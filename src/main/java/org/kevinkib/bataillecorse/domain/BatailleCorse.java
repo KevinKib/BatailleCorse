@@ -1,5 +1,6 @@
 package org.kevinkib.bataillecorse.domain;
 
+import org.kevinkib.bataillecorse.domain.hitrules.HitRules;
 import org.kevinkib.cards.CardsController;
 import org.kevinkib.cards.domain.*;
 
@@ -11,6 +12,7 @@ public class BatailleCorse {
     private List<Player> players;
     private int currentPlayer;
     private Pile pile;
+    private HitRules hitRules;
 
     public BatailleCorse(int nbPlayers) {
         initializePlayersAndHands(nbPlayers);
@@ -39,6 +41,15 @@ public class BatailleCorse {
             increaseCurrentPlayerIndex();
         } catch (NoCardsException e) {
             throw new IllegalStateException("A player should always have cards after the no cards check.");
+        }
+    }
+
+    public void hit(Player player) {
+        if (hitRules.applies(pile)) {
+            // win: empty pile & add it to hand & become next current player
+        }
+        else {
+            // lose: penality
         }
     }
 
@@ -89,6 +100,7 @@ public class BatailleCorse {
     private void initializeData() {
         currentPlayer = 0;
         pile = new Pile();
+        hitRules = HitRules.DEFAULT;
     }
 
     private void increaseCurrentPlayerIndex() {
