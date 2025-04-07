@@ -1,6 +1,8 @@
 package org.kevinkib.bataillecorse.domain;
 
 import org.kevinkib.bataillecorse.domain.hitrules.HitRules;
+import org.kevinkib.bataillecorse.domain.penality.Penality;
+import org.kevinkib.bataillecorse.domain.penality.PutCardsUnderPile;
 import org.kevinkib.cards.CardsController;
 import org.kevinkib.cards.domain.*;
 
@@ -13,15 +15,19 @@ public class BatailleCorse {
     private int currentPlayer;
     private Pile pile;
     private HitRules hitRules;
+    private Penality penality;
 
     public BatailleCorse(int nbPlayers) {
         initializePlayersAndHands(nbPlayers);
         initializeData();
     }
 
-    public BatailleCorse(List<Player> players) {
+    public BatailleCorse(List<Player> players, int currentPlayer, Pile pile, HitRules hitRules, Penality penality) {
         this.players = players;
-        initializeData();
+        this.currentPlayer = currentPlayer;
+        this.pile = pile;
+        this.hitRules = hitRules;
+        this.penality = penality;
     }
 
     public void send(Player player) throws NotPlayersTurnException, PlayerCannotPlayException {
@@ -35,8 +41,7 @@ public class BatailleCorse {
 
         try {
             Card card = player.removeCardOnTop();
-            card.showInPile();
-            pile.add(card);
+            pile.add(card, CardPileState.SHOWN);
 
             increaseCurrentPlayerIndex();
         } catch (NoCardsException e) {
@@ -46,10 +51,13 @@ public class BatailleCorse {
 
     public void hit(Player player) {
         if (hitRules.applies(pile)) {
-            // win: empty pile & add it to hand & become next current player
+            List<Card> cards = pile.clearAndReturnCards();
+            player.addCards(cards);
+
+            currentPlayer = players.indexOf(player);
         }
         else {
-            // lose: penality
+            penality.apply(player, pile);
         }
     }
 
@@ -101,6 +109,7 @@ public class BatailleCorse {
         currentPlayer = 0;
         pile = new Pile();
         hitRules = HitRules.DEFAULT;
+        penality = new PutCardsUnderPile(2);
     }
 
     private void increaseCurrentPlayerIndex() {

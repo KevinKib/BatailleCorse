@@ -4,6 +4,7 @@ import org.kevinkib.cards.domain.Card;
 import org.kevinkib.cards.domain.Hand;
 import org.kevinkib.cards.domain.NoCardsException;
 
+import java.util.List;
 import java.util.Objects;
 
 public class Player {
@@ -14,6 +15,10 @@ public class Player {
     public Player(Integer id, Hand hand) {
         this.id = id;
         this.hand = hand;
+    }
+
+    public void addCards(List<Card> cards) {
+        hand.add(cards);
     }
 
     public Card removeCardOnTop() throws NoCardsException {
