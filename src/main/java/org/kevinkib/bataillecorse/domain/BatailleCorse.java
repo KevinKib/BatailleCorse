@@ -13,7 +13,7 @@ public class BatailleCorse {
 
     private List<Player> players;
     private int currentPlayer;
-    private Pile pile;
+    private CentralPile pile;
     private HitRules hitRules;
     private Penality penality;
 
@@ -22,7 +22,7 @@ public class BatailleCorse {
         initializeData();
     }
 
-    public BatailleCorse(List<Player> players, int currentPlayer, Pile pile, HitRules hitRules, Penality penality) {
+    public BatailleCorse(List<Player> players, int currentPlayer, CentralPile pile, HitRules hitRules, Penality penality) {
         this.players = players;
         this.currentPlayer = currentPlayer;
         this.pile = pile;
@@ -41,11 +41,13 @@ public class BatailleCorse {
 
         try {
             Card card = player.removeCardOnTop();
-            pile.add(card, CardPileState.SHOWN);
+            pile.add(card);
 
             increaseCurrentPlayerIndex();
         } catch (NoCardsException e) {
             throw new IllegalStateException("A player should always have cards after the no cards check.");
+        } catch (FullCentralPileException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -62,7 +64,7 @@ public class BatailleCorse {
     }
 
     public Card getPileTopCard() {
-        return pile.seeCardOnTop();
+        return pile.getCardOnTop();
     }
 
     public int getPileSize() {
@@ -107,7 +109,7 @@ public class BatailleCorse {
 
     private void initializeData() {
         currentPlayer = 0;
-        pile = new Pile();
+        pile = new CentralPile(new Pile(), CentralPileState.NEUTRAL);
         hitRules = HitRules.DEFAULT;
         penality = new PutCardsUnderPile(2);
     }

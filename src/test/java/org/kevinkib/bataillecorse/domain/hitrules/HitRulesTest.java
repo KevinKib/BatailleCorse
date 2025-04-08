@@ -2,8 +2,8 @@ package org.kevinkib.bataillecorse.domain.hitrules;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.kevinkib.cards.domain.Pile;
-import org.kevinkib.cards.testhelpers.PileFixtures;
+import org.kevinkib.bataillecorse.domain.CentralPile;
+import org.kevinkib.bataillecorse.domain.CentralPileFixtures;
 
 import java.util.Arrays;
 
@@ -12,11 +12,11 @@ import static org.hamcrest.junit.MatcherAssert.assertThat;
 
 class HitRulesTest {
 
-    private Pile pile;
+    private CentralPile pile;
 
     @BeforeEach
     public void init() {
-        pile = PileFixtures.createEmptyPile();
+        pile = CentralPileFixtures.createEmptyCentralPile();
     }
 
     @Test

@@ -2,13 +2,13 @@ package org.kevinkib.bataillecorse.domain.hitrules;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.kevinkib.cards.domain.Pile;
+import org.kevinkib.bataillecorse.domain.CentralPile;
+import org.kevinkib.bataillecorse.domain.CentralPileBuilder;
 import org.kevinkib.cards.domain.french.FrenchRank;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
-import static org.kevinkib.cards.testhelpers.PileFixtures.createEmptyPile;
-import static org.kevinkib.cards.testhelpers.PileFixtures.createPileWithRank;
+import static org.kevinkib.bataillecorse.domain.CentralPileFixtures.createEmptyCentralPile;
 
 class CanHitTensTest {
 
@@ -21,14 +21,16 @@ class CanHitTensTest {
 
     @Test
     public void givenEmptyPile_thenDoesNotApply() {
-        Pile pile = createEmptyPile();
+        CentralPile pile = createEmptyCentralPile();
 
         assertThat(canHitTens.applies(pile), is(false));
     }
 
     @Test
     public void givenTen_thenApplies() {
-        Pile pile = createPileWithRank(FrenchRank.TEN);
+        CentralPile pile = CentralPileBuilder.aCentralPile()
+                .withCardsWithRanks(FrenchRank.TEN)
+                .build();
 
         assertThat(canHitTens.applies(pile), is(true));
     }
@@ -36,7 +38,9 @@ class CanHitTensTest {
     @Test
     public void givenNotTen_thenDoesNotApply() {
         FrenchRank notTen = FrenchRank.ACE;
-        Pile pile = createPileWithRank(notTen);
+        CentralPile pile = CentralPileBuilder.aCentralPile()
+                .withCardsWithRanks(notTen)
+                .build();
 
         assertThat(canHitTens.applies(pile), is(false));
     }

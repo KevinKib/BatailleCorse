@@ -1,12 +1,13 @@
 package org.kevinkib.bataillecorse.domain.hitrules;
 
+import org.kevinkib.bataillecorse.domain.CentralPile;
 import org.kevinkib.cards.domain.Pile;
 import org.kevinkib.cards.domain.french.FrenchRank;
 
 public class CanHitSumOfTen implements HitRule {
 
     @Override
-    public boolean applies(Pile pile) {
+    public boolean applies(CentralPile pile) {
         if (pile.getSize() < 2) {
             return false;
         }

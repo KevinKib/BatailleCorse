@@ -1,5 +1,6 @@
 package org.kevinkib.bataillecorse.domain.hitrules;
 
+import org.kevinkib.bataillecorse.domain.CentralPile;
 import org.kevinkib.cards.domain.Pile;
 
 import java.util.Arrays;
@@ -13,7 +14,7 @@ public class HitRules {
         this.rules = rules;
     }
 
-    public boolean applies(Pile pile) {
+    public boolean applies(CentralPile pile) {
         for (HitRule rule : rules) {
             if (rule.applies(pile)) {
                 return true;

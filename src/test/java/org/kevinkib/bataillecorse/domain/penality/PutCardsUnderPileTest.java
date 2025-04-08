@@ -1,14 +1,11 @@
 package org.kevinkib.bataillecorse.domain.penality;
 
 import org.junit.jupiter.api.Test;
-import org.kevinkib.bataillecorse.domain.Player;
-import org.kevinkib.bataillecorse.domain.PlayerBuilder;
+import org.kevinkib.bataillecorse.domain.*;
 import org.kevinkib.cards.domain.Card;
-import org.kevinkib.cards.domain.Pile;
 import org.kevinkib.cards.domain.french.FrenchRank;
 import org.kevinkib.cards.testhelpers.CardBuilder;
 import org.kevinkib.cards.testhelpers.HandBuilder;
-import org.kevinkib.cards.testhelpers.PileFixtures;
 
 import java.util.Arrays;
 
@@ -27,7 +24,7 @@ class PutCardsUnderPileTest {
                 .withGivenCards(2)
                 .build();
 
-        Pile pile = PileFixtures.createPileWithCard(specificCard);
+        CentralPile pile = CentralPileFixtures.createCentralPileWithCardAndState(specificCard, CentralPileState.NEUTRAL);
         Player player = PlayerBuilder.aPlayer()
                 .withHand(
                         HandBuilder.aHand().withCards(Arrays.asList(
@@ -51,7 +48,8 @@ class PutCardsUnderPileTest {
                 .withGivenCards(2)
                 .build();
 
-        Pile pile = PileFixtures.createEmptyPile();
+        CentralPile pile = CentralPileFixtures.createEmptyCentralPile();
+
         Player player = PlayerBuilder.aPlayer()
                 .withHand(
                         HandBuilder.aHand().withCards(Arrays.asList(

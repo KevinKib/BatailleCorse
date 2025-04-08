@@ -11,7 +11,6 @@ import org.kevinkib.bataillecorse.domain.penality.Penality;
 import org.kevinkib.cards.domain.Card;
 import org.kevinkib.cards.domain.CardPileState;
 import org.kevinkib.cards.domain.Hand;
-import org.kevinkib.cards.domain.Pile;
 
 import java.util.Arrays;
 
@@ -19,8 +18,8 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.kevinkib.bataillecorse.domain.BatailleCorseTest.InitializationTest.IsEveryCardHidden.everyCardHidden;
+import static org.kevinkib.bataillecorse.domain.CentralPileFixtures.createCentralPileWithNumberOfCards;
 import static org.kevinkib.bataillecorse.domain.PlayerFixtures.createNumberOfPlayers;
-import static org.kevinkib.cards.testhelpers.PileFixtures.createPileWithNumberOfCards;
 import static org.mockito.Mockito.*;
 
 class BatailleCorseTest {
@@ -181,13 +180,13 @@ class BatailleCorseTest {
         public void whenLosing_thenApplyPenality() {
 
             Penality penality = mock(Penality.class);
-            Pile pile = mock(Pile.class);
+            CentralPile pile = mock(CentralPile.class);
 
             batailleCorse = BatailleCorseBuilder.aBatailleCorse()
                     .withPlayers(createNumberOfPlayers(2))
                     .withHitRules(HitRulesFixtures.neverApplyingRules())
                     .withPenality(penality)
-                    .withPile(pile)
+                    .withCentralPile(pile)
                     .build();
 
             Player player = batailleCorse.getCurrentPlayer();
@@ -201,12 +200,12 @@ class BatailleCorseTest {
         public void whenWinning_thenClearPile_andGivePileCardsToWinningPlayer() {
 
             int nbCards = 5;
-            Pile pile = createPileWithNumberOfCards(5);
+            CentralPile pile = createCentralPileWithNumberOfCards(nbCards);
 
             batailleCorse = BatailleCorseBuilder.aBatailleCorse()
                     .withPlayers(createNumberOfPlayers(2))
                     .withHitRules(HitRulesFixtures.alwaysApplyingRules())
-                    .withPile(pile)
+                    .withCentralPile(pile)
                     .build();
 
             Player player = batailleCorse.getCurrentPlayer();
@@ -221,13 +220,13 @@ class BatailleCorseTest {
         public void whenWinning_thenSetCurrentPlayerToWinningPlayer() {
 
             int nbCards = 5;
-            Pile pile = createPileWithNumberOfCards(5);
+            CentralPile pile = createCentralPileWithNumberOfCards(nbCards);
 
             batailleCorse = BatailleCorseBuilder.aBatailleCorse()
                     .withPlayers(createNumberOfPlayers(3))
                     .withHitRules(HitRulesFixtures.alwaysApplyingRules())
                     .withCurrentPlayer(0)
-                    .withPile(pile)
+                    .withCentralPile(pile)
                     .build();
 
             Player player = batailleCorse.getPlayerByIndex(2);

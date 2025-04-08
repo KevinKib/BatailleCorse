@@ -2,14 +2,13 @@ package org.kevinkib.bataillecorse.domain;
 
 import org.kevinkib.bataillecorse.domain.hitrules.HitRules;
 import org.kevinkib.bataillecorse.domain.penality.Penality;
-import org.kevinkib.cards.domain.Pile;
 
 import java.util.List;
 
 public final class BatailleCorseBuilder {
     private List<Player> players;
     private int currentPlayer;
-    private Pile pile;
+    private CentralPile pile;
     private HitRules hitRules;
     private Penality penality;
 
@@ -37,7 +36,7 @@ public final class BatailleCorseBuilder {
         return this;
     }
 
-    public BatailleCorseBuilder withPile(Pile pile) {
+    public BatailleCorseBuilder withCentralPile(CentralPile pile) {
         this.pile = pile;
         return this;
     }

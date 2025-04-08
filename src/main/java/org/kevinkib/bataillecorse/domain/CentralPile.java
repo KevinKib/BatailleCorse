@@ -4,6 +4,9 @@ import org.kevinkib.cards.domain.Card;
 import org.kevinkib.cards.domain.CardPileState;
 import org.kevinkib.cards.domain.Pile;
 import org.kevinkib.cards.domain.PileSubscriber;
+
+import java.util.List;
+
 import static org.kevinkib.bataillecorse.domain.CentralPileState.*;
 
 
@@ -30,12 +33,37 @@ public class CentralPile implements PileSubscriber {
         pile.add(card, CardPileState.SHOWN);
     }
 
-    public void clearAndReturnCards() {
-        pile.clearAndReturnCards();
+    public void addBelowForPenality(Card card) {
+        // TODO: handle case where we're adding an honor card for a penality....
+        pile.addBelow(card, CardPileState.HIDDEN);
+    }
+
+    public List<Card> clearAndReturnCards() {
+        return pile.clearAndReturnCards();
     }
 
     public boolean isEmpty() {
         return pile.isEmpty();
+    }
+
+    public int getSize() {
+        return pile.getSize();
+    }
+
+    public Card getCard(int index) {
+        return getCardByIndex(index);
+    }
+
+    public Card getCardOnTop() {
+        return pile.seeCardOnTop();
+    }
+
+    public Card getCardByIndex(int index) {
+        return pile.seeCardByIndex(index);
+    }
+
+    public List<Card> getCards() {
+        return pile.getCards();
     }
 
     @Override
