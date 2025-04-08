@@ -1,0 +1,69 @@
+package org.kevinkib.bataillecorse.domain;
+
+import org.kevinkib.cards.domain.Card;
+import org.kevinkib.cards.domain.CardPileState;
+import org.kevinkib.cards.domain.Pile;
+import org.kevinkib.cards.domain.PileSubscriber;
+import static org.kevinkib.bataillecorse.domain.CentralPileState.*;
+
+
+public class CentralPile implements PileSubscriber {
+
+    private final Pile pile;
+    private CentralPileState state;
+    private Integer nbCardsSinceLastHonourCard;
+    private HonourCard lastHonourCard;
+
+    public CentralPile(Pile pile, CentralPileState state) {
+        super();
+        this.pile = pile;
+        this.state = state;
+        this.nbCardsSinceLastHonourCard = 0;
+
+        pile.subscribe(this);
+    }
+
+    public void add(Card card) throws FullCentralPileException {
+        if (state.isFull()) {
+            throw new FullCentralPileException();
+        }
+        pile.add(card, CardPileState.SHOWN);
+    }
+
+    public void clearAndReturnCards() {
+        pile.clearAndReturnCards();
+    }
+
+    public boolean isEmpty() {
+        return pile.isEmpty();
+    }
+
+    @Override
+    public void onCardAdded(Pile pile) {
+        Card addedCard = pile.seeCardOnTop();
+        ++nbCardsSinceLastHonourCard;
+        state = NEUTRAL;
+
+        if (HonourCard.isHonour(addedCard)) {
+            state = HONOUR_STATE;
+            nbCardsSinceLastHonourCard = 0;
+            lastHonourCard = HonourCard.from(addedCard);
+        }
+
+        if (lastHonourCard != null && lastHonourCard.getNbChances().equals(nbCardsSinceLastHonourCard)) {
+            state = FULL;
+        }
+    }
+
+    @Override
+    public void onClear(Pile pile) {
+        state = NEUTRAL;
+        lastHonourCard = null;
+        nbCardsSinceLastHonourCard = 0;
+    }
+
+    public CentralPileState getState() {
+        return state;
+    }
+
+}
