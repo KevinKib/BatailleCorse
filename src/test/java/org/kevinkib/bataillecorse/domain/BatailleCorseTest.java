@@ -6,7 +6,7 @@ import org.hamcrest.TypeSafeMatcher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.kevinkib.bataillecorse.domain.hitrules.HitRulesFixtures;
+import org.kevinkib.bataillecorse.domain.slaprules.SlapRulesFixtures;
 import org.kevinkib.bataillecorse.domain.penality.Penality;
 import org.kevinkib.cards.domain.Card;
 import org.kevinkib.cards.domain.CardPileState;
@@ -161,7 +161,7 @@ class BatailleCorseTest {
     }
 
     @Nested
-    class HitTest {
+    class SlapTest {
 
         private BatailleCorse batailleCorse;
 
@@ -184,14 +184,14 @@ class BatailleCorseTest {
 
             batailleCorse = BatailleCorseBuilder.aBatailleCorse()
                     .withPlayers(createNumberOfPlayers(2))
-                    .withHitRules(HitRulesFixtures.neverApplyingRules())
+                    .withSlapRules(SlapRulesFixtures.neverApplyingRules())
                     .withPenality(penality)
                     .withCentralPile(pile)
                     .build();
 
             Player player = batailleCorse.getCurrentPlayer();
 
-            batailleCorse.hit(player);
+            batailleCorse.slap(player);
 
             verify(penality, times(1)).apply(player, pile);
         }
@@ -204,13 +204,13 @@ class BatailleCorseTest {
 
             batailleCorse = BatailleCorseBuilder.aBatailleCorse()
                     .withPlayers(createNumberOfPlayers(2))
-                    .withHitRules(HitRulesFixtures.alwaysApplyingRules())
+                    .withSlapRules(SlapRulesFixtures.alwaysApplyingRules())
                     .withCentralPile(pile)
                     .build();
 
             Player player = batailleCorse.getCurrentPlayer();
 
-            batailleCorse.hit(player);
+            batailleCorse.slap(player);
 
             assertThat(pile.isEmpty(), is(true));
             assertThat(player.getHandSize(), is(5));
@@ -224,14 +224,14 @@ class BatailleCorseTest {
 
             batailleCorse = BatailleCorseBuilder.aBatailleCorse()
                     .withPlayers(createNumberOfPlayers(3))
-                    .withHitRules(HitRulesFixtures.alwaysApplyingRules())
+                    .withSlapRules(SlapRulesFixtures.alwaysApplyingRules())
                     .withCurrentPlayer(0)
                     .withCentralPile(pile)
                     .build();
 
             Player player = batailleCorse.getPlayerByIndex(2);
 
-            batailleCorse.hit(player);
+            batailleCorse.slap(player);
 
             assertThat(batailleCorse.getCurrentPlayer(), is(player));
         }

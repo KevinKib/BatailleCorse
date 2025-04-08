@@ -1,4 +1,4 @@
-package org.kevinkib.bataillecorse.domain.hitrules;
+package org.kevinkib.bataillecorse.domain.slaprules;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -9,37 +9,38 @@ import org.kevinkib.cards.domain.french.FrenchRank;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
-class CanHitSumOfTenTest {
 
-    private CanHitSumOfTen rule;
+class CanSlapSandwichTest {
+
+    private CanSlapSandwich rule;
 
     @BeforeEach
     public void init() {
-        rule = new CanHitSumOfTen();
+        rule = new CanSlapSandwich();
     }
 
     @Test
     public void givenNotEnoughCards_thenDoesNotApply() {
         CentralPile pile = CentralPileBuilder.aCentralPile()
-                .withNumberOfCards(1)
+                .withNumberOfCards(2)
                 .build();
 
         assertThat(rule.applies(pile), is(false));
     }
 
     @Test
-    public void givenSumOfTen_thenApplies() {
+    public void givenSandwich_thenApplies() {
         CentralPile pile = CentralPileBuilder.aCentralPile()
-                .withCardsWithRanks(FrenchRank.FOUR, FrenchRank.SIX)
+                .withCardsWithRanks(FrenchRank.EIGHT, FrenchRank.FOUR, FrenchRank.EIGHT)
                 .build();
 
         assertThat(rule.applies(pile), is(true));
     }
 
     @Test
-    public void givenNotSumOfTen_thenDoesNotApply() {
+    public void givenNotSandwich_thenDoesNotApply() {
         CentralPile pile = CentralPileBuilder.aCentralPile()
-                .withCardsWithRanks(FrenchRank.FOUR, FrenchRank.FIVE)
+                .withCardsWithRanks(FrenchRank.EIGHT, FrenchRank.FOUR, FrenchRank.SIX)
                 .build();
 
         assertThat(rule.applies(pile), is(false));

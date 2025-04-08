@@ -1,6 +1,6 @@
 package org.kevinkib.bataillecorse.domain;
 
-import org.kevinkib.bataillecorse.domain.hitrules.HitRules;
+import org.kevinkib.bataillecorse.domain.slaprules.SlapRules;
 import org.kevinkib.bataillecorse.domain.penality.Penality;
 
 import java.util.List;
@@ -9,7 +9,7 @@ public final class BatailleCorseBuilder {
     private List<Player> players;
     private int currentPlayer;
     private CentralPile pile;
-    private HitRules hitRules;
+    private SlapRules slapRules;
     private Penality penality;
 
     private Integer nbPlayers;
@@ -41,8 +41,8 @@ public final class BatailleCorseBuilder {
         return this;
     }
 
-    public BatailleCorseBuilder withHitRules(HitRules hitRules) {
-        this.hitRules = hitRules;
+    public BatailleCorseBuilder withSlapRules(SlapRules slapRules) {
+        this.slapRules = slapRules;
         return this;
     }
 
@@ -55,6 +55,6 @@ public final class BatailleCorseBuilder {
         if (nbPlayers != null) {
             return new BatailleCorse(nbPlayers);
         }
-        return new BatailleCorse(players, currentPlayer, pile, hitRules, penality);
+        return new BatailleCorse(players, currentPlayer, pile, slapRules, penality);
     }
 }

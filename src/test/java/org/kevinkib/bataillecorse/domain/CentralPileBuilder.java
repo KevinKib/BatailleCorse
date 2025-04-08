@@ -36,6 +36,11 @@ public final class CentralPileBuilder {
         return this;
     }
 
+    public CentralPileBuilder withNoCards() {
+        this.pile = PileFixtures.createEmptyPile();
+        return this;
+    }
+
     public CentralPileBuilder withState(CentralPileState state) {
         this.state = state;
         return this;

@@ -1,4 +1,4 @@
-package org.kevinkib.bataillecorse.domain.hitrules;
+package org.kevinkib.bataillecorse.domain.slaprules;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -10,20 +10,20 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 import static org.kevinkib.bataillecorse.domain.CentralPileFixtures.createEmptyCentralPile;
 
-class CanHitTensTest {
+class CanSlapTensTest {
 
-    private CanHitTens canHitTens;
+    private CanSlapTens canSlapTens;
 
     @BeforeEach
     public void init() {
-        canHitTens = new CanHitTens();
+        canSlapTens = new CanSlapTens();
     }
 
     @Test
     public void givenEmptyPile_thenDoesNotApply() {
         CentralPile pile = createEmptyCentralPile();
 
-        assertThat(canHitTens.applies(pile), is(false));
+        assertThat(canSlapTens.applies(pile), is(false));
     }
 
     @Test
@@ -32,7 +32,7 @@ class CanHitTensTest {
                 .withCardsWithRanks(FrenchRank.TEN)
                 .build();
 
-        assertThat(canHitTens.applies(pile), is(true));
+        assertThat(canSlapTens.applies(pile), is(true));
     }
 
     @Test
@@ -42,7 +42,7 @@ class CanHitTensTest {
                 .withCardsWithRanks(notTen)
                 .build();
 
-        assertThat(canHitTens.applies(pile), is(false));
+        assertThat(canSlapTens.applies(pile), is(false));
     }
 
 }

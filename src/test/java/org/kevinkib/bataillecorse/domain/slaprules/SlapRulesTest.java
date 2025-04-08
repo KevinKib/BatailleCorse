@@ -1,4 +1,4 @@
-package org.kevinkib.bataillecorse.domain.hitrules;
+package org.kevinkib.bataillecorse.domain.slaprules;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -10,7 +10,7 @@ import java.util.Arrays;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
-class HitRulesTest {
+class SlapRulesTest {
 
     private CentralPile pile;
 
@@ -22,10 +22,10 @@ class HitRulesTest {
     @Test
     public void givenZeroApplyingRule_thenDoNotApply() {
 
-        HitRules rules = HitRulesBuilder.aHitRules()
+        SlapRules rules = SlapRulesBuilder.aSlapRules()
                 .withRules(Arrays.asList(
-                        HitRuleFixtures.neverApplyingRule(),
-                        HitRuleFixtures.neverApplyingRule()
+                        SlapRuleFixtures.neverApplyingRule(),
+                        SlapRuleFixtures.neverApplyingRule()
                 ))
                 .build();
 
@@ -35,10 +35,10 @@ class HitRulesTest {
     @Test
     public void givenAtLeastOneApplyingRule_thenApplies() {
 
-        HitRules rules = HitRulesBuilder.aHitRules()
+        SlapRules rules = SlapRulesBuilder.aSlapRules()
                 .withRules(Arrays.asList(
-                        HitRuleFixtures.neverApplyingRule(),
-                        HitRuleFixtures.alwaysApplyingRule()
+                        SlapRuleFixtures.neverApplyingRule(),
+                        SlapRuleFixtures.alwaysApplyingRule()
                 ))
                 .build();
 

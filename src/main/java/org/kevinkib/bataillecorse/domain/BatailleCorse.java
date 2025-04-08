@@ -1,6 +1,6 @@
 package org.kevinkib.bataillecorse.domain;
 
-import org.kevinkib.bataillecorse.domain.hitrules.HitRules;
+import org.kevinkib.bataillecorse.domain.slaprules.SlapRules;
 import org.kevinkib.bataillecorse.domain.penality.Penality;
 import org.kevinkib.bataillecorse.domain.penality.PutCardsUnderPile;
 import org.kevinkib.cards.CardsController;
@@ -14,7 +14,7 @@ public class BatailleCorse {
     private List<Player> players;
     private int currentPlayer;
     private CentralPile pile;
-    private HitRules hitRules;
+    private SlapRules slapRules;
     private Penality penality;
 
     public BatailleCorse(int nbPlayers) {
@@ -22,11 +22,11 @@ public class BatailleCorse {
         initializeData();
     }
 
-    public BatailleCorse(List<Player> players, int currentPlayer, CentralPile pile, HitRules hitRules, Penality penality) {
+    public BatailleCorse(List<Player> players, int currentPlayer, CentralPile pile, SlapRules slapRules, Penality penality) {
         this.players = players;
         this.currentPlayer = currentPlayer;
         this.pile = pile;
-        this.hitRules = hitRules;
+        this.slapRules = slapRules;
         this.penality = penality;
     }
 
@@ -51,8 +51,8 @@ public class BatailleCorse {
         }
     }
 
-    public void hit(Player player) {
-        if (hitRules.applies(pile)) {
+    public void slap(Player player) {
+        if (slapRules.applies(pile)) {
             List<Card> cards = pile.clearAndReturnCards();
             player.addCards(cards);
 
@@ -110,7 +110,7 @@ public class BatailleCorse {
     private void initializeData() {
         currentPlayer = 0;
         pile = new CentralPile(new Pile(), CentralPileState.NEUTRAL);
-        hitRules = HitRules.DEFAULT;
+        slapRules = SlapRules.DEFAULT;
         penality = new PutCardsUnderPile(2);
     }
 

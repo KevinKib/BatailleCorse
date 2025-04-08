@@ -108,6 +108,32 @@ class CentralPileTest {
     }
 
     @Nested
+    class AddBelowForPenalityTest {
+
+        private Card nonHonourCard = CardBuilder.aCard()
+                .withRank(FrenchRank.TWO)
+                .build();
+
+        private Card honourCard = CardBuilder.aCard()
+                .withRank(FrenchRank.JACK)
+                .build();
+
+        @Test
+        public void givenNeutralPileWithCards_whenAHonourCardIsAddedForPenality_ThenPileRemainsNeutral() {
+
+            CentralPile centralPile = CentralPileBuilder.aCentralPile()
+                    .withCards(nonHonourCard)
+                    .withState(NEUTRAL)
+                    .build();
+
+            centralPile.addBelowForPenality(honourCard);
+
+            assertThat(centralPile.getState(), is(NEUTRAL));
+        }
+
+    }
+
+    @Nested
     class ClearTest {
 
         @Test

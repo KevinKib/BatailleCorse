@@ -1,8 +1,8 @@
-package org.kevinkib.bataillecorse.domain.hitrules;
+package org.kevinkib.bataillecorse.domain.slaprules;
 
 import org.kevinkib.bataillecorse.domain.CentralPile;
 
-public class CanHitSameCardAsBelow implements HitRule {
+public class CanSlapSameCardAsBelow implements SlapRule {
 
     @Override
     public boolean applies(CentralPile pile) {

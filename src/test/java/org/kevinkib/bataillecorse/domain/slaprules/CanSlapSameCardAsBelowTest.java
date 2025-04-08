@@ -1,4 +1,4 @@
-package org.kevinkib.bataillecorse.domain.hitrules;
+package org.kevinkib.bataillecorse.domain.slaprules;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -9,13 +9,13 @@ import org.kevinkib.cards.domain.french.FrenchRank;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
-class CanHitSameCardAsBelowTest {
+class CanSlapSameCardAsBelowTest {
 
-    private CanHitSameCardAsBelow rule;
+    private CanSlapSameCardAsBelow rule;
 
     @BeforeEach
     public void init() {
-        rule = new CanHitSameCardAsBelow();
+        rule = new CanSlapSameCardAsBelow();
     }
 
     @Test

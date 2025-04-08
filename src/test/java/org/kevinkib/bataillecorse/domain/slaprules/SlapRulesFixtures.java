@@ -1,20 +1,20 @@
-package org.kevinkib.bataillecorse.domain.hitrules;
+package org.kevinkib.bataillecorse.domain.slaprules;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class HitRulesFixtures {
+public class SlapRulesFixtures {
 
-    public static HitRules alwaysApplyingRules() {
-        HitRules rules = mock(HitRules.class);
+    public static SlapRules alwaysApplyingRules() {
+        SlapRules rules = mock(SlapRules.class);
         when(rules.applies(any())).thenReturn(true);
 
         return rules;
     }
 
-    public static HitRules neverApplyingRules() {
-        HitRules rules = mock(HitRules.class);
+    public static SlapRules neverApplyingRules() {
+        SlapRules rules = mock(SlapRules.class);
         when(rules.applies(any())).thenReturn(false);
 
         return rules;
