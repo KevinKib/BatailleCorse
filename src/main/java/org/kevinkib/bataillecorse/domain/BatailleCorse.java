@@ -51,7 +51,11 @@ public class BatailleCorse {
         }
     }
 
-    public void slap(Player player) {
+    public void slap(Player player) throws CannotSlapIfNoCardsInPileException {
+        if (pile.isEmpty()) {
+            throw new CannotSlapIfNoCardsInPileException();
+        }
+
         if (slapRules.applies(pile)) {
             List<Card> cards = pile.clearAndReturnCards();
             player.addCards(cards);

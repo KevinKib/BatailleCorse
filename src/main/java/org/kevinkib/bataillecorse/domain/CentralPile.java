@@ -34,7 +34,6 @@ public class CentralPile implements PileSubscriber {
     }
 
     public void addBelowForPenality(Card card) {
-        // TODO: handle case where we're adding an honor card for a penality....
         pile.addBelow(card, CardPileState.HIDDEN);
     }
 

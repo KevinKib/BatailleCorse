@@ -177,6 +177,23 @@ class BatailleCorseTest {
         }
 
         @Test
+        public void givenNoCardsInPile_thenThrowCannotSlapIfNoCardsInPileException() {
+
+            CentralPile emptyCentralPile = CentralPileFixtures.createEmptyCentralPile();
+
+            batailleCorse = BatailleCorseBuilder.aBatailleCorse()
+                     .withPlayers(createNumberOfPlayers(2))
+                    .withCentralPile(emptyCentralPile)
+                    .build();
+
+            Player player = batailleCorse.getCurrentPlayer();
+
+            assertThrows(CannotSlapIfNoCardsInPileException.class, () -> {
+                batailleCorse.slap(player);
+            });
+        }
+
+        @Test
         public void whenLosing_thenApplyPenality() {
 
             Penality penality = mock(Penality.class);
@@ -191,7 +208,9 @@ class BatailleCorseTest {
 
             Player player = batailleCorse.getCurrentPlayer();
 
-            batailleCorse.slap(player);
+            assertDoesNotThrow(() -> {
+                batailleCorse.slap(player);
+            });
 
             verify(penality, times(1)).apply(player, pile);
         }
@@ -210,7 +229,9 @@ class BatailleCorseTest {
 
             Player player = batailleCorse.getCurrentPlayer();
 
-            batailleCorse.slap(player);
+            assertDoesNotThrow(() -> {
+                batailleCorse.slap(player);
+            });
 
             assertThat(pile.isEmpty(), is(true));
             assertThat(player.getHandSize(), is(5));
@@ -231,7 +252,9 @@ class BatailleCorseTest {
 
             Player player = batailleCorse.getPlayerByIndex(2);
 
-            batailleCorse.slap(player);
+            assertDoesNotThrow(() -> {
+                batailleCorse.slap(player);
+            });
 
             assertThat(batailleCorse.getCurrentPlayer(), is(player));
         }
