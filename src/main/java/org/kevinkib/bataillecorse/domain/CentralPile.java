@@ -45,6 +45,10 @@ public class CentralPile implements PileSubscriber {
         return pile.isEmpty();
     }
 
+    public boolean isFull() {
+        return state.isFull();
+    }
+
     public int getSize() {
         return pile.getSize();
     }

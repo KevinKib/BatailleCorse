@@ -2,7 +2,9 @@ package org.kevinkib.bataillecorse.domain;
 
 import org.kevinkib.bataillecorse.domain.slaprules.SlapRules;
 import org.kevinkib.bataillecorse.domain.penality.Penality;
+import org.kevinkib.cards.testhelpers.HandBuilder;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public final class BatailleCorseBuilder {
@@ -11,8 +13,6 @@ public final class BatailleCorseBuilder {
     private CentralPile pile;
     private SlapRules slapRules;
     private Penality penality;
-
-    private Integer nbPlayers;
 
     private BatailleCorseBuilder() {
     }
@@ -27,7 +27,17 @@ public final class BatailleCorseBuilder {
     }
 
     public BatailleCorseBuilder withNbPlayers(int nbPlayers) {
-        this.nbPlayers = nbPlayers;
+        players = new ArrayList<>();
+        for (int i = 0; i < nbPlayers; ++i) {
+            Player player = PlayerBuilder.aPlayer()
+                    .withId(i)
+                    .withHand(HandBuilder.aHand()
+                            .withNoCards()
+                            .build())
+                    .build();
+
+            players.add(player);
+        }
         return this;
     }
 
@@ -52,9 +62,10 @@ public final class BatailleCorseBuilder {
     }
 
     public BatailleCorse build() {
-        if (nbPlayers != null) {
-            return new BatailleCorse(nbPlayers);
-        }
         return new BatailleCorse(players, currentPlayer, pile, slapRules, penality);
+    }
+
+    public BatailleCorse buildAndInitialize() {
+        return new BatailleCorse(players.size());
     }
 }

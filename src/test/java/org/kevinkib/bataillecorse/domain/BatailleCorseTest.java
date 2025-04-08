@@ -6,11 +6,13 @@ import org.hamcrest.TypeSafeMatcher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.kevinkib.bataillecorse.domain.slaprules.SlapRulesFixtures;
 import org.kevinkib.bataillecorse.domain.penality.Penality;
+import org.kevinkib.bataillecorse.domain.slaprules.SlapRulesFixtures;
 import org.kevinkib.cards.domain.Card;
 import org.kevinkib.cards.domain.CardPileState;
 import org.kevinkib.cards.domain.Hand;
+import org.kevinkib.cards.testhelpers.CardFixtures;
+import org.kevinkib.cards.testhelpers.HandFixtures;
 
 import java.util.Arrays;
 
@@ -96,7 +98,7 @@ class BatailleCorseTest {
             nbPlayers = 2;
             batailleCorse = BatailleCorseBuilder.aBatailleCorse()
                     .withNbPlayers(nbPlayers)
-                    .build();
+                    .buildAndInitialize();
         }
 
         @Test
@@ -156,6 +158,25 @@ class BatailleCorseTest {
             });
 
             assertThat(batailleCorse.getCurrentPlayerIndex(), is(1));
+        }
+
+        @Test
+        public void givenFullPile_thenThrowFullCentralPileException() {
+            batailleCorse = BatailleCorseBuilder.aBatailleCorse()
+                    .withPlayers(Arrays.asList(
+                        PlayerBuilder.aPlayer()
+                            .withHand(HandFixtures.createHandWithCards(CardFixtures.anyCard()))
+                            .build(),
+                        PlayerBuilder.aPlayer().build()
+                    ))
+                    .withCentralPile(CentralPileFixtures.createWithState(CentralPileState.FULL))
+                    .build();
+
+            Player player = batailleCorse.getCurrentPlayer();
+
+            assertThrows(FullCentralPileException.class, () -> {
+                batailleCorse.send(player);
+            });
         }
 
     }

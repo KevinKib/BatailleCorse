@@ -18,6 +18,13 @@ public class CentralPileFixtures {
                 .build();
     }
 
+    public static CentralPile createWithState(CentralPileState state) {
+        return CentralPileBuilder.aCentralPile()
+                .withPile(PileFixtures.createEmptyPile())
+                .withState(state)
+                .build();
+    }
+
     public static CentralPile createCentralPileWithCardAndState(Card card, CentralPileState state) {
         return createCentralPileWithCardsAndState(Collections.singletonList(card), state);
     }

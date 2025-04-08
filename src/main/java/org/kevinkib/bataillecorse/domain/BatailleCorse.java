@@ -30,13 +30,17 @@ public class BatailleCorse {
         this.penality = penality;
     }
 
-    public void send(Player player) throws NotPlayersTurnException, PlayerCannotPlayException {
+    public void send(Player player) throws NotPlayersTurnException, PlayerCannotPlayException, FullCentralPileException {
         if (!getCurrentPlayer().equals(player)) {
             throw new NotPlayersTurnException(player);
         }
 
         if (!getCurrentPlayer().hasAnyCards()) {
             throw new PlayerCannotPlayException();
+        }
+
+        if (pile.isFull()) {
+            throw new FullCentralPileException();
         }
 
         try {
