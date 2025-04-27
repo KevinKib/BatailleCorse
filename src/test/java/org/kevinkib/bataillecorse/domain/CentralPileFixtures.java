@@ -2,6 +2,7 @@ package org.kevinkib.bataillecorse.domain;
 
 import org.kevinkib.cards.domain.Card;
 import org.kevinkib.cards.domain.french.FrenchRank;
+import org.kevinkib.cards.testhelpers.CardBuilder;
 import org.kevinkib.cards.testhelpers.PileFixtures;
 
 import java.util.Collections;
@@ -62,5 +63,34 @@ public class CentralPileFixtures {
                 .build();
     }
 
+    public static CentralPile createCentralPileGrabbableByPlayer(Player player) {
+        CentralPile pile = CentralPileFixtures.createEmptyCentralPile();
+        Player otherPlayer = PlayerBuilder.aPlayer().withId(2).build();
+        Card jackCard = CardBuilder.aCard().withRank(FrenchRank.JACK).build();
+        Card otherCard = CardBuilder.aCard().build();
+
+        try {
+            pile.add(jackCard, player);
+            pile.add(otherCard, otherPlayer);
+        } catch (FullCentralPileException e) {
+            throw new IllegalStateException("Should not have central pile be full during fixture instanciation");
+        }
+
+        return pile;
+    }
+
+    public static CentralPile createCentralPileThenAddCards(Card... cards) {
+        CentralPile pile = createEmptyCentralPile();
+
+        try {
+            for (int index = cards.length - 1; index >= 0; --index) {
+                pile.add(cards[index], null);
+            }
+        } catch (FullCentralPileException e) {
+            throw new IllegalStateException("Should not reach full central pile exception in fixture building");
+        }
+
+        return pile;
+    }
 
 }

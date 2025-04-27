@@ -12,6 +12,7 @@ import org.kevinkib.cards.domain.Card;
 import org.kevinkib.cards.domain.CardPileState;
 import org.kevinkib.cards.domain.Hand;
 import org.kevinkib.cards.testhelpers.CardFixtures;
+import org.kevinkib.cards.testhelpers.HandBuilder;
 import org.kevinkib.cards.testhelpers.HandFixtures;
 
 import java.util.Arrays;
@@ -279,6 +280,69 @@ class BatailleCorseTest {
 
             assertThat(batailleCorse.getCurrentPlayer(), is(player));
         }
+
+    }
+
+    @Nested
+    class GrabTest {
+
+        private BatailleCorse batailleCorse;
+        private Player player;
+
+        @BeforeEach
+        public void beforeEach() {
+            player = PlayerBuilder.aPlayer()
+                    .withId(1)
+                    .withHand(HandBuilder.aHand().withNoCards().build())
+                    .build();
+        }
+
+        @Test
+        public void givenNotGrabbablePile_thenThrowCannotGrabException() {
+            batailleCorse = BatailleCorseBuilder.aBatailleCorse()
+                    .withCentralPile(CentralPileFixtures.createEmptyCentralPile())
+                    .withPlayers(Arrays.asList(player))
+                    .build();
+
+            assertThrows(CannotGrabException.class, () -> {
+                batailleCorse.grab(player);
+            });
+        }
+
+        @Test
+        public void givenGrabbablePile_thenClearPileAndGiveCardsToPlayer() {
+            batailleCorse = BatailleCorseBuilder.aBatailleCorse()
+                    .withCentralPile(CentralPileFixtures.createCentralPileGrabbableByPlayer(player))
+                    .withPlayers(Arrays.asList(player))
+                    .build();
+
+            int pileSize = batailleCorse.getPileSize();
+
+            assertDoesNotThrow(() -> {
+                batailleCorse.grab(player);
+            });
+
+            assertThat(batailleCorse.getPileSize(), is(0));
+            assertThat(player.getHandSize(), is(pileSize));
+        }
+
+        @Test
+        public void givenGrabbablePile_thenReverseCardsFromPileInHand() {
+            batailleCorse = BatailleCorseBuilder.aBatailleCorse()
+                    .withCentralPile(CentralPileFixtures.createCentralPileGrabbableByPlayer(player))
+                    .withPlayers(Arrays.asList(player))
+                    .build();
+
+            int pileSize = batailleCorse.getPileSize();
+
+            assertDoesNotThrow(() -> {
+                batailleCorse.grab(player);
+            });
+
+            assertThat(batailleCorse.getPileSize(), is(0));
+            assertThat(player.getHandSize(), is(pileSize));
+        }
+
 
     }
 

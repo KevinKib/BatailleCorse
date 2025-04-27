@@ -16,6 +16,7 @@ public class BatailleCorse {
     private CentralPile pile;
     private SlapRules slapRules;
     private Penality penality;
+    private IndexHandler indexHandler;
 
     public BatailleCorse(int nbPlayers) {
         initializePlayersAndHands(nbPlayers);
@@ -28,6 +29,7 @@ public class BatailleCorse {
         this.pile = pile;
         this.slapRules = slapRules;
         this.penality = penality;
+        this.indexHandler = new IndexHandler(currentPlayer, getNbPlayers(), pile);
     }
 
     public void send(Player player) throws NotPlayersTurnException, PlayerCannotPlayException, FullCentralPileException {
@@ -45,9 +47,9 @@ public class BatailleCorse {
 
         try {
             Card card = player.removeCardOnTop();
-            pile.add(card);
+            pile.add(card, player);
 
-            increaseCurrentPlayerIndex();
+            currentPlayer = indexHandler.update();
         } catch (NoCardsException e) {
             throw new IllegalStateException("A player should always have cards after the no cards check.");
         } catch (FullCentralPileException e) {
@@ -62,13 +64,22 @@ public class BatailleCorse {
 
         if (slapRules.applies(pile)) {
             List<Card> cards = pile.clearAndReturnCards();
-            player.addCards(cards);
+            player.addCardsFromPile(cards);
 
             currentPlayer = players.indexOf(player);
         }
         else {
             penality.apply(player, pile);
         }
+    }
+
+    public void grab(Player player) throws CannotGrabException {
+        if (!pile.isGrabbableByPlayer(player)) {
+            throw new CannotGrabException(player);
+        }
+
+        List<Card> cards = pile.clearAndReturnCards();
+        player.addCardsFromPile(cards);
     }
 
     public Card getPileTopCard() {
@@ -120,13 +131,7 @@ public class BatailleCorse {
         pile = new CentralPile(new Pile(), CentralPileState.NEUTRAL);
         slapRules = SlapRules.DEFAULT;
         penality = new PutCardsUnderPile(2);
-    }
-
-    private void increaseCurrentPlayerIndex() {
-        currentPlayer += 1;
-        if (currentPlayer == getNbPlayers()) {
-            currentPlayer = 0;
-        }
+        indexHandler = new IndexHandler(currentPlayer, getNbPlayers(), pile);
     }
 
 }

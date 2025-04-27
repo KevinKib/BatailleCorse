@@ -4,6 +4,7 @@ import org.kevinkib.cards.domain.Card;
 import org.kevinkib.cards.domain.Hand;
 import org.kevinkib.cards.domain.NoCardsException;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -17,7 +18,8 @@ public class Player {
         this.hand = hand;
     }
 
-    public void addCards(List<Card> cards) {
+    public void addCardsFromPile(List<Card> cards) {
+        Collections.reverse(cards);
         hand.add(cards);
     }
 

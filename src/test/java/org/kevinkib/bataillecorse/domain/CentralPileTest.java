@@ -9,8 +9,7 @@ import org.kevinkib.cards.testhelpers.PileFixtures;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.kevinkib.bataillecorse.domain.CentralPileState.*;
 import static org.kevinkib.cards.testhelpers.CardFixtures.anyCard;
 
@@ -18,6 +17,8 @@ class CentralPileTest {
 
     @Nested
     class AddTest {
+
+        private final Player player = PlayerBuilder.aPlayer().build();
 
         @Test
         public void givenPile_andNonHonourCard_whenAdd_thenShouldHaveHonorState() {
@@ -29,7 +30,7 @@ class CentralPileTest {
 
             assertDoesNotThrow(() -> {
                 Card card = CardBuilder.aCard().withRank(FrenchRank.NINE).build();
-                centralPile.add(card);
+                centralPile.add(card, player);
             });
 
             assertThat(centralPile.getState(), is(NEUTRAL));
@@ -45,7 +46,7 @@ class CentralPileTest {
 
             assertDoesNotThrow(() -> {
                 Card card = CardBuilder.aCard().withRank(FrenchRank.QUEEN).build();
-                centralPile.add(card);
+                centralPile.add(card, player);
             });
 
             assertThat(centralPile.getState(), is(HONOUR_STATE));
@@ -61,11 +62,11 @@ class CentralPileTest {
 
             assertDoesNotThrow(() -> {
                 Card honourCard = CardBuilder.aCard().withRank(FrenchRank.QUEEN).build();
-                centralPile.add(honourCard);
+                centralPile.add(honourCard, player);
 
                 Card nonHonourCard = CardBuilder.aCard().withRank(FrenchRank.EIGHT).build();
-                centralPile.add(nonHonourCard);
-                centralPile.add(nonHonourCard);
+                centralPile.add(nonHonourCard, player);
+                centralPile.add(nonHonourCard, player);
             });
 
             assertThat(centralPile.getState(), is(FULL));
@@ -81,12 +82,31 @@ class CentralPileTest {
 
             assertDoesNotThrow(() -> {
                 Card honourCard = CardBuilder.aCard().withRank(FrenchRank.QUEEN).build();
-                centralPile.add(honourCard);
+                centralPile.add(honourCard, player);
 
                 Card nonHonourCard = CardBuilder.aCard().withRank(FrenchRank.EIGHT).build();
-                centralPile.add(nonHonourCard);
+                centralPile.add(nonHonourCard, player);
 
-                centralPile.add(honourCard);
+                centralPile.add(honourCard, player);
+            });
+
+            assertThat(centralPile.getState(), is(HONOUR_STATE));
+        }
+
+        @Test
+        public void givenPile_andNonJackHonourCard_andNonHonourCard_whenAdd_thenShouldKeepHonourState() {
+
+            CentralPile centralPile = CentralPileBuilder.aCentralPile()
+                    .withPile(PileFixtures.createEmptyPile())
+                    .withState(NEUTRAL)
+                    .build();
+
+            assertDoesNotThrow(() -> {
+                Card honourCard = CardBuilder.aCard().withRank(FrenchRank.KING).build();
+                centralPile.add(honourCard, player);
+
+                Card nonHonourCard = CardBuilder.aCard().withRank(FrenchRank.EIGHT).build();
+                centralPile.add(nonHonourCard, player);
             });
 
             assertThat(centralPile.getState(), is(HONOUR_STATE));
@@ -101,7 +121,7 @@ class CentralPileTest {
                     .build();
 
             assertThrows(FullCentralPileException.class, () -> {
-                centralPile.add(anyCard());
+                centralPile.add(anyCard(), player);
             });
         }
 
@@ -110,11 +130,11 @@ class CentralPileTest {
     @Nested
     class AddBelowForPenalityTest {
 
-        private Card nonHonourCard = CardBuilder.aCard()
+        private final Card nonHonourCard = CardBuilder.aCard()
                 .withRank(FrenchRank.TWO)
                 .build();
 
-        private Card honourCard = CardBuilder.aCard()
+        private final Card honourCard = CardBuilder.aCard()
                 .withRank(FrenchRank.JACK)
                 .build();
 
@@ -161,6 +181,118 @@ class CentralPileTest {
             assertThat(centralPile.getState(), is(NEUTRAL));
         }
 
+        @Test
+        public void givenPileWithCards_whenClear_thenHonourCardInformationsShouldBeReset() {
+
+            CentralPile centralPile = CentralPileBuilder.aCentralPile()
+                    .withPile(PileFixtures.createEmptyPile())
+                    .withState(NEUTRAL)
+                    .build();
+
+            Card honourCard = CardBuilder.aCard().withRank(FrenchRank.ACE).build();
+            Player player = PlayerBuilder.aPlayer().build();
+
+            assertDoesNotThrow(() -> {
+                centralPile.add(honourCard, player);
+                centralPile.clearAndReturnCards();
+            });
+
+            assertNull(centralPile.getLastHonourCard());
+            assertNull(centralPile.getPlayerThatAddedLastHonourCard());
+            assertThat(centralPile.getNbCardsSinceLastHonourCard(), is(0));
+        }
+
     }
 
+    @Nested
+    class IsGrabbableTest {
+
+        @Test
+        public void givenEmptyPile_thenIsNotGrabbableByAnyPlayer() {
+
+            CentralPile pile = CentralPileFixtures.createEmptyCentralPile();
+            Player player = PlayerBuilder.aPlayer().build();
+
+            assertThat(pile.isGrabbableByPlayer(player), is(false));
+        }
+
+        @Test
+        public void givenNotFullPile_withHonourCard_thenIsNotGrabbableByPlayer_thatAddedHonourCard() {
+
+            CentralPile pile = CentralPileFixtures.createEmptyCentralPile();
+            Player player = PlayerBuilder.aPlayer().withId(1).build();
+            Card honourCard = CardBuilder.aCard().withRank(FrenchRank.JACK).build();
+
+            assertDoesNotThrow(() -> {
+                pile.add(honourCard, player);
+            });
+
+            assertThat(pile.isGrabbableByPlayer(player), is(false));
+        }
+
+        @Test
+        public void givenFullPile_withHonourCard_thenIsNotGrabbableByPlayer_thatDidNotAddHonourCard() {
+
+            CentralPile pile = CentralPileFixtures.createEmptyCentralPile();
+            Player player = PlayerBuilder.aPlayer().withId(1).build();
+            Player otherPlayer = PlayerBuilder.aPlayer().withId(2).build();
+            Card jackCard = CardBuilder.aCard().withRank(FrenchRank.JACK).build();
+            Card otherCard = CardBuilder.aCard().build();
+
+            assertDoesNotThrow(() -> {
+                pile.add(jackCard, player);
+                pile.add(otherCard, otherPlayer);
+            });
+
+            assertThat(pile.isGrabbableByPlayer(otherPlayer), is(false));
+        }
+
+        @Test
+        public void givenFullPile_withHonourCard_thenIsGrabbableByPlayer_thatAddedHonourCard() {
+
+            CentralPile pile = CentralPileFixtures.createEmptyCentralPile();
+            Player player = PlayerBuilder.aPlayer().withId(1).build();
+            Player otherPlayer = PlayerBuilder.aPlayer().withId(2).build();
+            Card jackCard = CardBuilder.aCard().withRank(FrenchRank.JACK).build();
+            Card otherCard = CardBuilder.aCard().build();
+
+            assertDoesNotThrow(() -> {
+                pile.add(jackCard, player);
+                pile.add(otherCard, otherPlayer);
+            });
+
+            assertThat(pile.isGrabbableByPlayer(player), is(true));
+        }
+
+    }
+
+    @Nested
+    class IsLastCardHonourCardTest {
+
+        @Test
+        public void givenEmptyPile_thenReturnFalse() {
+            CentralPile pile = CentralPileFixtures.createEmptyCentralPile();
+
+            assertThat(pile.isLastCardHonourCard(), is(false));
+        }
+
+        @Test
+        public void givenPileWithNotHonourCardOnTop_thenReturnFalse() {
+            CentralPile pile = CentralPileBuilder.aCentralPile()
+                        .withCardsWithRanks(FrenchRank.FOUR)
+                        .build();
+
+            assertThat(pile.isLastCardHonourCard(), is(false));
+        }
+
+        @Test
+        public void givenPileWithHonourCardOnTop_thenReturnTrue() {
+            CentralPile pile = CentralPileBuilder.aCentralPile()
+                        .withCardsWithRanks(FrenchRank.QUEEN)
+                        .build();
+
+            assertThat(pile.isLastCardHonourCard(), is(true));
+        }
+
+    }
 }

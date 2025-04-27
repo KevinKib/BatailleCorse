@@ -16,21 +16,28 @@ public class CentralPile implements PileSubscriber {
     private CentralPileState state;
     private Integer nbCardsSinceLastHonourCard;
     private HonourCard lastHonourCard;
+    private Player playerThatAddedLastHonourCard;
 
     public CentralPile(Pile pile, CentralPileState state) {
         super();
         this.pile = pile;
         this.state = state;
         this.nbCardsSinceLastHonourCard = 0;
+        this.playerThatAddedLastHonourCard = null;
 
         pile.subscribe(this);
     }
 
-    public void add(Card card) throws FullCentralPileException {
+    public void add(Card card, Player player) throws FullCentralPileException {
         if (state.isFull()) {
             throw new FullCentralPileException();
         }
+
         pile.add(card, CardPileState.SHOWN);
+
+        if (HonourCard.isHonour(card)) {
+            playerThatAddedLastHonourCard = player;
+        }
     }
 
     public void addBelowForPenality(Card card) {
@@ -39,6 +46,14 @@ public class CentralPile implements PileSubscriber {
 
     public List<Card> clearAndReturnCards() {
         return pile.clearAndReturnCards();
+    }
+
+    public boolean isGrabbableByPlayer(Player player) {
+        if (playerThatAddedLastHonourCard == null) {
+            return false;
+        }
+
+        return isFull() && playerThatAddedLastHonourCard.equals(player);
     }
 
     public boolean isEmpty() {
@@ -73,7 +88,6 @@ public class CentralPile implements PileSubscriber {
     public void onCardAdded(Pile pile) {
         Card addedCard = pile.seeCardOnTop();
         ++nbCardsSinceLastHonourCard;
-        state = NEUTRAL;
 
         if (HonourCard.isHonour(addedCard)) {
             state = HONOUR_STATE;
@@ -91,10 +105,34 @@ public class CentralPile implements PileSubscriber {
         state = NEUTRAL;
         lastHonourCard = null;
         nbCardsSinceLastHonourCard = 0;
+        playerThatAddedLastHonourCard = null;
     }
 
     public CentralPileState getState() {
         return state;
     }
 
+    public Integer getNbCardsSinceLastHonourCard() {
+        return nbCardsSinceLastHonourCard;
+    }
+
+    public HonourCard getLastHonourCard() {
+        return lastHonourCard;
+    }
+
+    public Player getPlayerThatAddedLastHonourCard() {
+        return playerThatAddedLastHonourCard;
+    }
+
+    public boolean isLastCardHonourCard() {
+        if (isEmpty()) {
+            return false;
+        }
+
+        return HonourCard.isHonour(getCardOnTop());
+    }
+
+    public boolean isHonourState() {
+        return state == HONOUR_STATE;
+    }
 }
