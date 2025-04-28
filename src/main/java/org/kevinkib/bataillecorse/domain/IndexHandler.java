@@ -25,4 +25,12 @@ public class IndexHandler {
         return index;
     }
 
+    public void setCurrentPlayer(int currentPlayer) {
+        index = currentPlayer;
+    }
+
+    public Integer getCurrentPlayer() {
+        return index;
+    }
+
 }

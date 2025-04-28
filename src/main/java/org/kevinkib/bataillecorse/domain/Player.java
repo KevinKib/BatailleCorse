@@ -43,6 +43,10 @@ public class Player {
         return hand.getSize();
     }
 
+    public List<Card> getCards() {
+        return hand.getCards();
+    }
+
     public boolean hasAnyCards() {
         return hand.hasAnyCards();
     }

@@ -12,7 +12,6 @@ import java.util.List;
 public class BatailleCorse {
 
     private List<Player> players;
-    private int currentPlayer;
     private CentralPile pile;
     private SlapRules slapRules;
     private Penality penality;
@@ -25,7 +24,6 @@ public class BatailleCorse {
 
     public BatailleCorse(List<Player> players, int currentPlayer, CentralPile pile, SlapRules slapRules, Penality penality) {
         this.players = players;
-        this.currentPlayer = currentPlayer;
         this.pile = pile;
         this.slapRules = slapRules;
         this.penality = penality;
@@ -49,7 +47,7 @@ public class BatailleCorse {
             Card card = player.removeCardOnTop();
             pile.add(card, player);
 
-            currentPlayer = indexHandler.update();
+            indexHandler.update();
         } catch (NoCardsException e) {
             throw new IllegalStateException("A player should always have cards after the no cards check.");
         } catch (FullCentralPileException e) {
@@ -66,7 +64,7 @@ public class BatailleCorse {
             List<Card> cards = pile.clearAndReturnCards();
             player.addCardsFromPile(cards);
 
-            currentPlayer = players.indexOf(player);
+            indexHandler.setCurrentPlayer(players.indexOf(player));
         }
         else {
             penality.apply(player, pile);
@@ -90,16 +88,20 @@ public class BatailleCorse {
         return pile.getSize();
     }
 
+    public Player getWinner() {
+        return null;
+    }
+
     public Player getPlayerByIndex(int index) {
         return players.get(index);
     }
 
     public Player getCurrentPlayer() {
-        return players.get(currentPlayer);
+        return players.get(indexHandler.getCurrentPlayer());
     }
 
     public int getCurrentPlayerIndex() {
-        return currentPlayer;
+        return indexHandler.getCurrentPlayer();
     }
 
     public int getNbPlayers() {
@@ -127,11 +129,10 @@ public class BatailleCorse {
     }
 
     private void initializeData() {
-        currentPlayer = 0;
         pile = new CentralPile(new Pile(), CentralPileState.NEUTRAL);
         slapRules = SlapRules.DEFAULT;
         penality = new PutCardsUnderPile(2);
-        indexHandler = new IndexHandler(currentPlayer, getNbPlayers(), pile);
+        indexHandler = new IndexHandler(0, getNbPlayers(), pile);
     }
 
 }

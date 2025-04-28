@@ -1,17 +1,25 @@
 package org.kevinkib.bataillecorse.domain;
 
+import org.hamcrest.Description;
+import org.hamcrest.Matcher;
+import org.hamcrest.TypeSafeMatcher;
 import org.junit.jupiter.api.Test;
 import org.kevinkib.bataillecorse.domain.penality.PutCardsUnderPileBuilder;
 import org.kevinkib.bataillecorse.domain.slaprules.*;
+import org.kevinkib.cards.domain.Card;
 import org.kevinkib.cards.domain.french.FrenchRank;
-import org.kevinkib.cards.testhelpers.CardBuilder;
 import org.kevinkib.cards.testhelpers.HandBuilder;
 
 import java.util.Arrays;
+import java.util.List;
 
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.kevinkib.cards.testhelpers.CardBuilder.aCard;
+import static org.kevinkib.bataillecorse.domain.CardRanksMatcher.areCardsOfRanks;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.kevinkib.cards.domain.french.FrenchRank.*;
 
 public class BatailleCorseIT {
 
@@ -23,22 +31,26 @@ public class BatailleCorseIT {
         Player player1 = PlayerBuilder.aPlayer().withId(1)
                 .withHand(HandBuilder.aHand().withCards(
                         Arrays.asList(
-                                CardBuilder.aCard().withRank(FrenchRank.NINE).build(),
-                                CardBuilder.aCard().withRank(FrenchRank.FOUR).build(),
-                                CardBuilder.aCard().withRank(FrenchRank.SEVEN).build(),
-                                CardBuilder.aCard().withRank(FrenchRank.JACK).build(),
-                                CardBuilder.aCard().withRank(FrenchRank.TWO).build()
+                                aCard().withRank(NINE).build(),
+                                aCard().withRank(FOUR).build(),
+                                aCard().withRank(SEVEN).build(),
+                                aCard().withRank(JACK).build(),
+                                aCard().withRank(TWO).build(),
+                                aCard().withRank(THREE).build(),
+                                aCard().withRank(THREE).build()
                         ))
                         .build())
                 .build();
         Player player2 = PlayerBuilder.aPlayer().withId(2)
                 .withHand(HandBuilder.aHand().withCards(
                                 Arrays.asList(
-                                        CardBuilder.aCard().withRank(FrenchRank.ACE).build(),
-                                        CardBuilder.aCard().withRank(FrenchRank.EIGHT).build(),
-                                        CardBuilder.aCard().withRank(FrenchRank.SIX).build(),
-                                        CardBuilder.aCard().withRank(FrenchRank.KING).build(),
-                                        CardBuilder.aCard().withRank(FrenchRank.FIVE).build()
+                                        aCard().withRank(ACE).build(),
+                                        aCard().withRank(EIGHT).build(),
+                                        aCard().withRank(SIX).build(),
+                                        aCard().withRank(KING).build(),
+                                        aCard().withRank(FIVE).build(),
+                                        aCard().withRank(EIGHT).build(),
+                                        aCard().withRank(SEVEN).build()
                                 ))
                         .build())
                 .build();
@@ -74,9 +86,116 @@ public class BatailleCorseIT {
 
             batailleCorse.grab(player1);
 
-            assertThat(player1.getHand().getCards(), is(Arrays.asList(
+            assertThat(player1.getHand().getCards(), areCardsOfRanks(
+                    TWO, THREE, THREE, NINE, ACE, FOUR, SEVEN, JACK, EIGHT
+            ));
 
-            )));
+            assertThat(player2.getHand().getCards(), areCardsOfRanks(
+                    SIX, KING, FIVE, EIGHT, SEVEN
+            ));
+
+            batailleCorse.send(player1); // Two
+            batailleCorse.send(player2); // Six
+            batailleCorse.send(player1); // Three
+            batailleCorse.send(player2); // King
+            batailleCorse.send(player1); // Three
+
+            batailleCorse.slap(player2);
+
+            assertThat(player1.getHand().getCards(), areCardsOfRanks(
+                    NINE, ACE, FOUR, SEVEN, JACK, EIGHT
+            ));
+
+            assertThat(player2.getHand().getCards(), areCardsOfRanks(
+                    FIVE, EIGHT, SEVEN, TWO, SIX, THREE, KING, THREE
+            ));
+
+            batailleCorse.send(player2); // Five
+            batailleCorse.send(player1); // Nine
+            batailleCorse.send(player2); // Eight
+            batailleCorse.send(player1); // Ace
+            batailleCorse.send(player2); // Seven
+            batailleCorse.send(player2); // Two
+            batailleCorse.send(player2); // Six
+            batailleCorse.send(player2); // Three
+
+            assertThrows(CannotGrabException.class, () -> {
+                batailleCorse.grab(player2);
+            });
+
+            batailleCorse.grab(player1);
+
+            assertThat(player1.getHand().getCards(), areCardsOfRanks(
+                    FOUR, SEVEN, JACK, EIGHT, FIVE, NINE, EIGHT, ACE, SEVEN, TWO, SIX, THREE
+            ));
+
+            assertThat(player2.getHand().getCards(), areCardsOfRanks(
+                    KING, THREE
+            ));
+
+            batailleCorse.send(player1); // Four
+            batailleCorse.send(player2); // King
+            batailleCorse.send(player1); // Seven
+
+            assertThrows(NotPlayersTurnException.class, () -> {
+                batailleCorse.send(player2);
+            });
+
+            batailleCorse.send(player1); // Jack
+            batailleCorse.send(player2); // Three
+
+            batailleCorse.grab(player1);
+
+            assertThat(player1.getHand().getCards(), areCardsOfRanks(
+                    EIGHT, FIVE, NINE, EIGHT, ACE, SEVEN, TWO, SIX, THREE, FOUR, KING, SEVEN, JACK, THREE
+            ));
+
+            assertThat(player2.getHandSize(), is(0));
+
+            assertThat(batailleCorse.getWinner(), is(player1));
+
         });
     }
+}
+
+class CardRanksMatcher extends TypeSafeMatcher<List<Card>> {
+
+    private final List<FrenchRank> expectedRanks;
+
+    public CardRanksMatcher(List<FrenchRank> expectedRanks) {
+        this.expectedRanks = expectedRanks;
+    }
+
+    @Override
+    public boolean matchesSafely(List<Card> cards) {
+
+        if (cards == null || expectedRanks == null || cards.size() != expectedRanks.size()) {
+            return false;
+        }
+
+        for (int i = 0; i < cards.size(); ++i) {
+            Card card = cards.get(i);
+            FrenchRank rank = expectedRanks.get(i);
+
+            if (card.getRank() == null || !card.getRank().equals(rank)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+//    @Override
+//    protected void describeMismatchSafely(List<Card> item, Description mismatchDescription) {
+//        mismatchDescription.appendText("a");
+//    }
+
+    public void describeTo(Description description) {
+        description.appendText("same ranks");
+    }
+
+    public static Matcher<List<Card>> areCardsOfRanks(FrenchRank... expectedRanks) {
+        return new CardRanksMatcher(Arrays.stream(expectedRanks).toList());
+    }
+
 }
