@@ -51,6 +51,10 @@ public class Player {
         return hand.hasAnyCards();
     }
 
+    public boolean isEliminated() {
+        return !hand.hasAnyCards();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

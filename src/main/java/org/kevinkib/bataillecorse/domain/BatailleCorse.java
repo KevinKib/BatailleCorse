@@ -16,6 +16,7 @@ public class BatailleCorse {
     private SlapRules slapRules;
     private Penality penality;
     private IndexHandler indexHandler;
+    private Result result;
 
     public BatailleCorse(int nbPlayers) {
         initializePlayersAndHands(nbPlayers);
@@ -28,16 +29,21 @@ public class BatailleCorse {
         this.slapRules = slapRules;
         this.penality = penality;
         this.indexHandler = new IndexHandler(currentPlayer, getNbPlayers(), pile);
+        this.result = updateGameResult();
     }
 
-    public void send(Player player) throws NotPlayersTurnException, PlayerCannotPlayException, FullCentralPileException {
+    public void send(Player player) throws NotPlayersTurnException, FullCentralPileException {
         if (!getCurrentPlayer().equals(player)) {
             throw new NotPlayersTurnException(player);
         }
 
-        if (!getCurrentPlayer().hasAnyCards()) {
-            throw new PlayerCannotPlayException();
-        }
+        // TODO: If the current player has no cards, it's true that he cannot play, but it mostly means
+        // he isn't the current player. That means either the game is finished or the current player failed to update
+        // Either way, replace condition with something else
+
+//        if (!getCurrentPlayer().hasAnyCards()) {
+//            throw new PlayerCannotPlayException();
+//        }
 
         if (pile.isFull()) {
             throw new FullCentralPileException();
@@ -89,7 +95,7 @@ public class BatailleCorse {
     }
 
     public Player getWinner() {
-        return null;
+        return result.getWinningPlayer();
     }
 
     public Player getPlayerByIndex(int index) {
@@ -133,6 +139,27 @@ public class BatailleCorse {
         slapRules = SlapRules.DEFAULT;
         penality = new PutCardsUnderPile(2);
         indexHandler = new IndexHandler(0, getNbPlayers(), pile);
+        result = updateGameResult();
+    }
+
+    private Result updateGameResult() {
+        if (!pile.isEmpty()) {
+            return Result.ONGOING;
+        }
+
+        List<Player> playersWithCards = players.stream().filter(Player::hasAnyCards).toList();
+
+        if (playersWithCards.isEmpty()) {
+            throw new IllegalStateException("Cannot have no players with no cards when pile is empty");
+        }
+
+        if (playersWithCards.size() == 1) {
+            Player winningPlayer = playersWithCards.get(0);
+            return new Result(winningPlayer);
+        }
+        else {
+            return Result.ONGOING;
+        }
     }
 
 }

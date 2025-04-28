@@ -51,6 +51,11 @@ public final class BatailleCorseBuilder {
         return this;
     }
 
+    public BatailleCorseBuilder withEmptyCentralPile() {
+        this.pile = CentralPileFixtures.createEmptyCentralPile();
+        return this;
+    }
+
     public BatailleCorseBuilder withSlapRules(SlapRules slapRules) {
         this.slapRules = slapRules;
         return this;
