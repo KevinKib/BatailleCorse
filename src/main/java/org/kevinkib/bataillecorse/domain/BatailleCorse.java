@@ -71,6 +71,7 @@ public class BatailleCorse {
             player.addCardsFromPile(cards);
 
             indexHandler.setCurrentPlayer(players.indexOf(player));
+            result = updateGameResult();
         }
         else {
             penality.apply(player, pile);
@@ -84,6 +85,8 @@ public class BatailleCorse {
 
         List<Card> cards = pile.clearAndReturnCards();
         player.addCardsFromPile(cards);
+
+        result = updateGameResult();
     }
 
     public Card getPileTopCard() {
