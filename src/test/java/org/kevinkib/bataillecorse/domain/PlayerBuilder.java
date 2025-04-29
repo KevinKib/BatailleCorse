@@ -1,6 +1,13 @@
 package org.kevinkib.bataillecorse.domain;
 
 import org.kevinkib.cards.domain.Hand;
+import org.kevinkib.cards.testhelpers.CardFixtures;
+import org.kevinkib.cards.testhelpers.HandBuilder;
+
+import java.util.Arrays;
+import java.util.Collections;
+
+import static org.kevinkib.cards.testhelpers.CardFixtures.anyCard;
 
 public final class PlayerBuilder {
     private Integer id;
@@ -24,7 +31,12 @@ public final class PlayerBuilder {
     }
 
     public PlayerBuilder withEmptyHand() {
-        this.hand = new Hand();
+        this.hand = HandBuilder.aHand().withNoCards().build();
+        return this;
+    }
+
+    public PlayerBuilder withNonEmptyHand() {
+        this.hand = HandBuilder.aHand().withCards(Collections.singletonList(anyCard())).build();
         return this;
     }
 

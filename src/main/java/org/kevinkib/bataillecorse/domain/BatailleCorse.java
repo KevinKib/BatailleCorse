@@ -8,7 +8,7 @@ import org.kevinkib.cards.domain.*;
 
 import java.util.ArrayList;
 import java.util.List;
-
+// TODO: Handle case where p2 has no cards during honour pile, and p3 has to take over
 public class BatailleCorse {
 
     private List<Player> players;
@@ -29,21 +29,17 @@ public class BatailleCorse {
         this.slapRules = slapRules;
         this.penality = penality;
         this.indexHandler = new IndexHandler(currentPlayer, getNbPlayers(), pile);
-        this.result = updateGameResult();
+        this.result = Result.update(players, pile);
     }
 
-    public void send(Player player) throws NotPlayersTurnException, FullCentralPileException {
+    public void send(Player player) throws NotPlayersTurnException, FullCentralPileException, FinishedGameException {
+        if (isFinished()) {
+            throw new FinishedGameException();
+        }
+
         if (!getCurrentPlayer().equals(player)) {
             throw new NotPlayersTurnException(player);
         }
-
-        // TODO: If the current player has no cards, it's true that he cannot play, but it mostly means
-        // he isn't the current player. That means either the game is finished or the current player failed to update
-        // Either way, replace condition with something else
-
-//        if (!getCurrentPlayer().hasAnyCards()) {
-//            throw new PlayerCannotPlayException();
-//        }
 
         if (pile.isFull()) {
             throw new FullCentralPileException();
@@ -61,7 +57,11 @@ public class BatailleCorse {
         }
     }
 
-    public void slap(Player player) throws CannotSlapIfNoCardsInPileException {
+    public void slap(Player player) throws CannotSlapIfNoCardsInPileException, FinishedGameException {
+        if (isFinished()) {
+            throw new FinishedGameException();
+        }
+
         if (pile.isEmpty()) {
             throw new CannotSlapIfNoCardsInPileException();
         }
@@ -71,14 +71,18 @@ public class BatailleCorse {
             player.addCardsFromPile(cards);
 
             indexHandler.setCurrentPlayer(players.indexOf(player));
-            result = updateGameResult();
+            result = Result.update(players, pile);
         }
         else {
             penality.apply(player, pile);
         }
     }
 
-    public void grab(Player player) throws CannotGrabException {
+    public void grab(Player player) throws CannotGrabException, FinishedGameException {
+        if (isFinished()) {
+            throw new FinishedGameException();
+        }
+
         if (!pile.isGrabbableByPlayer(player)) {
             throw new CannotGrabException(player);
         }
@@ -86,7 +90,7 @@ public class BatailleCorse {
         List<Card> cards = pile.clearAndReturnCards();
         player.addCardsFromPile(cards);
 
-        result = updateGameResult();
+        result = Result.update(players, pile);
     }
 
     public Card getPileTopCard() {
@@ -117,6 +121,10 @@ public class BatailleCorse {
         return players.size();
     }
 
+    public boolean isFinished() {
+        return result.isFinished();
+    }
+
     private void initializePlayersAndHands(int nbPlayers) {
         players = new ArrayList<>();
         CardsController cardsController = new CardsController();
@@ -142,27 +150,7 @@ public class BatailleCorse {
         slapRules = SlapRules.DEFAULT;
         penality = new PutCardsUnderPile(2);
         indexHandler = new IndexHandler(0, getNbPlayers(), pile);
-        result = updateGameResult();
-    }
-
-    private Result updateGameResult() {
-        if (!pile.isEmpty()) {
-            return Result.ONGOING;
-        }
-
-        List<Player> playersWithCards = players.stream().filter(Player::hasAnyCards).toList();
-
-        if (playersWithCards.isEmpty()) {
-            throw new IllegalStateException("Cannot have no players with no cards when pile is empty");
-        }
-
-        if (playersWithCards.size() == 1) {
-            Player winningPlayer = playersWithCards.get(0);
-            return new Result(winningPlayer);
-        }
-        else {
-            return Result.ONGOING;
-        }
+        result = Result.update(players, pile);
     }
 
 }

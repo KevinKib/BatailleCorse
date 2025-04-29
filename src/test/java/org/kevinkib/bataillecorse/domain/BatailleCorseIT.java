@@ -1,25 +1,19 @@
 package org.kevinkib.bataillecorse.domain;
 
-import org.hamcrest.Description;
-import org.hamcrest.Matcher;
-import org.hamcrest.TypeSafeMatcher;
 import org.junit.jupiter.api.Test;
 import org.kevinkib.bataillecorse.domain.penality.PutCardsUnderPileBuilder;
 import org.kevinkib.bataillecorse.domain.slaprules.*;
-import org.kevinkib.cards.domain.Card;
-import org.kevinkib.cards.domain.french.FrenchRank;
 import org.kevinkib.cards.testhelpers.HandBuilder;
 
 import java.util.Arrays;
-import java.util.List;
 
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.kevinkib.cards.testhelpers.CardBuilder.aCard;
-import static org.kevinkib.bataillecorse.domain.CardRanksMatcher.areCardsOfRanks;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.kevinkib.cards.domain.french.FrenchRank.*;
+import static org.kevinkib.cards.testhelpers.CardFixtures.CardRanksMatcher.areCardsOfRanks;
 
 public class BatailleCorseIT {
 
@@ -156,46 +150,4 @@ public class BatailleCorseIT {
 
         });
     }
-}
-
-class CardRanksMatcher extends TypeSafeMatcher<List<Card>> {
-
-    private final List<FrenchRank> expectedRanks;
-
-    public CardRanksMatcher(List<FrenchRank> expectedRanks) {
-        this.expectedRanks = expectedRanks;
-    }
-
-    @Override
-    public boolean matchesSafely(List<Card> cards) {
-
-        if (cards == null || expectedRanks == null || cards.size() != expectedRanks.size()) {
-            return false;
-        }
-
-        for (int i = 0; i < cards.size(); ++i) {
-            Card card = cards.get(i);
-            FrenchRank rank = expectedRanks.get(i);
-
-            if (card.getRank() == null || !card.getRank().equals(rank)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-//    @Override
-//    protected void describeMismatchSafely(List<Card> item, Description mismatchDescription) {
-//        mismatchDescription.appendText("a");
-//    }
-
-    public void describeTo(Description description) {
-        description.appendText("same ranks");
-    }
-
-    public static Matcher<List<Card>> areCardsOfRanks(FrenchRank... expectedRanks) {
-        return new CardRanksMatcher(Arrays.stream(expectedRanks).toList());
-    }
-
 }

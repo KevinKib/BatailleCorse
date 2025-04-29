@@ -9,6 +9,10 @@ import java.util.List;
 
 public class PlayerFixtures {
 
+    public static Player anyPlayer() {
+        return PlayerBuilder.aPlayer().withEmptyHand().build();
+    }
+
     public static List<Player> createNumberOfPlayers(int nbPlayers) {
         List<Player> players = new ArrayList<>();
 

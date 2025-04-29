@@ -20,10 +20,10 @@ import java.util.Arrays;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.kevinkib.bataillecorse.domain.BatailleCorseFixtures.createFinishedGame;
 import static org.kevinkib.bataillecorse.domain.BatailleCorseTest.InitializationTest.IsEveryCardHidden.everyCardHidden;
 import static org.kevinkib.bataillecorse.domain.CentralPileFixtures.createCentralPileWithNumberOfCards;
-import static org.kevinkib.bataillecorse.domain.PlayerFixtures.createNumberOfPlayers;
-import static org.kevinkib.bataillecorse.domain.PlayerFixtures.createNumberOfPlayersWithAnyCards;
+import static org.kevinkib.bataillecorse.domain.PlayerFixtures.*;
 import static org.mockito.Mockito.*;
 
 class BatailleCorseTest {
@@ -80,7 +80,7 @@ class BatailleCorseTest {
                 description.appendText("does not have every card hidden");
             }
 
-            public static Matcher everyCardHidden() {
+            public static Matcher<Hand> everyCardHidden() {
                 return new IsEveryCardHidden();
             }
         }
@@ -90,11 +90,10 @@ class BatailleCorseTest {
     class SendTest {
 
         private BatailleCorse batailleCorse;
-        private int nbPlayers;
 
         @BeforeEach
         public void beforeEach() {
-            nbPlayers = 2;
+            int nbPlayers = 2;
             batailleCorse = BatailleCorseBuilder.aBatailleCorse()
                     .withNbPlayers(nbPlayers)
                     .buildAndInitialize();
@@ -145,10 +144,8 @@ class BatailleCorseTest {
         public void givenFullPile_thenThrowFullCentralPileException() {
             batailleCorse = BatailleCorseBuilder.aBatailleCorse()
                     .withPlayers(Arrays.asList(
-                        PlayerBuilder.aPlayer()
-                            .withHand(HandFixtures.createHandWithCards(CardFixtures.anyCard()))
-                            .build(),
-                        PlayerBuilder.aPlayer().withEmptyHand().build()
+                        PlayerBuilder.aPlayer().withNonEmptyHand().build(),
+                        PlayerBuilder.aPlayer().withNonEmptyHand().build()
                     ))
                     .withCentralPile(CentralPileFixtures.createWithState(CentralPileState.FULL))
                     .build();
@@ -160,6 +157,14 @@ class BatailleCorseTest {
             });
         }
 
+        @Test
+        public void givenFinishedGame_thenThrowFinishedGameException() {
+            batailleCorse = createFinishedGame();
+
+            assertThrows(FinishedGameException.class, () -> {
+                batailleCorse.send(PlayerBuilder.aPlayer().build());
+            });
+        }
     }
 
     @Nested
@@ -255,6 +260,15 @@ class BatailleCorseTest {
             assertThat(batailleCorse.getCurrentPlayer(), is(player));
         }
 
+        @Test
+        public void givenFinishedGame_thenThrowFinishedGameException() {
+            batailleCorse = createFinishedGame();
+
+            assertThrows(FinishedGameException.class, () -> {
+                batailleCorse.slap(PlayerBuilder.aPlayer().build());
+            });
+        }
+
     }
 
     @Nested
@@ -278,7 +292,10 @@ class BatailleCorseTest {
         public void givenNotGrabbablePile_thenThrowCannotGrabException() {
             batailleCorse = BatailleCorseBuilder.aBatailleCorse()
                     .withCentralPile(CentralPileFixtures.createEmptyCentralPile())
-                    .withPlayers(Arrays.asList(player))
+                    .withPlayers(Arrays.asList(
+                            player,
+                            PlayerBuilder.aPlayer().withNonEmptyHand().build()
+                    ))
                     .build();
 
             assertThrows(CannotGrabException.class, () -> {
@@ -320,57 +337,14 @@ class BatailleCorseTest {
             assertThat(player.getHandSize(), is(pileSize + nbInitialCardsForPlayer));
         }
 
-    }
-
-    @Nested
-    class GetWinnerTest {
-
         @Test
-        public void givenNonEmptyPile_thenReturnsNull() {
-            batailleCorse = BatailleCorseBuilder.aBatailleCorse()
-                    .withPlayers(PlayerFixtures.createNumberOfPlayers(2))
-                    .withCentralPile(CentralPileFixtures.createCentralPileThenAddCards(CardFixtures.anyCard()))
-                    .build();
+        public void givenFinishedGame_thenThrowFinishedGameException() {
+            batailleCorse = createFinishedGame();
 
-            assertNull(batailleCorse.getWinner());
+            assertThrows(FinishedGameException.class, () -> {
+                batailleCorse.grab(PlayerBuilder.aPlayer().build());
+            });
         }
-
-        @Test
-        public void givenMultiplePlayersWithCards_thenReturnsNull() {
-            batailleCorse = BatailleCorseBuilder.aBatailleCorse()
-                    .withPlayers(Arrays.asList(
-                            PlayerBuilder.aPlayer().withId(1).withHand(
-                                    HandFixtures.createHandWithCards(CardFixtures.anyCard())
-                            ).build(),
-                            PlayerBuilder.aPlayer().withId(2).withHand(
-                                    HandFixtures.createHandWithCards(CardFixtures.anyCard())
-                            ).build()
-                    ))
-                    .withCentralPile(CentralPileFixtures.createEmptyCentralPile())
-                    .build();
-
-            assertNull(batailleCorse.getWinner());
-        }
-
-        @Test
-        public void givenOnlyOnePlayerWithCards_thenReturnsPlayer() {
-            Player winningPlayer = PlayerBuilder.aPlayer().withId(1).withHand(
-                    HandFixtures.createHandWithCards(CardFixtures.anyCard())
-            ).build();
-
-            batailleCorse = BatailleCorseBuilder.aBatailleCorse()
-                    .withPlayers(Arrays.asList(
-                            winningPlayer,
-                            PlayerBuilder.aPlayer().withId(2).withHand(
-                                    HandFixtures.createHandWithNoCards()
-                            ).build()
-                    ))
-                    .withCentralPile(CentralPileFixtures.createEmptyCentralPile())
-                    .build();
-
-            assertThat(batailleCorse.getWinner(), is(winningPlayer));
-        }
-
 
     }
 
