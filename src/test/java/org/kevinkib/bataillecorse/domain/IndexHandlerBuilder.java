@@ -1,9 +1,11 @@
 package org.kevinkib.bataillecorse.domain;
 
+import java.util.List;
+
 public final class IndexHandlerBuilder {
 
     private Integer defaultIndex;
-    private Integer nbPlayers;
+    private List<Player> players;
     private CentralPile pile;
 
     private IndexHandlerBuilder() {
@@ -19,7 +21,12 @@ public final class IndexHandlerBuilder {
     }
 
     public IndexHandlerBuilder withNbPlayers(Integer nbPlayers) {
-        this.nbPlayers = nbPlayers;
+        this.players = PlayerFixtures.createNumberOfPlayers(nbPlayers);
+        return this;
+    }
+
+    public IndexHandlerBuilder withPlayers(List<Player> players) {
+        this.players = players;
         return this;
     }
 
@@ -29,6 +36,6 @@ public final class IndexHandlerBuilder {
     }
 
     public IndexHandler build() {
-        return new IndexHandler(defaultIndex, nbPlayers, pile);
+        return new IndexHandler(defaultIndex, players, pile);
     }
 }

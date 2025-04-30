@@ -14,6 +14,10 @@ public class PlayerFixtures {
     }
 
     public static List<Player> createNumberOfPlayers(int nbPlayers) {
+        return createNumberOfPlayersWithNoCards(nbPlayers);
+    }
+
+    public static List<Player> createNumberOfPlayersWithNoCards(int nbPlayers) {
         List<Player> players = new ArrayList<>();
 
         for (int i = 0; i < nbPlayers; ++i) {

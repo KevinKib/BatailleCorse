@@ -1,5 +1,6 @@
 package org.kevinkib.bataillecorse.domain;
 
+import org.kevinkib.cards.domain.Card;
 import org.kevinkib.cards.domain.Hand;
 import org.kevinkib.cards.testhelpers.CardFixtures;
 import org.kevinkib.cards.testhelpers.HandBuilder;
@@ -27,6 +28,14 @@ public final class PlayerBuilder {
 
     public PlayerBuilder withHand(Hand hand) {
         this.hand = hand;
+        return this;
+    }
+
+    public PlayerBuilder withCards(Card... cards) {
+        this.hand = HandBuilder.aHand()
+                .withCards(cards)
+                .build();
+
         return this;
     }
 

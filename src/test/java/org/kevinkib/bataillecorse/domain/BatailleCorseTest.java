@@ -11,6 +11,8 @@ import org.kevinkib.bataillecorse.domain.slaprules.SlapRulesFixtures;
 import org.kevinkib.cards.domain.Card;
 import org.kevinkib.cards.domain.CardPileState;
 import org.kevinkib.cards.domain.Hand;
+import org.kevinkib.cards.domain.french.FrenchRank;
+import org.kevinkib.cards.testhelpers.CardBuilder;
 import org.kevinkib.cards.testhelpers.CardFixtures;
 import org.kevinkib.cards.testhelpers.HandBuilder;
 import org.kevinkib.cards.testhelpers.HandFixtures;
@@ -24,6 +26,7 @@ import static org.kevinkib.bataillecorse.domain.BatailleCorseFixtures.createFini
 import static org.kevinkib.bataillecorse.domain.BatailleCorseTest.InitializationTest.IsEveryCardHidden.everyCardHidden;
 import static org.kevinkib.bataillecorse.domain.CentralPileFixtures.createCentralPileWithNumberOfCards;
 import static org.kevinkib.bataillecorse.domain.PlayerFixtures.*;
+import static org.kevinkib.cards.testhelpers.CardFixtures.anyCard;
 import static org.mockito.Mockito.*;
 
 class BatailleCorseTest {
@@ -163,6 +166,38 @@ class BatailleCorseTest {
 
             assertThrows(FinishedGameException.class, () -> {
                 batailleCorse.send(PlayerBuilder.aPlayer().build());
+            });
+        }
+
+        @Test
+        public void givenThreePlayers_anHonourCardInPile_andAPlayerDoesNotHaveEnoughCards_thenNextPlayerFinishes() {
+            Player player0 = PlayerBuilder.aPlayer().withId(0).withCards(
+                    CardBuilder.aCard().withRank(FrenchRank.ACE).build()
+            ).build();
+            Player player1 = PlayerBuilder.aPlayer().withId(1).withCards(
+                    anyCard(), anyCard()
+            ).build();
+            Player player2 = PlayerBuilder.aPlayer().withId(2).withCards(
+                    CardFixtures.createNumberOfCards(5).toArray(new Card[]{})
+            ).build();
+
+            batailleCorse = BatailleCorseBuilder.aBatailleCorse()
+                    .withPlayers(Arrays.asList(
+                            player0, player1, player2
+                    ))
+                    .withCentralPile(CentralPileFixtures.createEmptyCentralPile())
+                    .build();
+
+            assertDoesNotThrow(() -> {
+                batailleCorse.send(player0); // Ace
+
+                batailleCorse.send(player1);
+                batailleCorse.send(player1);
+
+                assertThat(player1.hasAnyCards(), is(false));
+                assertThat(batailleCorse.getCurrentPlayer(), is(player2));
+
+                batailleCorse.send(player2);
             });
         }
     }

@@ -8,7 +8,7 @@ import org.kevinkib.cards.domain.*;
 
 import java.util.ArrayList;
 import java.util.List;
-// TODO: Handle case where p2 has no cards during honour pile, and p3 has to take over
+
 public class BatailleCorse {
 
     private List<Player> players;
@@ -28,7 +28,7 @@ public class BatailleCorse {
         this.pile = pile;
         this.slapRules = slapRules;
         this.penality = penality;
-        this.indexHandler = new IndexHandler(currentPlayer, getNbPlayers(), pile);
+        this.indexHandler = new IndexHandler(currentPlayer, players, pile);
         this.result = Result.update(players, pile);
     }
 
@@ -149,7 +149,7 @@ public class BatailleCorse {
         pile = new CentralPile(new Pile(), CentralPileState.NEUTRAL);
         slapRules = SlapRules.DEFAULT;
         penality = new PutCardsUnderPile(2);
-        indexHandler = new IndexHandler(0, getNbPlayers(), pile);
+        indexHandler = new IndexHandler(0, players, pile);
         result = Result.update(players, pile);
     }
 
