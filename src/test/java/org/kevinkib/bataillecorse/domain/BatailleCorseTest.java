@@ -15,7 +15,6 @@ import org.kevinkib.cards.domain.french.FrenchRank;
 import org.kevinkib.cards.testhelpers.CardBuilder;
 import org.kevinkib.cards.testhelpers.CardFixtures;
 import org.kevinkib.cards.testhelpers.HandBuilder;
-import org.kevinkib.cards.testhelpers.HandFixtures;
 
 import java.util.Arrays;
 
@@ -26,6 +25,9 @@ import static org.kevinkib.bataillecorse.domain.BatailleCorseFixtures.createFini
 import static org.kevinkib.bataillecorse.domain.BatailleCorseTest.InitializationTest.IsEveryCardHidden.everyCardHidden;
 import static org.kevinkib.bataillecorse.domain.CentralPileFixtures.createCentralPileWithNumberOfCards;
 import static org.kevinkib.bataillecorse.domain.PlayerFixtures.*;
+import static org.kevinkib.bataillecorse.domain.slaprules.SlapRulesFixtures.alwaysApplyingSlapRules;
+import static org.kevinkib.bataillecorse.domain.slaprules.SlapRulesFixtures.anySlapRules;
+import static org.kevinkib.cards.domain.french.FrenchRank.JACK;
 import static org.kevinkib.cards.testhelpers.CardFixtures.anyCard;
 import static org.mockito.Mockito.*;
 
@@ -186,6 +188,7 @@ class BatailleCorseTest {
                             player0, player1, player2
                     ))
                     .withCentralPile(CentralPileFixtures.createEmptyCentralPile())
+                    .withSlapRules(anySlapRules())
                     .build();
 
             assertDoesNotThrow(() -> {
@@ -236,8 +239,8 @@ class BatailleCorseTest {
             CentralPile pile = mock(CentralPile.class);
 
             batailleCorse = BatailleCorseBuilder.aBatailleCorse()
-                    .withPlayers(createNumberOfPlayers(2))
-                    .withSlapRules(SlapRulesFixtures.neverApplyingRules())
+                    .withPlayers(createNumberOfPlayersWithAnyCards(2))
+                    .withSlapRules(SlapRulesFixtures.neverApplyingSlapRules())
                     .withPenality(penality)
                     .withCentralPile(pile)
                     .build();
@@ -258,8 +261,8 @@ class BatailleCorseTest {
             CentralPile pile = createCentralPileWithNumberOfCards(nbCards);
 
             batailleCorse = BatailleCorseBuilder.aBatailleCorse()
-                    .withPlayers(createNumberOfPlayers(2))
-                    .withSlapRules(SlapRulesFixtures.alwaysApplyingRules())
+                    .withPlayers(createNumberOfPlayersWithOneCard(2))
+                    .withSlapRules(alwaysApplyingSlapRules())
                     .withCentralPile(pile)
                     .build();
 
@@ -269,8 +272,9 @@ class BatailleCorseTest {
                 batailleCorse.slap(player);
             });
 
+            int expectedNumberOfCards = nbCards + 1;
             assertThat(pile.isEmpty(), is(true));
-            assertThat(player.getHandSize(), is(5));
+            assertThat(player.getHandSize(), is(expectedNumberOfCards));
         }
 
         @Test
@@ -280,8 +284,8 @@ class BatailleCorseTest {
             CentralPile pile = createCentralPileWithNumberOfCards(nbCards);
 
             batailleCorse = BatailleCorseBuilder.aBatailleCorse()
-                    .withPlayers(createNumberOfPlayers(3))
-                    .withSlapRules(SlapRulesFixtures.alwaysApplyingRules())
+                    .withPlayers(createNumberOfPlayersWithAnyCards(3))
+                    .withSlapRules(alwaysApplyingSlapRules())
                     .withCurrentPlayer(0)
                     .withCentralPile(pile)
                     .build();
@@ -343,6 +347,7 @@ class BatailleCorseTest {
             batailleCorse = BatailleCorseBuilder.aBatailleCorse()
                     .withCentralPile(CentralPileFixtures.createCentralPileGrabbableByPlayer(player))
                     .withPlayers(Arrays.asList(player))
+                    .withSlapRules(anySlapRules())
                     .build();
 
             int pileSize = batailleCorse.getPileSize();
@@ -360,6 +365,7 @@ class BatailleCorseTest {
             batailleCorse = BatailleCorseBuilder.aBatailleCorse()
                     .withCentralPile(CentralPileFixtures.createCentralPileGrabbableByPlayer(player))
                     .withPlayers(Arrays.asList(player))
+                    .withSlapRules(anySlapRules())
                     .build();
 
             int pileSize = batailleCorse.getPileSize();
@@ -379,6 +385,32 @@ class BatailleCorseTest {
             assertThrows(FinishedGameException.class, () -> {
                 batailleCorse.grab(PlayerBuilder.aPlayer().build());
             });
+        }
+
+        @Test
+        public void givenGrabbablePile_thenNextPlayerIsPlayerThatGrabbed() {
+
+            Player player1 = PlayerBuilder.aPlayer().withId(1).withCardsWithRanks(JACK).build();
+            Player player2 = PlayerBuilder.aPlayer().withId(2).withCards(anyCard()).build();
+            Player player3 = PlayerBuilder.aPlayer().withId(3).withCards(anyCard()).build();
+
+            batailleCorse = BatailleCorseBuilder.aBatailleCorse()
+                    .withCentralPile(CentralPileFixtures.createEmptyCentralPile())
+                    .withPlayers(Arrays.asList(
+                            player1, player2, player3)
+                    )
+                    .withSlapRules(anySlapRules())
+                    .build();
+
+
+            assertDoesNotThrow(() -> {
+                batailleCorse.send(player1); // Jack
+                batailleCorse.send(player2); // Any
+
+                batailleCorse.grab(player1);
+            });
+
+            assertThat(batailleCorse.getCurrentPlayer(), is(player1));
         }
 
     }

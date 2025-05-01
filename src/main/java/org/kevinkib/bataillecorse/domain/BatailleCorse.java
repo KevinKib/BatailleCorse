@@ -29,7 +29,7 @@ public class BatailleCorse {
         this.slapRules = slapRules;
         this.penality = penality;
         this.indexHandler = new IndexHandler(currentPlayer, players, pile);
-        this.result = Result.update(players, pile);
+        this.result = Result.update(players, pile, slapRules);
     }
 
     public void send(Player player) throws NotPlayersTurnException, FullCentralPileException, FinishedGameException {
@@ -49,6 +49,7 @@ public class BatailleCorse {
             Card card = player.removeCardOnTop();
             pile.add(card, player);
 
+            result = Result.update(players, pile, slapRules);
             indexHandler.update();
         } catch (NoCardsException e) {
             throw new IllegalStateException("A player should always have cards after the no cards check.");
@@ -71,11 +72,11 @@ public class BatailleCorse {
             player.addCardsFromPile(cards);
 
             indexHandler.setCurrentPlayer(players.indexOf(player));
-            result = Result.update(players, pile);
         }
         else {
             penality.apply(player, pile);
         }
+        result = Result.update(players, pile, slapRules);
     }
 
     public void grab(Player player) throws CannotGrabException, FinishedGameException {
@@ -90,7 +91,8 @@ public class BatailleCorse {
         List<Card> cards = pile.clearAndReturnCards();
         player.addCardsFromPile(cards);
 
-        result = Result.update(players, pile);
+        indexHandler.setCurrentPlayer(players.indexOf(player));
+        result = Result.update(players, pile, slapRules);
     }
 
     public Card getPileTopCard() {
@@ -146,11 +148,11 @@ public class BatailleCorse {
     }
 
     private void initializeData() {
-        pile = new CentralPile(new Pile(), CentralPileState.NEUTRAL);
+        pile = new CentralPile(new Pile(), CentralPileState.NEUTRAL, players);
         slapRules = SlapRules.DEFAULT;
         penality = new PutCardsUnderPile(2);
         indexHandler = new IndexHandler(0, players, pile);
-        result = Result.update(players, pile);
+        result = Result.update(players, pile, slapRules);
     }
 
 }

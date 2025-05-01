@@ -5,11 +5,16 @@ import org.kevinkib.cards.domain.Pile;
 import org.kevinkib.cards.domain.french.FrenchRank;
 import org.kevinkib.cards.testhelpers.PileFixtures;
 
+import java.util.Arrays;
+import java.util.List;
+
 public final class CentralPileBuilder {
     private Pile pile;
     private CentralPileState state;
+    private List<Player> players;
 
     private CentralPileBuilder() {
+        pile = PileFixtures.createEmptyPile();
     }
 
     public static CentralPileBuilder aCentralPile() {
@@ -46,7 +51,17 @@ public final class CentralPileBuilder {
         return this;
     }
 
+    public CentralPileBuilder withPlayers(List<Player> players) {
+        this.players = players;
+        return this;
+    }
+
+    public CentralPileBuilder withPlayers(Player... players) {
+        this.players = Arrays.stream(players).toList();
+        return this;
+    }
+
     public CentralPile build() {
-        return new CentralPile(pile, state);
+        return new CentralPile(pile, state, players);
     }
 }

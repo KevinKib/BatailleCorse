@@ -17,13 +17,15 @@ public class CentralPile implements PileSubscriber {
     private Integer nbCardsSinceLastHonourCard;
     private HonourCard lastHonourCard;
     private Player playerThatAddedLastHonourCard;
+    private List<Player> players;
 
-    public CentralPile(Pile pile, CentralPileState state) {
+    public CentralPile(Pile pile, CentralPileState state, List<Player> players) {
         super();
         this.pile = pile;
         this.state = state;
         this.nbCardsSinceLastHonourCard = 0;
         this.playerThatAddedLastHonourCard = null;
+        this.players = players;
 
         pile.subscribe(this);
     }

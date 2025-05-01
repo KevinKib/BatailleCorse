@@ -65,7 +65,7 @@ public class CentralPileFixtures {
 
     public static CentralPile createCentralPileGrabbableByPlayer(Player player) {
         CentralPile pile = CentralPileFixtures.createEmptyCentralPile();
-        Player otherPlayer = PlayerBuilder.aPlayer().withId(2).build();
+        Player otherPlayer = PlayerBuilder.aPlayer().build();
         Card jackCard = CardBuilder.aCard().withRank(FrenchRank.JACK).build();
         Card otherCard = CardBuilder.aCard().build();
 
