@@ -234,26 +234,6 @@ class CentralPileTest {
             assertThat(pile.isGrabbableByPlayer(player1), is(false));
         }
 
-        // TODO: remove
-//        @Test
-//        public void givenNotFullPile_withHonourCard_andOtherPlayersHaveNoCards_thenIsGrabbableByPlayer_thatAddedHonourCard() {
-//
-//            Player player1 = PlayerBuilder.aPlayer().withId(1).withCards(anyCard()).build();
-//            Player player2 = PlayerBuilder.aPlayer().withId(2).withEmptyHand().build();
-//            CentralPile pile = CentralPileBuilder.aCentralPile()
-//                    .withPlayers(player1, player2)
-//                    .withState(NEUTRAL)
-//                    .build();
-//            Card honourCard = CardBuilder.aCard().withRank(FrenchRank.ACE).build();
-//
-//            assertDoesNotThrow(() -> {
-//                pile.add(honourCard, player1);
-//                pile.add(anyCard(), player2);
-//            });
-//
-//            assertThat(pile.isGrabbableByPlayer(player1), is(true));
-//        }
-
         @Test
         public void givenFullPile_withHonourCard_thenIsNotGrabbableByPlayer_thatDidNotAddHonourCard() {
 
