@@ -1,7 +1,6 @@
 package org.kevinkib.bataillecorse.domain;
 
 import org.junit.jupiter.api.Test;
-import org.kevinkib.cards.testhelpers.CardFixtures;
 import org.kevinkib.cards.testhelpers.HandFixtures;
 
 import java.util.Arrays;

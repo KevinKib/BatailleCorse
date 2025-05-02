@@ -1,7 +1,6 @@
 package org.kevinkib.bataillecorse;
 
 import org.kevinkib.bataillecorse.domain.BatailleCorse;
-import org.kevinkib.bataillecorse.domain.NotPlayersTurnException;
 import org.kevinkib.bataillecorse.domain.Player;
 
 public class BatailleCorseController {

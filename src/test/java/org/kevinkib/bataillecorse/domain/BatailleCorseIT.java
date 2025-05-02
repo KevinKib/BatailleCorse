@@ -439,13 +439,6 @@ public class BatailleCorseIT {
             batailleCorse.send(player1); // Ace
             batailleCorse.send(player3); // Six
 
-//            assertThat(player1.getCards(), areCardsOfRanks(
-//                    TWO, THREE, THREE,
-//                    KING, ACE, EIGHT, SEVEN, TWO, THREE, EIGHT, FOUR, TEN, QUEEN, JACK, TWO,
-//                    JACK, FIVE, SEVEN, NINE, FIVE, FIVE, THREE, SEVEN, SEVEN,
-//                    KING, JACK, ACE, SIX
-//            ));
-
             assertThat(player3.hasAnyCards(), is(false));
 
             assertThat(batailleCorse.isFinished(), is(true));

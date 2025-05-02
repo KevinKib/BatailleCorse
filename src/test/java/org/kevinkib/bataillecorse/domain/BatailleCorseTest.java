@@ -17,6 +17,7 @@ import org.kevinkib.cards.testhelpers.CardFixtures;
 import org.kevinkib.cards.testhelpers.HandBuilder;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
@@ -33,7 +34,6 @@ import static org.mockito.Mockito.*;
 
 class BatailleCorseTest {
 
-    private BatailleCorse batailleCorse;
     private int nbPlayers;
 
     @Nested
@@ -46,7 +46,7 @@ class BatailleCorseTest {
 
         @Test
         public void whenInitializing_thenGiveHandsToPlayers_withHiddenCards() {
-            batailleCorse = new BatailleCorse(nbPlayers);
+            BatailleCorse batailleCorse = new BatailleCorse(nbPlayers);
 
             assertNotNull(batailleCorse.getPlayerByIndex(0).getHand());
             assertNotNull(batailleCorse.getPlayerByIndex(1).getHand());
@@ -346,7 +346,7 @@ class BatailleCorseTest {
         public void givenGrabbablePile_thenClearPileAndGiveCardsToPlayer() {
             batailleCorse = BatailleCorseBuilder.aBatailleCorse()
                     .withCentralPile(CentralPileFixtures.createCentralPileGrabbableByPlayer(player))
-                    .withPlayers(Arrays.asList(player))
+                    .withPlayers(Collections.singletonList(player))
                     .withSlapRules(anySlapRules())
                     .build();
 
@@ -364,7 +364,7 @@ class BatailleCorseTest {
         public void givenGrabbablePile_thenReverseCardsFromPileInHand() {
             batailleCorse = BatailleCorseBuilder.aBatailleCorse()
                     .withCentralPile(CentralPileFixtures.createCentralPileGrabbableByPlayer(player))
-                    .withPlayers(Arrays.asList(player))
+                    .withPlayers(Collections.singletonList(player))
                     .withSlapRules(anySlapRules())
                     .build();
 

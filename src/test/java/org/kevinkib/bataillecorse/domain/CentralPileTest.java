@@ -217,12 +217,10 @@ class CentralPileTest {
         }
 
         @Test
-        public void givenNotFullPile_withHonourCard_andAtLeastAnotherPlayerHasCard_thenIsNotGrabbableByPlayer_thatAddedHonourCard() {
+        public void givenNotFullPile_withHonourCard_thenIsNotGrabbableByPlayer_thatAddedHonourCard() {
 
             Player player1 = PlayerBuilder.aPlayer().withId(1).withCards(anyCard()).build();
-            Player player2 = PlayerBuilder.aPlayer().withId(2).withCards(anyCard()).build();
             CentralPile pile = CentralPileBuilder.aCentralPile()
-                    .withPlayers(player1, player2)
                     .withState(NEUTRAL)
                     .build();
             Card honourCard = CardBuilder.aCard().withRank(FrenchRank.JACK).build();

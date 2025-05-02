@@ -148,7 +148,7 @@ public class BatailleCorse {
     }
 
     private void initializeData() {
-        pile = new CentralPile(new Pile(), CentralPileState.NEUTRAL, players);
+        pile = new CentralPile(new Pile(), CentralPileState.NEUTRAL);
         slapRules = SlapRules.DEFAULT;
         penality = new PutCardsUnderPile(2);
         indexHandler = new IndexHandler(0, players, pile);
