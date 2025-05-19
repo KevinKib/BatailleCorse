@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  spring-backend:
+    image: maven:3.9.6-eclipse-temurin-17
+    container_name: bataillecorse-backend
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./:/app
+      - /mnt/c/Users/kevin/.m2/repository:/root/.m2/repository
+#      - /home/kevin/.m2/repository:/root/.m2
+    working_dir: /app
+    command: ["mvn", "-Dmaven.repo.local=/root/.m2/repository", "spring-boot:run"]
+#    command: ["mvn", "spring-boot:run"]
+#    command: ["ls", "-la"]
