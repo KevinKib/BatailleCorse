@@ -1,44 +1,19 @@
-<script setup></script>
+<script setup>
+import { Button, SelectButton } from 'primevue';
+
+</script>
 <template>
-  <h1>Test WebSocket Vue</h1>
+  <h1 class="text-3x1 font-bold underline">Test WebSocket Vue</h1>
+
+  <h2>Player 1</h2>
+  <Button type="submit" severity="primary" label="Send" />
+  <Button type="submit" severity="danger" label="Hit" />
+
 </template>
 
-<!-- <script setup>
-import { onMounted } from 'vue'
-import { Client } from '@stomp/stompjs'
-import SockJS from 'sockjs-client'
+<style>
+@import "tailwindcss";
+@import "tailwindcss-primeui";
 
-onMounted(() => {
-  console.log("🧩 WebSocket setup (Vue)")
 
-  const client = new Client({
-    // webSocketFactory: () => new SockJS(`${import.meta.env.VITE_BACKEND_URL}/connect`),
-    // webSocketFactory: () => new SockJS('http://host.docker.internal:8080/connect'),
-    webSocketFactory: () => new SockJS('/connect'),
-    reconnectDelay: 5000,
-    debug: (str) => console.log(`[STOMP] ${str}`),
-    onConnect: () => {
-      console.log('✅ Connected to STOMP')
-
-      client.subscribe('/topic/greetings', (message) => {
-        console.log('📨 Received:', message.body)
-      })
-
-      client.publish({
-        destination: '/app/hello',
-        body: 'Hello from Vue with @stomp/stompjs',
-      })
-    },
-    onStompError: (frame) => {
-      console.error('❌ STOMP Error:', frame.headers['message'])
-      console.error('Details:', frame.body)
-    }
-  })
-
-  client.activate()
-})
-</script>
-
-<template>
-  <h1>Test WebSocket Vue</h1>
-</template> -->
+</style>
