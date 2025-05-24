@@ -1,31 +1,65 @@
 import SockJS from 'sockjs-client/dist/sockjs';
 import { Client } from '@stomp/stompjs';
+import { useBatailleCorseStore } from '../state/BatailleCorse.store';
+
+
 
 class WebSocketService {
 
+  private readonly enableLogs = false;
+  private readonly url = 'http://127.0.0.1:8080/connect';
+  private readonly windows_url = 'http://172.31.112.1:8080/connect';
+
+  private client : Client; 
+
   public init() {
-    console.log("Creating SockJS...");
+    const batailleCorse = useBatailleCorseStore();
+
+    this.log("Creating SockJS...");
     const factory = () => {
-      console.log("Creating SockJS connection to http://127.0.0.1:8080/connect");
-      return new SockJS('http://127.0.0.1:8080/connect');
-      // return new SockJS('http://172.31.112.1:8080/connect');
+      this.log("Creating SockJS connection to "+this.url);
+      return new SockJS(this.windows_url);
     };
 
     const stompClient = new Client({
       brokerURL: undefined,
       webSocketFactory: factory,
-      debug: (str) => console.log("[STOMP DEBUG]", str),
+      debug: (str) => this.log("[STOMP DEBUG]", str),
       onConnect: (frame) => {
-        console.log('[STOMP] Connected:', frame);
+        this.log('[STOMP] Connected:', frame);
+
+        stompClient.subscribe('/topic/game', message => {
+          const response = JSON.parse(message.body);
+          batailleCorse.onResponse(response);
+        });
+
       },
       onStompError: (frame) => {
-        console.error('[STOMP] Error:', frame.headers['message']);
-        console.error('[STOMP] Details:', frame.body);
+        this.error('[STOMP] Error:', frame.headers['message']);
+        this.error('[STOMP] Details:', frame.body);
       },
     });
 
-    console.log("Activating STOMP client...");
+    this.log("Activating STOMP client...");
     stompClient.activate();
+
+    this.client = stompClient;
+  }
+
+  public publish(args: any) {
+    this.client.publish(args);
+  }
+
+  private log(message?: any, ...optionalParams: any[]) {
+    if (this.enableLogs) {
+      console.log(message, ...optionalParams);
+    }
+  }
+
+  private error(message?: any, ...optionalParams: any[]) {
+    if (this.enableLogs) {
+      console.error(message, ...optionalParams);
+    }
   }
 
 }
