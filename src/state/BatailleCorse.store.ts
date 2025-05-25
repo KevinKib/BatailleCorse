@@ -5,6 +5,44 @@ import webSocketService from '../service/WebSocketService';
 import BatailleCorse from "../service/model/BatailleCorse";
 import Response from "../service/model/Response";
 
+/*
+
+{
+  "currentPlayer": {
+    "nbCards": 24,
+    "id": "1"
+  },
+  "players": [
+    {
+      "nbCards": 25,
+      "id": "0"
+    },
+    {
+      "nbCards": 24,
+      "id": "1"
+    }
+  ],
+  "pile": [
+    {
+      "name": "HEART_8",
+      "rank": "8",
+      "suit": "HEART"
+    },
+    {
+      "name": "HEART_9",
+      "rank": "9",
+      "suit": "HEART"
+    },
+    {
+      "name": "SPADE_KING",
+      "rank": "KING",
+      "suit": "SPADE"
+    }
+  ]
+}
+
+*/
+
 export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
 
   const state = ref<BatailleCorse>();
@@ -35,6 +73,7 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
 
   function onResponse(response: Response) {
     console.log('onResponse', response);
+
     state.value = response.state;
     console.log(state.value);
   }
