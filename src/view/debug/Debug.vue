@@ -34,6 +34,18 @@
     </template>
   </Card>
 
+  <Card class="card">
+
+    <template #title>Pile</template>
+    <template #content>
+      Top card: {{ batailleCorse.state?.pile.at(0)?.rank }}
+      <br />
+      Nb cards: {{ batailleCorse.state?.pile.length }}
+
+      <PlayingCard :size="400" name="card_back"/>
+    </template>
+  </Card>
+
   <Button type="submit" label="Create game" rounded class="action" @click="create()"/>
 
   
@@ -44,6 +56,7 @@
 import { Button } from 'primevue';
 import Card from 'primevue/card';
 import { useBatailleCorseStore as useBatailleCorseStore } from '../../state/BatailleCorse.store';
+import PlayingCard from './PlayingCard.vue';
 
 const batailleCorse = useBatailleCorseStore();
 

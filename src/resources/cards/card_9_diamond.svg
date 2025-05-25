@@ -1,0 +1,918 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   version="1.1"
+   height="244.54906"
+   width="169.01215"
+   viewBox="-0.2 -236 169.075 244.54907"
+   id="svg1450"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <!-- SVG-cards 2.0.1								-->
+  <!-- This set of SVG files is a complete cards game with figures, numbers	-->
+  <!--	and backs of cards completely designed in SVG.				-->
+  <!--										-->
+  <!--	Copyright (C) 2005 David Bellot						-->
+  <!--										-->
+  <!--	This library is free software; you can redistribute it and/or		-->
+  <!--	modify it under the terms of the GNU Lesser General Public		-->
+  <!--	License as published by the Free Software Foundation; either		-->
+  <!--	version 2 of the License, or (at your option) any later version		-->
+  <!--										-->
+  <!--	This library is distributed in the hope that it will be useful,		-->
+  <!--	but WITHOUT ANY WARRANTY; without even the implied warranty of		-->
+  <!--	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU	-->
+  <!--	Lesser General Public License for more details.				-->
+  <!--										-->
+  <!--	You should have received a copy of the GNU Lesser General Public	-->
+  <!--	License along with this library; if not, write to the Free Software	-->
+  <!--	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA-->
+  <!--                                                                            -->
+  <!--	Contact the author David Bellot at david.bellot@free.fr			-->
+  <defs
+     id="defs265">
+    <g
+       id="n_10">
+      <text
+         transform="scale(0.32258,1.05741)"
+         font-family="'Bitstream Vera Serif'"
+         font-weight="bold"
+         font-size="43px"
+         id="text1">10</text>
+    </g>
+    <g
+       id="n_8">
+      <text
+         transform="scale(0.56453,1.05741)"
+         font-family="'Bitstream Vera Serif'"
+         font-weight="bold"
+         font-size="43px"
+         id="text9">8</text>
+    </g>
+    <g
+       id="n_9">
+      <text
+         transform="scale(0.56453,1.05741)"
+         font-family="'Bitstream Vera Serif'"
+         font-weight="bold"
+         font-size="43px"
+         id="text10">9</text>
+    </g>
+    <g
+       id="base">
+      <path
+         style="fill:#ffffff;stroke:#000000;stroke-width:2.5"
+         d="m 0,0 c 0,3.78 3.09,6.87 6.87,6.87 h 152.845 c 3.77,0 6.86,-3.09 6.86,-6.87 v -228.4 c 0,-3.78 -3.09,-6.87 -6.86,-6.87 H 6.87 c -3.78,0 -6.87,3.09 -6.87,6.87 z"
+         id="path14" />
+    </g>
+    <g
+       id="club">
+      <path
+         d="m 3.35,4.66 c 0,-1.81 -1.51,-3.28 -3.38,-3.28 -1.87,0 -3.38,1.47 -3.38,3.28 0,1.81 1.51,3.28 3.38,3.28 1.87,0 3.38,-1.47 3.38,-3.28 z"
+         id="path15" />
+      <path
+         d="m 7.71,-1.55 c 0,-1.81 -1.51,-3.28 -3.38,-3.28 -1.87,0 -3.38,1.47 -3.38,3.28 0,1.81 1.51,3.28 3.38,3.28 1.87,0 3.38,-1.47 3.38,-3.28 z"
+         id="path16" />
+      <path
+         d="m -0.95,-1.57 c 0,-0.66 -0.2,-1.28 -0.55,-1.8 -0.6,-0.89 -1.65,-1.48 -2.83,-1.48 -1.87,0 -3.38,1.47 -3.38,3.28 0,1.81 1.51,3.28 3.38,3.28 1.87,0 3.38,-1.47 3.38,-3.28 z"
+         id="path17" />
+      <path
+         d="m 3.94,-7.94 c -1.67,0 -2.55,1.36 -3.01,2.72 -0.46,1.36 -0.5,2.72 -0.5,2.72 h -0.86 c 0,0 -0.16,-5.43 -3.5,-5.44 z"
+         id="path18" />
+      <path
+         d="m -2.32,2.25 c 1.9,-1.9 1.9,-4.75 1.9,-4.75 l 0.85,-0.01 c 0,0 0,2.91 1.85,4.76"
+         id="path19" />
+      <path
+         d="m -1.94,-3.85 c 1.9,1.9 4.75,1.9 4.75,1.9 v 0.85 c 0,0 -2.91,0 -4.76,1.85"
+         id="path20" />
+      <path
+         d="m 1.87,-3.86 c -1.9,1.9 -4.75,1.9 -4.75,1.9 v 0.85 c 0,0 2.91,0 4.76,1.85"
+         id="path21" />
+    </g>
+    <g
+       id="diamond">
+      <path
+         style="fill:#e6180a"
+         d="m 0,0 c -2.56,0 -5.12,0 -7.68,0 0.8747,0.039 1.619,0.605 2.322,1.0728 C -3.779,2.264 -2.3,3.63 -1.132,5.228 -0.587,6.032 -0.0144,6.936 0,7.94 M -7.68,0 c 1.11,-0.035 2.058,-0.7413 2.904,-1.393 1.495,-1.255 2.789,-2.748 3.881,-4.364 C -0.494,-6.426 -0.022,-7.135 0,-7.94 0,-5.293 0,-2.647 0,0 m 0,-7.94 c 0.038,1.182 0.758,2.206 1.438,3.12 1.212,1.51 2.648,2.846 4.228,3.963 C 6.28,-0.474 6.932,-0.0185 7.68,0 5.12,0 2.56,0 0,0 M 7.68,0 C 6.57,0.035 5.622,0.741 4.776,1.392 3.281,2.648 1.987,4.141 0.895,5.757 0.494,6.426 0.0225,7.135 0,7.94 0,5.293 0,2.647 0,0"
+         id="path22" />
+    </g>
+    <g
+       id="heart">
+      <path
+         style="fill:#e6180a"
+         d="m -7.67,3.93 c 0.01,-4.71 5.91,-8.14 7.64,-11.87 1.75,3.72 7.66,7.12 7.7,11.83 C 7.68,6.11 5.96,7.92 3.85,7.92 1.73,7.92 0,6.13 0,3.91 0,6.14 -1.71,7.94 -3.82,7.94 -5.94,7.95 -7.66,6.15 -7.67,3.93 Z"
+         id="path23" />
+    </g>
+    <g
+       transform="matrix(0.4,0,0,0.4,236.59,667.12)"
+       id="lys"
+       style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-opacity:1">
+      <path
+         d="m 355.65,280.19 c 0,0 -3.75,-8.1 -8.1,-12.6 -4.36,-4.51 -9.68,-7.58 -11.04,-6.53"
+         transform="translate(-1.35,-0.76)"
+         style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.25pt;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         id="lys_1" />
+      <path
+         d="m 368.97,258.94 c -2.29,0.08 -5.9,1.92 -7.85,3.87 -2.59,2.6 -3.52,7.58 -3.59,9.44 -0.07,1.86 -1.32,-0.84 -2.19,-2.37 -0.86,-1.54 -1.93,-5.4 -2.22,-3.22 -0.28,2.2 -0.34,3.26 0.07,5.72 0.4,2.45 1.59,7.15 2.56,8.68 l 3.97,3.94 c 1.87,-1.88 3.1,-6.25 3.19,-6.25 l -0.07,9.34 4.35,4.32 c -1.16,-2.37 -1.94,-6.58 -1.63,-10.38 0.32,-3.8 2.3,-8.59 2.06,-10.44 -1.14,-0.4 -2.9,2.58 -5.21,1.88 -0.08,-1.75 0.74,-6.02 1.9,-7.69 1.17,-1.66 4.43,-5.7 6.41,-6.28 -0.36,-0.42 -0.99,-0.59 -1.75,-0.56 z"
+         style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.25pt;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         id="lys_2" />
+      <path
+         d="m 329.36,254.28 c 9.62,-4.95 19.64,8.3 19.64,8.3 0,0 1.44,-9.25 3.32,-9.36 1.88,-0.11 4.87,7.31 4.87,7.31 0,0 5.76,-7.64 15.72,-7.58 9.97,0.05 11.57,9.13 5.87,9.57 -5.66,0.44 -2.38,-5.15 -2.27,-3.65 0.06,0.17 -5.37,-7.75 -19.15,7.86 -2.03,2.3 -3.94,-8.46 -4.93,-6.09 -1.21,2.88 -0.22,6.26 -1.11,8.53 1.39,1.71 -11.35,-13.84 -16.77,-9.58"
+         transform="translate(-1.35,-0.76)"
+         style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.25pt;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         id="lys_3" />
+      <use
+         transform="matrix(0,1,1,0,74.5,-74.49)"
+         xlink:href="#lys_3"
+         style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-opacity:1"
+         id="use262" />
+      <use
+         transform="matrix(0,1,1,0,74.9,-74.93)"
+         xlink:href="#lys_1"
+         style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-opacity:1"
+         id="use263" />
+      <use
+         transform="matrix(0,1,1,0,74.82,-74.82)"
+         xlink:href="#lys_2"
+         style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-opacity:1"
+         id="use264" />
+    </g>
+  </defs>
+  <g
+     id="8_club"
+     transform="translate(-1339.55,-242.84312)">
+    <use
+       xlink:href="#base"
+       x="1173.02"
+       y="0"
+       id="use329" />
+    <use
+       xlink:href="#n_8"
+       x="1177.02"
+       y="-199.117"
+       id="use330" />
+    <use
+       xlink:href="#n_8"
+       x="1336.6"
+       y="-30.280001"
+       transform="rotate(180,1336.6,-30.28)"
+       id="use331" />
+    <use
+       xlink:href="#club"
+       x="1186.67"
+       y="-185.117"
+       transform="rotate(180,1186.67,-185.117)"
+       id="use332" />
+    <use
+       xlink:href="#club"
+       x="1326.95"
+       y="-44.279999"
+       id="use333" />
+    <use
+       xlink:href="#club"
+       x="507.035"
+       y="-82.712502"
+       transform="matrix(-2.4,0,0,-2.4,2433.768,-397.02)"
+       id="use334" />
+    <use
+       xlink:href="#club"
+       x="507.035"
+       y="-60.1474"
+       transform="matrix(-2.4,0,0,-2.4,2433.768,-288.70752)"
+       id="use335" />
+    <use
+       xlink:href="#club"
+       x="507.035"
+       y="-37.164101"
+       transform="scale(2.4)"
+       id="use336" />
+    <use
+       xlink:href="#club"
+       x="507.035"
+       y="-14.599"
+       transform="scale(2.4)"
+       id="use337" />
+    <use
+       xlink:href="#club"
+       x="540.30902"
+       y="-82.712502"
+       transform="matrix(-2.4,0,0,-2.4,2593.4832,-397.02)"
+       id="use338" />
+    <use
+       xlink:href="#club"
+       x="540.30902"
+       y="-60.1474"
+       transform="matrix(-2.4,0,0,-2.4,2593.4832,-288.70752)"
+       id="use339" />
+    <use
+       xlink:href="#club"
+       x="540.30902"
+       y="-37.164101"
+       transform="scale(2.4)"
+       id="use340" />
+    <use
+       xlink:href="#club"
+       x="540.30902"
+       y="-14.599"
+       transform="scale(2.4)"
+       id="use341" />
+  </g>
+  <g
+     id="9_club"
+     transform="translate(-1339.55,-242.84312)">
+    <use
+       xlink:href="#base"
+       x="1340.6"
+       y="0"
+       id="use342" />
+    <use
+       xlink:href="#n_9"
+       x="1344.6"
+       y="-199.117"
+       id="use343" />
+    <use
+       xlink:href="#n_9"
+       x="1504.17"
+       y="-30.280001"
+       transform="rotate(180,1504.17,-30.28)"
+       id="use344" />
+    <use
+       xlink:href="#club"
+       x="1354.25"
+       y="-185.117"
+       transform="rotate(180,1354.25,-185.117)"
+       id="use345" />
+    <use
+       xlink:href="#club"
+       x="1494.52"
+       y="-44.279999"
+       id="use346" />
+    <use
+       xlink:href="#club"
+       x="576.85797"
+       y="-82.712502"
+       transform="matrix(-2.4,0,0,-2.4,2768.9184,-397.02)"
+       id="use347" />
+    <use
+       xlink:href="#club"
+       x="576.85797"
+       y="-60.1474"
+       transform="matrix(-2.4,0,0,-2.4,2768.9184,-288.70752)"
+       id="use348" />
+    <use
+       xlink:href="#club"
+       x="576.85797"
+       y="-37.164101"
+       transform="scale(2.4)"
+       id="use349" />
+    <use
+       xlink:href="#club"
+       x="576.85797"
+       y="-14.599"
+       transform="scale(2.4)"
+       id="use350" />
+    <use
+       xlink:href="#club"
+       x="610.13202"
+       y="-82.712502"
+       transform="matrix(-2.4,0,0,-2.4,2928.6336,-397.02)"
+       id="use351" />
+    <use
+       xlink:href="#club"
+       x="610.13202"
+       y="-60.1474"
+       transform="matrix(-2.4,0,0,-2.4,2928.6336,-288.70752)"
+       id="use352" />
+    <use
+       xlink:href="#club"
+       x="610.13202"
+       y="-37.164101"
+       transform="scale(2.4)"
+       id="use353" />
+    <use
+       xlink:href="#club"
+       x="610.13202"
+       y="-14.599"
+       transform="scale(2.4)"
+       id="use354" />
+    <use
+       xlink:href="#club"
+       x="593.495"
+       y="-71.429901"
+       transform="matrix(-2.4,0,0,-2.4,2848.776,-342.86352)"
+       id="use355" />
+  </g>
+  <g
+     id="10_club"
+     transform="translate(-1339.55,-242.84312)">
+    <use
+       xlink:href="#base"
+       x="1508.17"
+       y="0"
+       id="use356" />
+    <use
+       xlink:href="#n_10"
+       x="1512.17"
+       y="-199.117"
+       id="use357" />
+    <use
+       xlink:href="#n_10"
+       x="1671.75"
+       y="-30.280001"
+       transform="rotate(180,1671.75,-30.28)"
+       id="use358" />
+    <use
+       xlink:href="#club"
+       x="1521.83"
+       y="-185.117"
+       transform="rotate(180,1521.83,-185.117)"
+       id="use359" />
+    <use
+       xlink:href="#club"
+       x="1662.1"
+       y="-44.279999"
+       id="use360" />
+    <use
+       xlink:href="#club"
+       x="646.68103"
+       y="-82.712502"
+       transform="matrix(-2.4,0,0,-2.4,3104.0688,-397.02)"
+       id="use361" />
+    <use
+       xlink:href="#club"
+       x="646.68103"
+       y="-60.1474"
+       transform="matrix(-2.4,0,0,-2.4,3104.0688,-288.70752)"
+       id="use362" />
+    <use
+       xlink:href="#club"
+       x="646.68103"
+       y="-37.164101"
+       transform="scale(2.4)"
+       id="use363" />
+    <use
+       xlink:href="#club"
+       x="646.68103"
+       y="-14.599"
+       transform="scale(2.4)"
+       id="use364" />
+    <use
+       xlink:href="#club"
+       x="679.95502"
+       y="-82.712502"
+       transform="matrix(-2.4,0,0,-2.4,3263.784,-397.02)"
+       id="use365" />
+    <use
+       xlink:href="#club"
+       x="679.95502"
+       y="-60.1474"
+       transform="matrix(-2.4,0,0,-2.4,3263.784,-288.70752)"
+       id="use366" />
+    <use
+       xlink:href="#club"
+       x="679.95502"
+       y="-37.164101"
+       transform="scale(2.4)"
+       id="use367" />
+    <use
+       xlink:href="#club"
+       x="679.95502"
+       y="-14.599"
+       transform="scale(2.4)"
+       id="use368" />
+    <use
+       xlink:href="#club"
+       x="663.31799"
+       y="-71.429901"
+       transform="matrix(-2.4,0,0,-2.4,3183.9264,-342.86352)"
+       id="use369" />
+    <use
+       xlink:href="#club"
+       x="663.31799"
+       y="-25.8815"
+       transform="scale(2.4)"
+       id="use370" />
+  </g>
+  <g
+     id="8_diamond"
+     transform="translate(-1339.55,-242.84312)">
+    <use
+       xlink:href="#base"
+       x="1173.02"
+       y="243.13699"
+       id="use610" />
+    <use
+       xlink:href="#n_8"
+       x="1177.02"
+       y="44.02"
+       style="fill:#e6180a"
+       id="use611" />
+    <use
+       xlink:href="#n_8"
+       x="1336.6"
+       y="212.85699"
+       transform="rotate(180,1336.6,212.857)"
+       style="fill:#e6180a"
+       id="use612" />
+    <use
+       xlink:href="#diamond"
+       x="1186.67"
+       y="58.02"
+       transform="rotate(180,1186.67,58.02)"
+       id="use613" />
+    <use
+       xlink:href="#diamond"
+       x="1326.95"
+       y="198.85699"
+       id="use614" />
+    <use
+       xlink:href="#diamond"
+       x="507.035"
+       y="18.594801"
+       transform="matrix(-2.4,0,0,-2.4,2433.768,89.25504)"
+       id="use615" />
+    <use
+       xlink:href="#diamond"
+       x="507.035"
+       y="41.159901"
+       transform="matrix(-2.4,0,0,-2.4,2433.768,197.56752)"
+       id="use616" />
+    <use
+       xlink:href="#diamond"
+       x="507.035"
+       y="64.143204"
+       transform="scale(2.4)"
+       id="use617" />
+    <use
+       xlink:href="#diamond"
+       x="507.035"
+       y="86.708298"
+       transform="scale(2.4)"
+       id="use618" />
+    <use
+       xlink:href="#diamond"
+       x="540.30902"
+       y="18.594801"
+       transform="matrix(-2.4,0,0,-2.4,2593.4832,89.25504)"
+       id="use619" />
+    <use
+       xlink:href="#diamond"
+       x="540.30902"
+       y="41.159901"
+       transform="matrix(-2.4,0,0,-2.4,2593.4832,197.56752)"
+       id="use620" />
+    <use
+       xlink:href="#diamond"
+       x="540.30902"
+       y="64.143204"
+       transform="scale(2.4)"
+       id="use621" />
+    <use
+       xlink:href="#diamond"
+       x="540.30902"
+       y="86.708298"
+       transform="scale(2.4)"
+       id="use622" />
+  </g>
+  <g
+     id="9_diamond"
+     transform="translate(-1339.55,-242.84312)">
+    <use
+       xlink:href="#base"
+       x="1340.6"
+       y="243.13699"
+       id="use623" />
+    <use
+       xlink:href="#n_9"
+       x="1344.6"
+       y="44.02"
+       style="fill:#e6180a"
+       id="use624" />
+    <use
+       xlink:href="#n_9"
+       x="1504.17"
+       y="212.85699"
+       transform="rotate(180,1504.17,212.857)"
+       style="fill:#e6180a"
+       id="use625" />
+    <use
+       xlink:href="#diamond"
+       x="1354.25"
+       y="58.02"
+       transform="rotate(180,1354.25,58.02)"
+       id="use626" />
+    <use
+       xlink:href="#diamond"
+       x="1494.52"
+       y="198.85699"
+       id="use627" />
+    <use
+       xlink:href="#diamond"
+       x="576.85797"
+       y="18.594801"
+       transform="matrix(-2.4,0,0,-2.4,2768.9184,89.25504)"
+       id="use628" />
+    <use
+       xlink:href="#diamond"
+       x="576.85797"
+       y="41.159901"
+       transform="matrix(-2.4,0,0,-2.4,2768.9184,197.56752)"
+       id="use629" />
+    <use
+       xlink:href="#diamond"
+       x="576.85797"
+       y="64.143204"
+       transform="scale(2.4)"
+       id="use630" />
+    <use
+       xlink:href="#diamond"
+       x="576.85797"
+       y="86.708298"
+       transform="scale(2.4)"
+       id="use631" />
+    <use
+       xlink:href="#diamond"
+       x="610.13202"
+       y="18.594801"
+       transform="matrix(-2.4,0,0,-2.4,2928.6336,89.25504)"
+       id="use632" />
+    <use
+       xlink:href="#diamond"
+       x="610.13202"
+       y="41.159901"
+       transform="matrix(-2.4,0,0,-2.4,2928.6336,197.56752)"
+       id="use633" />
+    <use
+       xlink:href="#diamond"
+       x="610.13202"
+       y="64.143204"
+       transform="scale(2.4)"
+       id="use634" />
+    <use
+       xlink:href="#diamond"
+       x="610.13202"
+       y="86.708298"
+       transform="scale(2.4)"
+       id="use635" />
+    <use
+       xlink:href="#diamond"
+       x="593.495"
+       y="29.8773"
+       transform="matrix(-2.4,0,0,-2.4,2848.776,143.41104)"
+       id="use636" />
+  </g>
+  <g
+     id="10_diamond"
+     transform="translate(-1339.55,-242.84312)">
+    <use
+       xlink:href="#base"
+       x="1508.17"
+       y="243.13699"
+       id="use637" />
+    <use
+       xlink:href="#n_10"
+       x="1512.17"
+       y="44.02"
+       style="fill:#e6180a"
+       id="use638" />
+    <use
+       xlink:href="#n_10"
+       x="1671.75"
+       y="212.85699"
+       transform="rotate(180,1671.75,212.857)"
+       style="fill:#e6180a"
+       id="use639" />
+    <use
+       xlink:href="#diamond"
+       x="1521.83"
+       y="58.02"
+       transform="rotate(180,1521.83,58.02)"
+       id="use640" />
+    <use
+       xlink:href="#diamond"
+       x="1662.1"
+       y="198.85699"
+       id="use641" />
+    <use
+       xlink:href="#diamond"
+       x="646.68103"
+       y="18.594801"
+       transform="matrix(-2.4,0,0,-2.4,3104.0688,89.25504)"
+       id="use642" />
+    <use
+       xlink:href="#diamond"
+       x="646.68103"
+       y="41.159901"
+       transform="matrix(-2.4,0,0,-2.4,3104.0688,197.56752)"
+       id="use643" />
+    <use
+       xlink:href="#diamond"
+       x="646.68103"
+       y="64.143204"
+       transform="scale(2.4)"
+       id="use644" />
+    <use
+       xlink:href="#diamond"
+       x="646.68103"
+       y="86.708298"
+       transform="scale(2.4)"
+       id="use645" />
+    <use
+       xlink:href="#diamond"
+       x="679.95502"
+       y="18.594801"
+       transform="matrix(-2.4,0,0,-2.4,3263.784,89.25504)"
+       id="use646" />
+    <use
+       xlink:href="#diamond"
+       x="679.95502"
+       y="41.159901"
+       transform="matrix(-2.4,0,0,-2.4,3263.784,197.56752)"
+       id="use647" />
+    <use
+       xlink:href="#diamond"
+       x="679.95502"
+       y="64.143204"
+       transform="scale(2.4)"
+       id="use648" />
+    <use
+       xlink:href="#diamond"
+       x="679.95502"
+       y="86.708298"
+       transform="scale(2.4)"
+       id="use649" />
+    <use
+       xlink:href="#diamond"
+       x="663.31799"
+       y="29.8773"
+       transform="matrix(-2.4,0,0,-2.4,3183.9264,143.41104)"
+       id="use650" />
+    <use
+       xlink:href="#diamond"
+       x="663.31799"
+       y="75.425797"
+       transform="scale(2.4)"
+       id="use651" />
+  </g>
+  <g
+     id="8_heart"
+     transform="translate(-1339.55,-242.84312)">
+    <use
+       xlink:href="#base"
+       x="1173.02"
+       y="486.27499"
+       id="use883" />
+    <use
+       xlink:href="#n_8"
+       x="1177.02"
+       y="287.15701"
+       style="fill:#e6180a"
+       id="use884" />
+    <use
+       xlink:href="#n_8"
+       x="1336.6"
+       y="455.995"
+       transform="rotate(180,1336.6,455.995)"
+       style="fill:#e6180a"
+       id="use885" />
+    <use
+       xlink:href="#heart"
+       x="1186.67"
+       y="301.15701"
+       transform="rotate(180,1186.67,301.157)"
+       id="use886" />
+    <use
+       xlink:href="#heart"
+       x="1326.95"
+       y="441.995"
+       id="use887" />
+    <use
+       xlink:href="#heart"
+       x="507.035"
+       y="119.902"
+       transform="matrix(-2.4,0,0,-2.4,2433.768,575.5296)"
+       id="use888" />
+    <use
+       xlink:href="#heart"
+       x="507.035"
+       y="142.467"
+       transform="matrix(-2.4,0,0,-2.4,2433.768,683.8416)"
+       id="use889" />
+    <use
+       xlink:href="#heart"
+       x="507.035"
+       y="165.451"
+       transform="scale(2.4)"
+       id="use890" />
+    <use
+       xlink:href="#heart"
+       x="507.035"
+       y="188.01601"
+       transform="scale(2.4)"
+       id="use891" />
+    <use
+       xlink:href="#heart"
+       x="540.30902"
+       y="119.902"
+       transform="matrix(-2.4,0,0,-2.4,2593.4832,575.5296)"
+       id="use892" />
+    <use
+       xlink:href="#heart"
+       x="540.30902"
+       y="142.467"
+       transform="matrix(-2.4,0,0,-2.4,2593.4832,683.8416)"
+       id="use893" />
+    <use
+       xlink:href="#heart"
+       x="540.30902"
+       y="165.451"
+       transform="scale(2.4)"
+       id="use894" />
+    <use
+       xlink:href="#heart"
+       x="540.30902"
+       y="188.01601"
+       transform="scale(2.4)"
+       id="use895" />
+  </g>
+  <g
+     id="9_heart"
+     transform="translate(-1339.55,-242.84312)">
+    <use
+       xlink:href="#base"
+       x="1340.6"
+       y="486.27499"
+       id="use896" />
+    <use
+       xlink:href="#n_9"
+       x="1344.6"
+       y="287.15701"
+       style="fill:#e6180a"
+       id="use897" />
+    <use
+       xlink:href="#n_9"
+       x="1504.17"
+       y="455.995"
+       transform="rotate(180,1504.17,455.995)"
+       style="fill:#e6180a"
+       id="use898" />
+    <use
+       xlink:href="#heart"
+       x="1354.25"
+       y="301.15701"
+       transform="rotate(180,1354.25,301.157)"
+       id="use899" />
+    <use
+       xlink:href="#heart"
+       x="1494.52"
+       y="441.995"
+       id="use900" />
+    <use
+       xlink:href="#heart"
+       x="576.85797"
+       y="119.902"
+       transform="matrix(-2.4,0,0,-2.4,2768.9184,575.5296)"
+       id="use901" />
+    <use
+       xlink:href="#heart"
+       x="576.85797"
+       y="142.467"
+       transform="matrix(-2.4,0,0,-2.4,2768.9184,683.8416)"
+       id="use902" />
+    <use
+       xlink:href="#heart"
+       x="576.85797"
+       y="165.451"
+       transform="scale(2.4)"
+       id="use903" />
+    <use
+       xlink:href="#heart"
+       x="576.85797"
+       y="188.01601"
+       transform="scale(2.4)"
+       id="use904" />
+    <use
+       xlink:href="#heart"
+       x="610.13202"
+       y="119.902"
+       transform="matrix(-2.4,0,0,-2.4,2928.6336,575.5296)"
+       id="use905" />
+    <use
+       xlink:href="#heart"
+       x="610.13202"
+       y="142.467"
+       transform="matrix(-2.4,0,0,-2.4,2928.6336,683.8416)"
+       id="use906" />
+    <use
+       xlink:href="#heart"
+       x="610.13202"
+       y="165.451"
+       transform="scale(2.4)"
+       id="use907" />
+    <use
+       xlink:href="#heart"
+       x="610.13202"
+       y="188.01601"
+       transform="scale(2.4)"
+       id="use908" />
+    <use
+       xlink:href="#heart"
+       x="593.495"
+       y="131.185"
+       transform="matrix(-2.4,0,0,-2.4,2848.776,629.688)"
+       id="use909" />
+  </g>
+  <g
+     id="10_heart"
+     transform="translate(-1339.55,-242.84312)">
+    <use
+       xlink:href="#base"
+       x="1508.17"
+       y="486.27499"
+       id="use910" />
+    <use
+       xlink:href="#n_10"
+       x="1512.17"
+       y="287.15701"
+       style="fill:#e6180a"
+       id="use911" />
+    <use
+       xlink:href="#n_10"
+       x="1671.75"
+       y="455.995"
+       transform="rotate(180,1671.75,455.995)"
+       style="fill:#e6180a"
+       id="use912" />
+    <use
+       xlink:href="#heart"
+       x="1521.83"
+       y="301.15701"
+       transform="rotate(180,1521.83,301.157)"
+       id="use913" />
+    <use
+       xlink:href="#heart"
+       x="1662.1"
+       y="441.995"
+       id="use914" />
+    <use
+       xlink:href="#heart"
+       x="646.68103"
+       y="119.902"
+       transform="matrix(-2.4,0,0,-2.4,3104.0688,575.5296)"
+       id="use915" />
+    <use
+       xlink:href="#heart"
+       x="646.68103"
+       y="142.467"
+       transform="matrix(-2.4,0,0,-2.4,3104.0688,683.8416)"
+       id="use916" />
+    <use
+       xlink:href="#heart"
+       x="646.68103"
+       y="165.451"
+       transform="scale(2.4)"
+       id="use917" />
+    <use
+       xlink:href="#heart"
+       x="646.68103"
+       y="188.01601"
+       transform="scale(2.4)"
+       id="use918" />
+    <use
+       xlink:href="#heart"
+       x="679.95502"
+       y="119.902"
+       transform="matrix(-2.4,0,0,-2.4,3263.784,575.5296)"
+       id="use919" />
+    <use
+       xlink:href="#heart"
+       x="679.95502"
+       y="142.467"
+       transform="matrix(-2.4,0,0,-2.4,3263.784,683.8416)"
+       id="use920" />
+    <use
+       xlink:href="#heart"
+       x="679.95502"
+       y="165.451"
+       transform="scale(2.4)"
+       id="use921" />
+    <use
+       xlink:href="#heart"
+       x="679.95502"
+       y="188.01601"
+       transform="scale(2.4)"
+       id="use922" />
+    <use
+       xlink:href="#heart"
+       x="663.31799"
+       y="131.185"
+       transform="matrix(-2.4,0,0,-2.4,3183.9264,629.688)"
+       id="use923" />
+    <use
+       xlink:href="#heart"
+       x="663.31799"
+       y="176.733"
+       transform="scale(2.4)"
+       id="use924" />
+  </g>
+</svg>

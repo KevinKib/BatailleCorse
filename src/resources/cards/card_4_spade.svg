@@ -1,0 +1,778 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   version="1.1"
+   height="244.54906"
+   width="169.01215"
+   viewBox="-0.2 -236 169.075 244.54907"
+   id="svg1450"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <!-- SVG-cards 2.0.1								-->
+  <!-- This set of SVG files is a complete cards game with figures, numbers	-->
+  <!--	and backs of cards completely designed in SVG.				-->
+  <!--										-->
+  <!--	Copyright (C) 2005 David Bellot						-->
+  <!--										-->
+  <!--	This library is free software; you can redistribute it and/or		-->
+  <!--	modify it under the terms of the GNU Lesser General Public		-->
+  <!--	License as published by the Free Software Foundation; either		-->
+  <!--	version 2 of the License, or (at your option) any later version		-->
+  <!--										-->
+  <!--	This library is distributed in the hope that it will be useful,		-->
+  <!--	but WITHOUT ANY WARRANTY; without even the implied warranty of		-->
+  <!--	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU	-->
+  <!--	Lesser General Public License for more details.				-->
+  <!--										-->
+  <!--	You should have received a copy of the GNU Lesser General Public	-->
+  <!--	License along with this library; if not, write to the Free Software	-->
+  <!--	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA-->
+  <!--                                                                            -->
+  <!--	Contact the author David Bellot at david.bellot@free.fr			-->
+  <defs
+     id="defs265">
+    <g
+       id="n_3">
+      <text
+         transform="scale(0.56453,1.05741)"
+         font-family="'Bitstream Vera Serif'"
+         font-weight="bold"
+         font-size="43px"
+         id="text4">3</text>
+    </g>
+    <g
+       id="n_4">
+      <text
+         transform="scale(0.56453,1.05741)"
+         font-family="'Bitstream Vera Serif'"
+         font-weight="bold"
+         font-size="43px"
+         id="text5">4</text>
+    </g>
+    <g
+       id="n_5">
+      <text
+         transform="scale(0.56453,1.05741)"
+         font-family="'Bitstream Vera Serif'"
+         font-weight="bold"
+         font-size="43px"
+         id="text6">5</text>
+    </g>
+    <g
+       id="base">
+      <path
+         style="fill:#ffffff;stroke:#000000;stroke-width:2.5"
+         d="m 0,0 c 0,3.78 3.09,6.87 6.87,6.87 h 152.845 c 3.77,0 6.86,-3.09 6.86,-6.87 v -228.4 c 0,-3.78 -3.09,-6.87 -6.86,-6.87 H 6.87 c -3.78,0 -6.87,3.09 -6.87,6.87 z"
+         id="path14" />
+    </g>
+    <g
+       id="heart">
+      <path
+         style="fill:#e6180a"
+         d="m -7.67,3.93 c 0.01,-4.71 5.91,-8.14 7.64,-11.87 1.75,3.72 7.66,7.12 7.7,11.83 C 7.68,6.11 5.96,7.92 3.85,7.92 1.73,7.92 0,6.13 0,3.91 0,6.14 -1.71,7.94 -3.82,7.94 -5.94,7.95 -7.66,6.15 -7.67,3.93 Z"
+         id="path23" />
+    </g>
+    <g
+       id="spade">
+      <path
+         d="m 3.92,-7.93 c -1.67,0 -2.55,1.78 -3.01,3.56 -0.46,1.78 -0.5,3.56 -0.5,3.56 l -0.85,0.01 c 0,0 -0.16,-7.13 -3.5,-7.13 z"
+         id="path24" />
+      <path
+         d="M 6.75,-0.8 C 6.74,2.67 1.53,5.19 0,7.93 -1.53,5.18 -6.74,2.66 -6.75,-0.8 c 0,-1.64 1.51,-2.97 3.38,-2.97 1.86,0 3.37,1.33 3.37,2.97 0,-1.64 1.51,-2.97 3.38,-2.97 1.87,0 3.37,1.33 3.37,2.97 z"
+         id="path25" />
+    </g>
+    <g
+       transform="matrix(1,0,0,0.95,-190.33,54.46)"
+       id="lace"
+       style="fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:0.320883;stroke-miterlimit:40;stroke-dasharray:none;stroke-opacity:1">
+      <path
+         d="m 585.84,796.83 c -0.65,0.05 -2.12,0.95 0.23,-0.34 0.48,-0.26 -0.87,0.66 -1.17,1.11 -0.89,1.73 -0.46,3.67 0.15,5.43 1.29,3.4 2.77,6.73 4.02,10.15 0.75,1.79 0.1,3.43 -1.01,4.92 -1.17,1.45 -2.66,2.62 -4.2,3.67 l -1.55,0.61 c 1.55,-1.03 3.05,-2.19 4.24,-3.63 1.09,-1.43 1.75,-3.02 1.08,-4.77 -1.16,-3.45 -2.7,-6.77 -4,-10.17 -0.64,-1.77 -1.14,-3.76 -0.26,-5.54 0.8,-1.29 2.37,-2.25 3.86,-2.45 z"
+         transform="translate(-41.66,-51.43)"
+         style="fill:none;fill-opacity:1;fill-rule:nonzero;stroke:#ffffff;stroke-width:0.320883;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:40;stroke-dasharray:none;stroke-opacity:1"
+         id="path261" />
+      <path
+         d="m 585.84,796.83 c -0.65,0.05 -2.12,0.95 0.23,-0.34 0.48,-0.26 -0.87,0.66 -1.17,1.11 -0.89,1.73 -0.46,3.67 0.15,5.43 1.29,3.4 2.77,6.73 4.02,10.15 0.75,1.79 0.1,3.43 -1.01,4.92 -1.17,1.45 -2.66,2.62 -4.2,3.67 l -1.55,0.61 c 1.55,-1.03 3.05,-2.19 4.24,-3.63 1.09,-1.43 1.75,-3.02 1.08,-4.77 -1.16,-3.45 -2.7,-6.77 -4,-10.17 -0.64,-1.77 -1.14,-3.76 -0.26,-5.54 0.8,-1.29 2.37,-2.25 3.86,-2.45 z"
+         transform="rotate(180,564.75,786.2)"
+         style="fill:none;fill-opacity:1;fill-rule:nonzero;stroke:#ffffff;stroke-width:0.320883;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:40;stroke-dasharray:none;stroke-opacity:1"
+         id="path262" />
+    </g>
+    <g
+       transform="matrix(0.4,0,0,0.4,236.59,667.12)"
+       id="lys"
+       style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-opacity:1">
+      <path
+         d="m 355.65,280.19 c 0,0 -3.75,-8.1 -8.1,-12.6 -4.36,-4.51 -9.68,-7.58 -11.04,-6.53"
+         transform="translate(-1.35,-0.76)"
+         style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.25pt;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         id="lys_1" />
+      <path
+         d="m 368.97,258.94 c -2.29,0.08 -5.9,1.92 -7.85,3.87 -2.59,2.6 -3.52,7.58 -3.59,9.44 -0.07,1.86 -1.32,-0.84 -2.19,-2.37 -0.86,-1.54 -1.93,-5.4 -2.22,-3.22 -0.28,2.2 -0.34,3.26 0.07,5.72 0.4,2.45 1.59,7.15 2.56,8.68 l 3.97,3.94 c 1.87,-1.88 3.1,-6.25 3.19,-6.25 l -0.07,9.34 4.35,4.32 c -1.16,-2.37 -1.94,-6.58 -1.63,-10.38 0.32,-3.8 2.3,-8.59 2.06,-10.44 -1.14,-0.4 -2.9,2.58 -5.21,1.88 -0.08,-1.75 0.74,-6.02 1.9,-7.69 1.17,-1.66 4.43,-5.7 6.41,-6.28 -0.36,-0.42 -0.99,-0.59 -1.75,-0.56 z"
+         style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.25pt;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         id="lys_2" />
+      <path
+         d="m 329.36,254.28 c 9.62,-4.95 19.64,8.3 19.64,8.3 0,0 1.44,-9.25 3.32,-9.36 1.88,-0.11 4.87,7.31 4.87,7.31 0,0 5.76,-7.64 15.72,-7.58 9.97,0.05 11.57,9.13 5.87,9.57 -5.66,0.44 -2.38,-5.15 -2.27,-3.65 0.06,0.17 -5.37,-7.75 -19.15,7.86 -2.03,2.3 -3.94,-8.46 -4.93,-6.09 -1.21,2.88 -0.22,6.26 -1.11,8.53 1.39,1.71 -11.35,-13.84 -16.77,-9.58"
+         transform="translate(-1.35,-0.76)"
+         style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.25pt;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         id="lys_3" />
+      <use
+         transform="matrix(0,1,1,0,74.5,-74.49)"
+         xlink:href="#lys_3"
+         style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-opacity:1"
+         id="use262" />
+      <use
+         transform="matrix(0,1,1,0,74.9,-74.93)"
+         xlink:href="#lys_1"
+         style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-opacity:1"
+         id="use263" />
+      <use
+         transform="matrix(0,1,1,0,74.82,-74.82)"
+         xlink:href="#lys_2"
+         style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-opacity:1"
+         id="use264" />
+    </g>
+    <g
+       id="twist"
+       style="fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:1.251;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       transform="matrix(0.3394,0.3394,-0.3394,0.3394,444.557,315.274)">
+      <path
+         style="fill:none;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:1.251;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         d="m 508.992,779.917 c -2.054,-1.516 -2.26,-4.512 -0.747,-6.48 1.827,-2.375 5.344,-2.595 7.638,-0.777 2.696,2.137 2.93,6.176 0.807,8.795 -2.447,3.018 -7.009,3.265 -9.953,0.837 -3.34,-2.755 -3.601,-7.842 -0.866,-11.11 2.394,-2.862 6.495,-3.76 9.915,-2.335"
+         transform="matrix(0.7518,0.3005,-0.3107,0.7774,372.862,20.8342)"
+         id="path264" />
+      <path
+         style="fill:none;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:1.251;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         d="m 507.265,776.876 c -0.309,-2.765 1.915,-5.165 4.616,-5.421 3.211,-0.304 5.98,2.289 6.239,5.435 0.3,3.658 -2.663,6.796 -6.255,7.057 -4.104,0.297 -7.612,-3.037 -7.874,-7.075 -0.296,-4.55 3.41,-8.429 7.894,-8.692 3.474,-0.203 6.793,1.741 8.422,4.797"
+         transform="matrix(0.7518,0.3005,0.3107,-0.7774,-109.566,1234.952)"
+         id="path265" />
+    </g>
+    <path
+       d="m 418.45,832.87 -1.61,0.58 c -1.01,0.51 -2.11,1.32 -2.44,1.79 -0.56,0.8 -0.64,0.8 -1.51,0.2 -1.38,-0.97 -1.66,-0.79 -1.44,0.9 0.2,1.47 0.16,1.52 -0.96,1.52 -1.39,0 -3,1.12 -4.24,2.94 -1.68,2.47 -0.64,7.28 1.7,9.12 1.48,1.17 2.11,0.6 0.74,-0.85 -1.47,-0.96 -2.59,-4.67 -1.99,-4.67 0.14,0 0.61,0.22 1.04,0.49 0.65,0.4 0.92,0.37 1.49,-0.2 0.61,-0.62 0.62,-0.69 0.05,-0.69 -1.15,0 -1.54,-2.43 -0.59,-3.69 0.58,-0.76 2.3,-1.51 3.45,-1.51 1.74,0 2.79,2.68 1.21,3.09 -0.44,0.11 -0.8,0.37 -0.8,0.57 0,0.64 1.27,0.88 2.04,0.4 1,-0.62 0.99,-0.63 1.54,0.69 0.26,0.63 0.98,1.64 1.6,2.22 l 0.72,0.7 v -2.61 c -0.11,-0.43 -0.21,-0.83 -0.25,-1.26 -0.05,-0.68 -2.96,-3.8 -3.53,-3.8 -0.21,0 -0.82,-0.47 -1.35,-1.05 l -0.97,-1.05 1.29,0.29 c 1.14,0.24 1.35,0.15 1.68,-0.72 0.47,-1.25 1.75,-2.03 3.13,-2.18 z m -0.2,1.98 c -1.11,0.05 -2.72,1.83 -2.36,3.27 l 0.25,0.99 1.63,-1.47 c 0.34,-0.32 0.5,-0.54 0.68,-0.78 v -1.96 c -0.06,-0.02 -0.12,-0.05 -0.2,-0.05 z m -5.61,11.26 c -0.29,-0.07 -0.49,0.19 -0.49,0.83 0,0.55 -0.18,1.12 -0.4,1.26 -0.22,0.14 -0.83,0.91 -0.83,1.44 l 0.06,0.83 3.07,-1.03 c 1.49,-0.51 2.97,-1.01 3.3,-1.13 0.4,-0.14 0.21,-0.32 -0.56,-0.52 -0.71,-0.19 -1.45,-0.13 -1.89,0.15 -0.6,0.38 -0.8,0.28 -1.23,-0.62 -0.36,-0.72 -0.74,-1.13 -1.03,-1.21 z m -4.32,0.29 c -0.8,0 -0.71,0.31 0.43,1.67 0.55,0.66 1,1.51 1,1.9 0,0.94 -1.5,2.83 -2.23,2.83 -0.76,0 -0.73,0.76 0.03,1.05 0.36,0.14 0.6,0.75 0.6,1.51 0,0.7 0.21,1.5 0.48,1.76 0.38,0.38 0.64,-0.15 1.19,-2.42 0.38,-1.6 0.7,-3.64 0.71,-4.55 0.02,-1.75 -1.16,-3.75 -2.21,-3.75 z m -3.79,0.46 c -0.29,0.1 -0.97,0.46 -1.6,1.11 -0.73,1.2 -0.88,1.59 -0.91,2.9 -0.03,0.95 0.11,2.07 0.31,2.49 0.3,0.65 0.22,0.73 -0.51,0.54 -1.11,-0.29 -1.6,0.46 -0.73,1.1 0.91,0.67 0.84,0.98 -0.54,2.4 l -0.95,0.97 h 1.1 c 0.02,-0.67 1.16,-1.03 2.64,-0.63 0.85,0.22 1.21,0.44 1.2,0.63 h 2.99 l -1.09,-0.9 c -0.89,-0.73 -1,-1.01 -0.6,-1.42 0.41,-0.41 0.36,-0.62 -0.29,-1.1 -0.75,-0.56 -0.75,-0.63 -0.1,-1 0.76,-0.43 0.95,-1.75 0.3,-2.15 -0.22,-0.14 -0.4,0.04 -0.4,0.39 0,0.85 -1.07,1.22 -1.81,0.61 -0.33,-0.27 -0.59,-0.94 -0.59,-1.48 0,-1.14 1.05,-3.32 1.6,-3.32 0.22,0 0.4,-0.27 0.4,-0.6 0,-0.45 -0.13,-0.63 -0.42,-0.54 z m 13.92,3.3 -0.55,0.84 c -0.38,0.58 -0.66,1.67 -0.63,2.42 0.05,1.5 -0.88,1.96 -1.3,0.64 -0.24,-0.74 -1.27,-1.41 -2.89,-1.86 -0.83,-0.23 -0.85,-0.17 -0.4,1.02 0.26,0.7 0.97,1.52 1.57,1.83 1.57,0.81 1.43,1.75 -0.25,1.75 -0.76,0 -1.81,0.37 -2.41,0.84 l -0.94,0.73 h 4.15 c -0.04,-0.13 0.27,-0.28 1.14,-0.53 1.24,-0.36 1.67,-0.73 1.95,-1.65 0.2,-0.66 0.46,-1.46 0.56,-1.79 z m -1.66,5.45 c 0.3,0.04 0.56,0.22 0.56,0.54 0,0.68 -1.08,1.16 -1.41,0.62 -0.13,-0.21 -0.12,-0.55 0.01,-0.77 0.19,-0.3 0.54,-0.42 0.84,-0.39 z"
+       id="center_deco"
+       style="fill:#ffffff;fill-opacity:1" />
+    <path
+       d="m 493.12,948.77 c -1.23,0 -2.22,0.99 -2.22,2.22 0,1.22 0.99,2.22 2.22,2.22 1.22,0 2.21,-1 2.21,-2.22 0,-1.23 -0.99,-2.22 -2.21,-2.22 z m -0.03,1.14 1.11,1.1 -1.06,1.06 -1.11,-1.11 z"
+       id="squa_circ"
+       style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2.39307;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:40;stroke-dashoffset:0;stroke-opacity:1" />
+  </defs>
+  <g
+     id="3_heart"
+     transform="translate(-501.67501,-729.11811)">
+    <use
+       xlink:href="#base"
+       x="335.14999"
+       y="486.27499"
+       id="use833" />
+    <use
+       xlink:href="#n_3"
+       x="339.14999"
+       y="287.15701"
+       style="fill:#e6180a"
+       id="use834" />
+    <use
+       xlink:href="#n_3"
+       x="498.72501"
+       y="455.995"
+       transform="rotate(180,498.725,455.995)"
+       style="fill:#e6180a"
+       id="use835" />
+    <use
+       xlink:href="#heart"
+       x="348.79999"
+       y="301.15701"
+       transform="rotate(180,348.8,301.157)"
+       id="use836" />
+    <use
+       xlink:href="#heart"
+       x="489.07501"
+       y="441.995"
+       id="use837" />
+    <use
+       xlink:href="#heart"
+       x="174.55701"
+       y="188.01601"
+       transform="scale(2.4)"
+       id="use838" />
+    <use
+       xlink:href="#heart"
+       x="174.55701"
+       y="151.961"
+       transform="matrix(-2.4,0,0,-2.4,837.8736,729.4128)"
+       id="use839" />
+    <use
+       xlink:href="#heart"
+       x="174.55701"
+       y="119.902"
+       transform="matrix(-2.4,0,0,-2.4,837.8736,575.5296)"
+       id="use840" />
+  </g>
+  <g
+     id="4_heart"
+     transform="translate(-501.67501,-729.11811)">
+    <use
+       xlink:href="#base"
+       x="502.72501"
+       y="486.27499"
+       id="use841" />
+    <use
+       xlink:href="#n_4"
+       x="506.72501"
+       y="287.15701"
+       style="fill:#e6180a"
+       id="use842" />
+    <use
+       xlink:href="#n_4"
+       x="666.29999"
+       y="455.995"
+       transform="rotate(180,666.3,455.995)"
+       style="fill:#e6180a"
+       id="use843" />
+    <use
+       xlink:href="#heart"
+       x="516.375"
+       y="301.15701"
+       transform="rotate(180,516.375,301.157)"
+       id="use844" />
+    <use
+       xlink:href="#heart"
+       x="656.65002"
+       y="441.995"
+       id="use845" />
+    <use
+       xlink:href="#heart"
+       x="227.743"
+       y="119.902"
+       transform="matrix(-2.4,0,0,-2.4,1093.1664,575.5296)"
+       id="use846" />
+    <use
+       xlink:href="#heart"
+       x="227.743"
+       y="188.01601"
+       transform="scale(2.4)"
+       id="use847" />
+    <use
+       xlink:href="#heart"
+       x="261.017"
+       y="119.902"
+       transform="matrix(-2.4,0,0,-2.4,1252.8816,575.5296)"
+       id="use848" />
+    <use
+       xlink:href="#heart"
+       x="261.017"
+       y="188.01601"
+       transform="scale(2.4)"
+       id="use849" />
+  </g>
+  <g
+     id="5_heart"
+     transform="translate(-501.67501,-729.11811)">
+    <use
+       xlink:href="#base"
+       x="670.29999"
+       y="486.27499"
+       id="use850" />
+    <use
+       xlink:href="#n_5"
+       x="674.29999"
+       y="287.15701"
+       style="fill:#e6180a"
+       id="use851" />
+    <use
+       xlink:href="#n_5"
+       x="833.875"
+       y="455.995"
+       transform="rotate(180,833.875,455.995)"
+       style="fill:#e6180a"
+       id="use852" />
+    <use
+       xlink:href="#heart"
+       x="683.95001"
+       y="301.15701"
+       transform="rotate(180,683.95,301.157)"
+       id="use853" />
+    <use
+       xlink:href="#heart"
+       x="824.22498"
+       y="441.995"
+       id="use854" />
+    <use
+       xlink:href="#heart"
+       x="297.56601"
+       y="119.902"
+       transform="matrix(-2.4,0,0,-2.4,1428.3168,575.5296)"
+       id="use855" />
+    <use
+       xlink:href="#heart"
+       x="297.56601"
+       y="188.01601"
+       transform="scale(2.4)"
+       id="use856" />
+    <use
+       xlink:href="#heart"
+       x="330.84"
+       y="119.902"
+       transform="matrix(-2.4,0,0,-2.4,1588.032,575.5296)"
+       id="use857" />
+    <use
+       xlink:href="#heart"
+       x="330.84"
+       y="188.01601"
+       transform="scale(2.4)"
+       id="use858" />
+    <use
+       xlink:href="#heart"
+       x="314.203"
+       y="151.961"
+       transform="matrix(-2.4,0,0,-2.4,1508.1744,729.4128)"
+       id="use859" />
+  </g>
+  <g
+     id="3_spade"
+     transform="translate(-501.67501,-729.11811)">
+    <use
+       xlink:href="#base"
+       x="335.14999"
+       y="729.41199"
+       id="use1116" />
+    <use
+       xlink:href="#n_3"
+       x="339.14999"
+       y="530.29498"
+       id="use1117" />
+    <use
+       xlink:href="#n_3"
+       x="498.72501"
+       y="699.13202"
+       transform="rotate(180,498.725,699.132)"
+       id="use1118" />
+    <use
+       xlink:href="#spade"
+       x="348.79999"
+       y="544.29498"
+       transform="rotate(180,348.8,544.295)"
+       id="use1119" />
+    <use
+       xlink:href="#spade"
+       x="489.07501"
+       y="685.13202"
+       id="use1120" />
+    <use
+       xlink:href="#spade"
+       x="174.55701"
+       y="289.323"
+       transform="scale(2.4)"
+       id="use1121" />
+    <use
+       xlink:href="#spade"
+       x="174.55701"
+       y="253.26801"
+       transform="matrix(-2.4,0,0,-2.4,837.8736,1215.6864)"
+       id="use1122" />
+    <use
+       xlink:href="#spade"
+       x="174.55701"
+       y="221.209"
+       transform="matrix(-2.4,0,0,-2.4,837.8736,1061.8032)"
+       id="use1123" />
+  </g>
+  <g
+     id="4_spade"
+     transform="translate(-501.67501,-729.11811)">
+    <use
+       xlink:href="#base"
+       x="502.72501"
+       y="729.41199"
+       id="use1124" />
+    <use
+       xlink:href="#n_4"
+       x="506.72501"
+       y="530.29498"
+       id="use1125" />
+    <use
+       xlink:href="#n_4"
+       x="666.29999"
+       y="699.13202"
+       transform="rotate(180,666.3,699.132)"
+       id="use1126" />
+    <use
+       xlink:href="#spade"
+       x="516.375"
+       y="544.29498"
+       transform="rotate(180,516.375,544.295)"
+       id="use1127" />
+    <use
+       xlink:href="#spade"
+       x="656.65002"
+       y="685.13202"
+       id="use1128" />
+    <use
+       xlink:href="#spade"
+       x="227.743"
+       y="221.209"
+       transform="matrix(-2.4,0,0,-2.4,1093.1664,1061.8032)"
+       id="use1129" />
+    <use
+       xlink:href="#spade"
+       x="227.743"
+       y="289.323"
+       transform="scale(2.4)"
+       id="use1130" />
+    <use
+       xlink:href="#spade"
+       x="261.017"
+       y="221.209"
+       transform="matrix(-2.4,0,0,-2.4,1252.8816,1061.8032)"
+       id="use1131" />
+    <use
+       xlink:href="#spade"
+       x="261.017"
+       y="289.323"
+       transform="scale(2.4)"
+       id="use1132" />
+  </g>
+  <g
+     id="5_spade"
+     transform="translate(-501.67501,-729.11811)">
+    <use
+       xlink:href="#base"
+       x="670.29999"
+       y="729.41199"
+       id="use1133" />
+    <use
+       xlink:href="#n_5"
+       x="674.29999"
+       y="530.29498"
+       id="use1134" />
+    <use
+       xlink:href="#n_5"
+       x="833.875"
+       y="699.13202"
+       transform="rotate(180,833.875,699.132)"
+       id="use1135" />
+    <use
+       xlink:href="#spade"
+       x="683.95001"
+       y="544.29498"
+       transform="rotate(180,683.95,544.295)"
+       id="use1136" />
+    <use
+       xlink:href="#spade"
+       x="824.22498"
+       y="685.13202"
+       id="use1137" />
+    <use
+       xlink:href="#spade"
+       x="297.56601"
+       y="221.209"
+       transform="matrix(-2.4,0,0,-2.4,1428.3168,1061.8032)"
+       id="use1138" />
+    <use
+       xlink:href="#spade"
+       x="297.56601"
+       y="289.323"
+       transform="scale(2.4)"
+       id="use1139" />
+    <use
+       xlink:href="#spade"
+       x="330.84"
+       y="221.209"
+       transform="matrix(-2.4,0,0,-2.4,1588.032,1061.8032)"
+       id="use1140" />
+    <use
+       xlink:href="#spade"
+       x="330.84"
+       y="289.323"
+       transform="scale(2.4)"
+       id="use1141" />
+    <use
+       xlink:href="#spade"
+       x="314.203"
+       y="253.26801"
+       transform="matrix(-2.4,0,0,-2.4,1508.1744,1215.6864)"
+       id="use1142" />
+  </g>
+  <g
+     id="back"
+     transform="translate(-501.67501,-729.11811)">
+    <use
+       xlink:href="#base"
+       x="335.14999"
+       y="972.54999"
+       id="use1397" />
+    <rect
+       style="fill:#0062ff;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.716133;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1"
+       width="131.9648"
+       height="177.42918"
+       x="358.44342"
+       y="761.04138"
+       transform="matrix(1.157448,0,0,1.291938,-72.77354,-239.377)"
+       ry="2.7421434"
+       rx="2.7421434"
+       id="rect1397" />
+    <rect
+       width="131.9648"
+       height="177.42918"
+       rx="2.9805906"
+       ry="2.8864667"
+       x="358.44342"
+       y="761.04138"
+       transform="matrix(1.064852,0,0,1.227341,-33.46908,-184.4809)"
+       style="fill:#0062ff;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:1.31317;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1"
+       id="rect1398" />
+    <rect
+       width="131.9648"
+       height="177.42918"
+       rx="0"
+       ry="0"
+       x="358.44342"
+       y="761.04138"
+       transform="matrix(0.901291,0,0,1.107675,35.9519,-82.79633)"
+       style="fill:#0062ff;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:1.25207;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1"
+       id="rect1399" />
+    <rect
+       width="131.9648"
+       height="177.42918"
+       rx="0"
+       ry="0"
+       x="358.44342"
+       y="761.04138"
+       transform="matrix(0.829188,0,0,1.052291,66.55439,-35.73366)"
+       style="fill:#0062ff;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:1.33928;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1"
+       id="rect1400" />
+    <g
+       id="back_c1">
+      <g
+         id="back_c2">
+        <use
+           transform="translate(-120.572,-156.034)"
+           xlink:href="#squa_circ"
+           id="use1400" />
+        <use
+           transform="translate(-113.479,-156.034)"
+           xlink:href="#squa_circ"
+           id="use1401" />
+        <use
+           transform="translate(-106.387,-156.034)"
+           xlink:href="#squa_circ"
+           id="use1402" />
+      </g>
+      <g
+         id="back_c3">
+        <use
+           transform="translate(-113.4792,-163.1263)"
+           xlink:href="#squa_circ"
+           id="use1403" />
+        <use
+           transform="translate(-106.3868,-170.2188)"
+           xlink:href="#squa_circ"
+           id="use1404" />
+        <use
+           transform="translate(-106.3868,-163.1263)"
+           xlink:href="#squa_circ"
+           id="use1405" />
+      </g>
+      <g
+         id="back_c4">
+        <g
+           id="back_c5">
+          <use
+             transform="translate(-99.2942,-177.311)"
+             xlink:href="#squa_circ"
+             id="use1406" />
+          <use
+             transform="translate(-92.2019,-177.311)"
+             xlink:href="#squa_circ"
+             id="use1407" />
+          <use
+             transform="translate(-85.1094,-177.311)"
+             xlink:href="#squa_circ"
+             id="use1408" />
+          <use
+             transform="translate(-78.017,-177.311)"
+             xlink:href="#squa_circ"
+             id="use1409" />
+        </g>
+        <use
+           transform="translate(0,7.0926)"
+           xlink:href="#back_c5"
+           id="use1410" />
+        <use
+           transform="translate(1.4161e-4,14.185)"
+           xlink:href="#back_c5"
+           id="use1411" />
+        <use
+           transform="translate(0,21.2775)"
+           xlink:href="#back_c5"
+           id="use1412" />
+        <use
+           transform="translate(1.4161e-4,28.3699)"
+           xlink:href="#back_c5"
+           id="use1413" />
+      </g>
+      <use
+         transform="translate(0,35.4623)"
+         xlink:href="#back_c5"
+         id="use1414" />
+      <use
+         transform="translate(1.4161e-4,42.5548)"
+         xlink:href="#back_c5"
+         id="use1415" />
+      <use
+         transform="translate(0,49.6472)"
+         xlink:href="#back_c5"
+         id="use1416" />
+      <use
+         transform="translate(-21.2773,56.7397)"
+         xlink:href="#back_c4"
+         id="use1417" />
+      <use
+         transform="rotate(180,393.8205,809.14)"
+         xlink:href="#back_c3"
+         id="use1418" />
+      <use
+         transform="translate(1.477e-4,7.0926)"
+         xlink:href="#back_c2"
+         id="use1419" />
+      <use
+         transform="translate(0,14.185)"
+         xlink:href="#back_c2"
+         id="use1420" />
+      <use
+         transform="translate(1.477e-4,21.2775)"
+         xlink:href="#back_c2"
+         id="use1421" />
+      <use
+         transform="translate(0,28.3699)"
+         xlink:href="#back_c2"
+         id="use1422" />
+    </g>
+    <rect
+       width="28.4"
+       height="6.5999999"
+       x="369.5"
+       y="856.09998"
+       style="fill:#0062ff;stroke:none"
+       id="rect1422" />
+    <use
+       transform="matrix(1,0,0,-1,0,1717.575)"
+       xlink:href="#back_c1"
+       id="use1423" />
+    <use
+       transform="matrix(-1,0,0,1,837.289,0)"
+       xlink:href="#back_c1"
+       id="use1424" />
+    <rect
+       width="28.4"
+       height="6.5999999"
+       x="440.29999"
+       y="855.5"
+       style="fill:#0062ff;stroke:none"
+       id="rect1424" />
+    <use
+       transform="rotate(180,418.6445,858.7875)"
+       xlink:href="#back_c1"
+       id="use1425" />
+    <use
+       xlink:href="#center_deco"
+       id="use1426" />
+    <use
+       transform="matrix(-1,0,0,1,836.872,0)"
+       xlink:href="#center_deco"
+       id="use1427" />
+    <use
+       transform="matrix(1,0,0,-1,0,1716.7)"
+       xlink:href="#center_deco"
+       id="use1428" />
+    <use
+       transform="rotate(180,418.436,858.35)"
+       xlink:href="#center_deco"
+       id="use1429" />
+    <use
+       xlink:href="#lys"
+       id="use1430" />
+    <use
+       transform="matrix(-1,0,0,1,838.164,0)"
+       xlink:href="#lys"
+       id="use1431" />
+    <use
+       transform="matrix(1,0,0,-1,0,1717.175)"
+       xlink:href="#lys"
+       id="use1432" />
+    <use
+       transform="rotate(180,419.082,858.5875)"
+       xlink:href="#lys"
+       id="use1433" />
+    <use
+       transform="rotate(-90,456.8495,858.3105)"
+       xlink:href="#twist"
+       id="use1434" />
+    <use
+       transform="rotate(180,418.481,858.3105)"
+       xlink:href="#twist"
+       id="use1435" />
+    <use
+       transform="rotate(90,418.481,819.942)"
+       xlink:href="#twist"
+       id="use1436" />
+    <use
+       xlink:href="#twist"
+       id="use1437" />
+    <g
+       id="g_lace">
+      <use
+         xlink:href="#lace"
+         id="use1438" />
+      <use
+         transform="translate(0,27.18114)"
+         xlink:href="#lace"
+         id="use1439" />
+      <use
+         transform="translate(0,54.37214)"
+         xlink:href="#lace"
+         id="use1440" />
+      <use
+         transform="translate(0,81.5631)"
+         xlink:href="#lace"
+         id="use1441" />
+      <use
+         transform="translate(0,108.7443)"
+         xlink:href="#lace"
+         id="use1442" />
+      <use
+         transform="translate(0,135.9353)"
+         xlink:href="#lace"
+         id="use1443" />
+      <use
+         transform="translate(0,163.1262)"
+         xlink:href="#lace"
+         id="use1444" />
+    </g>
+    <use
+       transform="translate(129.5877,-0.313128)"
+       xlink:href="#g_lace"
+       id="use1445" />
+    <g
+       transform="translate(-145.1693,-59.66309)"
+       id="g_lace2">
+      <use
+         transform="rotate(-90,456.94045,711.05255)"
+         xlink:href="#lace"
+         id="use1446" />
+      <use
+         transform="rotate(-90,470.53595,697.45705)"
+         xlink:href="#lace"
+         id="use1447" />
+      <use
+         transform="rotate(-90,484.13145,683.86155)"
+         xlink:href="#lace"
+         id="use1448" />
+      <use
+         transform="rotate(-90,497.72205,670.27095)"
+         xlink:href="#lace"
+         id="use1449" />
+    </g>
+    <use
+       transform="translate(0,207.189)"
+       xlink:href="#g_lace2"
+       id="use1450" />
+  </g>
+</svg>

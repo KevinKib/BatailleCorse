@@ -1,0 +1,525 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   version="1.1"
+   height="244.54906"
+   width="169.01215"
+   viewBox="-0.2 -236 169.075 244.54907"
+   id="svg1450"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <!-- SVG-cards 2.0.1								-->
+  <!-- This set of SVG files is a complete cards game with figures, numbers	-->
+  <!--	and backs of cards completely designed in SVG.				-->
+  <!--										-->
+  <!--	Copyright (C) 2005 David Bellot						-->
+  <!--										-->
+  <!--	This library is free software; you can redistribute it and/or		-->
+  <!--	modify it under the terms of the GNU Lesser General Public		-->
+  <!--	License as published by the Free Software Foundation; either		-->
+  <!--	version 2 of the License, or (at your option) any later version		-->
+  <!--										-->
+  <!--	This library is distributed in the hope that it will be useful,		-->
+  <!--	but WITHOUT ANY WARRANTY; without even the implied warranty of		-->
+  <!--	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU	-->
+  <!--	Lesser General Public License for more details.				-->
+  <!--										-->
+  <!--	You should have received a copy of the GNU Lesser General Public	-->
+  <!--	License along with this library; if not, write to the Free Software	-->
+  <!--	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA-->
+  <!--                                                                            -->
+  <!--	Contact the author David Bellot at david.bellot@free.fr			-->
+  <defs
+     id="defs265">
+    <g
+       id="n_2">
+      <text
+         transform="scale(0.56453,1.05741)"
+         font-family="'Bitstream Vera Serif'"
+         font-weight="bold"
+         font-size="43px"
+         id="text3">2</text>
+    </g>
+    <g
+       id="n_3">
+      <text
+         transform="scale(0.56453,1.05741)"
+         font-family="'Bitstream Vera Serif'"
+         font-weight="bold"
+         font-size="43px"
+         id="text4">3</text>
+    </g>
+    <g
+       id="ace">
+      <text
+         transform="scale(0.56453,1.05741)"
+         font-family="'Bitstream Vera Serif'"
+         font-weight="bold"
+         font-size="43px"
+         id="text11">A</text>
+    </g>
+    <g
+       id="base">
+      <path
+         style="fill:#ffffff;stroke:#000000;stroke-width:2.5"
+         d="m 0,0 c 0,3.78 3.09,6.87 6.87,6.87 h 152.845 c 3.77,0 6.86,-3.09 6.86,-6.87 v -228.4 c 0,-3.78 -3.09,-6.87 -6.86,-6.87 H 6.87 c -3.78,0 -6.87,3.09 -6.87,6.87 z"
+         id="path14" />
+    </g>
+    <g
+       id="diamond">
+      <path
+         style="fill:#e6180a"
+         d="m 0,0 c -2.56,0 -5.12,0 -7.68,0 0.8747,0.039 1.619,0.605 2.322,1.0728 C -3.779,2.264 -2.3,3.63 -1.132,5.228 -0.587,6.032 -0.0144,6.936 0,7.94 M -7.68,0 c 1.11,-0.035 2.058,-0.7413 2.904,-1.393 1.495,-1.255 2.789,-2.748 3.881,-4.364 C -0.494,-6.426 -0.022,-7.135 0,-7.94 0,-5.293 0,-2.647 0,0 m 0,-7.94 c 0.038,1.182 0.758,2.206 1.438,3.12 1.212,1.51 2.648,2.846 4.228,3.963 C 6.28,-0.474 6.932,-0.0185 7.68,0 5.12,0 2.56,0 0,0 M 7.68,0 C 6.57,0.035 5.622,0.741 4.776,1.392 3.281,2.648 1.987,4.141 0.895,5.757 0.494,6.426 0.0225,7.135 0,7.94 0,5.293 0,2.647 0,0"
+         id="path22" />
+    </g>
+    <g
+       id="heart">
+      <path
+         style="fill:#e6180a"
+         d="m -7.67,3.93 c 0.01,-4.71 5.91,-8.14 7.64,-11.87 1.75,3.72 7.66,7.12 7.7,11.83 C 7.68,6.11 5.96,7.92 3.85,7.92 1.73,7.92 0,6.13 0,3.91 0,6.14 -1.71,7.94 -3.82,7.94 -5.94,7.95 -7.66,6.15 -7.67,3.93 Z"
+         id="path23" />
+    </g>
+    <g
+       id="spade">
+      <path
+         d="m 3.92,-7.93 c -1.67,0 -2.55,1.78 -3.01,3.56 -0.46,1.78 -0.5,3.56 -0.5,3.56 l -0.85,0.01 c 0,0 -0.16,-7.13 -3.5,-7.13 z"
+         id="path24" />
+      <path
+         d="M 6.75,-0.8 C 6.74,2.67 1.53,5.19 0,7.93 -1.53,5.18 -6.74,2.66 -6.75,-0.8 c 0,-1.64 1.51,-2.97 3.38,-2.97 1.86,0 3.37,1.33 3.37,2.97 0,-1.64 1.51,-2.97 3.38,-2.97 1.87,0 3.37,1.33 3.37,2.97 z"
+         id="path25" />
+    </g>
+    <g
+       transform="matrix(0.4,0,0,0.4,236.59,667.12)"
+       id="lys"
+       style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-opacity:1">
+      <path
+         d="m 355.65,280.19 c 0,0 -3.75,-8.1 -8.1,-12.6 -4.36,-4.51 -9.68,-7.58 -11.04,-6.53"
+         transform="translate(-1.35,-0.76)"
+         style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.25pt;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         id="lys_1" />
+      <path
+         d="m 368.97,258.94 c -2.29,0.08 -5.9,1.92 -7.85,3.87 -2.59,2.6 -3.52,7.58 -3.59,9.44 -0.07,1.86 -1.32,-0.84 -2.19,-2.37 -0.86,-1.54 -1.93,-5.4 -2.22,-3.22 -0.28,2.2 -0.34,3.26 0.07,5.72 0.4,2.45 1.59,7.15 2.56,8.68 l 3.97,3.94 c 1.87,-1.88 3.1,-6.25 3.19,-6.25 l -0.07,9.34 4.35,4.32 c -1.16,-2.37 -1.94,-6.58 -1.63,-10.38 0.32,-3.8 2.3,-8.59 2.06,-10.44 -1.14,-0.4 -2.9,2.58 -5.21,1.88 -0.08,-1.75 0.74,-6.02 1.9,-7.69 1.17,-1.66 4.43,-5.7 6.41,-6.28 -0.36,-0.42 -0.99,-0.59 -1.75,-0.56 z"
+         style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.25pt;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         id="lys_2" />
+      <path
+         d="m 329.36,254.28 c 9.62,-4.95 19.64,8.3 19.64,8.3 0,0 1.44,-9.25 3.32,-9.36 1.88,-0.11 4.87,7.31 4.87,7.31 0,0 5.76,-7.64 15.72,-7.58 9.97,0.05 11.57,9.13 5.87,9.57 -5.66,0.44 -2.38,-5.15 -2.27,-3.65 0.06,0.17 -5.37,-7.75 -19.15,7.86 -2.03,2.3 -3.94,-8.46 -4.93,-6.09 -1.21,2.88 -0.22,6.26 -1.11,8.53 1.39,1.71 -11.35,-13.84 -16.77,-9.58"
+         transform="translate(-1.35,-0.76)"
+         style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.25pt;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         id="lys_3" />
+      <use
+         transform="matrix(0,1,1,0,74.5,-74.49)"
+         xlink:href="#lys_3"
+         style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-opacity:1"
+         id="use262" />
+      <use
+         transform="matrix(0,1,1,0,74.9,-74.93)"
+         xlink:href="#lys_1"
+         style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-opacity:1"
+         id="use263" />
+      <use
+         transform="matrix(0,1,1,0,74.82,-74.82)"
+         xlink:href="#lys_2"
+         style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-opacity:1"
+         id="use264" />
+    </g>
+  </defs>
+  <g
+     id="1_diamond"
+     transform="translate(-166.525,-485.98112)">
+    <use
+       xlink:href="#base"
+       x="0"
+       y="243.13699"
+       id="use547" />
+    <use
+       xlink:href="#ace"
+       x="4"
+       y="44.02"
+       style="fill:#e6180a"
+       id="use548" />
+    <use
+       xlink:href="#ace"
+       x="163.575"
+       y="212.85699"
+       transform="rotate(180,163.575,212.857)"
+       style="fill:#e6180a"
+       id="use549" />
+    <use
+       xlink:href="#diamond"
+       x="13.65"
+       y="58.02"
+       transform="rotate(180,13.65,58.02)"
+       id="use550" />
+    <use
+       xlink:href="#diamond"
+       x="153.925"
+       y="198.85699"
+       id="use551" />
+    <use
+       xlink:href="#diamond"
+       x="34.911499"
+       y="50.653599"
+       transform="matrix(-2.4,0,0,-2.4,167.5752,243.13728)"
+       id="use552" />
+  </g>
+  <g
+     id="2_diamond"
+     transform="translate(-166.525,-485.98112)">
+    <use
+       xlink:href="#base"
+       x="167.575"
+       y="243.13699"
+       id="use553" />
+    <use
+       xlink:href="#n_2"
+       x="171.575"
+       y="44.02"
+       style="fill:#e6180a"
+       id="use554" />
+    <use
+       xlink:href="#n_2"
+       x="331.14999"
+       y="212.85699"
+       transform="rotate(180,331.15,212.857)"
+       style="fill:#e6180a"
+       id="use555" />
+    <use
+       xlink:href="#diamond"
+       x="181.22501"
+       y="58.02"
+       transform="rotate(180,181.225,58.02)"
+       id="use556" />
+    <use
+       xlink:href="#diamond"
+       x="321.5"
+       y="198.85699"
+       id="use557" />
+    <use
+       xlink:href="#diamond"
+       x="104.734"
+       y="86.708298"
+       transform="scale(2.4)"
+       id="use558" />
+    <use
+       xlink:href="#diamond"
+       x="104.734"
+       y="18.594801"
+       transform="matrix(-2.4,0,0,-2.4,502.7232,89.25504)"
+       id="use559" />
+  </g>
+  <g
+     id="3_diamond"
+     transform="translate(-166.525,-485.98112)">
+    <use
+       xlink:href="#base"
+       x="335.14999"
+       y="243.13699"
+       id="use560" />
+    <use
+       xlink:href="#n_3"
+       x="339.14999"
+       y="44.02"
+       style="fill:#e6180a"
+       id="use561" />
+    <use
+       xlink:href="#n_3"
+       x="498.72501"
+       y="212.85699"
+       transform="rotate(180,498.725,212.857)"
+       style="fill:#e6180a"
+       id="use562" />
+    <use
+       xlink:href="#diamond"
+       x="348.79999"
+       y="58.02"
+       transform="rotate(180,348.8,58.02)"
+       id="use563" />
+    <use
+       xlink:href="#diamond"
+       x="489.07501"
+       y="198.85699"
+       id="use564" />
+    <use
+       xlink:href="#diamond"
+       x="174.55701"
+       y="86.708298"
+       transform="scale(2.4)"
+       id="use565" />
+    <use
+       xlink:href="#diamond"
+       x="174.55701"
+       y="50.653599"
+       transform="matrix(-2.4,0,0,-2.4,837.8736,243.13728)"
+       id="use566" />
+    <use
+       xlink:href="#diamond"
+       x="174.55701"
+       y="18.594801"
+       transform="matrix(-2.4,0,0,-2.4,837.8736,89.25504)"
+       id="use567" />
+  </g>
+  <g
+     id="1_heart"
+     transform="translate(-166.525,-485.98112)">
+    <use
+       xlink:href="#base"
+       x="0"
+       y="486.27499"
+       id="use820" />
+    <use
+       xlink:href="#ace"
+       x="4"
+       y="287.15701"
+       style="fill:#e6180a"
+       id="use821" />
+    <use
+       xlink:href="#ace"
+       x="163.575"
+       y="455.995"
+       transform="rotate(180,163.575,455.995)"
+       style="fill:#e6180a"
+       id="use822" />
+    <use
+       xlink:href="#heart"
+       x="13.65"
+       y="301.15701"
+       transform="rotate(180,13.65,301.157)"
+       id="use823" />
+    <use
+       xlink:href="#heart"
+       x="153.925"
+       y="441.995"
+       id="use824" />
+    <use
+       xlink:href="#heart"
+       x="34.911499"
+       y="151.961"
+       transform="matrix(-2.4,0,0,-2.4,167.5752,729.4128)"
+       id="use825" />
+  </g>
+  <g
+     id="2_heart"
+     transform="translate(-166.525,-485.98112)">
+    <use
+       xlink:href="#base"
+       x="167.575"
+       y="486.27499"
+       id="use826" />
+    <use
+       xlink:href="#n_2"
+       x="171.575"
+       y="287.15701"
+       style="fill:#e6180a"
+       id="use827" />
+    <use
+       xlink:href="#n_2"
+       x="331.14999"
+       y="455.995"
+       transform="rotate(180,331.15,455.995)"
+       style="fill:#e6180a"
+       id="use828" />
+    <use
+       xlink:href="#heart"
+       x="181.22501"
+       y="301.15701"
+       transform="rotate(180,181.225,301.157)"
+       id="use829" />
+    <use
+       xlink:href="#heart"
+       x="321.5"
+       y="441.995"
+       id="use830" />
+    <use
+       xlink:href="#heart"
+       x="104.734"
+       y="188.01601"
+       transform="scale(2.4)"
+       id="use831" />
+    <use
+       xlink:href="#heart"
+       x="104.734"
+       y="119.902"
+       transform="matrix(-2.4,0,0,-2.4,502.7232,575.5296)"
+       id="use832" />
+  </g>
+  <g
+     id="3_heart"
+     transform="translate(-166.525,-485.98112)">
+    <use
+       xlink:href="#base"
+       x="335.14999"
+       y="486.27499"
+       id="use833" />
+    <use
+       xlink:href="#n_3"
+       x="339.14999"
+       y="287.15701"
+       style="fill:#e6180a"
+       id="use834" />
+    <use
+       xlink:href="#n_3"
+       x="498.72501"
+       y="455.995"
+       transform="rotate(180,498.725,455.995)"
+       style="fill:#e6180a"
+       id="use835" />
+    <use
+       xlink:href="#heart"
+       x="348.79999"
+       y="301.15701"
+       transform="rotate(180,348.8,301.157)"
+       id="use836" />
+    <use
+       xlink:href="#heart"
+       x="489.07501"
+       y="441.995"
+       id="use837" />
+    <use
+       xlink:href="#heart"
+       x="174.55701"
+       y="188.01601"
+       transform="scale(2.4)"
+       id="use838" />
+    <use
+       xlink:href="#heart"
+       x="174.55701"
+       y="151.961"
+       transform="matrix(-2.4,0,0,-2.4,837.8736,729.4128)"
+       id="use839" />
+    <use
+       xlink:href="#heart"
+       x="174.55701"
+       y="119.902"
+       transform="matrix(-2.4,0,0,-2.4,837.8736,575.5296)"
+       id="use840" />
+  </g>
+  <g
+     id="1_spade"
+     transform="translate(-166.525,-485.98112)">
+    <use
+       xlink:href="#base"
+       x="0"
+       y="729.41199"
+       id="use1103" />
+    <use
+       xlink:href="#ace"
+       x="4"
+       y="530.29498"
+       id="use1104" />
+    <use
+       xlink:href="#ace"
+       x="163.575"
+       y="699.13202"
+       transform="rotate(180,163.575,699.132)"
+       id="use1105" />
+    <use
+       xlink:href="#spade"
+       x="13.65"
+       y="544.29498"
+       transform="rotate(180,13.65,544.295)"
+       id="use1106" />
+    <use
+       xlink:href="#spade"
+       x="153.925"
+       y="685.13202"
+       id="use1107" />
+    <use
+       xlink:href="#spade"
+       x="34.911499"
+       y="253.26801"
+       transform="matrix(-2.4,0,0,-2.4,167.5752,1215.6864)"
+       id="use1108" />
+  </g>
+  <g
+     id="2_spade"
+     transform="translate(-166.525,-485.98112)">
+    <use
+       xlink:href="#base"
+       x="167.575"
+       y="729.41199"
+       id="use1109" />
+    <use
+       xlink:href="#n_2"
+       x="171.575"
+       y="530.29498"
+       id="use1110" />
+    <use
+       xlink:href="#n_2"
+       x="331.14999"
+       y="699.13202"
+       transform="rotate(180,331.15,699.132)"
+       id="use1111" />
+    <use
+       xlink:href="#spade"
+       x="181.22501"
+       y="544.29498"
+       transform="rotate(180,181.225,544.295)"
+       id="use1112" />
+    <use
+       xlink:href="#spade"
+       x="321.5"
+       y="685.13202"
+       id="use1113" />
+    <use
+       xlink:href="#spade"
+       x="104.734"
+       y="289.323"
+       transform="scale(2.4)"
+       id="use1114" />
+    <use
+       xlink:href="#spade"
+       x="104.734"
+       y="221.209"
+       transform="matrix(-2.4,0,0,-2.4,502.7232,1061.8032)"
+       id="use1115" />
+  </g>
+  <g
+     id="3_spade"
+     transform="translate(-166.525,-485.98112)">
+    <use
+       xlink:href="#base"
+       x="335.14999"
+       y="729.41199"
+       id="use1116" />
+    <use
+       xlink:href="#n_3"
+       x="339.14999"
+       y="530.29498"
+       id="use1117" />
+    <use
+       xlink:href="#n_3"
+       x="498.72501"
+       y="699.13202"
+       transform="rotate(180,498.725,699.132)"
+       id="use1118" />
+    <use
+       xlink:href="#spade"
+       x="348.79999"
+       y="544.29498"
+       transform="rotate(180,348.8,544.295)"
+       id="use1119" />
+    <use
+       xlink:href="#spade"
+       x="489.07501"
+       y="685.13202"
+       id="use1120" />
+    <use
+       xlink:href="#spade"
+       x="174.55701"
+       y="289.323"
+       transform="scale(2.4)"
+       id="use1121" />
+    <use
+       xlink:href="#spade"
+       x="174.55701"
+       y="253.26801"
+       transform="matrix(-2.4,0,0,-2.4,837.8736,1215.6864)"
+       id="use1122" />
+    <use
+       xlink:href="#spade"
+       x="174.55701"
+       y="221.209"
+       transform="matrix(-2.4,0,0,-2.4,837.8736,1061.8032)"
+       id="use1123" />
+  </g>
+</svg>
