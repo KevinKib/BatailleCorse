@@ -45,8 +45,7 @@ import Response from "../service/model/Response";
 
 export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
 
-  const autoGrab = true;
-
+  const autoGrabEnabled = true;
   const state = ref<BatailleCorse>();
 
   function create() {
@@ -77,6 +76,22 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
     console.log('onResponse', response);
 
     state.value = response.state;
+    
+
+    if (autoGrabEnabled && state.value.pile.grabbable) {
+      setTimeout(autoGrab, 1500);
+    }
+  }
+
+  function autoGrab() {
+    if (state.value.pile.grabbable) {
+      // TODO: beware as pile can become grabbable on the next round. Reset the setTimeout if the pile is grabbed (?)
+
+      const playerIndex = Number(state.value.pile.playerThatAddedLastHonourCard.id);
+      if (playerIndex != undefined) {
+        grab((playerIndex));
+      }
+    }
   }
 
   return { 

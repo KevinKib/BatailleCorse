@@ -31,7 +31,7 @@ const defaultWidth = 167.575;
 const width = computed(() => props.size.value);
 const height = computed(() => props.size.value * defaultHeight / defaultWidth / 2);
 
-import { computed, defineAsyncComponent, ref, toRefs, watchEffect } from 'vue';
+import { computed, toRefs } from 'vue';
 
 const valid = computed(() => {
   return props.rank.value != "" && props.suit.value != "";
