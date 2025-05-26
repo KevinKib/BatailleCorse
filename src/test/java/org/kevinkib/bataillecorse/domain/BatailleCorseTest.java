@@ -456,4 +456,32 @@ class BatailleCorseTest {
 
     }
 
+    @Nested
+    class GetAvailableActionsTest {
+
+        private BatailleCorse batailleCorse;
+        private Player player1;
+
+        @BeforeEach
+        public void beforeEach() {
+            int nbPlayers = 2;
+
+            player1 = PlayerBuilder.aPlayer().withId(1).build();
+
+            batailleCorse = BatailleCorseBuilder.aBatailleCorse()
+                    .withPlayers(Arrays.asList(
+                            player1,
+                            PlayerBuilder.aPlayer().withId(2).build()
+                    ))
+                    .buildAndInitialize();
+        }
+
+        @Test
+        void givenFinishedGame_thenNoActionsAreAvailable() {
+            batailleCorse = BatailleCorseFixtures.createFinishedGame();
+            assertThat(batailleCorse.getAvailableActions(player1).isEmpty(), is(true));
+        }
+
+    }
+
 }

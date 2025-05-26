@@ -33,17 +33,7 @@ public class BatailleCorse {
     }
 
     public void send(Player player) throws NotPlayersTurnException, FullCentralPileException, FinishedGameException {
-        if (isFinished()) {
-            throw new FinishedGameException();
-        }
-
-        if (!getCurrentPlayer().equals(player)) {
-            throw new NotPlayersTurnException(player);
-        }
-
-        if (pile.isFull()) {
-            throw new FullCentralPileException();
-        }
+        checkIfPlayerCanSend(player);
 
         try {
             Card card = player.removeCardOnTop();
@@ -59,13 +49,7 @@ public class BatailleCorse {
     }
 
     public boolean slap(Player player) throws CannotSlapIfNoCardsInPileException, FinishedGameException {
-        if (isFinished()) {
-            throw new FinishedGameException();
-        }
-
-        if (pile.isEmpty()) {
-            throw new CannotSlapIfNoCardsInPileException();
-        }
+        checkIfPlayerCanSlap(player);
 
         boolean successfulSlap = slapRules.applies(pile);
 
@@ -84,6 +68,40 @@ public class BatailleCorse {
     }
 
     public void grab(Player player) throws CannotGrabException, FinishedGameException {
+        checkIfPlayerCanGrab(player);
+
+        List<Card> cards = pile.clearAndReturnCards();
+        player.addCardsFromPile(cards);
+
+        indexHandler.setCurrentPlayer(players.indexOf(player));
+        result = Result.update(players, pile, slapRules);
+    }
+
+    private void checkIfPlayerCanSend(Player player) throws NotPlayersTurnException, FullCentralPileException, FinishedGameException {
+        if (isFinished()) {
+            throw new FinishedGameException();
+        }
+
+        if (!getCurrentPlayer().equals(player)) {
+            throw new NotPlayersTurnException(player);
+        }
+
+        if (pile.isFull()) {
+            throw new FullCentralPileException();
+        }
+    }
+
+    private void checkIfPlayerCanSlap(Player player) throws CannotSlapIfNoCardsInPileException, FinishedGameException {
+        if (isFinished()) {
+            throw new FinishedGameException();
+        }
+
+        if (pile.isEmpty()) {
+            throw new CannotSlapIfNoCardsInPileException();
+        }
+    }
+
+    private void checkIfPlayerCanGrab(Player player) throws CannotGrabException, FinishedGameException {
         if (isFinished()) {
             throw new FinishedGameException();
         }
@@ -91,12 +109,27 @@ public class BatailleCorse {
         if (!pile.isGrabbableByPlayer(player)) {
             throw new CannotGrabException(player);
         }
+    }
 
-        List<Card> cards = pile.clearAndReturnCards();
-        player.addCardsFromPile(cards);
+    public List<Action> getAvailableActions(Player player) {
+        List<Action> allowedActions = new ArrayList<>();
 
-        indexHandler.setCurrentPlayer(players.indexOf(player));
-        result = Result.update(players, pile, slapRules);
+        try {
+            checkIfPlayerCanSend(player);
+            allowedActions.add(Action.SEND);
+        } catch (Exception ignored) {}
+
+        try {
+            checkIfPlayerCanSlap(player);
+            allowedActions.add(Action.SLAP);
+        } catch (Exception ignored) {}
+
+        try {
+            checkIfPlayerCanGrab(player);
+            allowedActions.add(Action.GRAB);
+        } catch (Exception ignored) {}
+
+        return allowedActions;
     }
 
     public Card getPileTopCard() {

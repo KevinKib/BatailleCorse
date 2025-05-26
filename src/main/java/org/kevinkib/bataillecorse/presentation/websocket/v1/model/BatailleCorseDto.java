@@ -15,7 +15,7 @@ public class BatailleCorseDto {
 
     public List<PlayerDto> getPlayers() {
         return batailleCorse.getPlayers().stream()
-                .map(PlayerDto::new)
+                .map(player -> new PlayerDto(player, batailleCorse.getAvailableActions(player)))
                 .toList();
     }
 
@@ -26,7 +26,8 @@ public class BatailleCorseDto {
     }
 
     public PlayerDto getCurrentPlayer() {
-        return new PlayerDto(batailleCorse.getCurrentPlayer());
+        Player currentPlayer = batailleCorse.getCurrentPlayer();
+        return new PlayerDto(currentPlayer, batailleCorse.getAvailableActions(currentPlayer));
     }
 
 }
