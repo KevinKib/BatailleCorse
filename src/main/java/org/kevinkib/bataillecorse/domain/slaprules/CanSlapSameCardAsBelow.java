@@ -10,6 +10,6 @@ public class CanSlapSameCardAsBelow implements SlapRule {
             return false;
         }
 
-        return pile.getCardByIndex(0).equals(pile.getCardByIndex(1));
+        return pile.getCardByIndex(0).isSameRankAs(pile.getCardByIndex(1));
     }
 }

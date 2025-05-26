@@ -10,6 +10,6 @@ public class CanSlapSandwich implements SlapRule {
             return false;
         }
 
-        return pile.getCard(0).equals(pile.getCard(2));
+        return pile.getCard(0).isSameRankAs(pile.getCard(2));
     }
 }

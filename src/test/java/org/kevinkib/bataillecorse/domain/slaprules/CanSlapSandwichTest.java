@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Test;
 import org.kevinkib.bataillecorse.domain.CentralPile;
 import org.kevinkib.bataillecorse.domain.CentralPileBuilder;
 import org.kevinkib.cards.domain.french.FrenchRank;
+import org.kevinkib.cards.domain.french.FrenchSuit;
+import org.kevinkib.cards.testhelpers.CardBuilder;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
@@ -33,6 +35,18 @@ class CanSlapSandwichTest {
         CentralPile pile = CentralPileBuilder.aCentralPile()
                 .withCardsWithRanks(FrenchRank.EIGHT, FrenchRank.FOUR, FrenchRank.EIGHT)
                 .build();
+
+        assertThat(rule.applies(pile), is(true));
+    }
+
+    @Test
+    public void givenCardsWithSameRanksAndDifferentSuits_thenApplies() {
+        CentralPile pile = CentralPileBuilder.aCentralPile()
+                .withCards(
+                        CardBuilder.aCard().withRank(FrenchRank.EIGHT).withSuit(FrenchSuit.CLUB).build(),
+                        CardBuilder.aCard().withRank(FrenchRank.FOUR).build(),
+                        CardBuilder.aCard().withRank(FrenchRank.EIGHT).withSuit(FrenchSuit.DIAMOND).build()
+                ).build();
 
         assertThat(rule.applies(pile), is(true));
     }

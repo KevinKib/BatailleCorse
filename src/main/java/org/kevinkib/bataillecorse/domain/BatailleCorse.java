@@ -58,7 +58,7 @@ public class BatailleCorse {
         }
     }
 
-    public void slap(Player player) throws CannotSlapIfNoCardsInPileException, FinishedGameException {
+    public boolean slap(Player player) throws CannotSlapIfNoCardsInPileException, FinishedGameException {
         if (isFinished()) {
             throw new FinishedGameException();
         }
@@ -67,7 +67,9 @@ public class BatailleCorse {
             throw new CannotSlapIfNoCardsInPileException();
         }
 
-        if (slapRules.applies(pile)) {
+        boolean successfulSlap = slapRules.applies(pile);
+
+        if (successfulSlap) {
             List<Card> cards = pile.clearAndReturnCards();
             player.addCardsFromPile(cards);
 
@@ -77,6 +79,8 @@ public class BatailleCorse {
             penality.apply(player, pile);
         }
         result = Result.update(players, pile, slapRules);
+
+        return successfulSlap;
     }
 
     public void grab(Player player) throws CannotGrabException, FinishedGameException {
@@ -97,6 +101,10 @@ public class BatailleCorse {
 
     public Card getPileTopCard() {
         return pile.getCardOnTop();
+    }
+
+    public List<Card> getPileCards() {
+        return new ArrayList<>(pile.getCards());
     }
 
     public int getPileSize() {
@@ -121,6 +129,10 @@ public class BatailleCorse {
 
     public int getNbPlayers() {
         return players.size();
+    }
+
+    public List<Player> getPlayers() {
+        return new ArrayList<>(players);
     }
 
     public boolean isFinished() {

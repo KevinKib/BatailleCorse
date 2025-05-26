@@ -255,6 +255,27 @@ class BatailleCorseTest {
         }
 
         @Test
+        public void whenLosing_thenReturnFalse() {
+
+            Penality penality = mock(Penality.class);
+            CentralPile pile = mock(CentralPile.class);
+
+            batailleCorse = BatailleCorseBuilder.aBatailleCorse()
+                    .withPlayers(createNumberOfPlayersWithAnyCards(2))
+                    .withSlapRules(SlapRulesFixtures.neverApplyingSlapRules())
+                    .withPenality(penality)
+                    .withCentralPile(pile)
+                    .build();
+
+            Player player = batailleCorse.getCurrentPlayer();
+
+            assertDoesNotThrow(() -> {
+                boolean successfulSlap = batailleCorse.slap(player);
+                assertThat(successfulSlap, is(false));
+            });
+        }
+
+        @Test
         public void whenWinning_thenClearPile_andGivePileCardsToWinningPlayer() {
 
             int nbCards = 5;
@@ -297,6 +318,26 @@ class BatailleCorseTest {
             });
 
             assertThat(batailleCorse.getCurrentPlayer(), is(player));
+        }
+
+        @Test
+        public void whenWinning_thenReturnTrue() {
+
+            int nbCards = 5;
+            CentralPile pile = createCentralPileWithNumberOfCards(nbCards);
+
+            batailleCorse = BatailleCorseBuilder.aBatailleCorse()
+                    .withPlayers(createNumberOfPlayersWithOneCard(2))
+                    .withSlapRules(alwaysApplyingSlapRules())
+                    .withCentralPile(pile)
+                    .build();
+
+            Player player = batailleCorse.getCurrentPlayer();
+
+            assertDoesNotThrow(() -> {
+                boolean successfulSlap = batailleCorse.slap(player);
+                assertThat(successfulSlap, is(true));
+            });
         }
 
         @Test
