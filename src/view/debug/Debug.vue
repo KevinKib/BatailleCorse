@@ -35,14 +35,14 @@
 
     <template #title>Pile</template>
     <template #content>
-      Top card: {{ batailleCorse?.pile.at(0)?.rank }}
+      Top card: {{ batailleCorse?.pile.cards.at(0)?.rank }}
       <br />
-      Nb cards: {{ batailleCorse?.pile.length }}
+      Nb cards: {{ batailleCorse?.pile.cards.length }}
 
       <PlayingCard 
         :size="120"
-        :suit="batailleCorse?.pile.at(0)?.suit"
-        :rank="batailleCorse?.pile.at(0)?.rank"/>
+        :suit="batailleCorse?.pile.cards.at(0)?.suit"
+        :rank="batailleCorse?.pile.cards.at(0)?.rank"/>
     </template>
   </Card>
 

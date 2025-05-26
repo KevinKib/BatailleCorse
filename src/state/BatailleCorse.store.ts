@@ -45,6 +45,8 @@ import Response from "../service/model/Response";
 
 export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
 
+  const autoGrab = true;
+
   const state = ref<BatailleCorse>();
 
   function create() {
@@ -75,7 +77,6 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
     console.log('onResponse', response);
 
     state.value = response.state;
-    console.log(state.value);
   }
 
   return { 
