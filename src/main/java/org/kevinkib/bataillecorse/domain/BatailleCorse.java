@@ -132,6 +132,10 @@ public class BatailleCorse {
         return allowedActions;
     }
 
+    public CentralPile getPile() {
+        return pile;
+    }
+
     public Card getPileTopCard() {
         return pile.getCardOnTop();
     }
@@ -142,6 +146,10 @@ public class BatailleCorse {
 
     public int getPileSize() {
         return pile.getSize();
+    }
+
+    public boolean isPileGrabbable() {
+        return pile.isGrabbableByAnyPlayer();
     }
 
     public Player getWinner() {

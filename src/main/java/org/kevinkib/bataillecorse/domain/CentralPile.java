@@ -56,6 +56,10 @@ public class CentralPile implements PileSubscriber {
         return isFull() && playerThatAddedLastHonourCard.equals(player);
     }
 
+    public boolean isGrabbableByAnyPlayer() {
+        return isFull();
+    }
+
     public boolean isEmpty() {
         return pile.isEmpty();
     }

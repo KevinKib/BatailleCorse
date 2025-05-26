@@ -19,10 +19,8 @@ public class BatailleCorseDto {
                 .toList();
     }
 
-    public List<CardDto> getPile() {
-        return batailleCorse.getPileCards().stream()
-                .map(CardDto::new)
-                .toList();
+    public PileDto getPile() {
+        return new PileDto(batailleCorse.getPile());
     }
 
     public PlayerDto getCurrentPlayer() {
