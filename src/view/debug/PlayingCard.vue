@@ -1,15 +1,5 @@
 <template>
-
-  <!-- <component :is="{...card}" :key="filename" v-if="valid" :width="width" :height="height"/> -->
-
-  <!-- <img :src="`../../resources/cards/png/${filename}.png`"/> -->
-  <!-- <img :src="`/src/resources/cards/png/card_1_diamond.png`"/> -->
-  <!-- <img :src="`/src/resources/cards/png/${filename}.png`" v-if="valid"/> -->
-  <img :src="url" v-if="valid"/>
-
-  {{ props.rank }}
-  {{ props.suit }}
-
+  <img :src="url" v-show="valid" :width="width" :height="height"/>
 </template>
 
 <script setup lang="ts">
@@ -47,14 +37,9 @@ const valid = computed(() => {
   return props.rank.value != "" && props.suit.value != "";
 });
 
-// const card = ref();
-
-// watchEffect(() => {
-//   card.value = defineAsyncComponent(() => import(`../../resources/cards/svg/${filename.value}.svg`));
-// })
-
 const filename = computed(() => {
-  if (props.hidden.value == true) {
+
+  if (!valid.value || props.hidden.value == true) {
     return `card_back`;
   }
 

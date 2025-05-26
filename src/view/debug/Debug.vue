@@ -6,11 +6,11 @@
     <template #content>
       
       <Button type="submit" severity="primary" label="Send" rounded class="action" 
-        @click="send(0)"/>
-      <Button type="submit" severity="danger" label="Hit" rounded class="action"
-        @click="slap(0)"/>
+        @click="send(0)" :disabled="isButtonDisabled(0, 'send')"/>
+      <Button type="submit" severity="danger" label="Slap" rounded class="action"
+        @click="slap(0)" :disabled="isButtonDisabled(0, 'slap')"/>
       <Button type="submit" severity="info" label="Grab" rounded class="action"
-        @click="grab(0)"/>
+        @click="grab(0)" :disabled="isButtonDisabled(0, 'grab')"/>
 
       Cards : {{ batailleCorse?.players.at(0)?.nbCards }}
     </template>
@@ -21,11 +21,11 @@
     <template #content>
 
       <Button type="submit" severity="primary" label="Send" rounded class="action" 
-        @click="send(1)"/>
-      <Button type="submit" severity="danger" label="Hit" rounded class="action"
-        @click="slap(1)"/>
+        @click="send(1)" :disabled="isButtonDisabled(1, 'send')"/>
+      <Button type="submit" severity="danger" label="Slap" rounded class="action"
+        @click="slap(1)" :disabled="isButtonDisabled(1, 'slap')" />
       <Button type="submit" severity="info" label="Grab" rounded class="action"
-        @click="grab(1)"/>
+        @click="grab(1)" :disabled="isButtonDisabled(1, 'grab')"/>
 
       Cards : {{ batailleCorse?.players.at(1)?.nbCards }}
     </template>
@@ -74,6 +74,10 @@ function grab(playerIndex) {
 
 function create() {
   batailleCorseStore.create();
+}
+
+function isButtonDisabled(playerIndex: number, buttonLabel: string) {
+  return !batailleCorse.value?.players.at(playerIndex).availableActions.includes(buttonLabel.toLocaleUpperCase());
 }
 
 </script>
