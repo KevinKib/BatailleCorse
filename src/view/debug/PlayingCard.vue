@@ -4,7 +4,8 @@
 
   <!-- <img :src="`../../resources/cards/png/${filename}.png`"/> -->
   <!-- <img :src="`/src/resources/cards/png/card_1_diamond.png`"/> -->
-  <img :src="`/src/resources/cards/png/${filename}.png`" v-if="valid"/>
+  <!-- <img :src="`/src/resources/cards/png/${filename}.png`" v-if="valid"/> -->
+  <img :src="url" v-if="valid"/>
 
   {{ props.rank }}
   {{ props.suit }}
@@ -46,11 +47,11 @@ const valid = computed(() => {
   return props.rank.value != "" && props.suit.value != "";
 });
 
-const card = ref();
+// const card = ref();
 
-watchEffect(() => {
-  card.value = defineAsyncComponent(() => import(`../../resources/cards/svg/${filename.value}.svg`));
-})
+// watchEffect(() => {
+//   card.value = defineAsyncComponent(() => import(`../../resources/cards/svg/${filename.value}.svg`));
+// })
 
 const filename = computed(() => {
   if (props.hidden.value == true) {
@@ -60,9 +61,27 @@ const filename = computed(() => {
   return `card_${props.rank.value.toLocaleLowerCase()}_${props.suit.value.toLocaleLowerCase()}`;
 });
 
-// const card = computed(() => {
-//   console.log("computed card");
-//   return defineAsyncComponent(() => import(`../../resources/cards/${filename.value}.svg`));
-// });
+const images = import.meta.glob('/src/resources/cards/png/*.png', {
+  eager: true,
+  query: 'url',
+});
+
+const cache = new Map();
+
+interface URL {
+  default: string,
+}
+
+for (const [path, url] of (Object.entries(images) as [string, URL][])) {
+  const img = new Image();
+  img.src = url.default;
+  cache.set(path, img);
+}
+
+const url = computed(() => {
+  const imageUrl : URL = images[`/src/resources/cards/png/${filename.value}.png`] as URL;
+
+  return imageUrl.default;
+});
 
 </script>
