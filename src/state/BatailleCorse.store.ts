@@ -4,6 +4,7 @@ import { readonly, Ref, ref } from "vue";
 import webSocketService from '../service/WebSocketService';
 import BatailleCorse from "../service/model/BatailleCorse";
 import Response from "../service/model/Response";
+import AI from "../service/model/ai/AI";
 
 /*
 
@@ -48,6 +49,10 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
   const autoGrabEnabled = true;
   const state = ref<BatailleCorse>();
 
+  const player0Ai = new AI(0, 500);
+  const player1Ai = new AI(1, 530);
+
+
   function create() {
     webSocketService.publish({
       destination: '/app/create'
@@ -77,10 +82,14 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
 
     state.value = response.state;
     
-
     if (autoGrabEnabled && state.value.pile.grabbable) {
       setTimeout(autoGrab, 1500);
     }
+
+    
+    
+    player0Ai.play();
+    player1Ai.play();
   }
 
   function autoGrab() {

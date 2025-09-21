@@ -2,7 +2,7 @@
   <h1>Bataille Corse</h1>
 
   <Card class="card">
-    <template #title>Player 1</template>
+    <template #title>Player 0</template>
     <template #content>
       
       <Button type="submit" severity="primary" label="Send" rounded class="action" 
@@ -17,7 +17,7 @@
   </Card>
 
   <Card class="card">
-    <template #title>Player 2</template>
+    <template #title>Player 1</template>
     <template #content>
 
       <Button type="submit" severity="primary" label="Send" rounded class="action" 
@@ -54,8 +54,9 @@
 import { Button } from 'primevue';
 import Card from 'primevue/card';
 import { useBatailleCorseStore as useBatailleCorseStore } from '../../state/BatailleCorse.store';
-import PlayingCard from './PlayingCard.vue';
+import PlayingCard from '../../components/PlayingCard.vue';
 import { storeToRefs } from 'pinia';
+import AI from '../../service/model/ai/AI';
 
 const batailleCorseStore = useBatailleCorseStore();
 const { state: batailleCorse } = storeToRefs(batailleCorseStore);
@@ -79,6 +80,8 @@ function create() {
 function isButtonDisabled(playerIndex: number, buttonLabel: string) {
   return !batailleCorse.value?.players.at(playerIndex).availableActions.includes(buttonLabel.toLocaleUpperCase());
 }
+
+
 
 </script>
 

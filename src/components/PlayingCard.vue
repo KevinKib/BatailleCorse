@@ -1,5 +1,5 @@
 <template>
-  <img :src="url" v-show="valid" :width="width" :height="height"/>
+  <img :src="url" v-show="valid" :width="width" :height="height" class="playing_card"/>
 </template>
 
 <script setup lang="ts">
@@ -70,3 +70,11 @@ const url = computed(() => {
 });
 
 </script>
+
+<style>
+
+.playing_card {
+  border: 1px solid black;
+  border-radius: 6%;
+}
+</style>
