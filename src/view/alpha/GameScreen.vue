@@ -76,9 +76,27 @@ import { Button } from 'primevue';
 import { storeToRefs } from 'pinia';
 import { useBatailleCorseStore } from '../../state/BatailleCorse.store';
 import { Action } from '../../service/model/Action';
+import { onBeforeUnmount, onMounted, onUnmounted } from 'vue';
 
 const batailleCorseStore = useBatailleCorseStore();
 const { state: batailleCorse } = storeToRefs(batailleCorseStore);
+
+onMounted(() => {
+  document.addEventListener('keyup', onKeyUp);
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('keyup', onKeyUp);
+})
+
+function onKeyUp(event) {
+  if (event.key == 'q' || event.key == 'c') {
+    send(0);
+  }
+  if (event.key == 'd' || event.key == ' ') {
+    slap(0);
+  }
+}
 
 function slap(playerIndex) {
   batailleCorseStore.slap(playerIndex);
