@@ -2,8 +2,6 @@ import SockJS from 'sockjs-client/dist/sockjs';
 import { Client } from '@stomp/stompjs';
 import { useBatailleCorseStore } from '../state/BatailleCorse.store';
 
-
-
 class WebSocketService {
 
   private readonly enableLogs = false;

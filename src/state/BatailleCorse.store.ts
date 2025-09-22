@@ -52,7 +52,6 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
   const player0Ai = new AI(0, 500);
   const player1Ai = new AI(1, 530);
 
-
   function create() {
     webSocketService.publish({
       destination: '/app/create'

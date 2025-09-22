@@ -48,6 +48,10 @@
 
   <Button type="submit" label="Create game" rounded class="action" @click="create()"/>
 
+  <RouterLink to="/">
+    <Button severity="danger" label="Back to menu" />
+  </RouterLink>
+
 </template>
 
 <script setup lang="ts">

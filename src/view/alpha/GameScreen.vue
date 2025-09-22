@@ -1,0 +1,187 @@
+<template>
+  <div class="gamescreen flex">
+
+    <div class="gamescreen_top flex">
+      <div class="left_side"></div>
+      <div class="middle_side">
+        <h1 class="player_tag">Player</h1>
+        <div class="card">
+          <PlayingCard 
+            :size="100"
+            :hidden="true"
+            rank="10"
+            suit="spade"
+          />
+          <div class="card_counter">
+            <CardCounter />
+          </div>
+        </div>
+      </div>
+      <div class="right_side"></div>
+      
+    </div>
+
+    <div class="gamescreen_middle flex">
+      <div class="card">
+        <PlayingCard 
+          :size="100"
+          :hidden="false"
+          rank="3"
+          suit="spade"
+        />
+        <div class="card_counter">
+          <CardCounter />
+        </div>
+      </div>
+    </div>
+
+    <div class="gamescreen_bottom flex">
+      <div class="left_side">
+        <RouterLink to="/" class="back_button">
+          <Button severity="danger" label="Back" icon="pi pi-undo" variant="" rounded />
+        </RouterLink>
+      </div>
+
+      <div class="middle_side">
+        <div class="card">
+          <PlayingCard 
+            :size="100"
+            :hidden="true"
+            rank="10"
+            suit="spade"
+          />
+          <div class="card_counter">
+            <CardCounter />
+          </div>
+        </div>
+        <h1 class="player_tag">Player</h1>
+        <div class="action_buttons">
+          <Button class="action_button" icon="pi pi-arrow-up" severity="success" label="Send" rounded />
+          <Button class="action_button" icon="pi pi-hammer" severity="warn" label="Slap" rounded />
+        </div>
+      </div>
+
+      <div class="right_side"></div>
+    </div>
+  </div>
+  
+</template>
+
+<script setup lang="ts">
+import PlayingCard from '../../components/PlayingCard.vue';
+import CardCounter from '../../components/CardCounter.vue';
+import { Button } from 'primevue';
+</script>
+
+<style>
+
+.gamescreen {
+  /* @apply bg-[url("src/resources/background/texture-2391621_1280.jpg")]; */
+  /* @apply bg-[url("src/resources/background/engin-akyurt-xwb9RDqZKu8-unsplash_small.jpg")]; */
+  /* background: #1B5E20; */
+  /* background: #005D5D; */
+
+  background: #005D5D;
+  background: radial-gradient(circle, rgba(0, 93, 93, 1) 0%, rgba(13, 66, 28, 1) 150%);
+
+  /* background: radial-gradient(circle, rgba(27, 94, 32, 1) 0%, rgba(56, 142, 60, 1) 100%); */
+  background-repeat: repeat;
+  background-position: center;
+  /* opacity: 50%; */
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.gamescreen_top {
+  height: 30%;
+  
+  .middle_side {
+    margin-top: auto;
+  }
+}
+
+.gamescreen_middle {
+  height: 40%;
+}
+
+.gamescreen_bottom {
+  height: 30%;
+  .middle_side {
+    margin-bottom: auto;
+  }
+}
+
+.screen_content {
+  opacity: 100%;
+}
+
+.card_with_counter {
+  display: flex;
+  flex-direction: row;
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+  
+}
+
+.card {
+  position: relative;
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: auto;
+  margin-bottom: auto;
+}
+
+.card_counter {
+  position: absolute;
+  bottom: 0;
+  left: 100%;
+  margin-left: 4px;
+}
+
+.player_tag {
+  position: relative;
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.action_buttons {
+  width: fit-content;
+  margin-top: auto;
+  margin-bottom: 16px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.action_button {
+  margin-left: 8px;
+  margin-right: 8px;
+}
+
+.left_side {
+  width: 30%;
+  display: flex;
+}
+
+.middle_side {
+  width: 40%;
+}
+
+.right_side {
+  width: 30%;
+}
+
+.back_button {
+  margin-left: 16px;
+  margin-right: 16px;
+  margin-top: auto;
+  margin-bottom: 16px;
+}
+
+</style>
