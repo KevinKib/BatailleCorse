@@ -49,7 +49,7 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
   const autoGrabEnabled = true;
   const state = ref<BatailleCorse>();
 
-  const player0Ai = new AI(0, 500);
+  // const player0Ai = new AI(0, 500);
   const player1Ai = new AI(1, 530);
 
   function create() {
@@ -87,7 +87,7 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
 
     
     
-    player0Ai.play();
+    // player0Ai.play();
     player1Ai.play();
   }
 

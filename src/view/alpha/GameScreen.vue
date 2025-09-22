@@ -4,10 +4,10 @@
     <div class="gamescreen_top flex">
       <div class="left_side"></div>
       <div class="middle_side">
-        <h1 class="player_tag">Player</h1>
+        <h1 class="player_tag">Computer (Easy)</h1>
         <div class="card">
           <PlayingCard 
-            :size="100"
+            :size="90"
             :hidden="true"
             rank="10"
             suit="spade"
@@ -24,7 +24,7 @@
     <div class="gamescreen_middle flex">
       <div class="card">
         <PlayingCard 
-          :size="100"
+          :size="125"
           :hidden="false"
           rank="3"
           suit="spade"
@@ -45,7 +45,7 @@
       <div class="middle_side">
         <div class="card">
           <PlayingCard 
-            :size="100"
+            :size="90"
             :hidden="true"
             rank="10"
             suit="spade"
@@ -54,7 +54,7 @@
             <CardCounter />
           </div>
         </div>
-        <h1 class="player_tag">Player</h1>
+        <h1 class="player_tag">SNP</h1>
         <div class="action_buttons">
           <Button class="action_button" icon="pi pi-arrow-up" severity="success" label="Send" rounded />
           <Button class="action_button" icon="pi pi-hammer" severity="warn" label="Slap" rounded />
@@ -71,6 +71,9 @@
 import PlayingCard from '../../components/PlayingCard.vue';
 import CardCounter from '../../components/CardCounter.vue';
 import { Button } from 'primevue';
+
+
+
 </script>
 
 <style>
