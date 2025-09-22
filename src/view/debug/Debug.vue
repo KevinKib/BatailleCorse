@@ -57,10 +57,11 @@
 <script setup lang="ts">
 import { Button } from 'primevue';
 import Card from 'primevue/card';
-import { useBatailleCorseStore as useBatailleCorseStore } from '../../state/BatailleCorse.store';
 import PlayingCard from '../../components/PlayingCard.vue';
 import { storeToRefs } from 'pinia';
 import AI from '../../service/model/ai/AI';
+import { useBatailleCorseStore } from '../../state/BatailleCorse.store';
+import { Action } from '../../service/model/Action';
 
 const batailleCorseStore = useBatailleCorseStore();
 const { state: batailleCorse } = storeToRefs(batailleCorseStore);
@@ -81,7 +82,7 @@ function create() {
   batailleCorseStore.create();
 }
 
-function isButtonDisabled(playerIndex: number, buttonLabel: string) {
+function isButtonDisabled(playerIndex: number, buttonLabel: Action) {
   return !batailleCorse.value?.players.at(playerIndex).availableActions.includes(buttonLabel.toLocaleUpperCase());
 }
 

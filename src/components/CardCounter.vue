@@ -1,10 +1,22 @@
 <template>
   <div class="counter">
-    <p class="count">35</p>
+    <p class="count">{{ props.count }}</p>
   </div>
 </template>
 
 <script setup lang="ts">
+import { toRefs } from 'vue';
+
+const nonReactiveProps = defineProps({
+  count: {
+    default: 0,
+    type: Number,
+    required: true,
+  }
+});
+
+const props = toRefs(nonReactiveProps);
+
 </script>
 
 <style>

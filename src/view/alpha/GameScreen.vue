@@ -13,7 +13,7 @@
             suit="spade"
           />
           <div class="card_counter">
-            <CardCounter />
+            <CardCounter :count="batailleCorse?.players.at(1).nbCards"/>
           </div>
         </div>
       </div>
@@ -26,11 +26,11 @@
         <PlayingCard 
           :size="125"
           :hidden="false"
-          rank="3"
-          suit="spade"
+          :suit="batailleCorse?.pile.cards.at(0)?.suit"
+          :rank="batailleCorse?.pile.cards.at(0)?.rank"
         />
         <div class="card_counter">
-          <CardCounter />
+          <CardCounter :count="batailleCorse?.pile.cards.length"/>
         </div>
       </div>
     </div>
@@ -51,13 +51,15 @@
             suit="spade"
           />
           <div class="card_counter">
-            <CardCounter />
+            <CardCounter :count="batailleCorse?.players.at(0).nbCards"/>
           </div>
         </div>
         <h1 class="player_tag">SNP</h1>
         <div class="action_buttons">
-          <Button class="action_button" icon="pi pi-arrow-up" severity="success" label="Send" rounded />
-          <Button class="action_button" icon="pi pi-hammer" severity="warn" label="Slap" rounded />
+          <Button class="action_button" icon="pi pi-arrow-up" severity="success" label="Send" rounded
+            @click="send(0)" :disabled="isButtonDisabled(0, 'send')"/>
+          <Button class="action_button" icon="pi pi-hammer" severity="warn" label="Slap" rounded
+            @click="slap(0)" :disabled="isButtonDisabled(0, 'slap')"/>
         </div>
       </div>
 
@@ -71,8 +73,24 @@
 import PlayingCard from '../../components/PlayingCard.vue';
 import CardCounter from '../../components/CardCounter.vue';
 import { Button } from 'primevue';
+import { storeToRefs } from 'pinia';
+import { useBatailleCorseStore } from '../../state/BatailleCorse.store';
+import { Action } from '../../service/model/Action';
 
+const batailleCorseStore = useBatailleCorseStore();
+const { state: batailleCorse } = storeToRefs(batailleCorseStore);
 
+function slap(playerIndex) {
+  batailleCorseStore.slap(playerIndex);
+}
+
+function send(playerIndex) {
+  batailleCorseStore.send(playerIndex);
+}
+
+function isButtonDisabled(playerIndex: number, buttonLabel: Action) {
+  return !batailleCorse.value?.players.at(playerIndex).availableActions.includes(buttonLabel.toLocaleUpperCase());
+}
 
 </script>
 
