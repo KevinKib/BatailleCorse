@@ -23,12 +23,21 @@
 
     <div class="gamescreen_middle flex">
       <div class="card">
-        <PlayingCard 
+        <PlayingCard
+          ref="pile" 
           :size="125"
           :hidden="false"
           :suit="batailleCorse?.pile.cards.at(0)?.suit"
           :rank="batailleCorse?.pile.cards.at(0)?.rank"
         />
+        <!-- <Transition name="card_moving">
+          <PlayingCard :v-show="transitionActivated"
+            :size="125"
+            :hidden="false"
+            :suit="batailleCorse?.pile.cards.at(0)?.suit"
+            :rank="batailleCorse?.pile.cards.at(0)?.rank"
+          />
+        </Transition> -->
         <div class="card_counter">
           <CardCounter :count="batailleCorse?.pile.cards.length"/>
         </div>
@@ -76,20 +85,32 @@ import { Button } from 'primevue';
 import { storeToRefs } from 'pinia';
 import { useBatailleCorseStore } from '../../state/BatailleCorse.store';
 import { Action } from '../../service/model/Action';
-import { onBeforeUnmount, onMounted, onUnmounted } from 'vue';
+import { onBeforeUnmount, onMounted, onUnmounted, ref, useTemplateRef } from 'vue';
+import { RefSymbol, ShallowRefMarker } from '@vue/reactivity';
 
 const batailleCorseStore = useBatailleCorseStore();
 const { state: batailleCorse } = storeToRefs(batailleCorseStore);
 
+const transitionActivated = ref(true);
+const pile = useTemplateRef("pile");
+
+setInterval(() => {
+  if (pile.value) {
+    console.log("getBoundingClientRect", pile.value);
+    console.log("getBoundingClientRect2", pile.value.rootCard.getBoundingClientRect());
+  }
+
+}, 5000);
+
 onMounted(() => {
-  document.addEventListener('keyup', onKeyUp);
+  document.addEventListener('keyup', setupHotkeys);
 })
 
 onBeforeUnmount(() => {
-  document.removeEventListener('keyup', onKeyUp);
+  document.removeEventListener('keyup', setupHotkeys);
 })
 
-function onKeyUp(event) {
+function setupHotkeys(event) {
   if (event.key == 'q' || event.key == 'c') {
     send(0);
   }
@@ -104,6 +125,10 @@ function slap(playerIndex) {
 
 function send(playerIndex) {
   batailleCorseStore.send(playerIndex);
+
+  // TODO: make sure send is successful
+
+
 }
 
 function isButtonDisabled(playerIndex: number, buttonLabel: Action) {
@@ -222,5 +247,18 @@ function isButtonDisabled(playerIndex: number, buttonLabel: Action) {
   margin-top: auto;
   margin-bottom: 16px;
 }
+
+.move_card_animation {
+
+}
+
+.card_moving-enter-active, .card_moving-leave-active {
+  transition: opacity 0.5s ease;
+}
+
+.card_moving-enter-from, .card_moving-leave-to {
+  opacity: 0;
+}
+
 
 </style>

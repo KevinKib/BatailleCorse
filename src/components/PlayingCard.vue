@@ -1,5 +1,5 @@
 <template>
-  <img :src="url" v-show="valid" :width="width" :height="height" class="playing_card"/>
+  <img :src="url" v-show="valid" :width="width" :height="height" class="playing_card" ref="rootCard"/>
 </template>
 
 <script setup lang="ts">
@@ -24,6 +24,11 @@ const nonReactiveProps = defineProps({
 })
 
 const props = toRefs(nonReactiveProps);
+const rootCard = useTemplateRef("rootCard");
+
+defineExpose({
+  rootCard
+});
 
 const defaultHeight = 486.275;
 const defaultWidth = 167.575;
@@ -31,7 +36,7 @@ const defaultWidth = 167.575;
 const width = computed(() => props.size.value);
 const height = computed(() => props.size.value * defaultHeight / defaultWidth / 2);
 
-import { computed, toRefs } from 'vue';
+import { computed, toRefs, useTemplateRef } from 'vue';
 
 const valid = computed(() => {
   return props.rank.value != "" && props.suit.value != "";
