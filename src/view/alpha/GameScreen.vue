@@ -24,20 +24,11 @@
     <div class="gamescreen_middle flex">
       <div class="card">
         <PlayingCard
-          ref="pile" 
           :size="125"
           :hidden="false"
           :suit="batailleCorse?.pile.cards.at(0)?.suit"
           :rank="batailleCorse?.pile.cards.at(0)?.rank"
         />
-        <!-- <Transition name="card_moving">
-          <PlayingCard :v-show="transitionActivated"
-            :size="125"
-            :hidden="false"
-            :suit="batailleCorse?.pile.cards.at(0)?.suit"
-            :rank="batailleCorse?.pile.cards.at(0)?.rank"
-          />
-        </Transition> -->
         <div class="card_counter">
           <CardCounter :count="batailleCorse?.pile.cards.length"/>
         </div>
@@ -54,11 +45,22 @@
       <div class="middle_side">
         <div class="card">
           <PlayingCard 
+            ref="pile"
             :size="90"
             :hidden="true"
             rank="10"
             suit="spade"
           />
+            
+          <span :class="{ cardmoving: true }" ref="movedElement">
+            <PlayingCard
+              ref="pile" 
+              :size="125"
+              :hidden="false"
+              :suit="batailleCorse?.pile.cards.at(0)?.suit"
+              :rank="batailleCorse?.pile.cards.at(0)?.rank"
+            />
+          </span>
           <div class="card_counter">
             <CardCounter :count="batailleCorse?.players.at(0).nbCards"/>
           </div>
@@ -69,6 +71,7 @@
             @click="send(0)" :disabled="isButtonDisabled(0, 'send')"/>
           <Button class="action_button" icon="pi pi-hammer" severity="warn" label="Slap" rounded
             @click="slap(0)" :disabled="isButtonDisabled(0, 'slap')"/>
+          <Button @click="clickMoveElement()">Déplacer</button>
         </div>
       </div>
 
@@ -85,14 +88,44 @@ import { Button } from 'primevue';
 import { storeToRefs } from 'pinia';
 import { useBatailleCorseStore } from '../../state/BatailleCorse.store';
 import { Action } from '../../service/model/Action';
-import { onBeforeUnmount, onMounted, onUnmounted, ref, useTemplateRef } from 'vue';
+import { computed, onBeforeUnmount, onMounted, onUnmounted, ref, useTemplateRef } from 'vue';
 import { RefSymbol, ShallowRefMarker } from '@vue/reactivity';
 
 const batailleCorseStore = useBatailleCorseStore();
 const { state: batailleCorse } = storeToRefs(batailleCorseStore);
 
-const transitionActivated = ref(true);
 const pile = useTemplateRef("pile");
+const movedElement = useTemplateRef("movedElement");
+
+const movedPos = {
+  top: -550,
+  left: -450,
+}
+
+
+function clickMoveElement() {
+  if (animate.value) {
+    movedPos.top = -550;
+    movedPos.left = -550;
+  }
+  else {
+    movedPos.top = -550;
+    movedPos.left = -750;
+  }
+
+  animate.value = !animate.value;
+
+  movedElement.value.style.top = movedPos.top + 'px';
+  movedElement.value.style.left = movedPos.left + 'px';
+}
+
+const animate = ref(false);
+const top = computed(() => {
+  return pile.value.rootCard.getBoundingClientRect().top;
+})
+const left = computed(() => {
+  return pile.value.rootCard.getBoundingClientRect().left;
+})
 
 setInterval(() => {
   if (pile.value) {
@@ -134,6 +167,10 @@ function send(playerIndex) {
 function isButtonDisabled(playerIndex: number, buttonLabel: Action) {
   return !batailleCorse.value?.players.at(playerIndex).availableActions.includes(buttonLabel.toLocaleUpperCase());
 }
+
+setInterval(() =>  {
+
+}, 5000)
 
 </script>
 
@@ -248,17 +285,9 @@ function isButtonDisabled(playerIndex: number, buttonLabel: Action) {
   margin-bottom: 16px;
 }
 
-.move_card_animation {
-
+.cardmoving {
+  position: absolute;
+  transition: 1s top, 1s left;
 }
-
-.card_moving-enter-active, .card_moving-leave-active {
-  transition: opacity 0.5s ease;
-}
-
-.card_moving-enter-from, .card_moving-leave-to {
-  opacity: 0;
-}
-
 
 </style>
