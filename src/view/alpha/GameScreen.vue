@@ -28,8 +28,8 @@
           ref="centerPile"
           :size="125"
           :hidden="false"
-          :suit="batailleCorse?.pile.cards.at(0)?.suit"
-          :rank="batailleCorse?.pile.cards.at(0)?.rank"
+          :suit="isSendAnimating ? frozenPileCard.suit : batailleCorse?.pile.cards.at(0)?.suit"
+          :rank="isSendAnimating ? frozenPileCard.rank : batailleCorse?.pile.cards.at(0)?.rank"
         />
         <div class="card_counter">
           <CardCounter :count="batailleCorse?.pile.cards.length"/>
@@ -80,6 +80,7 @@
       left: ghostCard.x + 'px',
       width: ghostCard.width + 'px',
       height: ghostCard.height + 'px',
+      '--ghost-duration': ghostCard.duration + 'ms',
     }"
   />
 
@@ -92,11 +93,11 @@ import { Button } from 'primevue';
 import { storeToRefs } from 'pinia';
 import { useBatailleCorseStore } from '../../state/BatailleCorse.store';
 import { Action } from '../../service/model/Action';
-import { nextTick, onBeforeUnmount, onMounted, reactive, useTemplateRef, watch } from 'vue';
+import { nextTick, onBeforeUnmount, onMounted, reactive, ref, useTemplateRef, watch } from 'vue';
 import cardBackUrl from '/src/resources/cards/png/card_back.png?url';
 
 const batailleCorseStore = useBatailleCorseStore();
-const { state: batailleCorse, lastSend } = storeToRefs(batailleCorseStore);
+const { state: batailleCorse, lastSend, lastGrab } = storeToRefs(batailleCorseStore);
 
 const pile = useTemplateRef("pile");
 const opponentCard = useTemplateRef("opponentCard");
@@ -107,31 +108,20 @@ const ghostCard = reactive({
   visible: false,
   transitioning: false,
   x: 0, y: 0, width: 0, height: 0,
+  duration: 100,
 });
 
-watch(lastSend, (event) => {
-  if (!event) return;
+const isSendAnimating = ref(false);
+const frozenPileCard = reactive({ rank: '', suit: '' });
 
-  const sourceEl = event.playerIndex === 0
-    ? pile.value?.rootCard
-    : opponentCard.value?.rootCard;
-  const destEl = centerPile.value?.rootCard;
-
-  if (!sourceEl) return;
-
-  const srcRect = sourceEl.getBoundingClientRect();
-  const destRect = (destEl && destEl.offsetParent !== null)
-    ? destEl.getBoundingClientRect()
-    : centerPileArea.value?.getBoundingClientRect();
-
-  if (!destRect || destRect.width === 0) return;
-
+function animateGhostCard(srcRect: DOMRect, destRect: DOMRect, duration: number) {
   ghostCard.visible = false;
   ghostCard.transitioning = false;
   ghostCard.x = srcRect.left;
   ghostCard.y = srcRect.top;
   ghostCard.width = srcRect.width;
   ghostCard.height = srcRect.height;
+  ghostCard.duration = duration;
   ghostCard.visible = true;
 
   nextTick(() => {
@@ -149,8 +139,53 @@ watch(lastSend, (event) => {
   setTimeout(() => {
     ghostCard.visible = false;
     ghostCard.transitioning = false;
-  }, 150);
+    isSendAnimating.value = false;
+  }, duration + 50);
+}
+
+function getCenterPileRect(): DOMRect | undefined {
+  const el = centerPile.value?.rootCard;
+  return (el && el.offsetParent !== null)
+    ? el.getBoundingClientRect()
+    : centerPileArea.value?.getBoundingClientRect();
+}
+
+watch(lastSend, (event) => {
+  if (!event) return;
+
+  const sourceEl = event.playerIndex === 0
+    ? pile.value?.rootCard
+    : opponentCard.value?.rootCard;
+
+  if (!sourceEl) return;
+
+  const srcRect = sourceEl.getBoundingClientRect();
+  const destRect = getCenterPileRect();
+
+  if (!destRect || destRect.width === 0) return;
+
+  frozenPileCard.rank = batailleCorse.value?.pile.cards.at(0)?.rank ?? '';
+  frozenPileCard.suit = batailleCorse.value?.pile.cards.at(0)?.suit ?? '';
+  isSendAnimating.value = true;
+  animateGhostCard(srcRect, destRect, 100);
 });
+
+watch(lastGrab, (event) => {
+  if (!event) return;
+
+  const destEl = event.winnerPlayerIndex === 0
+    ? pile.value?.rootCard
+    : opponentCard.value?.rootCard;
+
+  if (!destEl) return;
+
+  const srcRect = getCenterPileRect();
+  const destRect = destEl.getBoundingClientRect();
+
+  if (!srcRect || srcRect.width === 0) return;
+
+  animateGhostCard(srcRect, destRect, 200);
+}, { flush: 'sync' });
 
 onMounted(() => {
   document.addEventListener('keyup', setupHotkeys);
@@ -312,8 +347,10 @@ function isButtonDisabled(playerIndex: number, buttonLabel: Action) {
 }
 
 .ghost-card.transitioning {
-  transition: top 100ms ease-in, left 100ms ease-in,
-              width 100ms ease-in, height 100ms ease-in;
+  transition: top var(--ghost-duration, 100ms) ease-in,
+              left var(--ghost-duration, 100ms) ease-in,
+              width var(--ghost-duration, 100ms) ease-in,
+              height var(--ghost-duration, 100ms) ease-in;
 }
 
 </style>

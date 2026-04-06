@@ -52,6 +52,9 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
   let sendSeq = 0;
   const lastSend = ref<{ playerIndex: number; seq: number } | null>(null);
 
+  let grabSeq = 0;
+  const lastGrab = ref<{ winnerPlayerIndex: number; seq: number } | null>(null);
+
   // const player0Ai = new AI(0, 500);
   const player1Ai = new AI(1, 600);
 
@@ -83,6 +86,13 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
   function onResponse(response: Response) {
     console.log('onResponse', response);
 
+    if (response.eventType.trim() === 'GRAB') {
+      const winnerPlayerIndex = Number(state.value?.pile.playerThatAddedLastHonourCard?.id);
+      if (!isNaN(winnerPlayerIndex)) {
+        lastGrab.value = { winnerPlayerIndex, seq: ++grabSeq };
+      }
+    }
+
     state.value = response.state;
     
     if (autoGrabEnabled && state.value.pile.grabbable) {
@@ -110,6 +120,7 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
     // state: readonly(state),
     state,
     lastSend,
+    lastGrab,
     create,
     send,
     slap,
