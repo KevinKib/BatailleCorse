@@ -6,7 +6,8 @@
       <div class="middle_side">
         <h1 class="player_tag">Computer (Easy)</h1>
         <div class="card">
-          <PlayingCard 
+          <PlayingCard
+            ref="opponentCard"
             :size="90"
             :hidden="true"
             rank="10"
@@ -22,8 +23,9 @@
     </div>
 
     <div class="gamescreen_middle flex">
-      <div class="card">
+      <div class="card" ref="centerPileArea">
         <PlayingCard
+          ref="centerPile"
           :size="125"
           :hidden="false"
           :suit="batailleCorse?.pile.cards.at(0)?.suit"
@@ -68,7 +70,19 @@
       <div class="right_side"></div>
     </div>
   </div>
-  
+
+  <img
+    v-if="ghostCard.visible"
+    :src="cardBackUrl"
+    :class="['ghost-card', { transitioning: ghostCard.transitioning }]"
+    :style="{
+      top: ghostCard.y + 'px',
+      left: ghostCard.x + 'px',
+      width: ghostCard.width + 'px',
+      height: ghostCard.height + 'px',
+    }"
+  />
+
 </template>
 
 <script setup lang="ts">
@@ -78,21 +92,65 @@ import { Button } from 'primevue';
 import { storeToRefs } from 'pinia';
 import { useBatailleCorseStore } from '../../state/BatailleCorse.store';
 import { Action } from '../../service/model/Action';
-import { computed, onBeforeUnmount, onMounted, onUnmounted, ref, useTemplateRef } from 'vue';
-import { RefSymbol, ShallowRefMarker } from '@vue/reactivity';
+import { nextTick, onBeforeUnmount, onMounted, reactive, useTemplateRef, watch } from 'vue';
+import cardBackUrl from '/src/resources/cards/png/card_back.png?url';
 
 const batailleCorseStore = useBatailleCorseStore();
-const { state: batailleCorse } = storeToRefs(batailleCorseStore);
+const { state: batailleCorse, lastSend } = storeToRefs(batailleCorseStore);
 
 const pile = useTemplateRef("pile");
+const opponentCard = useTemplateRef("opponentCard");
+const centerPile = useTemplateRef("centerPile");
+const centerPileArea = useTemplateRef<HTMLDivElement>("centerPileArea");
 
-setInterval(() => {
-  if (pile.value) {
-    console.log("getBoundingClientRect", pile.value);
-    console.log("getBoundingClientRect2", pile.value.rootCard?.getBoundingClientRect());
-  }
+const ghostCard = reactive({
+  visible: false,
+  transitioning: false,
+  x: 0, y: 0, width: 0, height: 0,
+});
 
-}, 5000);
+watch(lastSend, (event) => {
+  if (!event) return;
+
+  const sourceEl = event.playerIndex === 0
+    ? pile.value?.rootCard
+    : opponentCard.value?.rootCard;
+  const destEl = centerPile.value?.rootCard;
+
+  if (!sourceEl) return;
+
+  const srcRect = sourceEl.getBoundingClientRect();
+  const destRect = (destEl && destEl.offsetParent !== null)
+    ? destEl.getBoundingClientRect()
+    : centerPileArea.value?.getBoundingClientRect();
+
+  if (!destRect || destRect.width === 0) return;
+
+  ghostCard.visible = false;
+  ghostCard.transitioning = false;
+  ghostCard.x = srcRect.left;
+  ghostCard.y = srcRect.top;
+  ghostCard.width = srcRect.width;
+  ghostCard.height = srcRect.height;
+  ghostCard.visible = true;
+
+  nextTick(() => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        ghostCard.transitioning = true;
+        ghostCard.x = destRect.left;
+        ghostCard.y = destRect.top;
+        ghostCard.width = destRect.width;
+        ghostCard.height = destRect.height;
+      });
+    });
+  });
+
+  setTimeout(() => {
+    ghostCard.visible = false;
+    ghostCard.transitioning = false;
+  }, 150);
+});
 
 onMounted(() => {
   document.addEventListener('keyup', setupHotkeys);
@@ -125,9 +183,6 @@ function isButtonDisabled(playerIndex: number, buttonLabel: Action) {
   return !batailleCorse.value?.players.at(playerIndex)?.availableActions.includes(buttonLabel.toLocaleUpperCase());
 }
 
-setInterval(() =>  {
-
-}, 5000)
 
 </script>
 
@@ -245,6 +300,20 @@ setInterval(() =>  {
 .cardmoving {
   position: absolute;
   transition: 1s top, 1s left;
+}
+
+.ghost-card {
+  position: fixed;
+  pointer-events: none;
+  z-index: 1000;
+  border: 1px solid black;
+  border-radius: 6%;
+  transition: none;
+}
+
+.ghost-card.transitioning {
+  transition: top 100ms ease-in, left 100ms ease-in,
+              width 100ms ease-in, height 100ms ease-in;
 }
 
 </style>

@@ -49,6 +49,9 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
   const autoGrabEnabled = true;
   const state = ref<BatailleCorse>();
 
+  let sendSeq = 0;
+  const lastSend = ref<{ playerIndex: number; seq: number } | null>(null);
+
   // const player0Ai = new AI(0, 500);
   const player1Ai = new AI(1, 600);
 
@@ -59,6 +62,7 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
   }
 
   function send(playerIndex: number) {
+    lastSend.value = { playerIndex, seq: ++sendSeq };
     webSocketService.publish({
       destination: `/app/send/${playerIndex}`
     });
@@ -102,9 +106,10 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
     }
   }
 
-  return { 
+  return {
     // state: readonly(state),
     state,
+    lastSend,
     create,
     send,
     slap,
