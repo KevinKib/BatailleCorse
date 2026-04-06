@@ -16,7 +16,7 @@ public class PlayerDto {
     }
 
     public String getId() {
-        return player.getId().toString();
+        return player.id().toString();
     }
 
     public Integer getNbCards() {

@@ -26,8 +26,6 @@ public class PutCardsUnderPile implements Penality {
         } catch (NoCardsException e) {
             throw new IllegalStateException("Should never reach no cards exception during PutCardsUnderPile penality.");
         }
-
-
     }
 
 }

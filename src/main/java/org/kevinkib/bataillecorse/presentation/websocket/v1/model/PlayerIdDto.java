@@ -1,9 +1,6 @@
 package org.kevinkib.bataillecorse.presentation.websocket.v1.model;
 
-import org.kevinkib.bataillecorse.domain.Action;
 import org.kevinkib.bataillecorse.domain.Player;
-
-import java.util.List;
 
 public class PlayerIdDto {
 
@@ -17,7 +14,7 @@ public class PlayerIdDto {
         if (player == null) {
             return null;
         }
-        return player.getId().toString();
+        return player.id().toString();
     }
 
 }

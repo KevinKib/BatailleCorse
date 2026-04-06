@@ -28,6 +28,10 @@ public class PileDto {
     }
 
     public PlayerIdDto getPlayerThatAddedLastHonourCard() {
+        if (pile.getPlayerThatAddedLastHonourCard() == null) {
+            return null;
+        }
+
         return new PlayerIdDto(pile.getPlayerThatAddedLastHonourCard());
     }
 

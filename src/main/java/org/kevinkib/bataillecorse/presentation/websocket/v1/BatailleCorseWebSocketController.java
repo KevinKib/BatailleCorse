@@ -33,7 +33,7 @@ public class BatailleCorseWebSocketController {
             CardDto cardDto = new CardDto(player.getCardOnTop());
             batailleCorse.send(player);
 
-            String message = "Player "+player.getId()+" sent "+cardDto.getName()+".";
+            String message = "Player "+player.id()+" sent "+cardDto.getName()+".";
             return new SuccessResponse(eventType, message, batailleCorseDto);
 
         } catch (Exception e) {
@@ -53,9 +53,9 @@ public class BatailleCorseWebSocketController {
             String message;
 
             if (successfulSlap) {
-                message = "Player "+player.getId()+" slapped and won.";
+                message = "Player "+player.id()+" slapped and won.";
             } else {
-                message = "Player "+player.getId()+" slapped, lost, and received a penality.";
+                message = "Player "+player.id()+" slapped, lost, and received a penality.";
             }
 
             return new SuccessResponse(eventType, message, batailleCorseDto);
@@ -76,7 +76,7 @@ public class BatailleCorseWebSocketController {
 
             batailleCorse.grab(player);
 
-            String message = "Player "+player.getId()+" grabbed the pile. ";
+            String message = "Player "+player.id()+" grabbed the pile. ";
             return new SuccessResponse(eventType, message, batailleCorseDto);
 
         } catch (Exception e) {

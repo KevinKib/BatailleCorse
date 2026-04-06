@@ -48,10 +48,10 @@ class BatailleCorseTest {
         public void whenInitializing_thenGiveHandsToPlayers_withHiddenCards() {
             BatailleCorse batailleCorse = new BatailleCorse(nbPlayers);
 
-            assertNotNull(batailleCorse.getPlayerByIndex(0).getHand());
-            assertNotNull(batailleCorse.getPlayerByIndex(1).getHand());
+            assertNotNull(batailleCorse.getPlayerByIndex(0).hand());
+            assertNotNull(batailleCorse.getPlayerByIndex(1).hand());
 
-            assertThat(batailleCorse.getPlayerByIndex(0).getHand(), is(everyCardHidden()));
+            assertThat(batailleCorse.getPlayerByIndex(0).hand(), is(everyCardHidden()));
         }
 
         @Test

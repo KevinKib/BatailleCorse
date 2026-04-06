@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.kevinkib.cards.domain.french.FrenchRank.*;
 import static org.kevinkib.cards.testhelpers.CardFixtures.CardRanksMatcher.areCardsOfRanks;
 
-public class BatailleCorseIT {
+public class BatailleCorseFullGameTest {
 
     private BatailleCorse batailleCorse;
 
@@ -80,11 +80,11 @@ public class BatailleCorseIT {
 
             batailleCorse.grab(player1);
 
-            assertThat(player1.getHand().getCards(), areCardsOfRanks(
+            assertThat(player1.hand().getCards(), areCardsOfRanks(
                     TWO, THREE, THREE, NINE, ACE, FOUR, SEVEN, JACK, EIGHT
             ));
 
-            assertThat(player2.getHand().getCards(), areCardsOfRanks(
+            assertThat(player2.hand().getCards(), areCardsOfRanks(
                     SIX, KING, FIVE, EIGHT, SEVEN
             ));
 
@@ -96,11 +96,11 @@ public class BatailleCorseIT {
 
             batailleCorse.slap(player2);
 
-            assertThat(player1.getHand().getCards(), areCardsOfRanks(
+            assertThat(player1.hand().getCards(), areCardsOfRanks(
                     NINE, ACE, FOUR, SEVEN, JACK, EIGHT
             ));
 
-            assertThat(player2.getHand().getCards(), areCardsOfRanks(
+            assertThat(player2.hand().getCards(), areCardsOfRanks(
                     FIVE, EIGHT, SEVEN, TWO, SIX, THREE, KING, THREE
             ));
 
@@ -119,11 +119,11 @@ public class BatailleCorseIT {
 
             batailleCorse.grab(player1);
 
-            assertThat(player1.getHand().getCards(), areCardsOfRanks(
+            assertThat(player1.hand().getCards(), areCardsOfRanks(
                     FOUR, SEVEN, JACK, EIGHT, FIVE, NINE, EIGHT, ACE, SEVEN, TWO, SIX, THREE
             ));
 
-            assertThat(player2.getHand().getCards(), areCardsOfRanks(
+            assertThat(player2.hand().getCards(), areCardsOfRanks(
                     KING, THREE
             ));
 

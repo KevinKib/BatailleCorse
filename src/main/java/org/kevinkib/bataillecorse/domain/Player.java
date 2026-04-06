@@ -8,15 +8,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-public class Player {
-
-    private final Integer id;
-    private final Hand hand;
-
-    public Player(Integer id, Hand hand) {
-        this.id = id;
-        this.hand = hand;
-    }
+public record Player(Integer id, Hand hand) {
 
     public void addCardsFromPile(List<Card> cards) {
         Collections.reverse(cards);
@@ -29,14 +21,6 @@ public class Player {
 
     public Card getCardOnTop() {
         return hand.getCardOnTop();
-    }
-
-    public Integer getId() {
-        return id;
-    }
-
-    public Hand getHand() {
-        return hand;
     }
 
     public int getHandSize() {

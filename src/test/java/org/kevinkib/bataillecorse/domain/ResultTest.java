@@ -22,7 +22,7 @@ public class ResultTest {
                 anySlapRules()
         );
 
-        assertNull(result.getWinningPlayer());
+        assertNull(result.winningPlayer());
     }
 
     @Test
@@ -40,7 +40,7 @@ public class ResultTest {
                 anySlapRules()
         );
 
-        assertNull(result.getWinningPlayer());
+        assertNull(result.winningPlayer());
     }
 
     @Test
@@ -60,7 +60,7 @@ public class ResultTest {
                 anySlapRules()
         );
 
-        assertThat(result.getWinningPlayer(), is(winningPlayer));
+        assertThat(result.winningPlayer(), is(winningPlayer));
     }
 
     @Test
@@ -78,7 +78,7 @@ public class ResultTest {
                 alwaysApplyingSlapRules()
         );
 
-        assertNull(result.getWinningPlayer());
+        assertNull(result.winningPlayer());
     }
 
 

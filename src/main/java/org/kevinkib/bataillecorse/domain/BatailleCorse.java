@@ -32,7 +32,7 @@ public class BatailleCorse {
         this.result = Result.update(players, pile, slapRules);
     }
 
-    public void send(Player player) throws NotPlayersTurnException, FullCentralPileException, FinishedGameException {
+    public synchronized void send(Player player) throws NotPlayersTurnException, FullCentralPileException, FinishedGameException {
         checkIfPlayerCanSend(player);
 
         try {
@@ -48,7 +48,7 @@ public class BatailleCorse {
         }
     }
 
-    public boolean slap(Player player) throws CannotSlapIfNoCardsInPileException, FinishedGameException {
+    public synchronized boolean slap(Player player) throws CannotSlapIfNoCardsInPileException, FinishedGameException {
         checkIfPlayerCanSlap(player);
 
         boolean successfulSlap = slapRules.applies(pile);
@@ -67,7 +67,7 @@ public class BatailleCorse {
         return successfulSlap;
     }
 
-    public void grab(Player player) throws CannotGrabException, FinishedGameException {
+    public synchronized void grab(Player player) throws CannotGrabException, FinishedGameException {
         checkIfPlayerCanGrab(player);
 
         List<Card> cards = pile.clearAndReturnCards();
@@ -153,7 +153,7 @@ public class BatailleCorse {
     }
 
     public Player getWinner() {
-        return result.getWinningPlayer();
+        return result.winningPlayer();
     }
 
     public Player getPlayerByIndex(int index) {

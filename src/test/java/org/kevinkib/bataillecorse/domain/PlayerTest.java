@@ -23,7 +23,7 @@ public class PlayerTest {
 
         player.addCardsFromPile(cards);
 
-        assertThat(player.getHand().getCards(), is(Arrays.asList(three, two)));
+        assertThat(player.hand().getCards(), is(Arrays.asList(three, two)));
     }
 
 }

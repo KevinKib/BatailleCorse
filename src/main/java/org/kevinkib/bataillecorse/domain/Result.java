@@ -4,17 +4,7 @@ import org.kevinkib.bataillecorse.domain.slaprules.SlapRules;
 
 import java.util.List;
 
-public class Result {
-
-    private final Player winningPlayer;
-
-    public Result(Player winningPlayer) {
-        this.winningPlayer = winningPlayer;
-    }
-
-    public Player getWinningPlayer() {
-        return winningPlayer;
-    }
+public record Result(Player winningPlayer) {
 
     public static Result ONGOING = new Result(null);
 
@@ -31,8 +21,7 @@ public class Result {
 
         if (!pile.isEmpty() && slapRules.applies(pile)) {
             return Result.ONGOING;
-        }
-        else {
+        } else {
             Player winningPlayer = playersWithCards.get(0);
             return new Result(winningPlayer);
         }
