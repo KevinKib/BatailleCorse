@@ -13,7 +13,7 @@
             suit="spade"
           />
           <div class="card_counter">
-            <CardCounter :count="batailleCorse?.players.at(1).nbCards"/>
+            <CardCounter :count="batailleCorse?.players.at(1)?.nbCards"/>
           </div>
         </div>
       </div>
@@ -52,17 +52,8 @@
             suit="spade"
           />
             
-          <span :class="{ cardmoving: true }" ref="movedElement">
-            <PlayingCard
-              ref="pile" 
-              :size="125"
-              :hidden="false"
-              :suit="batailleCorse?.pile.cards.at(0)?.suit"
-              :rank="batailleCorse?.pile.cards.at(0)?.rank"
-            />
-          </span>
           <div class="card_counter">
-            <CardCounter :count="batailleCorse?.players.at(0).nbCards"/>
+            <CardCounter :count="batailleCorse?.players.at(0)?.nbCards"/>
           </div>
         </div>
         <h1 class="player_tag">SNP</h1>
@@ -71,7 +62,6 @@
             @click="send(0)" :disabled="isButtonDisabled(0, 'send')"/>
           <Button class="action_button" icon="pi pi-hammer" severity="warn" label="Slap" rounded
             @click="slap(0)" :disabled="isButtonDisabled(0, 'slap')"/>
-          <Button @click="clickMoveElement()">Déplacer</button>
         </div>
       </div>
 
@@ -95,42 +85,11 @@ const batailleCorseStore = useBatailleCorseStore();
 const { state: batailleCorse } = storeToRefs(batailleCorseStore);
 
 const pile = useTemplateRef("pile");
-const movedElement = useTemplateRef("movedElement");
-
-const movedPos = {
-  top: -550,
-  left: -450,
-}
-
-
-function clickMoveElement() {
-  if (animate.value) {
-    movedPos.top = -550;
-    movedPos.left = -550;
-  }
-  else {
-    movedPos.top = -550;
-    movedPos.left = -750;
-  }
-
-  animate.value = !animate.value;
-
-  movedElement.value.style.top = movedPos.top + 'px';
-  movedElement.value.style.left = movedPos.left + 'px';
-}
-
-const animate = ref(false);
-const top = computed(() => {
-  return pile.value.rootCard.getBoundingClientRect().top;
-})
-const left = computed(() => {
-  return pile.value.rootCard.getBoundingClientRect().left;
-})
 
 setInterval(() => {
   if (pile.value) {
     console.log("getBoundingClientRect", pile.value);
-    console.log("getBoundingClientRect2", pile.value.rootCard.getBoundingClientRect());
+    console.log("getBoundingClientRect2", pile.value.rootCard?.getBoundingClientRect());
   }
 
 }, 5000);
@@ -143,7 +102,7 @@ onBeforeUnmount(() => {
   document.removeEventListener('keyup', setupHotkeys);
 })
 
-function setupHotkeys(event) {
+function setupHotkeys(event: { key: string; }) {
   if (event.key == 'q' || event.key == 'c') {
     send(0);
   }
@@ -152,20 +111,18 @@ function setupHotkeys(event) {
   }
 }
 
-function slap(playerIndex) {
+function slap(playerIndex: number) {
   batailleCorseStore.slap(playerIndex);
 }
 
-function send(playerIndex) {
+function send(playerIndex: number) {
   batailleCorseStore.send(playerIndex);
 
   // TODO: make sure send is successful
-
-
 }
 
 function isButtonDisabled(playerIndex: number, buttonLabel: Action) {
-  return !batailleCorse.value?.players.at(playerIndex).availableActions.includes(buttonLabel.toLocaleUpperCase());
+  return !batailleCorse.value?.players.at(playerIndex)?.availableActions.includes(buttonLabel.toLocaleUpperCase());
 }
 
 setInterval(() =>  {

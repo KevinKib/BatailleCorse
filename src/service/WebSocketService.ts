@@ -8,7 +8,7 @@ class WebSocketService {
   private readonly url = 'http://127.0.0.1:8080/connect';
   private readonly windows_url = 'http://172.31.112.1:8080/connect';
 
-  private client : Client; 
+  private client!: Client; 
 
   public init() {
     const batailleCorse = useBatailleCorseStore();
