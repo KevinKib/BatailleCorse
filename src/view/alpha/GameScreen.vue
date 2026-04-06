@@ -23,16 +23,18 @@
     </div>
 
     <div class="gamescreen_middle flex">
-      <div class="card" ref="centerPileArea">
-        <PlayingCard
-          ref="centerPile"
-          :size="125"
-          :hidden="false"
-          :suit="isSendAnimating ? frozenPileCard.suit : batailleCorse?.pile.cards.at(0)?.suit"
-          :rank="isSendAnimating ? frozenPileCard.rank : batailleCorse?.pile.cards.at(0)?.rank"
-        />
-        <div class="card_counter">
-          <CardCounter :count="batailleCorse?.pile.cards.length"/>
+      <div class="pile_slot">
+        <div class="card" ref="centerPileArea">
+          <PlayingCard
+            ref="centerPile"
+            :size="125"
+            :hidden="false"
+            :suit="isPileAnimating ? frozenPileCard.suit : batailleCorse?.pile.cards.at(0)?.suit"
+            :rank="isPileAnimating ? frozenPileCard.rank : batailleCorse?.pile.cards.at(0)?.rank"
+          />
+          <div class="card_counter">
+            <CardCounter :count="batailleCorse?.pile.cards.length"/>
+          </div>
         </div>
       </div>
     </div>
@@ -73,7 +75,7 @@
 
   <img
     v-if="ghostCard.visible"
-    :src="cardBackUrl"
+    :src="ghostCard.src"
     :class="['ghost-card', { transitioning: ghostCard.transitioning }]"
     :style="{
       top: ghostCard.y + 'px',
@@ -96,6 +98,13 @@ import { Action } from '../../service/model/Action';
 import { nextTick, onBeforeUnmount, onMounted, reactive, ref, useTemplateRef, watch } from 'vue';
 import cardBackUrl from '/src/resources/cards/png/card_back.png?url';
 
+const cardImages = import.meta.glob('/src/resources/cards/png/*.png', { eager: true, query: 'url' });
+
+function getCardUrl(rank: string, suit: string): string {
+  const key = `/src/resources/cards/png/card_${rank.toLowerCase()}_${suit.toLowerCase()}.png`;
+  return (cardImages[key] as { default: string })?.default ?? cardBackUrl;
+}
+
 const batailleCorseStore = useBatailleCorseStore();
 const { state: batailleCorse, lastSend, lastGrab } = storeToRefs(batailleCorseStore);
 
@@ -109,14 +118,22 @@ const ghostCard = reactive({
   transitioning: false,
   x: 0, y: 0, width: 0, height: 0,
   duration: 100,
+  src: cardBackUrl,
 });
 
-const isSendAnimating = ref(false);
+const isPileAnimating = ref(false);
 const frozenPileCard = reactive({ rank: '', suit: '' });
 
-function animateGhostCard(srcRect: DOMRect, destRect: DOMRect, duration: number) {
+function freezePileCard() {
+  const top = batailleCorse.value?.pile.cards.at(0);
+  frozenPileCard.rank = top?.rank ?? '';
+  frozenPileCard.suit = top?.suit ?? '';
+}
+
+function animateGhostCard(srcRect: DOMRect, destRect: DOMRect, duration: number, src = cardBackUrl) {
   ghostCard.visible = false;
   ghostCard.transitioning = false;
+  ghostCard.src = src;
   ghostCard.x = srcRect.left;
   ghostCard.y = srcRect.top;
   ghostCard.width = srcRect.width;
@@ -139,7 +156,7 @@ function animateGhostCard(srcRect: DOMRect, destRect: DOMRect, duration: number)
   setTimeout(() => {
     ghostCard.visible = false;
     ghostCard.transitioning = false;
-    isSendAnimating.value = false;
+    isPileAnimating.value = false;
   }, duration + 50);
 }
 
@@ -149,6 +166,14 @@ function getCenterPileRect(): DOMRect | undefined {
     ? el.getBoundingClientRect()
     : centerPileArea.value?.getBoundingClientRect();
 }
+
+// During send animation, the server responds within a few ms with the new card face.
+// Watch for that update and switch the ghost image immediately.
+watch(() => batailleCorse.value?.pile.cards.at(0), (newCard) => {
+  if (isPileAnimating.value && newCard) {
+    ghostCard.src = getCardUrl(newCard.rank, newCard.suit);
+  }
+});
 
 watch(lastSend, (event) => {
   if (!event) return;
@@ -164,9 +189,8 @@ watch(lastSend, (event) => {
 
   if (!destRect || destRect.width === 0) return;
 
-  frozenPileCard.rank = batailleCorse.value?.pile.cards.at(0)?.rank ?? '';
-  frozenPileCard.suit = batailleCorse.value?.pile.cards.at(0)?.suit ?? '';
-  isSendAnimating.value = true;
+  freezePileCard();
+  isPileAnimating.value = true;
   animateGhostCard(srcRect, destRect, 100);
 });
 
@@ -184,7 +208,11 @@ watch(lastGrab, (event) => {
 
   if (!srcRect || srcRect.width === 0) return;
 
-  animateGhostCard(srcRect, destRect, 200);
+  const topCard = batailleCorse.value?.pile.cards.at(0);
+  const src = topCard ? getCardUrl(topCard.rank, topCard.suit) : cardBackUrl;
+  freezePileCard();
+  isPileAnimating.value = true;
+  animateGhostCard(srcRect, destRect, 200, src);
 }, { flush: 'sync' });
 
 onMounted(() => {
@@ -224,18 +252,10 @@ function isButtonDisabled(playerIndex: number, buttonLabel: Action) {
 <style>
 
 .gamescreen {
-  /* @apply bg-[url("src/resources/background/texture-2391621_1280.jpg")]; */
-  /* @apply bg-[url("src/resources/background/engin-akyurt-xwb9RDqZKu8-unsplash_small.jpg")]; */
-  /* background: #1B5E20; */
-  /* background: #005D5D; */
-
-  background: #005D5D;
-  background: radial-gradient(circle, rgba(0, 93, 93, 1) 0%, rgba(13, 66, 28, 1) 150%);
-
-  /* background: radial-gradient(circle, rgba(27, 94, 32, 1) 0%, rgba(56, 142, 60, 1) 100%); */
-  background-repeat: repeat;
-  background-position: center;
-  /* opacity: 50%; */
+  /* Two-layer background: vignette on top, deep felt below */
+  background:
+    radial-gradient(ellipse at 50% 42%, transparent 15%, rgba(0, 0, 0, 0.62) 100%),
+    radial-gradient(ellipse at 50% 38%, #1e5c30 0%, #0d2e18 48%, #07160d 100%);
   width: 100%;
   height: 100%;
   display: flex;
@@ -244,7 +264,10 @@ function isButtonDisabled(playerIndex: number, buttonLabel: Action) {
 
 .gamescreen_top {
   height: 30%;
-  
+  background: rgba(0, 0, 0, 0.10);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 20px;
+
   .middle_side {
     margin-top: auto;
   }
@@ -256,9 +279,26 @@ function isButtonDisabled(playerIndex: number, buttonLabel: Action) {
 
 .gamescreen_bottom {
   height: 30%;
+  background: rgba(0, 0, 0, 0.10);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding-top: 20px;
+
   .middle_side {
     margin-bottom: auto;
   }
+}
+
+.pile_slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  padding: 20px 28px;
+  margin: auto;
+  border: 2px dashed rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.22);
+  box-shadow: inset 0 2px 16px rgba(0, 0, 0, 0.5);
 }
 
 .screen_content {
@@ -343,6 +383,7 @@ function isButtonDisabled(playerIndex: number, buttonLabel: Action) {
   z-index: 1000;
   border: 1px solid black;
   border-radius: 6%;
+  box-shadow: 3px 5px 0px rgba(0, 0, 0, 0.9), 4px 10px 24px rgba(0, 0, 0, 0.6);
   transition: none;
 }
 
