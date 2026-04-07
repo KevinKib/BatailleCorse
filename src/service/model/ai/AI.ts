@@ -52,7 +52,7 @@ export default class AI {
     return this.batailleCorse.state?.players.at(this.playerIndex).availableActions.includes("SEND");
   }
 
-  private getRandomInt(max) {
+  private getRandomInt(max: number) {
     return Math.floor(Math.random() * max);
   }
 

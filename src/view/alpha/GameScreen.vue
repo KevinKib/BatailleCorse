@@ -82,6 +82,7 @@
         left: ghost.x + 'px',
         width: ghost.width + 'px',
         height: ghost.height + 'px',
+        '--slap-duration': ghost.duration + 'ms',
       }"
     />
   </template>
@@ -98,6 +99,15 @@
       '--ghost-duration': ghostCard.duration + 'ms',
     }"
   />
+
+  <div
+    v-if="cardDeltaIndicator.visible"
+    class="card-delta"
+    :class="{ 'card-delta--negative': cardDeltaIndicator.delta < 0 }"
+    :style="{ left: cardDeltaIndicator.x + 'px', top: cardDeltaIndicator.y + 'px' }"
+  >
+    {{ cardDeltaIndicator.delta > 0 ? '+' : '' }}{{ cardDeltaIndicator.delta }}
+  </div>
 
 </template>
 
@@ -119,7 +129,7 @@ function getCardUrl(rank: string, suit: string): string {
 }
 
 const batailleCorseStore = useBatailleCorseStore();
-const { state: batailleCorse, lastSend, lastGrab, lastSlap, lastSuccessfulSlap } = storeToRefs(batailleCorseStore);
+const { state: batailleCorse, lastSend, lastGrab, lastSlap, lastSuccessfulSlap, lastErroneousSlap } = storeToRefs(batailleCorseStore);
 
 const SLAP_DURATION = 280;
 const SLAP_STAGGER = 60;
@@ -143,8 +153,26 @@ const isPileFlashing = ref(false);
 const frozenPileCard = reactive({ rank: '', suit: '' });
 
 const slapGhosts = SLAP_OFFSETS.map(() =>
-  reactive({ visible: false, transitioning: false, x: 0, y: 0, width: 0, height: 0, src: cardBackUrl })
+  reactive({ visible: false, transitioning: false, x: 0, y: 0, width: 0, height: 0, src: cardBackUrl, duration: SLAP_DURATION })
 );
+
+const cardDeltaIndicator = reactive({ visible: false, delta: 0, x: 0, y: 0 });
+let recentSlapIndicatorShown = false;
+
+function showCardDelta(delta: number, playerIndex: number) {
+  if (delta === 0) return;
+  const el = playerIndex === 0 ? pile.value?.rootCard : opponentCard.value?.rootCard;
+  if (!el) return;
+  const rect = el.getBoundingClientRect();
+  cardDeltaIndicator.visible = false;
+  nextTick(() => {
+    cardDeltaIndicator.delta = delta;
+    cardDeltaIndicator.x = rect.right + 8;
+    cardDeltaIndicator.y = rect.top + rect.height / 2 - 16;
+    cardDeltaIndicator.visible = true;
+    setTimeout(() => { cardDeltaIndicator.visible = false; }, 1400);
+  });
+}
 
 function freezePileCard() {
   const top = batailleCorse.value?.pile.cards.at(0);
@@ -216,9 +244,64 @@ watch(lastSend, (event) => {
   animateGhostCard(srcRect, destRect, 100);
 });
 
-// When GRAB fires the pile is cleared — unfreeze so the empty state renders cleanly.
-watch(lastGrab, () => {
-  isPileAnimating.value = false;
+// When GRAB fires, animate cards from center pile to winner's deck, then clear the pile display.
+watch(lastGrab, (event) => {
+  if (!event) {
+    isPileAnimating.value = false;
+    return;
+  }
+
+  const pileCount = batailleCorse.value?.pile.cards.length ?? 0;
+  const topCard = batailleCorse.value?.pile.cards.at(0);
+  const destEl = event.winnerPlayerIndex === 0 ? pile.value?.rootCard : opponentCard.value?.rootCard;
+  const srcRect = getCenterPileRect();
+
+  if (!destEl || !srcRect || srcRect.width === 0) {
+    isPileAnimating.value = false;
+    return;
+  }
+
+  const destRect = destEl.getBoundingClientRect();
+
+  freezePileCard();
+  isPileAnimating.value = true;
+
+  if (!recentSlapIndicatorShown) showCardDelta(pileCount, event.winnerPlayerIndex);
+
+  slapGhosts.forEach((ghost, i) => {
+    const offset = SLAP_OFFSETS[i];
+    setTimeout(() => {
+      ghost.src = i === 0 && topCard ? getCardUrl(topCard.rank, topCard.suit) : cardBackUrl;
+      ghost.duration = SLAP_DURATION;
+      ghost.visible = false;
+      ghost.transitioning = false;
+      ghost.x = srcRect.left + offset.x;
+      ghost.y = srcRect.top + offset.y;
+      ghost.width = srcRect.width;
+      ghost.height = srcRect.height;
+      ghost.visible = true;
+
+      nextTick(() => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            ghost.transitioning = true;
+            ghost.x = destRect.left;
+            ghost.y = destRect.top;
+            ghost.width = destRect.width;
+            ghost.height = destRect.height;
+          });
+        });
+      });
+
+      setTimeout(() => {
+        ghost.visible = false;
+        ghost.transitioning = false;
+        if (i === slapGhosts.length - 1) {
+          isPileAnimating.value = false;
+        }
+      }, SLAP_DURATION + 50);
+    }, i * SLAP_STAGGER);
+  });
 }, { flush: 'sync' });
 
 // Immediate flash on any slap attempt, before the server responds.
@@ -228,9 +311,10 @@ watch(lastSlap, () => {
 });
 
 // Successful slap response: animate 3 staggered ghost cards from pile to winner's deck.
-// isPileAnimating stays true until GRAB fires (~1500ms later) to keep the pile visible.
+// isPileAnimating is cleared when the last ghost finishes, so the pile empties cleanly after the animation.
 watch(lastSuccessfulSlap, (event) => {
   if (!event) return;
+  console.log(lastSuccessfulSlap);
 
   const destEl = event.winnerPlayerIndex === 0
     ? pile.value?.rootCard
@@ -244,9 +328,14 @@ watch(lastSuccessfulSlap, (event) => {
   if (!srcRect || srcRect.width === 0) return;
 
   const topCard = batailleCorse.value?.pile.cards.at(0);
+  const pileCount = batailleCorse.value?.pile.cards.length ?? 0;
 
   freezePileCard();
   isPileAnimating.value = true;
+
+  showCardDelta(pileCount, event.winnerPlayerIndex);
+  recentSlapIndicatorShown = true;
+  setTimeout(() => { recentSlapIndicatorShown = false; }, 2000);
 
   slapGhosts.forEach((ghost, i) => {
     const offset = SLAP_OFFSETS[i];
@@ -276,10 +365,57 @@ watch(lastSuccessfulSlap, (event) => {
       setTimeout(() => {
         ghost.visible = false;
         ghost.transitioning = false;
+        if (i === slapGhosts.length - 1) {
+          isPileAnimating.value = false;
+        }
       }, SLAP_DURATION + 50);
     }, i * SLAP_STAGGER);
   });
 }, { flush: 'sync' });
+
+// Erroneous slap: animate 2 ghost cards from slapper's deck to center, show -2 indicator.
+watch(lastErroneousSlap, (event) => {
+  if (!event) return;
+
+  const srcEl = event.playerIndex === 0 ? pile.value?.rootCard : opponentCard.value?.rootCard;
+  const destRect = getCenterPileRect();
+  if (!srcEl || !destRect) return;
+
+  const srcRect = srcEl.getBoundingClientRect();
+
+  [slapGhosts[0], slapGhosts[1]].forEach((ghost, i) => {
+    setTimeout(() => {
+      ghost.src = cardBackUrl;
+      ghost.duration = 220;
+      ghost.visible = false;
+      ghost.transitioning = false;
+      ghost.x = srcRect.left;
+      ghost.y = srcRect.top;
+      ghost.width = srcRect.width;
+      ghost.height = srcRect.height;
+      ghost.visible = true;
+
+      nextTick(() => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            ghost.transitioning = true;
+            ghost.x = destRect.left;
+            ghost.y = destRect.top;
+            ghost.width = destRect.width;
+            ghost.height = destRect.height;
+          });
+        });
+      });
+
+      setTimeout(() => {
+        ghost.visible = false;
+        ghost.transitioning = false;
+      }, 220 + 50);
+    }, i * 50);
+  });
+
+  showCardDelta(-2, event.playerIndex);
+});
 
 onMounted(() => {
   document.addEventListener('keyup', setupHotkeys);
@@ -510,8 +646,10 @@ function isButtonDisabled(playerIndex: number, buttonLabel: Action) {
 }
 
 .slap-ghost.transitioning {
-  transition: top 280ms ease-in-out, left 280ms ease-in-out,
-              width 280ms ease-in-out, height 280ms ease-in-out;
+  transition: top var(--slap-duration, 280ms) ease-in-out,
+              left var(--slap-duration, 280ms) ease-in-out,
+              width var(--slap-duration, 280ms) ease-in-out,
+              height var(--slap-duration, 280ms) ease-in-out;
 }
 
 .ghost-card {
@@ -529,6 +667,28 @@ function isButtonDisabled(playerIndex: number, buttonLabel: Action) {
               left var(--ghost-duration, 100ms) ease-in,
               width var(--ghost-duration, 100ms) ease-in,
               height var(--ghost-duration, 100ms) ease-in;
+}
+
+@keyframes card-delta-float {
+  0%   { opacity: 0; transform: translateY(0); }
+  12%  { opacity: 1; }
+  70%  { opacity: 1; transform: translateY(-28px); }
+  100% { opacity: 0; transform: translateY(-44px); }
+}
+
+.card-delta {
+  position: fixed;
+  pointer-events: none;
+  z-index: 1001;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #4ade80;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85);
+  animation: card-delta-float 1.4s ease-out forwards;
+}
+
+.card-delta--negative {
+  color: #f87171;
 }
 
 </style>
