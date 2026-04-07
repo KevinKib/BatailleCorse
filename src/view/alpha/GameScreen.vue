@@ -117,341 +117,100 @@ import CardCounter from '../../components/CardCounter.vue';
 import { Button } from 'primevue';
 import { storeToRefs } from 'pinia';
 import { useBatailleCorseStore } from '../../state/BatailleCorse.store';
+import { useCardAnimation } from '../../composables/useCardAnimation';
+import { useHotkeys } from '../../composables/useHotkeys';
 import { Action } from '../../service/model/Action';
-import { nextTick, onBeforeUnmount, onMounted, reactive, ref, useTemplateRef, watch } from 'vue';
-import cardBackUrl from '/src/resources/cards/png/card_back.png?url';
-
-const cardImages = import.meta.glob('/src/resources/cards/png/*.png', { eager: true, query: 'url' });
-
-function getCardUrl(rank: string, suit: string): string {
-  const key = `/src/resources/cards/png/card_${rank.toLowerCase()}_${suit.toLowerCase()}.png`;
-  return (cardImages[key] as { default: string })?.default ?? cardBackUrl;
-}
+import { useTemplateRef, watch } from 'vue';
 
 const batailleCorseStore = useBatailleCorseStore();
 const { state: batailleCorse, lastSend, lastGrab, lastSlap, lastSuccessfulSlap, lastErroneousSlap } = storeToRefs(batailleCorseStore);
-
-const SLAP_DURATION = 280;
-const SLAP_STAGGER = 60;
-const SLAP_OFFSETS = [{ x: 0, y: 0 }, { x: 6, y: -4 }, { x: -5, y: -7 }];
 
 const pile = useTemplateRef("pile");
 const opponentCard = useTemplateRef("opponentCard");
 const centerPile = useTemplateRef("centerPile");
 const centerPileArea = useTemplateRef<HTMLDivElement>("centerPileArea");
 
-const ghostCard = reactive({
-  visible: false,
-  transitioning: false,
-  x: 0, y: 0, width: 0, height: 0,
-  duration: 100,
-  src: cardBackUrl,
-});
-
-const isPileAnimating = ref(false);
-const isPileFlashing = ref(false);
-const frozenPileCard = reactive({ rank: '', suit: '' });
-
-const slapGhosts = SLAP_OFFSETS.map(() =>
-  reactive({ visible: false, transitioning: false, x: 0, y: 0, width: 0, height: 0, src: cardBackUrl, duration: SLAP_DURATION })
+const animation = useCardAnimation(
+  () => pile.value?.rootCard,
+  () => opponentCard.value?.rootCard,
+  () => centerPile.value?.rootCard,
+  () => centerPileArea.value,
 );
 
-const cardDeltaIndicator = reactive({ visible: false, delta: 0, x: 0, y: 0 });
-let recentSlapIndicatorShown = false;
-
-function showCardDelta(delta: number, playerIndex: number) {
-  if (delta === 0) return;
-  const el = playerIndex === 0 ? pile.value?.rootCard : opponentCard.value?.rootCard;
-  if (!el) return;
-  const rect = el.getBoundingClientRect();
-  cardDeltaIndicator.visible = false;
-  nextTick(() => {
-    cardDeltaIndicator.delta = delta;
-    cardDeltaIndicator.x = rect.right + 8;
-    cardDeltaIndicator.y = rect.top + rect.height / 2 - 16;
-    cardDeltaIndicator.visible = true;
-    setTimeout(() => { cardDeltaIndicator.visible = false; }, 1400);
-  });
-}
-
-function freezePileCard() {
-  const top = batailleCorse.value?.pile.cards.at(0);
-  frozenPileCard.rank = top?.rank ?? '';
-  frozenPileCard.suit = top?.suit ?? '';
-}
-
-function animateGhostCard(srcRect: DOMRect, destRect: DOMRect, duration: number, src = cardBackUrl) {
-  ghostCard.visible = false;
-  ghostCard.transitioning = false;
-  ghostCard.src = src;
-  ghostCard.x = srcRect.left;
-  ghostCard.y = srcRect.top;
-  ghostCard.width = srcRect.width;
-  ghostCard.height = srcRect.height;
-  ghostCard.duration = duration;
-  ghostCard.visible = true;
-
-  nextTick(() => {
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        ghostCard.transitioning = true;
-        ghostCard.x = destRect.left;
-        ghostCard.y = destRect.top;
-        ghostCard.width = destRect.width;
-        ghostCard.height = destRect.height;
-      });
-    });
-  });
-
-  setTimeout(() => {
-    ghostCard.visible = false;
-    ghostCard.transitioning = false;
-    isPileAnimating.value = false;
-  }, duration + 50);
-}
-
-function getCenterPileRect(): DOMRect | undefined {
-  const el = centerPile.value?.rootCard;
-  return (el && el.offsetParent !== null)
-    ? el.getBoundingClientRect()
-    : centerPileArea.value?.getBoundingClientRect();
-}
+const {
+  ghostCard, slapGhosts, isPileAnimating, isPileFlashing, frozenPileCard, cardDeltaIndicator,
+} = animation;
 
 // During send animation, the server responds within a few ms with the new card face.
 // Watch for that update and switch the ghost image immediately.
 watch(() => batailleCorse.value?.pile.cards.at(0), (newCard) => {
-  if (isPileAnimating.value && newCard) {
-    ghostCard.src = getCardUrl(newCard.rank, newCard.suit);
-  }
+  animation.onNewPileCard(newCard);
 });
 
 watch(lastSend, (event) => {
   if (!event) return;
-
-  const sourceEl = event.playerIndex === 0
-    ? pile.value?.rootCard
-    : opponentCard.value?.rootCard;
-
+  const sourceEl = event.playerIndex === 0 ? pile.value?.rootCard : opponentCard.value?.rootCard;
   if (!sourceEl) return;
-
-  const srcRect = sourceEl.getBoundingClientRect();
-  const destRect = getCenterPileRect();
-
+  const destRect = animation.getCenterPileRect();
   if (!destRect || destRect.width === 0) return;
-
-  freezePileCard();
-  isPileAnimating.value = true;
-  animateGhostCard(srcRect, destRect, 100);
+  animation.animateSend(sourceEl.getBoundingClientRect(), destRect, batailleCorse.value?.pile.cards.at(0));
 });
 
 // When GRAB fires, animate cards from center pile to winner's deck, then clear the pile display.
 watch(lastGrab, (event) => {
-  if (!event) {
-    isPileAnimating.value = false;
-    return;
-  }
-
-  const pileCount = batailleCorse.value?.pile.cards.length ?? 0;
-  const topCard = batailleCorse.value?.pile.cards.at(0);
+  if (!event) { animation.cancelPileAnimation(); return; }
+  const pileCards = [...(batailleCorse.value?.pile.cards ?? [])];
   const destEl = event.winnerPlayerIndex === 0 ? pile.value?.rootCard : opponentCard.value?.rootCard;
-  const srcRect = getCenterPileRect();
-
-  if (!destEl || !srcRect || srcRect.width === 0) {
-    isPileAnimating.value = false;
-    return;
-  }
-
-  const destRect = destEl.getBoundingClientRect();
-
-  freezePileCard();
-  isPileAnimating.value = true;
-
-  if (!recentSlapIndicatorShown) showCardDelta(pileCount, event.winnerPlayerIndex);
-
-  slapGhosts.forEach((ghost, i) => {
-    const offset = SLAP_OFFSETS[i];
-    setTimeout(() => {
-      ghost.src = i === 0 && topCard ? getCardUrl(topCard.rank, topCard.suit) : cardBackUrl;
-      ghost.duration = SLAP_DURATION;
-      ghost.visible = false;
-      ghost.transitioning = false;
-      ghost.x = srcRect.left + offset.x;
-      ghost.y = srcRect.top + offset.y;
-      ghost.width = srcRect.width;
-      ghost.height = srcRect.height;
-      ghost.visible = true;
-
-      nextTick(() => {
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            ghost.transitioning = true;
-            ghost.x = destRect.left;
-            ghost.y = destRect.top;
-            ghost.width = destRect.width;
-            ghost.height = destRect.height;
-          });
-        });
-      });
-
-      setTimeout(() => {
-        ghost.visible = false;
-        ghost.transitioning = false;
-        if (i === slapGhosts.length - 1) {
-          isPileAnimating.value = false;
-        }
-      }, SLAP_DURATION + 50);
-    }, i * SLAP_STAGGER);
-  });
+  const srcRect = animation.getCenterPileRect();
+  if (!destEl || !srcRect || srcRect.width === 0) { animation.cancelPileAnimation(); return; }
+  animation.showDeltaOnGrab(pileCards.length, destEl);
+  animation.animatePileToWinner(srcRect, destEl.getBoundingClientRect(), pileCards);
 }, { flush: 'sync' });
 
 // Immediate flash on any slap attempt, before the server responds.
-watch(lastSlap, () => {
-  isPileFlashing.value = true;
-  setTimeout(() => { isPileFlashing.value = false; }, 400);
-});
+watch(lastSlap, () => animation.flashPile());
 
-// Successful slap response: animate 3 staggered ghost cards from pile to winner's deck.
-// isPileAnimating is cleared when the last ghost finishes, so the pile empties cleanly after the animation.
+// Successful slap: animate cards from pile to winner's deck.
 watch(lastSuccessfulSlap, (event) => {
   if (!event) return;
-  console.log(lastSuccessfulSlap);
-
-  const destEl = event.winnerPlayerIndex === 0
-    ? pile.value?.rootCard
-    : opponentCard.value?.rootCard;
-
+  const destEl = event.winnerPlayerIndex === 0 ? pile.value?.rootCard : opponentCard.value?.rootCard;
   if (!destEl) return;
-
-  const srcRect = getCenterPileRect();
-  const destRect = destEl.getBoundingClientRect();
-
+  const srcRect = animation.getCenterPileRect();
   if (!srcRect || srcRect.width === 0) return;
-
-  const topCard = batailleCorse.value?.pile.cards.at(0);
-  const pileCount = batailleCorse.value?.pile.cards.length ?? 0;
-
-  freezePileCard();
-  isPileAnimating.value = true;
-
-  showCardDelta(pileCount, event.winnerPlayerIndex);
-  recentSlapIndicatorShown = true;
-  setTimeout(() => { recentSlapIndicatorShown = false; }, 2000);
-
-  slapGhosts.forEach((ghost, i) => {
-    const offset = SLAP_OFFSETS[i];
-
-    setTimeout(() => {
-      ghost.src = i === 0 && topCard ? getCardUrl(topCard.rank, topCard.suit) : cardBackUrl;
-      ghost.visible = false;
-      ghost.transitioning = false;
-      ghost.x = srcRect.left + offset.x;
-      ghost.y = srcRect.top + offset.y;
-      ghost.width = srcRect.width;
-      ghost.height = srcRect.height;
-      ghost.visible = true;
-
-      nextTick(() => {
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            ghost.transitioning = true;
-            ghost.x = destRect.left;
-            ghost.y = destRect.top;
-            ghost.width = destRect.width;
-            ghost.height = destRect.height;
-          });
-        });
-      });
-
-      setTimeout(() => {
-        ghost.visible = false;
-        ghost.transitioning = false;
-        if (i === slapGhosts.length - 1) {
-          isPileAnimating.value = false;
-        }
-      }, SLAP_DURATION + 50);
-    }, i * SLAP_STAGGER);
-  });
+  const pileCards = [...(batailleCorse.value?.pile.cards ?? [])];
+  animation.showDeltaOnSlap(pileCards.length, destEl);
+  animation.animatePileToWinner(srcRect, destEl.getBoundingClientRect(), pileCards);
 }, { flush: 'sync' });
 
 // Erroneous slap: animate 2 ghost cards from slapper's deck to center, show -2 indicator.
 watch(lastErroneousSlap, (event) => {
   if (!event) return;
-
   const srcEl = event.playerIndex === 0 ? pile.value?.rootCard : opponentCard.value?.rootCard;
-  const destRect = getCenterPileRect();
+  const destRect = animation.getCenterPileRect();
   if (!srcEl || !destRect) return;
-
-  const srcRect = srcEl.getBoundingClientRect();
-
-  [slapGhosts[0], slapGhosts[1]].forEach((ghost, i) => {
-    setTimeout(() => {
-      ghost.src = cardBackUrl;
-      ghost.duration = 220;
-      ghost.visible = false;
-      ghost.transitioning = false;
-      ghost.x = srcRect.left;
-      ghost.y = srcRect.top;
-      ghost.width = srcRect.width;
-      ghost.height = srcRect.height;
-      ghost.visible = true;
-
-      nextTick(() => {
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            ghost.transitioning = true;
-            ghost.x = destRect.left;
-            ghost.y = destRect.top;
-            ghost.width = destRect.width;
-            ghost.height = destRect.height;
-          });
-        });
-      });
-
-      setTimeout(() => {
-        ghost.visible = false;
-        ghost.transitioning = false;
-      }, 220 + 50);
-    }, i * 50);
-  });
-
-  showCardDelta(-2, event.playerIndex);
+  animation.animateErroneousSlap(srcEl.getBoundingClientRect(), destRect);
+  animation.showDeltaAlways(-2, srcEl);
 });
 
-onMounted(() => {
-  document.addEventListener('keyup', setupHotkeys);
-})
+function isButtonDisabled(playerIndex: number, buttonLabel: Action) {
+  return !batailleCorse.value?.players.at(playerIndex)?.availableActions.includes(buttonLabel.toLocaleUpperCase());
+}
 
-onBeforeUnmount(() => {
-  document.removeEventListener('keyup', setupHotkeys);
-})
-
-function setupHotkeys(event: { key: string; }) {
-  if (event.key == 'q' || event.key == 'c') {
-    if (!isButtonDisabled(0, 'send')) send(0);
-  }
-  if (event.key == 'd' || event.key == ' ') {
-    if (!isButtonDisabled(0, 'slap')) slap(0);
-  }
+function send(playerIndex: number) {
+  batailleCorseStore.send(playerIndex);
 }
 
 function slap(playerIndex: number) {
   batailleCorseStore.slap(playerIndex);
 }
 
-function send(playerIndex: number) {
-  batailleCorseStore.send(playerIndex);
-
-  // TODO: make sure send is successful
-}
-
-function isButtonDisabled(playerIndex: number, buttonLabel: Action) {
-  return !batailleCorse.value?.players.at(playerIndex)?.availableActions.includes(buttonLabel.toLocaleUpperCase());
-}
-
-
+useHotkeys(
+  () => { if (!isButtonDisabled(0, 'send')) send(0); },
+  () => { if (!isButtonDisabled(0, 'slap')) slap(0); },
+);
 </script>
 
-<style>
+<style scoped>
 
 .gamescreen {
   /* Two-layer background: vignette on top, deep felt below */
@@ -519,18 +278,6 @@ function isButtonDisabled(playerIndex: number, buttonLabel: Action) {
   box-shadow: inset 0 2px 16px rgba(0, 0, 0, 0.5);
 }
 
-.screen_content {
-  opacity: 100%;
-}
-
-.card_with_counter {
-  display: flex;
-  flex-direction: row;
-  width: fit-content;
-  margin-left: auto;
-  margin-right: auto;
-  
-}
 
 .card {
   position: relative;
@@ -575,7 +322,7 @@ function isButtonDisabled(playerIndex: number, buttonLabel: Action) {
 }
 
 .card.stacked {
-  z-index: 0;
+  z-index: 1001;
 }
 
 .card.stacked::before,
@@ -620,10 +367,6 @@ function isButtonDisabled(playerIndex: number, buttonLabel: Action) {
   margin-bottom: 16px;
 }
 
-.cardmoving {
-  position: absolute;
-  transition: 1s top, 1s left;
-}
 
 @keyframes pile-flash {
   0%   { box-shadow: inset 0 2px 16px rgba(0, 0, 0, 0.5); }
