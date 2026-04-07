@@ -56,16 +56,8 @@ const images = import.meta.glob('/src/resources/cards/png/*.png', {
   query: 'url',
 });
 
-const cache = new Map();
-
 interface URL {
   default: string,
-}
-
-for (const [path, url] of (Object.entries(images) as [string, URL][])) {
-  const img = new Image();
-  img.src = url.default;
-  cache.set(path, img);
 }
 
 const url = computed(() => {

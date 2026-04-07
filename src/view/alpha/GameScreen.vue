@@ -78,8 +78,7 @@
       :src="ghost.src"
       :class="['slap-ghost', { transitioning: ghost.transitioning }]"
       :style="{
-        top: ghost.y + 'px',
-        left: ghost.x + 'px',
+        transform: `translate(${ghost.x}px, ${ghost.y}px)`,
         width: ghost.width + 'px',
         height: ghost.height + 'px',
         '--slap-duration': ghost.duration + 'ms',
@@ -92,8 +91,7 @@
     :src="ghostCard.src"
     :class="['ghost-card', { transitioning: ghostCard.transitioning }]"
     :style="{
-      top: ghostCard.y + 'px',
-      left: ghostCard.x + 'px',
+      transform: `translate(${ghostCard.x}px, ${ghostCard.y}px)`,
       width: ghostCard.width + 'px',
       height: ghostCard.height + 'px',
       '--ghost-duration': ghostCard.duration + 'ms',
@@ -380,6 +378,8 @@ useHotkeys(
 
 .slap-ghost {
   position: fixed;
+  top: 0;
+  left: 0;
   pointer-events: none;
   z-index: 1000;
   border: 1px solid black;
@@ -389,14 +389,15 @@ useHotkeys(
 }
 
 .slap-ghost.transitioning {
-  transition: top var(--slap-duration, 280ms) ease-in-out,
-              left var(--slap-duration, 280ms) ease-in-out,
+  transition: transform var(--slap-duration, 280ms) ease-in-out,
               width var(--slap-duration, 280ms) ease-in-out,
               height var(--slap-duration, 280ms) ease-in-out;
 }
 
 .ghost-card {
   position: fixed;
+  top: 0;
+  left: 0;
   pointer-events: none;
   z-index: 1000;
   border: 1px solid black;
@@ -406,8 +407,7 @@ useHotkeys(
 }
 
 .ghost-card.transitioning {
-  transition: top var(--ghost-duration, 100ms) ease-in,
-              left var(--ghost-duration, 100ms) ease-in,
+  transition: transform var(--ghost-duration, 100ms) ease-in,
               width var(--ghost-duration, 100ms) ease-in,
               height var(--ghost-duration, 100ms) ease-in;
 }
