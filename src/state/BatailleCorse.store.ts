@@ -55,6 +55,12 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
   let grabSeq = 0;
   const lastGrab = ref<{ winnerPlayerIndex: number; seq: number } | null>(null);
 
+  let slapSeq = 0;
+  const lastSlap = ref<{ seq: number } | null>(null);
+
+  let successfulSlapSeq = 0;
+  const lastSuccessfulSlap = ref<{ winnerPlayerIndex: number; seq: number } | null>(null);
+
   // const player0Ai = new AI(0, 500);
   const player1Ai = new AI(1, 600);
 
@@ -72,6 +78,7 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
   }
 
   function slap(playerIndex: number) {
+    lastSlap.value = { seq: ++slapSeq };
     webSocketService.publish({
       destination: `/app/slap/${playerIndex}`
     });
@@ -90,6 +97,13 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
       const winnerPlayerIndex = Number(state.value?.pile.playerThatAddedLastHonourCard?.id);
       if (!isNaN(winnerPlayerIndex)) {
         lastGrab.value = { winnerPlayerIndex, seq: ++grabSeq };
+      }
+    }
+
+    if (response.eventType === 'SLAP' && state.value?.pile.grabbable) {
+      const winnerPlayerIndex = Number(response.state.pile.playerThatAddedLastHonourCard?.id);
+      if (!isNaN(winnerPlayerIndex)) {
+        lastSuccessfulSlap.value = { winnerPlayerIndex, seq: ++successfulSlapSeq };
       }
     }
 
@@ -121,6 +135,8 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
     state,
     lastSend,
     lastGrab,
+    lastSlap,
+    lastSuccessfulSlap,
     create,
     send,
     slap,

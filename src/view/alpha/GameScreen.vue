@@ -5,7 +5,7 @@
       <div class="left_side"></div>
       <div class="middle_side">
         <h1 class="player_tag">Computer (Easy)</h1>
-        <div class="card">
+        <div class="card stacked">
           <PlayingCard
             ref="opponentCard"
             :size="90"
@@ -23,7 +23,7 @@
     </div>
 
     <div class="gamescreen_middle flex">
-      <div class="pile_slot">
+      <div :class="['pile_slot', { 'pile-flash': isPileFlashing }]">
         <div class="card" ref="centerPileArea">
           <PlayingCard
             ref="centerPile"
@@ -47,20 +47,19 @@
       </div>
 
       <div class="middle_side">
-        <div class="card">
-          <PlayingCard 
+        <h1 class="player_tag">SNP</h1>
+        <div class="card stacked">
+          <PlayingCard
             ref="pile"
             :size="90"
             :hidden="true"
             rank="10"
             suit="spade"
           />
-            
           <div class="card_counter">
             <CardCounter :count="batailleCorse?.players.at(0)?.nbCards"/>
           </div>
         </div>
-        <h1 class="player_tag">SNP</h1>
         <div class="action_buttons">
           <Button class="action_button" icon="pi pi-arrow-up" severity="success" label="Send" rounded
             @click="send(0)" :disabled="isButtonDisabled(0, 'send')"/>
@@ -72,6 +71,20 @@
       <div class="right_side"></div>
     </div>
   </div>
+
+  <template v-for="(ghost, i) in slapGhosts" :key="i">
+    <img
+      v-if="ghost.visible"
+      :src="ghost.src"
+      :class="['slap-ghost', { transitioning: ghost.transitioning }]"
+      :style="{
+        top: ghost.y + 'px',
+        left: ghost.x + 'px',
+        width: ghost.width + 'px',
+        height: ghost.height + 'px',
+      }"
+    />
+  </template>
 
   <img
     v-if="ghostCard.visible"
@@ -106,7 +119,11 @@ function getCardUrl(rank: string, suit: string): string {
 }
 
 const batailleCorseStore = useBatailleCorseStore();
-const { state: batailleCorse, lastSend, lastGrab } = storeToRefs(batailleCorseStore);
+const { state: batailleCorse, lastSend, lastGrab, lastSlap, lastSuccessfulSlap } = storeToRefs(batailleCorseStore);
+
+const SLAP_DURATION = 280;
+const SLAP_STAGGER = 60;
+const SLAP_OFFSETS = [{ x: 0, y: 0 }, { x: 6, y: -4 }, { x: -5, y: -7 }];
 
 const pile = useTemplateRef("pile");
 const opponentCard = useTemplateRef("opponentCard");
@@ -122,7 +139,12 @@ const ghostCard = reactive({
 });
 
 const isPileAnimating = ref(false);
+const isPileFlashing = ref(false);
 const frozenPileCard = reactive({ rank: '', suit: '' });
+
+const slapGhosts = SLAP_OFFSETS.map(() =>
+  reactive({ visible: false, transitioning: false, x: 0, y: 0, width: 0, height: 0, src: cardBackUrl })
+);
 
 function freezePileCard() {
   const top = batailleCorse.value?.pile.cards.at(0);
@@ -194,7 +216,20 @@ watch(lastSend, (event) => {
   animateGhostCard(srcRect, destRect, 100);
 });
 
-watch(lastGrab, (event) => {
+// When GRAB fires the pile is cleared — unfreeze so the empty state renders cleanly.
+watch(lastGrab, () => {
+  isPileAnimating.value = false;
+}, { flush: 'sync' });
+
+// Immediate flash on any slap attempt, before the server responds.
+watch(lastSlap, () => {
+  isPileFlashing.value = true;
+  setTimeout(() => { isPileFlashing.value = false; }, 400);
+});
+
+// Successful slap response: animate 3 staggered ghost cards from pile to winner's deck.
+// isPileAnimating stays true until GRAB fires (~1500ms later) to keep the pile visible.
+watch(lastSuccessfulSlap, (event) => {
   if (!event) return;
 
   const destEl = event.winnerPlayerIndex === 0
@@ -209,10 +244,41 @@ watch(lastGrab, (event) => {
   if (!srcRect || srcRect.width === 0) return;
 
   const topCard = batailleCorse.value?.pile.cards.at(0);
-  const src = topCard ? getCardUrl(topCard.rank, topCard.suit) : cardBackUrl;
+
   freezePileCard();
   isPileAnimating.value = true;
-  animateGhostCard(srcRect, destRect, 200, src);
+
+  slapGhosts.forEach((ghost, i) => {
+    const offset = SLAP_OFFSETS[i];
+
+    setTimeout(() => {
+      ghost.src = i === 0 && topCard ? getCardUrl(topCard.rank, topCard.suit) : cardBackUrl;
+      ghost.visible = false;
+      ghost.transitioning = false;
+      ghost.x = srcRect.left + offset.x;
+      ghost.y = srcRect.top + offset.y;
+      ghost.width = srcRect.width;
+      ghost.height = srcRect.height;
+      ghost.visible = true;
+
+      nextTick(() => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            ghost.transitioning = true;
+            ghost.x = destRect.left;
+            ghost.y = destRect.top;
+            ghost.width = destRect.width;
+            ghost.height = destRect.height;
+          });
+        });
+      });
+
+      setTimeout(() => {
+        ghost.visible = false;
+        ghost.transitioning = false;
+      }, SLAP_DURATION + 50);
+    }, i * SLAP_STAGGER);
+  });
 }, { flush: 'sync' });
 
 onMounted(() => {
@@ -225,10 +291,10 @@ onBeforeUnmount(() => {
 
 function setupHotkeys(event: { key: string; }) {
   if (event.key == 'q' || event.key == 'c') {
-    send(0);
+    if (!isButtonDisabled(0, 'send')) send(0);
   }
   if (event.key == 'd' || event.key == ' ') {
-    slap(0);
+    if (!isButtonDisabled(0, 'slap')) slap(0);
   }
 }
 
@@ -269,7 +335,12 @@ function isButtonDisabled(playerIndex: number, buttonLabel: Action) {
   padding-bottom: 20px;
 
   .middle_side {
-    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    margin: 0;
   }
 }
 
@@ -284,15 +355,26 @@ function isButtonDisabled(playerIndex: number, buttonLabel: Action) {
   padding-top: 20px;
 
   .middle_side {
-    margin-bottom: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    margin: 0;
   }
+}
+
+.pile_slot .card {
+  min-width: 125px;
+  min-height: 182px;
 }
 
 .pile_slot {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: fit-content;
+  min-width: 181px;  /* 125px card + 28px padding × 2 */
+  min-height: 222px; /* 182px card + 20px padding × 2 */
   padding: 20px 28px;
   margin: auto;
   border: 2px dashed rgba(255, 255, 255, 0.1);
@@ -331,25 +413,55 @@ function isButtonDisabled(playerIndex: number, buttonLabel: Action) {
 }
 
 .player_tag {
-  position: relative;
   width: fit-content;
   margin-left: auto;
   margin-right: auto;
-  margin-top: 8px;
-  margin-bottom: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  padding: 4px 14px;
 }
 
 .action_buttons {
   width: fit-content;
-  margin-top: auto;
-  margin-bottom: 16px;
   margin-left: auto;
   margin-right: auto;
 }
 
 .action_button {
-  margin-left: 8px;
-  margin-right: 8px;
+  margin-left: 6px;
+  margin-right: 6px;
+}
+
+.card.stacked {
+  z-index: 0;
+}
+
+.card.stacked::before,
+.card.stacked::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  border-radius: 6%;
+  background: #ede8df;
+  z-index: -1;
+}
+
+.card.stacked::before {
+  transform: translate(-3px, -3px);
+  box-shadow: 1px 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+.card.stacked::after {
+  transform: translate(-6px, -6px);
+  background: #e4dfd6;
+  box-shadow: 1px 2px 6px rgba(0, 0, 0, 0.25);
 }
 
 .left_side {
@@ -375,6 +487,31 @@ function isButtonDisabled(playerIndex: number, buttonLabel: Action) {
 .cardmoving {
   position: absolute;
   transition: 1s top, 1s left;
+}
+
+@keyframes pile-flash {
+  0%   { box-shadow: inset 0 2px 16px rgba(0, 0, 0, 0.5); }
+  35%  { box-shadow: inset 0 2px 16px rgba(0, 0, 0, 0.5), 0 0 32px 10px rgba(255, 210, 40, 0.45); }
+  100% { box-shadow: inset 0 2px 16px rgba(0, 0, 0, 0.5); }
+}
+
+.pile_slot.pile-flash {
+  animation: pile-flash 380ms ease-out;
+}
+
+.slap-ghost {
+  position: fixed;
+  pointer-events: none;
+  z-index: 1000;
+  border: 1px solid black;
+  border-radius: 6%;
+  box-shadow: 3px 5px 0px rgba(0, 0, 0, 0.9), 4px 10px 24px rgba(0, 0, 0, 0.6);
+  transition: none;
+}
+
+.slap-ghost.transitioning {
+  transition: top 280ms ease-in-out, left 280ms ease-in-out,
+              width 280ms ease-in-out, height 280ms ease-in-out;
 }
 
 .ghost-card {
