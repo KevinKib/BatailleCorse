@@ -3,6 +3,7 @@ package org.kevinkib.bataillecorse.presentation.websocket.v1;
 import org.kevinkib.bataillecorse.domain.BatailleCorse;
 import org.kevinkib.bataillecorse.domain.Player;
 import org.kevinkib.bataillecorse.presentation.websocket.v1.model.*;
+import org.kevinkib.bataillecorse.presentation.websocket.v1.model.event.*;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
@@ -19,7 +20,7 @@ public class BatailleCorseWebSocketController {
     public Response createGame() {
         batailleCorse = new BatailleCorse(2);
         batailleCorseDto = new BatailleCorseDto(batailleCorse);
-        return new SuccessResponse(EventType.CREATE, "Game created", batailleCorseDto);
+        return new SuccessResponse(EventType.CREATE, new EmptyEventData(), "Game created", batailleCorseDto);
     }
 
     @MessageMapping("/send/{playerIndex}")
@@ -34,7 +35,8 @@ public class BatailleCorseWebSocketController {
             batailleCorse.send(player);
 
             String message = "Player "+player.id()+" sent "+cardDto.getName()+".";
-            return new SuccessResponse(eventType, message, batailleCorseDto);
+            SendEventData eventData = new SendEventData(new PlayerIdDto(player));
+            return new SuccessResponse(eventType, eventData, message, batailleCorseDto);
 
         } catch (Exception e) {
             System.err.println(e.getMessage());
@@ -58,7 +60,9 @@ public class BatailleCorseWebSocketController {
                 message = "Player "+player.id()+" slapped, lost, and received a penality.";
             }
 
-            return new SuccessResponse(eventType, message, batailleCorseDto);
+            SlapEventData eventData = new SlapEventData(successfulSlap, new PlayerIdDto(player));
+
+            return new SuccessResponse(eventType, eventData, message, batailleCorseDto);
 
         } catch (Exception e) {
             System.err.println(e.getMessage());
@@ -77,7 +81,9 @@ public class BatailleCorseWebSocketController {
             batailleCorse.grab(player);
 
             String message = "Player "+player.id()+" grabbed the pile. ";
-            return new SuccessResponse(eventType, message, batailleCorseDto);
+            GrabEventData eventData = new GrabEventData(new PlayerIdDto(player));
+
+            return new SuccessResponse(eventType, eventData, message, batailleCorseDto);
 
         } catch (Exception e) {
             System.err.println(e.getMessage());

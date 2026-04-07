@@ -1,4 +1,4 @@
-package org.kevinkib.bataillecorse.presentation.websocket.v1.model;
+package org.kevinkib.bataillecorse.presentation.websocket.v1.model.event;
 
 public enum EventType {
 
