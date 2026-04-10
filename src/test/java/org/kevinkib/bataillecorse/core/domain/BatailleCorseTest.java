@@ -22,6 +22,7 @@ import java.util.Collections;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.kevinkib.bataillecorse.core.domain.BatailleCorseBuilder.aBatailleCorse;
 import static org.kevinkib.bataillecorse.core.domain.BatailleCorseFixtures.createFinishedGame;
 import static org.kevinkib.bataillecorse.core.domain.BatailleCorseTest.InitializationTest.IsEveryCardHidden.everyCardHidden;
 import static org.kevinkib.bataillecorse.core.domain.CentralPileFixtures.createCentralPileWithNumberOfCards;
@@ -46,7 +47,7 @@ class BatailleCorseTest {
 
         @Test
         public void whenInitializing_thenGiveHandsToPlayers_withHiddenCards() {
-            BatailleCorse batailleCorse = new BatailleCorse(nbPlayers);
+            BatailleCorse batailleCorse = aBatailleCorse().withNbPlayers(nbPlayers).buildAndInitialize();
 
             assertNotNull(batailleCorse.getPlayerByIndex(0).hand());
             assertNotNull(batailleCorse.getPlayerByIndex(1).hand());
@@ -56,14 +57,14 @@ class BatailleCorseTest {
 
         @Test
         public void whenInitializing_thenDefaultPlayerShouldBePlayerZero() {
-            BatailleCorse batailleCorse = new BatailleCorse(nbPlayers);
+            BatailleCorse batailleCorse = aBatailleCorse().withNbPlayers(nbPlayers).buildAndInitialize();
 
             assertThat(batailleCorse.getCurrentPlayerIndex(), is(0));
         }
 
         @Test
         public void whenInitializing_thenPileShouldBeEmpty() {
-            BatailleCorse batailleCorse = new BatailleCorse(nbPlayers);
+            BatailleCorse batailleCorse = aBatailleCorse().withNbPlayers(nbPlayers).buildAndInitialize();
 
             assertThat(batailleCorse.getPileSize(), is(0));
         }
@@ -99,7 +100,7 @@ class BatailleCorseTest {
         @BeforeEach
         public void beforeEach() {
             int nbPlayers = 2;
-            batailleCorse = BatailleCorseBuilder.aBatailleCorse()
+            batailleCorse = aBatailleCorse()
                     .withNbPlayers(nbPlayers)
                     .buildAndInitialize();
         }
@@ -147,7 +148,7 @@ class BatailleCorseTest {
 
         @Test
         public void givenFullPile_thenThrowFullCentralPileException() {
-            batailleCorse = BatailleCorseBuilder.aBatailleCorse()
+            batailleCorse = aBatailleCorse()
                     .withPlayers(Arrays.asList(
                         PlayerBuilder.aPlayer().withNonEmptyHand().build(),
                         PlayerBuilder.aPlayer().withNonEmptyHand().build()
@@ -183,7 +184,7 @@ class BatailleCorseTest {
                     CardFixtures.createNumberOfCards(5).toArray(new Card[]{})
             ).build();
 
-            batailleCorse = BatailleCorseBuilder.aBatailleCorse()
+            batailleCorse = aBatailleCorse()
                     .withPlayers(Arrays.asList(
                             player0, player1, player2
                     ))
@@ -220,7 +221,7 @@ class BatailleCorseTest {
 
             CentralPile emptyCentralPile = CentralPileFixtures.createEmptyCentralPile();
 
-            batailleCorse = BatailleCorseBuilder.aBatailleCorse()
+            batailleCorse = aBatailleCorse()
                     .withPlayers(createNumberOfPlayersWithAnyCards(2))
                     .withCentralPile(emptyCentralPile)
                     .build();
@@ -238,7 +239,7 @@ class BatailleCorseTest {
             Penality penality = mock(Penality.class);
             CentralPile pile = mock(CentralPile.class);
 
-            batailleCorse = BatailleCorseBuilder.aBatailleCorse()
+            batailleCorse = aBatailleCorse()
                     .withPlayers(createNumberOfPlayersWithAnyCards(2))
                     .withSlapRules(SlapRulesFixtures.neverApplyingSlapRules())
                     .withPenality(penality)
@@ -260,7 +261,7 @@ class BatailleCorseTest {
             Penality penality = mock(Penality.class);
             CentralPile pile = mock(CentralPile.class);
 
-            batailleCorse = BatailleCorseBuilder.aBatailleCorse()
+            batailleCorse = aBatailleCorse()
                     .withPlayers(createNumberOfPlayersWithAnyCards(2))
                     .withSlapRules(SlapRulesFixtures.neverApplyingSlapRules())
                     .withPenality(penality)
@@ -281,7 +282,7 @@ class BatailleCorseTest {
             int nbCards = 5;
             CentralPile pile = createCentralPileWithNumberOfCards(nbCards);
 
-            batailleCorse = BatailleCorseBuilder.aBatailleCorse()
+            batailleCorse = aBatailleCorse()
                     .withPlayers(createNumberOfPlayersWithOneCard(2))
                     .withSlapRules(alwaysApplyingSlapRules())
                     .withCentralPile(pile)
@@ -304,7 +305,7 @@ class BatailleCorseTest {
             int nbCards = 5;
             CentralPile pile = createCentralPileWithNumberOfCards(nbCards);
 
-            batailleCorse = BatailleCorseBuilder.aBatailleCorse()
+            batailleCorse = aBatailleCorse()
                     .withPlayers(createNumberOfPlayersWithAnyCards(3))
                     .withSlapRules(alwaysApplyingSlapRules())
                     .withCurrentPlayer(0)
@@ -326,7 +327,7 @@ class BatailleCorseTest {
             int nbCards = 5;
             CentralPile pile = createCentralPileWithNumberOfCards(nbCards);
 
-            batailleCorse = BatailleCorseBuilder.aBatailleCorse()
+            batailleCorse = aBatailleCorse()
                     .withPlayers(createNumberOfPlayersWithOneCard(2))
                     .withSlapRules(alwaysApplyingSlapRules())
                     .withCentralPile(pile)
@@ -370,7 +371,7 @@ class BatailleCorseTest {
 
         @Test
         public void givenNotGrabbablePile_thenThrowCannotGrabException() {
-            batailleCorse = BatailleCorseBuilder.aBatailleCorse()
+            batailleCorse = aBatailleCorse()
                     .withCentralPile(CentralPileFixtures.createEmptyCentralPile())
                     .withPlayers(Arrays.asList(
                             player,
@@ -385,7 +386,7 @@ class BatailleCorseTest {
 
         @Test
         public void givenGrabbablePile_thenClearPileAndGiveCardsToPlayer() {
-            batailleCorse = BatailleCorseBuilder.aBatailleCorse()
+            batailleCorse = aBatailleCorse()
                     .withCentralPile(CentralPileFixtures.createCentralPileGrabbableByPlayer(player))
                     .withPlayers(Collections.singletonList(player))
                     .withSlapRules(anySlapRules())
@@ -403,7 +404,7 @@ class BatailleCorseTest {
 
         @Test
         public void givenGrabbablePile_thenReverseCardsFromPileInHand() {
-            batailleCorse = BatailleCorseBuilder.aBatailleCorse()
+            batailleCorse = aBatailleCorse()
                     .withCentralPile(CentralPileFixtures.createCentralPileGrabbableByPlayer(player))
                     .withPlayers(Collections.singletonList(player))
                     .withSlapRules(anySlapRules())
@@ -435,7 +436,7 @@ class BatailleCorseTest {
             Player player2 = PlayerBuilder.aPlayer().withId(2).withCards(anyCard()).build();
             Player player3 = PlayerBuilder.aPlayer().withId(3).withCards(anyCard()).build();
 
-            batailleCorse = BatailleCorseBuilder.aBatailleCorse()
+            batailleCorse = aBatailleCorse()
                     .withCentralPile(CentralPileFixtures.createEmptyCentralPile())
                     .withPlayers(Arrays.asList(
                             player1, player2, player3)
@@ -468,7 +469,7 @@ class BatailleCorseTest {
 
             player1 = PlayerBuilder.aPlayer().withId(1).build();
 
-            batailleCorse = BatailleCorseBuilder.aBatailleCorse()
+            batailleCorse = aBatailleCorse()
                     .withPlayers(Arrays.asList(
                             player1,
                             PlayerBuilder.aPlayer().withId(2).build()

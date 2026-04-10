@@ -1,6 +1,7 @@
 package org.kevinkib.bataillecorse.websocket.presentation.v1;
 
 import org.kevinkib.bataillecorse.core.domain.BatailleCorse;
+import org.kevinkib.bataillecorse.core.domain.BatailleCorseId;
 import org.kevinkib.bataillecorse.core.domain.Player;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.dto.*;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.dto.event.*;
@@ -12,13 +13,14 @@ import org.springframework.stereotype.Controller;
 @Controller
 public class BatailleCorseWebSocketController {
 
+    public static final int NB_PLAYERS = 2;
     private BatailleCorse batailleCorse;
     private BatailleCorseDto batailleCorseDto;
 
     @MessageMapping("/create")
     @SendTo("/topic/game")
     public Response createGame() {
-        batailleCorse = new BatailleCorse(2);
+        batailleCorse = new BatailleCorse(BatailleCorseId.generate(), NB_PLAYERS);
         batailleCorseDto = new BatailleCorseDto(batailleCorse);
         return new SuccessResponse(EventType.CREATE, new EmptyEventData(), "Game created", batailleCorseDto);
     }

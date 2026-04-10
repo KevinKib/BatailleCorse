@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class BatailleCorseBuilder {
+    private BatailleCorseId id;
     private List<Player> players;
     private int currentPlayer;
     private CentralPile pile;
@@ -19,6 +20,11 @@ public final class BatailleCorseBuilder {
 
     public static BatailleCorseBuilder aBatailleCorse() {
         return new BatailleCorseBuilder();
+    }
+
+    public BatailleCorseBuilder withId(BatailleCorseId id) {
+        this.id = id;
+        return this;
     }
 
     public BatailleCorseBuilder withPlayers(List<Player> players) {
@@ -67,10 +73,10 @@ public final class BatailleCorseBuilder {
     }
 
     public BatailleCorse build() {
-        return new BatailleCorse(players, currentPlayer, pile, slapRules, penality);
+        return new BatailleCorse(id, players, currentPlayer, pile, slapRules, penality);
     }
 
     public BatailleCorse buildAndInitialize() {
-        return new BatailleCorse(players.size());
+        return new BatailleCorse(id, players.size());
     }
 }
