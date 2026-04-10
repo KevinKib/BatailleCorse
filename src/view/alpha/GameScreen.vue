@@ -152,7 +152,7 @@ watch(lastSend, (event) => {
   const destRect = animation.getCenterPileRect();
   if (!destRect || destRect.width === 0) return;
   animation.animateSend(sourceEl.getBoundingClientRect(), destRect, batailleCorse.value?.pile.cards.at(0));
-});
+}, { flush: 'sync' });
 
 // When GRAB fires, animate cards from center pile to winner's deck, then clear the pile display.
 watch(lastGrab, (event) => {

@@ -57,6 +57,8 @@ export function useCardAnimation(
   const cardDeltaIndicator = reactive({ visible: false, delta: 0, x: 0, y: 0 });
   let recentSlapIndicatorShown = false;
 
+  let ghostCardTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
   // --- Internal helpers ---
 
   function getCenterPileRect(): DOMRect | undefined {
@@ -80,6 +82,10 @@ export function useCardAnimation(
   }
 
   function animateGhostCard(srcRect: DOMRect, destRect: DOMRect, duration: number, src = cardBackUrl) {
+    if (ghostCardTimeoutId !== null) {
+      clearTimeout(ghostCardTimeoutId);
+      ghostCardTimeoutId = null;
+    }
     ghostCard.visible = false;
     ghostCard.transitioning = false;
     ghostCard.src = src;
@@ -92,7 +98,8 @@ export function useCardAnimation(
 
     startTransition(ghostCard, destRect);
 
-    setTimeout(() => {
+    ghostCardTimeoutId = setTimeout(() => {
+      ghostCardTimeoutId = null;
       ghostCard.visible = false;
       ghostCard.transitioning = false;
       isPileAnimating.value = false;
@@ -130,7 +137,15 @@ export function useCardAnimation(
 
   function onNewPileCard(card: Card | undefined) {
     if (isPileAnimating.value && card) {
-      ghostCard.src = getCardUrl(card.rank, card.suit);
+      const src = getCardUrl(card.rank, card.suit);
+      ghostCard.src = src;
+      // If the pile was empty, the center pile img is hidden (valid = false) and won't
+      // start loading until the animation ends. Preload via a detached Image so the
+      // browser caches it before it becomes visible.
+      if (!frozenPileCard.rank) {
+        const preload = new Image();
+        preload.src = src;
+      }
     }
   }
 

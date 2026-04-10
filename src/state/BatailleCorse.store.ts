@@ -67,7 +67,7 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
   const lastErroneousSlap = ref<{ playerIndex: number; seq: number } | null>(null);
 
   // const player0Ai = new AI(0, 500);
-  const player1Ai = new AI(1, 800);
+  const player1Ai = new AI(1, 650);
 
   function create() {
     webSocketService.publish({
