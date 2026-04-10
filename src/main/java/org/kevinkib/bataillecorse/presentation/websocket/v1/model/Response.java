@@ -27,7 +27,7 @@ public abstract class Response {
         return eventType.toString();
     }
 
-    public EventData eventData() {
+    public EventData getEventData() {
         return eventData;
     }
 

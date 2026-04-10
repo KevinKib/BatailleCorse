@@ -73,7 +73,7 @@ public class BatailleCorseWebSocketController {
     @MessageMapping("/grab/{playerIndex}")
     @SendTo("/topic/game")
     public Response grab(@DestinationVariable("playerIndex") Integer playerIndex) {
-        EventType eventType = EventType.SEND;
+        EventType eventType = EventType.GRAB;
 
         try {
             Player player = batailleCorse.getPlayerByIndex(playerIndex);

@@ -1,9 +1,6 @@
 package org.kevinkib.bataillecorse.domain;
 
-import org.kevinkib.cards.domain.Card;
-import org.kevinkib.cards.domain.CardPileState;
-import org.kevinkib.cards.domain.Pile;
-import org.kevinkib.cards.domain.PileSubscriber;
+import org.kevinkib.cards.domain.*;
 
 import java.util.List;
 
@@ -48,6 +45,33 @@ public class CentralPile implements PileSubscriber {
         return pile.clearAndReturnCards();
     }
 
+    @Override
+    public void onCardAdded(Pile pile, Card addedCard, PilePosition pilePosition) {
+        if (PilePosition.BOTTOM == pilePosition) {
+            return;
+        }
+
+        ++nbCardsSinceLastHonourCard;
+
+        if (HonourCard.isHonour(addedCard)) {
+            state = HONOUR_STATE;
+            nbCardsSinceLastHonourCard = 0;
+            lastHonourCard = HonourCard.from(addedCard);
+        }
+
+        if (lastHonourCard != null && lastHonourCard.getNbChances().equals(nbCardsSinceLastHonourCard)) {
+            state = FULL;
+        }
+    }
+
+    @Override
+    public void onClear(Pile pile) {
+        state = NEUTRAL;
+        lastHonourCard = null;
+        nbCardsSinceLastHonourCard = 0;
+        playerThatAddedLastHonourCard = null;
+    }
+
     public boolean isGrabbableByPlayer(Player player) {
         if (playerThatAddedLastHonourCard == null) {
             return false;
@@ -86,30 +110,6 @@ public class CentralPile implements PileSubscriber {
 
     public List<Card> getCards() {
         return pile.getCards();
-    }
-
-    @Override
-    public void onCardAdded(Pile pile) {
-        Card addedCard = pile.seeCardOnTop();
-        ++nbCardsSinceLastHonourCard;
-
-        if (HonourCard.isHonour(addedCard)) {
-            state = HONOUR_STATE;
-            nbCardsSinceLastHonourCard = 0;
-            lastHonourCard = HonourCard.from(addedCard);
-        }
-
-        if (lastHonourCard != null && lastHonourCard.getNbChances().equals(nbCardsSinceLastHonourCard)) {
-            state = FULL;
-        }
-    }
-
-    @Override
-    public void onClear(Pile pile) {
-        state = NEUTRAL;
-        lastHonourCard = null;
-        nbCardsSinceLastHonourCard = 0;
-        playerThatAddedLastHonourCard = null;
     }
 
     public CentralPileState getState() {
