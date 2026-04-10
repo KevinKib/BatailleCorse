@@ -10,8 +10,8 @@ import org.kevinkib.bataillecorse.domain.penality.Penality;
 import org.kevinkib.bataillecorse.domain.slaprules.SlapRulesFixtures;
 import org.kevinkib.cards.domain.Card;
 import org.kevinkib.cards.domain.CardPileState;
-import org.kevinkib.cards.domain.Hand;
-import org.kevinkib.cards.domain.french.FrenchRank;
+import org.kevinkib.cards.domain.hand.Hand;
+import org.kevinkib.cards.domain.deck.french.FrenchRank;
 import org.kevinkib.cards.testhelpers.CardBuilder;
 import org.kevinkib.cards.testhelpers.CardFixtures;
 import org.kevinkib.cards.testhelpers.HandBuilder;
@@ -28,7 +28,7 @@ import static org.kevinkib.bataillecorse.domain.CentralPileFixtures.createCentra
 import static org.kevinkib.bataillecorse.domain.PlayerFixtures.*;
 import static org.kevinkib.bataillecorse.domain.slaprules.SlapRulesFixtures.alwaysApplyingSlapRules;
 import static org.kevinkib.bataillecorse.domain.slaprules.SlapRulesFixtures.anySlapRules;
-import static org.kevinkib.cards.domain.french.FrenchRank.JACK;
+import static org.kevinkib.cards.domain.deck.french.FrenchRank.JACK;
 import static org.kevinkib.cards.testhelpers.CardFixtures.anyCard;
 import static org.mockito.Mockito.*;
 

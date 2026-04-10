@@ -1,8 +1,8 @@
 package org.kevinkib.bataillecorse.domain;
 
 import org.kevinkib.cards.domain.Card;
-import org.kevinkib.cards.domain.Hand;
-import org.kevinkib.cards.domain.french.FrenchRank;
+import org.kevinkib.cards.domain.hand.Hand;
+import org.kevinkib.cards.domain.deck.french.FrenchRank;
 import org.kevinkib.cards.testhelpers.HandBuilder;
 
 import java.util.Arrays;

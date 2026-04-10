@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.kevinkib.cards.testhelpers.CardBuilder.aCard;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.kevinkib.cards.domain.french.FrenchRank.*;
+import static org.kevinkib.cards.domain.deck.french.FrenchRank.*;
 import static org.kevinkib.cards.testhelpers.CardFixtures.CardRanksMatcher.areCardsOfRanks;
 
 public class BatailleCorseFullGameTest {

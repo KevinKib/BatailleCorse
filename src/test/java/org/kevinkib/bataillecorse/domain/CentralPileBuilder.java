@@ -1,8 +1,8 @@
 package org.kevinkib.bataillecorse.domain;
 
 import org.kevinkib.cards.domain.Card;
-import org.kevinkib.cards.domain.Pile;
-import org.kevinkib.cards.domain.french.FrenchRank;
+import org.kevinkib.cards.domain.pile.Pile;
+import org.kevinkib.cards.domain.deck.french.FrenchRank;
 import org.kevinkib.cards.testhelpers.PileFixtures;
 
 import java.util.List;

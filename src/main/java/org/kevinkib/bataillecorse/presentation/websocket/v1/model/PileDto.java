@@ -1,7 +1,6 @@
 package org.kevinkib.bataillecorse.presentation.websocket.v1.model;
 
 import org.kevinkib.bataillecorse.domain.CentralPile;
-import org.kevinkib.cards.domain.Pile;
 
 import java.util.List;
 

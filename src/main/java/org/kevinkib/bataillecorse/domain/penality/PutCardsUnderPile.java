@@ -3,7 +3,7 @@ package org.kevinkib.bataillecorse.domain.penality;
 import org.kevinkib.bataillecorse.domain.CentralPile;
 import org.kevinkib.bataillecorse.domain.Player;
 import org.kevinkib.cards.domain.Card;
-import org.kevinkib.cards.domain.NoCardsException;
+import org.kevinkib.cards.domain.hand.NoCardsException;
 
 public class PutCardsUnderPile implements Penality {
 

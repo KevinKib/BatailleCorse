@@ -1,8 +1,8 @@
 package org.kevinkib.bataillecorse.domain;
 
 import org.kevinkib.cards.domain.Card;
-import org.kevinkib.cards.domain.Hand;
-import org.kevinkib.cards.domain.NoCardsException;
+import org.kevinkib.cards.domain.hand.Hand;
+import org.kevinkib.cards.domain.hand.NoCardsException;
 
 import java.util.Collections;
 import java.util.List;

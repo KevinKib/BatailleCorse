@@ -3,8 +3,12 @@ package org.kevinkib.bataillecorse.domain;
 import org.kevinkib.bataillecorse.domain.slaprules.SlapRules;
 import org.kevinkib.bataillecorse.domain.penality.Penality;
 import org.kevinkib.bataillecorse.domain.penality.PutCardsUnderPile;
-import org.kevinkib.cards.CardsController;
+import org.kevinkib.cards.CardsService;
 import org.kevinkib.cards.domain.*;
+import org.kevinkib.cards.domain.deck.*;
+import org.kevinkib.cards.domain.hand.Hand;
+import org.kevinkib.cards.domain.hand.NoCardsException;
+import org.kevinkib.cards.domain.pile.Pile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -182,9 +186,9 @@ public class BatailleCorse {
 
     private void initializePlayersAndHands(int nbPlayers) {
         players = new ArrayList<>();
-        CardsController cardsController = new CardsController();
+        CardsService cardsService = new CardsService();
 
-        Deck deck = cardsController.createDeck(DeckType.FRENCH, new DeckCreationOptions(CardHandState.HIDDEN_IN_HAND));
+        Deck deck = cardsService.createDeck(DeckType.FRENCH, new DeckCreationOptions(CardHandState.HIDDEN_IN_HAND));
 
         try {
             List<Hand> hands = deck.distributeAll(nbPlayers, new DistributionOptions(false));

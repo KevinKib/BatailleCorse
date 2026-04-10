@@ -1,7 +1,7 @@
 package org.kevinkib.bataillecorse.domain;
 
 import org.kevinkib.cards.domain.Card;
-import org.kevinkib.cards.domain.french.FrenchRank;
+import org.kevinkib.cards.domain.deck.french.FrenchRank;
 import org.kevinkib.cards.testhelpers.CardBuilder;
 import org.kevinkib.cards.testhelpers.PileFixtures;
 

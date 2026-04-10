@@ -2,7 +2,7 @@ package org.kevinkib.bataillecorse.domain;
 
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.kevinkib.cards.domain.french.FrenchRank;
+import org.kevinkib.cards.domain.deck.french.FrenchRank;
 import org.kevinkib.cards.testhelpers.CardBuilder;
 
 import java.util.stream.Stream;

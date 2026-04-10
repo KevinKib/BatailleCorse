@@ -4,8 +4,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.kevinkib.bataillecorse.domain.CentralPile;
 import org.kevinkib.bataillecorse.domain.CentralPileBuilder;
-import org.kevinkib.cards.domain.french.FrenchRank;
-import org.kevinkib.cards.domain.french.FrenchSuit;
+import org.kevinkib.cards.domain.deck.french.FrenchRank;
+import org.kevinkib.cards.domain.deck.french.FrenchSuit;
 import org.kevinkib.cards.testhelpers.CardBuilder;
 
 import static org.hamcrest.Matchers.is;
