@@ -1,5 +1,5 @@
 import { nextTick, reactive, readonly, ref } from 'vue';
-import cardBackUrl from '/src/resources/cards/png/card_back.png?url';
+import cardBackUrl from '/src/resources/cards/png/card_back.png?inline';
 import type Card from '../service/model/Card';
 
 const SLAP_DURATION = 280;
@@ -8,7 +8,23 @@ const SLAP_OFFSETS = [{ x: 0, y: 0 }, { x: 6, y: -4 }, { x: -5, y: -7 }];
 const ERRONEOUS_SLAP_DURATION = 220;
 const ERRONEOUS_SLAP_STAGGER = 50;
 
-const cardImages = import.meta.glob('/src/resources/cards/png/*.png', { eager: true, query: 'url' });
+const cardImages = import.meta.glob('/src/resources/cards/png/*.png', { eager: true, query: '?inline' });
+
+// Kept at module scope so decoded bitmaps are not garbage-collected during the session.
+const _preloadedImages: HTMLImageElement[] = [];
+
+export function preloadAllCards(): void {
+  for (const key in cardImages) {
+    const src = (cardImages[key] as { default: string }).default;
+    const img = new Image();
+    _preloadedImages.push(img);
+    img.src = src;
+    img.onload = () => {
+      if ('decode' in img) img.decode().catch(() => {});
+    };
+    img.onerror = () => {};
+  }
+}
 
 function getCardUrl(rank: string, suit: string): string {
   const key = `/src/resources/cards/png/card_${rank.toLowerCase()}_${suit.toLowerCase()}.png`;
@@ -139,13 +155,6 @@ export function useCardAnimation(
     if (isPileAnimating.value && card) {
       const src = getCardUrl(card.rank, card.suit);
       ghostCard.src = src;
-      // If the pile was empty, the center pile img is hidden (valid = false) and won't
-      // start loading until the animation ends. Preload via a detached Image so the
-      // browser caches it before it becomes visible.
-      if (!frozenPileCard.rank) {
-        const preload = new Image();
-        preload.src = src;
-      }
     }
   }
 

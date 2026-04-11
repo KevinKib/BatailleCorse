@@ -53,7 +53,7 @@ const filename = computed(() => {
 
 const images = import.meta.glob('/src/resources/cards/png/*.png', {
   eager: true,
-  query: 'url',
+  query: '?inline',
 });
 
 interface URL {

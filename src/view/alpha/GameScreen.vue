@@ -115,10 +115,10 @@ import CardCounter from '../../components/CardCounter.vue';
 import { Button } from 'primevue';
 import { storeToRefs } from 'pinia';
 import { useBatailleCorseStore } from '../../state/BatailleCorse.store';
-import { useCardAnimation } from '../../composables/useCardAnimation';
+import { useCardAnimation, preloadAllCards } from '../../composables/useCardAnimation';
 import { useHotkeys } from '../../composables/useHotkeys';
 import { Action } from '../../service/model/Action';
-import { useTemplateRef, watch } from 'vue';
+import { onMounted, useTemplateRef, watch } from 'vue';
 
 const batailleCorseStore = useBatailleCorseStore();
 const { state: batailleCorse, lastSend, lastGrab, lastSlap, lastSuccessfulSlap, lastErroneousSlap } = storeToRefs(batailleCorseStore);
@@ -206,6 +206,10 @@ useHotkeys(
   () => { if (!isButtonDisabled(0, 'send')) send(0); },
   () => { if (!isButtonDisabled(0, 'slap')) slap(0); },
 );
+
+onMounted(() => {
+  preloadAllCards();
+});
 </script>
 
 <style scoped>
