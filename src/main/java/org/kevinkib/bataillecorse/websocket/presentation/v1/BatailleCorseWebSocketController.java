@@ -14,6 +14,7 @@ import org.springframework.stereotype.Controller;
 public class BatailleCorseWebSocketController {
 
     public static final int NB_PLAYERS = 2;
+    public static final String GAME_CREATED_MESSAGE = "Game created";
     private BatailleCorse batailleCorse;
     private BatailleCorseDto batailleCorseDto;
 
@@ -22,7 +23,7 @@ public class BatailleCorseWebSocketController {
     public Response createGame() {
         batailleCorse = new BatailleCorse(BatailleCorseId.generate(), NB_PLAYERS);
         batailleCorseDto = new BatailleCorseDto(batailleCorse);
-        return new SuccessResponse(EventType.CREATE, new EmptyEventData(), "Game created", batailleCorseDto);
+        return new SuccessResponse(EventType.CREATE, new EmptyEventData(), GAME_CREATED_MESSAGE, batailleCorseDto);
     }
 
     @MessageMapping("/send/{playerIndex}")
