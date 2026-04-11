@@ -3,8 +3,11 @@ package org.kevinkib.bataillecorse.websocket.presentation.v1;
 import org.kevinkib.bataillecorse.core.domain.BatailleCorse;
 import org.kevinkib.bataillecorse.core.domain.BatailleCorseId;
 import org.kevinkib.bataillecorse.core.domain.Player;
+import org.kevinkib.bataillecorse.sessionmanagement.application.SessionService;
+import org.kevinkib.bataillecorse.websocket.presentation.v1.api.GameActionPayload;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.dto.*;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.dto.event.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
@@ -15,24 +18,35 @@ public class BatailleCorseWebSocketController {
 
     public static final int NB_PLAYERS = 2;
     public static final String GAME_CREATED_MESSAGE = "Game created";
-    private BatailleCorse batailleCorse;
-    private BatailleCorseDto batailleCorseDto;
+
+    private final SessionService sessionService;
+
+    public BatailleCorseWebSocketController(SessionService sessionService) {
+        this.sessionService = sessionService;
+    }
 
     @MessageMapping("/create")
     @SendTo("/topic/game")
     public Response createGame() {
-        batailleCorse = new BatailleCorse(BatailleCorseId.generate(), NB_PLAYERS);
-        batailleCorseDto = new BatailleCorseDto(batailleCorse);
-        return new SuccessResponse(EventType.CREATE, new EmptyEventData(), GAME_CREATED_MESSAGE, batailleCorseDto);
+        BatailleCorse batailleCorse = sessionService.createGame(NB_PLAYERS);
+        return new SuccessResponse(
+                EventType.CREATE,
+                new EmptyEventData(),
+                GAME_CREATED_MESSAGE,
+                new BatailleCorseDto(batailleCorse));
     }
 
-    @MessageMapping("/send/{playerIndex}")
+    @MessageMapping("/send")
     @SendTo("/topic/game")
-    public Response send(@DestinationVariable("playerIndex") Integer playerIndex) {
+    public Response send(GameActionPayload payload) {
         EventType eventType = EventType.SEND;
 
+        BatailleCorse batailleCorse = sessionService.getGame(
+                new BatailleCorseId(payload.gameId()));
+        BatailleCorseDto batailleCorseDto = new BatailleCorseDto(batailleCorse);
+
         try {
-            Player player = batailleCorse.getPlayerByIndex(playerIndex);
+            Player player = batailleCorse.getPlayerByIndex(payload.playerIndex());
 
             CardDto cardDto = new CardDto(player.getCardOnTop());
             batailleCorse.send(player);
@@ -47,13 +61,17 @@ public class BatailleCorseWebSocketController {
         }
     }
 
-    @MessageMapping("/slap/{playerIndex}")
+    @MessageMapping("/slap")
     @SendTo("/topic/game")
-    public Response slap(@DestinationVariable("playerIndex") Integer playerIndex) {
+    public Response slap(GameActionPayload payload) {
         EventType eventType = EventType.SLAP;
 
+        BatailleCorse batailleCorse = sessionService.getGame(
+                new BatailleCorseId(payload.gameId()));
+        BatailleCorseDto batailleCorseDto = new BatailleCorseDto(batailleCorse);
+
         try {
-            Player player = batailleCorse.getPlayerByIndex(playerIndex);
+            Player player = batailleCorse.getPlayerByIndex(payload.playerIndex());
             boolean successfulSlap = batailleCorse.slap(player);
             String message;
 
@@ -73,13 +91,17 @@ public class BatailleCorseWebSocketController {
         }
     }
 
-    @MessageMapping("/grab/{playerIndex}")
+    @MessageMapping("/grab")
     @SendTo("/topic/game")
-    public Response grab(@DestinationVariable("playerIndex") Integer playerIndex) {
+    public Response grab(GameActionPayload payload) {
         EventType eventType = EventType.GRAB;
 
+        BatailleCorse batailleCorse = sessionService.getGame(
+                new BatailleCorseId(payload.gameId()));
+        BatailleCorseDto batailleCorseDto = new BatailleCorseDto(batailleCorse);
+
         try {
-            Player player = batailleCorse.getPlayerByIndex(playerIndex);
+            Player player = batailleCorse.getPlayerByIndex(payload.playerIndex());
 
             batailleCorse.grab(player);
 

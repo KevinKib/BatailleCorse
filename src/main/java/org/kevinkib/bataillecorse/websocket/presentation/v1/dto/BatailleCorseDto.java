@@ -13,6 +13,10 @@ public class BatailleCorseDto {
         this.batailleCorse = batailleCorse;
     }
 
+    public String getId() {
+        return batailleCorse.getId().toString();
+    }
+
     public List<PlayerDto> getPlayers() {
         return batailleCorse.getPlayers().stream()
                 .map(player -> new PlayerDto(player, batailleCorse.getAvailableActions(player)))
