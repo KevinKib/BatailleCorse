@@ -1,8 +1,8 @@
 package org.kevinkib.bataillecorse.websocket.presentation.v1;
 
 import org.junit.jupiter.api.Test;
-import org.kevinkib.bataillecorse.websocket.presentation.v1.dto.Response;
-import org.kevinkib.bataillecorse.websocket.presentation.v1.dto.SuccessResponse;
+import org.kevinkib.bataillecorse.websocket.presentation.v1.api.Response;
+import org.kevinkib.bataillecorse.websocket.presentation.v1.api.SuccessResponse;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.dto.event.EmptyEventData;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.dto.event.EventType;
 import org.springframework.beans.factory.annotation.Autowired;
