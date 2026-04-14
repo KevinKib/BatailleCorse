@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head><title>STOMP Test</title></head>
+<body>
+  <script src="https://cdn.jsdelivr.net/npm/sockjs-client/dist/sockjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs/bundles/stomp.umd.min.js"></script>
+  <script>
+    const client = new StompJs.Client({
+      webSocketFactory: () => new SockJS('http://127.0.0.1:8080/connect'),
+      debug: (str) => console.log(str),
+      onConnect: () => {
+        console.log("Connected!");
+      },
+      onStompError: (frame) => {
+        console.error("STOMP error:", frame);
+      }
+    });
+    client.activate();
+  </script>
+</body>
+</html>

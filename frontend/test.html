@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Test SockJS</title>
+  <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
+</head>
+<body>
+  <h1>Testing SockJS + STOMP</h1>
+  <script>
+    const socket = new SockJS('http://127.0.0.1:8080/connect');
+    const client = new StompJs.Client({
+      webSocketFactory: () => socket,
+      debug: str => console.log('[STOMP]', str),
+      onConnect: frame => {
+        console.log('[STOMP] Connected:', frame);
+        client.subscribe('/topic/greetings', msg => {
+          console.log('[STOMP] Received:', msg.body);
+        });
+      },
+      onStompError: frame => {
+        console.error('[STOMP] Broker error:', frame);
+      }
+    });
+
+    console.log('Activating client...');
+    client.activate();
+  </script>
+</body>
+</html>
