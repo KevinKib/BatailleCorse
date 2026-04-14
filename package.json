@@ -7,10 +7,12 @@
     "serve": "vite preview"
   },
   "dependencies": {
+    "@primeuix/themes": "^2.0.3",
     "@stomp/stompjs": "^7.1.1",
     "@tailwindcss/vite": "^4.1.7",
     "pinia": "^3.0.2",
     "primeicons": "^7.0.0",
+    "primevue": "^4.5.5",
     "sockjs-client": "^1.6.1",
     "tailwindcss": "^4.1.7",
     "tailwindcss-primeui": "^0.6.1",
