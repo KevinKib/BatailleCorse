@@ -12,9 +12,11 @@ import org.kevinkib.cards.domain.pile.Pile;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class BatailleCorse {
 
+    private final BatailleCorseId id;
     private List<Player> players;
     private CentralPile pile;
     private SlapRules slapRules;
@@ -22,12 +24,14 @@ public class BatailleCorse {
     private IndexHandler indexHandler;
     private Result result;
 
-    public BatailleCorse(int nbPlayers) {
+    public BatailleCorse(BatailleCorseId id, int nbPlayers) {
+        this.id = id;
         initializePlayersAndHands(nbPlayers);
         initializeData();
     }
 
-    public BatailleCorse(List<Player> players, int currentPlayer, CentralPile pile, SlapRules slapRules, Penality penality) {
+    public BatailleCorse(BatailleCorseId id, List<Player> players, int currentPlayer, CentralPile pile, SlapRules slapRules, Penality penality) {
+        this.id = id;
         this.players = players;
         this.pile = pile;
         this.slapRules = slapRules;
@@ -136,6 +140,10 @@ public class BatailleCorse {
         return allowedActions;
     }
 
+    public BatailleCorseId getId() {
+        return id;
+    }
+
     public CentralPile getPile() {
         return pile;
     }
@@ -212,4 +220,15 @@ public class BatailleCorse {
         result = Result.update(players, pile, slapRules);
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        BatailleCorse that = (BatailleCorse) o;
+        return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
+    }
 }

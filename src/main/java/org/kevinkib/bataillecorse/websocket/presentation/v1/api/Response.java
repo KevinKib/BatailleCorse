@@ -1,5 +1,6 @@
-package org.kevinkib.bataillecorse.websocket.presentation.v1.dto;
+package org.kevinkib.bataillecorse.websocket.presentation.v1.api;
 
+import org.kevinkib.bataillecorse.websocket.presentation.v1.dto.BatailleCorseDto;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.dto.event.EventData;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.dto.event.EventType;
 
