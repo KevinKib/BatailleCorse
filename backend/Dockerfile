@@ -4,7 +4,10 @@ FROM maven:3.9-eclipse-temurin-22 AS build
 WORKDIR /app
 COPY . .
 
-RUN mvn clean package -DskipTests
+RUN --mount=type=secret,id=maven_settings \
+    --mount=type=cache,target=/root/.m2 \
+    mvn clean package -DskipTests \
+    -s /run/secrets/maven_settings
 
 # ---- Run stage ----
 FROM eclipse-temurin:22-jdk
