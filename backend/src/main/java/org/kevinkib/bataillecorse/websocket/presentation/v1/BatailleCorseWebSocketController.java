@@ -30,9 +30,10 @@ public class BatailleCorseWebSocketController {
     @SendTo("/topic/game")
     public Response createGame() {
         BatailleCorse batailleCorse = sessionService.createGame(NB_PLAYERS);
+
         return new SuccessResponse(
                 EventType.CREATE,
-                new EmptyEventData(),
+                new CreateEventData(new BatailleCorseIdDto(batailleCorse.getId())),
                 GAME_CREATED_MESSAGE,
                 new BatailleCorseDto(batailleCorse));
     }

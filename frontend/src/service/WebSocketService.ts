@@ -8,7 +8,7 @@ class WebSocketService {
   private readonly url = 'http://127.0.0.1:8080/connect';
   private readonly windows_url = 'http://172.31.112.1:8080/connect';
 
-  private client!: Client; 
+  private client!: Client;
 
   public init() {
     const batailleCorse = useBatailleCorseStore();
@@ -44,8 +44,8 @@ class WebSocketService {
     this.client = stompClient;
   }
 
-  public publish(args: any) {
-    this.client.publish(args);
+  public publish(destination: string, body?: any) {
+    this.client.publish({destination, body});
   }
 
   private log(message?: any, ...optionalParams: any[]) {

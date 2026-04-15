@@ -7,6 +7,7 @@ import Response from "../service/model/Response";
 import AI from "../service/model/ai/AI";
 import SlapEventData from '../service/model/event/SlapEventData';
 import GrabEventData from '../service/model/event/GrabEventData';
+import CreateEventData from "../service/model/event/CreateEventData";
 
 /*
 
@@ -66,37 +67,49 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
   let erroneousSlapSeq = 0;
   const lastErroneousSlap = ref<{ playerIndex: number; seq: number } | null>(null);
 
+  const gameId = ref<string | null>(null);
+
   // const player0Ai = new AI(0, 500);
   const player1Ai = new AI(1, 650);
 
   function create() {
-    webSocketService.publish({
-      destination: '/app/create'
-    });
+    webSocketService.publish('/app/create');
   }
 
   function send(playerIndex: number) {
     lastSend.value = { playerIndex, seq: ++sendSeq };
-    webSocketService.publish({
-      destination: `/app/send/${playerIndex}`
-    });
+    webSocketService.publish(`/app/send`, JSON.stringify({
+        gameId: gameId.value,
+        playerIndex: playerIndex,
+      })
+    );
   }
 
   function slap(playerIndex: number) {
     lastSlap.value = { seq: ++slapSeq };
-    webSocketService.publish({
-      destination: `/app/slap/${playerIndex}`
-    });
+    webSocketService.publish(`/app/slap`, JSON.stringify({
+          gameId: gameId.value,
+          playerIndex: playerIndex,
+        })
+    );
   }
 
   function grab(playerIndex: number) {
-    webSocketService.publish({
-      destination: `/app/grab/${playerIndex}`
-    });
+    webSocketService.publish(`/app/grab`, JSON.stringify({
+          gameId: gameId.value,
+          playerIndex: playerIndex,
+        })
+    );
   }
 
   function onResponse(response: Response) {
     console.log('onResponse', response);
+
+    // TODO: Responsibility separation for various event type handlers
+    if (response.eventType === 'CREATE') {
+      const createData = response.eventData as CreateEventData;
+      gameId.value = createData.game.id;
+    }
 
     if (response.eventType === 'GRAB') {
       const grabData = response.eventData as GrabEventData;
@@ -138,7 +151,6 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
   }
 
   return {
-    // state: readonly(state),
     state,
     lastSend,
     lastGrab,
