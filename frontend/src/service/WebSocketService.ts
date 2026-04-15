@@ -16,7 +16,7 @@ class WebSocketService {
     this.log("Creating SockJS...");
     const factory = () => {
       this.log("Creating SockJS connection to "+this.url);
-      return new SockJS(this.windows_url);
+      return new SockJS(this.url);
     };
 
     const stompClient = new Client({
