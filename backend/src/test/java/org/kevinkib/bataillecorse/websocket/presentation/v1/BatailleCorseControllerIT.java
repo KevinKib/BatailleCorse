@@ -3,6 +3,7 @@ package org.kevinkib.bataillecorse.websocket.presentation.v1;
 import org.junit.jupiter.api.Test;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.api.Response;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.api.SuccessResponse;
+import org.kevinkib.bataillecorse.websocket.presentation.v1.dto.event.CreateEventData;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.dto.event.EmptyEventData;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.dto.event.EventType;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +26,7 @@ class BatailleCorseControllerIT {
 
         assertThat(response, instanceOf(SuccessResponse.class));
         assertThat(response.getEventType(), is(EventType.CREATE.toString()));
-        assertThat(response.getEventData(), instanceOf(EmptyEventData.class));
+        assertThat(response.getEventData(), instanceOf(CreateEventData.class));
         assertThat(response.getMessage(), is(GAME_CREATED_MESSAGE));
         assertThat(response.getState(), notNullValue());
         assertThat(response.getState().getPlayers(), hasSize(NB_PLAYERS));
