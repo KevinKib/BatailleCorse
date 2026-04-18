@@ -47,7 +47,7 @@
       </div>
 
       <div class="middle_side">
-        <h1 class="player_tag">SNP</h1>
+        <h1 class="player_tag">{{ settingsStore.playerName || 'You' }}</h1>
         <div class="card stacked">
           <PlayingCard
             ref="pile"
@@ -115,6 +115,7 @@ import CardCounter from '../../components/CardCounter.vue';
 import { Button } from 'primevue';
 import { storeToRefs } from 'pinia';
 import { useBatailleCorseStore } from '../../state/BatailleCorse.store';
+import { useSettingsStore } from '../../state/Settings.store';
 import { useCardAnimation, preloadAllCards } from '../../composables/useCardAnimation';
 import { useHotkeys } from '../../composables/useHotkeys';
 import { Action } from '../../service/model/Action';
@@ -202,9 +203,13 @@ function slap(playerIndex: number) {
   batailleCorseStore.slap(playerIndex);
 }
 
+const settingsStore = useSettingsStore();
+
 useHotkeys(
   () => { if (!isButtonDisabled(0, 'send')) send(0); },
   () => { if (!isButtonDisabled(0, 'slap')) slap(0); },
+  () => [settingsStore.sendKey],
+  () => [settingsStore.slapKey],
 );
 
 onMounted(() => {

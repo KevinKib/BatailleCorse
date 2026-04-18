@@ -23,6 +23,14 @@ public class BatailleCorseDto {
                 .toList();
     }
 
+    public PlayerIdDto getWinner() {
+        if (!batailleCorse.isFinished()) {
+            return null;
+        }
+
+        return new PlayerIdDto(batailleCorse.getWinner());
+    }
+
     public PileDto getPile() {
         return new PileDto(batailleCorse.getPile());
     }
