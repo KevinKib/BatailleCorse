@@ -119,7 +119,7 @@ import { useSettingsStore } from '../../state/Settings.store';
 import { useCardAnimation, preloadAllCards } from '../../composables/useCardAnimation';
 import { useHotkeys } from '../../composables/useHotkeys';
 import { Action } from '../../service/model/Action';
-import { onMounted, useTemplateRef, watch } from 'vue';
+import { nextTick, onBeforeUnmount, onMounted, useTemplateRef, watch } from 'vue';
 
 const batailleCorseStore = useBatailleCorseStore();
 const { state: batailleCorse, lastSend, lastGrab, lastSlap, lastSuccessfulSlap, lastErroneousSlap } = storeToRefs(batailleCorseStore);
@@ -146,49 +146,62 @@ watch(() => batailleCorse.value?.pile.cards.at(0), (newCard) => {
   animation.onNewPileCard(newCard);
 });
 
-watch(lastSend, (event) => {
+// SEND is optimistic: topCard is snapshotted in the store at call time, no flush:'sync' needed.
+watch(lastSend, async (event) => {
   if (!event) return;
   const sourceEl = event.playerIndex === 0 ? pile.value?.rootCard : opponentCard.value?.rootCard;
   if (!sourceEl) return;
+  await nextTick();
   const destRect = animation.getCenterPileRect();
   if (!destRect || destRect.width === 0) return;
-  animation.animateSend(sourceEl.getBoundingClientRect(), destRect, batailleCorse.value?.pile.cards.at(0));
-}, { flush: 'sync' });
+  animation.animateSend(sourceEl.getBoundingClientRect(), destRect, event.topCard);
+  // SEND is non-blocking in the queue — no notifyAnimationComplete needed.
+});
 
-// When GRAB fires, animate cards from center pile to winner's deck, then clear the pile display.
-watch(lastGrab, (event) => {
-  if (!event) { animation.cancelPileAnimation(); return; }
-  const pileCards = [...(batailleCorse.value?.pile.cards ?? [])];
-  const destEl = event.winnerPlayerIndex === 0 ? pile.value?.rootCard : opponentCard.value?.rootCard;
+// GRAB: pileCards snapshot is embedded in the event by the store.
+watch(lastGrab, async (event) => {
+  if (!event) { animation.cancelPileAnimation(); batailleCorseStore.notifyAnimationComplete(); return; }
+  const { pileCards, winnerPlayerIndex } = event;
+  await nextTick();
+  const destEl = winnerPlayerIndex === 0 ? pile.value?.rootCard : opponentCard.value?.rootCard;
   const srcRect = animation.getCenterPileRect();
-  if (!destEl || !srcRect || srcRect.width === 0) { animation.cancelPileAnimation(); return; }
+  if (!destEl || !srcRect || srcRect.width === 0) {
+    animation.cancelPileAnimation();
+    batailleCorseStore.notifyAnimationComplete();
+    return;
+  }
   animation.showDeltaOnGrab(pileCards.length, destEl);
-  animation.animatePileToWinner(srcRect, destEl.getBoundingClientRect(), pileCards);
-}, { flush: 'sync' });
+  await animation.animatePileToWinner(srcRect, destEl.getBoundingClientRect(), pileCards);
+  batailleCorseStore.notifyAnimationComplete();
+});
 
 // Immediate flash on any slap attempt, before the server responds.
 watch(lastSlap, () => animation.flashPile());
 
-// Successful slap: animate cards from pile to winner's deck.
-watch(lastSuccessfulSlap, (event) => {
+// Successful slap: pileCards snapshot is embedded in the event by the store.
+watch(lastSuccessfulSlap, async (event) => {
   if (!event) return;
-  const destEl = event.winnerPlayerIndex === 0 ? pile.value?.rootCard : opponentCard.value?.rootCard;
-  if (!destEl) return;
+  const { pileCards, winnerPlayerIndex } = event;
+  await nextTick();
+  const destEl = winnerPlayerIndex === 0 ? pile.value?.rootCard : opponentCard.value?.rootCard;
+  if (!destEl) { batailleCorseStore.notifyAnimationComplete(); return; }
   const srcRect = animation.getCenterPileRect();
-  if (!srcRect || srcRect.width === 0) return;
-  const pileCards = [...(batailleCorse.value?.pile.cards ?? [])];
+  if (!srcRect || srcRect.width === 0) { batailleCorseStore.notifyAnimationComplete(); return; }
   animation.showDeltaOnSlap(pileCards.length, destEl);
-  animation.animatePileToWinner(srcRect, destEl.getBoundingClientRect(), pileCards);
-}, { flush: 'sync' });
+  await animation.animatePileToWinner(srcRect, destEl.getBoundingClientRect(), pileCards);
+  batailleCorseStore.notifyAnimationComplete();
+});
 
 // Erroneous slap: animate 2 ghost cards from slapper's deck to center, show -2 indicator.
-watch(lastErroneousSlap, (event) => {
+watch(lastErroneousSlap, async (event) => {
   if (!event) return;
+  await nextTick();
   const srcEl = event.playerIndex === 0 ? pile.value?.rootCard : opponentCard.value?.rootCard;
   const destRect = animation.getCenterPileRect();
-  if (!srcEl || !destRect) return;
-  animation.animateErroneousSlap(srcEl.getBoundingClientRect(), destRect);
+  if (!srcEl || !destRect) { batailleCorseStore.notifyAnimationComplete(); return; }
+  await animation.animateErroneousSlap(srcEl.getBoundingClientRect(), destRect);
   animation.showDeltaAlways(-2, srcEl);
+  batailleCorseStore.notifyAnimationComplete();
 });
 
 function isButtonDisabled(playerIndex: number, buttonLabel: Action) {
@@ -214,6 +227,11 @@ useHotkeys(
 
 onMounted(() => {
   preloadAllCards();
+});
+
+onBeforeUnmount(() => {
+  animation.cancelAllAnimations();
+  batailleCorseStore.cancelAutoGrab();
 });
 </script>
 

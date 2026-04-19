@@ -23,6 +23,7 @@ class WebSocketService {
     const stompClient = new Client({
       brokerURL: undefined,
       webSocketFactory: factory,
+      reconnectDelay: 3000,
       debug: (str) => this.log("[STOMP DEBUG]", str),
       onConnect: (frame) => {
         this.log('[STOMP] Connected:', frame);
@@ -32,6 +33,9 @@ class WebSocketService {
           batailleCorse.onResponse(response);
         });
 
+      },
+      onDisconnect: () => {
+        this.log('[STOMP] Disconnected — will reconnect in 3s');
       },
       onStompError: (frame) => {
         this.error('[STOMP] Error:', frame.headers['message']);
@@ -46,7 +50,6 @@ class WebSocketService {
   }
 
   public publish(destination: string, body?: any) {
-    console.log(destination);
     this.client.publish({destination, body});
   }
 
