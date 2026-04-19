@@ -9,6 +9,9 @@ import AI from "../service/model/ai/AI";
 import SlapEventData from '../service/model/event/SlapEventData';
 import GrabEventData from '../service/model/event/GrabEventData';
 import CreateEventData from "../service/model/event/CreateEventData";
+import { useSettingsStore } from './Settings.store';
+
+const DIFFICULTY_REACTION_TIMES = [2100, 1800, 1500, 1200, 900, 700, 600, 500, 400];
 
 /*
 
@@ -81,10 +84,13 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
 
   const gameId = ref<string | null>(null);
 
+  const settingsStore = useSettingsStore();
+
   // const player0Ai = new AI(0, 500);
-  const player1Ai = new AI(1, 590);
+  let player1Ai = new AI(1, DIFFICULTY_REACTION_TIMES[settingsStore.difficulty]);
 
   function create(playerName?: string) {
+    player1Ai = new AI(1, DIFFICULTY_REACTION_TIMES[settingsStore.difficulty]);
     webSocketService.publish('/app/create', playerName ? JSON.stringify({ playerName }) : undefined);
   }
 

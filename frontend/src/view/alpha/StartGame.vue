@@ -69,6 +69,25 @@
         </p>
       </div>
 
+      <div class="field-group">
+        <label class="field-label">Difficulty</label>
+        <div class="difficulty-badge" :style="{ color: TIERS[difficulty].color }">
+          {{ TIERS[difficulty].name }}
+        </div>
+        <input
+          type="range"
+          min="0"
+          max="8"
+          v-model.number="difficulty"
+          class="difficulty-slider"
+          :style="{ '--tier-color': TIERS[difficulty].color }"
+        />
+        <div class="difficulty-ends">
+          <span>Training</span>
+          <span>Legend</span>
+        </div>
+      </div>
+
       <Button
         class="start-button"
         label="Deal Cards"
@@ -99,7 +118,19 @@ import PlayingCard from '../../components/PlayingCard.vue';
 const router = useRouter();
 const batailleCorseStore = useBatailleCorseStore();
 const settingsStore = useSettingsStore();
-const { playerName, sendKey, slapKey } = storeToRefs(settingsStore);
+const { playerName, sendKey, slapKey, difficulty } = storeToRefs(settingsStore);
+
+const TIERS = [
+  { name: 'Training',   color: '#6b7280' },
+  { name: 'Bronze',     color: '#cd7f32' },
+  { name: 'Silver',     color: '#a8a9ad' },
+  { name: 'Gold',       color: '#ffd700' },
+  { name: 'Platinum',   color: '#00b4d8' },
+  { name: 'Diamond',    color: '#91d7f5' },
+  { name: 'Champion',   color: '#a855f7' },
+  { name: 'Challenger', color: '#f97316' },
+  { name: 'Legend',     color: '#ef4444' },
+];
 
 const capturing = ref<'send' | 'slap' | null>(null);
 let currentCaptureListener: ((e: KeyboardEvent) => void) | null = null;
@@ -413,5 +444,65 @@ function startGame() {
 
 .debug-link:hover {
   color: rgba(255, 255, 255, 0.45);
+}
+
+/* Difficulty slider */
+.difficulty-badge {
+  text-align: center;
+  font-family: "Gabarito", sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-shadow: 0 0 12px currentColor;
+  transition: color 0.2s;
+}
+
+.difficulty-slider {
+  width: 100%;
+  height: 6px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+}
+
+.difficulty-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--tier-color, #fff);
+  box-shadow: 0 0 8px var(--tier-color, #fff), 0 2px 6px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+.difficulty-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: none;
+  background: var(--tier-color, #fff);
+  box-shadow: 0 0 8px var(--tier-color, #fff), 0 2px 6px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+.difficulty-slider::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 3px;
+}
+
+.difficulty-ends {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.3);
 }
 </style>
