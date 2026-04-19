@@ -119,7 +119,7 @@ import { useSettingsStore } from '../../state/Settings.store';
 import { useCardAnimation, preloadAllCards } from '../../composables/useCardAnimation';
 import { useHotkeys } from '../../composables/useHotkeys';
 import { Action } from '../../service/model/Action';
-import { onMounted, useTemplateRef, watch } from 'vue';
+import { onBeforeUnmount, onMounted, useTemplateRef, watch } from 'vue';
 
 const batailleCorseStore = useBatailleCorseStore();
 const { state: batailleCorse, lastSend, lastGrab, lastSlap, lastSuccessfulSlap, lastErroneousSlap } = storeToRefs(batailleCorseStore);
@@ -214,6 +214,11 @@ useHotkeys(
 
 onMounted(() => {
   preloadAllCards();
+});
+
+onBeforeUnmount(() => {
+  animation.cancelAllAnimations();
+  batailleCorseStore.cancelAutoGrab();
 });
 </script>
 

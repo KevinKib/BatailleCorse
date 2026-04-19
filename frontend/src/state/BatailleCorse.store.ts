@@ -52,6 +52,8 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
   const autoGrabEnabled = true;
   const state = ref<BatailleCorse>();
 
+  let autoGrabTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
   let sendSeq = 0;
   const lastSend = ref<{ playerIndex: number; seq: number } | null>(null);
 
@@ -70,7 +72,7 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
   const gameId = ref<string | null>(null);
 
   // const player0Ai = new AI(0, 500);
-  const player1Ai = new AI(1, 1800);
+  const player1Ai = new AI(1, 590);
 
   function create(playerName?: string) {
     webSocketService.publish('/app/create', playerName ? JSON.stringify({ playerName }) : undefined);
@@ -129,12 +131,26 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
 
     state.value = response.state;
 
+    if (autoGrabTimeoutId !== null) {
+      clearTimeout(autoGrabTimeoutId);
+      autoGrabTimeoutId = null;
+    }
     if (autoGrabEnabled && state.value.pile.grabbable) {
-      setTimeout(autoGrab, 1500);
+      autoGrabTimeoutId = setTimeout(() => {
+        autoGrabTimeoutId = null;
+        autoGrab();
+      }, 1500);
     }
 
     // player0Ai.play();
     player1Ai.play();
+  }
+
+  function cancelAutoGrab() {
+    if (autoGrabTimeoutId !== null) {
+      clearTimeout(autoGrabTimeoutId);
+      autoGrabTimeoutId = null;
+    }
   }
 
   function autoGrab() {
@@ -160,6 +176,7 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
     slap,
     grab,
     onResponse,
+    cancelAutoGrab,
   }
 
 });

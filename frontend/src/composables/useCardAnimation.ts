@@ -36,15 +36,14 @@ function startTransition(
   destRect: DOMRect,
 ) {
   nextTick(() => {
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        ghost.transitioning = true;
-        ghost.x = destRect.left;
-        ghost.y = destRect.top;
-        ghost.width = destRect.width;
-        ghost.height = destRect.height;
-      });
-    });
+    // Force a synchronous reflow so the browser has painted the initial position
+    // before we apply the transition. More reliable than double-RAF on throttled tabs.
+    void document.body.getBoundingClientRect();
+    ghost.transitioning = true;
+    ghost.x = destRect.left;
+    ghost.y = destRect.top;
+    ghost.width = destRect.width;
+    ghost.height = destRect.height;
   });
 }
 
@@ -186,6 +185,21 @@ export function useCardAnimation(
     isPileAnimating.value = false;
   }
 
+  /** Cancel all in-flight animations and reset visible state — call on component unmount. */
+  function cancelAllAnimations() {
+    if (ghostCardTimeoutId !== null) {
+      clearTimeout(ghostCardTimeoutId);
+      ghostCardTimeoutId = null;
+    }
+    ghostCard.visible = false;
+    ghostCard.transitioning = false;
+    slapGhosts.forEach(g => { g.visible = false; g.transitioning = false; });
+    isPileAnimating.value = false;
+    isPileFlashing.value = false;
+    cardDeltaIndicator.visible = false;
+    recentSlapIndicatorShown = false;
+  }
+
   /** Animate 2 penalty cards from a player's deck to the center pile. */
   function animateErroneousSlap(srcRect: DOMRect, destRect: DOMRect) {
     [slapGhosts[0], slapGhosts[1]].forEach((ghost, i) => {
@@ -242,6 +256,7 @@ export function useCardAnimation(
     animateSend,
     animatePileToWinner,
     cancelPileAnimation,
+    cancelAllAnimations,
     animateErroneousSlap,
     showDeltaOnSlap,
     showDeltaOnGrab,
