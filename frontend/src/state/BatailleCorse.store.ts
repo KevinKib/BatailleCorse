@@ -204,7 +204,7 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
   function autoGrab() {
     if (state.value.pile.grabbable) {
       const playerIndex = Number(state.value.pile.playerThatAddedLastHonourCard.id);
-      if (playerIndex != undefined) {
+      if (!isNaN(playerIndex)) {
         grab((playerIndex));
       }
     }
