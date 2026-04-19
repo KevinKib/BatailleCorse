@@ -123,6 +123,7 @@ export function useCardAnimation(
 
   function animateGhostCards(srcRect: DOMRect, destRect: DOMRect, pileCards: Card[], onComplete?: () => void) {
     const ghostCount = Math.min(pileCards.length, slapGhosts.length);
+    if (ghostCount === 0) { onComplete?.(); return; }
     slapGhosts.slice(0, ghostCount).forEach((ghost, i) => {
       const offset = SLAP_OFFSETS[i];
       setTimeout(() => {
@@ -170,13 +171,16 @@ export function useCardAnimation(
     animateGhostCard(srcRect, destRect, 100);
   }
 
-  /** Animate pile cards flying to a winner's deck (slap or grab). */
-  function animatePileToWinner(srcRect: DOMRect, destRect: DOMRect, pileCards: Card[]) {
-    isPileAnimating.value = true;
-    frozenPileCard.rank = '';
-    frozenPileCard.suit = '';
-    animateGhostCards(srcRect, destRect, pileCards, () => {
-      isPileAnimating.value = false;
+  /** Animate pile cards flying to a winner's deck (slap or grab). Resolves when done. */
+  function animatePileToWinner(srcRect: DOMRect, destRect: DOMRect, pileCards: Card[]): Promise<void> {
+    return new Promise(resolve => {
+      isPileAnimating.value = true;
+      frozenPileCard.rank = '';
+      frozenPileCard.suit = '';
+      animateGhostCards(srcRect, destRect, pileCards, () => {
+        isPileAnimating.value = false;
+        resolve();
+      });
     });
   }
 
@@ -200,27 +204,31 @@ export function useCardAnimation(
     recentSlapIndicatorShown = false;
   }
 
-  /** Animate 2 penalty cards from a player's deck to the center pile. */
-  function animateErroneousSlap(srcRect: DOMRect, destRect: DOMRect) {
-    [slapGhosts[0], slapGhosts[1]].forEach((ghost, i) => {
-      setTimeout(() => {
-        ghost.src = cardBackUrl;
-        ghost.duration = ERRONEOUS_SLAP_DURATION;
-        ghost.visible = false;
-        ghost.transitioning = false;
-        ghost.x = srcRect.left;
-        ghost.y = srcRect.top;
-        ghost.width = srcRect.width;
-        ghost.height = srcRect.height;
-        ghost.visible = true;
-
-        startTransition(ghost, destRect);
-
+  /** Animate 2 penalty cards from a player's deck to the center pile. Resolves when done. */
+  function animateErroneousSlap(srcRect: DOMRect, destRect: DOMRect): Promise<void> {
+    return new Promise(resolve => {
+      const ghosts = [slapGhosts[0], slapGhosts[1]];
+      ghosts.forEach((ghost, i) => {
         setTimeout(() => {
+          ghost.src = cardBackUrl;
+          ghost.duration = ERRONEOUS_SLAP_DURATION;
           ghost.visible = false;
           ghost.transitioning = false;
-        }, ERRONEOUS_SLAP_DURATION + 50);
-      }, i * ERRONEOUS_SLAP_STAGGER);
+          ghost.x = srcRect.left;
+          ghost.y = srcRect.top;
+          ghost.width = srcRect.width;
+          ghost.height = srcRect.height;
+          ghost.visible = true;
+
+          startTransition(ghost, destRect);
+
+          setTimeout(() => {
+            ghost.visible = false;
+            ghost.transitioning = false;
+            if (i === ghosts.length - 1) resolve();
+          }, ERRONEOUS_SLAP_DURATION + 50);
+        }, i * ERRONEOUS_SLAP_STAGGER);
+      });
     });
   }
 

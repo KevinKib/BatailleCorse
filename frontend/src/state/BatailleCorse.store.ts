@@ -1,8 +1,9 @@
 import { defineStore } from "pinia";
-import { readonly, Ref, ref } from "vue";
+import { ref } from "vue";
 
 import webSocketService from '../service/WebSocketService';
 import BatailleCorse from "../service/model/BatailleCorse";
+import type Card from "../service/model/Card";
 import Response from "../service/model/Response";
 import AI from "../service/model/ai/AI";
 import SlapEventData from '../service/model/event/SlapEventData';
@@ -54,17 +55,26 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
 
   let autoGrabTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
+  // Server events are buffered so that each GRAB/SLAP animation plays to completion
+  // before the next event is applied. SEND and CREATE events are non-blocking.
+  const CATCHUP_THRESHOLD = 3; // skip animations when this many events are still waiting
+  const eventQueue: Response[] = [];
+  let isProcessingQueue = false;
+  let animationResolve: (() => void) | null = null;
+
   let sendSeq = 0;
-  const lastSend = ref<{ playerIndex: number; seq: number } | null>(null);
+  // topCard is snapshotted at call time so the watcher doesn't need flush:'sync'
+  const lastSend = ref<{ playerIndex: number; seq: number; topCard: Card | undefined } | null>(null);
 
   let grabSeq = 0;
-  const lastGrab = ref<{ winnerPlayerIndex: number; seq: number } | null>(null);
+  // pileCards snapshotted before state update so the watcher always gets the right cards
+  const lastGrab = ref<{ winnerPlayerIndex: number; seq: number; pileCards: Card[] } | null>(null);
 
   let slapSeq = 0;
   const lastSlap = ref<{ seq: number } | null>(null);
 
   let successfulSlapSeq = 0;
-  const lastSuccessfulSlap = ref<{ winnerPlayerIndex: number; seq: number } | null>(null);
+  const lastSuccessfulSlap = ref<{ winnerPlayerIndex: number; seq: number; pileCards: Card[] } | null>(null);
 
   let erroneousSlapSeq = 0;
   const lastErroneousSlap = ref<{ playerIndex: number; seq: number } | null>(null);
@@ -79,7 +89,8 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
   }
 
   function send(playerIndex: number) {
-    lastSend.value = { playerIndex, seq: ++sendSeq };
+    const topCard = state.value?.pile.cards.at(0);
+    lastSend.value = { playerIndex, seq: ++sendSeq, topCard };
     webSocketService.publish(`/app/send`, JSON.stringify({
         gameId: gameId.value,
         playerIndex: playerIndex,
@@ -105,7 +116,23 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
   }
 
   function onResponse(response: Response) {
-    // TODO: Responsibility separation for various event type handlers
+    eventQueue.push(response);
+    if (!isProcessingQueue) drainQueue();
+  }
+
+  async function drainQueue() {
+    isProcessingQueue = true;
+    while (eventQueue.length > 0) {
+      const response = eventQueue.shift()!;
+      await processEvent(response);
+    }
+    isProcessingQueue = false;
+  }
+
+  async function processEvent(response: Response) {
+    const skipAnimation = eventQueue.length >= CATCHUP_THRESHOLD;
+    let needsAnimationWait = false;
+
     if (response.eventType === 'CREATE') {
       const createData = response.eventData as CreateEventData;
       gameId.value = createData.game.id;
@@ -115,7 +142,9 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
       const grabData = response.eventData as GrabEventData;
       const winnerPlayerIndex = Number(grabData.player?.id);
       if (!isNaN(winnerPlayerIndex)) {
-        lastGrab.value = { winnerPlayerIndex, seq: ++grabSeq };
+        const pileCards = [...(state.value?.pile.cards ?? [])];
+        lastGrab.value = { winnerPlayerIndex, seq: ++grabSeq, pileCards };
+        needsAnimationWait = true;
       }
     }
 
@@ -123,9 +152,12 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
       const slapData = response.eventData as SlapEventData;
       const slapperIndex = Number(slapData.player?.id);
       if (slapData.isSuccessful && !isNaN(slapperIndex)) {
-        lastSuccessfulSlap.value = { winnerPlayerIndex: slapperIndex, seq: ++successfulSlapSeq };
+        const pileCards = [...(state.value?.pile.cards ?? [])];
+        lastSuccessfulSlap.value = { winnerPlayerIndex: slapperIndex, seq: ++successfulSlapSeq, pileCards };
+        needsAnimationWait = true;
       } else if (!slapData.isSuccessful && !isNaN(slapperIndex)) {
         lastErroneousSlap.value = { playerIndex: slapperIndex, seq: ++erroneousSlapSeq };
+        needsAnimationWait = true;
       }
     }
 
@@ -144,6 +176,16 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
 
     // player0Ai.play();
     player1Ai.play();
+
+    if (needsAnimationWait && !skipAnimation) {
+      await new Promise<void>(resolve => { animationResolve = resolve; });
+    }
+  }
+
+  /** Called by the component once a blocking animation (GRAB/SLAP) finishes. */
+  function notifyAnimationComplete() {
+    animationResolve?.();
+    animationResolve = null;
   }
 
   function cancelAutoGrab() {
@@ -155,8 +197,6 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
 
   function autoGrab() {
     if (state.value.pile.grabbable) {
-      // TODO: beware as pile can become grabbable on the next round. Reset the setTimeout if the pile is grabbed (?)
-
       const playerIndex = Number(state.value.pile.playerThatAddedLastHonourCard.id);
       if (playerIndex != undefined) {
         grab((playerIndex));
@@ -176,6 +216,7 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
     slap,
     grab,
     onResponse,
+    notifyAnimationComplete,
     cancelAutoGrab,
   }
 
