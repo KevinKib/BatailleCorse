@@ -21,7 +21,6 @@ class WebSocketService {
     };
 
     const stompClient = new Client({
-      brokerURL: undefined,
       webSocketFactory: factory,
       reconnectDelay: 3000,
       debug: (str) => this.log("[STOMP DEBUG]", str),
@@ -38,8 +37,8 @@ class WebSocketService {
         this.log('[STOMP] Disconnected — will reconnect in 3s');
       },
       onStompError: (frame) => {
-        this.error('[STOMP] Error:', frame.headers['message']);
-        this.error('[STOMP] Details:', frame.body);
+        console.error('[STOMP] Error:', frame.headers['message']);
+        console.error('[STOMP] Details:', frame.body);
       },
     });
 

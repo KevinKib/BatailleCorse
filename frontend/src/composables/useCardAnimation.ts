@@ -256,7 +256,7 @@ export function useCardAnimation(
     isPileAnimating: readonly(isPileAnimating),
     isPileFlashing: readonly(isPileFlashing),
     frozenPileCard: readonly(frozenPileCard),
-    cardDeltaIndicator,
+    cardDeltaIndicator: readonly(cardDeltaIndicator),
     // Functions for view watchers
     getCenterPileRect,
     onNewPileCard,
