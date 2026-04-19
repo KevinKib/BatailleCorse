@@ -5,7 +5,8 @@ import { useBatailleCorseStore } from '../state/BatailleCorse.store';
 class WebSocketService {
 
   private readonly enableLogs = false;
-  private readonly url = 'http://127.0.0.1:8080/connect';
+  private readonly url = 'http://localhost:8080/connect';
+  private readonly local_url = 'http://127.0.0.1:8080/connect';
   private readonly windows_url = 'http://172.31.112.1:8080/connect';
 
   private client!: Client;
