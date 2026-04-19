@@ -7,12 +7,11 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 
+# Copy source
+COPY . .
 
 # ---- Dev stage ----
 FROM base AS dev
-
-# Copy source
-COPY . .
 
 # Run app
 CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
@@ -20,15 +19,14 @@ CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
 # ---- Build stage ----
 FROM base AS build
 
-# Copy source
-COPY . .
-
 # Run app
 RUN npm run build
 
 
 # ---- Production stage ----
 FROM nginx:alpine AS prod
+
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Copy base output
 COPY --from=build /app/dist /usr/share/nginx/html

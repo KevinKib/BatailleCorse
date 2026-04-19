@@ -4,7 +4,7 @@ services:
   frontend:
     build:
       context: ./frontend
-      target: build
+      target: dev
       dockerfile: Dockerfile
     ports:
       - "5173:5173"

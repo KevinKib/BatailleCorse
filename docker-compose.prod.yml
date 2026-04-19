@@ -1,0 +1,23 @@
+version: "3.9"
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      target: prod
+    image: bataillecorse-frontend:0.1
+    ports:
+      - "80:80"
+
+  backend:
+    build:
+      context: ./backend
+    secrets:
+      - maven_settings
+    image: bataillecorse-backend:0.1
+    ports:
+      - "8080:8080"
+
+secrets:
+  maven_settings:
+    file: ./docker/settings.xml
