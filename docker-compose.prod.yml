@@ -6,8 +6,6 @@ services:
       context: ./frontend
       target: prod
     image: bataillecorse-frontend:0.1
-    ports:
-      - "80:80"
 
   backend:
     build:
