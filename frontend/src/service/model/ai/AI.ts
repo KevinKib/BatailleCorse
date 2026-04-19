@@ -67,19 +67,20 @@ export default class AI {
 
     if (this.timeoutId != undefined) {
       clearTimeout(this.timeoutId);
+      console.log("clearTimeout", this.timeoutId);
     }
 
     this.timeoutId = setTimeout(() => {
+      console.log("executes", this.timeoutId);
       if (this.canSlap()) {
-        console.log("AI slaps");
-
         this.batailleCorse.slap(this.playerIndex);
       }
       else if (this.canSend()) {
-        console.log("AI sends");
         this.batailleCorse.send(this.playerIndex);
       }
     }, this.reactionTime);
+
+    console.log("setTimeout", this.timeoutId);
   }
     
 }

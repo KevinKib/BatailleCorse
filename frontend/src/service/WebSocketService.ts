@@ -46,7 +46,6 @@ class WebSocketService {
   }
 
   public publish(destination: string, body?: any) {
-    console.log(destination);
     this.client.publish({destination, body});
   }
 

@@ -103,8 +103,6 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
   }
 
   function onResponse(response: Response) {
-    console.log('onResponse', response);
-
     // TODO: Responsibility separation for various event type handlers
     if (response.eventType === 'CREATE') {
       const createData = response.eventData as CreateEventData;
