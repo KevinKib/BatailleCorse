@@ -25,4 +25,4 @@ services:
 
 secrets:
   maven_settings:
-    file: ./docker/settings.xml
+    file: deploy/docker/settings.xml
