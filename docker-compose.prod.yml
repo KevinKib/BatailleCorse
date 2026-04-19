@@ -12,8 +12,8 @@ services:
   backend:
     build:
       context: ./backend
-    secrets:
-      - maven_settings
+      secrets:
+        - maven_settings
     image: bataillecorse-backend:0.1
     ports:
       - "8080:8080"
