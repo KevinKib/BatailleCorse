@@ -5,9 +5,9 @@ import { useBatailleCorseStore } from '../state/BatailleCorse.store';
 class WebSocketService {
 
   private readonly enableLogs = false;
-  private readonly url = 'http://localhost:8080/connect';
-  private readonly local_url = 'http://127.0.0.1:8080/connect';
-  private readonly windows_url = 'http://172.31.112.1:8080/connect';
+  private readonly connectUrl = '/connect';
+  // private readonly local_url = 'http://127.0.0.1:8080/connect';
+  // private readonly windows_url = 'http://172.31.112.1:8080/connect';
 
   private client!: Client;
 
@@ -16,8 +16,8 @@ class WebSocketService {
 
     this.log("Creating SockJS...");
     const factory = () => {
-      this.log("Creating SockJS connection to "+this.url);
-      return new SockJS(this.url);
+      this.log("Creating SockJS connection to "+this.connectUrl);
+      return new SockJS(this.connectUrl);
     };
 
     const stompClient = new Client({
@@ -46,6 +46,7 @@ class WebSocketService {
   }
 
   public publish(destination: string, body?: any) {
+    console.log(destination);
     this.client.publish({destination, body});
   }
 
