@@ -18,6 +18,15 @@ services:
     ports:
       - "8080:8080"
 
+  gateway:
+    build:
+      context: ./deploy/nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - frontend
+      - backend
+
 secrets:
   maven_settings:
     file: deploy/docker/settings.xml
