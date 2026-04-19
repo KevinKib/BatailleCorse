@@ -4,24 +4,26 @@ services:
   frontend:
     build:
       context: ./frontend
-      target: dev
-      dockerfile: Dockerfile
-    ports:
-      - "5173:5173"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    environment:
-      - CHOKIDAR_USEPOLLING=true
+      target: prod
+    image: bataillecorse-frontend:0.1
 
   backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile
       secrets:
         - maven_settings
+    image: bataillecorse-backend:0.1
     ports:
       - "8080:8080"
+
+  gateway:
+    build:
+      context: ./deploy/nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - frontend
+      - backend
 
 secrets:
   maven_settings:

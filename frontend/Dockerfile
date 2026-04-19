@@ -1,23 +1,34 @@
-# ---- Build stage ----
-FROM node:20-alpine AS build
+# ---- Base stage ----
+FROM node:20-alpine AS base
 
 WORKDIR /app
 
 # Install dependencies
 COPY package*.json ./
-RUN npm install
+RUN npm ci
 
 # Copy source
 COPY . .
 
+# ---- Dev stage ----
+FROM base AS dev
+
 # Run app
 CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
 
+# ---- Build stage ----
+FROM base AS build
+
+# Run app
+RUN NODE_OPTIONS="--max-old-space-size=2048" npm run build
+
 
 # ---- Production stage ----
-FROM nginx:alpine
+FROM nginx:alpine AS prod
 
-# Copy build output
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Copy base output
 COPY --from=build /app/dist /usr/share/nginx/html
 
 # Expose web port

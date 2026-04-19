@@ -70,7 +70,7 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
   const gameId = ref<string | null>(null);
 
   // const player0Ai = new AI(0, 500);
-  const player1Ai = new AI(1, 600);
+  const player1Ai = new AI(1, 1800);
 
   function create(playerName?: string) {
     webSocketService.publish('/app/create', playerName ? JSON.stringify({ playerName }) : undefined);
