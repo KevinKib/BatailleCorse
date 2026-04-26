@@ -3,6 +3,7 @@ package org.kevinkib.bataillecorse.sessionmanagement.application;
 import org.kevinkib.bataillecorse.core.domain.BatailleCorse;
 import org.kevinkib.bataillecorse.core.domain.BatailleCorseId;
 import org.kevinkib.bataillecorse.sessionmanagement.application.port.SessionRepository;
+import org.kevinkib.bataillecorse.sessionmanagement.domain.SessionToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 
