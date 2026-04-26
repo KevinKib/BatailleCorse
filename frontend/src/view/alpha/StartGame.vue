@@ -71,20 +71,20 @@
 
       <div class="field-group">
         <label class="field-label">Difficulty</label>
-        <div class="difficulty-badge" :style="{ color: TIERS[difficulty].color }">
-          {{ TIERS[difficulty].name }}
+        <div class="difficulty-badge" :style="{ color: DIFFICULTY[difficulty].color }">
+          {{ DIFFICULTY[difficulty].name }}
         </div>
         <input
           type="range"
-          min="0"
-          max="8"
+          :min="MIN_DIFFICULTY"
+          :max="MAX_DIFFICULTY"
           v-model.number="difficulty"
           class="difficulty-slider"
-          :style="{ '--tier-color': TIERS[difficulty].color }"
+          :style="{ '--tier-color': DIFFICULTY[difficulty].color }"
         />
         <div class="difficulty-ends">
-          <span>Training</span>
-          <span>Legend</span>
+          <span>{{ DIFFICULTY[MIN_DIFFICULTY].name }}</span>
+          <span>{{ DIFFICULTY[MAX_DIFFICULTY].name }}</span>
         </div>
       </div>
 
@@ -122,6 +122,7 @@ import { Button, InputText } from 'primevue';
 
 import { useBatailleCorseStore } from '../../state/BatailleCorse.store';
 import { useSettingsStore } from '../../state/Settings.store';
+import { DIFFICULTY, MIN_DIFFICULTY, MAX_DIFFICULTY } from '../../model/Difficulty';
 import PlayingCard from '../../components/PlayingCard.vue';
 
 const router = useRouter();
@@ -129,17 +130,6 @@ const batailleCorseStore = useBatailleCorseStore();
 const settingsStore = useSettingsStore();
 const { playerName, sendKey, slapKey, difficulty } = storeToRefs(settingsStore);
 
-const TIERS = [
-  { name: 'Training',   color: '#6b7280' },
-  { name: 'Bronze',     color: '#cd7f32' },
-  { name: 'Silver',     color: '#a8a9ad' },
-  { name: 'Gold',       color: '#ffd700' },
-  { name: 'Platinum',   color: '#00b4d8' },
-  { name: 'Diamond',    color: '#91d7f5' },
-  { name: 'Champion',   color: '#a855f7' },
-  { name: 'Challenger', color: '#f97316' },
-  { name: 'Legend',     color: '#ef4444' },
-];
 
 const capturing = ref<'send' | 'slap' | null>(null);
 let currentCaptureListener: ((e: KeyboardEvent) => void) | null = null;

@@ -116,6 +116,7 @@ import { Button } from 'primevue';
 import { storeToRefs } from 'pinia';
 import { useBatailleCorseStore } from '../../state/BatailleCorse.store';
 import { useSettingsStore } from '../../state/Settings.store';
+import { DIFFICULTY } from '../../model/Difficulty';
 import { useCardAnimation, preloadAllCards } from '../../composables/useCardAnimation';
 import { useHotkeys } from '../../composables/useHotkeys';
 import { Action } from '../../service/model/Action';
@@ -218,8 +219,7 @@ function slap(playerIndex: number) {
 
 const settingsStore = useSettingsStore();
 
-const TIERS = ['Training','Bronze','Silver','Gold','Platinum','Diamond','Champion','Challenger','Legend'];
-const difficultyLabel = computed(() => TIERS[settingsStore.difficulty] ?? 'Easy');
+const difficultyLabel = computed(() => DIFFICULTY[settingsStore.difficulty]?.name);
 
 useHotkeys(
   () => { if (!isButtonDisabled(0, 'send')) send(0); },
