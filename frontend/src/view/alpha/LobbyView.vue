@@ -48,11 +48,15 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { Button } from 'primevue';
 import PlayingCard from '../../components/PlayingCard.vue';
+import { preloadAllCards } from '../../composables/useCardAnimation';
 
 const router = useRouter();
+
+onMounted(() => preloadAllCards());
 </script>
 
 <style scoped>

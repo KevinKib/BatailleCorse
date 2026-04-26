@@ -117,7 +117,7 @@ import { storeToRefs } from 'pinia';
 import { useBatailleCorseStore } from '../../state/BatailleCorse.store';
 import { useSettingsStore } from '../../state/Settings.store';
 import { DIFFICULTY } from '../../model/Difficulty';
-import { useCardAnimation, preloadAllCards } from '../../composables/useCardAnimation';
+import { useCardAnimation } from '../../composables/useCardAnimation';
 import { useHotkeys } from '../../composables/useHotkeys';
 import { Action } from '../../model/Action';
 import { computed, nextTick, onBeforeUnmount, onMounted, useTemplateRef, watch } from 'vue';
@@ -229,7 +229,6 @@ useHotkeys(
 );
 
 onMounted(() => {
-  preloadAllCards();
 });
 
 onBeforeUnmount(() => {
