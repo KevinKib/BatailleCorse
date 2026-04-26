@@ -2,13 +2,13 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 
 import webSocketService from '../service/WebSocketService';
-import BatailleCorse from "../service/model/BatailleCorse";
-import type Card from "../service/model/Card";
-import Response from "../service/model/Response";
-import AI from "../service/model/ai/AI";
-import SlapEventData from '../service/model/event/SlapEventData';
-import GrabEventData from '../service/model/event/GrabEventData';
-import CreateEventData from "../service/model/event/CreateEventData";
+import BatailleCorse from "../model/BatailleCorse";
+import type Card from "../model/Card";
+import Response from "../model/Response";
+import AI from "../model/ai/AI";
+import SlapEventData from '../model/event/SlapEventData';
+import GrabEventData from '../model/event/GrabEventData';
+import CreateEventData from "../model/event/CreateEventData";
 import { useSettingsStore } from './Settings.store';
 import { DIFFICULTY } from '../model/Difficulty';
 

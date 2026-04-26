@@ -59,9 +59,9 @@ import { Button } from 'primevue';
 import Card from 'primevue/card';
 import PlayingCard from '../../components/PlayingCard.vue';
 import { storeToRefs } from 'pinia';
-import AI from '../../service/model/ai/AI';
+import AI from '../../model/ai/AI';
 import { useBatailleCorseStore } from '../../state/BatailleCorse.store';
-import { Action } from '../../service/model/Action';
+import { Action } from '../../model/Action';
 
 const batailleCorseStore = useBatailleCorseStore();
 const { state: batailleCorse } = storeToRefs(batailleCorseStore);

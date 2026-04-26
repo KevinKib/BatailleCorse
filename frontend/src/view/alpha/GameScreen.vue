@@ -119,7 +119,7 @@ import { useSettingsStore } from '../../state/Settings.store';
 import { DIFFICULTY } from '../../model/Difficulty';
 import { useCardAnimation, preloadAllCards } from '../../composables/useCardAnimation';
 import { useHotkeys } from '../../composables/useHotkeys';
-import { Action } from '../../service/model/Action';
+import { Action } from '../../model/Action';
 import { computed, nextTick, onBeforeUnmount, onMounted, useTemplateRef, watch } from 'vue';
 
 const batailleCorseStore = useBatailleCorseStore();
