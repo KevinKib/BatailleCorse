@@ -3,10 +3,6 @@
 </template>
 
 <script setup>
-import Debug from './view/debug/Debug.vue';
-import GameScreen from './view/alpha/GameScreen.vue';
-import StartGame from './view/alpha/StartGame.vue';
-
 </script>
 
 <style>

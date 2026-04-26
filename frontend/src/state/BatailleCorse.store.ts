@@ -13,44 +13,6 @@ import { useSettingsStore } from './Settings.store';
 
 const DIFFICULTY_REACTION_TIMES = [2100, 1800, 1500, 1200, 900, 700, 600, 500, 400];
 
-/*
-
-{
-  "currentPlayer": {
-    "nbCards": 24,
-    "id": "1"
-  },
-  "players": [
-    {
-      "nbCards": 25,
-      "id": "0"
-    },
-    {
-      "nbCards": 24,
-      "id": "1"
-    }
-  ],
-  "pile": [
-    {
-      "name": "HEART_8",
-      "rank": "8",
-      "suit": "HEART"
-    },
-    {
-      "name": "HEART_9",
-      "rank": "9",
-      "suit": "HEART"
-    },
-    {
-      "name": "SPADE_KING",
-      "rank": "KING",
-      "suit": "SPADE"
-    }
-  ]
-}
-
-*/
-
 export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
 
   const autoGrabEnabled = true;
@@ -212,6 +174,7 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
 
   return {
     state,
+    gameId,
     lastSend,
     lastGrab,
     lastSlap,

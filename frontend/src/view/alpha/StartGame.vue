@@ -99,14 +99,14 @@
         @click="startGame"
       />
 
-      <RouterLink to="debug" class="debug-link">Debug mode</RouterLink>
+      <RouterLink to="/debug" class="debug-link">Debug mode</RouterLink>
 
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref } from 'vue';
+import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { useRouter, RouterLink } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { Button, InputText } from 'primevue';
@@ -183,7 +183,12 @@ onBeforeUnmount(() => cancelCapture());
 
 function startGame() {
   batailleCorseStore.create(playerName.value || undefined);
-  router.push('/game');
+  const unwatch = watch(() => batailleCorseStore.gameId, (id) => {
+    if (id) {
+      unwatch();
+      router.push(`/room/${id}`);
+    }
+  });
 }
 </script>
 
