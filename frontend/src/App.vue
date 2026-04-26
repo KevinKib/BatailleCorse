@@ -13,6 +13,7 @@ const TRANSITION_MS = 800;
 
 function onEnter(el: Element, done: () => void) {
   const div = el as HTMLElement;
+  div.style.willChange = 'opacity';
   div.style.position = 'absolute';
   div.style.inset = '0';
   div.style.zIndex = '1';
@@ -29,6 +30,7 @@ function onEnter(el: Element, done: () => void) {
 
 function onLeave(el: Element, done: () => void) {
   const div = el as HTMLElement;
+  div.style.willChange = 'opacity';
   div.style.position = 'absolute';
   div.style.inset = '0';
   div.style.zIndex = '0';
