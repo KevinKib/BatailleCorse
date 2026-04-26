@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 import org.kevinkib.bataillecorse.core.domain.BatailleCorseId;
 import org.kevinkib.bataillecorse.core.domain.PlayerId;
 
-import java.util.Map;
 import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -23,8 +22,9 @@ class SessionGameTest {
 
             var sessionGame = SessionGame.create(BatailleCorseId.generate(), players);
 
-            assertThat(sessionGame.playersByToken().values(), hasSize(2));
-            assertThat(sessionGame.playersByToken().values(), hasItems(new PlayerId(0), new PlayerId(1)));
+            assertThat(sessionGame.tokensByPlayer().keySet(), hasSize(2));
+            assertThat(sessionGame.tokensByPlayer(), hasKey(new PlayerId(0)));
+            assertThat(sessionGame.tokensByPlayer(), hasKey(new PlayerId(1)));
         }
 
         @Test
@@ -33,7 +33,9 @@ class SessionGameTest {
 
             var sessionGame = SessionGame.create(BatailleCorseId.generate(), players);
 
-            assertThat(sessionGame.playersByToken().keySet(), hasSize(2));
+            var token0 = sessionGame.tokensByPlayer().get(new PlayerId(0));
+            var token1 = sessionGame.tokensByPlayer().get(new PlayerId(1));
+            assertThat(token0, is(not(equalTo(token1))));
         }
     }
 
@@ -44,10 +46,7 @@ class SessionGameTest {
         public void givenSessionGame_withSessionId_whenLoadingBySessionId_thenReturnPlayerId() {
             var players = createNumberOfPlayers(2);
             var sessionGame = SessionGame.create(BatailleCorseId.generate(), players);
-            var tokenForPlayer0 = sessionGame.playersByToken().entrySet().stream()
-                    .filter(e -> e.getValue().equals(new PlayerId(0)))
-                    .map(Map.Entry::getKey)
-                    .findFirst().orElseThrow();
+            var tokenForPlayer0 = sessionGame.tokensByPlayer().get(new PlayerId(0));
 
             Optional<PlayerId> result = sessionGame.findPlayerByToken(tokenForPlayer0);
 

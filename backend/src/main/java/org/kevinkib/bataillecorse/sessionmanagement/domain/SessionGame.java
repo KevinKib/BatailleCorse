@@ -9,20 +9,27 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public record SessionGame(BatailleCorseId id, Map<SessionToken, PlayerId> playersByToken) {
+public record SessionGame(BatailleCorseId id, Map<PlayerId, SessionToken> tokensByPlayer) {
 
     public static SessionGame create(BatailleCorseId id, List<Player> players) {
-        Map<SessionToken, PlayerId> playersByToken = new HashMap<>();
+        Map<PlayerId, SessionToken> tokensByPlayer = new HashMap<>();
 
         for (Player player : players) {
-            playersByToken.put(SessionToken.generate(), player.id());
+            tokensByPlayer.put(player.id(), SessionToken.generate());
         }
 
-        return new SessionGame(id, playersByToken);
+        return new SessionGame(id, tokensByPlayer);
+    }
+
+    public Optional<SessionToken> findTokenByPlayer(PlayerId playerId) {
+        return Optional.ofNullable(tokensByPlayer.get(playerId));
     }
 
     public Optional<PlayerId> findPlayerByToken(SessionToken token) {
-        return Optional.ofNullable(playersByToken.get(token));
+        return tokensByPlayer.entrySet().stream()
+                .filter(e -> e.getValue().equals(token))
+                .map(Map.Entry::getKey)
+                .findFirst();
     }
 
 }
