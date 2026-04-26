@@ -1,8 +1,43 @@
 <template>
-  <RouterView />
+  <div class="app-root">
+    <RouterView v-slot="{ Component, route }">
+      <Transition :css="false" @enter="onEnter" @leave="onLeave">
+        <component :is="Component" :key="route.path" />
+      </Transition>
+    </RouterView>
+  </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
+const TRANSITION_MS = 800;
+
+function onEnter(el: Element, done: () => void) {
+  const div = el as HTMLElement;
+  div.style.position = 'absolute';
+  div.style.inset = '0';
+  div.style.zIndex = '1';
+  div.style.opacity = '0';
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    div.style.transition = `opacity ${TRANSITION_MS}ms ease`;
+    div.style.opacity = '1';
+    div.addEventListener('transitionend', () => {
+      div.style.cssText = '';
+      done();
+    }, { once: true });
+  }));
+}
+
+function onLeave(el: Element, done: () => void) {
+  const div = el as HTMLElement;
+  div.style.position = 'absolute';
+  div.style.inset = '0';
+  div.style.zIndex = '0';
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    div.style.transition = `opacity ${TRANSITION_MS}ms ease`;
+    div.style.opacity = '0';
+    div.addEventListener('transitionend', () => done(), { once: true });
+  }));
+}
 </script>
 
 <style>
@@ -29,10 +64,6 @@
 html, body, #app {
   width: 100%;
   height: 100%;
-  /* font-family: "Gabarito", sans-serif;
-  font-optical-sizing: auto;
-  font-weight: 400;
-  font-style: normal; */
   font-family: "Bricolage Grotesque", sans-serif;
   font-optical-sizing: auto;
   font-weight: 500;
@@ -47,6 +78,13 @@ h5              { font-size: .83em; margin: 1.5em 0 }
 h6              { font-size: .75em; margin: 1.67em 0 }
 h1, h2, h3, h4,
 h5, h6          { font-weight: bolder }
+
+.app-root {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #07160d;
+}
 
 .titlescreen {
   width: 100%;
