@@ -99,7 +99,16 @@
         @click="startGame"
       />
 
-      <RouterLink to="/debug" class="debug-link">Debug mode</RouterLink>
+      <Button
+        class="back-button"
+        label="Back to Lobby"
+        icon="pi pi-arrow-left"
+        severity="secondary"
+        size="small"
+        text
+        @click="router.push('/')"
+      />
+
 
     </div>
   </div>
@@ -107,7 +116,7 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
-import { useRouter, RouterLink } from 'vue-router';
+import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { Button, InputText } from 'primevue';
 
@@ -438,19 +447,6 @@ function startGame() {
   letter-spacing: 0.08em;
 }
 
-/* Debug link */
-.debug-link {
-  font-size: 0.65rem;
-  color: rgba(255, 255, 255, 0.2);
-  text-decoration: none;
-  letter-spacing: 0.1em;
-  transition: color 0.2s;
-}
-
-.debug-link:hover {
-  color: rgba(255, 255, 255, 0.45);
-}
-
 /* Difficulty slider */
 .difficulty-badge {
   text-align: center;
@@ -466,6 +462,7 @@ function startGame() {
 .difficulty-slider {
   width: 100%;
   height: 6px;
+  margin-bottom: 6px;
   -webkit-appearance: none;
   appearance: none;
   background: rgba(255, 255, 255, 0.12);

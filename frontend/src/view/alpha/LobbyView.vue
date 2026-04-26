@@ -42,14 +42,13 @@
         disabled
       />
 
-      <RouterLink to="/debug" class="debug-link">Debug mode</RouterLink>
 
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { useRouter, RouterLink } from 'vue-router';
+import { useRouter } from 'vue-router';
 import { Button } from 'primevue';
 import PlayingCard from '../../components/PlayingCard.vue';
 
@@ -172,15 +171,4 @@ const router = useRouter();
   letter-spacing: 0.08em;
 }
 
-.debug-link {
-  font-size: 0.65rem;
-  color: rgba(255, 255, 255, 0.2);
-  text-decoration: none;
-  letter-spacing: 0.1em;
-  transition: color 0.2s;
-}
-
-.debug-link:hover {
-  color: rgba(255, 255, 255, 0.45);
-}
 </style>
