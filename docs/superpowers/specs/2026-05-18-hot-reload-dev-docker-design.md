@@ -126,8 +126,7 @@ backend:
     context: ./backend
     dockerfile: Dockerfile
     target: dev          # points to the new dev stage
-    secrets:
-      - maven_settings   # still needed at build time for dependency resolution
+    # no secrets needed: dev stage doesn't run Maven at build time
   ports:
     - "8080:8080"
   volumes:
