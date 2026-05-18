@@ -21,9 +21,11 @@ public class BatailleCorseWebSocketController {
     public static final String GAME_CREATED_MESSAGE = "Game created";
 
     private final SessionService sessionService;
+    private final GameMessagingService gameMessagingService;
 
-    public BatailleCorseWebSocketController(SessionService sessionService) {
+    public BatailleCorseWebSocketController(SessionService sessionService, GameMessagingService gameMessagingService) {
         this.sessionService = sessionService;
+        this.gameMessagingService = gameMessagingService;
     }
 
     @MessageMapping("/create")
@@ -39,13 +41,14 @@ public class BatailleCorseWebSocketController {
     }
 
     @MessageMapping("/send")
-    @SendTo("/topic/game")
-    public Response send(GameActionPayload payload) {
+    public void send(GameActionPayload payload) {
         EventType eventType = EventType.SEND;
 
         BatailleCorse batailleCorse = sessionService.getGame(
                 new BatailleCorseId(payload.gameId()));
         BatailleCorseDto batailleCorseDto = new BatailleCorseDto(batailleCorse);
+
+        Response response;
 
         try {
             Player player = batailleCorse.getPlayerByIndex(payload.playerIndex());
@@ -55,23 +58,25 @@ public class BatailleCorseWebSocketController {
 
             String message = "Player "+player.id()+" sent "+cardDto.getName()+".";
             SendEventData eventData = new SendEventData(new PlayerIdDto(player));
-            return new SuccessResponse(eventType, eventData, message, batailleCorseDto);
+            response = new SuccessResponse(eventType, eventData, message, batailleCorseDto);
 
         } catch (Exception e) {
             System.err.println(e.getMessage());
-            return new ErrorResponse(eventType, e.getMessage(), batailleCorseDto);
+            response = new ErrorResponse(eventType, e.getMessage(), batailleCorseDto);
         }
+
+        gameMessagingService.sendToGame(payload.gameId(), response);
     }
 
     @MessageMapping("/slap")
-    @SendTo("/topic/game")
-    public Response slap(GameActionPayload payload) {
+    public void slap(GameActionPayload payload) {
         EventType eventType = EventType.SLAP;
 
         BatailleCorse batailleCorse = sessionService.getGame(
                 new BatailleCorseId(payload.gameId()));
         BatailleCorseDto batailleCorseDto = new BatailleCorseDto(batailleCorse);
 
+        Response response;
         try {
             Player player = batailleCorse.getPlayerByIndex(payload.playerIndex());
             boolean successfulSlap = batailleCorse.slap(player);
@@ -85,23 +90,25 @@ public class BatailleCorseWebSocketController {
 
             SlapEventData eventData = new SlapEventData(successfulSlap, new PlayerIdDto(player));
 
-            return new SuccessResponse(eventType, eventData, message, batailleCorseDto);
+            response = new SuccessResponse(eventType, eventData, message, batailleCorseDto);
 
         } catch (Exception e) {
             System.err.println(e.getMessage());
-            return new ErrorResponse(eventType, e.getMessage(), batailleCorseDto);
+            response = new ErrorResponse(eventType, e.getMessage(), batailleCorseDto);
         }
+
+        gameMessagingService.sendToGame(payload.gameId(), response);
     }
 
     @MessageMapping("/grab")
-    @SendTo("/topic/game")
-    public Response grab(GameActionPayload payload) {
+    public void grab(GameActionPayload payload) {
         EventType eventType = EventType.GRAB;
 
         BatailleCorse batailleCorse = sessionService.getGame(
                 new BatailleCorseId(payload.gameId()));
         BatailleCorseDto batailleCorseDto = new BatailleCorseDto(batailleCorse);
 
+        Response response;
         try {
             Player player = batailleCorse.getPlayerByIndex(payload.playerIndex());
 
@@ -110,11 +117,13 @@ public class BatailleCorseWebSocketController {
             String message = "Player "+player.id()+" grabbed the pile. ";
             GrabEventData eventData = new GrabEventData(new PlayerIdDto(player));
 
-            return new SuccessResponse(eventType, eventData, message, batailleCorseDto);
+            response = new SuccessResponse(eventType, eventData, message, batailleCorseDto);
 
         } catch (Exception e) {
             System.err.println(e.getMessage());
-            return new ErrorResponse(eventType, e.getMessage(), batailleCorseDto);
+            response = new ErrorResponse(eventType, e.getMessage(), batailleCorseDto);
         }
+
+        gameMessagingService.sendToGame(payload.gameId(), response);
     }
 }

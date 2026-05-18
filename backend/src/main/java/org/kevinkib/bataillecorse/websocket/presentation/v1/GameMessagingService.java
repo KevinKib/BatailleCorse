@@ -1,0 +1,24 @@
+package org.kevinkib.bataillecorse.websocket.presentation.v1;
+
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.stereotype.Service;
+
+@Service
+public class GameMessagingService {
+
+    private final SimpMessagingTemplate messagingTemplate;
+
+    public GameMessagingService(SimpMessagingTemplate messagingTemplate) {
+        this.messagingTemplate = messagingTemplate;
+    }
+
+    public void sendToGame(String gameId, Object payload) {
+        messagingTemplate.convertAndSend(destination(gameId), payload);
+    }
+
+    private String destination(String gameId) {
+//        return "/topic/game/" + gameId;
+        return "/topic/game/";
+    }
+
+}
