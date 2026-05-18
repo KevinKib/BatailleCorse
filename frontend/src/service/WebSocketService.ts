@@ -6,17 +6,15 @@ class WebSocketService {
 
   private readonly enableLogs = false;
   private readonly connectUrl = '/connect';
-  // private readonly local_url = 'http://127.0.0.1:8080/connect';
-  // private readonly windows_url = 'http://172.31.112.1:8080/connect';
 
   private client!: Client;
+  private currentGameId: string | null = null;
+  private currentGameSubscription: { unsubscribe: () => void } | null = null;
 
   public init() {
-    const batailleCorse = useBatailleCorseStore();
-
     this.log("Creating SockJS...");
     const factory = () => {
-      this.log("Creating SockJS connection to "+this.connectUrl);
+      this.log("Creating SockJS connection to " + this.connectUrl);
       return new SockJS(this.connectUrl);
     };
 
@@ -27,11 +25,16 @@ class WebSocketService {
       onConnect: (frame) => {
         this.log('[STOMP] Connected:', frame);
 
+        // Generic channel: receives CREATE events so the client learns the game ID.
         stompClient.subscribe('/topic/game', message => {
           const response = JSON.parse(message.body);
-          batailleCorse.onResponse(response);
+          useBatailleCorseStore().onResponse(response);
         });
 
+        // Re-subscribe to per-game channel after reconnect.
+        if (this.currentGameId) {
+          this.doSubscribeToGame(this.currentGameId);
+        }
       },
       onDisconnect: () => {
         this.log('[STOMP] Disconnected — will reconnect in 3s');
@@ -48,19 +51,34 @@ class WebSocketService {
     this.client = stompClient;
   }
 
+  public subscribeToGame(gameId: string) {
+    this.currentGameId = gameId;
+    if (this.client?.connected) {
+      this.doSubscribeToGame(gameId);
+    }
+  }
+
+  public unsubscribeFromGame() {
+    this.currentGameSubscription?.unsubscribe();
+    this.currentGameSubscription = null;
+    this.currentGameId = null;
+  }
+
   public publish(destination: string, body?: any) {
-    this.client.publish({destination, body});
+    this.client.publish({ destination, body });
+  }
+
+  private doSubscribeToGame(gameId: string) {
+    this.currentGameSubscription?.unsubscribe();
+    this.currentGameSubscription = this.client.subscribe(`/topic/game/${gameId}`, message => {
+      const response = JSON.parse(message.body);
+      useBatailleCorseStore().onResponse(response);
+    });
   }
 
   private log(message?: any, ...optionalParams: any[]) {
     if (this.enableLogs) {
       console.log(message, ...optionalParams);
-    }
-  }
-
-  private error(message?: any, ...optionalParams: any[]) {
-    if (this.enableLogs) {
-      console.error(message, ...optionalParams);
     }
   }
 
