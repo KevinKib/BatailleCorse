@@ -26,7 +26,7 @@ public class GameRestController {
         try {
             BatailleCorse game = sessionService.getGame(new BatailleCorseId(id));
             return ResponseEntity.ok(new BatailleCorseDto(game));
-        } catch (InvalidGameIdException | IllegalArgumentException e) {
+        } catch (InvalidGameIdException e) {
             return ResponseEntity.notFound().build();
         }
     }
