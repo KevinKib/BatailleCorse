@@ -17,8 +17,7 @@ public class GameMessagingService {
     }
 
     private String destination(String gameId) {
-//        return "/topic/game/" + gameId;
-        return "/topic/game/";
+        return "/topic/game/" + gameId;
     }
 
 }
