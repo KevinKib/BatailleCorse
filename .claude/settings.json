@@ -21,6 +21,7 @@
       "Bash(mvn*)",
       "Bash(npm*)",
       "Bash(docker-compose*)",
+      "Bash(docker compose*)",
       "Bash(docker build*)",
       "Bash(docker logs*)",
       "Bash(docker ps*)"
@@ -36,7 +37,10 @@
       "Bash(git reset --hard*)",
       "Bash(git push --force*)",
       "Bash(git clean*)",
-      "Bash(*prod*)"
+      "Bash(bash *prod*)",
+      "Bash(sh *prod*)",
+      "Bash(*docker-compose.prod*)",
+      "Bash(*docker compose*prod*)"
     ]
   }
 }
