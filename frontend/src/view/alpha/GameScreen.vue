@@ -236,7 +236,7 @@ useHotkeys(
 onMounted(async () => {
   const gameId = route.params.id as string;
   const response = await fetch(`/api/game/${gameId}`);
-  if (response.status === 404) {
+  if (!response.ok) {
     router.replace('/');
     return;
   }
