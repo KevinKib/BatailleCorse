@@ -7,28 +7,38 @@ import org.kevinkib.bataillecorse.websocket.presentation.v1.dto.PlayerDto;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.dto.event.CreateEventData;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
-@SpringBootTest
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class GameRestControllerIT {
+
+    @LocalServerPort
+    private int port;
 
     @Autowired
     private BatailleCorseWebSocketController wsController;
 
-    @Autowired
-    private GameRestController gameRestController;
+    private RestTemplate restTemplate = new RestTemplate();
 
     @Test
     void givenUnknownId_whenGetGame_thenReturns404() {
-        ResponseEntity<?> response = gameRestController.getGame("unknown-id");
-
-        assertThat(response.getStatusCode(), is(HttpStatus.NOT_FOUND));
+        try {
+            restTemplate.getForEntity(
+                    "http://localhost:" + port + "/api/game/unknown-id",
+                    String.class);
+            throw new AssertionError("Expected 404 but request succeeded");
+        } catch (HttpClientErrorException.NotFound e) {
+            assertThat(e.getStatusCode(), is(HttpStatus.NOT_FOUND));
+        }
     }
 
     @Test
@@ -37,7 +47,9 @@ class GameRestControllerIT {
         CreateEventData createData = (CreateEventData) createResponse.getEventData();
         String gameId = createData.game().getId();
 
-        ResponseEntity<BatailleCorseDto> response = gameRestController.getGame(gameId);
+        ResponseEntity<BatailleCorseDto> response = restTemplate.getForEntity(
+                "http://localhost:" + port + "/api/game/" + gameId,
+                BatailleCorseDto.class);
 
         assertThat(response.getStatusCode(), is(HttpStatus.OK));
         BatailleCorseDto body = response.getBody();
