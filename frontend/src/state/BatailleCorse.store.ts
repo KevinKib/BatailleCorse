@@ -55,6 +55,11 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
     webSocketService.publish('/app/create', playerName ? JSON.stringify({ playerName }) : undefined);
   }
 
+  function hydrate(id: string, gameState: BatailleCorse) {
+    gameId.value = id;
+    state.value = gameState;
+  }
+
   function send(playerIndex: number) {
     const topCard = state.value?.pile.cards.at(0);
     lastSend.value = { playerIndex, seq: ++sendSeq, topCard };
@@ -180,6 +185,7 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
     lastSuccessfulSlap,
     lastErroneousSlap,
     create,
+    hydrate,
     send,
     slap,
     grab,
