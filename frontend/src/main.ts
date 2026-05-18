@@ -27,16 +27,18 @@ app.use(PrimeVue, {
 import Debug from './view/debug/Debug.vue';
 import GameScreen from './view/alpha/GameScreen.vue';
 import StartGame from './view/alpha/StartGame.vue';
-import { createMemoryHistory, createRouter } from 'vue-router';
+import LobbyView from './view/alpha/LobbyView.vue';
+import { createWebHistory, createRouter } from 'vue-router';
 
 const routes = [
-  { path: '/', component: StartGame },
-  { path: '/game', component: GameScreen },
+  { path: '/', component: LobbyView },
+  { path: '/create', component: StartGame },
+  { path: '/room/:id', component: GameScreen },
   { path: '/debug', component: Debug },
 ]
 
 const router = createRouter({
-  history: createMemoryHistory(),
+  history: createWebHistory(),
   routes,
 });
 

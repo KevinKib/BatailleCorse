@@ -8,7 +8,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-public record Player(Integer id, Hand hand) {
+public record Player(PlayerId id, Hand hand) {
+
+    public Player(Integer id, Hand hand) {
+        this(new PlayerId(id), hand);
+    }
 
     public void addCardsFromPile(List<Card> cards) {
         Collections.reverse(cards);
