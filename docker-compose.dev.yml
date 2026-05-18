@@ -18,11 +18,13 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-      secrets:
-        - maven_settings
+      target: dev
     ports:
       - "8080:8080"
+    volumes:
+      - ./backend:/app
+      - backend_m2:/root/.m2/repository
+      - ./deploy/docker/settings.xml:/root/.m2/settings.xml:ro
 
-secrets:
-  maven_settings:
-    file: deploy/docker/settings.xml
+volumes:
+  backend_m2:
