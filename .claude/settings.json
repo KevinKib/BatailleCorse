@@ -1,0 +1,42 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd*)",
+      "Bash(ls*)",
+      "Bash(dir*)",
+      "Bash(pwd*)",
+      "Bash(Get-ChildItem*)",
+      "Bash(Set-Location*)",
+      "Bash(cat *)",
+      "Bash(head *)",
+      "Bash(tail *)",
+      "Bash(type *)",
+      "Bash(git status*)",
+      "Bash(git log*)",
+      "Bash(git diff*)",
+      "Bash(git add*)",
+      "Bash(git commit*)",
+      "Bash(git checkout*)",
+      "Bash(git push*)",
+      "Bash(mvn*)",
+      "Bash(npm*)",
+      "Bash(docker-compose*)",
+      "Bash(docker build*)",
+      "Bash(docker logs*)",
+      "Bash(docker ps*)"
+    ],
+    "deny": [
+      "Bash(rm*)",
+      "Bash(rmdir*)",
+      "Bash(del *)",
+      "Bash(Remove-Item*)",
+      "Bash(docker system prune*)",
+      "Bash(docker volume prune*)",
+      "Bash(docker volume rm*)",
+      "Bash(git reset --hard*)",
+      "Bash(git push --force*)",
+      "Bash(git clean*)",
+      "Bash(*prod*)"
+    ]
+  }
+}
