@@ -121,6 +121,9 @@ import { useCardAnimation } from '../../composables/useCardAnimation';
 import { useHotkeys } from '../../composables/useHotkeys';
 import { Action } from '../../model/Action';
 import { computed, nextTick, onBeforeUnmount, onMounted, useTemplateRef, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import webSocketService from '../../service/WebSocketService';
+import type BatailleCorse from '../../model/BatailleCorse';
 
 const batailleCorseStore = useBatailleCorseStore();
 const { state: batailleCorse, lastSend, lastGrab, lastSlap, lastSuccessfulSlap, lastErroneousSlap } = storeToRefs(batailleCorseStore);
@@ -218,6 +221,8 @@ function slap(playerIndex: number) {
 }
 
 const settingsStore = useSettingsStore();
+const route = useRoute();
+const router = useRouter();
 
 const difficultyLabel = computed(() => DIFFICULTY[settingsStore.difficulty]?.name);
 
@@ -228,12 +233,22 @@ useHotkeys(
   () => [settingsStore.slapKey],
 );
 
-onMounted(() => {
+onMounted(async () => {
+  const gameId = route.params.id as string;
+  const response = await fetch(`/api/game/${gameId}`);
+  if (response.status === 404) {
+    router.replace('/');
+    return;
+  }
+  const gameState = await response.json() as BatailleCorse;
+  batailleCorseStore.hydrate(gameId, gameState);
+  webSocketService.subscribeToGame(gameId);
 });
 
 onBeforeUnmount(() => {
   animation.cancelAllAnimations();
   batailleCorseStore.cancelAutoGrab();
+  webSocketService.unsubscribeFromGame();
 });
 </script>
 
