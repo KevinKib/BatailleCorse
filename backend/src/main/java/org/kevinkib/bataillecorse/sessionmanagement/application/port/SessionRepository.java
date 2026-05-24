@@ -13,4 +13,6 @@ public interface SessionRepository {
     BatailleCorse load(BatailleCorseId id);
 
     SessionToken loadSessionToken(BatailleCorseId batailleCorseId, PlayerId playerId);
+
+    SessionGame loadSessionGame(BatailleCorseId id);
 }
