@@ -3,7 +3,12 @@ package org.kevinkib.bataillecorse.websocket.presentation.v1;
 import org.kevinkib.bataillecorse.core.domain.BatailleCorse;
 import org.kevinkib.bataillecorse.core.domain.BatailleCorseId;
 import org.kevinkib.bataillecorse.core.domain.Player;
+import org.kevinkib.bataillecorse.core.domain.PlayerId;
 import org.kevinkib.bataillecorse.sessionmanagement.application.SessionService;
+import org.kevinkib.bataillecorse.sessionmanagement.domain.SessionToken;
+
+import java.util.HashMap;
+import java.util.Map;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.api.ErrorResponse;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.api.GameActionPayload;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.api.Response;
@@ -33,9 +38,15 @@ public class BatailleCorseWebSocketController {
     public Response createGame() {
         BatailleCorse batailleCorse = sessionService.createGame(NB_PLAYERS);
 
+        Map<Integer, String> tokens = new HashMap<>();
+        for (int i = 0; i < NB_PLAYERS; i++) {
+            SessionToken token = sessionService.loadTokenByPlayerId(batailleCorse.getId(), new PlayerId(i));
+            tokens.put(i, token.uuid().toString());
+        }
+
         return new SuccessResponse(
                 EventType.CREATE,
-                new CreateEventData(new BatailleCorseIdDto(batailleCorse.getId())),
+                new CreateEventData(new BatailleCorseIdDto(batailleCorse.getId()), tokens),
                 GAME_CREATED_MESSAGE,
                 new BatailleCorseDto(batailleCorse));
     }

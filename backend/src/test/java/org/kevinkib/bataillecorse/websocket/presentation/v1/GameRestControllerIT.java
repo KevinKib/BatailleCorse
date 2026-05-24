@@ -17,6 +17,9 @@ import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.hasKey;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.equalTo;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class GameRestControllerIT {
@@ -61,5 +64,17 @@ class GameRestControllerIT {
             assertThat(player.getNbCards(), is(26));
         }
         assertThat(body.getPile().getCards(), empty());
+    }
+
+    @Test
+    void givenCreate_whenCreateGame_thenResponseIncludesTokensForBothPlayers() {
+        Response createResponse = wsController.createGame();
+        CreateEventData createData = (CreateEventData) createResponse.getEventData();
+
+        assertThat(createData.tokens(), hasKey(0));
+        assertThat(createData.tokens(), hasKey(1));
+        assertThat(createData.tokens().get(0), notNullValue());
+        assertThat(createData.tokens().get(1), notNullValue());
+        assertThat(createData.tokens().get(0), not(equalTo(createData.tokens().get(1))));
     }
 }
