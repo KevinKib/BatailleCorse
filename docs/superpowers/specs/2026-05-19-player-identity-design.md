@@ -6,15 +6,15 @@
 
 ## Context
 
-Currently the backend trusts the `playerIndex` sent by the client in every action payload. Any client can claim to be any player. This spec introduces server-side player identity using STOMP session IDs for normal gameplay and `SessionToken` as a reconnect credential.
+Currently the backend trusts the `playerIndex` sent by the client in every action payload. Any client can claim to be any player. This spec introduces server-side player identity using `SessionToken` as the credential for both normal gameplay and reconnection.
 
 The AI (player 1) currently runs on the frontend. It will move server-side at some point; this design accommodates that without requiring changes to the identity model.
 
 ## Goals
 
-- Backend derives player identity from the STOMP connection, not from client-supplied claims
-- Players can reclaim their seat after a WebSocket disconnect using a token
-- Action payloads carry no player identity at all — just `gameId`
+- Backend derives player identity from a `SessionToken` credential, not from a client-supplied index
+- The same token works after a WebSocket reconnect — no special reconnect flow needed
+- Action payloads carry `gameId` + `token` only — no `playerIndex`
 
 ## Out of Scope
 
@@ -26,35 +26,20 @@ The AI (player 1) currently runs on the frontend. It will move server-side at so
 
 ## Design
 
-### Normal Gameplay: STOMP Session Identity
+### Token as the Single Identity Credential
 
-Every WebSocket connection has a server-assigned STOMP session ID, accessible in Spring via `SimpMessageHeaderAccessor.getSessionId()`. At CREATE time, the backend records `(gameId, stompSessionId) → player 0`. On every SEND / SLAP / GRAB, the controller looks up the session ID to find which player is acting — no token or playerIndex in the payload.
+Every player seat is assigned a `SessionToken` (UUID) at game creation. The token is:
+- Returned to the frontend in the CREATE response
+- Sent by the client in every SEND / SLAP / GRAB payload
+- Validated by the backend on every action to resolve the acting player
 
-**Action payload before:**
-```json
-{ "gameId": "uuid", "playerIndex": 0 }
-```
-
-**Action payload after:**
-```json
-{ "gameId": "uuid" }
-```
-
-### Reconnect: Token Credential
-
-When a client reconnects (new STOMP session ID), it sends its stored token to `/app/reconnect`:
-
-```json
-{ "gameId": "uuid", "token": "uuid" }
-```
-
-The backend validates the token against `SessionGame`, finds the corresponding player seat, and registers the new session ID. Normal action resolution then works again.
+On reconnect, the client simply sends its next action with the same token — no special reconnect endpoint needed. The token is self-sufficient.
 
 ### CREATE Response: Token Distribution
 
-The CREATE response includes both player tokens so the frontend can store them for reconnection. For human vs AI (current state), both tokens go to the same browser — token 0 for the human, token 1 for the client-side AI.
+The CREATE response includes both player tokens so the frontend can store them.
 
-When the AI moves server-side, only token 0 will be returned. That change belongs in the AI migration spec.
+For human vs AI (current state), both tokens go to the same browser — token 0 for the human, token 1 for the client-side AI. When the AI moves server-side, only token 0 will be returned; that change belongs in the AI migration spec.
 
 **New `CreateEventData` shape:**
 ```json
@@ -64,68 +49,92 @@ When the AI moves server-side, only token 0 will be returned. That change belong
 }
 ```
 
+### Action Payload
+
+**Before:**
+```json
+{ "gameId": "uuid", "playerIndex": 0 }
+```
+
+**After:**
+```json
+{ "gameId": "uuid", "token": "uuid-a" }
+```
+
 ---
 
 ## Component Changes
 
 ### `SessionGame` (Session Management — domain)
 
-Add active STOMP session tracking alongside the existing token map:
+No structural changes. `findPlayerByToken(SessionToken) → Optional<PlayerId>` already exists and is all that is needed.
 
-- `Map<PlayerId, String> sessionIdsByPlayer` — current STOMP session per seat
-- `activateSession(PlayerId, String sessionId)` — called at CREATE and on reconnect
-- `findPlayerBySessionId(String sessionId) → Optional<PlayerId>` — used by controllers on every action
-- `findPlayerByToken(SessionToken) → Optional<PlayerId>` — already exists, used for reconnect validation
+### `InvalidTokenException` (Session Management — application)
+
+New exception class, mirrors `InvalidGameIdException`. Thrown when a token is not found for a given game.
 
 ### `SessionService` (Session Management — application)
 
-Three new methods:
+One new method:
+- `findPlayerIdByToken(BatailleCorseId, SessionToken) → Optional<PlayerId>` — resolves a token to a player seat for a given game
 
-- `activatePlayerSession(BatailleCorseId, PlayerId, String stompSessionId)` — called by the controller after CREATE
-- `findPlayerIdBySessionId(BatailleCorseId, String stompSessionId) → Optional<PlayerId>` — called on every action
-- `reconnect(BatailleCorseId, SessionToken, String newStompSessionId) → PlayerId` — validates token, remaps session; throws `InvalidTokenException` if token unknown
+`loadTokenByPlayerId` is unchanged (still used to build the CREATE response).
 
-### `SessionRepository` port
+### `SessionRepository` (Session Management — port)
 
 One new method:
-- `loadSessionGame(BatailleCorseId) → SessionGame` — needed to support session ID lookups and reconnect (already partially implied by existing `loadSessionToken`, now made explicit)
+- `loadSessionGame(BatailleCorseId) → SessionGame` — needed so `SessionService` can call `findPlayerByToken` on the session. The implementation already holds `SessionGame` in memory; this formalises access through the port.
+
+### `InMemorySessionRepository` (Session Management — infrastructure)
+
+Implements the new `loadSessionGame` method.
 
 ### `GameActionPayload` (websocket — api)
 
-Drops `playerIndex` and `token`. Only field remaining: `gameId: String`.
+Replaces `playerIndex: Integer` with `token: String`. `gameId` is unchanged.
 
 ### `BatailleCorseWebSocketController` (websocket — presentation)
 
-SEND / SLAP / GRAB handlers:
-1. Extract STOMP session ID from `SimpMessageHeaderAccessor`
-2. Call `sessionService.findPlayerIdBySessionId(gameId, sessionId)` → `PlayerId`
-3. If empty → return `ErrorResponse` (unknown session — client should reconnect)
-4. Call `batailleCorse.getPlayerByIndex(playerId.id())` → proceed as before
+SEND / SLAP / GRAB handlers replace:
+```java
+Player player = batailleCorse.getPlayerByIndex(payload.playerIndex());
+```
+with:
+```java
+PlayerId playerId = sessionService
+    .findPlayerIdByToken(new BatailleCorseId(payload.gameId()), new SessionToken(payload.token()))
+    .orElseThrow(InvalidTokenException::new);
+Player player = batailleCorse.getPlayerByIndex(playerId.id());
+```
 
-New `/app/reconnect` handler:
-1. Extract STOMP session ID from headers
-2. Call `sessionService.reconnect(gameId, token, sessionId)`
-3. Broadcast a `RECONNECT` success event to `/topic/game/{gameId}` (so other clients know the player is back)
-4. On `InvalidTokenException` → return `ErrorResponse`
+`InvalidTokenException` is caught by the existing try/catch block and returns an `ErrorResponse` — no new error handling path needed.
 
-CREATE handler:
-1. After creating the game, call `sessionService.activatePlayerSession(gameId, player0Id, sessionId)`
-2. Load both tokens via `sessionService.loadTokenByPlayerId()` for each player
-3. Include tokens in `CreateEventData`
+CREATE handler adds: after creating the game, load both tokens via `sessionService.loadTokenByPlayerId()` and include them in `CreateEventData`.
 
 ### `CreateEventData` (websocket — dto)
 
-Add `Map<Integer, String> tokens` (player index → token UUID string).
+Adds `Map<Integer, String> tokens` (player index → token UUID string).
 
 ### Frontend: `BatailleCorse.store.ts`
 
-- On CREATE event: store `tokens` map (e.g. `playerTokens.value = response.eventData.tokens`)
-- `send()`, `slap()`, `grab()`: payload becomes `{ gameId }` only — remove `playerIndex`
-- New `reconnect(gameId)` function: called by `WebSocketService` on reconnect; publishes `{ gameId, token: playerTokens.value[0] }` to `/app/reconnect` — in the current human vs AI setup the human is always player 0; this will be revisited when join flow is added
+- On CREATE event: store the `tokens` map and persist it to `localStorage` keyed by `gameId` (e.g. `localStorage.setItem('tokens:${gameId}', JSON.stringify(tokens))`)
+- `send()`, `slap()`, `grab()`: payload becomes `{ gameId, token }` — token looked up by player index from the stored map. Human is always player 0 in the current setup; AI (player 1) uses `tokens[1]`
+- `playerIndex` removed from all published payloads
 
-### Frontend: `WebSocketService.ts`
+### Frontend: `GameScreen.vue` (`onMounted`)
 
-- On `onConnect`, if `currentGameId` is set (reconnect scenario): call `store.reconnect(currentGameId)` after re-subscribing to the per-game channel
+After fetching game state and before calling `subscribeToGame`, restore tokens from `localStorage`:
+```typescript
+const stored = localStorage.getItem(`tokens:${gameId}`);
+if (stored) batailleCorseStore.restoreTokens(gameId, JSON.parse(stored));
+else router.replace('/'); // tokens lost, cannot play
+```
+
+`restoreTokens(gameId, tokens)` is a new store action alongside `hydrate`.
+
+### Frontend: TypeScript model for action payload
+
+Update or add a type reflecting `{ gameId: string, token: string }`.
 
 ---
 
@@ -133,15 +142,21 @@ Add `Map<Integer, String> tokens` (player index → token UUID string).
 
 | Situation | Response |
 |---|---|
-| Action arrives, session ID not found | `ErrorResponse` with message "Unknown session — reconnect required" |
-| Reconnect with invalid token | `ErrorResponse` with message "Invalid token" |
-| Reconnect succeeds | `SuccessResponse` with `RECONNECT` event type broadcast to `/topic/game/{gameId}` |
+| Action arrives with unknown token | `ErrorResponse` — caught by existing try/catch, message: "Invalid token" |
 
 ---
 
 ## Testing
 
-- Unit: `SessionGame` — `activateSession`, `findPlayerBySessionId`, token + session ID interaction
-- Unit: `SessionService` — `findPlayerIdBySessionId`, `reconnect` (valid token, invalid token, already-active session)
-- Integration: `BatailleCorseWebSocketController` — SEND with valid session, SEND with unknown session ID, reconnect flow
-- Frontend: store handles `tokens` in CREATE event, payload no longer includes `playerIndex`
+**Backend — unit:**
+- `SessionGame.findPlayerByToken` — valid token returns correct `PlayerId`, unknown token returns empty
+- `SessionService.findPlayerIdByToken` — delegates correctly to repository and session game
+
+**Backend — integration:**
+- `BatailleCorseWebSocketController` — SEND/SLAP/GRAB with valid token succeeds; with invalid token returns `ErrorResponse`
+- CREATE response includes `tokens` map with correct UUIDs for both players
+
+**Frontend:**
+- Store stores `tokens` on CREATE event and persists to `localStorage`
+- `onMounted` in `GameScreen.vue` restores tokens from `localStorage`; redirects to `/` if missing
+- `send()` / `slap()` / `grab()` publish `{ gameId, token }` with no `playerIndex`
