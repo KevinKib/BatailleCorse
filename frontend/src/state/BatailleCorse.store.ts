@@ -108,6 +108,7 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
     if (response.eventType === 'CREATE') {
       const createData = response.eventData as CreateEventData;
       gameId.value = createData.game.id;
+      webSocketService.subscribeToGame(gameId.value);
     }
 
     if (response.eventType === 'GRAB') {
