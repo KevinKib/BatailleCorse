@@ -1,14 +1,14 @@
 package org.kevinkib.bataillecorse.websocket.presentation.v1;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.kevinkib.bataillecorse.core.domain.BatailleCorse;
 import org.kevinkib.bataillecorse.core.domain.BatailleCorseId;
 import org.kevinkib.bataillecorse.core.domain.Player;
 import org.kevinkib.bataillecorse.core.domain.PlayerId;
 import org.kevinkib.bataillecorse.sessionmanagement.application.SessionService;
 import org.kevinkib.bataillecorse.sessionmanagement.domain.SessionToken;
-
-import java.util.HashMap;
-import java.util.Map;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.api.ErrorResponse;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.api.GameActionPayload;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.api.Response;
