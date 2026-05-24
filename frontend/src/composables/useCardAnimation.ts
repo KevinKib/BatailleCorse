@@ -1,6 +1,6 @@
 import { nextTick, reactive, readonly, ref } from 'vue';
 import cardBackUrl from '/src/resources/cards/png/card_back.png?inline';
-import type Card from '../service/model/Card';
+import type Card from '../model/Card';
 
 const SLAP_DURATION = 280;
 const SLAP_STAGGER = 60;

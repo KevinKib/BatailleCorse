@@ -2,54 +2,15 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 
 import webSocketService from '../service/WebSocketService';
-import BatailleCorse from "../service/model/BatailleCorse";
-import type Card from "../service/model/Card";
-import Response from "../service/model/Response";
-import AI from "../service/model/ai/AI";
-import SlapEventData from '../service/model/event/SlapEventData';
-import GrabEventData from '../service/model/event/GrabEventData';
-import CreateEventData from "../service/model/event/CreateEventData";
+import BatailleCorse from "../model/BatailleCorse";
+import type Card from "../model/Card";
+import Response from "../model/Response";
+import AI from "../model/ai/AI";
+import SlapEventData from '../model/event/SlapEventData';
+import GrabEventData from '../model/event/GrabEventData';
+import CreateEventData from "../model/event/CreateEventData";
 import { useSettingsStore } from './Settings.store';
-
-const DIFFICULTY_REACTION_TIMES = [2100, 1800, 1500, 1200, 900, 700, 600, 500, 400];
-
-/*
-
-{
-  "currentPlayer": {
-    "nbCards": 24,
-    "id": "1"
-  },
-  "players": [
-    {
-      "nbCards": 25,
-      "id": "0"
-    },
-    {
-      "nbCards": 24,
-      "id": "1"
-    }
-  ],
-  "pile": [
-    {
-      "name": "HEART_8",
-      "rank": "8",
-      "suit": "HEART"
-    },
-    {
-      "name": "HEART_9",
-      "rank": "9",
-      "suit": "HEART"
-    },
-    {
-      "name": "SPADE_KING",
-      "rank": "KING",
-      "suit": "SPADE"
-    }
-  ]
-}
-
-*/
+import { DIFFICULTY } from '../model/Difficulty';
 
 export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
 
@@ -87,10 +48,10 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
   const settingsStore = useSettingsStore();
 
   // const player0Ai = new AI(0, 500);
-  let player1Ai = new AI(1, DIFFICULTY_REACTION_TIMES[settingsStore.difficulty]);
+  let player1Ai = new AI(1, DIFFICULTY[settingsStore.difficulty].reactionTime);
 
   function create(playerName?: string) {
-    player1Ai = new AI(1, DIFFICULTY_REACTION_TIMES[settingsStore.difficulty]);
+    player1Ai = new AI(1, DIFFICULTY[settingsStore.difficulty].reactionTime);
     webSocketService.publish('/app/create', playerName ? JSON.stringify({ playerName }) : undefined);
   }
 
@@ -212,6 +173,7 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
 
   return {
     state,
+    gameId,
     lastSend,
     lastGrab,
     lastSlap,

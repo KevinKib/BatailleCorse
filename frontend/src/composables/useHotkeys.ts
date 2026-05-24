@@ -3,8 +3,8 @@ import { onBeforeUnmount, onMounted } from 'vue';
 export function useHotkeys(
   onSend: () => void,
   onSlap: () => void,
-  getSendKeys: () => string[] = () => ['q', 'c'],
-  getSlapKeys: () => string[] = () => ['d', ' '],
+  getSendKeys: () => string[] = () => ['q'],
+  getSlapKeys: () => string[] = () => ['d'],
 ) {
   function handleKey(e: KeyboardEvent) {
     if (getSendKeys().includes(e.key)) onSend();

@@ -4,7 +4,7 @@
     <div class="gamescreen_top flex">
       <div class="left_side"></div>
       <div class="middle_side">
-        <h1 class="player_tag">Computer (Easy)</h1>
+        <h1 class="player_tag">Computer ({{ difficultyLabel }})</h1>
         <div class="card stacked">
           <PlayingCard
             ref="opponentCard"
@@ -116,10 +116,11 @@ import { Button } from 'primevue';
 import { storeToRefs } from 'pinia';
 import { useBatailleCorseStore } from '../../state/BatailleCorse.store';
 import { useSettingsStore } from '../../state/Settings.store';
-import { useCardAnimation, preloadAllCards } from '../../composables/useCardAnimation';
+import { DIFFICULTY } from '../../model/Difficulty';
+import { useCardAnimation } from '../../composables/useCardAnimation';
 import { useHotkeys } from '../../composables/useHotkeys';
-import { Action } from '../../service/model/Action';
-import { nextTick, onBeforeUnmount, onMounted, useTemplateRef, watch } from 'vue';
+import { Action } from '../../model/Action';
+import { computed, nextTick, onBeforeUnmount, onMounted, useTemplateRef, watch } from 'vue';
 
 const batailleCorseStore = useBatailleCorseStore();
 const { state: batailleCorse, lastSend, lastGrab, lastSlap, lastSuccessfulSlap, lastErroneousSlap } = storeToRefs(batailleCorseStore);
@@ -218,6 +219,8 @@ function slap(playerIndex: number) {
 
 const settingsStore = useSettingsStore();
 
+const difficultyLabel = computed(() => DIFFICULTY[settingsStore.difficulty]?.name);
+
 useHotkeys(
   () => { if (!isButtonDisabled(0, 'send')) send(0); },
   () => { if (!isButtonDisabled(0, 'slap')) slap(0); },
@@ -226,7 +229,6 @@ useHotkeys(
 );
 
 onMounted(() => {
-  preloadAllCards();
 });
 
 onBeforeUnmount(() => {

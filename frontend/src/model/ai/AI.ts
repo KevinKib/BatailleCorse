@@ -1,4 +1,4 @@
-import { useBatailleCorseStore } from "../../../state/BatailleCorse.store";
+import { useBatailleCorseStore } from "../../state/BatailleCorse.store";
 
 
 
