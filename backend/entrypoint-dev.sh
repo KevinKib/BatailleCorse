@@ -8,7 +8,7 @@ cleanup() {
 trap cleanup SIGTERM SIGINT
 
 echo "[dev] Starting Spring Boot..."
-mvn spring-boot:run &
+mvn spring-boot:run -Dspring-boot.run.jvmArguments="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005" &
 MVN_PID=$!
 
 echo "[dev] Watching src/ for changes..."
