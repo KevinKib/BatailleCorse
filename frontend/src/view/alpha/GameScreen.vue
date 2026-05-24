@@ -235,13 +235,22 @@ useHotkeys(
 
 onMounted(async () => {
   const gameId = route.params.id as string;
+
+  const stored = localStorage.getItem(`tokens:${gameId}`);
+  if (!stored) {
+    router.replace('/');
+    return;
+  }
+
   const response = await fetch(`/api/game/${gameId}`);
   if (!response.ok) {
     router.replace('/');
     return;
   }
+
   const gameState = await response.json() as BatailleCorse;
   batailleCorseStore.hydrate(gameId, gameState);
+  batailleCorseStore.restoreTokens(JSON.parse(stored));
   webSocketService.subscribeToGame(gameId);
 });
 
