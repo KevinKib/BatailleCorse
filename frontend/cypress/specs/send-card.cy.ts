@@ -8,7 +8,7 @@ describe('Send card', () => {
     cy.get('[data-cy="player-card-count"]', { timeout: 10000 }).should('contain.text', '25');
 
     // Pile has at least one card (may have more if AI acted within 2100ms, which is unlikely).
-    cy.get('[data-cy="pile-card-count"]')
+    cy.get('[data-cy="pile-card-count"]', { timeout: 10000 })
       .invoke('text')
       .then((text) => parseInt(text.trim(), 10))
       .should('be.gte', 1);

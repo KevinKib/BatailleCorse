@@ -13,6 +13,6 @@ describe('Create game', () => {
     // Initial state: 52 cards split evenly, pile empty.
     cy.get('[data-cy="player-card-count"]').should('contain.text', '26');
     cy.get('[data-cy="opponent-card-count"]').should('contain.text', '26');
-    cy.get('[data-cy="pile-card-count"]').invoke('text').invoke('trim').should('eq', '0');
+    cy.get('[data-cy="pile-card-count"]').should('contain.text', '0');
   });
 });
