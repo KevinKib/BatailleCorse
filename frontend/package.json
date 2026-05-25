@@ -4,7 +4,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "serve": "vite preview"
+    "serve": "vite preview",
+    "cy:open": "cypress open",
+    "cy:run": "cypress run"
   },
   "dependencies": {
     "@primeuix/themes": "^2.0.3",
@@ -23,6 +25,7 @@
   "devDependencies": {
     "@types/sockjs-client": "^1.5.4",
     "@vitejs/plugin-vue": "^4.5.0",
+    "cypress": "^13.0.0",
     "typescript": "^5.8.3",
     "vite": "^5.0.0"
   }
