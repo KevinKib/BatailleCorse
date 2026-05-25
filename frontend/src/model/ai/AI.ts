@@ -1,86 +1,54 @@
-import { useBatailleCorseStore } from "../../state/BatailleCorse.store";
-
-
+import type BatailleCorse from '../BatailleCorse';
+import type Pile from '../Pile';
 
 export default class AI {
+  private timeoutId: ReturnType<typeof setTimeout> | undefined;
 
-  private playerIndex: number;
-  private reactionTime: number;
-  private batailleCorse: any;
+  constructor(
+    private readonly playerIndex: number,
+    private readonly reactionTime: number,
+  ) {}
 
-  private timeoutId: number | undefined;
-
-  public constructor(playerIndex: number, reactionTime: number) {
-    this.playerIndex = playerIndex;
-    this.reactionTime = reactionTime;
-
-    this.batailleCorse = useBatailleCorseStore();
+  /**
+   * Schedules the AI's next action based on the current game state.
+   * State and actions are injected at call time — no store dependency.
+   * A second call before the timeout fires replaces the pending action.
+   */
+  play(state: BatailleCorse, actions: { send(): void; slap(): void }): void {
+    clearTimeout(this.timeoutId);
+    const variation = Math.floor(Math.random() * 200) - 100;
+    const delay = Math.max(0, this.reactionTime + variation);
+    this.timeoutId = setTimeout(() => {
+      if (this.shouldAttemptSlap(state.pile)) {
+        actions.slap(); // server validates; AI accepts any resulting penalty
+      } else if (state.players[this.playerIndex]?.hasAvailableAction('SEND')) {
+        actions.send();
+      }
+    }, delay);
   }
 
-  public canSlap() {
-    const pile = this.batailleCorse.state?.pile;
+  /** Cancels the pending scheduled action, if any. */
+  cancel(): void {
+    clearTimeout(this.timeoutId);
+    this.timeoutId = undefined;
+  }
 
-    if (pile == undefined || pile.cards == undefined && pile.cards.length == 0) {
-      return false;
+  /**
+   * Internal AI heuristic for when to attempt a slap.
+   * NOT authoritative game rules — the server validates all slap attempts.
+   * These conditions are game-variant-specific and will need to become
+   * configurable when game variants are introduced.
+   */
+  private shouldAttemptSlap(pile: Pile): boolean {
+    const cards = pile.cards;
+    if (cards.length >= 1 && cards[0].rank === '10') return true;
+    if (cards.length >= 2 && cards[0].rank === cards[1].rank) return true;
+    if (cards.length >= 3 && cards[0].rank === cards[2].rank) return true;
+    if (cards.length >= 2) {
+      const r0 = Number(cards[0].rank);
+      const r1 = Number(cards[1].rank);
+      if (!isNaN(r0) && !isNaN(r1) && r0 + r1 === 10) return true;
     }
-
-    if (pile.cards.length >= 1 && pile.cards.at(0).rank == "10") {
-      return true;
-    }
-
-    if (pile.cards.length >= 2 &&pile.cards.at(0).rank == pile.cards.at(1).rank) {
-      return true;
-    }
-
-    if (pile.cards.length >= 3 &&pile.cards.at(0).rank == pile.cards.at(2).rank) {
-      return true;
-    }
-
-    if (pile.cards.length >= 2) {
-      const pileZeroRank = Number(pile.cards.at(0).rank);
-      const pileOneRank = Number(pile.cards.at(1).rank);
-
-      if (!isNaN(pileZeroRank) && !isNaN(pileOneRank) && pileZeroRank + pileOneRank == 10) {
-        return true;
-      }
-    }
-
     return false;
   }
-
-  public canSend() : boolean {
-    return this.batailleCorse.state?.players.at(this.playerIndex).availableActions.includes("SEND");
-  }
-
-  private getRandomInt(max: number) {
-    return Math.floor(Math.random() * max);
-  }
-
-  public get reaction() {
-    const variation = this.getRandomInt(200) - 100;
-    // const variation = 0;
-
-    return this.reactionTime + variation;
-  }
-
-  public play() {
-
-    if (this.timeoutId != undefined) {
-      clearTimeout(this.timeoutId);
-      console.log("clearTimeout", this.timeoutId);
-    }
-
-    this.timeoutId = setTimeout(() => {
-      console.log("executes", this.timeoutId);
-      if (this.canSlap()) {
-        this.batailleCorse.slap(this.playerIndex);
-      }
-      else if (this.canSend()) {
-        this.batailleCorse.send(this.playerIndex);
-      }
-    }, this.reactionTime);
-
-    console.log("setTimeout", this.timeoutId);
-  }
-    
 }
