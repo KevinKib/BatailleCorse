@@ -8,15 +8,13 @@ cleanup() {
 trap cleanup SIGTERM SIGINT
 
 echo "[dev] Starting Spring Boot..."
-mvn spring-boot:run &
+mvn spring-boot:run -Dspring-boot.run.jvmArguments="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005" &
 MVN_PID=$!
 
 echo "[dev] Watching src/ for changes..."
 while true; do
-  inotifywait -r -e close_write,moved_to,create,delete src/ 2>/dev/null || true
+  inotifywait -r -e close_write,moved_to,create,delete src/ 2>/dev/null || sleep 2
   echo "[dev] Change detected — compiling..."
   sleep 0.5
   mvn compile -q || true
 done
-
-wait $MVN_PID

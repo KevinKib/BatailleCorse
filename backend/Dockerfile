@@ -9,6 +9,19 @@ RUN --mount=type=secret,id=maven_settings \
     mvn clean package -DskipTests \
     -s /run/secrets/maven_settings
 
+# ---- Dev stage ----
+FROM maven:3.9-eclipse-temurin-22 AS dev
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y inotify-tools && rm -rf /var/lib/apt/lists/*
+
+COPY entrypoint-dev.sh /entrypoint-dev.sh
+# Strip Windows CRLF line endings in case the file was saved on Windows
+RUN sed -i 's/\r$//' /entrypoint-dev.sh && chmod +x /entrypoint-dev.sh
+
+ENTRYPOINT ["/entrypoint-dev.sh"]
+
 # ---- Run stage ----
 FROM eclipse-temurin:22-jdk
 

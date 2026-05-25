@@ -1,9 +1,15 @@
 package org.kevinkib.bataillecorse.websocket.presentation.v1;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.kevinkib.bataillecorse.core.domain.BatailleCorse;
 import org.kevinkib.bataillecorse.core.domain.BatailleCorseId;
 import org.kevinkib.bataillecorse.core.domain.Player;
+import org.kevinkib.bataillecorse.core.domain.PlayerId;
+import org.kevinkib.bataillecorse.sessionmanagement.application.InvalidTokenException;
 import org.kevinkib.bataillecorse.sessionmanagement.application.SessionService;
+import org.kevinkib.bataillecorse.sessionmanagement.domain.SessionToken;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.api.ErrorResponse;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.api.GameActionPayload;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.api.Response;
@@ -33,9 +39,15 @@ public class BatailleCorseWebSocketController {
     public Response createGame() {
         BatailleCorse batailleCorse = sessionService.createGame(NB_PLAYERS);
 
+        Map<Integer, String> tokens = new HashMap<>();
+        for (int i = 0; i < NB_PLAYERS; i++) {
+            SessionToken token = sessionService.loadTokenByPlayerId(batailleCorse.getId(), new PlayerId(i));
+            tokens.put(i, token.uuid().toString());
+        }
+
         return new SuccessResponse(
                 EventType.CREATE,
-                new CreateEventData(new BatailleCorseIdDto(batailleCorse.getId())),
+                new CreateEventData(new BatailleCorseIdDto(batailleCorse.getId()), tokens),
                 GAME_CREATED_MESSAGE,
                 new BatailleCorseDto(batailleCorse));
     }
@@ -44,24 +56,27 @@ public class BatailleCorseWebSocketController {
     public void send(GameActionPayload payload) {
         EventType eventType = EventType.SEND;
 
-        BatailleCorse batailleCorse = sessionService.getGame(
-                new BatailleCorseId(payload.gameId()));
-        BatailleCorseDto batailleCorseDto = new BatailleCorseDto(batailleCorse);
+        BatailleCorseId gameId = new BatailleCorseId(payload.gameId());
+        BatailleCorse batailleCorse = sessionService.getGame(gameId);
 
         Response response;
-
         try {
-            Player player = batailleCorse.getPlayerByIndex(payload.playerIndex());
+            PlayerId playerId = sessionService
+                    .findPlayerIdByToken(gameId, new SessionToken(payload.token()))
+                    .orElseThrow(InvalidTokenException::new);
+            Player player = batailleCorse.getPlayerByIndex(playerId.id());
 
             CardDto cardDto = new CardDto(player.getCardOnTop());
             batailleCorse.send(player);
 
-            String message = "Player "+player.id()+" sent "+cardDto.getName()+".";
+            BatailleCorseDto batailleCorseDto = new BatailleCorseDto(batailleCorse);
+            String message = "Player " + player.id() + " sent " + cardDto.getName() + ".";
             SendEventData eventData = new SendEventData(new PlayerIdDto(player));
             response = new SuccessResponse(eventType, eventData, message, batailleCorseDto);
 
         } catch (Exception e) {
             System.err.println(e.getMessage());
+            BatailleCorseDto batailleCorseDto = new BatailleCorseDto(batailleCorse);
             response = new ErrorResponse(eventType, e.getMessage(), batailleCorseDto);
         }
 
@@ -72,28 +87,28 @@ public class BatailleCorseWebSocketController {
     public void slap(GameActionPayload payload) {
         EventType eventType = EventType.SLAP;
 
-        BatailleCorse batailleCorse = sessionService.getGame(
-                new BatailleCorseId(payload.gameId()));
-        BatailleCorseDto batailleCorseDto = new BatailleCorseDto(batailleCorse);
+        BatailleCorseId gameId = new BatailleCorseId(payload.gameId());
+        BatailleCorse batailleCorse = sessionService.getGame(gameId);
 
         Response response;
         try {
-            Player player = batailleCorse.getPlayerByIndex(payload.playerIndex());
+            PlayerId playerId = sessionService
+                    .findPlayerIdByToken(gameId, new SessionToken(payload.token()))
+                    .orElseThrow(InvalidTokenException::new);
+            Player player = batailleCorse.getPlayerByIndex(playerId.id());
+
             boolean successfulSlap = batailleCorse.slap(player);
-            String message;
+            String message = successfulSlap
+                    ? "Player " + player.id() + " slapped and won."
+                    : "Player " + player.id() + " slapped, lost, and received a penality.";
 
-            if (successfulSlap) {
-                message = "Player "+player.id()+" slapped and won.";
-            } else {
-                message = "Player "+player.id()+" slapped, lost, and received a penality.";
-            }
-
+            BatailleCorseDto batailleCorseDto = new BatailleCorseDto(batailleCorse);
             SlapEventData eventData = new SlapEventData(successfulSlap, new PlayerIdDto(player));
-
             response = new SuccessResponse(eventType, eventData, message, batailleCorseDto);
 
         } catch (Exception e) {
             System.err.println(e.getMessage());
+            BatailleCorseDto batailleCorseDto = new BatailleCorseDto(batailleCorse);
             response = new ErrorResponse(eventType, e.getMessage(), batailleCorseDto);
         }
 
@@ -104,23 +119,26 @@ public class BatailleCorseWebSocketController {
     public void grab(GameActionPayload payload) {
         EventType eventType = EventType.GRAB;
 
-        BatailleCorse batailleCorse = sessionService.getGame(
-                new BatailleCorseId(payload.gameId()));
-        BatailleCorseDto batailleCorseDto = new BatailleCorseDto(batailleCorse);
+        BatailleCorseId gameId = new BatailleCorseId(payload.gameId());
+        BatailleCorse batailleCorse = sessionService.getGame(gameId);
 
         Response response;
         try {
-            Player player = batailleCorse.getPlayerByIndex(payload.playerIndex());
+            PlayerId playerId = sessionService
+                    .findPlayerIdByToken(gameId, new SessionToken(payload.token()))
+                    .orElseThrow(InvalidTokenException::new);
+            Player player = batailleCorse.getPlayerByIndex(playerId.id());
 
             batailleCorse.grab(player);
 
-            String message = "Player "+player.id()+" grabbed the pile. ";
+            BatailleCorseDto batailleCorseDto = new BatailleCorseDto(batailleCorse);
+            String message = "Player " + player.id() + " grabbed the pile. ";
             GrabEventData eventData = new GrabEventData(new PlayerIdDto(player));
-
             response = new SuccessResponse(eventType, eventData, message, batailleCorseDto);
 
         } catch (Exception e) {
             System.err.println(e.getMessage());
+            BatailleCorseDto batailleCorseDto = new BatailleCorseDto(batailleCorse);
             response = new ErrorResponse(eventType, e.getMessage(), batailleCorseDto);
         }
 

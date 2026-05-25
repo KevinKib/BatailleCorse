@@ -13,7 +13,7 @@
             rank="10"
             suit="spade"
           />
-          <div class="card_counter">
+          <div class="card_counter" data-cy="opponent-card-count">
             <CardCounter :count="batailleCorse?.players.at(1)?.nbCards"/>
           </div>
         </div>
@@ -32,7 +32,7 @@
             :suit="isPileAnimating ? frozenPileCard.suit : batailleCorse?.pile.cards.at(0)?.suit"
             :rank="isPileAnimating ? frozenPileCard.rank : batailleCorse?.pile.cards.at(0)?.rank"
           />
-          <div class="card_counter">
+          <div class="card_counter" data-cy="pile-card-count">
             <CardCounter :count="batailleCorse?.pile.cards.length"/>
           </div>
         </div>
@@ -56,7 +56,7 @@
             rank="10"
             suit="spade"
           />
-          <div class="card_counter">
+          <div class="card_counter" data-cy="player-card-count">
             <CardCounter :count="batailleCorse?.players.at(0)?.nbCards"/>
           </div>
         </div>
@@ -121,6 +121,9 @@ import { useCardAnimation } from '../../composables/useCardAnimation';
 import { useHotkeys } from '../../composables/useHotkeys';
 import { Action } from '../../model/Action';
 import { computed, nextTick, onBeforeUnmount, onMounted, useTemplateRef, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import webSocketService from '../../service/WebSocketService';
+import type BatailleCorse from '../../model/BatailleCorse';
 
 const batailleCorseStore = useBatailleCorseStore();
 const { state: batailleCorse, lastSend, lastGrab, lastSlap, lastSuccessfulSlap, lastErroneousSlap } = storeToRefs(batailleCorseStore);
@@ -218,6 +221,8 @@ function slap(playerIndex: number) {
 }
 
 const settingsStore = useSettingsStore();
+const route = useRoute();
+const router = useRouter();
 
 const difficultyLabel = computed(() => DIFFICULTY[settingsStore.difficulty]?.name);
 
@@ -228,12 +233,31 @@ useHotkeys(
   () => [settingsStore.slapKey],
 );
 
-onMounted(() => {
+onMounted(async () => {
+  const gameId = route.params.id as string;
+
+  const stored = localStorage.getItem(`tokens:${gameId}`);
+  if (!stored) {
+    router.replace('/');
+    return;
+  }
+
+  const response = await fetch(`/api/game/${gameId}`);
+  if (!response.ok) {
+    router.replace('/');
+    return;
+  }
+
+  const gameState = await response.json() as BatailleCorse;
+  batailleCorseStore.hydrate(gameId, gameState);
+  batailleCorseStore.restoreTokens(JSON.parse(stored));
+  webSocketService.subscribeToGame(gameId);
 });
 
 onBeforeUnmount(() => {
   animation.cancelAllAnimations();
   batailleCorseStore.cancelAutoGrab();
+  webSocketService.unsubscribeFromGame();
 });
 </script>
 

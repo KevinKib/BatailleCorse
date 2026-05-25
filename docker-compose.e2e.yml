@@ -26,6 +26,8 @@ services:
       - ./backend:/app
       - backend_m2:/root/.m2/repository
       - ./deploy/docker/settings.xml:/root/.m2/settings.xml:ro
+    environment:
+      - SPRING_PROFILES_ACTIVE=test
 
 volumes:
   backend_m2:

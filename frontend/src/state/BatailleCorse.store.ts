@@ -44,6 +44,7 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
   const lastErroneousSlap = ref<{ playerIndex: number; seq: number } | null>(null);
 
   const gameId = ref<string | null>(null);
+  const playerTokens = ref<Record<number, string>>({});
 
   const settingsStore = useSettingsStore();
 
@@ -55,31 +56,37 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
     webSocketService.publish('/app/create', playerName ? JSON.stringify({ playerName }) : undefined);
   }
 
+  function hydrate(id: string, gameState: BatailleCorse) {
+    gameId.value = id;
+    state.value = gameState;
+  }
+
+  function restoreTokens(tokens: Record<number, string>) {
+    playerTokens.value = tokens;
+  }
+
   function send(playerIndex: number) {
     const topCard = state.value?.pile.cards.at(0);
     lastSend.value = { playerIndex, seq: ++sendSeq, topCard };
     webSocketService.publish(`/app/send`, JSON.stringify({
-        gameId: gameId.value,
-        playerIndex: playerIndex,
-      })
-    );
+      gameId: gameId.value,
+      token: playerTokens.value[playerIndex],
+    }));
   }
 
   function slap(playerIndex: number) {
     lastSlap.value = { seq: ++slapSeq };
     webSocketService.publish(`/app/slap`, JSON.stringify({
-          gameId: gameId.value,
-          playerIndex: playerIndex,
-        })
-    );
+      gameId: gameId.value,
+      token: playerTokens.value[playerIndex],
+    }));
   }
 
   function grab(playerIndex: number) {
     webSocketService.publish(`/app/grab`, JSON.stringify({
-          gameId: gameId.value,
-          playerIndex: playerIndex,
-        })
-    );
+      gameId: gameId.value,
+      token: playerTokens.value[playerIndex],
+    }));
   }
 
   function onResponse(response: Response) {
@@ -103,6 +110,9 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
     if (response.eventType === 'CREATE') {
       const createData = response.eventData as CreateEventData;
       gameId.value = createData.game.id;
+      playerTokens.value = createData.tokens;
+      localStorage.setItem(`tokens:${gameId.value}`, JSON.stringify(createData.tokens));
+      webSocketService.subscribeToGame(gameId.value);
     }
 
     if (response.eventType === 'GRAB') {
@@ -180,6 +190,8 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
     lastSuccessfulSlap,
     lastErroneousSlap,
     create,
+    hydrate,
+    restoreTokens,
     send,
     slap,
     grab,

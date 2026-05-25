@@ -9,6 +9,8 @@ import org.kevinkib.bataillecorse.sessionmanagement.domain.SessionToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 
+import java.util.Optional;
+
 public class SessionService {
 
     private final SessionRepository repository;
@@ -38,5 +40,9 @@ public class SessionService {
 
     public SessionToken loadTokenByPlayerId(BatailleCorseId batailleCorseId, PlayerId playerId) {
         return repository.loadSessionToken(batailleCorseId, playerId);
+    }
+
+    public Optional<PlayerId> findPlayerIdByToken(BatailleCorseId gameId, SessionToken token) {
+        return repository.loadSessionGame(gameId).findPlayerByToken(token);
     }
 }

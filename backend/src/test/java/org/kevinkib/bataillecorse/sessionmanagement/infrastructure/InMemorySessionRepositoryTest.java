@@ -15,6 +15,22 @@ import static org.kevinkib.bataillecorse.core.domain.PlayerFixtures.createNumber
 class InMemorySessionRepositoryTest {
 
     @Nested
+    class LoadSessionGameTest {
+
+        @Test
+        public void givenExistingSessionGame_whenLoadingSessionGame_thenReturnSessionGame() {
+            var repository = new InMemorySessionRepository();
+            var game = aBatailleCorse().withId(BatailleCorseId.generate()).withNbPlayers(2).buildAndInitialize();
+            var players = createNumberOfPlayers(2);
+            var sessionGame = SessionGame.create(game.getId(), players);
+
+            repository.save(game, sessionGame);
+
+            assertThat(repository.loadSessionGame(game.getId()), is(sessionGame));
+        }
+    }
+
+    @Nested
     class LoadSessionTokenTest {
 
         @Test
