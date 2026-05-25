@@ -13,7 +13,7 @@
             rank="10"
             suit="spade"
           />
-          <div class="card_counter">
+          <div class="card_counter" data-cy="opponent-card-count">
             <CardCounter :count="batailleCorse?.players.at(1)?.nbCards"/>
           </div>
         </div>
@@ -32,7 +32,7 @@
             :suit="isPileAnimating ? frozenPileCard.suit : batailleCorse?.pile.cards.at(0)?.suit"
             :rank="isPileAnimating ? frozenPileCard.rank : batailleCorse?.pile.cards.at(0)?.rank"
           />
-          <div class="card_counter">
+          <div class="card_counter" data-cy="pile-card-count">
             <CardCounter :count="batailleCorse?.pile.cards.length"/>
           </div>
         </div>
@@ -56,7 +56,7 @@
             rank="10"
             suit="spade"
           />
-          <div class="card_counter">
+          <div class="card_counter" data-cy="player-card-count">
             <CardCounter :count="batailleCorse?.players.at(0)?.nbCards"/>
           </div>
         </div>
