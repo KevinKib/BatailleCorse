@@ -29,6 +29,7 @@ export default class GameSession {
   private readonly AUTO_GRAB_DELAY = 1500;
   private readonly eventQueue: Response[] = [];
   private isProcessingQueue = false;
+  private drainPromise: Promise<void> = Promise.resolve();
 
   private sendSeq = 0;
   private grabSeq = 0;
@@ -88,8 +89,8 @@ export default class GameSession {
   /** Starts queue processing. Returns a promise that resolves when the queue is drained. */
   onResponse(response: Response): Promise<void> {
     this.eventQueue.push(response);
-    if (!this.isProcessingQueue) return this.drainQueue();
-    return Promise.resolve();
+    if (!this.isProcessingQueue) this.drainPromise = this.drainQueue();
+    return this.drainPromise;
   }
 
   /** Cancels the auto-grab timer and any pending AI action. */
