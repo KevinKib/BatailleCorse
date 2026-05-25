@@ -1,13 +1,31 @@
-import Card from "./Card";
 import Pile from "./Pile";
 import Player from "./Player";
-import PlayerId from "./PlayerId";
+import type PlayerId from "./PlayerId";
 
 export default class BatailleCorse {
+  constructor(
+    public readonly currentPlayer: Player,
+    public readonly pile: Pile,
+    public readonly players: Player[],
+    public readonly winner: PlayerId | null,
+  ) {}
 
-  currentPlayer: Player;
-  pile: Pile;
-  players: Player[];
-  winner: PlayerId | null;
-
+  static fromJSON(data: {
+    currentPlayer: { id: string; nbCards: number; availableActions: string[] };
+    pile: {
+      cards: { rank: string; suit: string; name: string }[];
+      grabbable: boolean;
+      nbCardsSinceLastHonourCard: number;
+      playerThatAddedLastHonourCard: { id: string };
+    };
+    players: { id: string; nbCards: number; availableActions: string[] }[];
+    winner: { id: string } | null;
+  }): BatailleCorse {
+    return new BatailleCorse(
+      Player.fromJSON(data.currentPlayer),
+      Pile.fromJSON(data.pile),
+      data.players.map(p => Player.fromJSON(p)),
+      data.winner ?? null,
+    );
+  }
 }
