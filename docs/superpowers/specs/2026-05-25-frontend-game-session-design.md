@@ -15,6 +15,10 @@ The current `BatailleCorse.store.ts` conflates four responsibilities:
 
 Business logic is untestable without mounting Vue components or bootstrapping Pinia. The `AI` class contains slap-worthiness rules (game domain knowledge) and has a circular dependency with the store.
 
+## Server authority
+
+The server is the sole authority on game validity. No client-side logic constitutes a security boundary or replaces server validation. Every action the client sends (send, slap, grab) is validated server-side regardless of what the client computed locally. Client-side checks are UI hints and AI heuristics only.
+
 ## Architecture
 
 Three layers after the refactor:
@@ -60,6 +64,8 @@ class Pile {
 
 ### `Player` (interface → class)
 
+`availableActions` is server-provided state — the server decides what each player may do. The client reads it only as a UI hint (disabling buttons) and to guide the AI. The server validates every action independently.
+
 ```typescript
 class Player {
   constructor(
@@ -68,8 +74,9 @@ class Player {
     public readonly availableActions: string[],
   ) {}
 
-  canSend(): boolean {
-    return this.availableActions.includes('SEND');
+  // Reads server-provided state — not client-side authorization.
+  hasAvailableAction(action: string): boolean {
+    return this.availableActions.includes(action);
   }
 
   static fromJSON(data: unknown): Player { ... }
@@ -108,7 +115,7 @@ The `Response` interface keeps `state: BatailleCorse` typed as before, but every
 
 `AI` loses its `useBatailleCorseStore()` import. State and actions are injected at call time via `play()`.
 
-The slap-condition logic (rank 10, pairs, sandwiches, sum-to-10) stays in `AI` as a private method — it is the only consumer of this logic on the frontend (the human player's slap validity is entirely server-validated). These conditions are game-variant-specific and will need to become injectable or configurable when game variants are introduced; keeping them in `AI` rather than `Pile` leaves that door open.
+**Slap heuristic:** The AI has a private heuristic for deciding when to attempt a slap. This is an AI decision aid — a best-effort approximation — not a validity check. The server validates every slap attempt independently and will penalise the AI for erroneous slaps. The exact conditions are an internal implementation detail of `AI` and are intentionally not prescribed in this spec; they must not be treated as authoritative game rules and will need to become game-variant-configurable in the future.
 
 ```typescript
 class AI {
@@ -123,9 +130,9 @@ class AI {
     clearTimeout(this.timeoutId);
     const delay = this.reactionTime + Math.floor(Math.random() * 200) - 100;
     this.timeoutId = setTimeout(() => {
-      if (this.isSlapWorthy(state.pile)) {
-        actions.slap();
-      } else if (state.players[this.playerIndex]?.canSend()) {
+      if (this.shouldAttemptSlap(state.pile)) {
+        actions.slap();  // server validates; AI accepts any resulting penalty
+      } else if (state.players[this.playerIndex]?.hasAvailableAction('SEND')) {
         actions.send();
       }
     }, delay);
@@ -136,18 +143,9 @@ class AI {
     this.timeoutId = undefined;
   }
 
-  private isSlapWorthy(pile: Pile): boolean {
-    // rank 10, pairs, sandwiches, sum-to-10 — game-variant-specific, not pile knowledge
-    if (pile.cards.length >= 1 && pile.cards[0].rank === '10') return true;
-    if (pile.cards.length >= 2 && pile.cards[0].rank === pile.cards[1].rank) return true;
-    if (pile.cards.length >= 3 && pile.cards[0].rank === pile.cards[2].rank) return true;
-    if (pile.cards.length >= 2) {
-      const r0 = Number(pile.cards[0].rank);
-      const r1 = Number(pile.cards[1].rank);
-      if (!isNaN(r0) && !isNaN(r1) && r0 + r1 === 10) return true;
-    }
-    return false;
-  }
+  // Internal heuristic — not authoritative game rules.
+  // Server validates all slap attempts independently.
+  private shouldAttemptSlap(pile: Pile): boolean { ... }
 }
 ```
 
@@ -298,7 +296,7 @@ Workflow tests on `GameSession` verify cross-cutting behaviour that is currently
 - Auto-grab cancelled when next event arrives before timer fires
 - Animation catchup: events beyond threshold skip `awaitAnimation`
 
-Unit tests on `AI.isSlapWorthy()` (via `AI.play()`) verify each slap condition independently with real `Pile` objects — no mocks needed since `Pile` is a plain class constructed from data.
+Unit tests on `AI.play()` verify that the AI attempts a slap when its internal heuristic fires and sends when `hasAvailableAction('SEND')` is true — using real `Pile` and `Player` objects built from fixture data.
 
 ### Test shape
 
@@ -331,8 +329,8 @@ No `vi.fn()` explosion. The WebSocket port is a plain spy object. Domain objects
 
 | File | Change |
 |------|--------|
-| `frontend/src/model/Pile.ts` | interface → class, add `isSlapWorthy()`, `getAutoGrabPlayer()`, `fromJSON()` |
-| `frontend/src/model/Player.ts` | interface → class, add `canSend()`, `fromJSON()` |
+| `frontend/src/model/Pile.ts` | interface → class, add `getAutoGrabPlayer()`, `fromJSON()` |
+| `frontend/src/model/Player.ts` | interface → class, add `hasAvailableAction()`, `fromJSON()` |
 | `frontend/src/model/BatailleCorse.ts` | add constructor, `fromJSON()` |
 | `frontend/src/model/ai/AI.ts` | remove store import, inject state+actions at `play()` call time, add `cancel()` |
 | `frontend/src/application/GameSession.ts` | new file — application layer |
