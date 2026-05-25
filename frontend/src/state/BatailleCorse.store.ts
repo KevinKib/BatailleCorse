@@ -4,189 +4,52 @@ import { ref } from "vue";
 import webSocketService from '../service/WebSocketService';
 import BatailleCorse from "../model/BatailleCorse";
 import type Card from "../model/Card";
-import Response from "../model/Response";
+import type Response from "../model/Response";
 import AI from "../model/ai/AI";
-import SlapEventData from '../model/event/SlapEventData';
-import GrabEventData from '../model/event/GrabEventData';
-import CreateEventData from "../model/event/CreateEventData";
 import { useSettingsStore } from './Settings.store';
 import { DIFFICULTY } from '../model/Difficulty';
+import GameSession from '../application/GameSession';
+import type { GameEvent } from '../application/GameEvent';
 
 export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
 
-  const autoGrabEnabled = true;
   const state = ref<BatailleCorse>();
-
-  // Guards against processing CREATE events from other clients.
-  // The backend broadcasts CREATE to /topic/game (all subscribers). Only the client
-  // that called create() should react to its own CREATE event.
-  let pendingCreate = false;
-
-  let autoGrabTimeoutId: ReturnType<typeof setTimeout> | null = null;
-
-  // Server events are buffered so that each GRAB/SLAP animation plays to completion
-  // before the next event is applied. SEND and CREATE events are non-blocking.
-  const CATCHUP_THRESHOLD = 3; // skip animations when this many events are still waiting
-  const eventQueue: Response[] = [];
-  let isProcessingQueue = false;
-  let animationResolve: (() => void) | null = null;
-
-  let sendSeq = 0;
-  // topCard is snapshotted at call time so the watcher doesn't need flush:'sync'
+  const gameId = ref<string | null>(null);
   const lastSend = ref<{ playerIndex: number; seq: number; topCard: Card | undefined } | null>(null);
-
-  let grabSeq = 0;
-  // pileCards snapshotted before state update so the watcher always gets the right cards
   const lastGrab = ref<{ winnerPlayerIndex: number; seq: number; pileCards: Card[] } | null>(null);
-
-  let slapSeq = 0;
   const lastSlap = ref<{ seq: number } | null>(null);
-
-  let successfulSlapSeq = 0;
   const lastSuccessfulSlap = ref<{ winnerPlayerIndex: number; seq: number; pileCards: Card[] } | null>(null);
-
-  let erroneousSlapSeq = 0;
   const lastErroneousSlap = ref<{ playerIndex: number; seq: number } | null>(null);
 
-  const gameId = ref<string | null>(null);
-  const playerTokens = ref<Record<number, string>>({});
+  let animationResolve: (() => void) | null = null;
+  // slapSeq lives in the store because the slap flash animation fires optimistically
+  // at the moment the user presses the button, before the server responds.
+  let slapSeq = 0;
 
   const settingsStore = useSettingsStore();
 
-  // const player0Ai = new AI(0, 500);
-  let player1Ai = new AI(1, DIFFICULTY[settingsStore.difficulty].reactionTime);
+  const session = new GameSession(
+    webSocketService,
+    {
+      onEvent(event: GameEvent) {
+        switch (event.type) {
+          case 'state-update':    state.value = event.state; break;
+          case 'game-id-change':  gameId.value = event.gameId; break;
+          case 'send':            lastSend.value = event; break;
+          case 'grab':            lastGrab.value = event; break;
+          case 'slap':            lastSlap.value = { seq: ++slapSeq }; break;
+          case 'successful-slap': lastSuccessfulSlap.value = event; break;
+          case 'erroneous-slap':  lastErroneousSlap.value = event; break;
+        }
+      },
+      awaitAnimation: () => new Promise<void>(resolve => { animationResolve = resolve; }),
+    },
+    () => new AI(1, DIFFICULTY[settingsStore.difficulty].reactionTime),
+  );
 
-  function create(playerName?: string) {
-    pendingCreate = true;
-    player1Ai = new AI(1, DIFFICULTY[settingsStore.difficulty].reactionTime);
-    webSocketService.publish('/app/create', playerName ? JSON.stringify({ playerName }) : undefined);
-  }
-
-  function hydrate(id: string, gameState: BatailleCorse) {
-    gameId.value = id;
-    state.value = gameState;
-  }
-
-  function restoreTokens(tokens: Record<number, string>) {
-    playerTokens.value = tokens;
-  }
-
-  function send(playerIndex: number) {
-    const topCard = state.value?.pile.cards.at(0);
-    lastSend.value = { playerIndex, seq: ++sendSeq, topCard };
-    webSocketService.publish(`/app/send`, JSON.stringify({
-      gameId: gameId.value,
-      token: playerTokens.value[playerIndex],
-    }));
-  }
-
-  function slap(playerIndex: number) {
-    lastSlap.value = { seq: ++slapSeq };
-    webSocketService.publish(`/app/slap`, JSON.stringify({
-      gameId: gameId.value,
-      token: playerTokens.value[playerIndex],
-    }));
-  }
-
-  function grab(playerIndex: number) {
-    webSocketService.publish(`/app/grab`, JSON.stringify({
-      gameId: gameId.value,
-      token: playerTokens.value[playerIndex],
-    }));
-  }
-
-  function onResponse(response: Response) {
-    eventQueue.push(response);
-    if (!isProcessingQueue) drainQueue();
-  }
-
-  async function drainQueue() {
-    isProcessingQueue = true;
-    while (eventQueue.length > 0) {
-      const response = eventQueue.shift()!;
-      await processEvent(response);
-    }
-    isProcessingQueue = false;
-  }
-
-  async function processEvent(response: Response) {
-    const skipAnimation = eventQueue.length >= CATCHUP_THRESHOLD;
-    let needsAnimationWait = false;
-
-    if (response.eventType === 'CREATE') {
-      if (!pendingCreate) return;
-      pendingCreate = false;
-      const createData = response.eventData as CreateEventData;
-      gameId.value = createData.game.id;
-      playerTokens.value = createData.tokens;
-      localStorage.setItem(`tokens:${gameId.value}`, JSON.stringify(createData.tokens));
-      webSocketService.subscribeToGame(gameId.value);
-    }
-
-    if (response.eventType === 'GRAB') {
-      const grabData = response.eventData as GrabEventData;
-      const winnerPlayerIndex = Number(grabData.player?.id);
-      if (!isNaN(winnerPlayerIndex)) {
-        const pileCards = [...(state.value?.pile.cards ?? [])];
-        lastGrab.value = { winnerPlayerIndex, seq: ++grabSeq, pileCards };
-        needsAnimationWait = true;
-      }
-    }
-
-    if (response.eventType === 'SLAP') {
-      const slapData = response.eventData as SlapEventData;
-      const slapperIndex = Number(slapData.player?.id);
-      if (slapData.isSuccessful && !isNaN(slapperIndex)) {
-        const pileCards = [...(state.value?.pile.cards ?? [])];
-        lastSuccessfulSlap.value = { winnerPlayerIndex: slapperIndex, seq: ++successfulSlapSeq, pileCards };
-        needsAnimationWait = true;
-      } else if (!slapData.isSuccessful && !isNaN(slapperIndex)) {
-        lastErroneousSlap.value = { playerIndex: slapperIndex, seq: ++erroneousSlapSeq };
-        needsAnimationWait = true;
-      }
-    }
-
-    state.value = response.state;
-
-    if (autoGrabTimeoutId !== null) {
-      clearTimeout(autoGrabTimeoutId);
-      autoGrabTimeoutId = null;
-    }
-    if (autoGrabEnabled && state.value.pile.grabbable) {
-      autoGrabTimeoutId = setTimeout(() => {
-        autoGrabTimeoutId = null;
-        autoGrab();
-      }, 1500);
-    }
-
-    // player0Ai.play();
-    player1Ai.play();
-
-    if (needsAnimationWait && !skipAnimation) {
-      await new Promise<void>(resolve => { animationResolve = resolve; });
-    }
-  }
-
-  /** Called by the component once a blocking animation (GRAB/SLAP) finishes. */
   function notifyAnimationComplete() {
     animationResolve?.();
     animationResolve = null;
-  }
-
-  function cancelAutoGrab() {
-    if (autoGrabTimeoutId !== null) {
-      clearTimeout(autoGrabTimeoutId);
-      autoGrabTimeoutId = null;
-    }
-  }
-
-  function autoGrab() {
-    if (state.value.pile.grabbable) {
-      const playerIndex = Number(state.value.pile.playerThatAddedLastHonourCard.id);
-      if (!isNaN(playerIndex)) {
-        grab((playerIndex));
-      }
-    }
   }
 
   return {
@@ -197,15 +60,15 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
     lastSlap,
     lastSuccessfulSlap,
     lastErroneousSlap,
-    create,
-    hydrate,
-    restoreTokens,
-    send,
-    slap,
-    grab,
-    onResponse,
+    create:               (name?: string) => session.create(name),
+    hydrate:              (id: string, s: BatailleCorse) => session.hydrate(id, s),
+    restoreTokens:        (tokens: Record<number, string>) => session.restoreTokens(tokens),
+    send:                 (playerIndex: number) => session.send(playerIndex),
+    slap:                 (playerIndex: number) => session.slap(playerIndex),
+    grab:                 (playerIndex: number) => session.grab(playerIndex),
+    onResponse:           (r: Response) => { session.onResponse(r); },
     notifyAnimationComplete,
-    cancelAutoGrab,
-  }
+    cancelAutoGrab:       () => session.cancelAll(),
+  };
 
 });
