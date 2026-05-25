@@ -17,6 +17,11 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
   const autoGrabEnabled = true;
   const state = ref<BatailleCorse>();
 
+  // Guards against processing CREATE events from other clients.
+  // The backend broadcasts CREATE to /topic/game (all subscribers). Only the client
+  // that called create() should react to its own CREATE event.
+  let pendingCreate = false;
+
   let autoGrabTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
   // Server events are buffered so that each GRAB/SLAP animation plays to completion
@@ -52,6 +57,7 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
   let player1Ai = new AI(1, DIFFICULTY[settingsStore.difficulty].reactionTime);
 
   function create(playerName?: string) {
+    pendingCreate = true;
     player1Ai = new AI(1, DIFFICULTY[settingsStore.difficulty].reactionTime);
     webSocketService.publish('/app/create', playerName ? JSON.stringify({ playerName }) : undefined);
   }
@@ -108,6 +114,8 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
     let needsAnimationWait = false;
 
     if (response.eventType === 'CREATE') {
+      if (!pendingCreate) return;
+      pendingCreate = false;
       const createData = response.eventData as CreateEventData;
       gameId.value = createData.game.id;
       playerTokens.value = createData.tokens;
