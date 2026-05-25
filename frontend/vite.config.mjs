@@ -5,6 +5,9 @@ import svgLoader from 'vite-svg-loader'
 
 export default defineConfig({
   plugins: [vue(), tailwindcss(), svgLoader()],
+  test: {
+    environment: 'happy-dom',
+  },
   server: {
     host: true,
     port: 5173,
@@ -25,9 +28,4 @@ export default defineConfig({
     }
   },
   base: './',
-  // resolve: {
-  //   alias: {
-  //     src: "/src"
-  //   },
-  // },
 })
