@@ -8,7 +8,6 @@ import {
   buildSlapResponse,
   buildGame,
   buildPile,
-  buildPlayer,
   buildCard,
   buildResponse,
 } from '../model/fixtures';
