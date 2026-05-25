@@ -41,9 +41,10 @@ public class InMemorySessionRepository implements SessionRepository {
                 .orElseThrow(IllegalArgumentException::new);
     }
 
-    private SessionGame loadSessionGame(BatailleCorseId batailleCorseId) {
+    @Override
+    public SessionGame loadSessionGame(BatailleCorseId id) {
         return sessionGames.stream()
-                .filter(session -> session.id().equals(batailleCorseId))
+                .filter(session -> session.id().equals(id))
                 .findFirst()
                 .orElseThrow(IllegalArgumentException::new);
     }

@@ -62,4 +62,16 @@ class GameRestControllerIT {
         }
         assertThat(body.getPile().getCards(), empty());
     }
+
+    @Test
+    void givenCreate_whenCreateGame_thenResponseIncludesTokensForBothPlayers() {
+        Response createResponse = wsController.createGame();
+        CreateEventData createData = (CreateEventData) createResponse.getEventData();
+
+        assertThat(createData.tokens(), hasKey(0));
+        assertThat(createData.tokens(), hasKey(1));
+        assertThat(createData.tokens().get(0), notNullValue());
+        assertThat(createData.tokens().get(1), notNullValue());
+        assertThat(createData.tokens().get(0), not(equalTo(createData.tokens().get(1))));
+    }
 }
