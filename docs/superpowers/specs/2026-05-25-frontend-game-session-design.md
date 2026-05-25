@@ -35,7 +35,9 @@ Vue components (`GameScreen.vue`, `StartGame.vue`) keep their existing store API
 
 ### `Pile` (interface → class)
 
-`Pile` gains two behaviour methods. The slap-worthiness logic currently in `AI.canSlap()` moves here — the pile is the right owner of this game rule.
+`Pile` gains one behaviour method: `getAutoGrabPlayer()`. This reads pure pile state (`grabbable`, `playerThatAddedLastHonourCard`) that the pile already owns, so it belongs here.
+
+`isSlapWorthy()` is intentionally **not** added to `Pile`. Slap conditions are game-variant rules, not pile knowledge — the pile is state, not a rule evaluator. The conditions will be game-dependent in future variants and must remain separate from the pile data structure. See the AI section for where they live now.
 
 ```typescript
 class Pile {
@@ -45,18 +47,6 @@ class Pile {
     public readonly nbCardsSinceLastHonourCard: number,
     public readonly playerThatAddedLastHonourCard: PlayerId,
   ) {}
-
-  isSlapWorthy(): boolean {
-    if (this.cards.length >= 1 && this.cards[0].rank === '10') return true;
-    if (this.cards.length >= 2 && this.cards[0].rank === this.cards[1].rank) return true;
-    if (this.cards.length >= 3 && this.cards[0].rank === this.cards[2].rank) return true;
-    if (this.cards.length >= 2) {
-      const r0 = Number(this.cards[0].rank);
-      const r1 = Number(this.cards[1].rank);
-      if (!isNaN(r0) && !isNaN(r1) && r0 + r1 === 10) return true;
-    }
-    return false;
-  }
 
   getAutoGrabPlayer(): number | null {
     if (!this.grabbable) return null;
@@ -116,7 +106,9 @@ The `Response` interface keeps `state: BatailleCorse` typed as before, but every
 
 ## Section 2 — AI decoupling
 
-`AI` loses its `useBatailleCorseStore()` import. State and actions are injected at call time via `play()`:
+`AI` loses its `useBatailleCorseStore()` import. State and actions are injected at call time via `play()`.
+
+The slap-condition logic (rank 10, pairs, sandwiches, sum-to-10) stays in `AI` as a private method — it is the only consumer of this logic on the frontend (the human player's slap validity is entirely server-validated). These conditions are game-variant-specific and will need to become injectable or configurable when game variants are introduced; keeping them in `AI` rather than `Pile` leaves that door open.
 
 ```typescript
 class AI {
@@ -131,7 +123,7 @@ class AI {
     clearTimeout(this.timeoutId);
     const delay = this.reactionTime + Math.floor(Math.random() * 200) - 100;
     this.timeoutId = setTimeout(() => {
-      if (state.pile.isSlapWorthy()) {
+      if (this.isSlapWorthy(state.pile)) {
         actions.slap();
       } else if (state.players[this.playerIndex]?.canSend()) {
         actions.send();
@@ -142,6 +134,19 @@ class AI {
   cancel(): void {
     clearTimeout(this.timeoutId);
     this.timeoutId = undefined;
+  }
+
+  private isSlapWorthy(pile: Pile): boolean {
+    // rank 10, pairs, sandwiches, sum-to-10 — game-variant-specific, not pile knowledge
+    if (pile.cards.length >= 1 && pile.cards[0].rank === '10') return true;
+    if (pile.cards.length >= 2 && pile.cards[0].rank === pile.cards[1].rank) return true;
+    if (pile.cards.length >= 3 && pile.cards[0].rank === pile.cards[2].rank) return true;
+    if (pile.cards.length >= 2) {
+      const r0 = Number(pile.cards[0].rank);
+      const r1 = Number(pile.cards[1].rank);
+      if (!isNaN(r0) && !isNaN(r1) && r0 + r1 === 10) return true;
+    }
+    return false;
   }
 }
 ```
@@ -293,7 +298,7 @@ Workflow tests on `GameSession` verify cross-cutting behaviour that is currently
 - Auto-grab cancelled when next event arrives before timer fires
 - Animation catchup: events beyond threshold skip `awaitAnimation`
 
-Domain unit tests on `Pile.isSlapWorthy()` verify each slap condition independently with real `Card` objects.
+Unit tests on `AI.isSlapWorthy()` (via `AI.play()`) verify each slap condition independently with real `Pile` objects — no mocks needed since `Pile` is a plain class constructed from data.
 
 ### Test shape
 
@@ -335,4 +340,4 @@ No `vi.fn()` explosion. The WebSocket port is a plain spy object. Domain objects
 | `frontend/src/state/BatailleCorse.store.ts` | thin bridge only |
 | `frontend/src/model/fixtures/` | new directory — test fixture factories |
 | `frontend/src/application/GameSession.test.ts` | new file — workflow tests |
-| `frontend/src/model/Pile.test.ts` | new file — `isSlapWorthy` unit tests |
+| `frontend/src/model/ai/AI.test.ts` | new file — slap condition and play() workflow tests |
