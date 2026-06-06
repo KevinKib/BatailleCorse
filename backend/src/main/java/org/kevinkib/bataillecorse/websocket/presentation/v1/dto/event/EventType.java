@@ -5,7 +5,8 @@ public enum EventType {
     CREATE,
     SEND,
     SLAP,
-    GRAB;
+    GRAB,
+    JOIN;
 
     @Override
     public String toString() {
