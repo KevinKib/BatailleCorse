@@ -39,7 +39,7 @@
         severity="secondary"
         size="large"
         rounded
-        disabled
+        @click="router.push('/join')"
       />
 
 
