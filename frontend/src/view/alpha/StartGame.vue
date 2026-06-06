@@ -237,7 +237,7 @@ async function joinGame() {
   const id = joinGameId.value.trim();
   if (!id) return;
   try {
-    await batailleCorseStore.join(id);
+    await batailleCorseStore.join(id, playerName.value || undefined);
     router.push(`/room/${id}`);
   } catch (e) {
     joinError.value = 'Could not join this game. Check the ID and try again.';
