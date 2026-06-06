@@ -38,8 +38,8 @@ public class GameRestController {
     public ResponseEntity<BatailleCorseDto> getGame(@PathVariable String id) {
         try {
             BatailleCorse game = sessionService.getGame(new BatailleCorseId(id));
-            return ResponseEntity.ok(new BatailleCorseDto(game));
-        } catch (InvalidGameIdException e) {
+            return ResponseEntity.ok(BatailleCorseDto.from(game));
+        } catch (InvalidGameIdException | IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
         }
     }
@@ -54,9 +54,9 @@ public class GameRestController {
             Player joiner = game.getPlayerByIndex(result.playerId().id());
             Response broadcast = new SuccessResponse(
                     EventType.JOIN,
-                    new JoinEventData(new PlayerIdDto(joiner)),
+                    new JoinEventData(PlayerIdDto.from(joiner)),
                     "Player " + result.playerId().id() + " joined.",
-                    new BatailleCorseDto(game));
+                    BatailleCorseDto.from(game));
             gameMessagingService.sendToGame(id, broadcast);
 
             return ResponseEntity.ok(new JoinResponseDto(

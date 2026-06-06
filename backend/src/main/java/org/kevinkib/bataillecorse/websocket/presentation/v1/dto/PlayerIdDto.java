@@ -1,20 +1,27 @@
 package org.kevinkib.bataillecorse.websocket.presentation.v1.dto;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.kevinkib.bataillecorse.core.domain.Player;
 
 public class PlayerIdDto {
 
-    private final Player player;
+    private final String id;
 
-    public PlayerIdDto(Player player) {
-        this.player = player;
+    @JsonCreator
+    public PlayerIdDto(@JsonProperty("id") String id) {
+        this.id = id;
     }
 
-    public String getId() {
+    public static PlayerIdDto from(Player player) {
         if (player == null) {
             return null;
         }
-        return player.id().toString();
+        return new PlayerIdDto(player.id().toString());
+    }
+
+    public String getId() {
+        return id;
     }
 
 }
