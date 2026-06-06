@@ -17,25 +17,36 @@ class SessionGameTest {
     class CreateTest {
 
         @Test
-        public void givenPlayers_whenCreating_thenEachPlayerHasAToken() {
+        public void givenPlayers_whenCreating_thenEachSeatHasAToken() {
             var players = createNumberOfPlayers(2);
 
             var sessionGame = SessionGame.create(BatailleCorseId.generate(), players);
 
-            assertThat(sessionGame.tokensByPlayer().keySet(), hasSize(2));
-            assertThat(sessionGame.tokensByPlayer(), hasKey(new PlayerId(0)));
-            assertThat(sessionGame.tokensByPlayer(), hasKey(new PlayerId(1)));
+            assertThat(sessionGame.findTokenByPlayer(new PlayerId(0)).isPresent(), is(true));
+            assertThat(sessionGame.findTokenByPlayer(new PlayerId(1)).isPresent(), is(true));
         }
 
         @Test
-        public void givenPlayers_whenCreating_thenEachPlayerHasADistinctToken() {
+        public void givenPlayers_whenCreating_thenEachSeatHasADistinctToken() {
             var players = createNumberOfPlayers(2);
 
             var sessionGame = SessionGame.create(BatailleCorseId.generate(), players);
 
-            var token0 = sessionGame.tokensByPlayer().get(new PlayerId(0));
-            var token1 = sessionGame.tokensByPlayer().get(new PlayerId(1));
+            var token0 = sessionGame.findTokenByPlayer(new PlayerId(0)).orElseThrow();
+            var token1 = sessionGame.findTokenByPlayer(new PlayerId(1)).orElseThrow();
             assertThat(token0, is(not(equalTo(token1))));
+        }
+
+        @Test
+        public void givenPlayers_whenCreating_thenSeatsAreOrderedById() {
+            var players = createNumberOfPlayers(2);
+
+            var sessionGame = SessionGame.create(BatailleCorseId.generate(), players);
+
+            var seats = sessionGame.seats();
+            assertThat(seats, hasSize(2));
+            assertThat(seats.get(0).id(), is(new PlayerId(0)));
+            assertThat(seats.get(1).id(), is(new PlayerId(1)));
         }
     }
 
@@ -53,14 +64,15 @@ class SessionGameTest {
         }
 
         @Test
-        public void givenSeat_whenClaimed_thenIsClaimed() {
+        public void givenSeat_whenClaimedWithName_thenIsClaimedWithThatName() {
             var players = createNumberOfPlayers(2);
             var sessionGame = SessionGame.create(BatailleCorseId.generate(), players);
 
-            sessionGame.claim(new PlayerId(0));
+            sessionGame.claim(new PlayerId(0), "Alice");
 
             assertThat(sessionGame.isClaimed(new PlayerId(0)), is(true));
             assertThat(sessionGame.isClaimed(new PlayerId(1)), is(false));
+            assertThat(sessionGame.seats().get(0).name(), is("Alice"));
         }
     }
 
@@ -68,10 +80,10 @@ class SessionGameTest {
     class FindPlayerByTokenTest {
 
         @Test
-        public void givenSessionGame_withSessionId_whenLoadingBySessionId_thenReturnPlayerId() {
+        public void givenSessionGame_withToken_whenLookingUp_thenReturnPlayerId() {
             var players = createNumberOfPlayers(2);
             var sessionGame = SessionGame.create(BatailleCorseId.generate(), players);
-            var tokenForPlayer0 = sessionGame.tokensByPlayer().get(new PlayerId(0));
+            var tokenForPlayer0 = sessionGame.findTokenByPlayer(new PlayerId(0)).orElseThrow();
 
             Optional<PlayerId> result = sessionGame.findPlayerByToken(tokenForPlayer0);
 
@@ -79,7 +91,7 @@ class SessionGameTest {
         }
 
         @Test
-        public void givenSessionGame_withUnknownSessionId_whenLoadingBySessionId_thenReturnEmpty() {
+        public void givenSessionGame_withUnknownToken_whenLookingUp_thenReturnEmpty() {
             var players = createNumberOfPlayers(2);
             var sessionGame = SessionGame.create(BatailleCorseId.generate(), players);
 

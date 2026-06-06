@@ -3,11 +3,14 @@ package org.kevinkib.bataillecorse.sessionmanagement.application;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.kevinkib.bataillecorse.core.domain.BatailleCorse;
 import org.kevinkib.bataillecorse.core.domain.PlayerId;
 import org.kevinkib.bataillecorse.sessionmanagement.domain.GameMode;
+import org.kevinkib.bataillecorse.sessionmanagement.domain.SessionPlayer;
 import org.kevinkib.bataillecorse.sessionmanagement.domain.SessionToken;
 import org.kevinkib.bataillecorse.sessionmanagement.infrastructure.InMemorySessionRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -95,5 +98,44 @@ class SessionServiceTest {
 
             assertThat(result, is(Optional.empty()));
         }
+    }
+
+    @Test
+    public void givenMultiplayerCreateWithName_whenCreating_thenSeatZeroClaimedWithName() {
+        BatailleCorse game = service.createGame(2, GameMode.MULTIPLAYER, "Alice");
+
+        List<SessionPlayer> seats = service.getSeats(game.getId());
+        assertThat(seats.get(0).isClaimed(), is(true));
+        assertThat(seats.get(0).name(), is("Alice"));
+        assertThat(seats.get(1).isClaimed(), is(false));
+    }
+
+    @Test
+    public void givenMultiplayerCreateWithBlankName_whenCreating_thenSeatZeroGetsDefaultName() {
+        BatailleCorse game = service.createGame(2, GameMode.MULTIPLAYER, "  ");
+
+        List<SessionPlayer> seats = service.getSeats(game.getId());
+        assertThat(seats.get(0).name(), is("Player 1"));
+    }
+
+    @Test
+    public void givenMultiplayerGame_whenJoiningWithName_thenSeatOneClaimedWithName() {
+        BatailleCorse game = service.createGame(2, GameMode.MULTIPLAYER, "Alice");
+
+        service.joinGame(game.getId(), "Bob");
+
+        List<SessionPlayer> seats = service.getSeats(game.getId());
+        assertThat(seats.get(1).isClaimed(), is(true));
+        assertThat(seats.get(1).name(), is("Bob"));
+    }
+
+    @Test
+    public void givenMultiplayerGame_whenJoiningWithBlankName_thenSeatOneGetsDefaultName() {
+        BatailleCorse game = service.createGame(2, GameMode.MULTIPLAYER, null);
+
+        service.joinGame(game.getId(), null);
+
+        List<SessionPlayer> seats = service.getSeats(game.getId());
+        assertThat(seats.get(1).name(), is("Player 2"));
     }
 }

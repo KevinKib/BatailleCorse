@@ -4,42 +4,50 @@ import org.kevinkib.bataillecorse.core.domain.BatailleCorseId;
 import org.kevinkib.bataillecorse.core.domain.Player;
 import org.kevinkib.bataillecorse.core.domain.PlayerId;
 
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
-public record SessionGame(BatailleCorseId id, Map<PlayerId, SessionToken> tokensByPlayer, Set<PlayerId> claimedSeats) {
+public record SessionGame(BatailleCorseId id, Map<PlayerId, SessionPlayer> players) {
 
     public static SessionGame create(BatailleCorseId id, List<Player> players) {
-        Map<PlayerId, SessionToken> tokensByPlayer = new HashMap<>();
-
+        Map<PlayerId, SessionPlayer> seats = new LinkedHashMap<>();
         for (Player player : players) {
-            tokensByPlayer.put(player.id(), SessionToken.generate());
+            seats.put(player.id(), new SessionPlayer(player.id(), SessionToken.generate()));
         }
-
-        return new SessionGame(id, tokensByPlayer, new HashSet<>());
+        return new SessionGame(id, seats);
     }
 
-    public void claim(PlayerId playerId) {
-        claimedSeats.add(playerId);
+    public void claim(PlayerId playerId, String name) {
+        SessionPlayer seat = players.get(playerId);
+        if (seat == null) {
+            throw new IllegalArgumentException("Unknown seat " + playerId.id());
+        }
+        seat.claim(name);
     }
 
     public boolean isClaimed(PlayerId playerId) {
-        return claimedSeats.contains(playerId);
+        SessionPlayer seat = players.get(playerId);
+        return seat != null && seat.isClaimed();
     }
 
     public Optional<SessionToken> findTokenByPlayer(PlayerId playerId) {
-        return Optional.ofNullable(tokensByPlayer.get(playerId));
+        return Optional.ofNullable(players.get(playerId)).map(SessionPlayer::token);
     }
 
     public Optional<PlayerId> findPlayerByToken(SessionToken token) {
-        return tokensByPlayer.entrySet().stream()
-                .filter(e -> e.getValue().equals(token))
-                .map(Map.Entry::getKey)
+        return players.values().stream()
+                .filter(seat -> seat.token().equals(token))
+                .map(SessionPlayer::id)
                 .findFirst();
     }
 
+    /** Seats ordered by player id, for presentation. */
+    public List<SessionPlayer> seats() {
+        return players.values().stream()
+                .sorted(Comparator.comparing(seat -> seat.id().id()))
+                .toList();
+    }
 }

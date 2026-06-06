@@ -39,7 +39,7 @@ class InMemorySessionRepositoryTest {
             var players = createNumberOfPlayers(2);
             var game = aBatailleCorse().withId(BatailleCorseId.generate()).withNbPlayers(2).buildAndInitialize();
             var sessionGame = SessionGame.create(game.getId(), players);
-            SessionToken expectedToken = sessionGame.tokensByPlayer().get(new PlayerId(0));
+            SessionToken expectedToken = sessionGame.findTokenByPlayer(new PlayerId(0)).orElseThrow();
 
             repository.save(game, sessionGame);
 
