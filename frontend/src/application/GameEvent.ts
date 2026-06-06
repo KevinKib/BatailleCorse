@@ -8,4 +8,5 @@ export type GameEvent =
   | { type: 'grab'; winnerPlayerIndex: number; seq: number; pileCards: Card[] }
   | { type: 'slap' }
   | { type: 'successful-slap'; winnerPlayerIndex: number; seq: number; pileCards: Card[] }
-  | { type: 'erroneous-slap'; playerIndex: number; seq: number };
+  | { type: 'erroneous-slap'; playerIndex: number; seq: number }
+  | { type: 'join'; playerIndex: number };
