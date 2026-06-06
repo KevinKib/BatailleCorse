@@ -103,9 +103,14 @@ export default class GameSession {
       this.callbacks.onEvent({ type: 'state-update', state: this.state });
     }
 
-    const sessionResponse = await fetch(`/api/game/${id}/session`);
-    if (sessionResponse.ok) {
-      const view = await sessionResponse.json() as { players: SessionSeat[] };
+    await this.loadSessionView(id);
+  }
+
+  /** Fetches the server's seat occupancy + names and applies it. */
+  async loadSessionView(id: string): Promise<void> {
+    const response = await fetch(`/api/game/${id}/session`);
+    if (response.ok) {
+      const view = await response.json() as { players: SessionSeat[] };
       this.applySessionView(view.players);
     }
   }
@@ -148,6 +153,9 @@ export default class GameSession {
 
   /** Applies server seat occupancy + names: resolves waiting and both names. */
   applySessionView(players: SessionSeat[]): void {
+    // Names and the waiting overlay are multiplayer-only; solo's opponent is the AI.
+    if (this.mode !== 'multiplayer') return;
+
     const mine = players.find(p => p.id === this.myPlayerIndex);
     const opponent = players.find(p => p.id !== this.myPlayerIndex);
 
@@ -158,7 +166,7 @@ export default class GameSession {
 
     this.callbacks.onEvent({ type: 'opponent-name-change', name: opponent?.name ?? null });
 
-    this.waiting = this.mode === 'multiplayer' && !(opponent?.joined ?? false);
+    this.waiting = !(opponent?.joined ?? false);
     this.callbacks.onEvent({ type: 'waiting-change', waiting: this.waiting });
   }
 

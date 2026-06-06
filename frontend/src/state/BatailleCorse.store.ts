@@ -10,7 +10,6 @@ import { useSettingsStore } from './Settings.store';
 import { DIFFICULTY } from '../model/Difficulty';
 import GameSession from '../application/GameSession';
 import type { GameEvent } from '../application/GameEvent';
-import type SessionSeat from '../model/SessionSeat';
 
 export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
 
@@ -80,7 +79,7 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
     lastErroneousSlap,
     create:               (gameMode: 'solo' | 'multiplayer', name?: string) => session.create(gameMode, name),
     join:                 (id: string, name?: string) => session.join(id, name),
-    applySessionView:     (players: SessionSeat[]) => session.applySessionView(players),
+    loadSessionView:      (id: string) => session.loadSessionView(id),
     hydrate:              (id: string, s: BatailleCorse) => session.hydrate(id, s),
     restoreTokens:        (tokens: Record<number, string>) => session.restoreTokens(tokens),
     restoreSession:       (tokens: Record<number, string>) => session.restoreSession(tokens),

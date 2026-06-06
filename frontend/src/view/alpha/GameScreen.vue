@@ -279,11 +279,7 @@ onMounted(async () => {
   const gameState = await response.json() as BatailleCorse;
   batailleCorseStore.hydrate(gameId, gameState);
   batailleCorseStore.restoreSession(JSON.parse(stored));
-    const sessionResponse = await fetch(`/api/game/${gameId}/session`);
-    if (sessionResponse.ok) {
-      const view = await sessionResponse.json() as { players: { id: number; name: string | null; joined: boolean }[] };
-      batailleCorseStore.applySessionView(view.players);
-    }
+  await batailleCorseStore.loadSessionView(gameId);
   webSocketService.subscribeToGame(gameId);
 });
 
