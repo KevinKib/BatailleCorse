@@ -2,12 +2,12 @@ package org.kevinkib.bataillecorse.sessionmanagement.application;
 
 import org.kevinkib.bataillecorse.core.domain.BatailleCorse;
 import org.kevinkib.bataillecorse.core.domain.BatailleCorseId;
+import org.kevinkib.bataillecorse.core.domain.Player;
 import org.kevinkib.bataillecorse.core.domain.PlayerId;
 import org.kevinkib.bataillecorse.sessionmanagement.application.port.SessionRepository;
+import org.kevinkib.bataillecorse.sessionmanagement.domain.GameMode;
 import org.kevinkib.bataillecorse.sessionmanagement.domain.SessionGame;
 import org.kevinkib.bataillecorse.sessionmanagement.domain.SessionToken;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 
 import java.util.Optional;
 
@@ -20,14 +20,45 @@ public class SessionService {
     }
 
     public BatailleCorse createGame(int nbPlayers) {
+        return createGame(nbPlayers, GameMode.SOLO);
+    }
+
+    public BatailleCorse createGame(int nbPlayers, GameMode mode) {
         BatailleCorseId id = BatailleCorseId.generate();
         BatailleCorse batailleCorse = new BatailleCorse(id, nbPlayers);
 
         SessionGame sessionGame = SessionGame.create(id, batailleCorse.getPlayers());
 
+        if (mode == GameMode.SOLO) {
+            for (Player player : batailleCorse.getPlayers()) {
+                sessionGame.claim(player.id());
+            }
+        } else {
+            sessionGame.claim(new PlayerId(0));
+        }
+
         repository.save(batailleCorse, sessionGame);
 
         return batailleCorse;
+    }
+
+    public JoinResult joinGame(BatailleCorseId gameId) throws SeatUnavailableException {
+        SessionGame sessionGame = repository.loadSessionGame(gameId);
+        PlayerId seat = new PlayerId(1);
+
+        if (sessionGame.isClaimed(seat)) {
+            throw new SeatUnavailableException(seat);
+        }
+
+        sessionGame.claim(seat);
+        SessionToken token = sessionGame.findTokenByPlayer(seat)
+                .orElseThrow(() -> new IllegalStateException("Seat 1 has no token"));
+
+        return new JoinResult(seat, token);
+    }
+
+    public boolean isSeatClaimed(BatailleCorseId gameId, PlayerId playerId) {
+        return repository.loadSessionGame(gameId).isClaimed(playerId);
     }
 
     public BatailleCorse getGame(BatailleCorseId id) throws InvalidGameIdException {
