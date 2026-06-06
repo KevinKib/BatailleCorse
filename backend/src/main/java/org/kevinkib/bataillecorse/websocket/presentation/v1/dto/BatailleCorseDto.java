@@ -1,5 +1,7 @@
 package org.kevinkib.bataillecorse.websocket.presentation.v1.dto;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.kevinkib.bataillecorse.core.domain.BatailleCorse;
 import org.kevinkib.bataillecorse.core.domain.Player;
 
@@ -7,37 +9,63 @@ import java.util.List;
 
 public class BatailleCorseDto {
 
-    private final BatailleCorse batailleCorse;
+    private final String id;
+    private final List<PlayerDto> players;
+    private final PlayerIdDto winner;
+    private final PileDto pile;
+    private final PlayerDto currentPlayer;
 
-    public BatailleCorseDto(BatailleCorse batailleCorse) {
-        this.batailleCorse = batailleCorse;
+    @JsonCreator
+    public BatailleCorseDto(@JsonProperty("id") String id,
+                            @JsonProperty("players") List<PlayerDto> players,
+                            @JsonProperty("winner") PlayerIdDto winner,
+                            @JsonProperty("pile") PileDto pile,
+                            @JsonProperty("currentPlayer") PlayerDto currentPlayer) {
+        this.id = id;
+        this.players = players;
+        this.winner = winner;
+        this.pile = pile;
+        this.currentPlayer = currentPlayer;
+    }
+
+    public static BatailleCorseDto from(BatailleCorse batailleCorse) {
+        List<PlayerDto> players = batailleCorse.getPlayers().stream()
+                .map(player -> PlayerDto.from(player, batailleCorse.getAvailableActions(player)))
+                .toList();
+
+        PlayerIdDto winner = batailleCorse.isFinished()
+                ? PlayerIdDto.from(batailleCorse.getWinner())
+                : null;
+
+        Player current = batailleCorse.getCurrentPlayer();
+        PlayerDto currentPlayer = PlayerDto.from(current, batailleCorse.getAvailableActions(current));
+
+        return new BatailleCorseDto(
+                batailleCorse.getId().toString(),
+                players,
+                winner,
+                PileDto.from(batailleCorse.getPile()),
+                currentPlayer);
     }
 
     public String getId() {
-        return batailleCorse.getId().toString();
+        return id;
     }
 
     public List<PlayerDto> getPlayers() {
-        return batailleCorse.getPlayers().stream()
-                .map(player -> new PlayerDto(player, batailleCorse.getAvailableActions(player)))
-                .toList();
+        return players;
     }
 
     public PlayerIdDto getWinner() {
-        if (!batailleCorse.isFinished()) {
-            return null;
-        }
-
-        return new PlayerIdDto(batailleCorse.getWinner());
+        return winner;
     }
 
     public PileDto getPile() {
-        return new PileDto(batailleCorse.getPile());
+        return pile;
     }
 
     public PlayerDto getCurrentPlayer() {
-        Player currentPlayer = batailleCorse.getCurrentPlayer();
-        return new PlayerDto(currentPlayer, batailleCorse.getAvailableActions(currentPlayer));
+        return currentPlayer;
     }
 
 }

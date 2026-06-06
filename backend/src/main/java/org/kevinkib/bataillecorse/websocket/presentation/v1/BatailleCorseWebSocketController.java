@@ -55,7 +55,7 @@ public class BatailleCorseWebSocketController {
                 EventType.CREATE,
                 new CreateEventData(new BatailleCorseIdDto(batailleCorse.getId()), tokens),
                 GAME_CREATED_MESSAGE,
-                new BatailleCorseDto(batailleCorse));
+                BatailleCorseDto.from(batailleCorse));
     }
 
     @MessageMapping("/send")
@@ -72,17 +72,17 @@ public class BatailleCorseWebSocketController {
                     .orElseThrow(InvalidTokenException::new);
             Player player = batailleCorse.getPlayerByIndex(playerId.id());
 
-            CardDto cardDto = new CardDto(player.getCardOnTop());
+            CardDto cardDto = CardDto.from(player.getCardOnTop());
             batailleCorse.send(player);
 
-            BatailleCorseDto batailleCorseDto = new BatailleCorseDto(batailleCorse);
+            BatailleCorseDto batailleCorseDto = BatailleCorseDto.from(batailleCorse);
             String message = "Player " + player.id() + " sent " + cardDto.getName() + ".";
-            SendEventData eventData = new SendEventData(new PlayerIdDto(player));
+            SendEventData eventData = new SendEventData(PlayerIdDto.from(player));
             response = new SuccessResponse(eventType, eventData, message, batailleCorseDto);
 
         } catch (Exception e) {
             System.err.println(e.getMessage());
-            BatailleCorseDto batailleCorseDto = new BatailleCorseDto(batailleCorse);
+            BatailleCorseDto batailleCorseDto = BatailleCorseDto.from(batailleCorse);
             response = new ErrorResponse(eventType, e.getMessage(), batailleCorseDto);
         }
 
@@ -108,13 +108,13 @@ public class BatailleCorseWebSocketController {
                     ? "Player " + player.id() + " slapped and won."
                     : "Player " + player.id() + " slapped, lost, and received a penality.";
 
-            BatailleCorseDto batailleCorseDto = new BatailleCorseDto(batailleCorse);
-            SlapEventData eventData = new SlapEventData(successfulSlap, new PlayerIdDto(player));
+            BatailleCorseDto batailleCorseDto = BatailleCorseDto.from(batailleCorse);
+            SlapEventData eventData = new SlapEventData(successfulSlap, PlayerIdDto.from(player));
             response = new SuccessResponse(eventType, eventData, message, batailleCorseDto);
 
         } catch (Exception e) {
             System.err.println(e.getMessage());
-            BatailleCorseDto batailleCorseDto = new BatailleCorseDto(batailleCorse);
+            BatailleCorseDto batailleCorseDto = BatailleCorseDto.from(batailleCorse);
             response = new ErrorResponse(eventType, e.getMessage(), batailleCorseDto);
         }
 
@@ -137,14 +137,14 @@ public class BatailleCorseWebSocketController {
 
             batailleCorse.grab(player);
 
-            BatailleCorseDto batailleCorseDto = new BatailleCorseDto(batailleCorse);
+            BatailleCorseDto batailleCorseDto = BatailleCorseDto.from(batailleCorse);
             String message = "Player " + player.id() + " grabbed the pile. ";
-            GrabEventData eventData = new GrabEventData(new PlayerIdDto(player));
+            GrabEventData eventData = new GrabEventData(PlayerIdDto.from(player));
             response = new SuccessResponse(eventType, eventData, message, batailleCorseDto);
 
         } catch (Exception e) {
             System.err.println(e.getMessage());
-            BatailleCorseDto batailleCorseDto = new BatailleCorseDto(batailleCorse);
+            BatailleCorseDto batailleCorseDto = BatailleCorseDto.from(batailleCorse);
             response = new ErrorResponse(eventType, e.getMessage(), batailleCorseDto);
         }
 

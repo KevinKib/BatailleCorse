@@ -1,37 +1,55 @@
 package org.kevinkib.bataillecorse.websocket.presentation.v1.dto;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.kevinkib.bataillecorse.core.domain.CentralPile;
 
 import java.util.List;
 
 public class PileDto {
 
-    private final CentralPile pile;
+    private final List<CardDto> cards;
+    private final boolean grabbable;
+    private final Integer nbCardsSinceLastHonourCard;
+    private final PlayerIdDto playerThatAddedLastHonourCard;
 
-    public PileDto(CentralPile pile) {
-        this.pile = pile;
+    @JsonCreator
+    public PileDto(@JsonProperty("cards") List<CardDto> cards,
+                   @JsonProperty("grabbable") boolean grabbable,
+                   @JsonProperty("nbCardsSinceLastHonourCard") Integer nbCardsSinceLastHonourCard,
+                   @JsonProperty("playerThatAddedLastHonourCard") PlayerIdDto playerThatAddedLastHonourCard) {
+        this.cards = cards;
+        this.grabbable = grabbable;
+        this.nbCardsSinceLastHonourCard = nbCardsSinceLastHonourCard;
+        this.playerThatAddedLastHonourCard = playerThatAddedLastHonourCard;
+    }
+
+    public static PileDto from(CentralPile pile) {
+        List<CardDto> cards = pile.getCards().stream()
+                .map(CardDto::from)
+                .toList();
+
+        return new PileDto(
+                cards,
+                pile.isGrabbableByAnyPlayer(),
+                pile.getNbCardsSinceLastHonourCard(),
+                PlayerIdDto.from(pile.getPlayerThatAddedLastHonourCard()));
     }
 
     public List<CardDto> getCards() {
-        return pile.getCards().stream()
-                .map(CardDto::new)
-                .toList();
+        return cards;
     }
 
     public boolean isGrabbable() {
-        return pile.isGrabbableByAnyPlayer();
+        return grabbable;
     }
 
     public Integer getNbCardsSinceLastHonourCard() {
-        return pile.getNbCardsSinceLastHonourCard();
+        return nbCardsSinceLastHonourCard;
     }
 
     public PlayerIdDto getPlayerThatAddedLastHonourCard() {
-        if (pile.getPlayerThatAddedLastHonourCard() == null) {
-            return null;
-        }
-
-        return new PlayerIdDto(pile.getPlayerThatAddedLastHonourCard());
+        return playerThatAddedLastHonourCard;
     }
 
 }
