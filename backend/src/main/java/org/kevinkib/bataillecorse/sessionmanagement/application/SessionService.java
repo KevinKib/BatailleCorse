@@ -13,6 +13,8 @@ import java.util.Optional;
 
 public class SessionService {
 
+    private static final PlayerId JOINER_SEAT = new PlayerId(1);
+
     private final SessionRepository repository;
 
     public SessionService(SessionRepository repository) {
@@ -42,19 +44,18 @@ public class SessionService {
         return batailleCorse;
     }
 
-    public JoinResult joinGame(BatailleCorseId gameId) throws SeatUnavailableException {
+    public JoinResult joinGame(BatailleCorseId gameId) {
         SessionGame sessionGame = repository.loadSessionGame(gameId);
-        PlayerId seat = new PlayerId(1);
 
-        if (sessionGame.isClaimed(seat)) {
-            throw new SeatUnavailableException(seat);
+        if (sessionGame.isClaimed(JOINER_SEAT)) {
+            throw new SeatUnavailableException(JOINER_SEAT);
         }
 
-        sessionGame.claim(seat);
-        SessionToken token = sessionGame.findTokenByPlayer(seat)
-                .orElseThrow(() -> new IllegalStateException("Seat 1 has no token"));
+        sessionGame.claim(JOINER_SEAT);
+        SessionToken token = sessionGame.findTokenByPlayer(JOINER_SEAT)
+                .orElseThrow(() -> new IllegalStateException("Seat " + JOINER_SEAT.id() + " has no token"));
 
-        return new JoinResult(seat, token);
+        return new JoinResult(JOINER_SEAT, token);
     }
 
     public boolean isSeatClaimed(BatailleCorseId gameId, PlayerId playerId) {
