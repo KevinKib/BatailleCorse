@@ -11,4 +11,6 @@ export type GameEvent =
   | { type: 'erroneous-slap'; playerIndex: number; seq: number }
   | { type: 'mode-change'; mode: 'solo' | 'multiplayer' }
   | { type: 'my-index-change'; playerIndex: number }
-  | { type: 'waiting-change'; waiting: boolean };
+  | { type: 'waiting-change'; waiting: boolean }
+  | { type: 'my-name-change'; name: string | null }
+  | { type: 'opponent-name-change'; name: string | null };

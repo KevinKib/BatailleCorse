@@ -6,6 +6,7 @@ import type GrabEventData from '../model/event/GrabEventData';
 import type SlapEventData from '../model/event/SlapEventData';
 import type { GameEvent } from './GameEvent';
 import AI from '../model/ai/AI';
+import type SessionSeat from '../model/SessionSeat';
 
 export interface WebSocketPort {
   publish(destination: string, body?: string): void;
@@ -29,6 +30,7 @@ export default class GameSession {
   private mode: 'solo' | 'multiplayer' = 'solo';
   private myPlayerIndex = 0;
   private waiting = false;
+  private myName: string | null = null;
 
   private readonly CATCHUP_THRESHOLD = 3;
   private readonly AUTO_GRAB_DELAY = 1500;
@@ -54,20 +56,25 @@ export default class GameSession {
     this.mode = gameMode;
     this.myPlayerIndex = 0;
     this.waiting = gameMode === 'multiplayer';
-    // Only solo needs the puppet AI; multiplayer waits for a second human.
+    this.myName = playerName ?? null;
     if (gameMode === 'solo') {
       this.ai = this.aiFactory();
     }
     this.emitPerspective();
-    // playerName stays browser-local per the spec; only the mode is sent.
-    void playerName;
+    this.callbacks.onEvent({ type: 'my-name-change', name: this.myName });
     const serverMode = gameMode === 'solo' ? 'SOLO' : 'MULTIPLAYER';
-    this.webSocket.publish('/app/create', JSON.stringify({ mode: serverMode }));
+    const payload: { mode: string; name?: string } = { mode: serverMode };
+    if (playerName) payload.name = playerName;
+    this.webSocket.publish('/app/create', JSON.stringify(payload));
   }
 
   /** Joins an existing multiplayer game as seat 1 and hydrates its state. */
-  async join(id: string): Promise<void> {
-    const response = await fetch(`/api/game/${id}/join`, { method: 'POST' });
+  async join(id: string, playerName?: string): Promise<void> {
+    const response = await fetch(`/api/game/${id}/join`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: playerName ?? null }),
+    });
     if (!response.ok) {
       throw new Error(`Join failed: ${response.status}`);
     }
@@ -76,6 +83,7 @@ export default class GameSession {
     this.mode = 'multiplayer';
     this.myPlayerIndex = body.playerId;
     this.waiting = false;
+    this.myName = playerName ?? null;
 
     const tokens = { [body.playerId]: body.token };
     this.playerTokens = tokens;
@@ -85,6 +93,7 @@ export default class GameSession {
     this.webSocket.subscribeToGame(id);
 
     this.emitPerspective();
+    this.callbacks.onEvent({ type: 'my-name-change', name: this.myName });
     this.callbacks.onEvent({ type: 'game-id-change', gameId: id });
 
     const stateResponse = await fetch(`/api/game/${id}`);
@@ -92,6 +101,17 @@ export default class GameSession {
       const json = await stateResponse.json();
       this.state = BatailleCorse.fromJSON(json as Parameters<typeof BatailleCorse.fromJSON>[0]);
       this.callbacks.onEvent({ type: 'state-update', state: this.state });
+    }
+
+    await this.loadSessionView(id);
+  }
+
+  /** Fetches the server's seat occupancy + names and applies it. */
+  async loadSessionView(id: string): Promise<void> {
+    const response = await fetch(`/api/game/${id}/session`);
+    if (response.ok) {
+      const view = await response.json() as { players: SessionSeat[] };
+      this.applySessionView(view.players);
     }
   }
 
@@ -121,7 +141,6 @@ export default class GameSession {
     } else {
       this.mode = 'multiplayer';
       this.myPlayerIndex = seats[0] ?? 0;
-      this.waiting = false;
     }
     this.emitPerspective();
   }
@@ -129,6 +148,25 @@ export default class GameSession {
   private emitPerspective(): void {
     this.callbacks.onEvent({ type: 'mode-change', mode: this.mode });
     this.callbacks.onEvent({ type: 'my-index-change', playerIndex: this.myPlayerIndex });
+    this.callbacks.onEvent({ type: 'waiting-change', waiting: this.waiting });
+  }
+
+  /** Applies server seat occupancy + names: resolves waiting and both names. */
+  applySessionView(players: SessionSeat[]): void {
+    // Names and the waiting overlay are multiplayer-only; solo's opponent is the AI.
+    if (this.mode !== 'multiplayer') return;
+
+    const mine = players.find(p => p.id === this.myPlayerIndex);
+    const opponent = players.find(p => p.id !== this.myPlayerIndex);
+
+    if (mine && mine.name !== null) {
+      this.myName = mine.name;
+      this.callbacks.onEvent({ type: 'my-name-change', name: mine.name });
+    }
+
+    this.callbacks.onEvent({ type: 'opponent-name-change', name: opponent?.name ?? null });
+
+    this.waiting = !(opponent?.joined ?? false);
     this.callbacks.onEvent({ type: 'waiting-change', waiting: this.waiting });
   }
 
@@ -197,8 +235,13 @@ export default class GameSession {
     }
 
     if (response.eventType === 'JOIN') {
-      this.waiting = false;
-      this.callbacks.onEvent({ type: 'waiting-change', waiting: false });
+      const joinData = response.eventData as unknown as { players?: SessionSeat[] };
+      if (joinData?.players) {
+        this.applySessionView(joinData.players);
+      } else {
+        this.waiting = false;
+        this.callbacks.onEvent({ type: 'waiting-change', waiting: false });
+      }
     }
 
     if (response.eventType === 'GRAB') {

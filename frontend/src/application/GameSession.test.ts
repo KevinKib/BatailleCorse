@@ -296,6 +296,86 @@ describe('GameSession', () => {
     });
   });
 
+  // --- Names and session view -----------------------------------------------
+
+  describe('names and session view', () => {
+    it('create("multiplayer", name) sends name in payload', () => {
+      const { session, published } = makeSession();
+      session.create('multiplayer', 'Alice');
+      expect(published).toContainEqual({
+        dest: '/app/create',
+        body: JSON.stringify({ mode: 'MULTIPLAYER', name: 'Alice' }),
+      });
+    });
+
+    it('emits my-name-change on create with a name', () => {
+      const { session, events } = makeSession();
+      session.create('multiplayer', 'Alice');
+      expect(events).toContainEqual({ type: 'my-name-change', name: 'Alice' });
+    });
+
+    it('applySessionView keeps waiting while opponent seat is not joined', () => {
+      const { session, events } = makeSession();
+      session.create('multiplayer', 'Alice');
+      session.applySessionView([
+        { id: 0, name: 'Alice', joined: true },
+        { id: 1, name: null, joined: false },
+      ]);
+      const waitingEvents = events.filter(e => e.type === 'waiting-change');
+      expect(waitingEvents.at(-1)).toEqual({ type: 'waiting-change', waiting: true });
+      expect(events).toContainEqual({ type: 'opponent-name-change', name: null });
+    });
+
+    it('applySessionView clears waiting and sets opponent name once joined', () => {
+      const { session, events } = makeSession();
+      session.create('multiplayer', 'Alice');
+      session.applySessionView([
+        { id: 0, name: 'Alice', joined: true },
+        { id: 1, name: 'Bob', joined: true },
+      ]);
+      const waitingEvents = events.filter(e => e.type === 'waiting-change');
+      expect(waitingEvents.at(-1)).toEqual({ type: 'waiting-change', waiting: false });
+      expect(events).toContainEqual({ type: 'opponent-name-change', name: 'Bob' });
+    });
+
+    it('applySessionView is a no-op in solo mode', () => {
+      const { session, events } = makeSession();
+      session.create('solo', 'Alice');
+      events.length = 0;
+      session.applySessionView([
+        { id: 0, name: 'Alice', joined: true },
+        { id: 1, name: 'Player 2', joined: true },
+      ]);
+      expect(events).toHaveLength(0);
+    });
+
+    it('a JOIN event carrying seats applies them (clears waiting, sets opponent name)', async () => {
+      const { session, events } = makeSession();
+      session.create('multiplayer', 'Alice');
+      await session.onResponse(buildResponse({
+        eventType: 'JOIN',
+        eventData: { player: { id: '1' }, players: [
+          { id: 0, name: 'Alice', joined: true },
+          { id: 1, name: 'Bob', joined: true },
+        ] },
+        state: buildGame(),
+      }));
+      const waitingChanges = events.filter(e => e.type === 'waiting-change');
+      expect(waitingChanges.at(-1)).toEqual({ type: 'waiting-change', waiting: false });
+      expect(events).toContainEqual({ type: 'opponent-name-change', name: 'Bob' });
+    });
+
+    it('restoreSession does not force waiting to false for a multiplayer host', () => {
+      const { session, events } = makeSession();
+      session.create('multiplayer', 'Alice'); // host is waiting
+      events.length = 0;
+      session.restoreSession({ 0: 'tok-0' });
+      const forcedFalse = events.filter(
+        e => e.type === 'waiting-change' && e.waiting === false);
+      expect(forcedFalse).toHaveLength(0);
+    });
+  });
+
   // --- Event queue ----------------------------------------------------------
 
   describe('event queue seq counters', () => {

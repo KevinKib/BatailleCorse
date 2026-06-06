@@ -47,7 +47,7 @@
       </div>
 
       <div class="middle_side">
-        <h1 class="player_tag">{{ settingsStore.playerName || 'You' }}</h1>
+        <h1 class="player_tag">{{ myName || settingsStore.playerName || 'You' }}</h1>
         <div class="card stacked">
           <PlayingCard
             ref="pile"
@@ -138,7 +138,7 @@ import webSocketService from '../../service/WebSocketService';
 import type BatailleCorse from '../../model/BatailleCorse';
 
 const batailleCorseStore = useBatailleCorseStore();
-const { state: batailleCorse, mode, myPlayerIndex, waiting,
+const { state: batailleCorse, mode, myPlayerIndex, waiting, myName, opponentName,
         lastSend, lastGrab, lastSlap, lastSuccessfulSlap, lastErroneousSlap } = storeToRefs(batailleCorseStore);
 
 const pile = useTemplateRef("pile");
@@ -250,7 +250,7 @@ const opponentIndex = computed(() => 1 - myPlayerIndex.value);
 const isSolo = computed(() => mode.value === 'solo');
 const isWaiting = computed(() => waiting.value);
 const opponentLabel = computed(() =>
-  isSolo.value ? `Computer (${difficultyLabel.value})` : 'Opponent');
+  isSolo.value ? `Computer (${difficultyLabel.value})` : (opponentName.value ?? 'Opponent'));
 const shareLink = computed(() =>
   `${window.location.origin}/join/${route.params.id}`);
 
@@ -279,6 +279,7 @@ onMounted(async () => {
   const gameState = await response.json() as BatailleCorse;
   batailleCorseStore.hydrate(gameId, gameState);
   batailleCorseStore.restoreSession(JSON.parse(stored));
+  await batailleCorseStore.loadSessionView(gameId);
   webSocketService.subscribeToGame(gameId);
 });
 
