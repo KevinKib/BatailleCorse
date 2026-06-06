@@ -10,6 +10,7 @@ import { useSettingsStore } from './Settings.store';
 import { DIFFICULTY } from '../model/Difficulty';
 import GameSession from '../application/GameSession';
 import type { GameEvent } from '../application/GameEvent';
+import type SessionSeat from '../model/SessionSeat';
 
 export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
 
@@ -25,6 +26,8 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
   const mode = ref<'solo' | 'multiplayer'>('solo');
   const myPlayerIndex = ref<number>(0);
   const waiting = ref<boolean>(false);
+  const myName = ref<string | null>(null);
+  const opponentName = ref<string | null>(null);
 
   let animationResolve: (() => void) | null = null;
   // slapSeq lives in the store because the slap flash animation fires optimistically
@@ -45,9 +48,11 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
           case 'slap':            lastSlap.value = { seq: ++slapSeq }; break;
           case 'successful-slap': lastSuccessfulSlap.value = event; break;
           case 'erroneous-slap':  lastErroneousSlap.value = event; break;
-          case 'mode-change':     mode.value = event.mode; break;
-          case 'my-index-change': myPlayerIndex.value = event.playerIndex; break;
-          case 'waiting-change':  waiting.value = event.waiting; break;
+          case 'mode-change':          mode.value = event.mode; break;
+          case 'my-index-change':      myPlayerIndex.value = event.playerIndex; break;
+          case 'waiting-change':       waiting.value = event.waiting; break;
+          case 'my-name-change':       myName.value = event.name; break;
+          case 'opponent-name-change': opponentName.value = event.name; break;
         }
       },
       awaitAnimation: () => new Promise<void>(resolve => { animationResolve = resolve; }),
@@ -66,13 +71,16 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
     mode,
     myPlayerIndex,
     waiting,
+    myName,
+    opponentName,
     lastSend,
     lastGrab,
     lastSlap,
     lastSuccessfulSlap,
     lastErroneousSlap,
     create:               (gameMode: 'solo' | 'multiplayer', name?: string) => session.create(gameMode, name),
-    join:                 (id: string) => session.join(id),
+    join:                 (id: string, name?: string) => session.join(id, name),
+    applySessionView:     (players: SessionSeat[]) => session.applySessionView(players),
     hydrate:              (id: string, s: BatailleCorse) => session.hydrate(id, s),
     restoreTokens:        (tokens: Record<number, string>) => session.restoreTokens(tokens),
     restoreSession:       (tokens: Record<number, string>) => session.restoreSession(tokens),
