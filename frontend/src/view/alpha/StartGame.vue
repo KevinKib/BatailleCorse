@@ -23,6 +23,33 @@
 
       <div class="panel-divider" />
 
+      <div v-if="screenMode === 'create'" class="field-group">
+        <label class="field-label">Opponent</label>
+        <div class="opponent-toggle">
+          <button
+            class="opponent-option"
+            :class="{ 'opponent-option--active': vsComputer }"
+            @click="vsComputer = true"
+          >Computer</button>
+          <button
+            class="opponent-option"
+            :class="{ 'opponent-option--active': !vsComputer }"
+            @click="vsComputer = false"
+          >Human</button>
+        </div>
+      </div>
+
+      <div v-if="screenMode === 'join'" class="field-group">
+        <label class="field-label" for="gameId">Game ID</label>
+        <InputText
+          id="gameId"
+          v-model="joinGameId"
+          placeholder="Paste game ID or link..."
+          class="name-input"
+        />
+        <p v-if="joinError" class="conflict-warning">{{ joinError }}</p>
+      </div>
+
       <div class="field-group">
         <label class="field-label" for="playerName">Your Name</label>
         <InputText
@@ -69,7 +96,7 @@
         </p>
       </div>
 
-      <div class="field-group">
+      <div class="field-group" v-if="screenMode === 'create' && vsComputer">
         <label class="field-label">Difficulty</label>
         <div class="difficulty-badge" :style="{ color: DIFFICULTY[difficulty].color }">
           {{ DIFFICULTY[difficulty].name }}
@@ -90,7 +117,7 @@
 
       <Button
         class="start-button"
-        label="Deal Cards"
+        :label="screenMode === 'join' ? 'Join Game' : (vsComputer ? 'Deal Cards' : 'Create Game')"
         icon="pi pi-play"
         severity="success"
         size="large"
@@ -116,7 +143,7 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { Button, InputText } from 'primevue';
 
@@ -129,6 +156,17 @@ const router = useRouter();
 const batailleCorseStore = useBatailleCorseStore();
 const settingsStore = useSettingsStore();
 const { playerName, sendKey, slapKey, difficulty } = storeToRefs(settingsStore);
+
+const route = useRoute();
+const screenMode = computed<'create' | 'join'>(() =>
+  route.path.startsWith('/join') ? 'join' : 'create');
+
+// New Game toggle: true = solo vs computer, false = 2-player vs human
+const vsComputer = ref(true);
+
+// Join: the game id to join (pre-filled from the share link)
+const joinGameId = ref<string>((route.params.id as string) ?? '');
+const joinError = ref<string>('');
 
 
 const capturing = ref<'send' | 'slap' | null>(null);
@@ -181,13 +219,29 @@ function cancelCapture() {
 onBeforeUnmount(() => cancelCapture());
 
 function startGame() {
-  batailleCorseStore.create(playerName.value || undefined);
+  if (screenMode.value === 'join') {
+    joinGame();
+    return;
+  }
+  const gameMode = vsComputer.value ? 'solo' : 'multiplayer';
+  batailleCorseStore.create(gameMode, playerName.value || undefined);
   const unwatch = watch(() => batailleCorseStore.gameId, (id) => {
     if (id) {
       unwatch();
       router.push(`/room/${id}`);
     }
   });
+}
+
+async function joinGame() {
+  const id = joinGameId.value.trim();
+  if (!id) return;
+  try {
+    await batailleCorseStore.join(id);
+    router.push(`/room/${id}`);
+  } catch (e) {
+    joinError.value = 'Could not join this game. Check the ID and try again.';
+  }
 }
 </script>
 
@@ -496,5 +550,30 @@ function startGame() {
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.3);
+}
+
+.opponent-toggle {
+  display: flex;
+  gap: 8px;
+}
+
+.opponent-option {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1.5px solid rgba(255, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.35);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.opponent-option--active {
+  background: rgba(232, 201, 109, 0.14);
+  border-color: rgba(232, 201, 109, 0.55);
+  color: #f5c842;
 }
 </style>
