@@ -41,8 +41,9 @@ public class BatailleCorseWebSocketController {
     @SendTo("/topic/game")
     public Response createGame(@Payload(required = false) CreateGamePayload payload) {
         GameMode mode = (payload != null && payload.mode() != null) ? payload.mode() : GameMode.SOLO;
+        String name = (payload != null) ? payload.name() : null;
 
-        BatailleCorse batailleCorse = sessionService.createGame(NB_PLAYERS, mode);
+        BatailleCorse batailleCorse = sessionService.createGame(NB_PLAYERS, mode, name);
 
         int seatsToReturn = (mode == GameMode.SOLO) ? NB_PLAYERS : 1;
         Map<Integer, String> tokens = new HashMap<>();

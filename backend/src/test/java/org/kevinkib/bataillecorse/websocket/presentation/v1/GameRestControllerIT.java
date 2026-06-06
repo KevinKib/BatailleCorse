@@ -7,6 +7,7 @@ import org.kevinkib.bataillecorse.websocket.presentation.v1.api.Response;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.dto.BatailleCorseDto;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.dto.JoinResponseDto;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.dto.PlayerDto;
+import org.kevinkib.bataillecorse.websocket.presentation.v1.dto.SessionViewDto;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.dto.event.CreateEventData;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -80,7 +81,7 @@ class GameRestControllerIT {
 
     @Test
     void givenMultiplayerCreate_whenCreateGame_thenResponseIncludesOnlyTokenForSeatZero() {
-        Response createResponse = wsController.createGame(new CreateGamePayload(GameMode.MULTIPLAYER));
+        Response createResponse = wsController.createGame(new CreateGamePayload(GameMode.MULTIPLAYER, null));
         CreateEventData createData = (CreateEventData) createResponse.getEventData();
 
         assertThat(createData.tokens(), hasKey(0));
@@ -89,7 +90,7 @@ class GameRestControllerIT {
 
     @Test
     void givenMultiplayerGame_whenJoin_thenReturnsJoinerTokenForSeatOne() {
-        Response createResponse = wsController.createGame(new CreateGamePayload(GameMode.MULTIPLAYER));
+        Response createResponse = wsController.createGame(new CreateGamePayload(GameMode.MULTIPLAYER, null));
         CreateEventData createData = (CreateEventData) createResponse.getEventData();
         String gameId = createData.game().getId();
 
@@ -129,5 +130,60 @@ class GameRestControllerIT {
         } catch (HttpClientErrorException.NotFound e) {
             assertThat(e.getStatusCode(), is(HttpStatus.NOT_FOUND));
         }
+    }
+
+    @Test
+    void givenMultiplayerGame_whenGetSession_thenSeatZeroJoinedWithNameAndSeatOnePending() {
+        Response createResponse = wsController.createGame(
+                new CreateGamePayload(GameMode.MULTIPLAYER, "Alice"));
+        CreateEventData createData = (CreateEventData) createResponse.getEventData();
+        String gameId = createData.game().getId();
+
+        ResponseEntity<SessionViewDto> response = restTemplate.getForEntity(
+                "http://localhost:" + port + "/api/game/" + gameId + "/session",
+                SessionViewDto.class);
+
+        assertThat(response.getStatusCode(), is(HttpStatus.OK));
+        SessionViewDto body = response.getBody();
+        assertThat(body, notNullValue());
+        assertThat(body.players(), hasSize(2));
+        assertThat(body.players().get(0).joined(), is(true));
+        assertThat(body.players().get(0).name(), is("Alice"));
+        assertThat(body.players().get(1).joined(), is(false));
+    }
+
+    @Test
+    void givenUnknownId_whenGetSession_thenReturns404() {
+        try {
+            restTemplate.getForEntity(
+                    "http://localhost:" + port + "/api/game/unknown-id/session",
+                    String.class);
+            throw new AssertionError("Expected 404 but request succeeded");
+        } catch (HttpClientErrorException.NotFound e) {
+            assertThat(e.getStatusCode(), is(HttpStatus.NOT_FOUND));
+        }
+    }
+
+    @Test
+    void givenMultiplayerGame_whenJoinWithName_thenSessionShowsBothNames() {
+        Response createResponse = wsController.createGame(
+                new CreateGamePayload(GameMode.MULTIPLAYER, "Alice"));
+        CreateEventData createData = (CreateEventData) createResponse.getEventData();
+        String gameId = createData.game().getId();
+
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
+        org.springframework.http.HttpEntity<String> request =
+                new org.springframework.http.HttpEntity<>("{\"name\":\"Bob\"}", headers);
+
+        restTemplate.postForEntity(
+                "http://localhost:" + port + "/api/game/" + gameId + "/join",
+                request, JoinResponseDto.class);
+
+        SessionViewDto session = restTemplate.getForEntity(
+                "http://localhost:" + port + "/api/game/" + gameId + "/session",
+                SessionViewDto.class).getBody();
+        assertThat(session.players().get(0).name(), is("Alice"));
+        assertThat(session.players().get(1).name(), is("Bob"));
     }
 }
