@@ -9,4 +9,6 @@ export type GameEvent =
   | { type: 'slap' }
   | { type: 'successful-slap'; winnerPlayerIndex: number; seq: number; pileCards: Card[] }
   | { type: 'erroneous-slap'; playerIndex: number; seq: number }
-  | { type: 'join'; playerIndex: number };
+  | { type: 'mode-change'; mode: 'solo' | 'multiplayer' }
+  | { type: 'my-index-change'; playerIndex: number }
+  | { type: 'waiting-change'; waiting: boolean };

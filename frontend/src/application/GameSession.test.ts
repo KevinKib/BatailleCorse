@@ -48,7 +48,7 @@ describe('GameSession', () => {
   describe('CREATE event', () => {
     it('emits game-id-change and subscribes to per-game channel', async () => {
       const { session, events, subscribed } = makeSession();
-      session.create('Alice');
+      session.create('solo', 'Alice');
       await session.onResponse(buildCreateResponse('game-1', { 0: 'tok-a', 1: 'tok-b' }));
       expect(events).toContainEqual({ type: 'game-id-change', gameId: 'game-1' });
       expect(subscribed).toContain('game-1');
@@ -56,7 +56,7 @@ describe('GameSession', () => {
 
     it('stores tokens in localStorage', async () => {
       const { session } = makeSession();
-      session.create();
+      session.create('solo');
       await session.onResponse(buildCreateResponse('game-42', { 0: 'tok-x', 1: 'tok-y' }));
       const stored = JSON.parse(localStorage.getItem('tokens:game-42')!);
       expect(stored).toEqual({ 0: 'tok-x', 1: 'tok-y' });
@@ -68,6 +68,48 @@ describe('GameSession', () => {
       await session.onResponse(buildCreateResponse('game-1', { 0: 'tok-a', 1: 'tok-b' }));
       expect(events.find(e => e.type === 'game-id-change')).toBeUndefined();
       expect(subscribed).toHaveLength(0);
+    });
+  });
+
+  // --- Multiplayer mode -----------------------------------------------------
+
+  describe('multiplayer mode', () => {
+    it('create("multiplayer") announces waiting and sends MULTIPLAYER', () => {
+      const { session, events, published } = makeSession();
+      session.create('multiplayer');
+      expect(events).toContainEqual({ type: 'mode-change', mode: 'multiplayer' });
+      expect(events).toContainEqual({ type: 'waiting-change', waiting: true });
+      expect(published).toContainEqual({ dest: '/app/create', body: JSON.stringify({ mode: 'MULTIPLAYER' }) });
+    });
+
+    it('create("solo") is not waiting and sends SOLO', () => {
+      const { session, events, published } = makeSession();
+      session.create('solo');
+      expect(events).toContainEqual({ type: 'mode-change', mode: 'solo' });
+      expect(events).toContainEqual({ type: 'waiting-change', waiting: false });
+      expect(published).toContainEqual({ dest: '/app/create', body: JSON.stringify({ mode: 'SOLO' }) });
+    });
+
+    it('clears waiting when a JOIN event arrives', async () => {
+      const { session, events } = makeSession();
+      session.create('multiplayer');
+      await session.onResponse(buildResponse({ eventType: 'JOIN', state: buildGame() }));
+      const waitingChanges = events.filter(e => e.type === 'waiting-change');
+      expect(waitingChanges.at(-1)).toEqual({ type: 'waiting-change', waiting: false });
+    });
+
+    it('restoreSession derives multiplayer perspective from a single token', () => {
+      const { session, events } = makeSession();
+      session.restoreSession({ 1: 'tok-1' });
+      expect(events).toContainEqual({ type: 'mode-change', mode: 'multiplayer' });
+      expect(events).toContainEqual({ type: 'my-index-change', playerIndex: 1 });
+    });
+
+    it('restoreSession derives solo perspective from both tokens', () => {
+      const { session, events } = makeSession();
+      session.restoreSession({ 0: 'tok-0', 1: 'tok-1' });
+      expect(events).toContainEqual({ type: 'mode-change', mode: 'solo' });
+      expect(events).toContainEqual({ type: 'my-index-change', playerIndex: 0 });
     });
   });
 

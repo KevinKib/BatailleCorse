@@ -25,6 +25,11 @@ export default class GameSession {
   private autoGrabTimeoutId: ReturnType<typeof setTimeout> | null = null;
   private ai: AI;
 
+  // Multiplayer perspective. Solo is the default so single-player behaviour is unchanged.
+  private mode: 'solo' | 'multiplayer' = 'solo';
+  private myPlayerIndex = 0;
+  private waiting = false;
+
   private readonly CATCHUP_THRESHOLD = 3;
   private readonly AUTO_GRAB_DELAY = 1500;
   private readonly eventQueue: Response[] = [];
@@ -44,22 +49,87 @@ export default class GameSession {
     this.ai = aiFactory();
   }
 
-  create(playerName?: string): void {
+  create(gameMode: 'solo' | 'multiplayer', playerName?: string): void {
     this.pendingCreate = true;
-    this.ai = this.aiFactory();
-    this.webSocket.publish(
-      '/app/create',
-      playerName ? JSON.stringify({ playerName }) : undefined,
-    );
+    this.mode = gameMode;
+    this.myPlayerIndex = 0;
+    this.waiting = gameMode === 'multiplayer';
+    // Only solo needs the puppet AI; multiplayer waits for a second human.
+    if (gameMode === 'solo') {
+      this.ai = this.aiFactory();
+    }
+    this.emitPerspective();
+    // playerName stays browser-local per the spec; only the mode is sent.
+    void playerName;
+    const serverMode = gameMode === 'solo' ? 'SOLO' : 'MULTIPLAYER';
+    this.webSocket.publish('/app/create', JSON.stringify({ mode: serverMode }));
+  }
+
+  /** Joins an existing multiplayer game as seat 1 and hydrates its state. */
+  async join(id: string): Promise<void> {
+    const response = await fetch(`/api/game/${id}/join`, { method: 'POST' });
+    if (!response.ok) {
+      throw new Error(`Join failed: ${response.status}`);
+    }
+    const body = await response.json() as { playerId: number; token: string };
+
+    this.mode = 'multiplayer';
+    this.myPlayerIndex = body.playerId;
+    this.waiting = false;
+
+    const tokens = { [body.playerId]: body.token };
+    this.playerTokens = tokens;
+    localStorage.setItem(`tokens:${id}`, JSON.stringify(tokens));
+
+    this.gameId = id;
+    this.webSocket.subscribeToGame(id);
+
+    this.emitPerspective();
+    this.callbacks.onEvent({ type: 'game-id-change', gameId: id });
+
+    const stateResponse = await fetch(`/api/game/${id}`);
+    if (stateResponse.ok) {
+      const json = await stateResponse.json();
+      this.state = BatailleCorse.fromJSON(json as Parameters<typeof BatailleCorse.fromJSON>[0]);
+      this.callbacks.onEvent({ type: 'state-update', state: this.state });
+    }
   }
 
   hydrate(id: string, gameState: BatailleCorse): void {
     this.gameId = id;
-    this.state = gameState;
+    this.state = gameState instanceof BatailleCorse
+      ? gameState
+      : BatailleCorse.fromJSON(gameState as unknown as Parameters<typeof BatailleCorse.fromJSON>[0]);
+    this.callbacks.onEvent({ type: 'game-id-change', gameId: id });
+    this.callbacks.onEvent({ type: 'state-update', state: this.state });
   }
 
   restoreTokens(tokens: Record<number, string>): void {
     this.playerTokens = tokens;
+  }
+
+  /**
+   * Restores mode + perspective from persisted tokens. Solo stores both seat
+   * tokens ({0,1}); multiplayer stores exactly one (the local player's seat).
+   */
+  restoreSession(tokens: Record<number, string>): void {
+    this.playerTokens = tokens;
+    const seats = Object.keys(tokens).map(Number);
+    if (seats.length >= 2) {
+      this.mode = 'solo';
+      this.myPlayerIndex = 0;
+    } else {
+      this.mode = 'multiplayer';
+      this.myPlayerIndex = seats[0] ?? 0;
+      this.waiting = false;
+    }
+    this.emitPerspective();
+  }
+
+  private emitPerspective(): void {
+    this.callbacks.onEvent({ type: 'mode-change', mode: this.mode });
+    this.callbacks.onEvent({ type: 'my-index-change', playerIndex: this.myPlayerIndex });
+    this.callbacks.onEvent({ type: 'waiting-change', waiting: this.waiting });
   }
 
   send(playerIndex: number): void {
@@ -126,6 +196,11 @@ export default class GameSession {
       this.callbacks.onEvent({ type: 'game-id-change', gameId: this.gameId });
     }
 
+    if (response.eventType === 'JOIN') {
+      this.waiting = false;
+      this.callbacks.onEvent({ type: 'waiting-change', waiting: false });
+    }
+
     if (response.eventType === 'GRAB') {
       const grabData = response.eventData as GrabEventData;
       const winnerPlayerIndex = Number(grabData.player?.id);
@@ -172,19 +247,24 @@ export default class GameSession {
       clearTimeout(this.autoGrabTimeoutId);
       this.autoGrabTimeoutId = null;
     }
+    // In multiplayer, only the rightful grabber's tab arms the timer so the two
+    // clients don't both fire a grab. Solo is unchanged.
     const grabPlayer = newState.pile.getAutoGrabPlayer();
-    if (grabPlayer !== null) {
+    const mayAutoGrab = this.mode === 'solo' || grabPlayer === this.myPlayerIndex;
+    if (grabPlayer !== null && mayAutoGrab) {
       this.autoGrabTimeoutId = setTimeout(() => {
         this.autoGrabTimeoutId = null;
         this.grab(grabPlayer);
       }, this.AUTO_GRAB_DELAY);
     }
 
-    // Let the AI decide its next action
-    this.ai.play(newState, {
-      send: () => this.send(1),
-      slap: () => this.slap(1),
-    });
+    // The puppet AI only drives player 1 in solo; multiplayer is two humans.
+    if (this.mode === 'solo') {
+      this.ai.play(newState, {
+        send: () => this.send(1),
+        slap: () => this.slap(1),
+      });
+    }
 
     if (needsAnimationWait && !skipAnimation) {
       await this.callbacks.awaitAnimation();
