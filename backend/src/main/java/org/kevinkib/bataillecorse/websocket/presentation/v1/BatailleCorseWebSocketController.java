@@ -10,6 +10,8 @@ import org.kevinkib.bataillecorse.core.domain.PlayerId;
 import org.kevinkib.bataillecorse.sessionmanagement.application.InvalidTokenException;
 import org.kevinkib.bataillecorse.sessionmanagement.application.SessionService;
 import org.kevinkib.bataillecorse.sessionmanagement.domain.SessionToken;
+import org.kevinkib.bataillecorse.sessionmanagement.domain.GameMode;
+import org.kevinkib.bataillecorse.websocket.presentation.v1.api.CreateGamePayload;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.api.ErrorResponse;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.api.GameActionPayload;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.api.Response;
@@ -17,6 +19,7 @@ import org.kevinkib.bataillecorse.websocket.presentation.v1.api.SuccessResponse;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.dto.*;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.dto.event.*;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
 
@@ -36,11 +39,14 @@ public class BatailleCorseWebSocketController {
 
     @MessageMapping("/create")
     @SendTo("/topic/game")
-    public Response createGame() {
-        BatailleCorse batailleCorse = sessionService.createGame(NB_PLAYERS);
+    public Response createGame(@Payload(required = false) CreateGamePayload payload) {
+        GameMode mode = (payload != null && payload.mode() != null) ? payload.mode() : GameMode.SOLO;
 
+        BatailleCorse batailleCorse = sessionService.createGame(NB_PLAYERS, mode);
+
+        int seatsToReturn = (mode == GameMode.SOLO) ? NB_PLAYERS : 1;
         Map<Integer, String> tokens = new HashMap<>();
-        for (int i = 0; i < NB_PLAYERS; i++) {
+        for (int i = 0; i < seatsToReturn; i++) {
             SessionToken token = sessionService.loadTokenByPlayerId(batailleCorse.getId(), new PlayerId(i));
             tokens.put(i, token.uuid().toString());
         }

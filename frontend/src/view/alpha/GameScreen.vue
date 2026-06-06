@@ -4,7 +4,7 @@
     <div class="gamescreen_top flex">
       <div class="left_side"></div>
       <div class="middle_side">
-        <h1 class="player_tag">Computer ({{ difficultyLabel }})</h1>
+        <h1 class="player_tag">{{ opponentLabel }}</h1>
         <div class="card stacked">
           <PlayingCard
             ref="opponentCard"
@@ -14,7 +14,7 @@
             suit="spade"
           />
           <div class="card_counter" data-cy="opponent-card-count">
-            <CardCounter :count="batailleCorse?.players.at(1)?.nbCards"/>
+            <CardCounter :count="batailleCorse?.players.at(opponentIndex)?.nbCards"/>
           </div>
         </div>
       </div>
@@ -57,18 +57,30 @@
             suit="spade"
           />
           <div class="card_counter" data-cy="player-card-count">
-            <CardCounter :count="batailleCorse?.players.at(0)?.nbCards"/>
+            <CardCounter :count="batailleCorse?.players.at(myPlayerIndex)?.nbCards"/>
           </div>
         </div>
         <div class="action_buttons">
           <Button class="action_button" icon="pi pi-arrow-up" severity="success" label="Send" rounded
-            @click="send(0)" :disabled="isButtonDisabled(0, 'send')"/>
+            @click="send(myPlayerIndex)" :disabled="isButtonDisabled(myPlayerIndex, 'send')"/>
           <Button class="action_button" icon="pi pi-hammer" severity="warn" label="Slap" rounded
-            @click="slap(0)" :disabled="isButtonDisabled(0, 'slap')"/>
+            @click="slap(myPlayerIndex)" :disabled="isButtonDisabled(myPlayerIndex, 'slap')"/>
         </div>
       </div>
 
       <div class="right_side"></div>
+    </div>
+
+    <div v-if="isWaiting" class="waiting-overlay">
+      <div class="waiting-card">
+        <h2 class="waiting-title">Waiting for opponent…</h2>
+        <p class="waiting-sub">Share this link to invite a player</p>
+        <div class="share-row">
+          <InputText :value="shareLink" readonly class="share-input" />
+          <Button label="Copy" icon="pi pi-copy" rounded @click="copyShareLink" />
+        </div>
+        <p v-if="copied" class="waiting-copied">Copied!</p>
+      </div>
     </div>
   </div>
 
@@ -112,7 +124,7 @@
 <script setup lang="ts">
 import PlayingCard from '../../components/PlayingCard.vue';
 import CardCounter from '../../components/CardCounter.vue';
-import { Button } from 'primevue';
+import { Button, InputText } from 'primevue';
 import { storeToRefs } from 'pinia';
 import { useBatailleCorseStore } from '../../state/BatailleCorse.store';
 import { useSettingsStore } from '../../state/Settings.store';
@@ -120,13 +132,14 @@ import { DIFFICULTY } from '../../model/Difficulty';
 import { useCardAnimation } from '../../composables/useCardAnimation';
 import { useHotkeys } from '../../composables/useHotkeys';
 import { Action } from '../../model/Action';
-import { computed, nextTick, onBeforeUnmount, onMounted, useTemplateRef, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import webSocketService from '../../service/WebSocketService';
 import type BatailleCorse from '../../model/BatailleCorse';
 
 const batailleCorseStore = useBatailleCorseStore();
-const { state: batailleCorse, lastSend, lastGrab, lastSlap, lastSuccessfulSlap, lastErroneousSlap } = storeToRefs(batailleCorseStore);
+const { state: batailleCorse, mode, myPlayerIndex, waiting,
+        lastSend, lastGrab, lastSlap, lastSuccessfulSlap, lastErroneousSlap } = storeToRefs(batailleCorseStore);
 
 const pile = useTemplateRef("pile");
 const opponentCard = useTemplateRef("opponentCard");
@@ -153,7 +166,7 @@ watch(() => batailleCorse.value?.pile.cards.at(0), (newCard) => {
 // SEND is optimistic: topCard is snapshotted in the store at call time, no flush:'sync' needed.
 watch(lastSend, async (event) => {
   if (!event) return;
-  const sourceEl = event.playerIndex === 0 ? pile.value?.rootCard : opponentCard.value?.rootCard;
+  const sourceEl = event.playerIndex === myPlayerIndex.value ? pile.value?.rootCard : opponentCard.value?.rootCard;
   if (!sourceEl) return;
   await nextTick();
   const destRect = animation.getCenterPileRect();
@@ -167,7 +180,7 @@ watch(lastGrab, async (event) => {
   if (!event) { animation.cancelPileAnimation(); batailleCorseStore.notifyAnimationComplete(); return; }
   const { pileCards, winnerPlayerIndex } = event;
   await nextTick();
-  const destEl = winnerPlayerIndex === 0 ? pile.value?.rootCard : opponentCard.value?.rootCard;
+  const destEl = winnerPlayerIndex === myPlayerIndex.value ? pile.value?.rootCard : opponentCard.value?.rootCard;
   const srcRect = animation.getCenterPileRect();
   if (!destEl || !srcRect || srcRect.width === 0) {
     animation.cancelPileAnimation();
@@ -187,7 +200,7 @@ watch(lastSuccessfulSlap, async (event) => {
   if (!event) return;
   const { pileCards, winnerPlayerIndex } = event;
   await nextTick();
-  const destEl = winnerPlayerIndex === 0 ? pile.value?.rootCard : opponentCard.value?.rootCard;
+  const destEl = winnerPlayerIndex === myPlayerIndex.value ? pile.value?.rootCard : opponentCard.value?.rootCard;
   if (!destEl) { batailleCorseStore.notifyAnimationComplete(); return; }
   const srcRect = animation.getCenterPileRect();
   if (!srcRect || srcRect.width === 0) { batailleCorseStore.notifyAnimationComplete(); return; }
@@ -200,7 +213,7 @@ watch(lastSuccessfulSlap, async (event) => {
 watch(lastErroneousSlap, async (event) => {
   if (!event) return;
   await nextTick();
-  const srcEl = event.playerIndex === 0 ? pile.value?.rootCard : opponentCard.value?.rootCard;
+  const srcEl = event.playerIndex === myPlayerIndex.value ? pile.value?.rootCard : opponentCard.value?.rootCard;
   const destRect = animation.getCenterPileRect();
   if (!srcEl || !destRect) { batailleCorseStore.notifyAnimationComplete(); return; }
   await animation.animateErroneousSlap(srcEl.getBoundingClientRect(), destRect);
@@ -220,15 +233,30 @@ function slap(playerIndex: number) {
   batailleCorseStore.slap(playerIndex);
 }
 
+const copied = ref(false);
+async function copyShareLink() {
+  await navigator.clipboard.writeText(shareLink.value);
+  copied.value = true;
+  setTimeout(() => { copied.value = false; }, 1500);
+}
+
 const settingsStore = useSettingsStore();
 const route = useRoute();
 const router = useRouter();
 
 const difficultyLabel = computed(() => DIFFICULTY[settingsStore.difficulty]?.name);
 
+const opponentIndex = computed(() => 1 - myPlayerIndex.value);
+const isSolo = computed(() => mode.value === 'solo');
+const isWaiting = computed(() => waiting.value);
+const opponentLabel = computed(() =>
+  isSolo.value ? `Computer (${difficultyLabel.value})` : 'Opponent');
+const shareLink = computed(() =>
+  `${window.location.origin}/join/${route.params.id}`);
+
 useHotkeys(
-  () => { if (!isButtonDisabled(0, 'send')) send(0); },
-  () => { if (!isButtonDisabled(0, 'slap')) slap(0); },
+  () => { if (!isButtonDisabled(myPlayerIndex.value, 'send')) send(myPlayerIndex.value); },
+  () => { if (!isButtonDisabled(myPlayerIndex.value, 'slap')) slap(myPlayerIndex.value); },
   () => [settingsStore.sendKey],
   () => [settingsStore.slapKey],
 );
@@ -250,7 +278,7 @@ onMounted(async () => {
 
   const gameState = await response.json() as BatailleCorse;
   batailleCorseStore.hydrate(gameId, gameState);
-  batailleCorseStore.restoreTokens(JSON.parse(stored));
+  batailleCorseStore.restoreSession(JSON.parse(stored));
   webSocketService.subscribeToGame(gameId);
 });
 
@@ -272,6 +300,7 @@ onBeforeUnmount(() => {
   height: 100%;
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
 .gamescreen_top {
@@ -485,6 +514,61 @@ onBeforeUnmount(() => {
 
 .card-delta--negative {
   color: #f87171;
+}
+
+.waiting-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.78);
+  backdrop-filter: blur(3px);
+}
+
+.waiting-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  padding: 36px 40px;
+  max-width: 460px;
+}
+
+.waiting-title {
+  font-family: "Gabarito", sans-serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #f5c842;
+  margin: 0;
+}
+
+.waiting-sub {
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0;
+}
+
+.share-row {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.share-input {
+  flex: 1;
+}
+
+.waiting-copied {
+  font-size: 0.72rem;
+  color: #4ade80;
+  margin: 0;
 }
 
 </style>

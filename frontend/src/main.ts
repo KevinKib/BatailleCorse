@@ -33,6 +33,7 @@ import { createWebHistory, createRouter } from 'vue-router';
 const routes = [
   { path: '/', component: LobbyView },
   { path: '/create', component: StartGame },
+  { path: '/join/:id?', component: StartGame },
   { path: '/room/:id', component: GameScreen },
   { path: '/debug', component: Debug },
 ]

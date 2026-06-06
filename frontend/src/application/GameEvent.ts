@@ -8,4 +8,7 @@ export type GameEvent =
   | { type: 'grab'; winnerPlayerIndex: number; seq: number; pileCards: Card[] }
   | { type: 'slap' }
   | { type: 'successful-slap'; winnerPlayerIndex: number; seq: number; pileCards: Card[] }
-  | { type: 'erroneous-slap'; playerIndex: number; seq: number };
+  | { type: 'erroneous-slap'; playerIndex: number; seq: number }
+  | { type: 'mode-change'; mode: 'solo' | 'multiplayer' }
+  | { type: 'my-index-change'; playerIndex: number }
+  | { type: 'waiting-change'; waiting: boolean };

@@ -22,7 +22,7 @@ class BatailleCorseControllerIT {
 
     @Test
     void givenNoGame_whenCreateGame_thenReturnsSuccessResponseWithCreateEventAndNonNullState() {
-        Response response = controller.createGame();
+        Response response = controller.createGame(null);
 
         assertThat(response, instanceOf(SuccessResponse.class));
         assertThat(response.getEventType(), is(EventType.CREATE.toString()));

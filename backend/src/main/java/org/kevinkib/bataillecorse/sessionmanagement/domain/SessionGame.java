@@ -5,11 +5,13 @@ import org.kevinkib.bataillecorse.core.domain.Player;
 import org.kevinkib.bataillecorse.core.domain.PlayerId;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
-public record SessionGame(BatailleCorseId id, Map<PlayerId, SessionToken> tokensByPlayer) {
+public record SessionGame(BatailleCorseId id, Map<PlayerId, SessionToken> tokensByPlayer, Set<PlayerId> claimedSeats) {
 
     public static SessionGame create(BatailleCorseId id, List<Player> players) {
         Map<PlayerId, SessionToken> tokensByPlayer = new HashMap<>();
@@ -18,7 +20,15 @@ public record SessionGame(BatailleCorseId id, Map<PlayerId, SessionToken> tokens
             tokensByPlayer.put(player.id(), SessionToken.generate());
         }
 
-        return new SessionGame(id, tokensByPlayer);
+        return new SessionGame(id, tokensByPlayer, new HashSet<>());
+    }
+
+    public void claim(PlayerId playerId) {
+        claimedSeats.add(playerId);
+    }
+
+    public boolean isClaimed(PlayerId playerId) {
+        return claimedSeats.contains(playerId);
     }
 
     public Optional<SessionToken> findTokenByPlayer(PlayerId playerId) {

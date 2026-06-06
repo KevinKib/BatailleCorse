@@ -40,6 +40,31 @@ class SessionGameTest {
     }
 
     @Nested
+    class ClaimTest {
+
+        @Test
+        public void givenNewSessionGame_whenCreated_thenNoSeatsAreClaimed() {
+            var players = createNumberOfPlayers(2);
+
+            var sessionGame = SessionGame.create(BatailleCorseId.generate(), players);
+
+            assertThat(sessionGame.isClaimed(new PlayerId(0)), is(false));
+            assertThat(sessionGame.isClaimed(new PlayerId(1)), is(false));
+        }
+
+        @Test
+        public void givenSeat_whenClaimed_thenIsClaimed() {
+            var players = createNumberOfPlayers(2);
+            var sessionGame = SessionGame.create(BatailleCorseId.generate(), players);
+
+            sessionGame.claim(new PlayerId(0));
+
+            assertThat(sessionGame.isClaimed(new PlayerId(0)), is(true));
+            assertThat(sessionGame.isClaimed(new PlayerId(1)), is(false));
+        }
+    }
+
+    @Nested
     class FindPlayerByTokenTest {
 
         @Test

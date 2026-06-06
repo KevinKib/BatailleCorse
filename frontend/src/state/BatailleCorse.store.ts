@@ -21,6 +21,11 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
   const lastSuccessfulSlap = ref<{ winnerPlayerIndex: number; seq: number; pileCards: Card[] } | null>(null);
   const lastErroneousSlap = ref<{ playerIndex: number; seq: number } | null>(null);
 
+  // Multiplayer perspective, mirrored from GameSession via events.
+  const mode = ref<'solo' | 'multiplayer'>('solo');
+  const myPlayerIndex = ref<number>(0);
+  const waiting = ref<boolean>(false);
+
   let animationResolve: (() => void) | null = null;
   // slapSeq lives in the store because the slap flash animation fires optimistically
   // at the moment the user presses the button, before the server responds.
@@ -40,6 +45,9 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
           case 'slap':            lastSlap.value = { seq: ++slapSeq }; break;
           case 'successful-slap': lastSuccessfulSlap.value = event; break;
           case 'erroneous-slap':  lastErroneousSlap.value = event; break;
+          case 'mode-change':     mode.value = event.mode; break;
+          case 'my-index-change': myPlayerIndex.value = event.playerIndex; break;
+          case 'waiting-change':  waiting.value = event.waiting; break;
         }
       },
       awaitAnimation: () => new Promise<void>(resolve => { animationResolve = resolve; }),
@@ -55,14 +63,19 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
   return {
     state,
     gameId,
+    mode,
+    myPlayerIndex,
+    waiting,
     lastSend,
     lastGrab,
     lastSlap,
     lastSuccessfulSlap,
     lastErroneousSlap,
-    create:               (name?: string) => session.create(name),
+    create:               (gameMode: 'solo' | 'multiplayer', name?: string) => session.create(gameMode, name),
+    join:                 (id: string) => session.join(id),
     hydrate:              (id: string, s: BatailleCorse) => session.hydrate(id, s),
     restoreTokens:        (tokens: Record<number, string>) => session.restoreTokens(tokens),
+    restoreSession:       (tokens: Record<number, string>) => session.restoreSession(tokens),
     send:                 (playerIndex: number) => session.send(playerIndex),
     slap:                 (playerIndex: number) => session.slap(playerIndex),
     grab:                 (playerIndex: number) => session.grab(playerIndex),
