@@ -1,6 +1,8 @@
 package org.kevinkib.bataillecorse.websocket.presentation.v1;
 
 import org.junit.jupiter.api.Test;
+import org.kevinkib.bataillecorse.sessionmanagement.domain.GameMode;
+import org.kevinkib.bataillecorse.websocket.presentation.v1.api.CreateGamePayload;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.api.Response;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.dto.BatailleCorseDto;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.dto.PlayerDto;
@@ -43,7 +45,7 @@ class GameRestControllerIT {
 
     @Test
     void givenExistingGame_whenGetGame_thenReturnsGameStateWithTwoPlayers() {
-        Response createResponse = wsController.createGame();
+        Response createResponse = wsController.createGame(null);
         CreateEventData createData = (CreateEventData) createResponse.getEventData();
         String gameId = createData.game().getId();
 
@@ -65,7 +67,7 @@ class GameRestControllerIT {
 
     @Test
     void givenCreate_whenCreateGame_thenResponseIncludesTokensForBothPlayers() {
-        Response createResponse = wsController.createGame();
+        Response createResponse = wsController.createGame(null);
         CreateEventData createData = (CreateEventData) createResponse.getEventData();
 
         assertThat(createData.tokens(), hasKey(0));
@@ -73,5 +75,14 @@ class GameRestControllerIT {
         assertThat(createData.tokens().get(0), notNullValue());
         assertThat(createData.tokens().get(1), notNullValue());
         assertThat(createData.tokens().get(0), not(equalTo(createData.tokens().get(1))));
+    }
+
+    @Test
+    void givenMultiplayerCreate_whenCreateGame_thenResponseIncludesOnlyTokenForSeatZero() {
+        Response createResponse = wsController.createGame(new CreateGamePayload(GameMode.MULTIPLAYER));
+        CreateEventData createData = (CreateEventData) createResponse.getEventData();
+
+        assertThat(createData.tokens(), hasKey(0));
+        assertThat(createData.tokens(), not(hasKey(1)));
     }
 }
