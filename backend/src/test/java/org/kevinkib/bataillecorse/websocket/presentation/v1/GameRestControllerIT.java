@@ -5,6 +5,7 @@ import org.kevinkib.bataillecorse.sessionmanagement.domain.GameMode;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.api.CreateGamePayload;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.api.Response;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.dto.BatailleCorseDto;
+import org.kevinkib.bataillecorse.websocket.presentation.v1.dto.JoinResponseDto;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.dto.PlayerDto;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.dto.event.CreateEventData;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -84,5 +85,49 @@ class GameRestControllerIT {
 
         assertThat(createData.tokens(), hasKey(0));
         assertThat(createData.tokens(), not(hasKey(1)));
+    }
+
+    @Test
+    void givenMultiplayerGame_whenJoin_thenReturnsJoinerTokenForSeatOne() {
+        Response createResponse = wsController.createGame(new CreateGamePayload(GameMode.MULTIPLAYER));
+        CreateEventData createData = (CreateEventData) createResponse.getEventData();
+        String gameId = createData.game().getId();
+
+        ResponseEntity<JoinResponseDto> response = restTemplate.postForEntity(
+                "http://localhost:" + port + "/api/game/" + gameId + "/join",
+                null, JoinResponseDto.class);
+
+        assertThat(response.getStatusCode(), is(HttpStatus.OK));
+        assertThat(response.getBody(), notNullValue());
+        assertThat(response.getBody().playerId(), is(1));
+        assertThat(response.getBody().token(), notNullValue());
+    }
+
+    @Test
+    void givenSoloGame_whenJoin_thenReturns409() {
+        Response createResponse = wsController.createGame(null);
+        CreateEventData createData = (CreateEventData) createResponse.getEventData();
+        String gameId = createData.game().getId();
+
+        try {
+            restTemplate.postForEntity(
+                    "http://localhost:" + port + "/api/game/" + gameId + "/join",
+                    null, JoinResponseDto.class);
+            throw new AssertionError("Expected 409 but request succeeded");
+        } catch (HttpClientErrorException.Conflict e) {
+            assertThat(e.getStatusCode(), is(HttpStatus.CONFLICT));
+        }
+    }
+
+    @Test
+    void givenUnknownGame_whenJoin_thenReturns404() {
+        try {
+            restTemplate.postForEntity(
+                    "http://localhost:" + port + "/api/game/unknown-id/join",
+                    null, JoinResponseDto.class);
+            throw new AssertionError("Expected 404 but request succeeded");
+        } catch (HttpClientErrorException.NotFound e) {
+            assertThat(e.getStatusCode(), is(HttpStatus.NOT_FOUND));
+        }
     }
 }
