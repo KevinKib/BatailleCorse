@@ -13,8 +13,8 @@ services:
       secrets:
         - maven_settings
     image: bataillecorse-backend:0.1
-    ports:
-      - "8080:8080"
+    # Not published to the host: all traffic goes through the nginx gateway,
+    # which reaches the backend internally as http://backend:8080.
 
   gateway:
     build:
