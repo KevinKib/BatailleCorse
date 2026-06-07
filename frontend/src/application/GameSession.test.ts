@@ -430,6 +430,41 @@ describe('GameSession', () => {
 
       expect(events.find(e => e.type === 'send')).toBeUndefined();
     });
+
+    it('skips opponent send animations while catching up (queue backed up)', async () => {
+      const events: GameEvent[] = [];
+      let releaseAnimation!: () => void;
+      const animationGate = new Promise<void>(res => { releaseAnimation = res; });
+
+      const webSocket: WebSocketPort = {
+        publish: () => {},
+        subscribeToGame: () => {},
+      };
+      const callbacks: GameSessionCallbacks = {
+        onEvent: (e) => events.push(e),
+        awaitAnimation: () => animationGate,
+      };
+      const session = new GameSession(webSocket, callbacks, () => new AI(1, 0));
+      session.hydrate('game-1', buildGame());
+      session.restoreSession({ 1: 'tok-b' }); // multiplayer, my seat = 1, opponent = 0
+
+      // A GRAB by the opponent blocks on awaitAnimation, letting the queue build.
+      const drain = session.onResponse(buildGrabResponse('0', buildGame()));
+      // Four opponent SEND responses pile up behind the blocked grab animation.
+      for (let i = 0; i < 4; i++) {
+        session.onResponse(buildResponse({
+          eventType: 'SEND',
+          eventData: { player: { id: '0' } },
+          state: buildGame(),
+        }));
+      }
+      releaseAnimation();
+      await drain;
+
+      const sendEvents = events.filter(e => e.type === 'send');
+      // With threshold 3: the first SEND (3 still queued) is skipped, the rest emit.
+      expect(sendEvents).toHaveLength(3);
+    });
   });
 
   // --- Event queue ----------------------------------------------------------

@@ -294,7 +294,7 @@ export default class GameSession {
 
     if (response.eventType === 'SEND') {
       const senderIndex = Number((response.eventData as SendEventData).player?.id);
-      if (!isNaN(senderIndex) && !this.emitsSendOptimistically(senderIndex)) {
+      if (!isNaN(senderIndex) && !skipAnimation && !this.emitsSendOptimistically(senderIndex)) {
         const topCard = this.state?.pile.cards.at(0);
         this.callbacks.onEvent({
           type: 'send',
