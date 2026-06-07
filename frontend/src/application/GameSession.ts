@@ -4,6 +4,7 @@ import type Response from '../model/Response';
 import type CreateEventData from '../model/event/CreateEventData';
 import type GrabEventData from '../model/event/GrabEventData';
 import type SlapEventData from '../model/event/SlapEventData';
+import type SendEventData from '../model/event/SendEventData';
 import type { GameEvent } from './GameEvent';
 import AI from '../model/ai/AI';
 import type SessionSeat from '../model/SessionSeat';
@@ -151,6 +152,16 @@ export default class GameSession {
     this.callbacks.onEvent({ type: 'waiting-change', waiting: this.waiting });
   }
 
+  /**
+   * True when this client already emits the `send` GameEvent optimistically for
+   * the given seat, so a server SEND echo must NOT emit a duplicate. Solo drives
+   * both seats locally (user = 0, AI = 1 via send(1)); multiplayer drives only the
+   * local player's seat.
+   */
+  private emitsSendOptimistically(playerIndex: number): boolean {
+    return this.mode === 'solo' || playerIndex === this.myPlayerIndex;
+  }
+
   /** Applies server seat occupancy + names: resolves waiting and both names. */
   applySessionView(players: SessionSeat[]): void {
     // Names and the waiting overlay are multiplayer-only; solo's opponent is the AI.
@@ -278,6 +289,19 @@ export default class GameSession {
           seq: ++this.erroneousSlapSeq,
         });
         needsAnimationWait = true;
+      }
+    }
+
+    if (response.eventType === 'SEND') {
+      const senderIndex = Number((response.eventData as SendEventData).player?.id);
+      if (!isNaN(senderIndex) && !this.emitsSendOptimistically(senderIndex)) {
+        const topCard = this.state?.pile.cards.at(0);
+        this.callbacks.onEvent({
+          type: 'send',
+          playerIndex: senderIndex,
+          seq: ++this.sendSeq,
+          topCard,
+        });
       }
     }
 

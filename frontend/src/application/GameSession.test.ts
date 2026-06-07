@@ -376,6 +376,62 @@ describe('GameSession', () => {
     });
   });
 
+  // --- SEND server response (opponent / echo dedup) -------------------------
+
+  describe('SEND response', () => {
+    it('emits a send event for the opponent in multiplayer, with the pre-send topCard', async () => {
+      const { session, events } = makeSession();
+      const topCard = buildCard({ rank: 'K', suit: 'spade' });
+      session.hydrate('game-1', buildGame({ pile: buildPile({ cards: [topCard] }) }));
+      session.restoreSession({ 1: 'tok-b' }); // multiplayer, my seat = 1, opponent = 0
+
+      await session.onResponse(buildResponse({
+        eventType: 'SEND',
+        eventData: { player: { id: '0' } },
+        state: buildGame(),
+      }));
+
+      const sendEvent = events.find(e => e.type === 'send') as
+        Extract<GameEvent, { type: 'send' }> | undefined;
+      expect(sendEvent).toBeDefined();
+      expect(sendEvent!.playerIndex).toBe(0);
+      expect(sendEvent!.topCard).toEqual(topCard);
+    });
+
+    it('does NOT emit a second send event for the local player in multiplayer (optimistic already fired)', async () => {
+      const { session, events } = makeSession();
+      session.hydrate('game-1', buildGame({ pile: buildPile({ cards: [buildCard()] }) }));
+      session.restoreSession({ 1: 'tok-b' }); // multiplayer, my seat = 1
+
+      session.send(1); // optimistic emit for my own send
+
+      await session.onResponse(buildResponse({
+        eventType: 'SEND',
+        eventData: { player: { id: '1' } }, // server echo of my own send
+        state: buildGame(),
+      }));
+
+      const mySendEvents = events.filter(
+        e => e.type === 'send' && e.playerIndex === 1,
+      );
+      expect(mySendEvents).toHaveLength(1); // only the optimistic one
+    });
+
+    it('does NOT emit a send event from the SEND response in solo (AI already emits via send(1))', async () => {
+      const { session, events } = makeSession();
+      session.hydrate('game-1', buildGame({ pile: buildPile({ cards: [buildCard()] }) }));
+      session.restoreSession({ 0: 'tok-a', 1: 'tok-b' }); // solo, my seat = 0
+
+      await session.onResponse(buildResponse({
+        eventType: 'SEND',
+        eventData: { player: { id: '1' } },
+        state: buildGame(), // empty pile + no available actions => AI stays idle
+      }));
+
+      expect(events.find(e => e.type === 'send')).toBeUndefined();
+    });
+  });
+
   // --- Event queue ----------------------------------------------------------
 
   describe('event queue seq counters', () => {
