@@ -10,11 +10,16 @@ export const END_SCREEN_DELAY_MS = 600;
  */
 export function useEndScreen(isOver: () => boolean, delayMs = END_SCREEN_DELAY_MS) {
   const showEndOverlay = ref(false);
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
   // Live win: the caller invokes this once the final card animation resolves.
   function revealAfterAnimation() {
     if (!isOver()) return;
-    setTimeout(() => { showEndOverlay.value = true; }, delayMs);
+    if (timeoutId !== null) clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => {
+      timeoutId = null;
+      showEndOverlay.value = true;
+    }, delayMs);
   }
 
   // Reload into a finished game: no animation in flight, reveal at once.
@@ -22,5 +27,13 @@ export function useEndScreen(isOver: () => boolean, delayMs = END_SCREEN_DELAY_M
     if (isOver()) showEndOverlay.value = true;
   }
 
-  return { showEndOverlay, revealAfterAnimation, revealImmediatelyIfOver };
+  // Cancel a pending reveal; the caller wires this into onBeforeUnmount.
+  function cancel() {
+    if (timeoutId !== null) {
+      clearTimeout(timeoutId);
+      timeoutId = null;
+    }
+  }
+
+  return { showEndOverlay, revealAfterAnimation, revealImmediatelyIfOver, cancel };
 }

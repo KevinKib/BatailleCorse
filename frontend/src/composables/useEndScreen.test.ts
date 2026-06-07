@@ -33,4 +33,13 @@ describe('useEndScreen', () => {
     revealImmediatelyIfOver();
     expect(showEndOverlay.value).toBe(false);
   });
+
+  it('givenPendingReveal_whenCancel_thenOverlayNeverShowsAndNoTimerLeaks', () => {
+    const { showEndOverlay, revealAfterAnimation, cancel } = useEndScreen(() => true);
+    revealAfterAnimation();
+    cancel();
+    expect(vi.getTimerCount()).toBe(0);
+    vi.advanceTimersByTime(END_SCREEN_DELAY_MS + 100);
+    expect(showEndOverlay.value).toBe(false);
+  });
 });
