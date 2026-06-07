@@ -15,12 +15,13 @@ const FAN_CARDS = [
 
 const FAN_ANGLE_STEP = 11; // degrees between adjacent cards
 const FAN_SPREAD = 50; // horizontal px between adjacent cards
-const FAN_DIP = 9; // px each card drops per step away from center
+const FAN_DIP = 4.5; // vertical px per (step-from-center)²; quadratic so the arc
+                     // curves and inner cards sit nearer the center's height
 
 function fanStyle(i: number) {
   const offset = i - (FAN_CARDS.length - 1) / 2;
   const x = offset * FAN_SPREAD;
-  const y = Math.abs(offset) * FAN_DIP;
+  const y = offset * offset * FAN_DIP;
   const angle = offset * FAN_ANGLE_STEP;
   return {
     // Stack left-to-right so each card overlaps the one before it
