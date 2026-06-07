@@ -78,33 +78,46 @@ VICTORY                              DEFEAT
   existing PrimeVue `Button` component.
 - A `data-cy` hook on the overlay and on the victory-only flourish element for E2E tests.
 
-## Timing — overlay appears after the final animation, plus a short delay
+## Timing — overlay appears after the board settles, plus a short delay
 
-The only moves that can end a game are **GRAB** and **successful SLAP** (a SEND never
-ends it). Both already `await animation.animatePileToWinner(...)` and then call
-`notifyAnimationComplete()` in their watchers in `GameScreen.vue`.
+**A game can end on ANY move.** The winner is a property of game *state* set by the
+backend after the move: a winning **GRAB**/**SLAP** (collecting the last cards) *or* a
+**SEND** that empties the sender's hand (e.g. the computer playing its last card). The
+`send` event is emitted optimistically *before* the server responds, so the winner only
+lands later via the `state-update` — meaning the reveal cannot be wired into the send
+watcher. Driving it off per-action watchers also misses the send case entirely.
 
-To keep this orchestration logic out of the `.vue` (and unit-testable), it lives in a
-small composable `useEndScreen`, following the existing `composables/` pattern
-(`useCardAnimation`, `useHotkeys`):
+So the reveal is **state-driven**: it watches `isGameOver` (derived from the winner in
+state) and waits for the pile animation to settle (`isPileAnimating` false) so the final
+card movement lands first, then reveals after a short delay. This single source of truth
+covers every ending uniformly (send, grab, slap, erroneous-slap) and preserves the
+grab/slap timing (`animationEnd + delay`, since `isPileAnimating` is true across the
+pile-fly).
+
+To keep this logic out of the `.vue` (and unit-testable), it lives in a composable
+`useEndScreen`, following the existing `composables/` pattern (`useCardAnimation`,
+`useHotkeys`):
 
 ```ts
-// useEndScreen(isOver: () => boolean, delayMs = END_SCREEN_DELAY_MS)
-export function useEndScreen(isOver: () => boolean, delayMs = END_SCREEN_DELAY_MS) {
+// useEndScreen(isOver: () => boolean, isAnimating: () => boolean, delayMs = END_SCREEN_DELAY_MS)
+export function useEndScreen(isOver, isAnimating, delayMs = END_SCREEN_DELAY_MS) {
   const showEndOverlay = ref(false);
+  let timeoutId = null;
 
-  // Live win: called after the final card animation resolves; waits a short beat.
-  function revealAfterAnimation() {
-    if (!isOver()) return;
-    setTimeout(() => { showEndOverlay.value = true; }, delayMs);
-  }
+  const stopWatch = watch([() => isOver(), () => isAnimating()], ([over, animating]) => {
+    if (over && !animating) {
+      if (timeoutId !== null) clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => { timeoutId = null; showEndOverlay.value = true; }, delayMs);
+    }
+  });
 
   // Reload into a finished game: no animation in flight, reveal at once.
-  function revealImmediatelyIfOver() {
-    if (isOver()) showEndOverlay.value = true;
-  }
+  function revealImmediatelyIfOver() { if (isOver()) showEndOverlay.value = true; }
 
-  return { showEndOverlay, revealAfterAnimation, revealImmediatelyIfOver };
+  // Clears the pending timer and stops the watch; wired into onBeforeUnmount.
+  function cancel() { /* clearTimeout + stopWatch() */ }
+
+  return { showEndOverlay, revealImmediatelyIfOver, cancel };
 }
 ```
 
@@ -112,10 +125,11 @@ export function useEndScreen(isOver: () => boolean, delayMs = END_SCREEN_DELAY_M
 
 Wiring in `GameScreen.vue`:
 
-- Both terminal watchers (GRAB, successful SLAP) call `revealAfterAnimation()` right
-  after their `await animation.animatePileToWinner(...)` resolves.
+- Instantiate `useEndScreen(() => isGameOver.value, () => isPileAnimating.value)`. No
+  per-action reveal calls — the state watch handles every ending.
 - `onMounted`, immediately after `batailleCorseStore.hydrate(...)`, calls
   `revealImmediatelyIfOver()` to cover reload-into-finished-game.
+- `onBeforeUnmount` calls `cancel()`.
 - The overlay renders on `showEndOverlay`.
 
 ## Testing
@@ -131,11 +145,13 @@ Mockito):
 
 **Composable unit tests** (`useEndScreen.test.ts`, vitest + fake timers):
 
-- `revealAfterAnimation()` does nothing when `isOver()` is false.
-- `revealAfterAnimation()` flips `showEndOverlay` to true only after `delayMs` elapses
-  (assert still false before the timer, true after `vi.advanceTimersByTime`).
+- Game not over → overlay stays hidden.
+- Game ends with no animation (the SEND case) → overlay shows after `delayMs`.
+- Game ends mid-animation (grab/slap) → reveal waits until `isAnimating` is false, then
+  `delayMs` elapses.
 - `revealImmediatelyIfOver()` flips `showEndOverlay` synchronously when over, no-op when
-  not over.
+  not over (reload-into-finished-game).
+- `cancel()` clears the pending timer (no leak) and stops the watch.
 
 **E2E note:** A full Cypress victory/defeat flow requires driving a real game to
 completion deterministically, which needs a backend test-seeding hook that does not yet

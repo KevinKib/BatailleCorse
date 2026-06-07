@@ -204,7 +204,6 @@ watch(lastGrab, async (event) => {
   animation.showDeltaOnGrab(pileCards.length, destEl);
   await animation.animatePileToWinner(srcRect, destEl.getBoundingClientRect(), pileCards);
   batailleCorseStore.notifyAnimationComplete();
-  revealAfterAnimation();
 });
 
 // Immediate flash on any slap attempt, before the server responds.
@@ -222,7 +221,6 @@ watch(lastSuccessfulSlap, async (event) => {
   animation.showDeltaOnSlap(pileCards.length, destEl);
   await animation.animatePileToWinner(srcRect, destEl.getBoundingClientRect(), pileCards);
   batailleCorseStore.notifyAnimationComplete();
-  revealAfterAnimation();
 });
 
 // Erroneous slap: animate 2 ghost cards from slapper's deck to center, show -2 indicator.
@@ -273,8 +271,12 @@ const shareLink = computed(() =>
 const isGameOver = computed(() => batailleCorse.value?.isOver() ?? false);
 const didIWin = computed(() => batailleCorse.value?.isWinnerAt(myPlayerIndex.value) ?? false);
 
-const { showEndOverlay, revealAfterAnimation, revealImmediatelyIfOver, cancel: cancelEndScreen } =
-  useEndScreen(() => isGameOver.value);
+// A game can end on ANY move — a winning grab/slap or a SEND that empties the
+// sender's hand. The winner only lands in state via the post-move state-update,
+// so the overlay is driven by isGameOver (state), gated on the pile animation
+// settling, rather than wired into each action's watcher.
+const { showEndOverlay, revealImmediatelyIfOver, cancel: cancelEndScreen } =
+  useEndScreen(() => isGameOver.value, () => isPileAnimating.value);
 
 useHotkeys(
   () => { if (!isButtonDisabled(myPlayerIndex.value, 'send')) send(myPlayerIndex.value); },
