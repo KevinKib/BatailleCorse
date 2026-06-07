@@ -1,0 +1,12 @@
+# Dependencies and build output (must not leak into the image build)
+node_modules/
+dist/
+
+# IDE / OS noise
+.idea/
+*.iml
+.DS_Store
+
+# Local env / logs
+*.log
+.env.local
