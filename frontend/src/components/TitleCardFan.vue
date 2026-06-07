@@ -59,6 +59,9 @@ function fanStyle(i: number) {
   bottom: 0;
   left: 50%;
   transform-origin: bottom center;
-  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.6));
+  /* Suppress PlayingCard's hard "sticker" box-shadow (very visible on the
+     upright center card) and use a single soft, downward shadow instead. */
+  box-shadow: none;
+  filter: drop-shadow(0 7px 9px rgba(0, 0, 0, 0.4));
 }
 </style>
