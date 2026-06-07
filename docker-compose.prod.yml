@@ -21,10 +21,35 @@ services:
       context: ./deploy/nginx
     ports:
       - "80:80"
+      - "443:443"
+    volumes:
+      - certbot-certs:/etc/letsencrypt:ro
+      - certbot-webroot:/var/www/certbot:ro
     depends_on:
       - frontend
       - backend
+    # Reload nginx every 6h so renewed certificates are picked up without a
+    # restart, while keeping the master process in the foreground.
+    command: >
+      /bin/sh -c "while :; do sleep 6h & wait $${!}; nginx -s reload; done &
+      nginx -g 'daemon off;'"
+
+  # Renews certificates in the background. Initial issuance is done once via
+  # deploy/docker/init-letsencrypt.sh (see deploy/docker/HTTPS.md).
+  certbot:
+    image: certbot/certbot:latest
+    volumes:
+      - certbot-certs:/etc/letsencrypt
+      - certbot-webroot:/var/www/certbot
+    entrypoint: >
+      /bin/sh -c "trap exit TERM; while :; do
+      certbot renew --webroot -w /var/www/certbot --quiet;
+      sleep 12h & wait $${!}; done"
 
 secrets:
   maven_settings:
     file: deploy/docker/settings.xml
+
+volumes:
+  certbot-certs:
+  certbot-webroot:
