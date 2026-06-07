@@ -7,4 +7,12 @@ if [[ ! -f "$SETTINGS" ]]; then
   exit 1
 fi
 
-docker compose -f docker-compose.dev.yml up --build
+if ! docker compose -f docker-compose.dev.yml up --build; then
+  status=$?
+  echo >&2
+  echo "If the build failed at 'npm ci' with a lock file out-of-sync error" >&2
+  echo "(e.g. 'Missing: <pkg> from lock file'), regenerate the lock with the" >&2
+  echo "image's npm and retry:" >&2
+  echo "    ./frontend/sync-lock.sh   # then commit frontend/package-lock.json" >&2
+  exit $status
+fi

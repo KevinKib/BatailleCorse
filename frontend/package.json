@@ -8,7 +8,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "cy:open": "cypress open",
-    "cy:run": "cypress run"
+    "cy:run": "cypress run",
+    "lock:sync": "bash sync-lock.sh"
   },
   "dependencies": {
     "@primeuix/themes": "^2.0.3",
