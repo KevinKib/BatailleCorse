@@ -1,6 +1,8 @@
 <template>
   <div class="gamescreen flex">
 
+    <RulesPanel />
+
     <div class="gamescreen_top flex">
       <div class="left_side"></div>
       <div class="middle_side">
@@ -137,6 +139,7 @@
 <script setup lang="ts">
 import PlayingCard from '../../components/PlayingCard.vue';
 import CardCounter from '../../components/CardCounter.vue';
+import RulesPanel from '../../components/RulesPanel.vue';
 import { Button, InputText } from 'primevue';
 import { storeToRefs } from 'pinia';
 import { useBatailleCorseStore } from '../../state/BatailleCorse.store';
