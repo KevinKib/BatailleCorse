@@ -27,5 +27,8 @@ export default defineConfig({
       }
     }
   },
-  base: './',
+  // Absolute base so asset URLs (/assets/...) resolve correctly on deep links
+  // like /room/:id. A relative base ('./') breaks hard-loaded nested routes:
+  // the browser resolves ./assets against /room/ and 404s into the SPA fallback.
+  base: '/',
 })
