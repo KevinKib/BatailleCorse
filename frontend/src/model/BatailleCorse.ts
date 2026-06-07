@@ -10,6 +10,18 @@ export default class BatailleCorse {
     public readonly winner: PlayerId | null,
   ) {}
 
+  isOver(): boolean {
+    return this.winner !== null;
+  }
+
+  isWinner(playerId: string | undefined): boolean {
+    return this.winner !== null && this.winner.id === playerId;
+  }
+
+  isWinnerAt(playerIndex: number): boolean {
+    return this.isWinner(this.players[playerIndex]?.id);
+  }
+
   static fromJSON(data: {
     currentPlayer: { id: string; nbCards: number; availableActions: string[] };
     pile: {

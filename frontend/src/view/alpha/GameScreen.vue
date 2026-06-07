@@ -82,6 +82,19 @@
         <p v-if="copied" class="waiting-copied">Copied!</p>
       </div>
     </div>
+
+    <div v-if="showEndOverlay" class="end-overlay" data-cy="end-overlay">
+      <div :class="['end-card', didIWin ? 'end-card--victory' : 'end-card--defeat']">
+        <div v-if="didIWin" class="end-trophy" data-cy="victory-flourish">🏆</div>
+        <h1 class="end-title">{{ didIWin ? 'VICTORY' : 'DEFEAT' }}</h1>
+        <p class="end-sub">
+          {{ didIWin ? `You beat ${opponentLabel}!` : `${opponentLabel} won.` }}
+        </p>
+        <RouterLink to="/" class="end-home-button">
+          <Button label="Back to home" icon="pi pi-home" rounded />
+        </RouterLink>
+      </div>
+    </div>
   </div>
 
   <template v-for="(ghost, i) in slapGhosts" :key="i">
@@ -131,6 +144,7 @@ import { useSettingsStore } from '../../state/Settings.store';
 import { DIFFICULTY } from '../../model/Difficulty';
 import { useCardAnimation } from '../../composables/useCardAnimation';
 import { useHotkeys } from '../../composables/useHotkeys';
+import { useEndScreen } from '../../composables/useEndScreen';
 import { Action } from '../../model/Action';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -254,6 +268,16 @@ const opponentLabel = computed(() =>
 const shareLink = computed(() =>
   `${window.location.origin}/join/${route.params.id}`);
 
+const isGameOver = computed(() => batailleCorse.value?.isOver() ?? false);
+const didIWin = computed(() => batailleCorse.value?.isWinnerAt(myPlayerIndex.value) ?? false);
+
+// A game can end on ANY move — a winning grab/slap or a SEND that empties the
+// sender's hand. The winner only lands in state via the post-move state-update,
+// so the overlay is driven by isGameOver (state), gated on the pile animation
+// settling, rather than wired into each action's watcher.
+const { showEndOverlay, revealImmediatelyIfOver, cancel: cancelEndScreen } =
+  useEndScreen(() => isGameOver.value, () => isPileAnimating.value);
+
 useHotkeys(
   () => { if (!isButtonDisabled(myPlayerIndex.value, 'send')) send(myPlayerIndex.value); },
   () => { if (!isButtonDisabled(myPlayerIndex.value, 'slap')) slap(myPlayerIndex.value); },
@@ -278,6 +302,7 @@ onMounted(async () => {
 
   const gameState = await response.json() as BatailleCorse;
   batailleCorseStore.hydrate(gameId, gameState);
+  revealImmediatelyIfOver();
   batailleCorseStore.restoreSession(JSON.parse(stored));
   await batailleCorseStore.loadSessionView(gameId);
   webSocketService.subscribeToGame(gameId);
@@ -287,6 +312,7 @@ onBeforeUnmount(() => {
   animation.cancelAllAnimations();
   batailleCorseStore.cancelAutoGrab();
   webSocketService.unsubscribeFromGame();
+  cancelEndScreen();
 });
 </script>
 
@@ -570,6 +596,84 @@ onBeforeUnmount(() => {
   font-size: 0.72rem;
   color: #4ade80;
   margin: 0;
+}
+
+.end-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(4px);
+}
+
+.end-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  padding: 40px 48px;
+  max-width: 460px;
+  text-align: center;
+}
+
+.end-title {
+  font-family: "Gabarito", sans-serif;
+  font-size: 2.4rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  margin: 0;
+}
+
+.end-sub {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.75);
+  margin: 0;
+}
+
+.end-home-button {
+  margin-top: 10px;
+}
+
+/* Victory: gold accent + a brief trophy bounce / glow pulse. */
+.end-card--victory {
+  border-color: rgba(245, 200, 66, 0.55);
+  box-shadow: 0 0 48px 6px rgba(245, 200, 66, 0.25);
+}
+
+.end-card--victory .end-title {
+  color: #f5c842;
+  text-shadow: 0 2px 16px rgba(245, 200, 66, 0.45);
+}
+
+.end-trophy {
+  font-size: 3.2rem;
+  line-height: 1;
+  animation: trophy-bounce 1.6s ease-in-out infinite;
+}
+
+@keyframes trophy-bounce {
+  0%, 100% { transform: translateY(0) scale(1); }
+  30%      { transform: translateY(-10px) scale(1.06); }
+  60%      { transform: translateY(0) scale(1); }
+}
+
+/* Defeat: muted / somber, no flourish. */
+.end-card--defeat {
+  border-color: rgba(248, 113, 113, 0.35);
+}
+
+.end-card--defeat .end-title {
+  color: #cbd5d1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .end-trophy { animation: none; }
 }
 
 </style>
