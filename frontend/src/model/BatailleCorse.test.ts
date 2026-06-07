@@ -57,6 +57,11 @@ describe('BatailleCorse end-of-game queries', () => {
     expect(game.isWinner('1')).toBe(false);
   });
 
+  it('givenNoWinner_thenIsWinnerIsFalseForUndefinedId', () => {
+    const game = buildGame({ winner: null });
+    expect(game.isWinner(undefined)).toBe(false);
+  });
+
   it('givenWinner_thenIsWinnerAtResolvesTheSeatId', () => {
     const game = buildGame({
       players: [buildPlayer({ id: 'a' }), buildPlayer({ id: 'b' })],

@@ -15,7 +15,7 @@ export default class BatailleCorse {
   }
 
   isWinner(playerId: string | undefined): boolean {
-    return this.winner?.id === playerId;
+    return this.winner !== null && this.winner.id === playerId;
   }
 
   isWinnerAt(playerIndex: number): boolean {
