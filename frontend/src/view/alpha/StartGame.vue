@@ -24,14 +24,14 @@
         <div class="opponent-toggle">
           <button
             class="opponent-option"
-            :class="{ 'opponent-option--active': vsComputer }"
-            @click="vsComputer = true"
-          >Computer</button>
-          <button
-            class="opponent-option"
             :class="{ 'opponent-option--active': !vsComputer }"
             @click="vsComputer = false"
           >Human</button>
+          <button
+            class="opponent-option"
+            :class="{ 'opponent-option--active': vsComputer }"
+            @click="vsComputer = true"
+          >Computer</button>
         </div>
       </div>
 
