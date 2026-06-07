@@ -4,11 +4,7 @@
 
     <div class="title-panel">
 
-      <div class="deco-cards" aria-hidden="true">
-        <PlayingCard :size="80" rank="king" suit="heart" class="deco-card deco-card--left" />
-        <PlayingCard :size="80" rank="ace" suit="spade" class="deco-card deco-card--center" />
-        <PlayingCard :size="80" rank="queen" suit="diamond" class="deco-card deco-card--right" />
-      </div>
+      <TitleCardFan />
 
       <div class="title-block">
         <div class="suit-row">
@@ -51,7 +47,7 @@
 import { onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { Button } from 'primevue';
-import PlayingCard from '../../components/PlayingCard.vue';
+import TitleCardFan from '../../components/TitleCardFan.vue';
 import { preloadAllCards } from '../../composables/useCardAnimation';
 
 const router = useRouter();
@@ -94,39 +90,6 @@ onMounted(() => preloadAllCards());
   min-width: 380px;
   max-width: 480px;
   margin-top: 60px;
-}
-
-.deco-cards {
-  position: absolute;
-  top: -95px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 280px;
-  height: 110px;
-  pointer-events: none;
-}
-
-.deco-card {
-  position: absolute;
-  bottom: 0;
-  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.6));
-}
-
-.deco-card--left {
-  left: 10px;
-  transform: rotate(-22deg);
-  transform-origin: bottom center;
-}
-
-.deco-card--center {
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.deco-card--right {
-  right: 10px;
-  transform: rotate(22deg);
-  transform-origin: bottom center;
 }
 
 .title-block {
