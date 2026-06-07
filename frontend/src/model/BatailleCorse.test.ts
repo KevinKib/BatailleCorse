@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import BatailleCorse from './BatailleCorse';
 import Pile from './Pile';
 import Player from './Player';
+import { buildGame, buildPlayer } from './fixtures';
 
 describe('BatailleCorse.fromJSON', () => {
   it('constructs Pile and Player instances with their behaviour methods', () => {
@@ -30,5 +31,44 @@ describe('BatailleCorse.fromJSON', () => {
     expect(game.players[0].hasAvailableAction('SEND')).toBe(true);
     expect(game.players[1].hasAvailableAction('SEND')).toBe(false);
     expect(game.winner).toBeNull();
+  });
+});
+
+describe('BatailleCorse end-of-game queries', () => {
+  it('givenNoWinner_thenIsOverIsFalse', () => {
+    const game = buildGame({ winner: null });
+    expect(game.isOver()).toBe(false);
+  });
+
+  it('givenWinner_thenIsOverIsTrue', () => {
+    const game = buildGame({ winner: { id: '0' } });
+    expect(game.isOver()).toBe(true);
+  });
+
+  it('givenWinner_thenIsWinnerMatchesOnlyTheWinningId', () => {
+    const game = buildGame({ winner: { id: '0' } });
+    expect(game.isWinner('0')).toBe(true);
+    expect(game.isWinner('1')).toBe(false);
+  });
+
+  it('givenNoWinner_thenIsWinnerIsFalseForEveryId', () => {
+    const game = buildGame({ winner: null });
+    expect(game.isWinner('0')).toBe(false);
+    expect(game.isWinner('1')).toBe(false);
+  });
+
+  it('givenWinner_thenIsWinnerAtResolvesTheSeatId', () => {
+    const game = buildGame({
+      players: [buildPlayer({ id: 'a' }), buildPlayer({ id: 'b' })],
+      winner: { id: 'b' },
+    });
+    expect(game.isWinnerAt(0)).toBe(false);
+    expect(game.isWinnerAt(1)).toBe(true);
+  });
+
+  it('givenNoWinner_thenIsWinnerAtIsFalse', () => {
+    const game = buildGame({ winner: null });
+    expect(game.isWinnerAt(0)).toBe(false);
+    expect(game.isWinnerAt(1)).toBe(false);
   });
 });
