@@ -84,23 +84,39 @@ The only moves that can end a game are **GRAB** and **successful SLAP** (a SEND 
 ends it). Both already `await animation.animatePileToWinner(...)` and then call
 `notifyAnimationComplete()` in their watchers in `GameScreen.vue`.
 
-Immediately after that await resolves, each watcher calls a shared local helper:
+To keep this orchestration logic out of the `.vue` (and unit-testable), it lives in a
+small composable `useEndScreen`, following the existing `composables/` pattern
+(`useCardAnimation`, `useHotkeys`):
 
 ```ts
-function revealEndScreenIfOver() {
-  if (!isGameOver.value) return;
-  setTimeout(() => { showEndOverlay.value = true; }, END_SCREEN_DELAY_MS); // ~600ms
+// useEndScreen(isOver: () => boolean, delayMs = END_SCREEN_DELAY_MS)
+export function useEndScreen(isOver: () => boolean, delayMs = END_SCREEN_DELAY_MS) {
+  const showEndOverlay = ref(false);
+
+  // Live win: called after the final card animation resolves; waits a short beat.
+  function revealAfterAnimation() {
+    if (!isOver()) return;
+    setTimeout(() => { showEndOverlay.value = true; }, delayMs);
+  }
+
+  // Reload into a finished game: no animation in flight, reveal at once.
+  function revealImmediatelyIfOver() {
+    if (isOver()) showEndOverlay.value = true;
+  }
+
+  return { showEndOverlay, revealAfterAnimation, revealImmediatelyIfOver };
 }
 ```
 
-`showEndOverlay` is a local `ref(false)` in the component; the overlay renders on it.
-`END_SCREEN_DELAY_MS` is a named constant.
+`END_SCREEN_DELAY_MS` is a named constant (~600ms) in the composable.
 
-### Edge case — reload after the game is already over
+Wiring in `GameScreen.vue`:
 
-`onMounted` hydrates state from `/api/game/{id}`, which includes `winner`, but with no
-animation in flight. On mount, if `isGameOver` is already true, set
-`showEndOverlay = true` immediately (no delay). Both paths converge on the same ref.
+- Both terminal watchers (GRAB, successful SLAP) call `revealAfterAnimation()` right
+  after their `await animation.animatePileToWinner(...)` resolves.
+- `onMounted`, immediately after `batailleCorseStore.hydrate(...)`, calls
+  `revealImmediatelyIfOver()` to cover reload-into-finished-game.
+- The overlay renders on `showEndOverlay`.
 
 ## Testing
 
@@ -113,20 +129,28 @@ Mockito):
 - `isWinnerAt(index)` returns true for the winning seat, false for the losing seat, and
   false when there is no winner.
 
-**Component / E2E** (Cypress-style, matching existing `data-cy` conventions):
+**Composable unit tests** (`useEndScreen.test.ts`, vitest + fake timers):
 
-- Overlay hidden while the game is in progress.
-- Winner sees the **victory** variant (with the flourish element present).
-- Loser sees the **defeat** variant (no flourish element).
-- **Back to home** navigates to `/`.
+- `revealAfterAnimation()` does nothing when `isOver()` is false.
+- `revealAfterAnimation()` flips `showEndOverlay` to true only after `delayMs` elapses
+  (assert still false before the timer, true after `vi.advanceTimersByTime`).
+- `revealImmediatelyIfOver()` flips `showEndOverlay` synchronously when over, no-op when
+  not over.
+
+**E2E note:** A full Cypress victory/defeat flow requires driving a real game to
+completion deterministically, which needs a backend test-seeding hook that does not yet
+exist. End-to-end coverage of the finished-game screen is therefore **deferred** (out of
+scope for this plan); the model + composable unit tests cover the deducible logic. The
+overlay markup itself is verified manually against the `vite build` output.
 
 ## Files Touched
 
-- `frontend/src/model/BatailleCorse.ts` — add `isOver()` / `isWinner()`.
-- `frontend/src/model/BatailleCorse.test.ts` — cover the two methods.
-- `frontend/src/view/alpha/GameScreen.vue` — overlay markup, styling, `showEndOverlay`
-  ref, `revealEndScreenIfOver()`, mount-time check, delay constant.
-- E2E spec — victory/defeat/navigation coverage.
+- `frontend/src/model/BatailleCorse.ts` — add `isOver()` / `isWinner()` / `isWinnerAt()`.
+- `frontend/src/model/BatailleCorse.test.ts` — cover the three methods.
+- `frontend/src/composables/useEndScreen.ts` — `showEndOverlay` + reveal timing.
+- `frontend/src/composables/useEndScreen.test.ts` — timer-based unit tests.
+- `frontend/src/view/alpha/GameScreen.vue` — overlay markup + styling, `didIWin` /
+  `isGameOver` computeds, wire `useEndScreen` into the two terminal watchers and onMounted.
 
 ## Out of Scope
 
