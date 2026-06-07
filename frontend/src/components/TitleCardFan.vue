@@ -14,7 +14,7 @@ const FAN_CARDS = [
 ] as const;
 
 const FAN_ANGLE_STEP = 11; // degrees between adjacent cards
-const FAN_SPREAD = 50; // horizontal px between adjacent cards
+const FAN_SPREAD = 40; // horizontal px between adjacent cards
 const FAN_DIP = 4.5; // vertical px per (step-from-center)²; quadratic so the arc
                      // curves and inner cards sit nearer the center's height
 
