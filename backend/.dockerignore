@@ -1,0 +1,10 @@
+# Build output (built on host; must not leak into the image build)
+target/
+
+# IDE / OS noise
+.idea/
+*.iml
+.DS_Store
+
+# Local env / logs
+*.log
