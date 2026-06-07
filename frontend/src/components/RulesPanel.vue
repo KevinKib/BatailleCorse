@@ -54,7 +54,13 @@
             <span class="slap-rule__cards">
               <template v-for="(card, i) in example.cards" :key="i">
                 <span v-if="example.plus && i > 0" class="slap-rule__plus">+</span>
-                <PlayingCard :size="30" :rank="card.rank" :suit="card.suit" />
+                <span
+                  class="value-token"
+                  :class="{ 'value-token--red': isRedSuit(card.suit) }"
+                >
+                  <span class="value-token__rank">{{ card.rank }}</span>
+                  <span class="value-token__suit">{{ suitGlyph(card.suit) }}</span>
+                </span>
               </template>
             </span>
           </div>
@@ -69,11 +75,25 @@
 import { onMounted, onBeforeUnmount } from 'vue';
 import { useI18n } from '../composables/useI18n';
 import { useDisclosure } from '../composables/useDisclosure';
-import PlayingCard from './PlayingCard.vue';
 import { SLAP_EXAMPLES } from './slapExamples';
 
 const messages = useI18n();
 const { isOpen, close, toggle } = useDisclosure();
+
+const SUIT_GLYPH: Record<string, string> = {
+  spade: '♠',
+  heart: '♥',
+  diamond: '♦',
+  club: '♣',
+};
+
+function suitGlyph(suit: string): string {
+  return SUIT_GLYPH[suit] ?? '';
+}
+
+function isRedSuit(suit: string): boolean {
+  return suit === 'heart' || suit === 'diamond';
+}
 
 function handleKeydown(e: KeyboardEvent) {
   if (e.key === 'Escape' && isOpen.value) close();
@@ -207,8 +227,40 @@ onBeforeUnmount(() => document.removeEventListener('keydown', handleKeydown));
 .slap-rule__cards {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: 5px;
   flex-shrink: 0;
+}
+
+/* Value token — a compact card-corner style chip that keeps the rank big and
+   legible (the full card art is illegible at this size). Suit is decorative;
+   slap rules are purely rank-based. */
+.value-token {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  padding: 3px 5px;
+  background: #f4efe6;
+  color: #1a1a1a;
+  border: 1px solid rgba(0, 0, 0, 0.35);
+  border-radius: 5px;
+  line-height: 1;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.value-token--red {
+  color: #c0392b;
+}
+
+.value-token__rank {
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.value-token__suit {
+  font-size: 0.7rem;
+  margin-top: 1px;
 }
 
 .slap-rule__plus {
