@@ -29,22 +29,31 @@ they *are* handled in `processEvent`; `SEND` is the only action missing that pat
 
 ## Fix
 
-Add a `SEND` branch in `processEvent`, before the `state-update` emission, that
-emits a `send` GameEvent for the opponent's send.
+The optimistic send (instant local feedback) is kept. We add a `SEND` branch in
+`processEvent`, before the `state-update` emission, that emits a `send` GameEvent
+for sends this client did **not** already emit optimistically (i.e. the opponent's).
+
+The dedup decision is extracted into one named predicate so the intent is explicit
+and the boolean complexity stays sealed inside `GameSession`:
+
+```ts
+/**
+ * True when this client already emits the `send` GameEvent optimistically for
+ * the given seat, so a server SEND echo must NOT emit a duplicate. Solo drives
+ * both seats locally (user = 0, AI = 1 via send(1)); multiplayer drives only the
+ * local player's seat.
+ */
+private emitsSendOptimistically(playerIndex: number): boolean {
+  return this.mode === 'solo' || playerIndex === this.myPlayerIndex;
+}
+```
 
 ```ts
 if (response.eventType === 'SEND') {
-  const sendData = response.eventData as SendEventData;
-  const senderIndex = Number(sendData.player?.id);
-  // Animate only the opponent's send during normal play. The local player's
-  // send is already animated optimistically in send(); solo's AI send likewise
-  // emits via send(1). Skip while catching up to avoid a flood of ghost cards.
-  if (
-    this.mode === 'multiplayer' &&
-    !skipAnimation &&
-    !isNaN(senderIndex) &&
-    senderIndex !== this.myPlayerIndex
-  ) {
+  const senderIndex = Number((response.eventData as SendEventData).player?.id);
+  // Animate a server SEND only when this client didn't already emit it
+  // optimistically. Skip while catching up to avoid a flood of ghost cards.
+  if (!isNaN(senderIndex) && !skipAnimation && !this.emitsSendOptimistically(senderIndex)) {
     const topCard = this.state?.pile.cards.at(0);
     this.callbacks.onEvent({
       type: 'send',
@@ -61,15 +70,16 @@ existing `GrabEventData` / `SlapEventData` imports.
 
 ### Why each guard matters
 
-- **`mode === 'multiplayer'`** — In solo, the AI's send already emits optimistically
-  via `this.send(1)`; re-emitting on the response would double-animate. Solo behaviour
-  must stay unchanged.
-- **`senderIndex !== this.myPlayerIndex`** — In multiplayer, the local player's send
-  is already emitted optimistically in `send()`. Without this guard, the echoed
-  `SEND` response would fire a second animation for the local player.
+- **`!this.emitsSendOptimistically(senderIndex)`** — the dedup guard. It folds the
+  mode and seat checks into one concept: in solo both seats are driven locally (user
+  + AI via `send(1)`), and in multiplayer only the local player's seat is. A send
+  from any of those seats was already emitted optimistically in `send()`, so the
+  server echo must be ignored to avoid a double animation. Only the opponent's send
+  — which has no optimistic origin on this client — passes.
 - **`!skipAnimation`** — During catch-up (queue backed up, ≥3 events) the existing
   `skipAnimation` flag suppresses GRAB/SLAP animations. The opponent send respects
   the same flag so a lag/reconnect burst doesn't stack many ghost-card animations.
+- **`!isNaN(senderIndex)`** — generic validity check, mirroring the GRAB/SLAP handlers.
 
 ### Why `topCard` is correct here
 
@@ -85,6 +95,22 @@ state-update arrives.
 Send is non-blocking in the event queue (no `awaitAnimation` / `needsAnimationWait`),
 consistent with `GameScreen.vue` ("SEND is non-blocking in the queue"). The new
 branch must not set `needsAnimationWait`.
+
+## Isolation & Layering
+
+All of the optimistic-vs-echo dedup complexity stays in `GameSession`. The two
+consuming layers remain unaware of it and only handle their own concern:
+
+- **`useCardAnimation`** — pure animation mechanics (rects, ghosts, timing, freeze).
+  Knows nothing about players, mode, sequencing, or dedup.
+- **`GameScreen.vue`** — thin watchers that map a `send` event to *which DOM element*
+  is the source/dest deck. Does not know or care whether the event came from the
+  optimistic path or the server echo; both produce an identical `send` event.
+- **`GameSession`** — owns event emission and the dedup decision, expressed as the
+  single `emitsSendOptimistically(playerIndex)` predicate. New logic lands here only.
+
+This keeps the change additive and contained: no edits to the animation composable
+or the component watchers are required.
 
 ## Testing
 
