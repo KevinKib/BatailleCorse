@@ -1,7 +1,27 @@
-export interface RulesSection {
+export interface TextSection {
+  kind: 'text';
   title: string;
   body: string[]; // one entry per paragraph / bullet line
 }
+
+// The four slap conditions. The card examples that illustrate each pattern are
+// language-independent and live in `components/slapExamples.ts`; only the
+// human-readable labels are translated here.
+export interface SlapPatternLabels {
+  doubles: string;
+  sandwich: string;
+  sumOfTen: string;
+  tens: string;
+}
+
+export interface SlapSection {
+  kind: 'slap';
+  title: string;
+  labels: SlapPatternLabels;
+  footer: string;
+}
+
+export type RulesSection = TextSection | SlapSection;
 
 export interface RulesMessages {
   toggleLabel: string;      // text on the floating chip

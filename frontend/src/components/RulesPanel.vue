@@ -33,18 +33,34 @@
     </div>
 
     <div class="rules-panel__body">
-      <section
-        v-for="section in messages.rules.sections"
-        :key="section.title"
-        class="rules-section"
-      >
-        <h3 class="rules-section__title">{{ section.title }}</h3>
-        <p
-          v-for="line in section.body"
-          :key="line"
-          class="rules-section__line"
-        >{{ line }}</p>
-      </section>
+      <template v-for="section in messages.rules.sections" :key="section.title">
+        <section v-if="section.kind === 'text'" class="rules-section">
+          <h3 class="rules-section__title">{{ section.title }}</h3>
+          <p
+            v-for="line in section.body"
+            :key="line"
+            class="rules-section__line"
+          >{{ line }}</p>
+        </section>
+
+        <section v-else class="rules-section rules-slap" data-cy="rules-slap">
+          <h3 class="rules-section__title">{{ section.title }}</h3>
+          <div
+            v-for="example in SLAP_EXAMPLES"
+            :key="example.key"
+            class="slap-rule"
+          >
+            <span class="slap-rule__label">{{ section.labels[example.key] }}</span>
+            <span class="slap-rule__cards">
+              <template v-for="(card, i) in example.cards" :key="i">
+                <span v-if="example.plus && i > 0" class="slap-rule__plus">+</span>
+                <PlayingCard :size="30" :rank="card.rank" :suit="card.suit" />
+              </template>
+            </span>
+          </div>
+          <p class="rules-section__line rules-slap__footer">{{ section.footer }}</p>
+        </section>
+      </template>
     </div>
   </div>
 </template>
@@ -53,6 +69,8 @@
 import { onMounted, onBeforeUnmount } from 'vue';
 import { useI18n } from '../composables/useI18n';
 import { useDisclosure } from '../composables/useDisclosure';
+import PlayingCard from './PlayingCard.vue';
+import { SLAP_EXAMPLES } from './slapExamples';
 
 const messages = useI18n();
 const { isOpen, close, toggle } = useDisclosure();
@@ -162,5 +180,46 @@ onBeforeUnmount(() => document.removeEventListener('keydown', handleKeydown));
   line-height: 1.4;
   color: rgba(255, 255, 255, 0.88);
   margin: 0 0 4px;
+}
+
+/* Slap rules — the most important rules, given prominent card examples. */
+.rules-slap {
+  padding: 10px 12px;
+  background: rgba(245, 200, 66, 0.07);
+  border: 1px solid rgba(245, 200, 66, 0.28);
+  border-radius: 12px;
+}
+
+.slap-rule {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.slap-rule__label {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #f5c842;
+}
+
+.slap-rule__cards {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.slap-rule__plus {
+  color: rgba(255, 255, 255, 0.75);
+  font-weight: 700;
+  margin: 0 2px;
+}
+
+.rules-slap__footer {
+  margin-top: 10px;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.72);
 }
 </style>

@@ -7,33 +7,38 @@ export const messagesEn: Messages = {
     closeLabel: 'Close',
     sections: [
       {
+        kind: 'text',
         title: 'Goal',
         body: ['Win all the cards. The game ends when one player has them all.'],
       },
       {
+        kind: 'text',
         title: 'Send',
         body: ['On your turn, send your top card to the central pile. Play then passes to your opponent.'],
       },
       {
-        title: 'Slap',
-        body: [
-          'Either player can slap when the pile shows:',
-          'Doubles — top two cards same rank.',
-          'Sandwich — top card matches the card two below.',
-          'Sum of ten — top two cards add up to ten.',
-          'Tens — top card is a ten.',
-          'First to slap a valid pile takes it all.',
-        ],
+        kind: 'slap',
+        title: 'Slap when you see',
+        labels: {
+          doubles: 'Doubles',
+          sandwich: 'Sandwich',
+          sumOfTen: 'Sum of ten',
+          tens: 'Tens',
+        },
+        footer: 'First to slap a valid pile takes it all.',
       },
       {
+        kind: 'text',
         title: 'Wrong slap',
         body: ['Slap with no valid pattern and two of your cards go under the pile.'],
       },
       {
-        title: 'Honour cards (J Q K A)',
-        body: ["Send one and your opponent must answer with an honour card within a few cards: J → 1, Q → 2, K → 3, A → 4. If they don’t, the pile is yours to grab."],
+        kind: 'text',
+        title: 'Honour cards (Jack, Queen, King, Ace)',
+        body: ["Send one and your opponent must answer with an honour card within a few cards: Jack → 1, Queen → 2, King → 3, Ace → 4. If they don’t, the pile is yours to grab."],
       },
       {
+        kind: 'text',
         title: 'Grab',
         body: ['When the pile becomes grabbable, grab it to take every card.'],
       },
