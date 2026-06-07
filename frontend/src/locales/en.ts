@@ -4,6 +4,7 @@ export const messagesEn: Messages = {
   rules: {
     toggleLabel: 'Rules',
     panelTitle: 'How to play',
+    closeLabel: 'Close',
     sections: [
       {
         title: 'Goal',

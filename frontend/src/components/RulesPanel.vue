@@ -12,7 +12,7 @@
   </button>
 
   <div
-    v-if="isOpen"
+    v-show="isOpen"
     id="rules-panel"
     class="rules-panel"
     role="dialog"
@@ -24,7 +24,7 @@
       <button
         type="button"
         class="rules-panel__close"
-        aria-label="Close"
+        :aria-label="messages.rules.closeLabel"
         data-cy="rules-close"
         @click="close"
       >
@@ -34,14 +34,14 @@
 
     <div class="rules-panel__body">
       <section
-        v-for="(section, i) in messages.rules.sections"
-        :key="i"
+        v-for="section in messages.rules.sections"
+        :key="section.title"
         class="rules-section"
       >
         <h3 class="rules-section__title">{{ section.title }}</h3>
         <p
-          v-for="(line, j) in section.body"
-          :key="j"
+          v-for="line in section.body"
+          :key="line"
           class="rules-section__line"
         >{{ line }}</p>
       </section>
@@ -99,6 +99,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', handleKeydown));
   z-index: 1500;
   width: min(360px, calc(100vw - 32px));
   max-height: 70vh;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   background: rgba(0, 0, 0, 0.82);

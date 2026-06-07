@@ -6,6 +6,7 @@ export interface RulesSection {
 export interface RulesMessages {
   toggleLabel: string;      // text on the floating chip
   panelTitle: string;       // header of the expanded panel
+  closeLabel: string;       // accessible label for the close button
   sections: RulesSection[]; // ordered rule sections
 }
 
