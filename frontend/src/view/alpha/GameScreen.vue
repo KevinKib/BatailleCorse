@@ -131,6 +131,7 @@ import { useSettingsStore } from '../../state/Settings.store';
 import { DIFFICULTY } from '../../model/Difficulty';
 import { useCardAnimation } from '../../composables/useCardAnimation';
 import { useHotkeys } from '../../composables/useHotkeys';
+import { useEndScreen } from '../../composables/useEndScreen';
 import { Action } from '../../model/Action';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -190,6 +191,7 @@ watch(lastGrab, async (event) => {
   animation.showDeltaOnGrab(pileCards.length, destEl);
   await animation.animatePileToWinner(srcRect, destEl.getBoundingClientRect(), pileCards);
   batailleCorseStore.notifyAnimationComplete();
+  revealAfterAnimation();
 });
 
 // Immediate flash on any slap attempt, before the server responds.
@@ -207,6 +209,7 @@ watch(lastSuccessfulSlap, async (event) => {
   animation.showDeltaOnSlap(pileCards.length, destEl);
   await animation.animatePileToWinner(srcRect, destEl.getBoundingClientRect(), pileCards);
   batailleCorseStore.notifyAnimationComplete();
+  revealAfterAnimation();
 });
 
 // Erroneous slap: animate 2 ghost cards from slapper's deck to center, show -2 indicator.
@@ -254,6 +257,12 @@ const opponentLabel = computed(() =>
 const shareLink = computed(() =>
   `${window.location.origin}/join/${route.params.id}`);
 
+const isGameOver = computed(() => batailleCorse.value?.isOver() ?? false);
+const didIWin = computed(() => batailleCorse.value?.isWinnerAt(myPlayerIndex.value) ?? false);
+
+const { showEndOverlay, revealAfterAnimation, revealImmediatelyIfOver, cancel: cancelEndScreen } =
+  useEndScreen(() => isGameOver.value);
+
 useHotkeys(
   () => { if (!isButtonDisabled(myPlayerIndex.value, 'send')) send(myPlayerIndex.value); },
   () => { if (!isButtonDisabled(myPlayerIndex.value, 'slap')) slap(myPlayerIndex.value); },
@@ -278,6 +287,7 @@ onMounted(async () => {
 
   const gameState = await response.json() as BatailleCorse;
   batailleCorseStore.hydrate(gameId, gameState);
+  revealImmediatelyIfOver();
   batailleCorseStore.restoreSession(JSON.parse(stored));
   await batailleCorseStore.loadSessionView(gameId);
   webSocketService.subscribeToGame(gameId);
@@ -287,6 +297,7 @@ onBeforeUnmount(() => {
   animation.cancelAllAnimations();
   batailleCorseStore.cancelAutoGrab();
   webSocketService.unsubscribeFromGame();
+  cancelEndScreen();
 });
 </script>
 
