@@ -376,6 +376,97 @@ describe('GameSession', () => {
     });
   });
 
+  // --- SEND server response (opponent / echo dedup) -------------------------
+
+  describe('SEND response', () => {
+    it('emits a send event for the opponent in multiplayer, with the pre-send topCard', async () => {
+      const { session, events } = makeSession();
+      const topCard = buildCard({ rank: 'K', suit: 'spade' });
+      session.hydrate('game-1', buildGame({ pile: buildPile({ cards: [topCard] }) }));
+      session.restoreSession({ 1: 'tok-b' }); // multiplayer, my seat = 1, opponent = 0
+
+      await session.onResponse(buildResponse({
+        eventType: 'SEND',
+        eventData: { player: { id: '0' } },
+        state: buildGame(),
+      }));
+
+      const sendEvent = events.find(e => e.type === 'send') as
+        Extract<GameEvent, { type: 'send' }> | undefined;
+      expect(sendEvent).toBeDefined();
+      expect(sendEvent!.playerIndex).toBe(0);
+      expect(sendEvent!.topCard).toEqual(topCard);
+    });
+
+    it('does NOT emit a second send event for the local player in multiplayer (optimistic already fired)', async () => {
+      const { session, events } = makeSession();
+      session.hydrate('game-1', buildGame({ pile: buildPile({ cards: [buildCard()] }) }));
+      session.restoreSession({ 1: 'tok-b' }); // multiplayer, my seat = 1
+
+      session.send(1); // optimistic emit for my own send
+
+      await session.onResponse(buildResponse({
+        eventType: 'SEND',
+        eventData: { player: { id: '1' } }, // server echo of my own send
+        state: buildGame(),
+      }));
+
+      const mySendEvents = events.filter(
+        e => e.type === 'send' && e.playerIndex === 1,
+      );
+      expect(mySendEvents).toHaveLength(1); // only the optimistic one
+    });
+
+    it('does NOT emit a send event from the SEND response in solo (AI already emits via send(1))', async () => {
+      const { session, events } = makeSession();
+      session.hydrate('game-1', buildGame({ pile: buildPile({ cards: [buildCard()] }) }));
+      session.restoreSession({ 0: 'tok-a', 1: 'tok-b' }); // solo, my seat = 0
+
+      await session.onResponse(buildResponse({
+        eventType: 'SEND',
+        eventData: { player: { id: '1' } },
+        state: buildGame(), // empty pile + no available actions => AI stays idle
+      }));
+
+      expect(events.find(e => e.type === 'send')).toBeUndefined();
+    });
+
+    it('skips opponent send animations while catching up (queue backed up)', async () => {
+      const events: GameEvent[] = [];
+      let releaseAnimation!: () => void;
+      const animationGate = new Promise<void>(res => { releaseAnimation = res; });
+
+      const webSocket: WebSocketPort = {
+        publish: () => {},
+        subscribeToGame: () => {},
+      };
+      const callbacks: GameSessionCallbacks = {
+        onEvent: (e) => events.push(e),
+        awaitAnimation: () => animationGate,
+      };
+      const session = new GameSession(webSocket, callbacks, () => new AI(1, 0));
+      session.hydrate('game-1', buildGame());
+      session.restoreSession({ 1: 'tok-b' }); // multiplayer, my seat = 1, opponent = 0
+
+      // A GRAB by the opponent blocks on awaitAnimation, letting the queue build.
+      const drain = session.onResponse(buildGrabResponse('0', buildGame()));
+      // Four opponent SEND responses pile up behind the blocked grab animation.
+      for (let i = 0; i < 4; i++) {
+        session.onResponse(buildResponse({
+          eventType: 'SEND',
+          eventData: { player: { id: '0' } },
+          state: buildGame(),
+        }));
+      }
+      releaseAnimation();
+      await drain;
+
+      const sendEvents = events.filter(e => e.type === 'send');
+      // With threshold 3: the first SEND (3 still queued) is skipped, the rest emit.
+      expect(sendEvents).toHaveLength(3);
+    });
+  });
+
   // --- Event queue ----------------------------------------------------------
 
   describe('event queue seq counters', () => {
