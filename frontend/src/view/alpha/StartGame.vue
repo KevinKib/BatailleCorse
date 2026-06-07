@@ -393,34 +393,30 @@ async function joinGame() {
 .key-cap {
   min-width: 80px;
   min-height: 56px;
-  background: rgba(255, 255, 255, 0.07);
-  border: 1.5px solid rgba(255, 255, 255, 0.22);
-  border-bottom: 4px solid rgba(0, 0, 0, 0.45);
-  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1.5px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
   color: rgba(255, 255, 255, 0.85);
   font-family: "Gabarito", monospace;
   font-size: 1.1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, transform 0.1s, box-shadow 0.1s;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.35), 0 6px 16px rgba(0, 0, 0, 0.3);
   padding: 0 12px;
 }
 
 .key-cap:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.38);
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.35);
 }
 
 .key-cap--capturing {
-  transform: translateY(2px);
-  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.35), 0 2px 8px rgba(220, 180, 60, 0.2);
-  background: rgba(220, 180, 60, 0.12);
-  border-color: rgba(220, 180, 60, 0.6);
-  border-bottom-width: 1.5px;
+  background: rgba(232, 201, 109, 0.14);
+  border-color: rgba(232, 201, 109, 0.55);
+  color: #f5c842;
 }
 
 .key-cap__label {
