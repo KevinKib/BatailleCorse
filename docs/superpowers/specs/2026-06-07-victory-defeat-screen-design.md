@@ -23,7 +23,7 @@ The game state already carries everything needed:
 - `BatailleCorse.players[myPlayerIndex].id` — identifies the local player.
 
 Per project convention, deducible game logic lives in the model, not the component.
-`BatailleCorse` gains two methods:
+`BatailleCorse` gains three methods:
 
 ```ts
 isOver(): boolean {
@@ -33,21 +33,23 @@ isOver(): boolean {
 isWinner(playerId: string): boolean {
   return this.winner?.id === playerId;
 }
+
+// Seat-aware convenience: resolves the player's id from their seat index,
+// so the component never has to derive an id from the players array.
+isWinnerAt(playerIndex: number): boolean {
+  return this.isWinner(this.players[playerIndex]?.id);
+}
 ```
 
-The component holds only thin computeds that delegate to the model:
+The component holds only pure delegating computeds — no rules, no array lookups:
 
 ```ts
 const isGameOver = computed(() => batailleCorse.value?.isOver() ?? false);
-const didIWin = computed(() => {
-  const game = batailleCorse.value;
-  if (!game) return false;
-  return game.isWinner(game.players[myPlayerIndex.value].id);
-});
+const didIWin = computed(() => batailleCorse.value?.isWinnerAt(myPlayerIndex.value) ?? false);
 ```
 
-No win-condition rules are encoded in the `.vue` file — it only reads `isGameOver`
-and `didIWin`.
+No win-condition or player-lookup logic is encoded in the `.vue` file — it only forwards
+`myPlayerIndex` and reads `isGameOver` / `didIWin`.
 
 ## Overlay UI
 
@@ -108,6 +110,8 @@ Mockito):
 - `isOver()` returns false when `winner` is null, true when set.
 - `isWinner(id)` returns true only for the winning player's id; false for the opponent's
   id and when there is no winner.
+- `isWinnerAt(index)` returns true for the winning seat, false for the losing seat, and
+  false when there is no winner.
 
 **Component / E2E** (Cypress-style, matching existing `data-cy` conventions):
 
