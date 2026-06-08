@@ -51,6 +51,15 @@ function onLeave(el: Element, done: () => void) {
 @import "tailwindcss-primeui";
 @import 'primeicons/primeicons.css';
 
+:root {
+  /* Semantic accent roles (RGB channel triplets so alpha stays controllable).
+     active = attention / "your move" (brand gold); positive = go / gain;
+     negative = loss. Single source for the game-screen cue colours. */
+  --accent-active-rgb: 245, 200, 66;
+  --accent-positive-rgb: 74, 222, 128;
+  --accent-negative-rgb: 248, 113, 113;
+}
+
 .gabarito-font {
   font-family: "Gabarito", sans-serif;
   font-optical-sizing: auto;
