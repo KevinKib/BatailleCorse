@@ -826,4 +826,36 @@ onBeforeUnmount(() => {
   .action_button--my-turn { animation: none; }
 }
 
+/* --- Narrow-screen (phone) adjustments --- */
+@media (max-width: 480px) {
+  /* Slightly larger floors relative to width so cards stay legible on phones. */
+  .gamescreen {
+    --deck-card-w: clamp(44px, 18vw, 72px);
+    --pile-card-w: clamp(64px, 26vw, 104px);
+  }
+
+  /* Tighten the action buttons so Send + Slap stay side-by-side and on-screen. */
+  .action_button {
+    margin-left: 4px;
+    margin-right: 4px;
+  }
+
+  .action_buttons :deep(.p-button) {
+    padding: 0.45rem 0.7rem;
+    font-size: 0.85rem;
+  }
+
+  /* Take Back out of the bottom flow so it never competes with the action
+     buttons for width; pin it to the safe bottom-left corner. */
+  .back_button {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    margin: 8px;
+    margin-left: calc(8px + env(safe-area-inset-left, 0px));
+    margin-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+    z-index: 1500;
+  }
+}
+
 </style>

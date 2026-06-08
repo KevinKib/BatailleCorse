@@ -108,8 +108,8 @@ onBeforeUnmount(() => document.removeEventListener('keydown', handleKeydown));
    cards (z 1000/1001) but below the waiting/end overlays (z 2000). */
 .rules-toggle {
   position: absolute;
-  top: 16px;
-  right: 16px;
+  top: calc(16px + env(safe-area-inset-top, 0px));
+  right: calc(16px + env(safe-area-inset-right, 0px));
   z-index: 1500;
   display: inline-flex;
   align-items: center;
