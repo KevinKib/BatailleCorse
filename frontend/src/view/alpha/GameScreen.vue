@@ -49,11 +49,13 @@
       </div>
 
       <div class="middle_side">
-        <Transition name="turn-fade">
-          <div v-if="showMyTurn" class="turn-caption" data-cy="turn-indicator">
-            <span class="turn-caption__dot"></span>{{ YOUR_TURN_LABEL }}
-          </div>
-        </Transition>
+        <div class="turn-caption-slot">
+          <Transition name="turn-fade">
+            <div v-if="showMyTurn" class="turn-caption" data-cy="turn-indicator">
+              <span class="turn-caption__dot"></span>{{ YOUR_TURN_LABEL }}
+            </div>
+          </Transition>
+        </div>
         <h1 :class="['player_tag', { 'player_tag--active': showMyTurn }]">{{ myName || settingsStore.playerName || 'You' }}</h1>
         <div class="card stacked">
           <PlayingCard
@@ -706,12 +708,19 @@ onBeforeUnmount(() => {
   50%      { box-shadow: 0 0 22px 6px rgba(74, 222, 128, 0.70); }
 }
 
+.turn-caption-slot {
+  min-height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .turn-caption {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   width: fit-content;
-  margin: 0 auto 6px;
+  margin: 0;
   font-family: "Gabarito", sans-serif;
   font-size: 0.82rem;
   font-weight: 800;
@@ -734,8 +743,8 @@ onBeforeUnmount(() => {
 }
 
 @keyframes send-pulse {
-  0%, 100% { transform: scale(1); }
-  50%      { transform: scale(1.06); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
+  50%      { box-shadow: 0 0 16px 3px rgba(74, 222, 128, 0.65); }
 }
 
 .turn-fade-enter-active,
