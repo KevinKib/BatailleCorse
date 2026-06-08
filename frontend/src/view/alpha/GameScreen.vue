@@ -370,61 +370,97 @@ onBeforeUnmount(() => {
   background:
     radial-gradient(ellipse at 50% 42%, transparent 15%, rgba(0, 0, 0, 0.62) 100%),
     radial-gradient(ellipse at 50% 38%, #1e5c30 0%, #0d2e18 48%, #07160d 100%);
+  /* One fluid sizing source: every card/pile/gap derives from these so the
+     whole board scales coherently off the viewport. Clamp bounds are tuned
+     here; deck:pile width ratio mirrors the original 90:125. */
+  --deck-card-w: clamp(48px, 14vmin, 90px);
+  --pile-card-w: clamp(70px, 19vmin, 125px);
+  --card-aspect: 167.575 / 243.1375; /* matches PlayingCard intrinsic ratio */
+  --pile-card-h: calc(var(--pile-card-w) * 243.1375 / 167.575); /* card height at current width */
+  --band-pad: clamp(8px, 2.5vh, 20px);
+  --stack-gap: clamp(6px, 1.5vh, 10px);
   width: 100%;
-  height: 100%;
+  height: 100vh;     /* fallback for browsers without dvh */
+  height: 100dvh;    /* tracks the real visible area as mobile chrome shows/hides */
   display: flex;
   flex-direction: column;
   position: relative;
 }
 
+/* CSS width/aspect-ratio override PlayingCard's px width/height attributes
+   (CSS beats HTML attributes — no !important needed). PlayingCard is untouched,
+   so shared consumers like TitleCardFan are unaffected. */
+.gamescreen :deep(.playing_card) {
+  height: auto;
+  aspect-ratio: var(--card-aspect);
+}
+
+.gamescreen_top :deep(.playing_card),
+.gamescreen_bottom :deep(.playing_card) {
+  width: var(--deck-card-w);
+}
+
+.gamescreen_middle :deep(.playing_card) {
+  width: var(--pile-card-w);
+}
+
 .gamescreen_top {
-  height: 30%;
+  /* Size to content; the pile row absorbs the slack. min-height:0 lets it
+     shrink on short screens so the board still fits without scrolling. */
+  flex: 0 0 auto;
+  min-height: 0;
   background: rgba(0, 0, 0, 0.10);
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  padding-bottom: 20px;
+  padding-bottom: var(--band-pad);
 
   .middle_side {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-end;
-    gap: 10px;
+    gap: var(--stack-gap);
     margin: 0;
   }
 }
 
 .gamescreen_middle {
-  height: 40%;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .gamescreen_bottom {
-  height: 30%;
+  flex: 0 0 auto;
+  min-height: 0;
   background: rgba(0, 0, 0, 0.10);
   border-top: 1px solid rgba(255, 255, 255, 0.05);
-  padding-top: 20px;
+  padding-top: var(--band-pad);
+  /* Keep the Send/Slap buttons (and the Back button) off the bottom edge, the
+     same clearance the Back button used, plus the phone safe-area inset. */
+  padding-bottom: calc(var(--band-pad) + env(safe-area-inset-bottom, 0px));
 
   .middle_side {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    gap: 10px;
+    gap: var(--stack-gap);
     margin: 0;
   }
 }
 
 .pile_slot .card {
-  min-width: 125px;
-  min-height: 182px;
+  /* Reserve the full card box even when the pile is empty (the img is
+     v-show-hidden then), so the slot never shrinks with no card in it. */
+  min-width: var(--pile-card-w);
+  min-height: var(--pile-card-h);
 }
 
 .pile_slot {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 181px;  /* 125px card + 28px padding × 2 */
-  min-height: 222px; /* 182px card + 20px padding × 2 */
-  padding: 20px 28px;
+  /* Size around the fluid pile card instead of fixed px so it never overflows. */
+  padding: clamp(10px, 2.5vmin, 20px) clamp(14px, 3.5vmin, 28px);
   margin: auto;
   border: 2px dashed rgba(255, 255, 255, 0.1);
   border-radius: 14px;
@@ -502,23 +538,26 @@ onBeforeUnmount(() => {
 }
 
 .left_side {
-  width: 30%;
+  /* Side columns flex and may collapse; the center sizes to its content so the
+     Send + Slap buttons can never be squeezed into wrapping or clipping. */
+  flex: 1 1 0;
+  min-width: 0;
   display: flex;
 }
 
 .middle_side {
-  width: 40%;
+  flex: 0 0 auto;
 }
 
 .right_side {
-  width: 30%;
+  flex: 1 1 0;
+  min-width: 0;
 }
 
 .back_button {
   margin-left: 16px;
   margin-right: 16px;
   margin-top: auto;
-  margin-bottom: 16px;
 }
 
 
@@ -791,6 +830,38 @@ onBeforeUnmount(() => {
   .player_tag--active,
   .turn-hint__dot,
   .action_button--my-turn { animation: none; }
+}
+
+/* --- Narrow-screen (phone) adjustments --- */
+@media (max-width: 480px) {
+  /* Slightly larger floors relative to width so cards stay legible on phones. */
+  .gamescreen {
+    --deck-card-w: clamp(44px, 18vw, 72px);
+    --pile-card-w: clamp(64px, 26vw, 104px);
+  }
+
+  /* Tighten the action buttons so Send + Slap stay side-by-side and on-screen. */
+  .action_button {
+    margin-left: 4px;
+    margin-right: 4px;
+  }
+
+  .action_buttons :deep(.p-button) {
+    padding: 0.45rem 0.7rem;
+    font-size: 0.85rem;
+  }
+
+  /* Take Back out of the bottom flow so it never competes with the action
+     buttons for width; pin it to the safe bottom-left corner. */
+  .back_button {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    margin: 8px;
+    margin-left: calc(8px + env(safe-area-inset-left, 0px));
+    margin-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+    z-index: 1500;
+  }
 }
 
 </style>

@@ -12,7 +12,7 @@ A real-time card game with a Spring Boot (Java 22) backend and a Vue 3 + Vite fr
 Runs the frontend with hot reload and the backend with live reload and a remote debug port.
 
 ```sh
-./dev.sh
+sh dev.sh
 ```
 
 Or run the underlying command directly:
@@ -72,7 +72,7 @@ Specs live in `frontend/cypress/specs/`. When done, stop the stack with
 Builds optimized images and serves everything behind an Nginx gateway.
 
 ```sh
-./prod.sh
+bash prod.sh
 ```
 
 Or run the underlying command directly:

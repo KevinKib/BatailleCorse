@@ -1,5 +1,9 @@
 <template>
   <div class="app-root">
+    <!-- Persistent felt background, shared by the title screens. It lives
+         outside the RouterView so route transitions only fade the routed
+         content (the card panel), not the background behind it. -->
+    <div class="app-background" />
     <RouterView v-slot="{ Component, route }">
       <Transition :css="false" @enter="onEnter" @leave="onLeave">
         <component :is="Component" :key="route.path" />
@@ -86,6 +90,21 @@ h5, h6          { font-weight: bolder }
   width: 100%;
   height: 100%;
   background: #07160d;
+  /* Own stacking context so the background layer (z-index:-1) sits behind the
+     routed views without escaping app-root. */
+  isolation: isolate;
+}
+
+/* Shared title-screen felt, persistent across route transitions. The game
+   screen paints its own opaque background on top, so this only shows on the
+   title/lobby/setup screens and during transitions between them. */
+.app-background {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse at 50% 50%, transparent 15%, rgba(0, 0, 0, 0.8) 100%),
+    radial-gradient(ellipse at 50% 40%, #1e5c30 0%, #0d2e18 50%, #07160d 100%);
 }
 
 .titlescreen {
