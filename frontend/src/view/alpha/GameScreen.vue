@@ -404,37 +404,42 @@ onBeforeUnmount(() => {
 }
 
 .gamescreen_top {
-  height: 30%;
+  /* Size to content; the pile row absorbs the slack. min-height:0 lets it
+     shrink on short screens so the board still fits without scrolling. */
+  flex: 0 0 auto;
+  min-height: 0;
   background: rgba(0, 0, 0, 0.10);
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  padding-bottom: 20px;
+  padding-bottom: var(--band-pad);
 
   .middle_side {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-end;
-    gap: 10px;
+    gap: var(--stack-gap);
     margin: 0;
   }
 }
 
 .gamescreen_middle {
-  height: 40%;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .gamescreen_bottom {
-  height: 30%;
+  flex: 0 0 auto;
+  min-height: 0;
   background: rgba(0, 0, 0, 0.10);
   border-top: 1px solid rgba(255, 255, 255, 0.05);
-  padding-top: 20px;
+  padding-top: var(--band-pad);
 
   .middle_side {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    gap: 10px;
+    gap: var(--stack-gap);
     margin: 0;
   }
 }
@@ -526,16 +531,20 @@ onBeforeUnmount(() => {
 }
 
 .left_side {
-  width: 30%;
+  /* Side columns flex and may collapse; the center sizes to its content so the
+     Send + Slap buttons can never be squeezed into wrapping or clipping. */
+  flex: 1 1 0;
+  min-width: 0;
   display: flex;
 }
 
 .middle_side {
-  width: 40%;
+  flex: 0 0 auto;
 }
 
 .right_side {
-  width: 30%;
+  flex: 1 1 0;
+  min-width: 0;
 }
 
 .back_button {
