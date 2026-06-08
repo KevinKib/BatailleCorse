@@ -370,11 +370,37 @@ onBeforeUnmount(() => {
   background:
     radial-gradient(ellipse at 50% 42%, transparent 15%, rgba(0, 0, 0, 0.62) 100%),
     radial-gradient(ellipse at 50% 38%, #1e5c30 0%, #0d2e18 48%, #07160d 100%);
+  /* One fluid sizing source: every card/pile/gap derives from these so the
+     whole board scales coherently off the viewport. Clamp bounds are tuned
+     here; deck:pile width ratio mirrors the original 90:125. */
+  --deck-card-w: clamp(48px, 14vmin, 90px);
+  --pile-card-w: clamp(70px, 19vmin, 125px);
+  --card-aspect: 167.575 / 243.1375; /* matches PlayingCard intrinsic ratio */
+  --band-pad: clamp(8px, 2.5vh, 20px);
+  --stack-gap: clamp(6px, 1.5vh, 10px);
   width: 100%;
-  height: 100%;
+  height: 100vh;     /* fallback for browsers without dvh */
+  height: 100dvh;    /* tracks the real visible area as mobile chrome shows/hides */
   display: flex;
   flex-direction: column;
   position: relative;
+}
+
+/* CSS width/aspect-ratio override PlayingCard's px width/height attributes
+   (CSS beats HTML attributes — no !important needed). PlayingCard is untouched,
+   so shared consumers like TitleCardFan are unaffected. */
+.gamescreen :deep(.playing_card) {
+  height: auto;
+  aspect-ratio: var(--card-aspect);
+}
+
+.gamescreen_top :deep(.playing_card),
+.gamescreen_bottom :deep(.playing_card) {
+  width: var(--deck-card-w);
+}
+
+.gamescreen_middle :deep(.playing_card) {
+  width: var(--pile-card-w);
 }
 
 .gamescreen_top {
@@ -414,17 +440,15 @@ onBeforeUnmount(() => {
 }
 
 .pile_slot .card {
-  min-width: 125px;
-  min-height: 182px;
+  min-width: var(--pile-card-w);
 }
 
 .pile_slot {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 181px;  /* 125px card + 28px padding × 2 */
-  min-height: 222px; /* 182px card + 20px padding × 2 */
-  padding: 20px 28px;
+  /* Size around the fluid pile card instead of fixed px so it never overflows. */
+  padding: clamp(10px, 2.5vmin, 20px) clamp(14px, 3.5vmin, 28px);
   margin: auto;
   border: 2px dashed rgba(255, 255, 255, 0.1);
   border-radius: 14px;
