@@ -302,12 +302,12 @@ const isMyTurn = computed(() => batailleCorse.value?.isTurnOf(myPlayerIndex.valu
 const isOpponentTurn = computed(() => batailleCorse.value?.isTurnOf(opponentIndex.value) ?? false);
 
 // Suppress turn cues whenever nobody can take a turn: while an overlay owns the
-// screen (waiting / game over), or while the pile is grabbable (full) and about
-// to be auto-grabbed — SEND is unavailable to everyone in that window, so no
-// name should glow.
-const pileGrabbable = computed(() => batailleCorse.value?.pile.grabbable ?? false);
+// screen (waiting / game over), or while the pile is complete (full) and about
+// to be auto-grabbed — no card can be added and SEND is unavailable to everyone
+// in that window, so no name should glow.
+const pileComplete = computed(() => batailleCorse.value?.pile.grabbable ?? false);
 const showTurnCues = computed(() =>
-  !isWaiting.value && !showEndOverlay.value && !pileGrabbable.value);
+  !isWaiting.value && !showEndOverlay.value && !pileComplete.value);
 const showMyTurn = computed(() => showTurnCues.value && isMyTurn.value);
 const showOpponentTurn = computed(() => showTurnCues.value && isOpponentTurn.value);
 
