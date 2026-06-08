@@ -23,6 +23,12 @@ The sections below describe the original approach; the layered-cue principle and
 model/derivation still hold. Only the caption's lifecycle changed: persistent →
 one-time hint (`showFirstTurnHint`, `data-cy="turn-hint"`).
 
+**Grabbable-pile suppression:** the cues are also hidden while the pile is grabbable
+(`pile.grabbable`, i.e. the pile is full and in the ~1.5s auto-grab window). In that
+state no player can SEND — the backend only offers SEND when the pile is not full —
+so a glowing name would be misleading. This is folded into `showTurnCues`, the single
+gate every cue (both glows + the hint) already reads.
+
 ## Problem
 
 A returning user reported that the cue telling a player whether it's their turn to

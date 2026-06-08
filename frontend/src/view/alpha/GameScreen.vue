@@ -301,8 +301,13 @@ const YOUR_TURN_LABEL = 'YOUR TURN';
 const isMyTurn = computed(() => batailleCorse.value?.isTurnOf(myPlayerIndex.value) ?? false);
 const isOpponentTurn = computed(() => batailleCorse.value?.isTurnOf(opponentIndex.value) ?? false);
 
-// Suppress turn cues while an overlay owns the screen (waiting / game over).
-const showTurnCues = computed(() => !isWaiting.value && !showEndOverlay.value);
+// Suppress turn cues whenever nobody can take a turn: while an overlay owns the
+// screen (waiting / game over), or while the pile is grabbable (full) and about
+// to be auto-grabbed — SEND is unavailable to everyone in that window, so no
+// name should glow.
+const pileGrabbable = computed(() => batailleCorse.value?.pile.grabbable ?? false);
+const showTurnCues = computed(() =>
+  !isWaiting.value && !showEndOverlay.value && !pileGrabbable.value);
 const showMyTurn = computed(() => showTurnCues.value && isMyTurn.value);
 const showOpponentTurn = computed(() => showTurnCues.value && isOpponentTurn.value);
 
