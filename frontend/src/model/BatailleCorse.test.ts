@@ -77,3 +77,29 @@ describe('BatailleCorse end-of-game queries', () => {
     expect(game.isWinnerAt(1)).toBe(false);
   });
 });
+
+describe('BatailleCorse turn queries', () => {
+  it('givenCurrentPlayerAtIndex_thenIsTurnOfIsTrue', () => {
+    const players = [buildPlayer({ id: 'a' }), buildPlayer({ id: 'b' })];
+    const game = buildGame({ players, currentPlayer: players[0] });
+    expect(game.isTurnOf(0)).toBe(true);
+  });
+
+  it('givenOtherPlayerAtIndex_thenIsTurnOfIsFalse', () => {
+    const players = [buildPlayer({ id: 'a' }), buildPlayer({ id: 'b' })];
+    const game = buildGame({ players, currentPlayer: players[0] });
+    expect(game.isTurnOf(1)).toBe(false);
+  });
+
+  it('givenCurrentPlayerIsSecondSeat_thenIsTurnOfTracksThatSeat', () => {
+    const players = [buildPlayer({ id: 'a' }), buildPlayer({ id: 'b' })];
+    const game = buildGame({ players, currentPlayer: players[1] });
+    expect(game.isTurnOf(0)).toBe(false);
+    expect(game.isTurnOf(1)).toBe(true);
+  });
+
+  it('givenIndexOutOfRange_thenIsTurnOfIsFalse', () => {
+    const game = buildGame();
+    expect(game.isTurnOf(5)).toBe(false);
+  });
+});

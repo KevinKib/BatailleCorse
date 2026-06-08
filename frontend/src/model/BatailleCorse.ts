@@ -22,6 +22,10 @@ export default class BatailleCorse {
     return this.isWinner(this.players[playerIndex]?.id);
   }
 
+  isTurnOf(playerIndex: number): boolean {
+    return this.currentPlayer.id === this.players[playerIndex]?.id;
+  }
+
   static fromJSON(data: {
     currentPlayer: { id: string; nbCards: number; availableActions: string[] };
     pile: {
