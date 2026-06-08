@@ -762,8 +762,9 @@ onBeforeUnmount(() => {
   animation: turn-glow-pulse 1.8s ease-in-out infinite;
 }
 
+/* Same 1.8s ease-in-out as the name-tag glow so the two pulses stay in sync. */
 .action_button--my-turn {
-  animation: send-pulse 1.6s ease-in-out infinite;
+  animation: send-pulse 1.8s ease-in-out infinite;
 }
 
 @keyframes send-pulse {
