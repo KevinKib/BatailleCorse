@@ -6,7 +6,7 @@
     <div class="gamescreen_top flex">
       <div class="left_side"></div>
       <div class="middle_side">
-        <h1 class="player_tag">{{ opponentLabel }}</h1>
+        <h1 :class="['player_tag', { 'player_tag--active': showOpponentTurn }]">{{ opponentLabel }}</h1>
         <div class="card stacked">
           <PlayingCard
             ref="opponentCard"
@@ -49,7 +49,12 @@
       </div>
 
       <div class="middle_side">
-        <h1 class="player_tag">{{ myName || settingsStore.playerName || 'You' }}</h1>
+        <Transition name="turn-fade">
+          <div v-if="showMyTurn" class="turn-caption" data-cy="turn-indicator">
+            <span class="turn-caption__dot"></span>{{ YOUR_TURN_LABEL }}
+          </div>
+        </Transition>
+        <h1 :class="['player_tag', { 'player_tag--active': showMyTurn }]">{{ myName || settingsStore.playerName || 'You' }}</h1>
         <div class="card stacked">
           <PlayingCard
             ref="pile"
@@ -63,7 +68,7 @@
           </div>
         </div>
         <div class="action_buttons">
-          <Button class="action_button" icon="pi pi-arrow-up" severity="success" label="Send" rounded
+          <Button :class="['action_button', { 'action_button--my-turn': showMyTurn }]" icon="pi pi-arrow-up" severity="success" label="Send" rounded
             @click="send(myPlayerIndex)" :disabled="isButtonDisabled(myPlayerIndex, 'send')"/>
           <Button class="action_button" icon="pi pi-hammer" severity="warn" label="Slap" rounded
             @click="slap(myPlayerIndex)" :disabled="isButtonDisabled(myPlayerIndex, 'slap')"/>
@@ -280,6 +285,19 @@ const didIWin = computed(() => batailleCorse.value?.isWinnerAt(myPlayerIndex.val
 // settling, rather than wired into each action's watcher.
 const { showEndOverlay, revealImmediatelyIfOver, cancel: cancelEndScreen } =
   useEndScreen(() => isGameOver.value, () => isPileAnimating.value);
+
+// --- Turn indicator ---
+// "Whose turn" is conveyed by the glowing name tag (scales to N players);
+// the caption is a self-only cue answering "is it MY turn".
+const YOUR_TURN_LABEL = 'YOUR TURN';
+
+const isMyTurn = computed(() => batailleCorse.value?.isTurnOf(myPlayerIndex.value) ?? false);
+const isOpponentTurn = computed(() => batailleCorse.value?.isTurnOf(opponentIndex.value) ?? false);
+
+// Suppress turn cues while an overlay owns the screen (waiting / game over).
+const showTurnCues = computed(() => !isWaiting.value && !showEndOverlay.value);
+const showMyTurn = computed(() => showTurnCues.value && isMyTurn.value);
+const showOpponentTurn = computed(() => showTurnCues.value && isOpponentTurn.value);
 
 useHotkeys(
   () => { if (!isButtonDisabled(myPlayerIndex.value, 'send')) send(myPlayerIndex.value); },
@@ -675,8 +693,66 @@ onBeforeUnmount(() => {
   color: #cbd5d1;
 }
 
+/* --- Turn indicator --- */
+.player_tag--active {
+  color: #ffffff;
+  border-color: rgba(74, 222, 128, 0.9);
+  box-shadow: 0 0 16px 3px rgba(74, 222, 128, 0.55);
+  animation: turn-glow-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes turn-glow-pulse {
+  0%, 100% { box-shadow: 0 0 12px 2px rgba(74, 222, 128, 0.40); }
+  50%      { box-shadow: 0 0 22px 6px rgba(74, 222, 128, 0.70); }
+}
+
+.turn-caption {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  margin: 0 auto 6px;
+  font-family: "Gabarito", sans-serif;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: #4ade80;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.7);
+}
+
+.turn-caption__dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #4ade80;
+  box-shadow: 0 0 8px 2px rgba(74, 222, 128, 0.8);
+  animation: turn-glow-pulse 1.8s ease-in-out infinite;
+}
+
+.action_button--my-turn {
+  animation: send-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes send-pulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.06); }
+}
+
+.turn-fade-enter-active,
+.turn-fade-leave-active {
+  transition: opacity 0.25s ease;
+}
+
+.turn-fade-enter-from,
+.turn-fade-leave-to {
+  opacity: 0;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .end-trophy { animation: none; }
+  .end-trophy,
+  .player_tag--active,
+  .turn-caption__dot,
+  .action_button--my-turn { animation: none; }
 }
 
 </style>
