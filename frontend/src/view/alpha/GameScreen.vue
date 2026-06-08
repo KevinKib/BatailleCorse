@@ -6,7 +6,7 @@
     <div class="gamescreen_top flex">
       <div class="left_side"></div>
       <div class="middle_side">
-        <h1 class="player_tag">{{ opponentLabel }}</h1>
+        <h1 :class="['player_tag', { 'player_tag--active': showOpponentTurn }]">{{ opponentLabel }}</h1>
         <div class="card stacked">
           <PlayingCard
             ref="opponentCard"
@@ -49,7 +49,14 @@
       </div>
 
       <div class="middle_side">
-        <h1 class="player_tag">{{ myName || settingsStore.playerName || 'You' }}</h1>
+        <div class="player_tag_wrap">
+          <Transition name="turn-fade">
+            <div v-if="showFirstTurnHint" class="turn-hint" data-cy="turn-hint">
+              <span class="turn-hint__dot"></span>{{ YOUR_TURN_LABEL }}
+            </div>
+          </Transition>
+          <h1 :class="['player_tag', { 'player_tag--active': showMyTurn }]">{{ myName || settingsStore.playerName || 'You' }}</h1>
+        </div>
         <div class="card stacked">
           <PlayingCard
             ref="pile"
@@ -63,7 +70,7 @@
           </div>
         </div>
         <div class="action_buttons">
-          <Button class="action_button" icon="pi pi-arrow-up" severity="success" label="Send" rounded
+          <Button :class="['action_button', { 'action_button--my-turn': showMyTurn }]" icon="pi pi-arrow-up" severity="success" label="Send" rounded
             @click="send(myPlayerIndex)" :disabled="isButtonDisabled(myPlayerIndex, 'send')"/>
           <Button class="action_button" icon="pi pi-hammer" severity="warn" label="Slap" rounded
             @click="slap(myPlayerIndex)" :disabled="isButtonDisabled(myPlayerIndex, 'slap')"/>
@@ -280,6 +287,43 @@ const didIWin = computed(() => batailleCorse.value?.isWinnerAt(myPlayerIndex.val
 // settling, rather than wired into each action's watcher.
 const { showEndOverlay, revealImmediatelyIfOver, cancel: cancelEndScreen } =
   useEndScreen(() => isGameOver.value, () => isPileAnimating.value);
+
+// --- Turn indicator ---
+// Permanent cue: the active player's name tag glows. The cue is driven straight
+// off the backend's per-seat availableActions via canSend(seat) — the server
+// only offers SEND to the player whose turn it is, and only while a card can be
+// added (never when the pile is complete/grabbable or the game is finished). So
+// "no one can play" suppresses both glows for free, with no extra gating. It's
+// per-seat too, so it generalizes to N players (the view currently wires two
+// seats via opponentIndex = 1 - myPlayerIndex; a 4-player layout would iterate).
+// A glow is a learned signal, so we teach it once: the YOUR TURN hint shows the
+// first time it becomes your turn in a game, then auto-dismisses for good —
+// keeping the steady state uncluttered in a fast-reaction game.
+const YOUR_TURN_LABEL = 'YOUR TURN';
+
+// Only additional suppression needed: hide cues while an overlay owns the screen.
+const showTurnCues = computed(() => !isWaiting.value && !showEndOverlay.value);
+const showMyTurn = computed(() =>
+  showTurnCues.value && (batailleCorse.value?.canSend(myPlayerIndex.value) ?? false));
+const showOpponentTurn = computed(() =>
+  showTurnCues.value && (batailleCorse.value?.canSend(opponentIndex.value) ?? false));
+
+// One-time onboarding hint: visible only during the player's first turn of the
+// game and tied to turn state (not a timer), so it vanishes the instant they
+// play — even if that's within a second — and never returns. Bootstraps the
+// meaning of the name-tag glow.
+const showFirstTurnHint = ref(false);
+let firstTurnHintConsumed = false;
+
+watch(showMyTurn, (mine) => {
+  if (firstTurnHintConsumed) return;
+  if (mine) {
+    showFirstTurnHint.value = true;
+  } else if (showFirstTurnHint.value) {
+    showFirstTurnHint.value = false;
+    firstTurnHintConsumed = true;
+  }
+}, { immediate: true });
 
 useHotkeys(
   () => { if (!isButtonDisabled(myPlayerIndex.value, 'send')) send(myPlayerIndex.value); },
@@ -675,8 +719,78 @@ onBeforeUnmount(() => {
   color: #cbd5d1;
 }
 
+/* --- Turn indicator --- */
+.player_tag--active {
+  color: #ffffff;
+  border-color: rgba(74, 222, 128, 0.9);
+  box-shadow: 0 0 16px 3px rgba(74, 222, 128, 0.55);
+  animation: turn-glow-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes turn-glow-pulse {
+  0%, 100% { box-shadow: 0 0 12px 2px rgba(74, 222, 128, 0.40); }
+  50%      { box-shadow: 0 0 22px 6px rgba(74, 222, 128, 0.70); }
+}
+
+/* Wrapper lets the one-time hint float above the name tag without shifting layout. */
+.player_tag_wrap {
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+.turn-hint {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  font-family: "Gabarito", sans-serif;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: #4ade80;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.7);
+}
+
+.turn-hint__dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #4ade80;
+  box-shadow: 0 0 8px 2px rgba(74, 222, 128, 0.8);
+  animation: turn-glow-pulse 1.8s ease-in-out infinite;
+}
+
+/* Same 1.8s ease-in-out as the name-tag glow so the two pulses stay in sync. */
+.action_button--my-turn {
+  animation: send-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes send-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
+  50%      { box-shadow: 0 0 16px 3px rgba(74, 222, 128, 0.65); }
+}
+
+.turn-fade-enter-active,
+.turn-fade-leave-active {
+  transition: opacity 0.25s ease;
+}
+
+.turn-fade-enter-from,
+.turn-fade-leave-to {
+  opacity: 0;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .end-trophy { animation: none; }
+  .end-trophy,
+  .player_tag--active,
+  .turn-hint__dot,
+  .action_button--my-turn { animation: none; }
 }
 
 </style>

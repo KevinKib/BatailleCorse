@@ -77,3 +77,43 @@ describe('BatailleCorse end-of-game queries', () => {
     expect(game.isWinnerAt(1)).toBe(false);
   });
 });
+
+describe('BatailleCorse turn queries', () => {
+  it('givenPlayerHasSendAvailable_thenCanSendIsTrue', () => {
+    const game = buildGame({
+      players: [
+        buildPlayer({ id: 'a', availableActions: ['SEND'] }),
+        buildPlayer({ id: 'b', availableActions: ['SLAP'] }),
+      ],
+    });
+    expect(game.canSend(0)).toBe(true);
+  });
+
+  it('givenPlayerLacksSendAvailable_thenCanSendIsFalse', () => {
+    const game = buildGame({
+      players: [
+        buildPlayer({ id: 'a', availableActions: ['SEND'] }),
+        buildPlayer({ id: 'b', availableActions: ['SLAP'] }),
+      ],
+    });
+    expect(game.canSend(1)).toBe(false);
+  });
+
+  it('givenNoPlayerHasSend_thenCanSendIsFalseForEverySeat', () => {
+    // e.g. the pile is full/grabbable or the game is finished: the server offers
+    // SEND to no one.
+    const game = buildGame({
+      players: [
+        buildPlayer({ id: 'a', availableActions: ['GRAB'] }),
+        buildPlayer({ id: 'b', availableActions: ['SLAP'] }),
+      ],
+    });
+    expect(game.canSend(0)).toBe(false);
+    expect(game.canSend(1)).toBe(false);
+  });
+
+  it('givenIndexOutOfRange_thenCanSendIsFalse', () => {
+    const game = buildGame();
+    expect(game.canSend(5)).toBe(false);
+  });
+});

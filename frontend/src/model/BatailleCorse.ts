@@ -22,6 +22,17 @@ export default class BatailleCorse {
     return this.isWinner(this.players[playerIndex]?.id);
   }
 
+  /**
+   * Whether the player at the given seat may take their turn right now, i.e. the
+   * server currently offers them the SEND action. This is the authoritative
+   * "whose turn" signal: the backend only offers SEND to the player whose turn it
+   * is and only while a card can be added (not when the pile is full / grabbable
+   * or the game is finished).
+   */
+  canSend(playerIndex: number): boolean {
+    return this.players[playerIndex]?.hasAvailableAction('SEND') ?? false;
+  }
+
   static fromJSON(data: {
     currentPlayer: { id: string; nbCards: number; availableActions: string[] };
     pile: {

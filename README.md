@@ -28,6 +28,45 @@ Services:
 
 Source folders are bind-mounted, so edits on the host are reflected in the running containers.
 
+## Testing
+
+### Frontend unit tests (Vitest)
+
+Run from the `frontend` directory (no backend needed):
+
+```sh
+cd frontend
+npm install        # first time only
+npm test           # one-off run
+npm run test:watch # watch mode
+```
+
+### End-to-end tests (Cypress)
+
+The e2e specs drive the real app, so they need the full stack running. The Vite dev
+server proxies `/api` and `/connect` (WebSocket) to the Docker service `backend:8080`,
+so the stack must be started with Docker Compose — that proxy target only resolves on
+the Compose network.
+
+1. Start the e2e stack (backend on `:8080`, Vite dev server on `:5173`):
+
+   ```sh
+   docker compose -f docker-compose.e2e.yml up --build
+   ```
+
+2. In a second terminal, run Cypress from the `frontend` directory (it targets
+   `http://localhost:5173`):
+
+   ```sh
+   cd frontend
+   npm install      # first time only
+   npm run cy:run   # headless (CI-style)
+   npm run cy:open  # or the interactive runner
+   ```
+
+Specs live in `frontend/cypress/specs/`. When done, stop the stack with
+`docker compose -f docker-compose.e2e.yml down`.
+
 ## Production
 
 Builds optimized images and serves everything behind an Nginx gateway.
