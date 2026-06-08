@@ -289,8 +289,11 @@ const { showEndOverlay, revealImmediatelyIfOver, cancel: cancelEndScreen } =
   useEndScreen(() => isGameOver.value, () => isPileAnimating.value);
 
 // --- Turn indicator ---
-// "Whose turn" is conveyed by the glowing name tag (scales to N players);
-// the caption is a self-only cue answering "is it MY turn".
+// "Whose turn" is conveyed by the glowing name tag; the caption is a self-only
+// cue answering "is it MY turn". The model (isTurnOf) and the glow CSS are
+// per-seat and N-player-ready; the view currently wires only two seats
+// (opponentIndex = 1 - myPlayerIndex). A future 4-player layout would iterate
+// players and call isTurnOf(i) per seat instead.
 const YOUR_TURN_LABEL = 'YOUR TURN';
 
 const isMyTurn = computed(() => batailleCorse.value?.isTurnOf(myPlayerIndex.value) ?? false);
