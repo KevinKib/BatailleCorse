@@ -376,6 +376,7 @@ onBeforeUnmount(() => {
   --deck-card-w: clamp(48px, 14vmin, 90px);
   --pile-card-w: clamp(70px, 19vmin, 125px);
   --card-aspect: 167.575 / 243.1375; /* matches PlayingCard intrinsic ratio */
+  --pile-card-h: calc(var(--pile-card-w) * 243.1375 / 167.575); /* card height at current width */
   --band-pad: clamp(8px, 2.5vh, 20px);
   --stack-gap: clamp(6px, 1.5vh, 10px);
   width: 100%;
@@ -433,6 +434,9 @@ onBeforeUnmount(() => {
   background: rgba(0, 0, 0, 0.10);
   border-top: 1px solid rgba(255, 255, 255, 0.05);
   padding-top: var(--band-pad);
+  /* Keep the Send/Slap buttons (and the Back button) off the bottom edge, the
+     same clearance the Back button used, plus the phone safe-area inset. */
+  padding-bottom: calc(var(--band-pad) + env(safe-area-inset-bottom, 0px));
 
   .middle_side {
     display: flex;
@@ -445,7 +449,10 @@ onBeforeUnmount(() => {
 }
 
 .pile_slot .card {
+  /* Reserve the full card box even when the pile is empty (the img is
+     v-show-hidden then), so the slot never shrinks with no card in it. */
   min-width: var(--pile-card-w);
+  min-height: var(--pile-card-h);
 }
 
 .pile_slot {
@@ -551,7 +558,6 @@ onBeforeUnmount(() => {
   margin-left: 16px;
   margin-right: 16px;
   margin-top: auto;
-  margin-bottom: 16px;
 }
 
 

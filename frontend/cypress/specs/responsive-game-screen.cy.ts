@@ -34,4 +34,21 @@ describe('Responsive game screen (phone portrait)', () => {
       expect(r.left, 'Slap left edge within viewport').to.be.at.least(-1);
     });
   });
+
+  it('leaves a margin below the action buttons (not flush to the bottom edge)', () => {
+    cy.contains('button', 'Slap').then(($b) => {
+      const r = $b[0].getBoundingClientRect();
+      expect(VIEWPORT_H - r.bottom, 'gap below Slap button').to.be.greaterThan(4);
+    });
+  });
+
+  it('never collapses the empty pile slot', () => {
+    // At game start the pile is empty, so its card <img> is v-show-hidden. The
+    // slot must still reserve the full (portrait) card box — taller than wide —
+    // rather than shrink to padding height with no card in it.
+    cy.get('.pile_slot').then(($s) => {
+      const r = $s[0].getBoundingClientRect();
+      expect(r.height, 'empty pile slot stays card-tall').to.be.greaterThan(r.width);
+    });
+  });
 });
