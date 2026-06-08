@@ -49,14 +49,14 @@
       </div>
 
       <div class="middle_side">
-        <div class="turn-caption-slot">
+        <div class="player_tag_wrap">
           <Transition name="turn-fade">
-            <div v-if="showMyTurn" class="turn-caption" data-cy="turn-indicator">
-              <span class="turn-caption__dot"></span>{{ YOUR_TURN_LABEL }}
+            <div v-if="showFirstTurnHint" class="turn-hint" data-cy="turn-hint">
+              <span class="turn-hint__dot"></span>{{ YOUR_TURN_LABEL }}
             </div>
           </Transition>
+          <h1 :class="['player_tag', { 'player_tag--active': showMyTurn }]">{{ myName || settingsStore.playerName || 'You' }}</h1>
         </div>
-        <h1 :class="['player_tag', { 'player_tag--active': showMyTurn }]">{{ myName || settingsStore.playerName || 'You' }}</h1>
         <div class="card stacked">
           <PlayingCard
             ref="pile"
@@ -289,11 +289,13 @@ const { showEndOverlay, revealImmediatelyIfOver, cancel: cancelEndScreen } =
   useEndScreen(() => isGameOver.value, () => isPileAnimating.value);
 
 // --- Turn indicator ---
-// "Whose turn" is conveyed by the glowing name tag; the caption is a self-only
-// cue answering "is it MY turn". The model (isTurnOf) and the glow CSS are
-// per-seat and N-player-ready; the view currently wires only two seats
-// (opponentIndex = 1 - myPlayerIndex). A future 4-player layout would iterate
-// players and call isTurnOf(i) per seat instead.
+// Permanent cue: the active player's name tag glows. (isTurnOf + the glow CSS
+// are per-seat and N-player-ready; the view currently wires only two seats via
+// opponentIndex = 1 - myPlayerIndex. A future 4-player layout would iterate
+// players and call isTurnOf(i) per seat.)
+// A glow is a learned signal, so we teach it once: the YOUR TURN hint shows the
+// first time it becomes your turn in a game, then auto-dismisses for good —
+// keeping the steady state uncluttered in a fast-reaction game.
 const YOUR_TURN_LABEL = 'YOUR TURN';
 
 const isMyTurn = computed(() => batailleCorse.value?.isTurnOf(myPlayerIndex.value) ?? false);
@@ -303,6 +305,20 @@ const isOpponentTurn = computed(() => batailleCorse.value?.isTurnOf(opponentInde
 const showTurnCues = computed(() => !isWaiting.value && !showEndOverlay.value);
 const showMyTurn = computed(() => showTurnCues.value && isMyTurn.value);
 const showOpponentTurn = computed(() => showTurnCues.value && isOpponentTurn.value);
+
+// One-time onboarding hint: fires the first time it's your turn this game, then
+// auto-hides and never returns. Bootstraps the meaning of the name-tag glow.
+const showFirstTurnHint = ref(false);
+let firstTurnHintShown = false;
+let firstTurnHintTimer: ReturnType<typeof setTimeout> | null = null;
+
+watch(showMyTurn, (mine) => {
+  if (mine && !firstTurnHintShown) {
+    firstTurnHintShown = true;
+    showFirstTurnHint.value = true;
+    firstTurnHintTimer = setTimeout(() => { showFirstTurnHint.value = false; }, 2500);
+  }
+}, { immediate: true });
 
 useHotkeys(
   () => { if (!isButtonDisabled(myPlayerIndex.value, 'send')) send(myPlayerIndex.value); },
@@ -339,6 +355,7 @@ onBeforeUnmount(() => {
   batailleCorseStore.cancelAutoGrab();
   webSocketService.unsubscribeFromGame();
   cancelEndScreen();
+  if (firstTurnHintTimer) clearTimeout(firstTurnHintTimer);
 });
 </script>
 
@@ -711,19 +728,23 @@ onBeforeUnmount(() => {
   50%      { box-shadow: 0 0 22px 6px rgba(74, 222, 128, 0.70); }
 }
 
-.turn-caption-slot {
-  min-height: 22px;
+/* Wrapper lets the one-time hint float above the name tag without shifting layout. */
+.player_tag_wrap {
+  position: relative;
   display: flex;
-  align-items: center;
   justify-content: center;
 }
 
-.turn-caption {
+.turn-hint {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 6px;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  width: fit-content;
-  margin: 0;
+  white-space: nowrap;
   font-family: "Gabarito", sans-serif;
   font-size: 0.82rem;
   font-weight: 800;
@@ -732,7 +753,7 @@ onBeforeUnmount(() => {
   text-shadow: 0 1px 6px rgba(0, 0, 0, 0.7);
 }
 
-.turn-caption__dot {
+.turn-hint__dot {
   width: 9px;
   height: 9px;
   border-radius: 50%;
@@ -763,7 +784,7 @@ onBeforeUnmount(() => {
 @media (prefers-reduced-motion: reduce) {
   .end-trophy,
   .player_tag--active,
-  .turn-caption__dot,
+  .turn-hint__dot,
   .action_button--my-turn { animation: none; }
 }
 

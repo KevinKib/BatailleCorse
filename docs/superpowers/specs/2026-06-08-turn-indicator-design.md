@@ -1,7 +1,25 @@
 # Turn Indicator — Design
 
 **Date:** 2026-06-08
-**Status:** Approved (pending spec review)
+**Status:** Implemented; revised after first playtest (see Revision below)
+
+## Revision (2026-06-08, post-implementation playtest)
+
+The original design used a **persistent** "YOUR TURN" caption above the local
+player's name tag. In playtesting this read as too much for a fast-reaction game —
+a constant banner competes for the attention the player needs on the central pile.
+
+**Change:** the persistent caption is replaced by a **one-time onboarding hint**.
+The permanent turn cue is now the **glowing name tag + the Send-button glow pulse**
+alone. Because a glow is a *learned* signal (a first-time player has no way to know
+green-glow = "my turn"), the "YOUR TURN" label still appears — but only the **first
+time it becomes the local player's turn in a game** — then fades after ~2.5s and never
+returns. It floats above the name tag (absolutely positioned) so it never shifts
+layout. This teaches the association once, then keeps the steady state uncluttered.
+
+The sections below describe the original approach; the layered-cue principle and the
+model/derivation still hold. Only the caption's lifecycle changed: persistent →
+one-time hint (`showFirstTurnHint`, `data-cy="turn-hint"`).
 
 ## Problem
 
