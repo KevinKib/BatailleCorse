@@ -289,27 +289,24 @@ const { showEndOverlay, revealImmediatelyIfOver, cancel: cancelEndScreen } =
   useEndScreen(() => isGameOver.value, () => isPileAnimating.value);
 
 // --- Turn indicator ---
-// Permanent cue: the active player's name tag glows. (isTurnOf + the glow CSS
-// are per-seat and N-player-ready; the view currently wires only two seats via
-// opponentIndex = 1 - myPlayerIndex. A future 4-player layout would iterate
-// players and call isTurnOf(i) per seat.)
+// Permanent cue: the active player's name tag glows. The cue is driven straight
+// off the backend's per-seat availableActions via canSend(seat) — the server
+// only offers SEND to the player whose turn it is, and only while a card can be
+// added (never when the pile is complete/grabbable or the game is finished). So
+// "no one can play" suppresses both glows for free, with no extra gating. It's
+// per-seat too, so it generalizes to N players (the view currently wires two
+// seats via opponentIndex = 1 - myPlayerIndex; a 4-player layout would iterate).
 // A glow is a learned signal, so we teach it once: the YOUR TURN hint shows the
 // first time it becomes your turn in a game, then auto-dismisses for good —
 // keeping the steady state uncluttered in a fast-reaction game.
 const YOUR_TURN_LABEL = 'YOUR TURN';
 
-const isMyTurn = computed(() => batailleCorse.value?.isTurnOf(myPlayerIndex.value) ?? false);
-const isOpponentTurn = computed(() => batailleCorse.value?.isTurnOf(opponentIndex.value) ?? false);
-
-// Suppress turn cues whenever nobody can take a turn: while an overlay owns the
-// screen (waiting / game over), or while the pile is complete (full) and about
-// to be auto-grabbed — no card can be added and SEND is unavailable to everyone
-// in that window, so no name should glow.
-const pileComplete = computed(() => batailleCorse.value?.pile.grabbable ?? false);
-const showTurnCues = computed(() =>
-  !isWaiting.value && !showEndOverlay.value && !pileComplete.value);
-const showMyTurn = computed(() => showTurnCues.value && isMyTurn.value);
-const showOpponentTurn = computed(() => showTurnCues.value && isOpponentTurn.value);
+// Only additional suppression needed: hide cues while an overlay owns the screen.
+const showTurnCues = computed(() => !isWaiting.value && !showEndOverlay.value);
+const showMyTurn = computed(() =>
+  showTurnCues.value && (batailleCorse.value?.canSend(myPlayerIndex.value) ?? false));
+const showOpponentTurn = computed(() =>
+  showTurnCues.value && (batailleCorse.value?.canSend(opponentIndex.value) ?? false));
 
 // One-time onboarding hint: visible only during the player's first turn of the
 // game and tied to turn state (not a timer), so it vanishes the instant they

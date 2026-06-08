@@ -19,15 +19,23 @@ that's within a second), then never returns. It floats above the name tag (absol
 positioned) so it never shifts layout. This teaches the association once, then keeps
 the steady state uncluttered.
 
-The sections below describe the original approach; the layered-cue principle and the
-model/derivation still hold. Only the caption's lifecycle changed: persistent →
-one-time hint (`showFirstTurnHint`, `data-cy="turn-hint"`).
+The sections below describe the original approach; the layered-cue principle still
+holds, but the **turn-state derivation changed** (see next paragraph). Only the
+caption's lifecycle changed too: persistent → one-time hint (`showFirstTurnHint`,
+`data-cy="turn-hint"`).
 
-**Grabbable-pile suppression:** the cues are also hidden while the pile is grabbable
-(`pile.grabbable`, i.e. the pile is full and in the ~1.5s auto-grab window). In that
-state no player can SEND — the backend only offers SEND when the pile is not full —
-so a glowing name would be misleading. This is folded into `showTurnCues`, the single
-gate every cue (both glows + the hint) already reads.
+**Derivation: drive the cue off `availableActions`, not `currentPlayer`.** The first
+implementation added a model query `isTurnOf(seat)` (comparing `currentPlayer.id`) and
+then separately suppressed the cue while the pile was complete/grabbable. That was
+redundant: the backend already exposes the exact signal per seat — it offers the SEND
+action only to the player whose turn it is, and only while a card can be added (never
+when the pile is full/grabbable, never when the game is finished). So the cue is now
+derived from `BatailleCorse.canSend(seat)` = `players[seat].hasAvailableAction('SEND')`.
+This makes "no one can play" suppress both glows for free (no `pile.grabbable` gate
+needed), stays consistent with the Send button (which reads the same `availableActions`),
+and is per-seat so it generalizes to N players. `isTurnOf` and the `pileComplete` gate
+were removed as dead code. The only remaining gate is hiding cues while an overlay owns
+the screen (waiting / game over).
 
 ## Problem
 

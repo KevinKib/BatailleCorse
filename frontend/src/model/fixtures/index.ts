@@ -43,7 +43,6 @@ export function buildPlayer(overrides: Partial<{
 }
 
 export function buildGame(overrides: Partial<{
-  currentPlayer: Player;
   pile: Pile;
   players: Player[];
   winner: { id: string } | null;
@@ -53,7 +52,7 @@ export function buildGame(overrides: Partial<{
     buildPlayer({ id: '1' }),
   ];
   return new BatailleCorse(
-    overrides.currentPlayer ?? players[0],
+    players[0],
     overrides.pile ?? buildPile(),
     players,
     overrides.winner ?? null,

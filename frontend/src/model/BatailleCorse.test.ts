@@ -79,27 +79,41 @@ describe('BatailleCorse end-of-game queries', () => {
 });
 
 describe('BatailleCorse turn queries', () => {
-  it('givenCurrentPlayerAtIndex_thenIsTurnOfIsTrue', () => {
-    const players = [buildPlayer({ id: 'a' }), buildPlayer({ id: 'b' })];
-    const game = buildGame({ players, currentPlayer: players[0] });
-    expect(game.isTurnOf(0)).toBe(true);
+  it('givenPlayerHasSendAvailable_thenCanSendIsTrue', () => {
+    const game = buildGame({
+      players: [
+        buildPlayer({ id: 'a', availableActions: ['SEND'] }),
+        buildPlayer({ id: 'b', availableActions: ['SLAP'] }),
+      ],
+    });
+    expect(game.canSend(0)).toBe(true);
   });
 
-  it('givenOtherPlayerAtIndex_thenIsTurnOfIsFalse', () => {
-    const players = [buildPlayer({ id: 'a' }), buildPlayer({ id: 'b' })];
-    const game = buildGame({ players, currentPlayer: players[0] });
-    expect(game.isTurnOf(1)).toBe(false);
+  it('givenPlayerLacksSendAvailable_thenCanSendIsFalse', () => {
+    const game = buildGame({
+      players: [
+        buildPlayer({ id: 'a', availableActions: ['SEND'] }),
+        buildPlayer({ id: 'b', availableActions: ['SLAP'] }),
+      ],
+    });
+    expect(game.canSend(1)).toBe(false);
   });
 
-  it('givenCurrentPlayerIsSecondSeat_thenIsTurnOfTracksThatSeat', () => {
-    const players = [buildPlayer({ id: 'a' }), buildPlayer({ id: 'b' })];
-    const game = buildGame({ players, currentPlayer: players[1] });
-    expect(game.isTurnOf(0)).toBe(false);
-    expect(game.isTurnOf(1)).toBe(true);
+  it('givenNoPlayerHasSend_thenCanSendIsFalseForEverySeat', () => {
+    // e.g. the pile is full/grabbable or the game is finished: the server offers
+    // SEND to no one.
+    const game = buildGame({
+      players: [
+        buildPlayer({ id: 'a', availableActions: ['GRAB'] }),
+        buildPlayer({ id: 'b', availableActions: ['SLAP'] }),
+      ],
+    });
+    expect(game.canSend(0)).toBe(false);
+    expect(game.canSend(1)).toBe(false);
   });
 
-  it('givenIndexOutOfRange_thenIsTurnOfIsFalse', () => {
+  it('givenIndexOutOfRange_thenCanSendIsFalse', () => {
     const game = buildGame();
-    expect(game.isTurnOf(5)).toBe(false);
+    expect(game.canSend(5)).toBe(false);
   });
 });
