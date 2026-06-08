@@ -1,7 +1,5 @@
 <template>
   <div class="titlescreen">
-    <div class="title-bg" />
-
     <div class="title-panel">
 
       <TitleCardFan />
@@ -64,15 +62,6 @@ onMounted(() => preloadAllCards());
   align-items: center;
   justify-content: center;
   overflow: hidden;
-}
-
-.title-bg {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(ellipse at 50% 50%, transparent 15%, rgba(0, 0, 0, 0.8) 100%),
-    radial-gradient(ellipse at 50% 40%, #1e5c30 0%, #0d2e18 50%, #07160d 100%);
-  z-index: 0;
 }
 
 .title-panel {
