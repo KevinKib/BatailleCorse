@@ -306,17 +306,20 @@ const showTurnCues = computed(() => !isWaiting.value && !showEndOverlay.value);
 const showMyTurn = computed(() => showTurnCues.value && isMyTurn.value);
 const showOpponentTurn = computed(() => showTurnCues.value && isOpponentTurn.value);
 
-// One-time onboarding hint: fires the first time it's your turn this game, then
-// auto-hides and never returns. Bootstraps the meaning of the name-tag glow.
+// One-time onboarding hint: visible only during the player's first turn of the
+// game and tied to turn state (not a timer), so it vanishes the instant they
+// play — even if that's within a second — and never returns. Bootstraps the
+// meaning of the name-tag glow.
 const showFirstTurnHint = ref(false);
-let firstTurnHintShown = false;
-let firstTurnHintTimer: ReturnType<typeof setTimeout> | null = null;
+let firstTurnHintConsumed = false;
 
 watch(showMyTurn, (mine) => {
-  if (mine && !firstTurnHintShown) {
-    firstTurnHintShown = true;
+  if (firstTurnHintConsumed) return;
+  if (mine) {
     showFirstTurnHint.value = true;
-    firstTurnHintTimer = setTimeout(() => { showFirstTurnHint.value = false; }, 2500);
+  } else if (showFirstTurnHint.value) {
+    showFirstTurnHint.value = false;
+    firstTurnHintConsumed = true;
   }
 }, { immediate: true });
 
@@ -355,7 +358,6 @@ onBeforeUnmount(() => {
   batailleCorseStore.cancelAutoGrab();
   webSocketService.unsubscribeFromGame();
   cancelEndScreen();
-  if (firstTurnHintTimer) clearTimeout(firstTurnHintTimer);
 });
 </script>
 

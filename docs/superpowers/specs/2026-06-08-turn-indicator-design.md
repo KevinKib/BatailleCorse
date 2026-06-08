@@ -12,10 +12,12 @@ a constant banner competes for the attention the player needs on the central pil
 **Change:** the persistent caption is replaced by a **one-time onboarding hint**.
 The permanent turn cue is now the **glowing name tag + the Send-button glow pulse**
 alone. Because a glow is a *learned* signal (a first-time player has no way to know
-green-glow = "my turn"), the "YOUR TURN" label still appears — but only the **first
-time it becomes the local player's turn in a game** — then fades after ~2.5s and never
-returns. It floats above the name tag (absolutely positioned) so it never shifts
-layout. This teaches the association once, then keeps the steady state uncluttered.
+green-glow = "my turn"), the "YOUR TURN" label still appears — but only during the
+**local player's first turn of the game**. It is tied to turn state, not a timer: it
+shows when that first turn begins and disappears the instant the player plays (even if
+that's within a second), then never returns. It floats above the name tag (absolutely
+positioned) so it never shifts layout. This teaches the association once, then keeps
+the steady state uncluttered.
 
 The sections below describe the original approach; the layered-cue principle and the
 model/derivation still hold. Only the caption's lifecycle changed: persistent →

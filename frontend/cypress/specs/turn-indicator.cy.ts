@@ -3,7 +3,7 @@ describe('Turn indicator', () => {
     cy.createGame();
 
     // On a fresh game it is player 0's turn, so the one-time onboarding hint
-    // appears (it auto-dismisses after a couple of seconds, so assert promptly).
+    // appears and stays for the duration of that first turn (no Send issued here).
     cy.get('[data-cy="turn-hint"]', { timeout: 10000 })
       .should('be.visible')
       .and('contain.text', 'YOUR TURN');
