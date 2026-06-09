@@ -76,10 +76,11 @@ function onLeave(el: Element, done: () => void) {
     "wdth" 100;
 }
 
-/* touch-action is NOT inherited — the universal selector ensures every element,
-   including PrimeVue buttons, blocks double-tap zoom on iOS Safari. */
+/* Prevent double-tap zoom on iOS Safari on every element. !important is
+   required because PrimeVue injects its component styles dynamically after
+   this stylesheet, which would otherwise override the * rule. */
 * {
-  touch-action: manipulation;
+  touch-action: manipulation !important;
 }
 
 html, body, #app {
