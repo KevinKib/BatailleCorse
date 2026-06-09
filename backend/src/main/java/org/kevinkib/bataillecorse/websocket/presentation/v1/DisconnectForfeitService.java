@@ -11,6 +11,7 @@ import org.kevinkib.bataillecorse.websocket.presentation.v1.dto.BatailleCorseDto
 import org.kevinkib.bataillecorse.websocket.presentation.v1.dto.event.ConnectionEventData;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.dto.event.EventType;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.dto.event.ForfeitEventData;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
 
@@ -44,7 +45,7 @@ public class DisconnectForfeitService {
     public DisconnectForfeitService(SessionService sessionService,
                                     GameMessagingService messaging,
                                     PresenceRegistry registry,
-                                    TaskScheduler scheduler,
+                                    @Qualifier("taskScheduler") TaskScheduler scheduler,
                                     Clock clock) {
         this.sessionService = sessionService;
         this.messaging = messaging;
