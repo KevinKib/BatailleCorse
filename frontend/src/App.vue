@@ -13,7 +13,22 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted, onUnmounted } from 'vue';
+
 const TRANSITION_MS = 800;
+
+// iOS Safari ignores CSS touch-action on some elements; a JS guard is the
+// only reliable fallback. passive: false is required for preventDefault to work.
+let lastTap = 0;
+function blockDoubleTapZoom(e: TouchEvent) {
+  const now = Date.now();
+  if (e.touches.length === 1 && now - lastTap < 300) {
+    e.preventDefault();
+  }
+  lastTap = now;
+}
+onMounted(() => document.addEventListener('touchstart', blockDoubleTapZoom, { passive: false }));
+onUnmounted(() => document.removeEventListener('touchstart', blockDoubleTapZoom));
 
 function onEnter(el: Element, done: () => void) {
   const div = el as HTMLElement;
