@@ -85,6 +85,22 @@ public class BatailleCorse {
         result = Result.update(players, pile, slapRules);
     }
 
+    /**
+     * Ends the game by concession: the given seat loses, so the other player wins,
+     * regardless of card counts. Used by explicit forfeit and disconnect auto-loss.
+     * No-op if the game is already finished (handles the natural-win vs. timer race).
+     */
+    public synchronized void concede(PlayerId loser) {
+        if (isFinished()) {
+            return;
+        }
+        Player winner = players.stream()
+                .filter(player -> !player.id().equals(loser))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("No opponent for seat " + loser));
+        this.result = new Result(winner);
+    }
+
     private void checkIfPlayerCanSend(Player player) throws NotPlayersTurnException, FullCentralPileException, FinishedGameException {
         if (isFinished()) {
             throw new FinishedGameException();
