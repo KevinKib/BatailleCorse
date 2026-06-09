@@ -84,6 +84,9 @@ html, body, #app {
   font-weight: 500;
   font-style: normal;
   font-variation-settings: "wdth" 100;
+  /* Prevent double-tap zoom globally on iOS Safari (user-scalable=no is ignored
+     since iOS 10; touch-action: manipulation is the reliable cross-platform fix). */
+  touch-action: manipulation;
 }
 
 h1              { font-size: 2em; margin: .67em 0 }
