@@ -30,7 +30,13 @@ class BatailleCorseWebSocketControllerTest {
     void setUp() {
         sessionService = new SessionService(new InMemorySessionRepository(java.time.Clock.systemUTC()));
         template = mock(SimpMessagingTemplate.class);
-        controller = new BatailleCorseWebSocketController(sessionService, new GameMessagingService(template));
+        GameMessagingService messaging = new GameMessagingService(template);
+        org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler scheduler =
+                new org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler();
+        scheduler.initialize();
+        DisconnectForfeitService forfeitService = new DisconnectForfeitService(
+                sessionService, messaging, new PresenceRegistry(), scheduler, java.time.Clock.systemUTC());
+        controller = new BatailleCorseWebSocketController(sessionService, messaging, forfeitService);
     }
 
     @Nested
