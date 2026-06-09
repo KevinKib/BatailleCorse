@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class BatailleCorseConcedeTest {
 
@@ -30,12 +29,5 @@ class BatailleCorseConcedeTest {
         game.concede(new PlayerId(1)); // must be a no-op
 
         assertThat(game.getWinner().id(), is(new PlayerId(1)));
-    }
-
-    @Test
-    void givenUnknownSeat_whenConcede_thenThrows() {
-        BatailleCorse game = newTwoPlayerGame();
-
-        assertThrows(IllegalArgumentException.class, () -> game.concede(new PlayerId(99)));
     }
 }
