@@ -37,7 +37,10 @@ function blockDoubleTapZoom(e: TouchEvent) {
   lastTapX = t.clientX;
   lastTapY = t.clientY;
 }
-onMounted(() => document.addEventListener('touchstart', blockDoubleTapZoom, { passive: false }));
+onMounted(() => {
+  if (navigator.maxTouchPoints > 0)
+    document.addEventListener('touchstart', blockDoubleTapZoom, { passive: false });
+});
 onUnmounted(() => document.removeEventListener('touchstart', blockDoubleTapZoom));
 
 function onEnter(el: Element, done: () => void) {
