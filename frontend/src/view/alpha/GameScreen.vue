@@ -44,7 +44,7 @@
     <div class="gamescreen_bottom flex">
       <div class="left_side">
         <RouterLink to="/" class="back_button">
-          <Button severity="danger" label="Back" icon="pi pi-undo" variant="" rounded />
+          <Button severity="secondary" label="Back" icon="pi pi-undo" variant="text" rounded />
         </RouterLink>
       </div>
 
