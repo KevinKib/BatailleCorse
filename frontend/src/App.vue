@@ -19,13 +19,23 @@ const TRANSITION_MS = 800;
 
 // iOS Safari ignores CSS touch-action on some elements; a JS guard is the
 // only reliable fallback. passive: false is required for preventDefault to work.
+// We also check position: a zoom double-tap lands in roughly the same spot,
+// whereas intentional consecutive taps (Send → Slap) are usually far apart.
 let lastTap = 0;
+let lastTapX = 0;
+let lastTapY = 0;
 function blockDoubleTapZoom(e: TouchEvent) {
   const now = Date.now();
-  if (e.touches.length === 1 && now - lastTap < 300) {
+  const t = e.touches[0];
+  const dx = t.clientX - lastTapX;
+  const dy = t.clientY - lastTapY;
+  const near = dx * dx + dy * dy < 30 * 30; // 30 px radius
+  if (e.touches.length === 1 && now - lastTap < 300 && near) {
     e.preventDefault();
   }
   lastTap = now;
+  lastTapX = t.clientX;
+  lastTapY = t.clientY;
 }
 onMounted(() => document.addEventListener('touchstart', blockDoubleTapZoom, { passive: false }));
 onUnmounted(() => document.removeEventListener('touchstart', blockDoubleTapZoom));
