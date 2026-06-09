@@ -462,10 +462,12 @@ onBeforeUnmount(() => {
   /* Size around the fluid pile card instead of fixed px so it never overflows. */
   padding: clamp(10px, 2.5vmin, 20px) clamp(14px, 3.5vmin, 28px);
   margin: auto;
-  border: 2px dashed rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 14px;
-  background: rgba(0, 0, 0, 0.22);
-  box-shadow: inset 0 2px 16px rgba(0, 0, 0, 0.5);
+  /* Recessed felt well: inner gradient slightly darker than the felt plus a
+     deep inset shadow, so it reads as a carved card spot, not a placeholder. */
+  background: radial-gradient(ellipse at 50% 45%, rgba(0, 0, 0, 0.28) 0%, rgba(0, 0, 0, 0.5) 100%);
+  box-shadow: inset 0 3px 22px rgba(0, 0, 0, 0.65), inset 0 0 0 1px rgba(0, 0, 0, 0.35);
 }
 
 
@@ -562,9 +564,9 @@ onBeforeUnmount(() => {
 
 
 @keyframes pile-flash {
-  0%   { box-shadow: inset 0 2px 16px rgba(0, 0, 0, 0.5); }
-  35%  { box-shadow: inset 0 2px 16px rgba(0, 0, 0, 0.5), 0 0 32px 10px rgba(var(--accent-active-rgb), 0.45); }
-  100% { box-shadow: inset 0 2px 16px rgba(0, 0, 0, 0.5); }
+  0%   { box-shadow: inset 0 3px 22px rgba(0, 0, 0, 0.65), inset 0 0 0 1px rgba(0, 0, 0, 0.35); }
+  35%  { box-shadow: inset 0 3px 22px rgba(0, 0, 0, 0.65), inset 0 0 0 1px rgba(0, 0, 0, 0.35), 0 0 32px 10px rgba(var(--accent-active-rgb), 0.45); }
+  100% { box-shadow: inset 0 3px 22px rgba(0, 0, 0, 0.65), inset 0 0 0 1px rgba(0, 0, 0, 0.35); }
 }
 
 .pile_slot.pile-flash {
