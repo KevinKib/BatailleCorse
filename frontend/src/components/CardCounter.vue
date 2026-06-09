@@ -22,14 +22,16 @@ const props = toRefs(nonReactiveProps);
 <style>
 
 .counter {
-  /* width: auto; */
   height: 32px;
   width: 32px;
-  clip-path: circle(16px);
-  background-color: white;
-  color: black;
-  border: 2px solid black;
-  border-radius:50%;
+  /* Poker-chip token: dark felt disc, thin gold rim, light text. The
+     clip-path is dropped so the drop shadow can render (clip-path would clip
+     it); border-radius:50% keeps the circle. */
+  background-color: rgba(0, 0, 0, 0.6);
+  color: rgba(255, 255, 255, 0.92);
+  border: 2px solid rgba(var(--accent-active-rgb), 0.55);
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
 }
 
 .count {
