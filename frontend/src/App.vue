@@ -30,7 +30,7 @@ function blockDoubleTapZoom(e: TouchEvent) {
   const dx = t.clientX - lastTapX;
   const dy = t.clientY - lastTapY;
   const near = dx * dx + dy * dy < 30 * 30; // 30 px radius
-  if (e.touches.length === 1 && now - lastTap < 300 && near) {
+  if (e.touches.length === 1 && now - lastTap < 350 && near) {
     e.preventDefault();
   }
   lastTap = now;
