@@ -379,6 +379,8 @@ onBeforeUnmount(() => {
   --pile-card-h: calc(var(--pile-card-w) * 243.1375 / 167.575); /* card height at current width */
   --band-pad: clamp(8px, 2.5vh, 20px);
   --stack-gap: clamp(6px, 1.5vh, 10px);
+  /* Suppress double-tap zoom on iOS Safari (which ignores user-scalable=no). */
+  touch-action: manipulation;
   width: 100%;
   height: 100vh;     /* fallback for browsers without dvh */
   height: 100dvh;    /* tracks the real visible area as mobile chrome shows/hides */
