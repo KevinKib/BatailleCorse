@@ -1,49 +1,114 @@
 package org.kevinkib.bataillecorse.sessionmanagement.infrastructure;
 
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.kevinkib.bataillecorse.core.domain.BatailleCorse;
 import org.kevinkib.bataillecorse.core.domain.BatailleCorseId;
 import org.kevinkib.bataillecorse.core.domain.PlayerId;
 import org.kevinkib.bataillecorse.sessionmanagement.domain.SessionGame;
-import org.kevinkib.bataillecorse.sessionmanagement.domain.SessionToken;
+
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
-import static org.kevinkib.bataillecorse.core.domain.BatailleCorseBuilder.aBatailleCorse;
-import static org.kevinkib.bataillecorse.core.domain.PlayerFixtures.createNumberOfPlayers;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class InMemorySessionRepositoryTest {
 
-    @Nested
-    class LoadSessionGameTest {
-
-        @Test
-        public void givenExistingSessionGame_whenLoadingSessionGame_thenReturnSessionGame() {
-            var repository = new InMemorySessionRepository();
-            var game = aBatailleCorse().withId(BatailleCorseId.generate()).withNbPlayers(2).buildAndInitialize();
-            var players = createNumberOfPlayers(2);
-            var sessionGame = SessionGame.create(game.getId(), players);
-
-            repository.save(game, sessionGame);
-
-            assertThat(repository.loadSessionGame(game.getId()), is(sessionGame));
-        }
+    /** Test clock whose instant we can advance. */
+    private static final class MutableClock extends Clock {
+        private Instant now;
+        MutableClock(Instant start) { this.now = start; }
+        void advance(Duration d) { this.now = this.now.plus(d); }
+        @Override public Instant instant() { return now; }
+        @Override public ZoneOffset getZone() { return ZoneOffset.UTC; }
+        @Override public Clock withZone(java.time.ZoneId zone) { return this; }
     }
 
-    @Nested
-    class LoadSessionTokenTest {
+    private BatailleCorse newGame(BatailleCorseId id) {
+        return new BatailleCorse(id, 2);
+    }
 
-        @Test
-        public void givenExistingSessionGame_whenLoadingSessionTokenByPlayerId_thenReturnToken() {
-            var repository = new InMemorySessionRepository();
-            var players = createNumberOfPlayers(2);
-            var game = aBatailleCorse().withId(BatailleCorseId.generate()).withNbPlayers(2).buildAndInitialize();
-            var sessionGame = SessionGame.create(game.getId(), players);
-            SessionToken expectedToken = sessionGame.findTokenByPlayer(new PlayerId(0)).orElseThrow();
+    @Test
+    void givenSavedGame_whenLoad_thenReturnsIt() {
+        var repo = new InMemorySessionRepository(Clock.systemUTC());
+        var id = BatailleCorseId.generate();
+        var game = newGame(id);
+        repo.save(game, SessionGame.create(id, game.getPlayers()));
 
-            repository.save(game, sessionGame);
+        assertThat(repo.load(id), is(game));
+    }
 
-            assertThat(repository.loadSessionToken(game.getId(), new PlayerId(0)), is(expectedToken));
-        }
+    @Test
+    void givenUnknownId_whenLoad_thenThrows() {
+        var repo = new InMemorySessionRepository(Clock.systemUTC());
+        assertThrows(IllegalArgumentException.class, () -> repo.load(BatailleCorseId.generate()));
+    }
+
+    @Test
+    void givenUnfinishedGameIdleBeyondTtl_whenEvictStale_thenRemoved() {
+        var clock = new MutableClock(Instant.parse("2026-06-09T00:00:00Z"));
+        var repo = new InMemorySessionRepository(clock);
+        var id = BatailleCorseId.generate();
+        var game = newGame(id);
+        repo.save(game, SessionGame.create(id, game.getPlayers()));
+
+        clock.advance(Duration.ofMinutes(31));
+        List<BatailleCorseId> evicted = repo.evictStale(Duration.ofMinutes(2), Duration.ofMinutes(30));
+
+        assertThat(evicted, contains(id));
+        assertThrows(IllegalArgumentException.class, () -> repo.load(id));
+    }
+
+    @Test
+    void givenUnfinishedGameWithinTtl_whenEvictStale_thenKept() {
+        var clock = new MutableClock(Instant.parse("2026-06-09T00:00:00Z"));
+        var repo = new InMemorySessionRepository(clock);
+        var id = BatailleCorseId.generate();
+        var game = newGame(id);
+        repo.save(game, SessionGame.create(id, game.getPlayers()));
+
+        clock.advance(Duration.ofMinutes(10));
+        List<BatailleCorseId> evicted = repo.evictStale(Duration.ofMinutes(2), Duration.ofMinutes(30));
+
+        assertThat(evicted, is(empty()));
+        assertThat(repo.load(id), is(game));
+    }
+
+    @Test
+    void givenFinishedGamePastGrace_whenEvictStale_thenRemovedEvenWithinIdleTtl() {
+        var clock = new MutableClock(Instant.parse("2026-06-09T00:00:00Z"));
+        var repo = new InMemorySessionRepository(clock);
+        var id = BatailleCorseId.generate();
+        var game = newGame(id);
+        repo.save(game, SessionGame.create(id, game.getPlayers()));
+        game.concede(new PlayerId(0)); // now finished
+        repo.touch(id);                // grace counts from here
+
+        clock.advance(Duration.ofMinutes(3)); // > 2m grace, < 30m idle
+        List<BatailleCorseId> evicted = repo.evictStale(Duration.ofMinutes(2), Duration.ofMinutes(30));
+
+        assertThat(evicted, contains(id));
+    }
+
+    @Test
+    void givenTouch_whenIdleMeasured_thenResetsFromTouchInstant() {
+        var clock = new MutableClock(Instant.parse("2026-06-09T00:00:00Z"));
+        var repo = new InMemorySessionRepository(clock);
+        var id = BatailleCorseId.generate();
+        var game = newGame(id);
+        repo.save(game, SessionGame.create(id, game.getPlayers()));
+
+        clock.advance(Duration.ofMinutes(20));
+        repo.touch(id);                       // reset activity
+        clock.advance(Duration.ofMinutes(20)); // 20m since touch, < 30m
+        List<BatailleCorseId> evicted = repo.evictStale(Duration.ofMinutes(2), Duration.ofMinutes(30));
+
+        assertThat(evicted, is(empty()));
     }
 }

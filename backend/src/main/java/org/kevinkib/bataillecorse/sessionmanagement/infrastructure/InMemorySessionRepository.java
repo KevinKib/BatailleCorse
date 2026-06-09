@@ -7,31 +7,40 @@ import org.kevinkib.bataillecorse.sessionmanagement.application.port.SessionRepo
 import org.kevinkib.bataillecorse.sessionmanagement.domain.SessionGame;
 import org.kevinkib.bataillecorse.sessionmanagement.domain.SessionToken;
 
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class InMemorySessionRepository implements SessionRepository {
 
-    private final List<BatailleCorse> games;
-    private final List<SessionGame> sessionGames;
+    private final Clock clock;
+    private final Map<BatailleCorseId, BatailleCorse> games = new ConcurrentHashMap<>();
+    private final Map<BatailleCorseId, SessionGame> sessionGames = new ConcurrentHashMap<>();
+    private final Map<BatailleCorseId, Instant> lastActivityAt = new ConcurrentHashMap<>();
 
-    public InMemorySessionRepository() {
-        this.games = new ArrayList<>();
-        this.sessionGames = new ArrayList<>();
+    public InMemorySessionRepository(Clock clock) {
+        this.clock = clock;
     }
 
     @Override
     public void save(BatailleCorse batailleCorse, SessionGame sessionGame) {
-        games.add(batailleCorse);
-        sessionGames.add(sessionGame);
+        BatailleCorseId id = batailleCorse.getId();
+        games.put(id, batailleCorse);
+        sessionGames.put(id, sessionGame);
+        lastActivityAt.put(id, clock.instant());
     }
 
     @Override
     public BatailleCorse load(BatailleCorseId id) {
-        return games.stream()
-                .filter(game -> game.getId().equals(id))
-                .findFirst()
-                .orElseThrow(IllegalArgumentException::new);
+        BatailleCorse game = games.get(id);
+        if (game == null) {
+            throw new IllegalArgumentException("Unknown game " + id);
+        }
+        return game;
     }
 
     @Override
@@ -43,10 +52,41 @@ public class InMemorySessionRepository implements SessionRepository {
 
     @Override
     public SessionGame loadSessionGame(BatailleCorseId id) {
-        return sessionGames.stream()
-                .filter(session -> session.id().equals(id))
-                .findFirst()
-                .orElseThrow(IllegalArgumentException::new);
+        SessionGame sessionGame = sessionGames.get(id);
+        if (sessionGame == null) {
+            throw new IllegalArgumentException("Unknown game " + id);
+        }
+        return sessionGame;
     }
 
+    @Override
+    public void touch(BatailleCorseId id) {
+        if (games.containsKey(id)) {
+            lastActivityAt.put(id, clock.instant());
+        }
+    }
+
+    @Override
+    public void remove(BatailleCorseId id) {
+        games.remove(id);
+        sessionGames.remove(id);
+        lastActivityAt.remove(id);
+    }
+
+    @Override
+    public List<BatailleCorseId> evictStale(Duration finishedGrace, Duration idleTtl) {
+        Instant now = clock.instant();
+        List<BatailleCorseId> evicted = new ArrayList<>();
+        for (Map.Entry<BatailleCorseId, BatailleCorse> entry : games.entrySet()) {
+            BatailleCorseId id = entry.getKey();
+            Instant last = lastActivityAt.getOrDefault(id, Instant.EPOCH);
+            Duration idle = Duration.between(last, now);
+            Duration threshold = entry.getValue().isFinished() ? finishedGrace : idleTtl;
+            if (idle.compareTo(threshold) >= 0) {
+                evicted.add(id);
+            }
+        }
+        evicted.forEach(this::remove);
+        return evicted;
+    }
 }
