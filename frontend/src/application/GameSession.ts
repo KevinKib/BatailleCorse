@@ -217,6 +217,14 @@ export default class GameSession {
     }));
   }
 
+  /** Multiplayer: concede the game so the opponent wins immediately. */
+  forfeit(playerIndex: number): void {
+    this.webSocket.publish('/app/forfeit', JSON.stringify({
+      gameId: this.gameId,
+      token: this.playerTokens[playerIndex],
+    }));
+  }
+
   /** Starts queue processing. Returns a promise that resolves when the queue is drained. */
   onResponse(response: Response): Promise<void> {
     this.eventQueue.push(response);

@@ -27,6 +27,7 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
   const waiting = ref<boolean>(false);
   const myName = ref<string | null>(null);
   const opponentName = ref<string | null>(null);
+  const opponentConnection = ref<{ status: 'disconnected' | 'connected'; disconnectedSeat: number; deadlineEpochMs: number | null } | null>(null);
 
   let animationResolve: (() => void) | null = null;
   // slapSeq lives in the store because the slap flash animation fires optimistically
@@ -52,6 +53,7 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
           case 'waiting-change':       waiting.value = event.waiting; break;
           case 'my-name-change':       myName.value = event.name; break;
           case 'opponent-name-change': opponentName.value = event.name; break;
+          case 'opponent-connection':  opponentConnection.value = event; break;
         }
       },
       awaitAnimation: () => new Promise<void>(resolve => { animationResolve = resolve; }),
@@ -72,6 +74,7 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
     waiting,
     myName,
     opponentName,
+    opponentConnection,
     lastSend,
     lastGrab,
     lastSlap,
@@ -86,6 +89,7 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
     send:                 (playerIndex: number) => session.send(playerIndex),
     slap:                 (playerIndex: number) => session.slap(playerIndex),
     grab:                 (playerIndex: number) => session.grab(playerIndex),
+    forfeit:              (playerIndex: number) => session.forfeit(playerIndex),
     onResponse:           (r: Response) => { session.onResponse(r); },
     notifyAnimationComplete,
     cancelAutoGrab:       () => session.cancelAll(),
