@@ -563,7 +563,7 @@ onBeforeUnmount(() => {
 
 @keyframes pile-flash {
   0%   { box-shadow: inset 0 2px 16px rgba(0, 0, 0, 0.5); }
-  35%  { box-shadow: inset 0 2px 16px rgba(0, 0, 0, 0.5), 0 0 32px 10px rgba(255, 210, 40, 0.45); }
+  35%  { box-shadow: inset 0 2px 16px rgba(0, 0, 0, 0.5), 0 0 32px 10px rgba(var(--accent-active-rgb), 0.45); }
   100% { box-shadow: inset 0 2px 16px rgba(0, 0, 0, 0.5); }
 }
 
@@ -620,13 +620,13 @@ onBeforeUnmount(() => {
   z-index: 1001;
   font-size: 1.6rem;
   font-weight: 800;
-  color: #4ade80;
+  color: rgb(var(--accent-positive-rgb));
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85);
   animation: card-delta-float 1.4s ease-out forwards;
 }
 
 .card-delta--negative {
-  color: #f87171;
+  color: rgb(var(--accent-negative-rgb));
 }
 
 .waiting-overlay {
@@ -761,14 +761,14 @@ onBeforeUnmount(() => {
 /* --- Turn indicator --- */
 .player_tag--active {
   color: #ffffff;
-  border-color: rgba(74, 222, 128, 0.9);
-  box-shadow: 0 0 16px 3px rgba(74, 222, 128, 0.55);
+  border-color: rgba(var(--accent-active-rgb), 0.9);
+  box-shadow: 0 0 16px 3px rgba(var(--accent-active-rgb), 0.55);
   animation: turn-glow-pulse 1.8s ease-in-out infinite;
 }
 
 @keyframes turn-glow-pulse {
-  0%, 100% { box-shadow: 0 0 12px 2px rgba(74, 222, 128, 0.40); }
-  50%      { box-shadow: 0 0 22px 6px rgba(74, 222, 128, 0.70); }
+  0%, 100% { box-shadow: 0 0 12px 2px rgba(var(--accent-active-rgb), 0.40); }
+  50%      { box-shadow: 0 0 22px 6px rgba(var(--accent-active-rgb), 0.70); }
 }
 
 /* Wrapper lets the one-time hint float above the name tag without shifting layout. */
@@ -792,7 +792,7 @@ onBeforeUnmount(() => {
   font-size: 0.82rem;
   font-weight: 800;
   letter-spacing: 0.14em;
-  color: #4ade80;
+  color: rgb(var(--accent-active-rgb));
   text-shadow: 0 1px 6px rgba(0, 0, 0, 0.7);
 }
 
@@ -800,8 +800,8 @@ onBeforeUnmount(() => {
   width: 9px;
   height: 9px;
   border-radius: 50%;
-  background: #4ade80;
-  box-shadow: 0 0 8px 2px rgba(74, 222, 128, 0.8);
+  background: rgb(var(--accent-active-rgb));
+  box-shadow: 0 0 8px 2px rgba(var(--accent-active-rgb), 0.8);
   animation: turn-glow-pulse 1.8s ease-in-out infinite;
 }
 
@@ -811,8 +811,8 @@ onBeforeUnmount(() => {
 }
 
 @keyframes send-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
-  50%      { box-shadow: 0 0 16px 3px rgba(74, 222, 128, 0.65); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(var(--accent-active-rgb), 0); }
+  50%      { box-shadow: 0 0 16px 3px rgba(var(--accent-active-rgb), 0.65); }
 }
 
 .turn-fade-enter-active,
