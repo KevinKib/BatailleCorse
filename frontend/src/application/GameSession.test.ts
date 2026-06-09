@@ -21,9 +21,12 @@ function makeSession() {
   const published: { dest: string; body?: string }[] = [];
   const subscribed: string[] = [];
 
+  const presence: string[] = [];
   const webSocket: WebSocketPort = {
     publish: (dest, body) => published.push({ dest, body }),
     subscribeToGame: (id) => subscribed.push(id),
+    setPresence: (body) => presence.push(body),
+    clearPresence: () => { presence.length = 0; },
   };
 
   const callbacks: GameSessionCallbacks = {
@@ -33,7 +36,7 @@ function makeSession() {
 
   const session = new GameSession(webSocket, callbacks, () => new AI(1, 0));
 
-  return { session, events, published, subscribed };
+  return { session, events, published, subscribed, presence };
 }
 
 // ---------------------------------------------------------------------------
@@ -439,6 +442,8 @@ describe('GameSession', () => {
       const webSocket: WebSocketPort = {
         publish: () => {},
         subscribeToGame: () => {},
+        setPresence: () => {},
+        clearPresence: () => {},
       };
       const callbacks: GameSessionCallbacks = {
         onEvent: (e) => events.push(e),
@@ -464,6 +469,50 @@ describe('GameSession', () => {
       const sendEvents = events.filter(e => e.type === 'send');
       // With threshold 3: the first SEND (3 still queued) is skipped, the rest emit.
       expect(sendEvents).toHaveLength(3);
+    });
+  });
+
+  // --- Presence + connection events -----------------------------------------
+
+  describe('presence + connection events', () => {
+    it('sends presence after a multiplayer create', async () => {
+      const { session, presence } = makeSession();
+      session.create('multiplayer', 'Bob');
+      await session.onResponse(buildCreateResponse('game-7', { 0: 'tok-mp' }));
+      expect(presence.some(p => p.includes('game-7') && p.includes('tok-mp'))).toBe(true);
+    });
+
+    it('does NOT send presence in solo mode', async () => {
+      const { session, presence } = makeSession();
+      session.create('solo', 'Solo');
+      await session.onResponse(buildCreateResponse('game-8', { 0: 'a', 1: 'b' }));
+      expect(presence.length).toBe(0);
+    });
+
+    it('emits opponent-connection on OPPONENT_DISCONNECTED', async () => {
+      const { session, events } = makeSession();
+      session.create('multiplayer', 'Bob');
+      await session.onResponse(buildCreateResponse('game-9', { 0: 'tok' }));
+      await session.onResponse(buildResponse({
+        eventType: 'OPPONENT_DISCONNECTED',
+        eventData: { disconnectedSeat: 1, deadlineEpochMs: 1234 },
+      }));
+      expect(events).toContainEqual({
+        type: 'opponent-connection', status: 'disconnected', disconnectedSeat: 1, deadlineEpochMs: 1234,
+      });
+    });
+
+    it('emits opponent-connection on OPPONENT_RECONNECTED', async () => {
+      const { session, events } = makeSession();
+      session.create('multiplayer', 'Bob');
+      await session.onResponse(buildCreateResponse('game-10', { 0: 'tok' }));
+      await session.onResponse(buildResponse({
+        eventType: 'OPPONENT_RECONNECTED',
+        eventData: { disconnectedSeat: 1, deadlineEpochMs: null },
+      }));
+      expect(events).toContainEqual({
+        type: 'opponent-connection', status: 'connected', disconnectedSeat: 1, deadlineEpochMs: null,
+      });
     });
   });
 
