@@ -28,7 +28,7 @@ class BatailleCorseWebSocketControllerTest {
 
     @BeforeEach
     void setUp() {
-        sessionService = new SessionService(new InMemorySessionRepository());
+        sessionService = new SessionService(new InMemorySessionRepository(java.time.Clock.systemUTC()));
         template = mock(SimpMessagingTemplate.class);
         controller = new BatailleCorseWebSocketController(sessionService, new GameMessagingService(template));
     }

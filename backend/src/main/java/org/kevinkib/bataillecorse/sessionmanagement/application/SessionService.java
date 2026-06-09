@@ -85,6 +85,10 @@ public class SessionService {
         }
     }
 
+    public void touch(BatailleCorseId id) {
+        repository.touch(id);
+    }
+
     public SessionToken loadTokenByPlayerId(BatailleCorseId batailleCorseId, PlayerId playerId) {
         return repository.loadSessionToken(batailleCorseId, playerId);
     }
