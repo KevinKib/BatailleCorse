@@ -13,7 +13,35 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted, onUnmounted } from 'vue';
+
 const TRANSITION_MS = 800;
+
+// iOS Safari ignores CSS touch-action on some elements; a JS guard is the
+// only reliable fallback. passive: false is required for preventDefault to work.
+// We also check position: a zoom double-tap lands in roughly the same spot,
+// whereas intentional consecutive taps (Send → Slap) are usually far apart.
+let lastTap = 0;
+let lastTapX = 0;
+let lastTapY = 0;
+function blockDoubleTapZoom(e: TouchEvent) {
+  const now = Date.now();
+  const t = e.touches[0];
+  const dx = t.clientX - lastTapX;
+  const dy = t.clientY - lastTapY;
+  const near = dx * dx + dy * dy < 30 * 30; // 30 px radius
+  if (e.touches.length === 1 && now - lastTap < 350 && near) {
+    e.preventDefault();
+  }
+  lastTap = now;
+  lastTapX = t.clientX;
+  lastTapY = t.clientY;
+}
+onMounted(() => {
+  if (navigator.maxTouchPoints > 0)
+    document.addEventListener('touchstart', blockDoubleTapZoom, { passive: false });
+});
+onUnmounted(() => document.removeEventListener('touchstart', blockDoubleTapZoom));
 
 function onEnter(el: Element, done: () => void) {
   const div = el as HTMLElement;
@@ -74,6 +102,13 @@ function onLeave(el: Element, done: () => void) {
   font-style: normal;
   font-variation-settings:
     "wdth" 100;
+}
+
+/* Prevent double-tap zoom on iOS Safari on every element. !important is
+   required because PrimeVue injects its component styles dynamically after
+   this stylesheet, which would otherwise override the * rule. */
+* {
+  touch-action: manipulation !important;
 }
 
 html, body, #app {
