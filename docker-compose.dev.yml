@@ -13,6 +13,9 @@ services:
       - /app/node_modules
     environment:
       - CHOKIDAR_USEPOLLING=true
+    depends_on:
+      backend:
+        condition: service_healthy
 
   backend:
     build:
@@ -26,6 +29,14 @@ services:
       - ./backend:/app
       - backend_m2:/root/.m2/repository
       - ./deploy/docker/settings.xml:/root/.m2/settings.xml:ro
+    healthcheck:
+      # Spring Boot's Tomcat only accepts TCP connections once the context is
+      # fully started, so a successful connect means the app is ready to serve.
+      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/localhost/8080'"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 30s
 
 volumes:
   backend_m2:
