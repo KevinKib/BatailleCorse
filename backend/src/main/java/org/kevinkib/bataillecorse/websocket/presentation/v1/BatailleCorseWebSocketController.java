@@ -181,7 +181,7 @@ public class BatailleCorseWebSocketController {
             PlayerId playerId = sessionService
                     .findPlayerIdByToken(gameId, new SessionToken(payload.token()))
                     .orElseThrow(InvalidTokenException::new);
-            disconnectForfeitService.forfeit(new Seat(gameId, playerId));
+            disconnectForfeitService.forfeit(new Seat(gameId, playerId), ForfeitReason.RESIGNED);
         } catch (Exception e) {
             System.err.println(e.getMessage());
         }

@@ -9,6 +9,8 @@ import org.kevinkib.bataillecorse.sessionmanagement.application.SessionService;
 import org.kevinkib.bataillecorse.sessionmanagement.domain.GameMode;
 import org.kevinkib.bataillecorse.sessionmanagement.infrastructure.InMemorySessionRepository;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.api.Response;
+import org.kevinkib.bataillecorse.websocket.presentation.v1.api.SuccessResponse;
+import org.kevinkib.bataillecorse.websocket.presentation.v1.dto.PlayerDto;
 import org.springframework.scheduling.Trigger;
 import org.springframework.scheduling.TaskScheduler;
 
@@ -66,6 +68,7 @@ class DisconnectForfeitServiceTest {
     private CapturingScheduler scheduler;
     private RecordingMessaging messaging;
     private StompSessionSeatRegistry registry;
+    private ForfeitReasonRegistry forfeitReasonRegistry;
     private DisconnectForfeitService service;
     private BatailleCorseId gameId;
 
@@ -76,7 +79,8 @@ class DisconnectForfeitServiceTest {
         scheduler = new CapturingScheduler();
         messaging = new RecordingMessaging();
         registry = new StompSessionSeatRegistry();
-        service = new DisconnectForfeitService(sessionService, messaging, registry, scheduler, clock);
+        forfeitReasonRegistry = new ForfeitReasonRegistry();
+        service = new DisconnectForfeitService(sessionService, messaging, registry, scheduler, clock, forfeitReasonRegistry);
 
         BatailleCorse game = sessionService.createGame(2, GameMode.MULTIPLAYER);
         gameId = game.getId();
@@ -84,6 +88,15 @@ class DisconnectForfeitServiceTest {
 
     private List<String> eventTypes() {
         return messaging.sent.stream().map(Response::getEventType).toList();
+    }
+
+    private String forfeitReasonInLastStateForSeat(String seatId) {
+        Response last = messaging.sent.get(messaging.sent.size() - 1);
+        return last.getState().getPlayers().stream()
+                .filter(p -> p.getId().equals(seatId))
+                .map(PlayerDto::getForfeitReason)
+                .findFirst()
+                .orElse(null);
     }
 
     @Test
@@ -118,6 +131,7 @@ class DisconnectForfeitServiceTest {
         assertThat(game.isFinished(), is(true));
         assertThat(game.getWinner().id(), is(new PlayerId(1)));
         assertThat(eventTypes(), contains("OPPONENT_DISCONNECTED", "FORFEIT"));
+        assertThat(forfeitReasonInLastStateForSeat("0"), is("DISCONNECTED"));
     }
 
     @Test
@@ -132,12 +146,13 @@ class DisconnectForfeitServiceTest {
     }
 
     @Test
-    void whenForfeitCalledDirectly_thenConcedesAndBroadcastsForfeit() {
-        service.forfeit(new Seat(gameId, new PlayerId(1)));
+    void whenForfeitCalledDirectly_thenConcedesAndBroadcastsForfeitWithResigned() {
+        service.forfeit(new Seat(gameId, new PlayerId(1)), ForfeitReason.RESIGNED);
 
         BatailleCorse game = sessionService.getGame(gameId);
         assertThat(game.getWinner().id(), is(new PlayerId(0)));
         assertThat(eventTypes(), contains("FORFEIT"));
+        assertThat(forfeitReasonInLastStateForSeat("1"), is("RESIGNED"));
     }
 
     @Test
