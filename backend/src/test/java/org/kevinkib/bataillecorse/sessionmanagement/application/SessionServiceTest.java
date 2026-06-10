@@ -24,7 +24,7 @@ class SessionServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new SessionService(new InMemorySessionRepository());
+        service = new SessionService(new InMemorySessionRepository(java.time.Clock.systemUTC()));
     }
 
     @Nested
@@ -137,5 +137,15 @@ class SessionServiceTest {
 
         List<SessionPlayer> seats = service.getSeats(game.getId());
         assertThat(seats.get(1).name(), is("Player 2"));
+    }
+
+    @Nested
+    class TouchTest {
+
+        @Test
+        void givenExistingGame_whenTouch_thenDoesNotThrow() {
+            var game = service.createGame(2, GameMode.MULTIPLAYER);
+            service.touch(game.getId()); // smoke: delegation wired
+        }
     }
 }

@@ -28,6 +28,7 @@
   "devDependencies": {
     "@types/sockjs-client": "^1.5.4",
     "@vitejs/plugin-vue": "^4.5.0",
+    "@vue/test-utils": "^2.4.11",
     "cypress": "^13.0.0",
     "happy-dom": "^20.9.0",
     "typescript": "^5.8.3",

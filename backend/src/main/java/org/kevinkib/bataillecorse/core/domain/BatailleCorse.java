@@ -85,6 +85,22 @@ public class BatailleCorse {
         result = Result.update(players, pile, slapRules);
     }
 
+    // No-op when already finished: a natural win can race the disconnect-forfeit timer.
+    public synchronized void concede(PlayerId loser) {
+        if (isFinished()) {
+            return;
+        }
+        if (players.size() != 2) {
+            throw new UnsupportedOperationException(
+                    "concede only defines a winner for 2-player games; got " + players.size());
+        }
+        Player winner = players.stream()
+                .filter(player -> !player.id().equals(loser))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Unknown seat " + loser));
+        this.result = new Result(winner);
+    }
+
     private void checkIfPlayerCanSend(Player player) throws NotPlayersTurnException, FullCentralPileException, FinishedGameException {
         if (isFinished()) {
             throw new FinishedGameException();

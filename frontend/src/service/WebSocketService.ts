@@ -10,6 +10,7 @@ class WebSocketService {
   private client!: Client;
   private currentGameId: string | null = null;
   private currentGameSubscription: { unsubscribe: () => void } | null = null;
+  private currentPresence: string | null = null;
 
   public init() {
     this.log("Creating SockJS...");
@@ -34,6 +35,12 @@ class WebSocketService {
         // Re-subscribe to per-game channel after reconnect.
         if (this.currentGameId) {
           this.doSubscribeToGame(this.currentGameId);
+        }
+
+        // Re-assert presence after every (re)connect so the server can re-bind
+        // this session to its seat and cancel any pending disconnect timer.
+        if (this.currentPresence) {
+          this.publish('/app/presence', this.currentPresence);
         }
       },
       onDisconnect: () => {
@@ -62,6 +69,18 @@ class WebSocketService {
     this.currentGameSubscription?.unsubscribe();
     this.currentGameSubscription = null;
     this.currentGameId = null;
+    this.currentPresence = null;
+  }
+
+  public setPresence(body: string) {
+    this.currentPresence = body;
+    if (this.client?.connected) {
+      this.publish('/app/presence', body);
+    }
+  }
+
+  public clearPresence() {
+    this.currentPresence = null;
   }
 
   public publish(destination: string, body?: any) {

@@ -6,7 +6,10 @@ public enum EventType {
     SEND,
     SLAP,
     GRAB,
-    JOIN;
+    JOIN,
+    OPPONENT_DISCONNECTED,
+    OPPONENT_RECONNECTED,
+    FORFEIT;
 
     @Override
     public String toString() {

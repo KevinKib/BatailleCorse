@@ -12,6 +12,8 @@ import type SessionSeat from '../model/SessionSeat';
 export interface WebSocketPort {
   publish(destination: string, body?: string): void;
   subscribeToGame(gameId: string): void;
+  setPresence(body: string): void;
+  clearPresence(): void;
 }
 
 export interface GameSessionCallbacks {
@@ -92,6 +94,7 @@ export default class GameSession {
 
     this.gameId = id;
     this.webSocket.subscribeToGame(id);
+    this.sendPresence();
 
     this.emitPerspective();
     this.callbacks.onEvent({ type: 'my-name-change', name: this.myName });
@@ -144,12 +147,21 @@ export default class GameSession {
       this.myPlayerIndex = seats[0] ?? 0;
     }
     this.emitPerspective();
+    this.sendPresence();
   }
 
   private emitPerspective(): void {
     this.callbacks.onEvent({ type: 'mode-change', mode: this.mode });
     this.callbacks.onEvent({ type: 'my-index-change', playerIndex: this.myPlayerIndex });
     this.callbacks.onEvent({ type: 'waiting-change', waiting: this.waiting });
+  }
+
+  /** Multiplayer-only: tell the server which seat this client occupies, so a drop can be attributed. */
+  private sendPresence(): void {
+    if (this.mode !== 'multiplayer' || !this.gameId) return;
+    const token = this.playerTokens[this.myPlayerIndex];
+    if (!token) return;
+    this.webSocket.setPresence(JSON.stringify({ gameId: this.gameId, token }));
   }
 
   /**
@@ -205,6 +217,14 @@ export default class GameSession {
     }));
   }
 
+  /** Multiplayer: concede the game so the opponent wins immediately. */
+  forfeit(playerIndex: number): void {
+    this.webSocket.publish('/app/forfeit', JSON.stringify({
+      gameId: this.gameId,
+      token: this.playerTokens[playerIndex],
+    }));
+  }
+
   /** Starts queue processing. Returns a promise that resolves when the queue is drained. */
   onResponse(response: Response): Promise<void> {
     this.eventQueue.push(response);
@@ -243,6 +263,7 @@ export default class GameSession {
       localStorage.setItem(`tokens:${this.gameId}`, JSON.stringify(createData.tokens));
       this.webSocket.subscribeToGame(this.gameId);
       this.callbacks.onEvent({ type: 'game-id-change', gameId: this.gameId });
+      this.sendPresence();
     }
 
     if (response.eventType === 'JOIN') {
@@ -303,6 +324,23 @@ export default class GameSession {
           topCard,
         });
       }
+    }
+
+    if (response.eventType === 'OPPONENT_DISCONNECTED') {
+      const data = response.eventData as unknown as { disconnectedSeat: number; deadlineEpochMs: number };
+      this.callbacks.onEvent({
+        type: 'opponent-connection',
+        status: 'disconnected',
+        seat: Number(data.disconnectedSeat),
+        deadlineEpochMs: Number(data.deadlineEpochMs),
+      });
+    } else if (response.eventType === 'OPPONENT_RECONNECTED') {
+      const data = response.eventData as unknown as { reconnectedSeat: number };
+      this.callbacks.onEvent({
+        type: 'opponent-connection',
+        status: 'connected',
+        seat: Number(data.reconnectedSeat),
+      });
     }
 
     const newState = BatailleCorse.fromJSON(response.state as unknown as Parameters<typeof BatailleCorse.fromJSON>[0]);

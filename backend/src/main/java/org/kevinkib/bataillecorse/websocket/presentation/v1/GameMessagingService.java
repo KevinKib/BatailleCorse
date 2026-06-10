@@ -1,9 +1,7 @@
 package org.kevinkib.bataillecorse.websocket.presentation.v1;
 
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.stereotype.Service;
 
-@Service
 public class GameMessagingService {
 
     private final SimpMessagingTemplate messagingTemplate;

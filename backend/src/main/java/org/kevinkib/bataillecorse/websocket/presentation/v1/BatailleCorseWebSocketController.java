@@ -18,9 +18,11 @@ import org.kevinkib.bataillecorse.websocket.presentation.v1.api.Response;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.api.SuccessResponse;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.dto.*;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.dto.event.*;
+import org.kevinkib.bataillecorse.websocket.presentation.v1.api.PresencePayload;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.stereotype.Controller;
 
 @Controller
@@ -31,10 +33,14 @@ public class BatailleCorseWebSocketController {
 
     private final SessionService sessionService;
     private final GameMessagingService gameMessagingService;
+    private final DisconnectForfeitService disconnectForfeitService;
 
-    public BatailleCorseWebSocketController(SessionService sessionService, GameMessagingService gameMessagingService) {
+    public BatailleCorseWebSocketController(SessionService sessionService,
+                                            GameMessagingService gameMessagingService,
+                                            DisconnectForfeitService disconnectForfeitService) {
         this.sessionService = sessionService;
         this.gameMessagingService = gameMessagingService;
+        this.disconnectForfeitService = disconnectForfeitService;
     }
 
     @MessageMapping("/create")
@@ -75,6 +81,7 @@ public class BatailleCorseWebSocketController {
 
             CardDto cardDto = CardDto.from(player.getCardOnTop());
             batailleCorse.send(player);
+            sessionService.touch(gameId);
 
             BatailleCorseDto batailleCorseDto = BatailleCorseDto.from(batailleCorse);
             String message = "Player " + player.id() + " sent " + cardDto.getName() + ".";
@@ -105,6 +112,7 @@ public class BatailleCorseWebSocketController {
             Player player = batailleCorse.getPlayerByIndex(playerId.id());
 
             boolean successfulSlap = batailleCorse.slap(player);
+            sessionService.touch(gameId);
             String message = successfulSlap
                     ? "Player " + player.id() + " slapped and won."
                     : "Player " + player.id() + " slapped, lost, and received a penality.";
@@ -137,6 +145,7 @@ public class BatailleCorseWebSocketController {
             Player player = batailleCorse.getPlayerByIndex(playerId.id());
 
             batailleCorse.grab(player);
+            sessionService.touch(gameId);
 
             BatailleCorseDto batailleCorseDto = BatailleCorseDto.from(batailleCorse);
             String message = "Player " + player.id() + " grabbed the pile. ";
@@ -150,5 +159,31 @@ public class BatailleCorseWebSocketController {
         }
 
         gameMessagingService.sendToGame(payload.gameId(), response);
+    }
+
+    @MessageMapping("/presence")
+    public void presence(@Payload PresencePayload payload, SimpMessageHeaderAccessor headers) {
+        BatailleCorseId gameId = new BatailleCorseId(payload.gameId());
+        try {
+            PlayerId playerId = sessionService
+                    .findPlayerIdByToken(gameId, new SessionToken(payload.token()))
+                    .orElseThrow(InvalidTokenException::new);
+            disconnectForfeitService.onPresence(headers.getSessionId(), gameId, playerId);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
+    }
+
+    @MessageMapping("/forfeit")
+    public void forfeit(GameActionPayload payload) {
+        BatailleCorseId gameId = new BatailleCorseId(payload.gameId());
+        try {
+            PlayerId playerId = sessionService
+                    .findPlayerIdByToken(gameId, new SessionToken(payload.token()))
+                    .orElseThrow(InvalidTokenException::new);
+            disconnectForfeitService.forfeit(new Seat(gameId, playerId));
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
     }
 }

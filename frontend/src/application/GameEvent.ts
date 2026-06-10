@@ -13,4 +13,6 @@ export type GameEvent =
   | { type: 'my-index-change'; playerIndex: number }
   | { type: 'waiting-change'; waiting: boolean }
   | { type: 'my-name-change'; name: string | null }
-  | { type: 'opponent-name-change'; name: string | null };
+  | { type: 'opponent-name-change'; name: string | null }
+  | { type: 'opponent-connection'; status: 'disconnected'; seat: number; deadlineEpochMs: number }
+  | { type: 'opponent-connection'; status: 'connected'; seat: number };

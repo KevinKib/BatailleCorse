@@ -92,6 +92,16 @@
       </div>
     </div>
 
+    <div v-if="opponentDisconnected" class="disconnect-overlay" data-cy="disconnect-overlay">
+      <div class="disconnect-card">
+        <h2 class="disconnect-title">{{ opponentLabel }} disconnected</h2>
+        <p class="disconnect-sub">Waiting for them to return…</p>
+        <p class="disconnect-countdown" data-cy="disconnect-countdown">
+          You win in {{ secondsRemaining }}s
+        </p>
+      </div>
+    </div>
+
     <div v-if="showEndOverlay" class="end-overlay" data-cy="end-overlay">
       <div :class="['end-card', didIWin ? 'end-card--victory' : 'end-card--defeat']">
         <div v-if="didIWin" class="end-trophy" data-cy="victory-flourish">🏆</div>
@@ -157,12 +167,12 @@ import { useHotkeys } from '../../composables/useHotkeys';
 import { useEndScreen } from '../../composables/useEndScreen';
 import { Action } from '../../model/Action';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router';
 import webSocketService from '../../service/WebSocketService';
 import type BatailleCorse from '../../model/BatailleCorse';
 
 const batailleCorseStore = useBatailleCorseStore();
-const { state: batailleCorse, mode, myPlayerIndex, waiting, myName, opponentName,
+const { state: batailleCorse, mode, myPlayerIndex, waiting, myName, opponentName, opponentConnection,
         lastSend, lastGrab, lastSlap, lastSuccessfulSlap, lastErroneousSlap } = storeToRefs(batailleCorseStore);
 
 const pile = useTemplateRef("pile");
@@ -288,6 +298,61 @@ const didIWin = computed(() => batailleCorse.value?.isWinnerAt(myPlayerIndex.val
 const { showEndOverlay, revealImmediatelyIfOver, cancel: cancelEndScreen } =
   useEndScreen(() => isGameOver.value, () => isPileAnimating.value);
 
+// --- Opponent disconnect countdown ---
+// Driven by a server-provided absolute deadline; the local clock only renders
+// the remaining seconds. Cleared on reconnect or when the game ends.
+const now = ref(Date.now());
+let countdownTimer: ReturnType<typeof setInterval> | null = null;
+
+const opponentDisconnected = computed(() =>
+  mode.value === 'multiplayer'
+  && opponentConnection.value?.status === 'disconnected'
+  && opponentConnection.value.seat !== myPlayerIndex.value
+  && !isGameOver.value);
+
+const secondsRemaining = computed(() => {
+  const oc = opponentConnection.value;
+  if (oc?.status !== 'disconnected') return 0;
+  return Math.max(0, Math.ceil((oc.deadlineEpochMs - now.value) / 1000));
+});
+
+watch(opponentDisconnected, (active) => {
+  if (active && countdownTimer === null) {
+    now.value = Date.now();
+    countdownTimer = setInterval(() => { now.value = Date.now(); }, 250);
+  } else if (!active && countdownTimer !== null) {
+    clearInterval(countdownTimer);
+    countdownTimer = null;
+  }
+});
+
+// --- Leave confirmation ---
+// An in-progress game prompts before leaving. Confirming in multiplayer forfeits
+// (the opponent wins immediately); solo just leaves. A finished game leaves freely.
+const isInProgress = computed(() =>
+  !!batailleCorse.value && !isGameOver.value && !isWaiting.value);
+
+onBeforeRouteLeave(() => {
+  if (!isInProgress.value) return true;
+  const message = mode.value === 'multiplayer'
+    ? 'Leave the game? You will forfeit and your opponent wins.'
+    : 'Leave the game? Your current game will be lost.';
+  const confirmed = window.confirm(message);
+  if (!confirmed) return false;
+  if (mode.value === 'multiplayer') {
+    batailleCorseStore.forfeit(myPlayerIndex.value);
+  }
+  return true;
+});
+
+// Browser close/refresh: native prompt only (we cannot reliably send a forfeit on
+// unload — a hard close falls back to the server disconnect timer).
+function handleBeforeUnload(event: BeforeUnloadEvent) {
+  if (!isInProgress.value) return;
+  event.preventDefault();
+  event.returnValue = '';
+}
+
 // --- Turn indicator ---
 // Permanent cue: the active player's name tag glows. The cue is driven straight
 // off the backend's per-seat availableActions via canSend(seat) — the server
@@ -353,6 +418,7 @@ onMounted(async () => {
   batailleCorseStore.restoreSession(JSON.parse(stored));
   await batailleCorseStore.loadSessionView(gameId);
   webSocketService.subscribeToGame(gameId);
+  window.addEventListener('beforeunload', handleBeforeUnload);
 });
 
 onBeforeUnmount(() => {
@@ -360,6 +426,8 @@ onBeforeUnmount(() => {
   batailleCorseStore.cancelAutoGrab();
   webSocketService.unsubscribeFromGame();
   cancelEndScreen();
+  if (countdownTimer !== null) clearInterval(countdownTimer);
+  window.removeEventListener('beforeunload', handleBeforeUnload);
 });
 </script>
 
@@ -684,6 +752,50 @@ onBeforeUnmount(() => {
   font-size: 0.72rem;
   color: #4ade80;
   margin: 0;
+}
+
+.disconnect-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1900;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  pointer-events: none;
+  padding-top: 12vh;
+}
+
+.disconnect-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.72);
+  border: 1px solid rgba(248, 113, 113, 0.45);
+  border-radius: 14px;
+  padding: 18px 28px;
+  text-align: center;
+}
+
+.disconnect-title {
+  font-family: "Gabarito", sans-serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #f87171;
+  margin: 0;
+}
+
+.disconnect-sub {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0;
+}
+
+.disconnect-countdown {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #f5c842;
+  margin: 4px 0 0;
 }
 
 .end-overlay {
