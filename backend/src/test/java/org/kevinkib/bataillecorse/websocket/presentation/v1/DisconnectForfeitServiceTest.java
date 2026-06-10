@@ -25,15 +25,17 @@ import static org.hamcrest.Matchers.is;
 
 class DisconnectForfeitServiceTest {
 
-    /** Captures the most recently scheduled task; run() invokes it; cancel flips a flag. */
+    /** Captures scheduled tasks (last one, plus all in order); run() invokes them; cancel flips a flag. */
     private static final class CapturingScheduler implements TaskScheduler {
         Runnable lastTask;
         Instant lastTime;
         boolean cancelled;
+        final List<Runnable> scheduled = new ArrayList<>();
         public ScheduledFuture<?> schedule(Runnable task, Instant startTime) {
             this.lastTask = task;
             this.lastTime = startTime;
             this.cancelled = false;
+            this.scheduled.add(task);
             return new FakeFuture();
         }
         public ScheduledFuture<?> schedule(Runnable task, Trigger trigger) { throw new UnsupportedOperationException(); }
@@ -136,5 +138,34 @@ class DisconnectForfeitServiceTest {
         BatailleCorse game = sessionService.getGame(gameId);
         assertThat(game.getWinner().id(), is(new PlayerId(0)));
         assertThat(eventTypes(), contains("FORFEIT"));
+    }
+
+    @Test
+    void givenBothPlayersDisconnect_whenBothTimersFire_thenFirstDroppedLosesAndOnlyOneForfeit() {
+        service.onPresence("sess-0", gameId, new PlayerId(0));
+        service.onPresence("sess-1", gameId, new PlayerId(1));
+        service.onDisconnect("sess-0"); // seat 0 dropped first
+        service.onDisconnect("sess-1");
+
+        scheduler.scheduled.get(0).run(); // seat 0's timer -> seat 1 wins, game over
+        scheduler.scheduled.get(1).run(); // seat 1's timer -> no-op on finished game
+
+        BatailleCorse game = sessionService.getGame(gameId);
+        assertThat(game.getWinner().id(), is(new PlayerId(1)));
+        long forfeits = eventTypes().stream().filter("FORFEIT"::equals).count();
+        assertThat(forfeits, is(1L));
+    }
+
+    @Test
+    void givenTimerAlreadyFired_whenLateReconnect_thenNoReconnectBroadcastAndStaysFinished() {
+        service.onPresence("sess-0", gameId, new PlayerId(0));
+        service.onDisconnect("sess-0");
+        scheduler.lastTask.run(); // forfeit already happened
+
+        service.onPresence("sess-0b", gameId, new PlayerId(0)); // reconnect arrives too late
+
+        BatailleCorse game = sessionService.getGame(gameId);
+        assertThat(game.getWinner().id(), is(new PlayerId(1)));
+        assertThat(eventTypes(), contains("OPPONENT_DISCONNECTED", "FORFEIT")); // no OPPONENT_RECONNECTED
     }
 }

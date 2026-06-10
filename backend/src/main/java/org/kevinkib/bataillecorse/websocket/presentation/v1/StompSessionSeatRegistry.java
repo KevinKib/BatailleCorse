@@ -1,13 +1,11 @@
 package org.kevinkib.bataillecorse.websocket.presentation.v1;
 
 import org.kevinkib.bataillecorse.core.domain.BatailleCorseId;
-import org.springframework.stereotype.Component;
 
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Component
 public class StompSessionSeatRegistry {
 
     private final Map<String, Seat> seatBySession = new ConcurrentHashMap<>();

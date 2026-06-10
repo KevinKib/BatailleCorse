@@ -12,9 +12,7 @@ import org.kevinkib.bataillecorse.websocket.presentation.v1.dto.event.EventType;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.dto.event.ForfeitEventData;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.dto.event.OpponentDisconnectedEventData;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.dto.event.OpponentReconnectedEventData;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.TaskScheduler;
-import org.springframework.stereotype.Service;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -29,7 +27,6 @@ import java.util.concurrent.ScheduledFuture;
  * shared forfeit path. Reconnect (a fresh presence for the same seat) cancels a
  * pending timer. The timer firing — and explicit forfeit — both run {@link #forfeit}.
  */
-@Service
 public class DisconnectForfeitService {
 
     /** Grace before a dropped player auto-loses. */
@@ -46,7 +43,7 @@ public class DisconnectForfeitService {
     public DisconnectForfeitService(SessionService sessionService,
                                     GameMessagingService messaging,
                                     StompSessionSeatRegistry registry,
-                                    @Qualifier("taskScheduler") TaskScheduler scheduler,
+                                    TaskScheduler scheduler,
                                     Clock clock) {
         this.sessionService = sessionService;
         this.messaging = messaging;
