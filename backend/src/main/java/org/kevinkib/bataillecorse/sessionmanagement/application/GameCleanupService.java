@@ -2,14 +2,12 @@ package org.kevinkib.bataillecorse.sessionmanagement.application;
 
 import org.kevinkib.bataillecorse.core.domain.BatailleCorseId;
 import org.kevinkib.bataillecorse.sessionmanagement.application.port.SessionRepository;
-import org.kevinkib.bataillecorse.websocket.presentation.v1.PresenceRegistry;
+import org.kevinkib.bataillecorse.websocket.presentation.v1.StompSessionSeatRegistry;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.util.List;
 
-@Service
 public class GameCleanupService {
 
     /** Finished/forfeited games linger this long so a reconnecting loser can still read the result. */
@@ -18,9 +16,9 @@ public class GameCleanupService {
     public static final Duration IDLE_TTL = Duration.ofMinutes(30);
 
     private final SessionRepository repository;
-    private final PresenceRegistry presenceRegistry;
+    private final StompSessionSeatRegistry presenceRegistry;
 
-    public GameCleanupService(SessionRepository repository, PresenceRegistry presenceRegistry) {
+    public GameCleanupService(SessionRepository repository, StompSessionSeatRegistry presenceRegistry) {
         this.repository = repository;
         this.presenceRegistry = presenceRegistry;
     }

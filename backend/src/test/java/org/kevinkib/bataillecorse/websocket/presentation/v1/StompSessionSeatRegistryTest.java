@@ -7,13 +7,13 @@ import org.kevinkib.bataillecorse.core.domain.PlayerId;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
-class PresenceRegistryTest {
+class StompSessionSeatRegistryTest {
 
     private final BatailleCorseId gameId = BatailleCorseId.generate();
 
     @Test
     void givenBoundSession_whenSeatOf_thenReturnsSeat() {
-        var registry = new PresenceRegistry();
+        var registry = new StompSessionSeatRegistry();
         var seat = new Seat(gameId, new PlayerId(0));
         registry.bind("sess-1", seat);
 
@@ -22,7 +22,7 @@ class PresenceRegistryTest {
 
     @Test
     void givenBoundSession_whenUnbind_thenReturnsSeatAndForgets() {
-        var registry = new PresenceRegistry();
+        var registry = new StompSessionSeatRegistry();
         var seat = new Seat(gameId, new PlayerId(1));
         registry.bind("sess-2", seat);
 
@@ -32,13 +32,13 @@ class PresenceRegistryTest {
 
     @Test
     void whenUnbindUnknownSession_thenEmpty() {
-        var registry = new PresenceRegistry();
+        var registry = new StompSessionSeatRegistry();
         assertThat(registry.unbind("nope").isEmpty(), is(true));
     }
 
     @Test
     void givenSessionsForGame_whenRemoveGame_thenAllForgotten() {
-        var registry = new PresenceRegistry();
+        var registry = new StompSessionSeatRegistry();
         registry.bind("a", new Seat(gameId, new PlayerId(0)));
         registry.bind("b", new Seat(gameId, new PlayerId(1)));
         var otherGame = BatailleCorseId.generate();

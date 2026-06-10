@@ -1,8 +1,10 @@
 package org.kevinkib.bataillecorse.config;
 
+import org.kevinkib.bataillecorse.sessionmanagement.application.GameCleanupService;
 import org.kevinkib.bataillecorse.sessionmanagement.application.SessionService;
 import org.kevinkib.bataillecorse.sessionmanagement.application.port.SessionRepository;
 import org.kevinkib.bataillecorse.sessionmanagement.infrastructure.InMemorySessionRepository;
+import org.kevinkib.bataillecorse.websocket.presentation.v1.StompSessionSeatRegistry;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.TaskScheduler;
@@ -37,5 +39,10 @@ public class AppConfig {
         scheduler.setThreadNamePrefix("game-sched-");
         scheduler.initialize();
         return scheduler;
+    }
+
+    @Bean
+    public GameCleanupService gameCleanupService(StompSessionSeatRegistry stompSessionSeatRegistry) {
+        return new GameCleanupService(sessionRepository(), stompSessionSeatRegistry);
     }
 }

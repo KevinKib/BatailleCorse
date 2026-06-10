@@ -7,9 +7,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-/** Maps STOMP session ids to the seat they occupy, so a disconnect can be attributed. */
 @Component
-public class PresenceRegistry {
+public class StompSessionSeatRegistry {
 
     private final Map<String, Seat> seatBySession = new ConcurrentHashMap<>();
 

@@ -326,13 +326,20 @@ export default class GameSession {
       }
     }
 
-    if (response.eventType === 'OPPONENT_DISCONNECTED' || response.eventType === 'OPPONENT_RECONNECTED') {
-      const data = response.eventData as unknown as { disconnectedSeat: number; deadlineEpochMs: number | null };
+    if (response.eventType === 'OPPONENT_DISCONNECTED') {
+      const data = response.eventData as unknown as { disconnectedSeat: number; deadlineEpochMs: number };
       this.callbacks.onEvent({
         type: 'opponent-connection',
-        status: response.eventType === 'OPPONENT_DISCONNECTED' ? 'disconnected' : 'connected',
-        disconnectedSeat: Number(data.disconnectedSeat),
-        deadlineEpochMs: data.deadlineEpochMs ?? null,
+        status: 'disconnected',
+        seat: Number(data.disconnectedSeat),
+        deadlineEpochMs: Number(data.deadlineEpochMs),
+      });
+    } else if (response.eventType === 'OPPONENT_RECONNECTED') {
+      const data = response.eventData as unknown as { reconnectedSeat: number };
+      this.callbacks.onEvent({
+        type: 'opponent-connection',
+        status: 'connected',
+        seat: Number(data.reconnectedSeat),
       });
     }
 

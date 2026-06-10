@@ -8,9 +8,10 @@ import org.kevinkib.bataillecorse.sessionmanagement.application.SessionService;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.api.Response;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.api.SuccessResponse;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.dto.BatailleCorseDto;
-import org.kevinkib.bataillecorse.websocket.presentation.v1.dto.event.ConnectionEventData;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.dto.event.EventType;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.dto.event.ForfeitEventData;
+import org.kevinkib.bataillecorse.websocket.presentation.v1.dto.event.OpponentDisconnectedEventData;
+import org.kevinkib.bataillecorse.websocket.presentation.v1.dto.event.OpponentReconnectedEventData;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
@@ -36,7 +37,7 @@ public class DisconnectForfeitService {
 
     private final SessionService sessionService;
     private final GameMessagingService messaging;
-    private final PresenceRegistry registry;
+    private final StompSessionSeatRegistry registry;
     private final TaskScheduler scheduler;
     private final Clock clock;
 
@@ -44,7 +45,7 @@ public class DisconnectForfeitService {
 
     public DisconnectForfeitService(SessionService sessionService,
                                     GameMessagingService messaging,
-                                    PresenceRegistry registry,
+                                    StompSessionSeatRegistry registry,
                                     @Qualifier("taskScheduler") TaskScheduler scheduler,
                                     Clock clock) {
         this.sessionService = sessionService;
@@ -109,7 +110,7 @@ public class DisconnectForfeitService {
         }
         broadcast(seat.gameId(), new SuccessResponse(
                 EventType.OPPONENT_DISCONNECTED,
-                new ConnectionEventData(seat.playerId().id(), deadlineEpochMs),
+                new OpponentDisconnectedEventData(seat.playerId().id(), deadlineEpochMs),
                 "Player " + seat.playerId() + " disconnected.",
                 BatailleCorseDto.from(game)));
     }
@@ -121,7 +122,7 @@ public class DisconnectForfeitService {
         }
         broadcast(seat.gameId(), new SuccessResponse(
                 EventType.OPPONENT_RECONNECTED,
-                new ConnectionEventData(seat.playerId().id(), null),
+                new OpponentReconnectedEventData(seat.playerId().id()),
                 "Player " + seat.playerId() + " reconnected.",
                 BatailleCorseDto.from(game)));
     }

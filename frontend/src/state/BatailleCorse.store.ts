@@ -27,7 +27,11 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
   const waiting = ref<boolean>(false);
   const myName = ref<string | null>(null);
   const opponentName = ref<string | null>(null);
-  const opponentConnection = ref<{ status: 'disconnected' | 'connected'; disconnectedSeat: number; deadlineEpochMs: number | null } | null>(null);
+  const opponentConnection = ref<
+    | { status: 'disconnected'; seat: number; deadlineEpochMs: number }
+    | { status: 'connected'; seat: number }
+    | null
+  >(null);
 
   let animationResolve: (() => void) | null = null;
   // slapSeq lives in the store because the slap flash animation fires optimistically

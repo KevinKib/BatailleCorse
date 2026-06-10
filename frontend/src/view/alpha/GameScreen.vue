@@ -307,13 +307,13 @@ let countdownTimer: ReturnType<typeof setInterval> | null = null;
 const opponentDisconnected = computed(() =>
   mode.value === 'multiplayer'
   && opponentConnection.value?.status === 'disconnected'
-  && opponentConnection.value.disconnectedSeat !== myPlayerIndex.value
+  && opponentConnection.value.seat !== myPlayerIndex.value
   && !isGameOver.value);
 
 const secondsRemaining = computed(() => {
-  const deadline = opponentConnection.value?.deadlineEpochMs;
-  if (!deadline) return 0;
-  return Math.max(0, Math.ceil((deadline - now.value) / 1000));
+  const oc = opponentConnection.value;
+  if (oc?.status !== 'disconnected') return 0;
+  return Math.max(0, Math.ceil((oc.deadlineEpochMs - now.value) / 1000));
 });
 
 watch(opponentDisconnected, (active) => {

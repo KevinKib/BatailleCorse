@@ -498,7 +498,7 @@ describe('GameSession', () => {
         eventData: { disconnectedSeat: 1, deadlineEpochMs: 1234 },
       }));
       expect(events).toContainEqual({
-        type: 'opponent-connection', status: 'disconnected', disconnectedSeat: 1, deadlineEpochMs: 1234,
+        type: 'opponent-connection', status: 'disconnected', seat: 1, deadlineEpochMs: 1234,
       });
     });
 
@@ -508,10 +508,10 @@ describe('GameSession', () => {
       await session.onResponse(buildCreateResponse('game-10', { 0: 'tok' }));
       await session.onResponse(buildResponse({
         eventType: 'OPPONENT_RECONNECTED',
-        eventData: { disconnectedSeat: 1, deadlineEpochMs: null },
+        eventData: { reconnectedSeat: 1 },
       }));
       expect(events).toContainEqual({
-        type: 'opponent-connection', status: 'connected', disconnectedSeat: 1, deadlineEpochMs: null,
+        type: 'opponent-connection', status: 'connected', seat: 1,
       });
     });
   });

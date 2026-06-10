@@ -14,4 +14,5 @@ export type GameEvent =
   | { type: 'waiting-change'; waiting: boolean }
   | { type: 'my-name-change'; name: string | null }
   | { type: 'opponent-name-change'; name: string | null }
-  | { type: 'opponent-connection'; status: 'disconnected' | 'connected'; disconnectedSeat: number; deadlineEpochMs: number | null };
+  | { type: 'opponent-connection'; status: 'disconnected'; seat: number; deadlineEpochMs: number }
+  | { type: 'opponent-connection'; status: 'connected'; seat: number };

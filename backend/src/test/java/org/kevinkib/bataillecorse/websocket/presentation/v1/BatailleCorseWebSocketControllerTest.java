@@ -35,7 +35,7 @@ class BatailleCorseWebSocketControllerTest {
                 new org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler();
         scheduler.initialize();
         DisconnectForfeitService forfeitService = new DisconnectForfeitService(
-                sessionService, messaging, new PresenceRegistry(), scheduler, java.time.Clock.systemUTC());
+                sessionService, messaging, new StompSessionSeatRegistry(), scheduler, java.time.Clock.systemUTC());
         controller = new BatailleCorseWebSocketController(sessionService, messaging, forfeitService);
     }
 

@@ -63,7 +63,7 @@ class DisconnectForfeitServiceTest {
     private SessionService sessionService;
     private CapturingScheduler scheduler;
     private RecordingMessaging messaging;
-    private PresenceRegistry registry;
+    private StompSessionSeatRegistry registry;
     private DisconnectForfeitService service;
     private BatailleCorseId gameId;
 
@@ -73,7 +73,7 @@ class DisconnectForfeitServiceTest {
         sessionService = new SessionService(new InMemorySessionRepository(clock));
         scheduler = new CapturingScheduler();
         messaging = new RecordingMessaging();
-        registry = new PresenceRegistry();
+        registry = new StompSessionSeatRegistry();
         service = new DisconnectForfeitService(sessionService, messaging, registry, scheduler, clock);
 
         BatailleCorse game = sessionService.createGame(2, GameMode.MULTIPLAYER);
