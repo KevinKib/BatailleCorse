@@ -23,6 +23,10 @@ export default class BatailleCorse {
     return this.isWinner(this.players[playerIndex]?.id);
   }
 
+  /**
+   * The forfeit reason of the seat opposite the given one, or null. 2-player:
+   * the single other seat. Used by the winner's end screen to explain a forfeit.
+   */
   opponentForfeitReason(playerIndex: number): ForfeitReason | null {
     const opponent = this.players.find((_, i) => i !== playerIndex);
     return opponent?.forfeitReason ?? null;
