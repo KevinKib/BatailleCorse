@@ -434,10 +434,12 @@ onBeforeUnmount(() => {
 <style scoped>
 
 .gamescreen {
-  /* Two-layer background: vignette on top, deep felt below */
+  /* Two-layer background: vignette on top, deep felt below. Calmer than the
+     title screens (no watermarks/drift) so the cards stay the focus; the felt
+     grain is added statically via ::before below. */
   background:
     radial-gradient(ellipse at 50% 42%, transparent 15%, rgba(0, 0, 0, 0.62) 100%),
-    radial-gradient(ellipse at 50% 38%, #1e5c30 0%, #0d2e18 48%, #07160d 100%);
+    radial-gradient(ellipse at 50% 38%, var(--felt-center) 0%, var(--felt-mid) 48%, var(--felt-edge) 100%);
   /* One fluid sizing source: every card/pile/gap derives from these so the
      whole board scales coherently off the viewport. Clamp bounds are tuned
      here; deck:pile width ratio mirrors the original 90:125. */
@@ -453,6 +455,23 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   position: relative;
+  /* Own stacking context so the felt grain (::before, z-index:-1) layers above
+     the gradient background but stays behind every card and overlay. */
+  isolation: isolate;
+}
+
+/* Static felt grain over the board — same fabric texture as the title screens
+   but no drift, keeping the play area calm. */
+.gamescreen::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: var(--felt-noise);
+  background-size: 180px 180px;
+  opacity: 0.06;
+  mix-blend-mode: overlay;
+  pointer-events: none;
 }
 
 /* CSS width/aspect-ratio override PlayingCard's px width/height attributes
@@ -649,7 +668,7 @@ onBeforeUnmount(() => {
   z-index: 1000;
   border: 1px solid black;
   border-radius: 6%;
-  box-shadow: 3px 5px 0px rgba(0, 0, 0, 0.9), 4px 10px 24px rgba(0, 0, 0, 0.6);
+  box-shadow: var(--card-shadow);
   transition: none;
 }
 
@@ -667,7 +686,7 @@ onBeforeUnmount(() => {
   z-index: 1000;
   border: 1px solid black;
   border-radius: 6%;
-  box-shadow: 3px 5px 0px rgba(0, 0, 0, 0.9), 4px 10px 24px rgba(0, 0, 0, 0.6);
+  box-shadow: var(--card-shadow);
   transition: none;
 }
 
@@ -715,8 +734,9 @@ onBeforeUnmount(() => {
   flex-direction: column;
   align-items: center;
   gap: 14px;
-  background: rgba(0, 0, 0, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  box-shadow: var(--panel-shadow);
   border-radius: 16px;
   padding: 36px 40px;
   max-width: 460px;
@@ -726,7 +746,7 @@ onBeforeUnmount(() => {
   font-family: "Gabarito", sans-serif;
   font-size: 1.6rem;
   font-weight: 700;
-  color: #f5c842;
+  color: var(--gold);
   margin: 0;
 }
 
@@ -770,8 +790,9 @@ onBeforeUnmount(() => {
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  background: rgba(0, 0, 0, 0.72);
-  border: 1px solid rgba(248, 113, 113, 0.45);
+  background: var(--panel-bg);
+  border: 1px solid rgba(var(--accent-negative-rgb), 0.45);
+  box-shadow: var(--panel-shadow);
   border-radius: 14px;
   padding: 18px 28px;
   text-align: center;
@@ -794,7 +815,7 @@ onBeforeUnmount(() => {
 .disconnect-countdown {
   font-size: 1rem;
   font-weight: 800;
-  color: #f5c842;
+  color: var(--gold);
   margin: 4px 0 0;
 }
 
@@ -814,8 +835,9 @@ onBeforeUnmount(() => {
   flex-direction: column;
   align-items: center;
   gap: 14px;
-  background: rgba(0, 0, 0, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  box-shadow: var(--panel-shadow);
   border-radius: 16px;
   padding: 40px 48px;
   max-width: 460px;
@@ -842,13 +864,13 @@ onBeforeUnmount(() => {
 
 /* Victory: gold accent + a brief trophy bounce / glow pulse. */
 .end-card--victory {
-  border-color: rgba(245, 200, 66, 0.55);
-  box-shadow: 0 0 48px 6px rgba(245, 200, 66, 0.25);
+  border-color: rgba(var(--accent-active-rgb), 0.55);
+  box-shadow: var(--panel-shadow), 0 0 48px 6px rgba(var(--accent-active-rgb), 0.25);
 }
 
 .end-card--victory .end-title {
-  color: #f5c842;
-  text-shadow: 0 2px 16px rgba(245, 200, 66, 0.45);
+  color: var(--gold);
+  text-shadow: 0 2px 16px rgba(var(--accent-active-rgb), 0.45);
 }
 
 .end-trophy {
@@ -865,7 +887,7 @@ onBeforeUnmount(() => {
 
 /* Defeat: muted / somber, no flourish. */
 .end-card--defeat {
-  border-color: rgba(248, 113, 113, 0.35);
+  border-color: rgba(var(--accent-negative-rgb), 0.35);
 }
 
 .end-card--defeat .end-title {
