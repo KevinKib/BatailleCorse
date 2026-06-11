@@ -117,3 +117,39 @@ describe('BatailleCorse turn queries', () => {
     expect(game.canSend(5)).toBe(false);
   });
 });
+
+describe('BatailleCorse.opponentForfeitReason', () => {
+  it('returns the other seat forfeit reason for the given player index', () => {
+    const game = buildGame({
+      players: [
+        buildPlayer({ id: '0', forfeitReason: null }),
+        buildPlayer({ id: '1', forfeitReason: 'DISCONNECTED' }),
+      ],
+    });
+    // seat 0 is the winner; its opponent (seat 1) disconnected
+    expect(game.opponentForfeitReason(0)).toBe('DISCONNECTED');
+  });
+
+  it('returns null when the opponent did not forfeit', () => {
+    const game = buildGame({
+      players: [buildPlayer({ id: '0' }), buildPlayer({ id: '1' })],
+    });
+    expect(game.opponentForfeitReason(0)).toBeNull();
+  });
+
+  it('parses forfeitReason from JSON onto players', () => {
+    const game = BatailleCorse.fromJSON({
+      currentPlayer: { id: '0', nbCards: 26, availableActions: [] },
+      pile: {
+        cards: [], grabbable: false, nbCardsSinceLastHonourCard: 0,
+        playerThatAddedLastHonourCard: { id: '0' },
+      },
+      players: [
+        { id: '0', nbCards: 26, availableActions: [] },
+        { id: '1', nbCards: 0, availableActions: [], forfeitReason: 'RESIGNED' },
+      ],
+      winner: { id: '0' },
+    });
+    expect(game.players[1].forfeitReason).toBe('RESIGNED');
+  });
+});

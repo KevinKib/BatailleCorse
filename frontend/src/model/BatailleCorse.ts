@@ -1,6 +1,7 @@
 import Pile from "./Pile";
 import Player from "./Player";
 import type PlayerId from "./PlayerId";
+import type { ForfeitReason } from "./ForfeitReason";
 
 export default class BatailleCorse {
   constructor(
@@ -22,6 +23,11 @@ export default class BatailleCorse {
     return this.isWinner(this.players[playerIndex]?.id);
   }
 
+  opponentForfeitReason(playerIndex: number): ForfeitReason | null {
+    const opponent = this.players.find((_, i) => i !== playerIndex);
+    return opponent?.forfeitReason ?? null;
+  }
+
   /**
    * Whether the player at the given seat may take their turn right now, i.e. the
    * server currently offers them the SEND action. This is the authoritative
@@ -41,7 +47,7 @@ export default class BatailleCorse {
       nbCardsSinceLastHonourCard: number;
       playerThatAddedLastHonourCard: { id: string };
     };
-    players: { id: string; nbCards: number; availableActions: string[] }[];
+    players: { id: string; nbCards: number; availableActions: string[]; forfeitReason?: string | null }[];
     winner: { id: string } | null;
   }): BatailleCorse {
     return new BatailleCorse(
