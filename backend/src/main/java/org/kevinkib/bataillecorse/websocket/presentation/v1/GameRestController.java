@@ -34,17 +34,21 @@ public class GameRestController {
 
     private final SessionService sessionService;
     private final GameMessagingService gameMessagingService;
+    private final ForfeitReasonRegistry forfeitReasonRegistry;
 
-    public GameRestController(SessionService sessionService, GameMessagingService gameMessagingService) {
+    public GameRestController(SessionService sessionService, GameMessagingService gameMessagingService,
+                              ForfeitReasonRegistry forfeitReasonRegistry) {
         this.sessionService = sessionService;
         this.gameMessagingService = gameMessagingService;
+        this.forfeitReasonRegistry = forfeitReasonRegistry;
     }
 
     @GetMapping("/game/{id}")
     public ResponseEntity<BatailleCorseDto> getGame(@PathVariable String id) {
         try {
-            BatailleCorse game = sessionService.getGame(new BatailleCorseId(id));
-            return ResponseEntity.ok(BatailleCorseDto.from(game));
+            BatailleCorseId gameId = new BatailleCorseId(id);
+            BatailleCorse game = sessionService.getGame(gameId);
+            return ResponseEntity.ok(BatailleCorseDto.from(game, forfeitReasonRegistry.reasonsBySeat(gameId)));
         } catch (InvalidGameIdException | IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
         }
