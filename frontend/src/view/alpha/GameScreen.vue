@@ -106,9 +106,7 @@
       <div :class="['end-card', didIWin ? 'end-card--victory' : 'end-card--defeat']">
         <div v-if="didIWin" class="end-trophy" data-cy="victory-flourish">🏆</div>
         <h1 class="end-title">{{ didIWin ? 'VICTORY' : 'DEFEAT' }}</h1>
-        <p class="end-sub">
-          {{ didIWin ? `You beat ${opponentLabel}!` : `${opponentLabel} won.` }}
-        </p>
+        <p class="end-sub">{{ endSubtitle }}</p>
         <RouterLink to="/" class="end-home-button">
           <Button label="Back to home" icon="pi pi-home" rounded />
         </RouterLink>
@@ -170,6 +168,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, wa
 import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router';
 import webSocketService from '../../service/WebSocketService';
 import type BatailleCorse from '../../model/BatailleCorse';
+import { endGameMessage } from '../../model/endGameMessage';
 
 const batailleCorseStore = useBatailleCorseStore();
 const { state: batailleCorse, mode, myPlayerIndex, waiting, myName, opponentName, opponentConnection,
@@ -308,6 +307,12 @@ const pileIsEmpty = computed(() => (batailleCorse.value?.pile.cards.length ?? 0)
 
 const isGameOver = computed(() => batailleCorse.value?.isOver() ?? false);
 const didIWin = computed(() => batailleCorse.value?.isWinnerAt(myPlayerIndex.value) ?? false);
+const endSubtitle = computed(() =>
+  endGameMessage(
+    didIWin.value,
+    opponentLabel.value,
+    batailleCorse.value?.opponentForfeitReason(myPlayerIndex.value) ?? null,
+  ));
 
 // A game can end on ANY move — a winning grab/slap or a SEND that empties the
 // sender's hand. The winner only lands in state via the post-move state-update,
