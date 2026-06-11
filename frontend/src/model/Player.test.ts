@@ -31,3 +31,17 @@ describe('Player', () => {
     });
   });
 });
+
+describe('Player.fromJSON forfeitReason', () => {
+  it('defaults forfeitReason to null when absent', () => {
+    const player = Player.fromJSON({ id: '0', nbCards: 26, availableActions: [] });
+    expect(player.forfeitReason).toBeNull();
+  });
+
+  it('reads forfeitReason when present', () => {
+    const player = Player.fromJSON({
+      id: '1', nbCards: 0, availableActions: [], forfeitReason: 'DISCONNECTED',
+    });
+    expect(player.forfeitReason).toBe('DISCONNECTED');
+  });
+});

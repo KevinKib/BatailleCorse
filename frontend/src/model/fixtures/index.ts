@@ -1,6 +1,7 @@
 import type Card from '../Card';
 import Pile from '../Pile';
 import Player from '../Player';
+import type { ForfeitReason } from '../ForfeitReason';
 import BatailleCorse from '../BatailleCorse';
 import type Response from '../Response';
 
@@ -34,11 +35,13 @@ export function buildPlayer(overrides: Partial<{
   id: string;
   nbCards: number;
   availableActions: string[];
+  forfeitReason: ForfeitReason | null;
 }> = {}): Player {
   return new Player(
     overrides.id ?? '0',
     overrides.nbCards ?? 26,
     overrides.availableActions ?? [],
+    overrides.forfeitReason ?? null,
   );
 }
 
