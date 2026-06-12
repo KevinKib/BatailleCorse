@@ -15,6 +15,14 @@ services:
     image: bataillecorse-backend:0.1
     # Not published to the host: all traffic goes through the nginx gateway,
     # which reaches the backend internally as http://backend:8080.
+    healthcheck:
+      # Spring Boot's Tomcat only accepts TCP connections once the context is
+      # fully started, so a successful connect means the app is ready to serve.
+      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/localhost/8080'"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 30s
 
   gateway:
     build:
@@ -26,8 +34,10 @@ services:
       - certbot-certs:/etc/letsencrypt:ro
       - certbot-webroot:/var/www/certbot:ro
     depends_on:
-      - frontend
-      - backend
+      frontend:
+        condition: service_started
+      backend:
+        condition: service_healthy
     # Reload nginx every 6h so renewed certificates are picked up without a
     # restart, while keeping the master process in the foreground.
     command: >
