@@ -33,11 +33,19 @@ export function useEndScreen(
   }
 
   // Reveal once the game is over AND the board has settled (no pile animation).
+  // When the game is no longer over (e.g. a rematch dealt a fresh board), cancel
+  // any pending reveal and hide the overlay.
   const stopWatch = watch(
     [() => isOver(), () => isAnimating()],
     ([over, animating]) => {
-      if (over && !animating) scheduleReveal();
+      if (over && !animating) {
+        scheduleReveal();
+      } else if (!over) {
+        if (timeoutId !== null) { clearTimeout(timeoutId); timeoutId = null; }
+        showEndOverlay.value = false;
+      }
     },
+    { immediate: true },
   );
 
   // Reload into an already-finished game: no animation in flight, reveal at once.

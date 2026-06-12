@@ -73,6 +73,22 @@ describe('useEndScreen', () => {
     expect(showEndOverlay.value).toBe(false);
   });
 
+  it('givenOverlayShown_whenStateBecomesNotOver_thenOverlayHides', async () => {
+    const over = ref(true);
+    const animating = ref(false);
+    const { showEndOverlay } = useEndScreen(() => over.value, () => animating.value);
+
+    over.value = true;
+    await nextTick();
+    vi.advanceTimersByTime(END_SCREEN_DELAY_MS);
+    expect(showEndOverlay.value).toBe(true);
+
+    // A rematch deals a fresh, not-over game.
+    over.value = false;
+    await nextTick();
+    expect(showEndOverlay.value).toBe(false);
+  });
+
   it('givenPendingReveal_whenCancel_thenNeverShowsAndStopsWatching', async () => {
     const over = ref(false);
     const animating = ref(false);
