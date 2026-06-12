@@ -39,6 +39,13 @@ function makeSession() {
   return { session, events, published, subscribed, presence };
 }
 
+function buildRematchResponse(status: 'PENDING' | 'STARTED', requestedById: string) {
+  return buildResponse({
+    eventType: 'REMATCH',
+    eventData: { status, requestedBy: { id: requestedById } },
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -513,6 +520,56 @@ describe('GameSession', () => {
       expect(events).toContainEqual({
         type: 'opponent-connection', status: 'connected', seat: 1,
       });
+    });
+  });
+
+  // --- REMATCH --------------------------------------------------------------
+
+  describe('REMATCH', () => {
+    it('solo rematch() publishes /app/rematch for BOTH seat tokens', async () => {
+      const { session, published } = makeSession();
+      session.create('solo');
+      await session.onResponse(buildCreateResponse('game-1', { 0: 'tok-a', 1: 'tok-b' }));
+
+      session.rematch();
+
+      const rematchPublishes = published.filter(p => p.dest === '/app/rematch');
+      expect(rematchPublishes).toHaveLength(2);
+      const tokens = rematchPublishes.map(p => JSON.parse(p.body!).token).sort();
+      expect(tokens).toEqual(['tok-a', 'tok-b']);
+    });
+
+    it('multiplayer rematch() publishes only for the local seat and emits pending', async () => {
+      const { session, published, events } = makeSession();
+      session.create('multiplayer', 'Alice');
+      await session.onResponse(buildCreateResponse('game-1', { 0: 'tok-a' }));
+
+      session.rematch();
+
+      const rematchPublishes = published.filter(p => p.dest === '/app/rematch');
+      expect(rematchPublishes).toHaveLength(1);
+      expect(JSON.parse(rematchPublishes[0].body!).token).toBe('tok-a');
+      expect(events).toContainEqual({ type: 'rematch', status: 'pending', requestedBy: 0 });
+    });
+
+    it('REMATCH pending from opponent emits a pending event with their seat', async () => {
+      const { session, events } = makeSession();
+      session.create('multiplayer', 'Alice');
+      await session.onResponse(buildCreateResponse('game-1', { 0: 'tok-a' }));
+
+      await session.onResponse(buildRematchResponse('PENDING', '1'));
+
+      expect(events).toContainEqual({ type: 'rematch', status: 'pending', requestedBy: 1 });
+    });
+
+    it('REMATCH started emits a started event', async () => {
+      const { session, events } = makeSession();
+      session.create('solo');
+      await session.onResponse(buildCreateResponse('game-1', { 0: 'tok-a', 1: 'tok-b' }));
+
+      await session.onResponse(buildRematchResponse('STARTED', '0'));
+
+      expect(events).toContainEqual({ type: 'rematch', status: 'started' });
     });
   });
 
