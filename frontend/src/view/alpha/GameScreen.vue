@@ -1,6 +1,8 @@
 <template>
   <div class="gamescreen flex">
 
+    <GameTimer :time="formattedDuration" />
+
     <RulesPanel />
 
     <div class="gamescreen_top flex">
@@ -155,6 +157,7 @@
 import PlayingCard from '../../components/PlayingCard.vue';
 import CardCounter from '../../components/CardCounter.vue';
 import RulesPanel from '../../components/RulesPanel.vue';
+import GameTimer from '../../components/GameTimer.vue';
 import { Button, InputText } from 'primevue';
 import { storeToRefs } from 'pinia';
 import { useBatailleCorseStore } from '../../state/BatailleCorse.store';
@@ -163,6 +166,7 @@ import { DIFFICULTY } from '../../model/Difficulty';
 import { useCardAnimation } from '../../composables/useCardAnimation';
 import { useHotkeys } from '../../composables/useHotkeys';
 import { useEndScreen } from '../../composables/useEndScreen';
+import { useGameDuration } from '../../composables/useGameDuration';
 import { Action } from '../../model/Action';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue';
 import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router';
@@ -321,6 +325,14 @@ const endSubtitle = computed(() =>
 const { showEndOverlay, revealImmediatelyIfOver, cancel: cancelEndScreen } =
   useEndScreen(() => isGameOver.value, () => isPileAnimating.value);
 
+// Cosmetic game-duration timer. Active while a game is loaded and in play; the
+// composable freezes the value at game over. `isGameOver`/`isWaiting`/`batailleCorse`
+// already exist above.
+const isTimerActive = computed(() =>
+  !!batailleCorse.value && !isWaiting.value && !isGameOver.value);
+const { formattedDuration, cancel: cancelGameDuration } =
+  useGameDuration(() => isTimerActive.value, () => isGameOver.value);
+
 // --- Opponent disconnect countdown ---
 // Driven by a server-provided absolute deadline; the local clock only renders
 // the remaining seconds. Cleared on reconnect or when the game ends.
@@ -449,6 +461,7 @@ onBeforeUnmount(() => {
   batailleCorseStore.cancelAutoGrab();
   webSocketService.unsubscribeFromGame();
   cancelEndScreen();
+  cancelGameDuration();
   if (countdownTimer !== null) clearInterval(countdownTimer);
   if (slapImpactTimer !== null) clearTimeout(slapImpactTimer);
   window.removeEventListener('beforeunload', handleBeforeUnload);
