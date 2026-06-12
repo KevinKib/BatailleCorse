@@ -100,4 +100,49 @@ class SessionGameTest {
             assertThat(result, is(Optional.empty()));
         }
     }
+
+    @Nested
+    class RematchTest {
+
+        private SessionGame newSession() {
+            return SessionGame.create(BatailleCorseId.generate(), createNumberOfPlayers(2));
+        }
+
+        @Test
+        void givenNoSeatRequested_whenIsRematchUnanimous_thenFalse() {
+            var session = newSession();
+
+            assertThat(session.isRematchUnanimous(), is(false));
+        }
+
+        @Test
+        void givenOneOfTwoSeatsRequested_whenIsRematchUnanimous_thenFalse() {
+            var session = newSession();
+
+            session.requestRematch(new PlayerId(0));
+
+            assertThat(session.isRematchUnanimous(), is(false));
+        }
+
+        @Test
+        void givenAllSeatsRequested_whenIsRematchUnanimous_thenTrue() {
+            var session = newSession();
+
+            session.requestRematch(new PlayerId(0));
+            session.requestRematch(new PlayerId(1));
+
+            assertThat(session.isRematchUnanimous(), is(true));
+        }
+
+        @Test
+        void givenUnanimousRematch_whenClearRematch_thenNoLongerUnanimous() {
+            var session = newSession();
+            session.requestRematch(new PlayerId(0));
+            session.requestRematch(new PlayerId(1));
+
+            session.clearRematch();
+
+            assertThat(session.isRematchUnanimous(), is(false));
+        }
+    }
 }
