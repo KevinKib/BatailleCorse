@@ -3,7 +3,7 @@
 
     <RulesPanel />
 
-    <div :class="['gamescreen_top', 'flex', { 'zone--active': showOpponentTurn }]">
+    <div class="gamescreen_top flex">
       <div class="left_side"></div>
       <div class="middle_side">
         <h1 :class="['player_tag', { 'player_tag--active': showOpponentTurn }]">{{ opponentLabel }}</h1>
@@ -41,7 +41,7 @@
       </div>
     </div>
 
-    <div :class="['gamescreen_bottom', 'flex', { 'zone--active': showMyTurn }]">
+    <div class="gamescreen_bottom flex">
       <div class="left_side">
         <RouterLink to="/" class="back_button">
           <Button severity="secondary" label="Back" icon="pi pi-undo" variant="text" rounded />
@@ -521,7 +521,6 @@ onBeforeUnmount(() => {
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.04);
   padding-bottom: var(--band-pad);
-  transition: border-color 0.4s ease;
 
   .middle_side {
     display: flex;
@@ -559,21 +558,6 @@ onBeforeUnmount(() => {
     gap: var(--stack-gap);
     margin: 0;
   }
-}
-
-/* Active player's zone: a warm gold wash rising from their near edge plus a
-   gold zone border, reinforcing the name-tag glow without extra chrome. */
-.gamescreen_top.zone--active {
-  background:
-    radial-gradient(ellipse at 50% 0%, rgba(var(--accent-active-rgb), 0.12) 0%, transparent 62%),
-    linear-gradient(to bottom, rgba(0, 0, 0, 0.30) 0%, rgba(0, 0, 0, 0.05) 100%);
-  border-bottom-color: rgba(var(--accent-active-rgb), 0.32);
-}
-.gamescreen_bottom.zone--active {
-  background:
-    radial-gradient(ellipse at 50% 100%, rgba(var(--accent-active-rgb), 0.12) 0%, transparent 62%),
-    linear-gradient(to top, rgba(0, 0, 0, 0.30) 0%, rgba(0, 0, 0, 0.05) 100%);
-  border-top-color: rgba(var(--accent-active-rgb), 0.32);
 }
 
 .pile_slot .card {
