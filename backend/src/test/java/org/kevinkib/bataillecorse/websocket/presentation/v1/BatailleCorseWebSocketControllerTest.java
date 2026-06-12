@@ -153,4 +153,58 @@ class BatailleCorseWebSocketControllerTest {
             );
         }
     }
+
+    @Nested
+    class RematchTest {
+
+        @Test
+        void givenSoloBothSeatsRequest_whenSecondRematch_thenBroadcastsStarted() {
+            var game = sessionService.createGame(2, org.kevinkib.bataillecorse.sessionmanagement.domain.GameMode.SOLO);
+            String gameId = game.getId().uuid().toString();
+            SessionToken token0 = sessionService.loadTokenByPlayerId(game.getId(), new PlayerId(0));
+            SessionToken token1 = sessionService.loadTokenByPlayerId(game.getId(), new PlayerId(1));
+
+            controller.rematch(new GameActionPayload(gameId, token0.uuid().toString())); // PENDING
+            clearInvocations(template);
+
+            controller.rematch(new GameActionPayload(gameId, token1.uuid().toString())); // STARTED
+
+            verify(template).convertAndSend(
+                    eq("/topic/game/" + gameId),
+                    (Object) argThat(r -> ((Response) r).isSuccess()
+                            && ((org.kevinkib.bataillecorse.websocket.presentation.v1.dto.event.RematchEventData)
+                                    ((Response) r).getEventData()).status()
+                               == org.kevinkib.bataillecorse.websocket.presentation.v1.dto.event.RematchStatus.STARTED)
+            );
+        }
+
+        @Test
+        void givenMultiplayerSingleRequest_whenRematch_thenBroadcastsPending() {
+            var game = sessionService.createGame(2, org.kevinkib.bataillecorse.sessionmanagement.domain.GameMode.MULTIPLAYER);
+            sessionService.joinGame(game.getId()); // claim seat 1 so the game has two humans
+            String gameId = game.getId().uuid().toString();
+            SessionToken token0 = sessionService.loadTokenByPlayerId(game.getId(), new PlayerId(0));
+
+            controller.rematch(new GameActionPayload(gameId, token0.uuid().toString()));
+
+            verify(template).convertAndSend(
+                    eq("/topic/game/" + gameId),
+                    (Object) argThat(r -> ((Response) r).isSuccess()
+                            && ((org.kevinkib.bataillecorse.websocket.presentation.v1.dto.event.RematchEventData)
+                                    ((Response) r).getEventData()).status()
+                               == org.kevinkib.bataillecorse.websocket.presentation.v1.dto.event.RematchStatus.PENDING)
+            );
+        }
+
+        @Test
+        void givenInvalidToken_whenRematch_thenDoesNotBroadcast() {
+            var game = sessionService.createGame(2);
+            String gameId = game.getId().uuid().toString();
+
+            controller.rematch(new GameActionPayload(gameId, SessionToken.generate().uuid().toString()));
+
+            verify(template, org.mockito.Mockito.never()).convertAndSend(
+                    eq("/topic/game/" + gameId), (Object) org.mockito.ArgumentMatchers.any());
+        }
+    }
 }

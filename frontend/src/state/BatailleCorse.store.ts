@@ -32,6 +32,7 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
     | { status: 'connected'; seat: number }
     | null
   >(null);
+  const rematchState = ref<'idle' | 'requested-by-me' | 'requested-by-opponent'>('idle');
 
   let animationResolve: (() => void) | null = null;
   // slapSeq lives in the store because the slap flash animation fires optimistically
@@ -58,6 +59,15 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
           case 'my-name-change':       myName.value = event.name; break;
           case 'opponent-name-change': opponentName.value = event.name; break;
           case 'opponent-connection':  opponentConnection.value = event; break;
+          case 'rematch':
+            if (event.status === 'started') {
+              rematchState.value = 'idle';
+            } else {
+              rematchState.value = event.requestedBy === myPlayerIndex.value
+                ? 'requested-by-me'
+                : 'requested-by-opponent';
+            }
+            break;
         }
       },
       awaitAnimation: () => new Promise<void>(resolve => { animationResolve = resolve; }),
@@ -84,7 +94,8 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
     lastSlap,
     lastSuccessfulSlap,
     lastErroneousSlap,
-    create:               (gameMode: 'solo' | 'multiplayer', name?: string) => session.create(gameMode, name),
+    rematchState,
+    create:               (gameMode: 'solo' | 'multiplayer', name?: string) => { rematchState.value = 'idle'; session.create(gameMode, name); },
     join:                 (id: string, name?: string) => session.join(id, name),
     loadSessionView:      (id: string) => session.loadSessionView(id),
     hydrate:              (id: string, s: BatailleCorse) => session.hydrate(id, s),
@@ -94,6 +105,7 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
     slap:                 (playerIndex: number) => session.slap(playerIndex),
     grab:                 (playerIndex: number) => session.grab(playerIndex),
     forfeit:              (playerIndex: number) => session.forfeit(playerIndex),
+    rematch:              () => session.rematch(),
     onResponse:           (r: Response) => { session.onResponse(r); },
     notifyAnimationComplete,
     cancelAutoGrab:       () => session.cancelAll(),

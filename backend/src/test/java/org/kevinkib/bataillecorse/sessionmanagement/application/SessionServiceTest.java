@@ -140,6 +140,37 @@ class SessionServiceTest {
     }
 
     @Nested
+    class RematchTest {
+
+        @Test
+        void givenSoloGame_whenRematch_thenSameIdAndSeatsPreserved() {
+            BatailleCorse game = service.createGame(2, GameMode.SOLO, "Alice");
+            SessionToken seat0TokenBefore = service.loadTokenByPlayerId(game.getId(), new PlayerId(0));
+            String seat0NameBefore = service.getSeats(game.getId()).get(0).name();
+
+            BatailleCorse fresh = service.rematch(game.getId());
+
+            assertThat(fresh.getId(), is(game.getId()));
+            assertThat(fresh.isFinished(), is(false));
+            assertThat(service.isSeatClaimed(game.getId(), new PlayerId(0)), is(true));
+            assertThat(service.isSeatClaimed(game.getId(), new PlayerId(1)), is(true));
+            assertThat(service.getSeats(game.getId()).get(0).name(), is(seat0NameBefore));
+            assertThat(service.loadTokenByPlayerId(game.getId(), new PlayerId(0)), is(seat0TokenBefore));
+        }
+
+        @Test
+        void givenRequestedRematch_whenRematch_thenRequestFlagsCleared() {
+            BatailleCorse game = service.createGame(2, GameMode.SOLO);
+            service.getGameSession(game.getId()).requestRematch(new PlayerId(0));
+            service.getGameSession(game.getId()).requestRematch(new PlayerId(1));
+
+            service.rematch(game.getId());
+
+            assertThat(service.getGameSession(game.getId()).isRematchUnanimous(), is(false));
+        }
+    }
+
+    @Nested
     class TouchTest {
 
         @Test

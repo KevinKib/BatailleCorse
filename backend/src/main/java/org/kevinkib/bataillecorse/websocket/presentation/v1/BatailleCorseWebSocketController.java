@@ -186,4 +186,37 @@ public class BatailleCorseWebSocketController {
             System.err.println(e.getMessage());
         }
     }
+
+    @MessageMapping("/rematch")
+    public void rematch(GameActionPayload payload) {
+        BatailleCorseId gameId = new BatailleCorseId(payload.gameId());
+        try {
+            PlayerId playerId = sessionService
+                    .findPlayerIdByToken(gameId, new SessionToken(payload.token()))
+                    .orElseThrow(InvalidTokenException::new);
+
+            sessionService.getGameSession(gameId).requestRematch(playerId);
+
+            Response response;
+            if (sessionService.getGameSession(gameId).isRematchUnanimous()) {
+                BatailleCorse fresh = sessionService.rematch(gameId);
+                response = new SuccessResponse(
+                        EventType.REMATCH,
+                        new RematchEventData(RematchStatus.STARTED, new PlayerIdDto(String.valueOf(playerId.id()))),
+                        "Rematch started.",
+                        BatailleCorseDto.from(fresh));
+            } else {
+                BatailleCorse current = sessionService.getGame(gameId);
+                response = new SuccessResponse(
+                        EventType.REMATCH,
+                        new RematchEventData(RematchStatus.PENDING, new PlayerIdDto(String.valueOf(playerId.id()))),
+                        "Rematch requested.",
+                        BatailleCorseDto.from(current));
+            }
+
+            gameMessagingService.sendToGame(payload.gameId(), response);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
+    }
 }

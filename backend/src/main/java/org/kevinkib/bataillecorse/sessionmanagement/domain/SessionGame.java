@@ -33,6 +33,23 @@ public record SessionGame(BatailleCorseId id, Map<PlayerId, SessionPlayer> playe
         return seat != null && seat.isClaimed();
     }
 
+    public void requestRematch(PlayerId playerId) {
+        SessionPlayer seat = players.get(playerId);
+        if (seat == null) {
+            throw new IllegalArgumentException("Unknown seat " + playerId.id());
+        }
+        seat.requestRematch();
+    }
+
+    public boolean isRematchUnanimous() {
+        return !players.isEmpty()
+                && players.values().stream().allMatch(SessionPlayer::hasRequestedRematch);
+    }
+
+    public void clearRematch() {
+        players.values().forEach(SessionPlayer::clearRematch);
+    }
+
     public Optional<SessionToken> findTokenByPlayer(PlayerId playerId) {
         return Optional.ofNullable(players.get(playerId)).map(SessionPlayer::token);
     }

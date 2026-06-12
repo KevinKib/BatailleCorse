@@ -9,7 +9,8 @@ public enum EventType {
     JOIN,
     OPPONENT_DISCONNECTED,
     OPPONENT_RECONNECTED,
-    FORFEIT;
+    FORFEIT,
+    REMATCH;
 
     @Override
     public String toString() {

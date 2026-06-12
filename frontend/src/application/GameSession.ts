@@ -5,6 +5,7 @@ import type CreateEventData from '../model/event/CreateEventData';
 import type GrabEventData from '../model/event/GrabEventData';
 import type SlapEventData from '../model/event/SlapEventData';
 import type SendEventData from '../model/event/SendEventData';
+import type RematchEventData from '../model/event/RematchEventData';
 import type { GameEvent } from './GameEvent';
 import AI from '../model/ai/AI';
 import type SessionSeat from '../model/SessionSeat';
@@ -217,6 +218,26 @@ export default class GameSession {
     }));
   }
 
+  /**
+   * Requests a rematch. Solo holds both seat tokens, so it requests for every
+   * seat at once and the server's unanimity rule fires immediately. Multiplayer
+   * requests only the local seat and optimistically shows "waiting".
+   */
+  rematch(): void {
+    const seats = this.mode === 'solo'
+      ? Object.keys(this.playerTokens).map(Number)
+      : [this.myPlayerIndex];
+    for (const seat of seats) {
+      this.webSocket.publish('/app/rematch', JSON.stringify({
+        gameId: this.gameId,
+        token: this.playerTokens[seat],
+      }));
+    }
+    if (this.mode === 'multiplayer') {
+      this.callbacks.onEvent({ type: 'rematch', status: 'pending', requestedBy: this.myPlayerIndex });
+    }
+  }
+
   /** Multiplayer: concede the game so the opponent wins immediately. */
   forfeit(playerIndex: number): void {
     this.webSocket.publish('/app/forfeit', JSON.stringify({
@@ -341,6 +362,20 @@ export default class GameSession {
         status: 'connected',
         seat: Number(data.reconnectedSeat),
       });
+    }
+
+    if (response.eventType === 'REMATCH') {
+      const data = response.eventData as unknown as RematchEventData;
+      if (data.status === 'STARTED') {
+        this.cancelAll();
+        if (this.mode === 'solo') this.ai = this.aiFactory();
+        this.callbacks.onEvent({ type: 'rematch', status: 'started' });
+      } else if (this.mode !== 'solo') {
+        const requestedBy = Number(data.requestedBy?.id);
+        if (!isNaN(requestedBy)) {
+          this.callbacks.onEvent({ type: 'rematch', status: 'pending', requestedBy });
+        }
+      }
     }
 
     const newState = BatailleCorse.fromJSON(response.state as unknown as Parameters<typeof BatailleCorse.fromJSON>[0]);

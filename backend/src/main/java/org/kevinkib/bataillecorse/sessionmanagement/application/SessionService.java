@@ -69,6 +69,18 @@ public class SessionService {
         return new JoinResult(JOINER_SEAT, token);
     }
 
+    public SessionGame getGameSession(BatailleCorseId id) {
+        return repository.loadSessionGame(id);
+    }
+
+    public BatailleCorse rematch(BatailleCorseId id) {
+        SessionGame session = repository.loadSessionGame(id);
+        BatailleCorse fresh = new BatailleCorse(id, session.seats().size());
+        session.clearRematch();
+        repository.save(fresh, session);
+        return fresh;
+    }
+
     public List<SessionPlayer> getSeats(BatailleCorseId gameId) {
         return repository.loadSessionGame(gameId).seats();
     }
