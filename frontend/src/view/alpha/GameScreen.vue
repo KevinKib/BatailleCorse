@@ -25,8 +25,8 @@
     </div>
 
     <div class="gamescreen_middle flex">
-      <div :class="['pile_slot', { 'pile-flash': isPileFlashing }]">
-        <div class="card" ref="centerPileArea">
+      <div :class="['pile_slot', { 'pile-flash': isPileFlashing, 'pile_slot--empty': pileIsEmpty }]">
+        <div :class="['card', { 'card-punch': slapImpact === 'success', 'card-shake': slapImpact === 'error' }]" ref="centerPileArea">
           <PlayingCard
             ref="centerPile"
             :size="125"
@@ -229,9 +229,24 @@ watch(lastGrab, async (event) => {
 // Immediate flash on any slap attempt, before the server responds.
 watch(lastSlap, () => animation.flashPile());
 
+// Slap "juice": a one-shot impact on the central card — a scale punch when the
+// slap lands, a red shake when it was a mistake. Re-armed via null→nextTick so
+// rapid repeat slaps replay the animation rather than no-op on the same class.
+const slapImpact = ref<'success' | 'error' | null>(null);
+let slapImpactTimer: ReturnType<typeof setTimeout> | null = null;
+function flashSlapImpact(kind: 'success' | 'error') {
+  if (slapImpactTimer) clearTimeout(slapImpactTimer);
+  slapImpact.value = null;
+  void nextTick(() => {
+    slapImpact.value = kind;
+    slapImpactTimer = setTimeout(() => { slapImpact.value = null; }, 400);
+  });
+}
+
 // Successful slap: pileCards snapshot is embedded in the event by the store.
 watch(lastSuccessfulSlap, async (event) => {
   if (!event) return;
+  flashSlapImpact('success');
   const { pileCards, winnerPlayerIndex } = event;
   await nextTick();
   const destEl = winnerPlayerIndex === myPlayerIndex.value ? pile.value?.rootCard : opponentCard.value?.rootCard;
@@ -246,6 +261,7 @@ watch(lastSuccessfulSlap, async (event) => {
 // Erroneous slap: animate 2 ghost cards from slapper's deck to center, show -2 indicator.
 watch(lastErroneousSlap, async (event) => {
   if (!event) return;
+  flashSlapImpact('error');
   await nextTick();
   const srcEl = event.playerIndex === myPlayerIndex.value ? pile.value?.rootCard : opponentCard.value?.rootCard;
   const destRect = animation.getCenterPileRect();
@@ -287,6 +303,8 @@ const opponentLabel = computed(() =>
   isSolo.value ? `Computer (${difficultyLabel.value})` : (opponentName.value ?? 'Opponent'));
 const shareLink = computed(() =>
   `${window.location.origin}/join/${route.params.id}`);
+
+const pileIsEmpty = computed(() => (batailleCorse.value?.pile.cards.length ?? 0) === 0);
 
 const isGameOver = computed(() => batailleCorse.value?.isOver() ?? false);
 const didIWin = computed(() => batailleCorse.value?.isWinnerAt(myPlayerIndex.value) ?? false);
@@ -427,6 +445,7 @@ onBeforeUnmount(() => {
   webSocketService.unsubscribeFromGame();
   cancelEndScreen();
   if (countdownTimer !== null) clearInterval(countdownTimer);
+  if (slapImpactTimer !== null) clearTimeout(slapImpactTimer);
   window.removeEventListener('beforeunload', handleBeforeUnload);
 });
 </script>
@@ -434,10 +453,12 @@ onBeforeUnmount(() => {
 <style scoped>
 
 .gamescreen {
-  /* Two-layer background: vignette on top, deep felt below */
+  /* Two-layer background: vignette on top, deep felt below. Calmer than the
+     title screens (no watermarks/drift) so the cards stay the focus; the felt
+     grain is added statically via ::before below. */
   background:
     radial-gradient(ellipse at 50% 42%, transparent 15%, rgba(0, 0, 0, 0.62) 100%),
-    radial-gradient(ellipse at 50% 38%, #1e5c30 0%, #0d2e18 48%, #07160d 100%);
+    radial-gradient(ellipse at 50% 38%, var(--felt-center) 0%, var(--felt-mid) 48%, var(--felt-edge) 100%);
   /* One fluid sizing source: every card/pile/gap derives from these so the
      whole board scales coherently off the viewport. Clamp bounds are tuned
      here; deck:pile width ratio mirrors the original 90:125. */
@@ -453,6 +474,23 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   position: relative;
+  /* Own stacking context so the felt grain (::before, z-index:-1) layers above
+     the gradient background but stays behind every card and overlay. */
+  isolation: isolate;
+}
+
+/* Static felt grain over the board — same fabric texture as the title screens
+   but no drift, keeping the play area calm. */
+.gamescreen::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: var(--felt-noise);
+  background-size: 180px 180px;
+  opacity: 0.06;
+  mix-blend-mode: overlay;
+  pointer-events: none;
 }
 
 /* CSS width/aspect-ratio override PlayingCard's px width/height attributes
@@ -477,8 +515,11 @@ onBeforeUnmount(() => {
      shrink on short screens so the board still fits without scrolling. */
   flex: 0 0 auto;
   min-height: 0;
-  background: rgba(0, 0, 0, 0.10);
+  /* Placemat: a soft gradient darker at the outer edge reads as the player's
+     zone on the table rather than a flat tinted strip. */
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.30) 0%, rgba(0, 0, 0, 0.05) 100%);
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.04);
   padding-bottom: var(--band-pad);
 
   .middle_side {
@@ -499,9 +540,12 @@ onBeforeUnmount(() => {
 .gamescreen_bottom {
   flex: 0 0 auto;
   min-height: 0;
-  background: rgba(0, 0, 0, 0.10);
+  /* Placemat, mirrored: darkest at the bottom edge (the player's near side). */
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.30) 0%, rgba(0, 0, 0, 0.05) 100%);
   border-top: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
   padding-top: var(--band-pad);
+  transition: border-color 0.4s ease;
   /* Keep the Send/Slap buttons (and the Back button) off the bottom edge, the
      same clearance the Back button used, plus the phone safe-area inset. */
   padding-bottom: calc(var(--band-pad) + env(safe-area-inset-bottom, 0px));
@@ -523,7 +567,41 @@ onBeforeUnmount(() => {
   min-height: var(--pile-card-h);
 }
 
+/* Empty well gets a faint suit so it reads as an intentional card spot rather
+   than a missing card. Sits behind the (hidden) card image. */
+.pile_slot--empty::after {
+  content: '♠';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(var(--pile-card-w) * 0.62);
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.05);
+  pointer-events: none;
+}
+
+/* Slap juice: the central card reacts to the outcome of a slap. */
+.card.card-punch { animation: card-punch 320ms ease-out; }
+.card.card-shake { animation: card-shake 380ms ease-in-out; }
+
+@keyframes card-punch {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.09); }
+  100% { transform: scale(1); }
+}
+
+@keyframes card-shake {
+  0%, 100% { transform: translateX(0); }
+  18%      { transform: translateX(-6px) rotate(-1.5deg); }
+  38%      { transform: translateX(5px) rotate(1.2deg); }
+  58%      { transform: translateX(-4px) rotate(-0.8deg); }
+  78%      { transform: translateX(3px); }
+}
+
 .pile_slot {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -649,7 +727,7 @@ onBeforeUnmount(() => {
   z-index: 1000;
   border: 1px solid black;
   border-radius: 6%;
-  box-shadow: 3px 5px 0px rgba(0, 0, 0, 0.9), 4px 10px 24px rgba(0, 0, 0, 0.6);
+  box-shadow: var(--card-shadow);
   transition: none;
 }
 
@@ -667,7 +745,7 @@ onBeforeUnmount(() => {
   z-index: 1000;
   border: 1px solid black;
   border-radius: 6%;
-  box-shadow: 3px 5px 0px rgba(0, 0, 0, 0.9), 4px 10px 24px rgba(0, 0, 0, 0.6);
+  box-shadow: var(--card-shadow);
   transition: none;
 }
 
@@ -715,8 +793,9 @@ onBeforeUnmount(() => {
   flex-direction: column;
   align-items: center;
   gap: 14px;
-  background: rgba(0, 0, 0, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  box-shadow: var(--panel-shadow);
   border-radius: 16px;
   padding: 36px 40px;
   max-width: 460px;
@@ -726,7 +805,7 @@ onBeforeUnmount(() => {
   font-family: "Gabarito", sans-serif;
   font-size: 1.6rem;
   font-weight: 700;
-  color: #f5c842;
+  color: var(--gold);
   margin: 0;
 }
 
@@ -770,8 +849,9 @@ onBeforeUnmount(() => {
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  background: rgba(0, 0, 0, 0.72);
-  border: 1px solid rgba(248, 113, 113, 0.45);
+  background: var(--panel-bg);
+  border: 1px solid rgba(var(--accent-negative-rgb), 0.45);
+  box-shadow: var(--panel-shadow);
   border-radius: 14px;
   padding: 18px 28px;
   text-align: center;
@@ -794,7 +874,7 @@ onBeforeUnmount(() => {
 .disconnect-countdown {
   font-size: 1rem;
   font-weight: 800;
-  color: #f5c842;
+  color: var(--gold);
   margin: 4px 0 0;
 }
 
@@ -814,8 +894,9 @@ onBeforeUnmount(() => {
   flex-direction: column;
   align-items: center;
   gap: 14px;
-  background: rgba(0, 0, 0, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  box-shadow: var(--panel-shadow);
   border-radius: 16px;
   padding: 40px 48px;
   max-width: 460px;
@@ -842,13 +923,13 @@ onBeforeUnmount(() => {
 
 /* Victory: gold accent + a brief trophy bounce / glow pulse. */
 .end-card--victory {
-  border-color: rgba(245, 200, 66, 0.55);
-  box-shadow: 0 0 48px 6px rgba(245, 200, 66, 0.25);
+  border-color: rgba(var(--accent-active-rgb), 0.55);
+  box-shadow: var(--panel-shadow), 0 0 48px 6px rgba(var(--accent-active-rgb), 0.25);
 }
 
 .end-card--victory .end-title {
-  color: #f5c842;
-  text-shadow: 0 2px 16px rgba(245, 200, 66, 0.45);
+  color: var(--gold);
+  text-shadow: 0 2px 16px rgba(var(--accent-active-rgb), 0.45);
 }
 
 .end-trophy {
@@ -865,7 +946,7 @@ onBeforeUnmount(() => {
 
 /* Defeat: muted / somber, no flourish. */
 .end-card--defeat {
-  border-color: rgba(248, 113, 113, 0.35);
+  border-color: rgba(var(--accent-negative-rgb), 0.35);
 }
 
 .end-card--defeat .end-title {
@@ -943,7 +1024,9 @@ onBeforeUnmount(() => {
   .end-trophy,
   .player_tag--active,
   .turn-hint__dot,
-  .action_button--my-turn { animation: none; }
+  .action_button--my-turn,
+  .card.card-punch,
+  .card.card-shake { animation: none; }
 }
 
 /* --- Narrow-screen (phone) adjustments --- */

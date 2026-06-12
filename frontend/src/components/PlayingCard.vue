@@ -73,6 +73,6 @@ const url = computed(() => {
 .playing_card {
   border: 1px solid black;
   border-radius: 6%;
-  box-shadow: 3px 5px 0px rgba(0, 0, 0, 0.9), 4px 10px 24px rgba(0, 0, 0, 0.6);
+  box-shadow: var(--card-shadow);
 }
 </style>

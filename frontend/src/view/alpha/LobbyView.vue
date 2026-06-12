@@ -71,11 +71,11 @@ onMounted(() => preloadAllCards());
   flex-direction: column;
   align-items: center;
   gap: 22px;
-  background: rgba(0, 0, 0, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
   border-radius: 20px;
   padding: 48px 52px 36px;
-  box-shadow: 0 8px 64px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  box-shadow: var(--panel-shadow);
   min-width: 380px;
   max-width: 480px;
   margin-top: 60px;
@@ -97,7 +97,7 @@ onMounted(() => preloadAllCards());
 
 .suit-accent {
   font-size: 1rem;
-  color: #e8c96d;
+  color: var(--gold-soft);
   opacity: 0.7;
 }
 
@@ -107,7 +107,7 @@ onMounted(() => preloadAllCards());
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  background: linear-gradient(135deg, #f5c842 0%, #c8860a 100%);
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-deep) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
