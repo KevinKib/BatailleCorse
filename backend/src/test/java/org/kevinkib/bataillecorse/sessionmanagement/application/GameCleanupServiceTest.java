@@ -5,6 +5,7 @@ import org.kevinkib.bataillecorse.core.domain.BatailleCorse;
 import org.kevinkib.bataillecorse.core.domain.BatailleCorseId;
 import org.kevinkib.bataillecorse.sessionmanagement.application.port.SessionRepository;
 import org.kevinkib.bataillecorse.sessionmanagement.domain.SessionGame;
+import org.kevinkib.bataillecorse.websocket.presentation.v1.ForfeitReasonRegistry;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.StompSessionSeatRegistry;
 
 import java.time.Duration;
@@ -40,7 +41,7 @@ class GameCleanupServiceTest {
         var id = BatailleCorseId.generate();
         repo.toEvict.add(id);
         var registry = new StompSessionSeatRegistry();
-        var service = new GameCleanupService(repo, registry);
+        var service = new GameCleanupService(repo, registry, new ForfeitReasonRegistry());
 
         var spySession = "sess-1";
         registry.bind(spySession, new org.kevinkib.bataillecorse.websocket.presentation.v1.Seat(
@@ -55,7 +56,7 @@ class GameCleanupServiceTest {
     @Test
     void whenSweep_thenUsesConfiguredThresholds() {
         var repo = new StubRepository();
-        var service = new GameCleanupService(repo, new StompSessionSeatRegistry());
+        var service = new GameCleanupService(repo, new StompSessionSeatRegistry(), new ForfeitReasonRegistry());
 
         service.sweep();
 

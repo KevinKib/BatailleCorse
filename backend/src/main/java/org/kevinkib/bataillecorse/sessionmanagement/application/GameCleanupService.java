@@ -2,6 +2,7 @@ package org.kevinkib.bataillecorse.sessionmanagement.application;
 
 import org.kevinkib.bataillecorse.core.domain.BatailleCorseId;
 import org.kevinkib.bataillecorse.sessionmanagement.application.port.SessionRepository;
+import org.kevinkib.bataillecorse.websocket.presentation.v1.ForfeitReasonRegistry;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.StompSessionSeatRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,10 +22,12 @@ public class GameCleanupService {
 
     private final SessionRepository repository;
     private final StompSessionSeatRegistry presenceRegistry;
+    private final ForfeitReasonRegistry forfeitReasonRegistry;
 
-    public GameCleanupService(SessionRepository repository, StompSessionSeatRegistry presenceRegistry) {
+    public GameCleanupService(SessionRepository repository, StompSessionSeatRegistry presenceRegistry, ForfeitReasonRegistry forfeitReasonRegistry) {
         this.repository = repository;
         this.presenceRegistry = presenceRegistry;
+        this.forfeitReasonRegistry = forfeitReasonRegistry;
     }
 
     @Scheduled(fixedDelayString = "PT1M")
@@ -33,6 +36,7 @@ public class GameCleanupService {
         if (!evicted.isEmpty()) {
             log.info("Evicted {} stale game(s): {}", evicted.size(), evicted);
             evicted.forEach(presenceRegistry::removeGame);
+            evicted.forEach(forfeitReasonRegistry::removeGame);
         }
     }
 }

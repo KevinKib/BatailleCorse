@@ -1,0 +1,62 @@
+package org.kevinkib.bataillecorse.websocket.presentation.v1;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.kevinkib.bataillecorse.core.domain.BatailleCorse;
+import org.kevinkib.bataillecorse.core.domain.BatailleCorseId;
+import org.kevinkib.bataillecorse.core.domain.PlayerId;
+import org.kevinkib.bataillecorse.sessionmanagement.application.SessionService;
+import org.kevinkib.bataillecorse.sessionmanagement.domain.GameMode;
+import org.kevinkib.bataillecorse.sessionmanagement.infrastructure.InMemorySessionRepository;
+import org.kevinkib.bataillecorse.websocket.presentation.v1.api.Response;
+import org.kevinkib.bataillecorse.websocket.presentation.v1.dto.BatailleCorseDto;
+import org.kevinkib.bataillecorse.websocket.presentation.v1.dto.PlayerDto;
+import org.springframework.http.ResponseEntity;
+
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+
+class GameRestControllerTest {
+
+    /** Records every broadcast instead of touching a real broker. */
+    private static final class RecordingMessaging extends GameMessagingService {
+        final List<Response> sent = new ArrayList<>();
+        RecordingMessaging() { super(null); }
+        @Override public void sendToGame(String gameId, Object payload) { sent.add((Response) payload); }
+    }
+
+    private SessionService sessionService;
+    private ForfeitReasonRegistry forfeitReasonRegistry;
+    private GameRestController controller;
+
+    @BeforeEach
+    void setUp() {
+        Clock clock = Clock.fixed(Instant.parse("2026-06-11T10:00:00Z"), ZoneOffset.UTC);
+        sessionService = new SessionService(new InMemorySessionRepository(clock));
+        forfeitReasonRegistry = new ForfeitReasonRegistry();
+        controller = new GameRestController(sessionService, new RecordingMessaging(), forfeitReasonRegistry);
+    }
+
+    @Test
+    void givenForfeitedGame_whenGetGame_thenLosingPlayerHasForfeitReason() {
+        BatailleCorse game = sessionService.createGame(2, GameMode.MULTIPLAYER);
+        BatailleCorseId gameId = game.getId();
+        game.concede(new PlayerId(0));
+        forfeitReasonRegistry.record(new Seat(gameId, new PlayerId(0)), ForfeitReason.RESIGNED);
+
+        ResponseEntity<BatailleCorseDto> response = controller.getGame(gameId.uuid().toString());
+
+        BatailleCorseDto body = response.getBody();
+        PlayerDto loser = body.getPlayers().stream()
+                .filter(p -> p.getId().equals("0"))
+                .findFirst()
+                .orElseThrow();
+        assertThat(loser.getForfeitReason(), is("RESIGNED"));
+    }
+}

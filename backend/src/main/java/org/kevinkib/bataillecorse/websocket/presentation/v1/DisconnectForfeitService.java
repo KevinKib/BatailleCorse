@@ -37,6 +37,7 @@ public class DisconnectForfeitService {
     private final StompSessionSeatRegistry registry;
     private final TaskScheduler scheduler;
     private final Clock clock;
+    private final ForfeitReasonRegistry forfeitReasonRegistry;
 
     private final Map<Seat, ScheduledFuture<?>> pendingForfeits = new ConcurrentHashMap<>();
 
@@ -44,12 +45,14 @@ public class DisconnectForfeitService {
                                     GameMessagingService messaging,
                                     StompSessionSeatRegistry registry,
                                     TaskScheduler scheduler,
-                                    Clock clock) {
+                                    Clock clock,
+                                    ForfeitReasonRegistry forfeitReasonRegistry) {
         this.sessionService = sessionService;
         this.messaging = messaging;
         this.registry = registry;
         this.scheduler = scheduler;
         this.clock = clock;
+        this.forfeitReasonRegistry = forfeitReasonRegistry;
     }
 
     /** Records presence; if this seat had a pending forfeit, cancels it and announces the return. */
@@ -78,13 +81,13 @@ public class DisconnectForfeitService {
         }
 
         Instant deadline = clock.instant().plus(FORFEIT_GRACE);
-        ScheduledFuture<?> task = scheduler.schedule(() -> forfeit(seat), deadline);
+        ScheduledFuture<?> task = scheduler.schedule(() -> forfeit(seat, ForfeitReason.DISCONNECTED), deadline);
         pendingForfeits.put(seat, task);
         broadcastDisconnected(seat, deadline.toEpochMilli());
     }
 
-    /** Terminal path shared by the timer and explicit /app/forfeit. Idempotent on a finished game. */
-    public void forfeit(Seat seat) {
+    /** Terminal path shared by the timer (DISCONNECTED) and explicit /app/forfeit (RESIGNED). Idempotent on a finished game. */
+    public void forfeit(Seat seat, ForfeitReason reason) {
         pendingForfeits.remove(seat);
 
         BatailleCorse game = findGame(seat.gameId());
@@ -92,12 +95,13 @@ public class DisconnectForfeitService {
             return;
         }
         game.concede(seat.playerId());
+        forfeitReasonRegistry.record(seat, reason);
         sessionService.touch(seat.gameId()); // start the finished-grace clock
         broadcast(seat.gameId(), new SuccessResponse(
                 EventType.FORFEIT,
                 new ForfeitEventData(seat.playerId().id()),
                 "Player " + seat.playerId() + " forfeited.",
-                BatailleCorseDto.from(game)));
+                BatailleCorseDto.from(game, forfeitReasonRegistry.reasonsBySeat(seat.gameId()))));
     }
 
     private void broadcastDisconnected(Seat seat, long deadlineEpochMs) {

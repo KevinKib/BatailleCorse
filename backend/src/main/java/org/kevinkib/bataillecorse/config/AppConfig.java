@@ -5,6 +5,7 @@ import org.kevinkib.bataillecorse.sessionmanagement.application.SessionService;
 import org.kevinkib.bataillecorse.sessionmanagement.application.port.SessionRepository;
 import org.kevinkib.bataillecorse.sessionmanagement.infrastructure.InMemorySessionRepository;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.DisconnectForfeitService;
+import org.kevinkib.bataillecorse.websocket.presentation.v1.ForfeitReasonRegistry;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.GameMessagingService;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.StompSessionSeatRegistry;
 import org.kevinkib.bataillecorse.websocket.presentation.v1.WebSocketDisconnectListener;
@@ -51,6 +52,11 @@ public class AppConfig {
     }
 
     @Bean
+    public ForfeitReasonRegistry forfeitReasonRegistry() {
+        return new ForfeitReasonRegistry();
+    }
+
+    @Bean
     public GameMessagingService gameMessagingService(SimpMessagingTemplate messagingTemplate) {
         return new GameMessagingService(messagingTemplate);
     }
@@ -58,7 +64,7 @@ public class AppConfig {
     @Bean
     public DisconnectForfeitService disconnectForfeitService(GameMessagingService gameMessagingService) {
         return new DisconnectForfeitService(
-                sessionService(), gameMessagingService, stompSessionSeatRegistry(), taskScheduler(), clock());
+                sessionService(), gameMessagingService, stompSessionSeatRegistry(), taskScheduler(), clock(), forfeitReasonRegistry());
     }
 
     @Bean
@@ -68,6 +74,6 @@ public class AppConfig {
 
     @Bean
     public GameCleanupService gameCleanupService() {
-        return new GameCleanupService(sessionRepository(), stompSessionSeatRegistry());
+        return new GameCleanupService(sessionRepository(), stompSessionSeatRegistry(), forfeitReasonRegistry());
     }
 }

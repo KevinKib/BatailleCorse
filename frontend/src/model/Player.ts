@@ -1,8 +1,11 @@
+import type { ForfeitReason } from "./ForfeitReason";
+
 export default class Player {
   constructor(
     public readonly id: string,
     public readonly nbCards: number,
     public readonly availableActions: string[],
+    public readonly forfeitReason: ForfeitReason | null = null,
   ) {}
 
   /**
@@ -18,7 +21,13 @@ export default class Player {
     id: string;
     nbCards: number;
     availableActions: string[];
+    forfeitReason?: string | null;
   }): Player {
-    return new Player(data.id, data.nbCards, data.availableActions);
+    return new Player(
+      data.id,
+      data.nbCards,
+      data.availableActions,
+      (data.forfeitReason as ForfeitReason) ?? null,
+    );
   }
 }

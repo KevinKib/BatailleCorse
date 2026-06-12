@@ -1,6 +1,7 @@
 import Pile from "./Pile";
 import Player from "./Player";
 import type PlayerId from "./PlayerId";
+import type { ForfeitReason } from "./ForfeitReason";
 
 export default class BatailleCorse {
   constructor(
@@ -23,6 +24,15 @@ export default class BatailleCorse {
   }
 
   /**
+   * The forfeit reason of the seat opposite the given one, or null. 2-player:
+   * the single other seat. Used by the winner's end screen to explain a forfeit.
+   */
+  opponentForfeitReason(playerIndex: number): ForfeitReason | null {
+    const opponent = this.players.find((_, i) => i !== playerIndex);
+    return opponent?.forfeitReason ?? null;
+  }
+
+  /**
    * Whether the player at the given seat may take their turn right now, i.e. the
    * server currently offers them the SEND action. This is the authoritative
    * "whose turn" signal: the backend only offers SEND to the player whose turn it
@@ -41,7 +51,7 @@ export default class BatailleCorse {
       nbCardsSinceLastHonourCard: number;
       playerThatAddedLastHonourCard: { id: string };
     };
-    players: { id: string; nbCards: number; availableActions: string[] }[];
+    players: { id: string; nbCards: number; availableActions: string[]; forfeitReason?: string | null }[];
     winner: { id: string } | null;
   }): BatailleCorse {
     return new BatailleCorse(

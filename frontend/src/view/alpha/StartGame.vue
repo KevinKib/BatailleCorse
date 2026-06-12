@@ -155,8 +155,8 @@ const route = useRoute();
 const screenMode = computed<'create' | 'join'>(() =>
   route.path.startsWith('/join') ? 'join' : 'create');
 
-// New Game toggle: true = solo vs computer, false = 2-player vs human
-const vsComputer = ref(true);
+// New Game toggle: false = 2-player vs human (default), true = solo vs computer
+const vsComputer = ref(false);
 
 // Join: the game id to join (pre-filled from the share link)
 const joinGameId = ref<string>((route.params.id as string) ?? '');

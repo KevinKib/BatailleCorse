@@ -4,8 +4,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.kevinkib.bataillecorse.core.domain.BatailleCorse;
 import org.kevinkib.bataillecorse.core.domain.Player;
+import org.kevinkib.bataillecorse.websocket.presentation.v1.ForfeitReason;
 
 import java.util.List;
+import java.util.Map;
 
 public class BatailleCorseDto {
 
@@ -29,8 +31,16 @@ public class BatailleCorseDto {
     }
 
     public static BatailleCorseDto from(BatailleCorse batailleCorse) {
+        return from(batailleCorse, Map.of());
+    }
+
+    public static BatailleCorseDto from(BatailleCorse batailleCorse,
+                                        Map<Integer, ForfeitReason> forfeitReasons) {
         List<PlayerDto> players = batailleCorse.getPlayers().stream()
-                .map(player -> PlayerDto.from(player, batailleCorse.getAvailableActions(player)))
+                .map(player -> PlayerDto.from(
+                        player,
+                        batailleCorse.getAvailableActions(player),
+                        forfeitReasons.get(player.id().id())))
                 .toList();
 
         PlayerIdDto winner = batailleCorse.isFinished()
