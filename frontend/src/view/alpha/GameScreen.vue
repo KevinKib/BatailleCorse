@@ -325,13 +325,14 @@ const endSubtitle = computed(() =>
 const { showEndOverlay, revealImmediatelyIfOver, cancel: cancelEndScreen } =
   useEndScreen(() => isGameOver.value, () => isPileAnimating.value);
 
-// Cosmetic game-duration timer. Active while a game is loaded and in play; the
-// composable freezes the value at game over. `isGameOver`/`isWaiting`/`batailleCorse`
-// already exist above.
-const isTimerActive = computed(() =>
-  !!batailleCorse.value && !isWaiting.value && !isGameOver.value);
+// An in-progress game: state loaded, not waiting, not yet over. Drives both the
+// leave-confirmation guard and the cosmetic game-duration timer.
+const isInProgress = computed(() =>
+  !!batailleCorse.value && !isGameOver.value && !isWaiting.value);
+
+// Cosmetic game-duration timer; the composable freezes the value at game over.
 const { formattedDuration, cancel: cancelGameDuration } =
-  useGameDuration(() => isTimerActive.value, () => isGameOver.value);
+  useGameDuration(() => isInProgress.value, () => isGameOver.value);
 
 // --- Opponent disconnect countdown ---
 // Driven by a server-provided absolute deadline; the local clock only renders
@@ -364,9 +365,6 @@ watch(opponentDisconnected, (active) => {
 // --- Leave confirmation ---
 // An in-progress game prompts before leaving. Confirming in multiplayer forfeits
 // (the opponent wins immediately); solo just leaves. A finished game leaves freely.
-const isInProgress = computed(() =>
-  !!batailleCorse.value && !isGameOver.value && !isWaiting.value);
-
 onBeforeRouteLeave(() => {
   if (!isInProgress.value) return true;
   const message = mode.value === 'multiplayer'
