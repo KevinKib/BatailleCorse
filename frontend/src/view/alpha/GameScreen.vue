@@ -107,9 +107,21 @@
         <div v-if="didIWin" class="end-trophy" data-cy="victory-flourish">🏆</div>
         <h1 class="end-title">{{ didIWin ? 'VICTORY' : 'DEFEAT' }}</h1>
         <p class="end-sub">{{ endSubtitle }}</p>
-        <RouterLink to="/" class="end-home-button">
-          <Button label="Back to home" icon="pi pi-home" rounded />
-        </RouterLink>
+        <div class="end-actions">
+          <Button
+            class="end-replay-button"
+            :label="rematchButton.label"
+            :disabled="rematchButton.disabled"
+            icon="pi pi-replay"
+            severity="success"
+            rounded
+            data-cy="play-again"
+            @click="onPlayAgain"
+          />
+          <RouterLink to="/" class="end-home-button">
+            <Button label="Back to home" icon="pi pi-home" rounded />
+          </RouterLink>
+        </div>
       </div>
     </div>
   </div>
@@ -172,7 +184,7 @@ import { endGameMessage } from '../../model/endGameMessage';
 
 const batailleCorseStore = useBatailleCorseStore();
 const { state: batailleCorse, mode, myPlayerIndex, waiting, myName, opponentName, opponentConnection,
-        lastSend, lastGrab, lastSlap, lastSuccessfulSlap, lastErroneousSlap } = storeToRefs(batailleCorseStore);
+        lastSend, lastGrab, lastSlap, lastSuccessfulSlap, lastErroneousSlap, rematchState } = storeToRefs(batailleCorseStore);
 
 const pile = useTemplateRef("pile");
 const opponentCard = useTemplateRef("opponentCard");
@@ -313,6 +325,19 @@ const endSubtitle = computed(() =>
     opponentLabel.value,
     batailleCorse.value?.opponentForfeitReason(myPlayerIndex.value) ?? null,
   ));
+
+const rematchButton = computed(() => {
+  if (isSolo.value) return { label: 'Play Again', disabled: false };
+  switch (rematchState.value) {
+    case 'requested-by-me':       return { label: 'Waiting for opponent…', disabled: true };
+    case 'requested-by-opponent': return { label: 'Accept Rematch', disabled: false };
+    default:                      return { label: 'Play Again', disabled: false };
+  }
+});
+
+function onPlayAgain() {
+  batailleCorseStore.rematch();
+}
 
 // A game can end on ANY move — a winning grab/slap or a SEND that empties the
 // sender's hand. The winner only lands in state via the post-move state-update,
@@ -924,6 +949,14 @@ onBeforeUnmount(() => {
 
 .end-home-button {
   margin-top: 10px;
+}
+
+.end-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
 }
 
 /* Victory: gold accent + a brief trophy bounce / glow pulse. */
