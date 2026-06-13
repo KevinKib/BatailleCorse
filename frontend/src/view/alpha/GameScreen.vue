@@ -43,7 +43,7 @@
 
     <div class="gamescreen_bottom flex">
       <div class="left_side">
-        <RouterLink to="/" class="back_button">
+        <RouterLink :to="{ name: 'home' }" class="back_button">
           <Button severity="secondary" label="Back" icon="pi pi-undo" variant="text" rounded />
         </RouterLink>
       </div>
@@ -118,7 +118,7 @@
             data-cy="play-again"
             @click="onPlayAgain"
           />
-          <RouterLink to="/" class="end-home-button">
+          <RouterLink :to="{ name: 'home' }" class="end-home-button">
             <Button label="Back to home" icon="pi pi-home" rounded />
           </RouterLink>
         </div>
@@ -450,13 +450,13 @@ onMounted(async () => {
 
   const stored = localStorage.getItem(`tokens:${gameId}`);
   if (!stored) {
-    router.replace('/');
+    router.replace({ name: 'home' });
     return;
   }
 
   const response = await fetch(`/api/game/${gameId}`);
   if (!response.ok) {
-    router.replace('/');
+    router.replace({ name: 'home' });
     return;
   }
 
