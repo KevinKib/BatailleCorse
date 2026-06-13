@@ -312,8 +312,10 @@ const isSolo = computed(() => mode.value === 'solo');
 const isWaiting = computed(() => waiting.value);
 const opponentLabel = computed(() =>
   isSolo.value ? `Computer (${difficultyLabel.value})` : (opponentName.value ?? 'Opponent'));
-const shareLink = computed(() =>
-  `${window.location.origin}/join/${route.params.id}`);
+const shareLink = computed(() => {
+  const { href } = router.resolve({ name: 'join', params: { id: route.params.id } });
+  return `${window.location.origin}${href}`;
+});
 
 const pileIsEmpty = computed(() => (batailleCorse.value?.pile.cards.length ?? 0) === 0);
 
