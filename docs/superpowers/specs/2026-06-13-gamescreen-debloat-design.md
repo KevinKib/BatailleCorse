@@ -40,6 +40,37 @@ composables take **getter functions / callbacks** as inputs and return refs + me
 composable owns its own lifecycle cleanup (`onBeforeUnmount`) rather than leaving it to the
 view. Components are `<script setup lang="ts">` with typed `defineProps` / `defineEmits`.
 
+Additional rules adopted from the project's `vue-best-practices` skill (validated against its
+`composables.md` / `component-data-flow.md` references):
+
+- **Options-object inputs.** Composables taking more than one input receive a single typed
+  options object (`useGameAnimations({ pile, opponentCard, centerPile, centerPileArea })`),
+  not positional getters — keeps call sites readable and order-proof.
+- **`readonly` returns.** State a consumer only reads (e.g. `slapImpact`, `secondsRemaining`,
+  `showMyTurn`, the animation refs) is returned `readonly` so mutation flows through the
+  composable, not from the template. (Where `useCardAnimation` already owns the ref's
+  mutation internally, re-export it `readonly` from `useGameAnimations`.)
+- **Named TypeScript contracts.** Component props/emits use named `interface`s with
+  `defineProps<Props>()` / `defineEmits<Emits>()` — no inline object shapes. The
+  `rematchButton` prop gets a shared `RematchButton { label: string; disabled: boolean }`
+  type.
+- **SFC section order: `<template>` → `<script>` → `<style>`,** matching the project's
+  dominant convention (4/5 components + all views). Note: the skill itself prefers
+  `<script>`-first; project consistency wins here per "match the surrounding code." Existing
+  `useTemplateRef` usage confirms the project is on Vue 3.5+.
+
+### Alignment notes (already conformant — do not regress)
+
+- GameScreen is a **route-level view**; the refactor keeps it a thin composition surface, per
+  the skill's entry/root/view rule.
+- The remaining template refs (`pile`, `opponentCard`, `centerPile`, `centerPileArea`) are
+  **DOM element refs** used for `getBoundingClientRect` measurement — not component-instance
+  refs. Skipping the `PlayerDeck` dedup deliberately avoids `defineExpose` component-ref
+  forwarding, which the skill discourages ("prefer props/emit over component refs").
+- Animations are preserved as-is: `<Transition>` for the turn-hint enter/leave, class-based
+  for slap juice, state-driven for the ghost/delta layers — all matching the skill's
+  animation guidance.
+
 ## Composable contracts
 
 ### `useGameAnimations`
@@ -97,8 +128,8 @@ action events.
 
 ### `EndGameOverlay.vue`
 - Rendered by parent `v-if="showEndOverlay"`.
-- **Props:** `didIWin: boolean`, `subtitle: string`, `rematchButton: { label: string; disabled: boolean }`.
-- **Emits:** `play-again`.
+- **Props:** `didIWin: boolean`, `subtitle: string`, `rematchButton: RematchButton` (named type).
+- **Emits:** typed `defineEmits<{ playAgain: [] }>` (`@play-again` in the template).
 - Contains the trophy/victory/defeat markup + the "Back to home" `RouterLink`.
 - Moves `.end-*` CSS.
 
