@@ -2,11 +2,11 @@
 
 **Date:** 2026-06-13
 **Status:** Approved (design); Slice 1 ready for planning
-**Scope of this spec:** Slice 1 only — the pure game-rules engine. Session, WebSocket, and frontend are later slices, scoped below but not specified here.
+**Scope of this spec:** Slice 1 only — the pure game-rules engine (`bullshit.domain`). A prerequisite restructure (Slice 0) and the later session/presentation/frontend slices are scoped below but not specified here.
 
 ## Goal
 
-Add the card game **Bullshit** (a.k.a. Cheat / I Doubt It) to the project as a new Core bounded context — `bullshit.core.domain` — sitting beside the existing `core` (BatailleCorse) hexagon. Both depend on the shared `frenchcards` library. This spec covers the pure rules engine: a self-contained, fully unit-tested aggregate with no transport, session, or UI concerns.
+Add the card game **Bullshit** (a.k.a. Cheat / I Doubt It) to the project as a new game bounded context — `org.kevinkib.cardgames.bullshit.domain` — sitting beside the existing BatailleCorse hexagon. Both depend on the shared `frenchcards` library. This spec covers the pure rules engine: a self-contained, fully unit-tested aggregate with no transport, session, or UI concerns.
 
 ## Rules being modelled
 
@@ -35,14 +35,33 @@ Add the card game **Bullshit** (a.k.a. Cheat / I Doubt It) to the project as a n
 
 ## Architecture — where this lives
 
-New Core bounded context `bullshit.core.domain`, sibling to `core`, both depending on `frenchcards`. Slice 1 touches **no existing code**.
+### Target package structure (multi-game)
+
+The project is being restructured from a single-game root (`org.kevinkib.bataillecorse`, with `core` doubling as "the game") into a generic multi-game root where **each game is its own bounded context that owns its domain and its presentation adapter**:
+
+```
+org.kevinkib.cardgames
+├── bataillecorse
+│   ├── domain                ← was `core`
+│   └── presentation          ← BC adapter: send/slap/grab routing, BC DTOs, BC events
+├── bullshit
+│   ├── domain                ← Slice 1 (this spec)
+│   └── presentation          ← Bullshit adapter: discard/callBullshit, BullshitDto, reveal events
+├── sessionmanagement          (generic domain: rooms, seats, identity)
+├── presentation               ← SHARED transport/room plumbing: STOMP config, create/join,
+│                                 presence, disconnect-forfeit, rematch, Response envelope, SessionViewDto
+└── config
+```
+
+The Java root package rename is independent of the Maven `artifactId` (`bataillecorse-backend`), which does **not** change.
 
 ### Full-feature decomposition (context for later slices)
 
 | Slice | Scope | Status |
 |---|---|---|
-| **1. Bullshit Core hexagon** | Pure rules engine, fully unit-tested. New package only. | **This spec** |
-| **2. Generalize Session hexagon + reusable presentation** | Extract a `Game` abstraction so `SessionService`/`SessionGame`/`SessionRepository` serve any game; lift game-agnostic WS plumbing into a shared layer; add a Bullshit action/state adapter. | Later (own spec) |
+| **0. Restructure** | Pure rename/move, no logic change: `core` → `bataillecorse.domain`, `websocket` → top-level `presentation` (still BatailleCorse-flavored inside — untangled in Slice 2), root → `org.kevinkib.cardgames`, fix Spring scan base. | Prerequisite to Slice 1 |
+| **1. Bullshit Core hexagon** | Pure rules engine (`bullshit.domain`), fully unit-tested. New package only. | **This spec** |
+| **2. Generalize Session hexagon + split presentation** | Extract a `Game` abstraction so `SessionService`/`SessionGame`/`SessionRepository` serve any game; split the top-level `presentation` into shared plumbing + `bataillecorse.presentation`; add the `bullshit.presentation` WS adapter. | Later (own spec) |
 | **3. Vue frontend** | Bullshit board: hand selection, claim display, call-BS, reveal animation. | Later (own spec) |
 
 ### Presentation reuse (informs the aggregate's public surface)
@@ -111,6 +130,8 @@ Coverage targets the rules that matter:
 
 ## Slice-1 boundary
 
-**Delivers:** the `bullshit.core.domain` package — `Bullshit`, `BullshitId`, `Player`, `DiscardPile`, `Discard`, `ClaimMode` / `ClaimTarget` / `AscendingRankClaimMode`, `Result`, `Action`, exceptions — plus the full test suite.
+**Prerequisite:** Slice 0 (restructure to `org.kevinkib.cardgames`) lands first, so `bullshit.domain` is created in the target structure rather than moved later.
+
+**Delivers:** the `org.kevinkib.cardgames.bullshit.domain` package — `Bullshit`, `BullshitId`, `Player`, `DiscardPile`, `Discard`, `ClaimMode` / `ClaimTarget` / `AscendingRankClaimMode`, `Result`, `Action`, exceptions — plus the full test suite.
 
 **Explicitly excludes:** session management, WebSocket controller/DTOs/events, frontend, AI, and the suit-based `ClaimMode` variant. Those are Slices 2–3 and future work.
