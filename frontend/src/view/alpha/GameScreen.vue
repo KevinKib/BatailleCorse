@@ -144,7 +144,7 @@ import GameTimer from '../../components/GameTimer.vue';
 import WaitingOverlay from '../../components/WaitingOverlay.vue';
 import DisconnectOverlay from '../../components/DisconnectOverlay.vue';
 import EndGameOverlay from '../../components/EndGameOverlay.vue';
-import type { RematchButton } from '../../model/RematchButton';
+import { rematchButtonFor } from '../../model/RematchButton';
 import { Button } from 'primevue';
 import { storeToRefs } from 'pinia';
 import { useBatailleCorseStore } from '../../state/BatailleCorse.store';
@@ -181,8 +181,8 @@ const {
   centerPileAreaEl: () => centerPileArea.value,
 });
 
-function isButtonDisabled(playerIndex: number, buttonLabel: Action) {
-  return !batailleCorse.value?.players.at(playerIndex)?.availableActions.includes(buttonLabel.toLocaleUpperCase());
+function isButtonDisabled(playerIndex: number, action: Action) {
+  return !(batailleCorse.value?.canPlayerAct(playerIndex, action) ?? false);
 }
 
 function send(playerIndex: number) {
@@ -214,14 +214,7 @@ const endSubtitle = computed(() =>
     batailleCorse.value?.opponentForfeitReason(myPlayerIndex.value) ?? null,
   ));
 
-const rematchButton = computed<RematchButton>(() => {
-  if (isSolo.value) return { label: 'Play Again', disabled: false };
-  switch (rematchState.value) {
-    case 'requested-by-me':       return { label: 'Waiting for opponent…', disabled: true };
-    case 'requested-by-opponent': return { label: 'Accept Rematch', disabled: false };
-    default:                      return { label: 'Play Again', disabled: false };
-  }
-});
+const rematchButton = computed(() => rematchButtonFor(isSolo.value, rematchState.value));
 
 function onPlayAgain() {
   batailleCorseStore.rematch();

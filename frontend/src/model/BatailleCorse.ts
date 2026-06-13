@@ -2,6 +2,7 @@ import Pile from "./Pile";
 import Player from "./Player";
 import type PlayerId from "./PlayerId";
 import type { ForfeitReason } from "./ForfeitReason";
+import type { Action } from "./Action";
 
 export default class BatailleCorse {
   constructor(
@@ -40,7 +41,17 @@ export default class BatailleCorse {
    * or the game is finished).
    */
   canSend(playerIndex: number): boolean {
-    return this.players[playerIndex]?.hasAvailableAction('SEND') ?? false;
+    return this.canPlayerAct(playerIndex, 'send');
+  }
+
+  /**
+   * Whether the player at the given seat currently has the given action available
+   * (server-provided state, not client-side authorization — the server validates
+   * every request independently). The view uses this to enable/disable action
+   * buttons; the generalisation of {@link canSend} to any action.
+   */
+  canPlayerAct(playerIndex: number, action: Action): boolean {
+    return this.players[playerIndex]?.hasAvailableAction(action.toUpperCase()) ?? false;
   }
 
   static fromJSON(data: {

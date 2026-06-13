@@ -118,6 +118,35 @@ describe('BatailleCorse turn queries', () => {
   });
 });
 
+describe('BatailleCorse.canPlayerAct', () => {
+  it('givenPlayerHasActionAvailable_thenTrue', () => {
+    const game = buildGame({
+      players: [
+        buildPlayer({ id: 'a', availableActions: ['SEND'] }),
+        buildPlayer({ id: 'b', availableActions: ['SLAP'] }),
+      ],
+    });
+    expect(game.canPlayerAct(0, 'send')).toBe(true);
+    expect(game.canPlayerAct(1, 'slap')).toBe(true);
+  });
+
+  it('givenPlayerLacksAction_thenFalse', () => {
+    const game = buildGame({
+      players: [
+        buildPlayer({ id: 'a', availableActions: ['SEND'] }),
+        buildPlayer({ id: 'b', availableActions: ['SLAP'] }),
+      ],
+    });
+    expect(game.canPlayerAct(0, 'slap')).toBe(false);
+    expect(game.canPlayerAct(1, 'send')).toBe(false);
+  });
+
+  it('givenIndexOutOfRange_thenFalse', () => {
+    const game = buildGame();
+    expect(game.canPlayerAct(5, 'send')).toBe(false);
+  });
+});
+
 describe('BatailleCorse.opponentForfeitReason', () => {
   it('returns the other seat forfeit reason for the given player index', () => {
     const game = buildGame({
