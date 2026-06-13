@@ -155,6 +155,7 @@ import { useHotkeys } from '../../composables/useHotkeys';
 import { useEndScreen } from '../../composables/useEndScreen';
 import { useGameDuration } from '../../composables/useGameDuration';
 import { useDisconnectCountdown } from '../../composables/useDisconnectCountdown';
+import { useTurnIndicator } from '../../composables/useTurnIndicator';
 import { Action } from '../../model/Action';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue';
 import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router';
@@ -357,42 +358,13 @@ function handleBeforeUnload(event: BeforeUnloadEvent) {
   event.returnValue = '';
 }
 
-// --- Turn indicator ---
-// Permanent cue: the active player's name tag glows. The cue is driven straight
-// off the backend's per-seat availableActions via canSend(seat) — the server
-// only offers SEND to the player whose turn it is, and only while a card can be
-// added (never when the pile is complete/grabbable or the game is finished). So
-// "no one can play" suppresses both glows for free, with no extra gating. It's
-// per-seat too, so it generalizes to N players (the view currently wires two
-// seats via opponentIndex = 1 - myPlayerIndex; a 4-player layout would iterate).
-// A glow is a learned signal, so we teach it once: the YOUR TURN hint shows the
-// first time it becomes your turn in a game, then auto-dismisses for good —
-// keeping the steady state uncluttered in a fast-reaction game.
-const YOUR_TURN_LABEL = 'YOUR TURN';
-
-// Only additional suppression needed: hide cues while an overlay owns the screen.
-const showTurnCues = computed(() => !isWaiting.value && !showEndOverlay.value);
-const showMyTurn = computed(() =>
-  showTurnCues.value && (batailleCorse.value?.canSend(myPlayerIndex.value) ?? false));
-const showOpponentTurn = computed(() =>
-  showTurnCues.value && (batailleCorse.value?.canSend(opponentIndex.value) ?? false));
-
-// One-time onboarding hint: visible only during the player's first turn of the
-// game and tied to turn state (not a timer), so it vanishes the instant they
-// play — even if that's within a second — and never returns. Bootstraps the
-// meaning of the name-tag glow.
-const showFirstTurnHint = ref(false);
-let firstTurnHintConsumed = false;
-
-watch(showMyTurn, (mine) => {
-  if (firstTurnHintConsumed) return;
-  if (mine) {
-    showFirstTurnHint.value = true;
-  } else if (showFirstTurnHint.value) {
-    showFirstTurnHint.value = false;
-    firstTurnHintConsumed = true;
-  }
-}, { immediate: true });
+const { showMyTurn, showOpponentTurn, showFirstTurnHint, YOUR_TURN_LABEL, cancel: cancelTurnIndicator } = useTurnIndicator({
+  state: () => batailleCorse.value,
+  myPlayerIndex: () => myPlayerIndex.value,
+  opponentIndex: () => opponentIndex.value,
+  isWaiting: () => isWaiting.value,
+  showEndOverlay: () => showEndOverlay.value,
+});
 
 useHotkeys(
   () => { if (!isButtonDisabled(myPlayerIndex.value, 'send')) send(myPlayerIndex.value); },
@@ -432,6 +404,7 @@ onBeforeUnmount(() => {
   cancelEndScreen();
   cancelGameDuration();
   cancelDisconnectCountdown();
+  cancelTurnIndicator();
   if (slapImpactTimer !== null) clearTimeout(slapImpactTimer);
   window.removeEventListener('beforeunload', handleBeforeUnload);
 });
