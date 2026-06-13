@@ -10,13 +10,14 @@ defineProps<{ time: string }>();
 </script>
 
 <style scoped>
-/* Top-right HUD chip, styled to match the .player_tag felt pills. Pinned inside
-   .gamescreen (position: relative). z-index sits above the board but below the
+/* Top-left HUD chip, styled to match the .player_tag felt pills. Pinned inside
+   .gamescreen (position: relative); kept clear of the rules toggle, which owns
+   the top-right corner. z-index sits above the board but below the
    waiting/disconnect/end overlays (1900-2000) so those cover it. */
 .game-timer {
   position: absolute;
   top: calc(10px + env(safe-area-inset-top, 0px));
-  right: calc(10px + env(safe-area-inset-right, 0px));
+  left: calc(10px + env(safe-area-inset-left, 0px));
   z-index: 1500;
   display: inline-flex;
   align-items: center;
