@@ -14,9 +14,10 @@ has been running. It is a flavour element, not an authoritative or shared clock.
   an authoritative server-stamped start time is not justified for a cosmetic value.
 - **Lifecycle:** Starts counting when the game becomes playable; **freezes** at game
   over, displaying the final duration. Resets on page refresh (accepted tradeoff).
-- **Placement:** Small top-corner HUD chip (top-right of the board), visible during
-  play. The end overlay covers the board at game over, so the frozen value sits
-  behind it — no special end-screen rendering.
+- **Placement:** Small top-corner HUD chip (**top-left** of the board), visible
+  during play. Top-right is taken by the rules toggle panel. The end overlay covers
+  the board at game over, so the frozen value sits behind it — no special
+  end-screen rendering.
 - **Format:** `mm:ss`, rolling to `h:mm:ss` once elapsed time passes one hour.
 
 ## Active definition
@@ -61,9 +62,11 @@ match the existing `.player_tag` felt-chip aesthetic. No logic, no store access.
 
 - Instantiate `useGameDuration` wired to the existing `isWaiting`/`isGameOver`
   computeds (active = state loaded && !waiting && !over).
-- Render `<GameTimer :time="formattedDuration" />` pinned to the top-right corner
+- Render `<GameTimer :time="formattedDuration" />` pinned to the **top-left** corner
   of `.gamescreen` (already `position: relative; isolation: isolate`). Sits below
   overlay z-indexes so end/waiting overlays cover it.
+- The active flag reuses the existing `isInProgress` computed (single source of
+  truth) rather than a duplicate predicate.
 
 ## Testing
 
