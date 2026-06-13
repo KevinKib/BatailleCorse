@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 import org.kevinkib.bataillecorse.core.domain.penality.Penality;
 import org.kevinkib.bataillecorse.core.domain.slaprules.SlapRulesFixtures;
 import org.kevinkib.cards.domain.Card;
-import org.kevinkib.cards.domain.CardPileState;
 import org.kevinkib.cards.domain.hand.Hand;
 import org.kevinkib.cards.domain.deck.french.FrenchRank;
 import org.kevinkib.cards.testhelpers.CardBuilder;
@@ -131,7 +130,7 @@ class BatailleCorseTest {
             assertThat(player.getHandSize(), is(playerHandSize - 1));
 
             assertThat(batailleCorse.getPileTopCard(), is(playedCard));
-            assertThat(batailleCorse.getPileTopCard().getState(), is(CardPileState.SHOWN));
+            assertThat(batailleCorse.getPileTopCard().isShown(), is(true));
         }
 
         @Test

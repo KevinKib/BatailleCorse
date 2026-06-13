@@ -32,7 +32,7 @@ public class CentralPile implements PileSubscriber {
             throw new FullCentralPileException();
         }
 
-        pile.add(card, CardPileState.SHOWN);
+        pile.add(card, Visibility.SHOWN);
 
         if (HonourCard.isHonour(card)) {
             playerThatAddedLastHonourCard = player;
@@ -40,7 +40,7 @@ public class CentralPile implements PileSubscriber {
     }
 
     public void addBelowForPenality(Card card) {
-        pile.addBelow(card, CardPileState.HIDDEN);
+        pile.addBelow(card, Visibility.HIDDEN);
     }
 
     public List<Card> clearAndReturnCards() {
