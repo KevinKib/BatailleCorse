@@ -55,9 +55,9 @@ Additional rules adopted from the project's `vue-best-practices` skill (validate
   `rematchButton` prop gets a shared `RematchButton { label: string; disabled: boolean }`
   type.
 - **SFC section order: `<template>` → `<script>` → `<style>`,** matching the project's
-  dominant convention (4/5 components + all views). Note: the skill itself prefers
-  `<script>`-first; project consistency wins here per "match the surrounding code." Existing
-  `useTemplateRef` usage confirms the project is on Vue 3.5+.
+  dominant convention (4/5 components + all views) — now also the rule in the project's
+  `vue-best-practices` skill. Existing `useTemplateRef` usage confirms the project is on
+  Vue 3.5+.
 
 ### Alignment notes (already conformant — do not regress)
 
