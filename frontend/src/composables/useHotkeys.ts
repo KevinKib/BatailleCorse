@@ -7,8 +7,9 @@ export function useHotkeys(
   getSlapKeys: () => string[] = () => ['d'],
 ) {
   function handleKey(e: KeyboardEvent) {
-    if (getSendKeys().includes(e.key)) onSend();
-    if (getSlapKeys().includes(e.key)) onSlap();
+    const key = e.key.toLowerCase();
+    if (getSendKeys().includes(key)) onSend();
+    if (getSlapKeys().includes(key)) onSlap();
   }
 
   onMounted(() => document.addEventListener('keyup', handleKey));
