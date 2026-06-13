@@ -23,7 +23,7 @@
         severity="success"
         size="large"
         rounded
-        @click="router.push('/create')"
+        @click="router.push({ name: 'create' })"
       />
 
       <Button
@@ -33,7 +33,7 @@
         severity="secondary"
         size="large"
         rounded
-        @click="router.push('/join')"
+        @click="router.push({ name: 'join' })"
       />
 
 
