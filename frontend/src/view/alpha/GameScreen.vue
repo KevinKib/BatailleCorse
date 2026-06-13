@@ -150,7 +150,7 @@ import { storeToRefs } from 'pinia';
 import { useBatailleCorseStore } from '../../state/BatailleCorse.store';
 import { useSettingsStore } from '../../state/Settings.store';
 import { DIFFICULTY } from '../../model/Difficulty';
-import { useCardAnimation } from '../../composables/useCardAnimation';
+import { useGameAnimations } from '../../composables/useGameAnimations';
 import { useHotkeys } from '../../composables/useHotkeys';
 import { useEndScreen } from '../../composables/useEndScreen';
 import { useGameDuration } from '../../composables/useGameDuration';
@@ -159,107 +159,26 @@ import { useLeaveGuard } from '../../composables/useLeaveGuard';
 import { useTurnIndicator } from '../../composables/useTurnIndicator';
 import { useGameBootstrap } from '../../composables/useGameBootstrap';
 import { Action } from '../../model/Action';
-import { computed, nextTick, onBeforeUnmount, ref, useTemplateRef, watch } from 'vue';
+import { computed, onBeforeUnmount, useTemplateRef } from 'vue';
 import { endGameMessage } from '../../model/endGameMessage';
 
 const batailleCorseStore = useBatailleCorseStore();
 const { state: batailleCorse, mode, myPlayerIndex, waiting, myName, opponentName, opponentConnection,
-        lastSend, lastGrab, lastSlap, lastSuccessfulSlap, lastErroneousSlap, rematchState } = storeToRefs(batailleCorseStore);
+        rematchState } = storeToRefs(batailleCorseStore);
 
 const pile = useTemplateRef("pile");
 const opponentCard = useTemplateRef("opponentCard");
 const centerPile = useTemplateRef("centerPile");
 const centerPileArea = useTemplateRef<HTMLDivElement>("centerPileArea");
 
-const animation = useCardAnimation(
-  () => pile.value?.rootCard,
-  () => opponentCard.value?.rootCard,
-  () => centerPile.value?.rootCard,
-  () => centerPileArea.value,
-);
-
 const {
   ghostCard, slapGhosts, isPileAnimating, isPileFlashing, frozenPileCard, cardDeltaIndicator,
-} = animation;
-
-// During send animation, the server responds within a few ms with the new card face.
-// Watch for that update and switch the ghost image immediately.
-watch(() => batailleCorse.value?.pile.cards.at(0), (newCard) => {
-  animation.onNewPileCard(newCard);
-});
-
-// SEND is optimistic: topCard is snapshotted in the store at call time, no flush:'sync' needed.
-watch(lastSend, async (event) => {
-  if (!event) return;
-  const sourceEl = event.playerIndex === myPlayerIndex.value ? pile.value?.rootCard : opponentCard.value?.rootCard;
-  if (!sourceEl) return;
-  await nextTick();
-  const destRect = animation.getCenterPileRect();
-  if (!destRect || destRect.width === 0) return;
-  animation.animateSend(sourceEl.getBoundingClientRect(), destRect, event.topCard);
-  // SEND is non-blocking in the queue — no notifyAnimationComplete needed.
-});
-
-// GRAB: pileCards snapshot is embedded in the event by the store.
-watch(lastGrab, async (event) => {
-  if (!event) { animation.cancelPileAnimation(); batailleCorseStore.notifyAnimationComplete(); return; }
-  const { pileCards, winnerPlayerIndex } = event;
-  await nextTick();
-  const destEl = winnerPlayerIndex === myPlayerIndex.value ? pile.value?.rootCard : opponentCard.value?.rootCard;
-  const srcRect = animation.getCenterPileRect();
-  if (!destEl || !srcRect || srcRect.width === 0) {
-    animation.cancelPileAnimation();
-    batailleCorseStore.notifyAnimationComplete();
-    return;
-  }
-  animation.showDeltaOnGrab(pileCards.length, destEl);
-  await animation.animatePileToWinner(srcRect, destEl.getBoundingClientRect(), pileCards);
-  batailleCorseStore.notifyAnimationComplete();
-});
-
-// Immediate flash on any slap attempt, before the server responds.
-watch(lastSlap, () => animation.flashPile());
-
-// Slap "juice": a one-shot impact on the central card — a scale punch when the
-// slap lands, a red shake when it was a mistake. Re-armed via null→nextTick so
-// rapid repeat slaps replay the animation rather than no-op on the same class.
-const slapImpact = ref<'success' | 'error' | null>(null);
-let slapImpactTimer: ReturnType<typeof setTimeout> | null = null;
-function flashSlapImpact(kind: 'success' | 'error') {
-  if (slapImpactTimer) clearTimeout(slapImpactTimer);
-  slapImpact.value = null;
-  void nextTick(() => {
-    slapImpact.value = kind;
-    slapImpactTimer = setTimeout(() => { slapImpact.value = null; }, 400);
-  });
-}
-
-// Successful slap: pileCards snapshot is embedded in the event by the store.
-watch(lastSuccessfulSlap, async (event) => {
-  if (!event) return;
-  flashSlapImpact('success');
-  const { pileCards, winnerPlayerIndex } = event;
-  await nextTick();
-  const destEl = winnerPlayerIndex === myPlayerIndex.value ? pile.value?.rootCard : opponentCard.value?.rootCard;
-  if (!destEl) { batailleCorseStore.notifyAnimationComplete(); return; }
-  const srcRect = animation.getCenterPileRect();
-  if (!srcRect || srcRect.width === 0) { batailleCorseStore.notifyAnimationComplete(); return; }
-  animation.showDeltaOnSlap(pileCards.length, destEl);
-  await animation.animatePileToWinner(srcRect, destEl.getBoundingClientRect(), pileCards);
-  batailleCorseStore.notifyAnimationComplete();
-});
-
-// Erroneous slap: animate 2 ghost cards from slapper's deck to center, show -2 indicator.
-watch(lastErroneousSlap, async (event) => {
-  if (!event) return;
-  flashSlapImpact('error');
-  await nextTick();
-  const srcEl = event.playerIndex === myPlayerIndex.value ? pile.value?.rootCard : opponentCard.value?.rootCard;
-  const destRect = animation.getCenterPileRect();
-  if (!srcEl || !destRect) { batailleCorseStore.notifyAnimationComplete(); return; }
-  await animation.animateErroneousSlap(srcEl.getBoundingClientRect(), destRect);
-  animation.showDeltaAlways(-2, srcEl);
-  batailleCorseStore.notifyAnimationComplete();
+  slapImpact, cancel: cancelAnimations,
+} = useGameAnimations({
+  playerDeckEl: () => pile.value?.rootCard,
+  opponentDeckEl: () => opponentCard.value?.rootCard,
+  centerPileEl: () => centerPile.value?.rootCard,
+  centerPileAreaEl: () => centerPileArea.value,
 });
 
 function isButtonDisabled(playerIndex: number, buttonLabel: Action) {
@@ -355,12 +274,11 @@ useHotkeys(
 );
 
 onBeforeUnmount(() => {
-  animation.cancelAllAnimations();
+  cancelAnimations();
   cancelEndScreen();
   cancelGameDuration();
   cancelDisconnectCountdown();
   cancelTurnIndicator();
-  if (slapImpactTimer !== null) clearTimeout(slapImpactTimer);
 });
 </script>
 
