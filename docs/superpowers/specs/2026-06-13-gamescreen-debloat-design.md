@@ -118,7 +118,8 @@ action events.
 
 ### `WaitingOverlay.vue`
 - Rendered by parent `v-if="isWaiting"`.
-- Self-contained: computes `shareLink` from `useRoute()`, owns `copied` + `copyShareLink`.
+- Self-contained: computes `shareLink` via `useRouter().resolve({ name: 'join', params: { id } })`
+  (named-route convention adopted on main), owns `copied` + `copyShareLink`.
 - Moves `.waiting-*` CSS.
 
 ### `DisconnectOverlay.vue`
@@ -130,7 +131,7 @@ action events.
 - Rendered by parent `v-if="showEndOverlay"`.
 - **Props:** `didIWin: boolean`, `subtitle: string`, `rematchButton: RematchButton` (named type).
 - **Emits:** typed `defineEmits<{ playAgain: [] }>` (`@play-again` in the template).
-- Contains the trophy/victory/defeat markup + the "Back to home" `RouterLink`.
+- Contains the trophy/victory/defeat markup + the "Back to home" `RouterLink` (`{ name: 'home' }`).
 - Moves `.end-*` CSS.
 
 ## Resulting view
