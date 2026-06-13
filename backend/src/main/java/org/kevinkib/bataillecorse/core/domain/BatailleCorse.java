@@ -212,7 +212,7 @@ public class BatailleCorse {
         players = new ArrayList<>();
         CardsService cardsService = new CardsService();
 
-        Deck deck = cardsService.createDeck(DeckType.FRENCH, new DeckCreationOptions(CardHandState.HIDDEN_IN_HAND));
+        Deck deck = cardsService.createDeck(DeckType.FRENCH, new DeckCreationOptions(Visibility.HIDDEN));
 
         try {
             List<Hand> hands = deck.distributeAll(nbPlayers, new DistributionOptions(false));
