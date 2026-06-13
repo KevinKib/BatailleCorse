@@ -55,6 +55,50 @@ org.kevinkib.cardgames
 
 The Java root package rename is independent of the Maven `artifactId` (`bataillecorse-backend`), which does **not** change.
 
+The envisioned end-state (after all slices) — each game is a hexagon owning its `domain` + `presentation`, both reusing `frenchcards`; a generic `sessionmanagement` and a shared `presentation` serve every game:
+
+```mermaid
+graph TB
+    FC["📚 frenchcards 0.2.0<br/>deck · hand · pile · Visibility"]
+
+    subgraph CG["org.kevinkib.cardgames"]
+        subgraph BCgame["♟️ bataillecorse — game hexagon"]
+            BCD["domain<br/>BatailleCorse aggregate"]
+            BCP["presentation<br/>send / slap / grab · DTOs"]
+        end
+        subgraph BSgame["🃏 bullshit — game hexagon"]
+            BSD["domain<br/>Bullshit aggregate · ClaimMode"]
+            BSP["presentation<br/>discard / callBullshit · DTOs"]
+        end
+        SM["📦 sessionmanagement<br/>rooms · seats · tokens (generic)"]
+        SP["🌐 presentation (shared)<br/>STOMP · create/join · presence · rematch · forfeit"]
+    end
+
+    BCD --> FC
+    BSD --> FC
+    BCP --> BCD
+    BSP --> BSD
+    BCP --> SP
+    BSP --> SP
+    SP --> SM
+    SM -.->|Game abstraction| BCD
+    SM -.->|Game abstraction| BSD
+
+    classDef thisSlice fill:#1a3a2a,stroke:#4ade80,color:#fff;
+    classDef later fill:#3a2a1a,stroke:#fbbf24,color:#fff,stroke-dasharray:4 3;
+    classDef existing fill:#1a2a3a,stroke:#60a5fa,color:#fff;
+    classDef lib fill:#2a1a3a,stroke:#c084fc,color:#fff;
+
+    class BSD thisSlice;
+    class BSP,SM,SP later;
+    class BCD,BCP existing;
+    class FC lib;
+
+    linkStyle 7,8 stroke:#fbbf24,stroke-dasharray:4 3;
+```
+
+**Legend:** green = Slice 1 (this spec, `bullshit.domain`); blue = existing BatailleCorse code (moved in Slice 0); amber/dashed = later work — the shared `presentation` split and the generic `Game` abstraction that lets `sessionmanagement` drive any game (Slice 2), plus `bullshit.presentation`. The dashed `sessionmanagement → domain` edges are the conformist link extracted as a `Game` interface in Slice 2; today `sessionmanagement` references `BatailleCorse` directly.
+
 ### Full-feature decomposition (context for later slices)
 
 | Slice | Scope | Status |
