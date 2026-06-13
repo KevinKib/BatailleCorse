@@ -24,6 +24,7 @@ vi.mock('../../service/WebSocketService', () => ({
 }));
 
 import GameScreen from './GameScreen.vue';
+import DisconnectOverlay from '../../components/DisconnectOverlay.vue';
 import { useBatailleCorseStore } from '../../state/BatailleCorse.store';
 import { buildGame } from '../../model/fixtures';
 
@@ -58,8 +59,9 @@ describe('GameScreen', () => {
       store.opponentConnection = { status: 'disconnected', seat: 1, deadlineEpochMs: Date.now() + 60_000 };
       await nextTick();
 
-      expect(wrapper.find('[data-cy="disconnect-overlay"]').exists()).toBe(true);
-      expect(wrapper.find('[data-cy="disconnect-countdown"]').text()).toContain('You win in');
+      const overlay = wrapper.findComponent(DisconnectOverlay);
+      expect(overlay.exists()).toBe(true);
+      expect(overlay.props('secondsRemaining')).toBeGreaterThan(0);
     });
 
     it('hides the banner once the opponent reconnects', async () => {
@@ -71,7 +73,7 @@ describe('GameScreen', () => {
       store.opponentConnection = { status: 'connected', seat: 1 };
       await nextTick();
 
-      expect(wrapper.find('[data-cy="disconnect-overlay"]').exists()).toBe(false);
+      expect(wrapper.findComponent(DisconnectOverlay).exists()).toBe(false);
     });
   });
 

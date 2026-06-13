@@ -82,50 +82,21 @@
       <div class="right_side"></div>
     </div>
 
-    <div v-if="isWaiting" class="waiting-overlay">
-      <div class="waiting-card">
-        <h2 class="waiting-title">Waiting for opponent…</h2>
-        <p class="waiting-sub">Share this link to invite a player</p>
-        <div class="share-row">
-          <InputText :value="shareLink" readonly class="share-input" />
-          <Button label="Copy" icon="pi pi-copy" rounded @click="copyShareLink" />
-        </div>
-        <p v-if="copied" class="waiting-copied">Copied!</p>
-      </div>
-    </div>
+    <WaitingOverlay v-if="isWaiting" />
 
-    <div v-if="opponentDisconnected" class="disconnect-overlay" data-cy="disconnect-overlay">
-      <div class="disconnect-card">
-        <h2 class="disconnect-title">{{ opponentLabel }} disconnected</h2>
-        <p class="disconnect-sub">Waiting for them to return…</p>
-        <p class="disconnect-countdown" data-cy="disconnect-countdown">
-          You win in {{ secondsRemaining }}s
-        </p>
-      </div>
-    </div>
+    <DisconnectOverlay
+      v-if="opponentDisconnected"
+      :opponent-label="opponentLabel"
+      :seconds-remaining="secondsRemaining"
+    />
 
-    <div v-if="showEndOverlay" class="end-overlay" data-cy="end-overlay">
-      <div :class="['end-card', didIWin ? 'end-card--victory' : 'end-card--defeat']">
-        <div v-if="didIWin" class="end-trophy" data-cy="victory-flourish">🏆</div>
-        <h1 class="end-title">{{ didIWin ? 'VICTORY' : 'DEFEAT' }}</h1>
-        <p class="end-sub">{{ endSubtitle }}</p>
-        <div class="end-actions">
-          <Button
-            class="end-replay-button"
-            :label="rematchButton.label"
-            :disabled="rematchButton.disabled"
-            icon="pi pi-replay"
-            severity="success"
-            rounded
-            data-cy="play-again"
-            @click="onPlayAgain"
-          />
-          <RouterLink :to="{ name: 'home' }" class="end-home-button">
-            <Button label="Back to home" icon="pi pi-home" rounded />
-          </RouterLink>
-        </div>
-      </div>
-    </div>
+    <EndGameOverlay
+      v-if="showEndOverlay"
+      :did-i-win="didIWin"
+      :subtitle="endSubtitle"
+      :rematch-button="rematchButton"
+      @play-again="onPlayAgain"
+    />
   </div>
 
   <template v-for="(ghost, i) in slapGhosts" :key="i">
@@ -170,124 +141,48 @@ import PlayingCard from '../../components/PlayingCard.vue';
 import CardCounter from '../../components/CardCounter.vue';
 import RulesPanel from '../../components/RulesPanel.vue';
 import GameTimer from '../../components/GameTimer.vue';
-import { Button, InputText } from 'primevue';
+import WaitingOverlay from '../../components/WaitingOverlay.vue';
+import DisconnectOverlay from '../../components/DisconnectOverlay.vue';
+import EndGameOverlay from '../../components/EndGameOverlay.vue';
+import { rematchButtonFor } from '../../model/RematchButton';
+import { Button } from 'primevue';
 import { storeToRefs } from 'pinia';
 import { useBatailleCorseStore } from '../../state/BatailleCorse.store';
 import { useSettingsStore } from '../../state/Settings.store';
 import { DIFFICULTY } from '../../model/Difficulty';
-import { useCardAnimation } from '../../composables/useCardAnimation';
+import { useGameAnimations } from '../../composables/useGameAnimations';
 import { useHotkeys } from '../../composables/useHotkeys';
 import { useEndScreen } from '../../composables/useEndScreen';
 import { useGameDuration } from '../../composables/useGameDuration';
+import { useDisconnectCountdown } from '../../composables/useDisconnectCountdown';
+import { useLeaveGuard } from '../../composables/useLeaveGuard';
+import { useTurnIndicator } from '../../composables/useTurnIndicator';
+import { useGameBootstrap } from '../../composables/useGameBootstrap';
 import { Action } from '../../model/Action';
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue';
-import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router';
-import webSocketService from '../../service/WebSocketService';
-import type BatailleCorse from '../../model/BatailleCorse';
+import { computed, onBeforeUnmount, useTemplateRef } from 'vue';
 import { endGameMessage } from '../../model/endGameMessage';
 
 const batailleCorseStore = useBatailleCorseStore();
 const { state: batailleCorse, mode, myPlayerIndex, waiting, myName, opponentName, opponentConnection,
-        lastSend, lastGrab, lastSlap, lastSuccessfulSlap, lastErroneousSlap, rematchState } = storeToRefs(batailleCorseStore);
+        rematchState } = storeToRefs(batailleCorseStore);
 
 const pile = useTemplateRef("pile");
 const opponentCard = useTemplateRef("opponentCard");
 const centerPile = useTemplateRef("centerPile");
 const centerPileArea = useTemplateRef<HTMLDivElement>("centerPileArea");
 
-const animation = useCardAnimation(
-  () => pile.value?.rootCard,
-  () => opponentCard.value?.rootCard,
-  () => centerPile.value?.rootCard,
-  () => centerPileArea.value,
-);
-
 const {
   ghostCard, slapGhosts, isPileAnimating, isPileFlashing, frozenPileCard, cardDeltaIndicator,
-} = animation;
-
-// During send animation, the server responds within a few ms with the new card face.
-// Watch for that update and switch the ghost image immediately.
-watch(() => batailleCorse.value?.pile.cards.at(0), (newCard) => {
-  animation.onNewPileCard(newCard);
+  slapImpact, cancel: cancelAnimations,
+} = useGameAnimations({
+  playerDeckEl: () => pile.value?.rootCard,
+  opponentDeckEl: () => opponentCard.value?.rootCard,
+  centerPileEl: () => centerPile.value?.rootCard,
+  centerPileAreaEl: () => centerPileArea.value,
 });
 
-// SEND is optimistic: topCard is snapshotted in the store at call time, no flush:'sync' needed.
-watch(lastSend, async (event) => {
-  if (!event) return;
-  const sourceEl = event.playerIndex === myPlayerIndex.value ? pile.value?.rootCard : opponentCard.value?.rootCard;
-  if (!sourceEl) return;
-  await nextTick();
-  const destRect = animation.getCenterPileRect();
-  if (!destRect || destRect.width === 0) return;
-  animation.animateSend(sourceEl.getBoundingClientRect(), destRect, event.topCard);
-  // SEND is non-blocking in the queue — no notifyAnimationComplete needed.
-});
-
-// GRAB: pileCards snapshot is embedded in the event by the store.
-watch(lastGrab, async (event) => {
-  if (!event) { animation.cancelPileAnimation(); batailleCorseStore.notifyAnimationComplete(); return; }
-  const { pileCards, winnerPlayerIndex } = event;
-  await nextTick();
-  const destEl = winnerPlayerIndex === myPlayerIndex.value ? pile.value?.rootCard : opponentCard.value?.rootCard;
-  const srcRect = animation.getCenterPileRect();
-  if (!destEl || !srcRect || srcRect.width === 0) {
-    animation.cancelPileAnimation();
-    batailleCorseStore.notifyAnimationComplete();
-    return;
-  }
-  animation.showDeltaOnGrab(pileCards.length, destEl);
-  await animation.animatePileToWinner(srcRect, destEl.getBoundingClientRect(), pileCards);
-  batailleCorseStore.notifyAnimationComplete();
-});
-
-// Immediate flash on any slap attempt, before the server responds.
-watch(lastSlap, () => animation.flashPile());
-
-// Slap "juice": a one-shot impact on the central card — a scale punch when the
-// slap lands, a red shake when it was a mistake. Re-armed via null→nextTick so
-// rapid repeat slaps replay the animation rather than no-op on the same class.
-const slapImpact = ref<'success' | 'error' | null>(null);
-let slapImpactTimer: ReturnType<typeof setTimeout> | null = null;
-function flashSlapImpact(kind: 'success' | 'error') {
-  if (slapImpactTimer) clearTimeout(slapImpactTimer);
-  slapImpact.value = null;
-  void nextTick(() => {
-    slapImpact.value = kind;
-    slapImpactTimer = setTimeout(() => { slapImpact.value = null; }, 400);
-  });
-}
-
-// Successful slap: pileCards snapshot is embedded in the event by the store.
-watch(lastSuccessfulSlap, async (event) => {
-  if (!event) return;
-  flashSlapImpact('success');
-  const { pileCards, winnerPlayerIndex } = event;
-  await nextTick();
-  const destEl = winnerPlayerIndex === myPlayerIndex.value ? pile.value?.rootCard : opponentCard.value?.rootCard;
-  if (!destEl) { batailleCorseStore.notifyAnimationComplete(); return; }
-  const srcRect = animation.getCenterPileRect();
-  if (!srcRect || srcRect.width === 0) { batailleCorseStore.notifyAnimationComplete(); return; }
-  animation.showDeltaOnSlap(pileCards.length, destEl);
-  await animation.animatePileToWinner(srcRect, destEl.getBoundingClientRect(), pileCards);
-  batailleCorseStore.notifyAnimationComplete();
-});
-
-// Erroneous slap: animate 2 ghost cards from slapper's deck to center, show -2 indicator.
-watch(lastErroneousSlap, async (event) => {
-  if (!event) return;
-  flashSlapImpact('error');
-  await nextTick();
-  const srcEl = event.playerIndex === myPlayerIndex.value ? pile.value?.rootCard : opponentCard.value?.rootCard;
-  const destRect = animation.getCenterPileRect();
-  if (!srcEl || !destRect) { batailleCorseStore.notifyAnimationComplete(); return; }
-  await animation.animateErroneousSlap(srcEl.getBoundingClientRect(), destRect);
-  animation.showDeltaAlways(-2, srcEl);
-  batailleCorseStore.notifyAnimationComplete();
-});
-
-function isButtonDisabled(playerIndex: number, buttonLabel: Action) {
-  return !batailleCorse.value?.players.at(playerIndex)?.availableActions.includes(buttonLabel.toLocaleUpperCase());
+function isButtonDisabled(playerIndex: number, action: Action) {
+  return !(batailleCorse.value?.canPlayerAct(playerIndex, action) ?? false);
 }
 
 function send(playerIndex: number) {
@@ -298,16 +193,7 @@ function slap(playerIndex: number) {
   batailleCorseStore.slap(playerIndex);
 }
 
-const copied = ref(false);
-async function copyShareLink() {
-  await navigator.clipboard.writeText(shareLink.value);
-  copied.value = true;
-  setTimeout(() => { copied.value = false; }, 1500);
-}
-
 const settingsStore = useSettingsStore();
-const route = useRoute();
-const router = useRouter();
 
 const difficultyLabel = computed(() => DIFFICULTY[settingsStore.difficulty]?.name);
 
@@ -316,10 +202,6 @@ const isSolo = computed(() => mode.value === 'solo');
 const isWaiting = computed(() => waiting.value);
 const opponentLabel = computed(() =>
   isSolo.value ? `Computer (${difficultyLabel.value})` : (opponentName.value ?? 'Opponent'));
-const shareLink = computed(() => {
-  const { href } = router.resolve({ name: 'join', params: { id: route.params.id } });
-  return `${window.location.origin}${href}`;
-});
 
 const pileIsEmpty = computed(() => (batailleCorse.value?.pile.cards.length ?? 0) === 0);
 
@@ -332,14 +214,7 @@ const endSubtitle = computed(() =>
     batailleCorse.value?.opponentForfeitReason(myPlayerIndex.value) ?? null,
   ));
 
-const rematchButton = computed(() => {
-  if (isSolo.value) return { label: 'Play Again', disabled: false };
-  switch (rematchState.value) {
-    case 'requested-by-me':       return { label: 'Waiting for opponent…', disabled: true };
-    case 'requested-by-opponent': return { label: 'Accept Rematch', disabled: false };
-    default:                      return { label: 'Play Again', disabled: false };
-  }
-});
+const rematchButton = computed(() => rematchButtonFor(isSolo.value, rematchState.value));
 
 function onPlayAgain() {
   batailleCorseStore.rematch();
@@ -352,6 +227,8 @@ function onPlayAgain() {
 const { showEndOverlay, revealImmediatelyIfOver, cancel: cancelEndScreen } =
   useEndScreen(() => isGameOver.value, () => isPileAnimating.value);
 
+useGameBootstrap({ revealImmediatelyIfOver });
+
 // An in-progress game: state loaded, not waiting, not yet over. Drives both the
 // leave-confirmation guard and the cosmetic game-duration timer.
 const isInProgress = computed(() =>
@@ -361,94 +238,26 @@ const isInProgress = computed(() =>
 const { formattedDuration, cancel: cancelGameDuration } =
   useGameDuration(() => isInProgress.value, () => isGameOver.value);
 
-// --- Opponent disconnect countdown ---
-// Driven by a server-provided absolute deadline; the local clock only renders
-// the remaining seconds. Cleared on reconnect or when the game ends.
-const now = ref(Date.now());
-let countdownTimer: ReturnType<typeof setInterval> | null = null;
-
-const opponentDisconnected = computed(() =>
-  mode.value === 'multiplayer'
-  && opponentConnection.value?.status === 'disconnected'
-  && opponentConnection.value.seat !== myPlayerIndex.value
-  && !isGameOver.value);
-
-const secondsRemaining = computed(() => {
-  const oc = opponentConnection.value;
-  if (oc?.status !== 'disconnected') return 0;
-  return Math.max(0, Math.ceil((oc.deadlineEpochMs - now.value) / 1000));
+const { opponentDisconnected, secondsRemaining, cancel: cancelDisconnectCountdown } = useDisconnectCountdown({
+  mode: () => mode.value,
+  opponentConnection: () => opponentConnection.value,
+  myPlayerIndex: () => myPlayerIndex.value,
+  isGameOver: () => isGameOver.value,
 });
 
-watch(opponentDisconnected, (active) => {
-  if (active && countdownTimer === null) {
-    now.value = Date.now();
-    countdownTimer = setInterval(() => { now.value = Date.now(); }, 250);
-  } else if (!active && countdownTimer !== null) {
-    clearInterval(countdownTimer);
-    countdownTimer = null;
-  }
+useLeaveGuard({
+  isInProgress: () => isInProgress.value,
+  mode: () => mode.value,
+  forfeit: () => batailleCorseStore.forfeit(myPlayerIndex.value),
 });
 
-// --- Leave confirmation ---
-// An in-progress game prompts before leaving. Confirming in multiplayer forfeits
-// (the opponent wins immediately); solo just leaves. A finished game leaves freely.
-onBeforeRouteLeave(() => {
-  if (!isInProgress.value) return true;
-  const message = mode.value === 'multiplayer'
-    ? 'Leave the game? You will forfeit and your opponent wins.'
-    : 'Leave the game? Your current game will be lost.';
-  const confirmed = window.confirm(message);
-  if (!confirmed) return false;
-  if (mode.value === 'multiplayer') {
-    batailleCorseStore.forfeit(myPlayerIndex.value);
-  }
-  return true;
+const { showMyTurn, showOpponentTurn, showFirstTurnHint, YOUR_TURN_LABEL, cancel: cancelTurnIndicator } = useTurnIndicator({
+  state: () => batailleCorse.value,
+  myPlayerIndex: () => myPlayerIndex.value,
+  opponentIndex: () => opponentIndex.value,
+  isWaiting: () => isWaiting.value,
+  showEndOverlay: () => showEndOverlay.value,
 });
-
-// Browser close/refresh: native prompt only (we cannot reliably send a forfeit on
-// unload — a hard close falls back to the server disconnect timer).
-function handleBeforeUnload(event: BeforeUnloadEvent) {
-  if (!isInProgress.value) return;
-  event.preventDefault();
-  event.returnValue = '';
-}
-
-// --- Turn indicator ---
-// Permanent cue: the active player's name tag glows. The cue is driven straight
-// off the backend's per-seat availableActions via canSend(seat) — the server
-// only offers SEND to the player whose turn it is, and only while a card can be
-// added (never when the pile is complete/grabbable or the game is finished). So
-// "no one can play" suppresses both glows for free, with no extra gating. It's
-// per-seat too, so it generalizes to N players (the view currently wires two
-// seats via opponentIndex = 1 - myPlayerIndex; a 4-player layout would iterate).
-// A glow is a learned signal, so we teach it once: the YOUR TURN hint shows the
-// first time it becomes your turn in a game, then auto-dismisses for good —
-// keeping the steady state uncluttered in a fast-reaction game.
-const YOUR_TURN_LABEL = 'YOUR TURN';
-
-// Only additional suppression needed: hide cues while an overlay owns the screen.
-const showTurnCues = computed(() => !isWaiting.value && !showEndOverlay.value);
-const showMyTurn = computed(() =>
-  showTurnCues.value && (batailleCorse.value?.canSend(myPlayerIndex.value) ?? false));
-const showOpponentTurn = computed(() =>
-  showTurnCues.value && (batailleCorse.value?.canSend(opponentIndex.value) ?? false));
-
-// One-time onboarding hint: visible only during the player's first turn of the
-// game and tied to turn state (not a timer), so it vanishes the instant they
-// play — even if that's within a second — and never returns. Bootstraps the
-// meaning of the name-tag glow.
-const showFirstTurnHint = ref(false);
-let firstTurnHintConsumed = false;
-
-watch(showMyTurn, (mine) => {
-  if (firstTurnHintConsumed) return;
-  if (mine) {
-    showFirstTurnHint.value = true;
-  } else if (showFirstTurnHint.value) {
-    showFirstTurnHint.value = false;
-    firstTurnHintConsumed = true;
-  }
-}, { immediate: true });
 
 useHotkeys(
   () => { if (!isButtonDisabled(myPlayerIndex.value, 'send')) send(myPlayerIndex.value); },
@@ -457,39 +266,12 @@ useHotkeys(
   () => [settingsStore.slapKey],
 );
 
-onMounted(async () => {
-  const gameId = route.params.id as string;
-
-  const stored = localStorage.getItem(`tokens:${gameId}`);
-  if (!stored) {
-    router.replace({ name: 'home' });
-    return;
-  }
-
-  const response = await fetch(`/api/game/${gameId}`);
-  if (!response.ok) {
-    router.replace({ name: 'home' });
-    return;
-  }
-
-  const gameState = await response.json() as BatailleCorse;
-  batailleCorseStore.hydrate(gameId, gameState);
-  revealImmediatelyIfOver();
-  batailleCorseStore.restoreSession(JSON.parse(stored));
-  await batailleCorseStore.loadSessionView(gameId);
-  webSocketService.subscribeToGame(gameId);
-  window.addEventListener('beforeunload', handleBeforeUnload);
-});
-
 onBeforeUnmount(() => {
-  animation.cancelAllAnimations();
-  batailleCorseStore.cancelAutoGrab();
-  webSocketService.unsubscribeFromGame();
+  cancelAnimations();
   cancelEndScreen();
   cancelGameDuration();
-  if (countdownTimer !== null) clearInterval(countdownTimer);
-  if (slapImpactTimer !== null) clearTimeout(slapImpactTimer);
-  window.removeEventListener('beforeunload', handleBeforeUnload);
+  cancelDisconnectCountdown();
+  cancelTurnIndicator();
 });
 </script>
 
@@ -820,190 +602,6 @@ onBeforeUnmount(() => {
   color: rgb(var(--accent-negative-rgb));
 }
 
-.waiting-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 2000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.78);
-  backdrop-filter: blur(3px);
-}
-
-.waiting-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 14px;
-  background: var(--panel-bg);
-  border: 1px solid var(--panel-border);
-  box-shadow: var(--panel-shadow);
-  border-radius: 16px;
-  padding: 36px 40px;
-  max-width: 460px;
-}
-
-.waiting-title {
-  font-family: "Gabarito", sans-serif;
-  font-size: 1.6rem;
-  font-weight: 700;
-  color: var(--gold);
-  margin: 0;
-}
-
-.waiting-sub {
-  font-size: 0.72rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.5);
-  margin: 0;
-}
-
-.share-row {
-  display: flex;
-  gap: 8px;
-  width: 100%;
-}
-
-.share-input {
-  flex: 1;
-}
-
-.waiting-copied {
-  font-size: 0.72rem;
-  color: #4ade80;
-  margin: 0;
-}
-
-.disconnect-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 1900;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  pointer-events: none;
-  padding-top: 12vh;
-}
-
-.disconnect-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  background: var(--panel-bg);
-  border: 1px solid rgba(var(--accent-negative-rgb), 0.45);
-  box-shadow: var(--panel-shadow);
-  border-radius: 14px;
-  padding: 18px 28px;
-  text-align: center;
-}
-
-.disconnect-title {
-  font-family: "Gabarito", sans-serif;
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: #f87171;
-  margin: 0;
-}
-
-.disconnect-sub {
-  font-size: 0.78rem;
-  color: rgba(255, 255, 255, 0.6);
-  margin: 0;
-}
-
-.disconnect-countdown {
-  font-size: 1rem;
-  font-weight: 800;
-  color: var(--gold);
-  margin: 4px 0 0;
-}
-
-.end-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 2000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.82);
-  backdrop-filter: blur(4px);
-}
-
-.end-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 14px;
-  background: var(--panel-bg);
-  border: 1px solid var(--panel-border);
-  box-shadow: var(--panel-shadow);
-  border-radius: 16px;
-  padding: 40px 48px;
-  max-width: 460px;
-  text-align: center;
-}
-
-.end-title {
-  font-family: "Gabarito", sans-serif;
-  font-size: 2.4rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  margin: 0;
-}
-
-.end-sub {
-  font-size: 0.95rem;
-  color: rgba(255, 255, 255, 0.75);
-  margin: 0;
-}
-
-.end-home-button {
-  margin-top: 10px;
-}
-
-.end-actions {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  margin-top: 8px;
-}
-
-/* Victory: gold accent + a brief trophy bounce / glow pulse. */
-.end-card--victory {
-  border-color: rgba(var(--accent-active-rgb), 0.55);
-  box-shadow: var(--panel-shadow), 0 0 48px 6px rgba(var(--accent-active-rgb), 0.25);
-}
-
-.end-card--victory .end-title {
-  color: var(--gold);
-  text-shadow: 0 2px 16px rgba(var(--accent-active-rgb), 0.45);
-}
-
-.end-trophy {
-  font-size: 3.2rem;
-  line-height: 1;
-  animation: trophy-bounce 1.6s ease-in-out infinite;
-}
-
-@keyframes trophy-bounce {
-  0%, 100% { transform: translateY(0) scale(1); }
-  30%      { transform: translateY(-10px) scale(1.06); }
-  60%      { transform: translateY(0) scale(1); }
-}
-
-/* Defeat: muted / somber, no flourish. */
-.end-card--defeat {
-  border-color: rgba(var(--accent-negative-rgb), 0.35);
-}
-
-.end-card--defeat .end-title {
-  color: #cbd5d1;
-}
-
 /* --- Turn indicator --- */
 .player_tag--active {
   color: #ffffff;
@@ -1072,7 +670,6 @@ onBeforeUnmount(() => {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .end-trophy,
   .player_tag--active,
   .turn-hint__dot,
   .action_button--my-turn,
