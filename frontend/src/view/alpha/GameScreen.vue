@@ -157,11 +157,9 @@ import { useGameDuration } from '../../composables/useGameDuration';
 import { useDisconnectCountdown } from '../../composables/useDisconnectCountdown';
 import { useLeaveGuard } from '../../composables/useLeaveGuard';
 import { useTurnIndicator } from '../../composables/useTurnIndicator';
+import { useGameBootstrap } from '../../composables/useGameBootstrap';
 import { Action } from '../../model/Action';
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import webSocketService from '../../service/WebSocketService';
-import type BatailleCorse from '../../model/BatailleCorse';
+import { computed, nextTick, onBeforeUnmount, ref, useTemplateRef, watch } from 'vue';
 import { endGameMessage } from '../../model/endGameMessage';
 
 const batailleCorseStore = useBatailleCorseStore();
@@ -277,8 +275,6 @@ function slap(playerIndex: number) {
 }
 
 const settingsStore = useSettingsStore();
-const route = useRoute();
-const router = useRouter();
 
 const difficultyLabel = computed(() => DIFFICULTY[settingsStore.difficulty]?.name);
 
@@ -319,6 +315,8 @@ function onPlayAgain() {
 const { showEndOverlay, revealImmediatelyIfOver, cancel: cancelEndScreen } =
   useEndScreen(() => isGameOver.value, () => isPileAnimating.value);
 
+useGameBootstrap({ revealImmediatelyIfOver });
+
 // An in-progress game: state loaded, not waiting, not yet over. Drives both the
 // leave-confirmation guard and the cosmetic game-duration timer.
 const isInProgress = computed(() =>
@@ -356,33 +354,8 @@ useHotkeys(
   () => [settingsStore.slapKey],
 );
 
-onMounted(async () => {
-  const gameId = route.params.id as string;
-
-  const stored = localStorage.getItem(`tokens:${gameId}`);
-  if (!stored) {
-    router.replace({ name: 'home' });
-    return;
-  }
-
-  const response = await fetch(`/api/game/${gameId}`);
-  if (!response.ok) {
-    router.replace({ name: 'home' });
-    return;
-  }
-
-  const gameState = await response.json() as BatailleCorse;
-  batailleCorseStore.hydrate(gameId, gameState);
-  revealImmediatelyIfOver();
-  batailleCorseStore.restoreSession(JSON.parse(stored));
-  await batailleCorseStore.loadSessionView(gameId);
-  webSocketService.subscribeToGame(gameId);
-});
-
 onBeforeUnmount(() => {
   animation.cancelAllAnimations();
-  batailleCorseStore.cancelAutoGrab();
-  webSocketService.unsubscribeFromGame();
   cancelEndScreen();
   cancelGameDuration();
   cancelDisconnectCountdown();
