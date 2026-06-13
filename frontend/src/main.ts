@@ -24,18 +24,21 @@ app.use(PrimeVue, {
   }
 });
 
-import Debug from './view/debug/Debug.vue';
+import LandingView from './view/LandingView.vue';
 import GameScreen from './view/alpha/GameScreen.vue';
 import StartGame from './view/alpha/StartGame.vue';
 import LobbyView from './view/alpha/LobbyView.vue';
 import { createWebHistory, createRouter } from 'vue-router';
 
+const BASE = '/games/bataillecorse';
+
 const routes = [
-  { path: '/', component: LobbyView },
-  { path: '/create', component: StartGame },
-  { path: '/join/:id?', component: StartGame },
-  { path: '/room/:id', component: GameScreen },
-  { path: '/debug', component: Debug },
+  { path: '/', component: LandingView },
+  { path: '/games', redirect: { name: 'home' } },
+  { path: `${BASE}`,        name: 'home',   component: LobbyView },
+  { path: `${BASE}/create`, name: 'create', component: StartGame },
+  { path: `${BASE}/join/:id?`, name: 'join', component: StartGame },
+  { path: `${BASE}/room/:id`,  name: 'room', component: GameScreen },
 ]
 
 const router = createRouter({
