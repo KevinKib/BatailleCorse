@@ -154,6 +154,7 @@ import { useCardAnimation } from '../../composables/useCardAnimation';
 import { useHotkeys } from '../../composables/useHotkeys';
 import { useEndScreen } from '../../composables/useEndScreen';
 import { useGameDuration } from '../../composables/useGameDuration';
+import { useDisconnectCountdown } from '../../composables/useDisconnectCountdown';
 import { Action } from '../../model/Action';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue';
 import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router';
@@ -325,32 +326,11 @@ const isInProgress = computed(() =>
 const { formattedDuration, cancel: cancelGameDuration } =
   useGameDuration(() => isInProgress.value, () => isGameOver.value);
 
-// --- Opponent disconnect countdown ---
-// Driven by a server-provided absolute deadline; the local clock only renders
-// the remaining seconds. Cleared on reconnect or when the game ends.
-const now = ref(Date.now());
-let countdownTimer: ReturnType<typeof setInterval> | null = null;
-
-const opponentDisconnected = computed(() =>
-  mode.value === 'multiplayer'
-  && opponentConnection.value?.status === 'disconnected'
-  && opponentConnection.value.seat !== myPlayerIndex.value
-  && !isGameOver.value);
-
-const secondsRemaining = computed(() => {
-  const oc = opponentConnection.value;
-  if (oc?.status !== 'disconnected') return 0;
-  return Math.max(0, Math.ceil((oc.deadlineEpochMs - now.value) / 1000));
-});
-
-watch(opponentDisconnected, (active) => {
-  if (active && countdownTimer === null) {
-    now.value = Date.now();
-    countdownTimer = setInterval(() => { now.value = Date.now(); }, 250);
-  } else if (!active && countdownTimer !== null) {
-    clearInterval(countdownTimer);
-    countdownTimer = null;
-  }
+const { opponentDisconnected, secondsRemaining, cancel: cancelDisconnectCountdown } = useDisconnectCountdown({
+  mode: () => mode.value,
+  opponentConnection: () => opponentConnection.value,
+  myPlayerIndex: () => myPlayerIndex.value,
+  isGameOver: () => isGameOver.value,
 });
 
 // --- Leave confirmation ---
@@ -451,7 +431,7 @@ onBeforeUnmount(() => {
   webSocketService.unsubscribeFromGame();
   cancelEndScreen();
   cancelGameDuration();
-  if (countdownTimer !== null) clearInterval(countdownTimer);
+  cancelDisconnectCountdown();
   if (slapImpactTimer !== null) clearTimeout(slapImpactTimer);
   window.removeEventListener('beforeunload', handleBeforeUnload);
 });
