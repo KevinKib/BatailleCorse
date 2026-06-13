@@ -2,7 +2,7 @@
 
 **Date:** 2026-06-13
 **Status:** Approved (design); Slice 1 ready for planning
-**Scope of this spec:** Slice 1 only — the pure game-rules engine (`bullshit.domain`). A prerequisite restructure (Slice 0) and the later session/presentation/frontend slices are scoped below but not specified here.
+**Scope of this spec:** Slice 1 only — the pure game-rules engine (`bullshit.domain`). Two prerequisites (Slice A: frenchcards 0.2.0 upgrade; Slice 0: restructure) and the later session/presentation/frontend slices are scoped below but not specified here.
 
 ## Goal
 
@@ -59,6 +59,7 @@ The Java root package rename is independent of the Maven `artifactId` (`bataille
 
 | Slice | Scope | Status |
 |---|---|---|
+| **A. Upgrade frenchcards 0.1.0 → 0.2.0** | Mechanical API migration on existing code (see "frenchcards 0.2.0 upgrade" below). Prerequisite because Slice 1 targets the 0.2.0 API. | Prerequisite |
 | **0. Restructure** | Pure rename/move, no logic change: `core` → `bataillecorse.domain`, `websocket` → top-level `presentation` (still BatailleCorse-flavored inside — untangled in Slice 2), root → `org.kevinkib.cardgames`, fix Spring scan base. | Prerequisite to Slice 1 |
 | **1. Bullshit Core hexagon** | Pure rules engine (`bullshit.domain`), fully unit-tested. New package only. | **This spec** |
 | **2. Generalize Session hexagon + split presentation** | Extract a `Game` abstraction so `SessionService`/`SessionGame`/`SessionRepository` serve any game; split the top-level `presentation` into shared plumbing + `bataillecorse.presentation`; add the `bullshit.presentation` WS adapter. | Later (own spec) |
@@ -72,6 +73,37 @@ Session/presentation concerns split into **game-agnostic** (reusable) and **per-
 - *Per-game (new):* the action protocol (`discard`/`callBullshit`), the game-state DTOs (a `BullshitDto` exposing own-hand, opponents' hand counts, discard-pile size, current target, last claim, current player), and event payloads (`DiscardEventData`/`CallBullshitEventData`/`RevealEventData`).
 
 **Design principle pushed onto Slice 1:** shape the aggregate's public surface to match what session/presentation already consume from `BatailleCorse` — `getId()`, `getPlayers()`, `getCurrentPlayer()`, `getAvailableActions(player)`, `isFinished()`, `getWinner()`, plus an N-player `forfeit(playerId)`. Do **not** build the shared `Game` interface in Slice 1 (YAGNI) — but matching method shapes makes the later extraction a lift, not a rewrite.
+
+## frenchcards 0.2.0 upgrade (Slice A)
+
+The shared `frenchcards` library released `0.2.0`, a breaking pre-1.0 change. Slice 1 targets the 0.2.0 API, so the existing code migrates first. Verified impact is small and mechanical:
+
+**Production (2 files, 3 lines)** — `CardState`/`CardHandState`/`CardPileState` collapsed to binary `Visibility` (`SHOWN`/`HIDDEN`):
+- `BatailleCorse.java`: `new DeckCreationOptions(CardHandState.HIDDEN_IN_HAND)` → `new DeckCreationOptions(Visibility.HIDDEN)`.
+- `CentralPile.java`: `pile.add(card, CardPileState.SHOWN)` → `Visibility.SHOWN`; `pile.addBelow(card, CardPileState.HIDDEN)` → `Visibility.HIDDEN`.
+- No import edits needed — both files already import `org.kevinkib.cards.domain.*`.
+
+**Test (1 file, 2 lines)** — `Card.getState()` removed (now `getVisibility()`/`isShown()`):
+- `BatailleCorseTest.java`: `getPileTopCard().getState(), is(CardPileState.SHOWN)` → `getPileTopCard().isShown(), is(true)`; drop the `CardPileState` import.
+- The numerous `.withState(...)` calls in tests are the *local* `CentralPileBuilder`/`CentralPileState` enum — unaffected.
+
+**`pom.xml`:**
+- Bump `frenchcards` `0.1.0` → `0.2.0`.
+- Add the test-jar so `org.kevinkib.cards.testhelpers.*` resolves (they moved to a separate test-jar):
+  ```xml
+  <dependency>
+      <groupId>org.kevinkib</groupId>
+      <artifactId>frenchcards</artifactId>
+      <version>0.2.0</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+  </dependency>
+  ```
+  JUnit/Hamcrest already arrive via `spring-boot-starter-test`. The 0.2.0 artifact is already resolved in the local Maven repo.
+
+**Not affected:** `Pile`/`PileSubscriber` usage (`subscribe`/`onCardAdded`/`onClear` unchanged), `DistributionOptions(boolean)`, `CardBuilder`, frontend (`CardDto` exposes no card state).
+
+**Verification gate:** full backend suite green on 0.2.0 before starting Slice 0.
 
 ## Domain model (Slice 1)
 
@@ -104,6 +136,12 @@ State:
 - **Lie** (no match): `lastDiscard.claimant` takes the whole `discardPile` into hand; clear `pendingWinner` if it was the claimant. Then apply house rule #1 (pile clears, target resets to initial, claimant — the picker-upper — starts the next round).
 - **Truthful** (match): `caller` takes the whole `discardPile`. If `pendingWinner == claimant`, the claimant **wins now** (truthful + empty hand → `result` = claimant). Otherwise apply house rule #2 (caller starts the next round at initial target).
 
+### Construction / dealing (frenchcards 0.2.0)
+
+- Deal with `CardsService().createDeck(DeckType.FRENCH, new DeckCreationOptions(Visibility.HIDDEN))` then `deck.distributeAll(nbPlayers)` — the no-options overload distributes round-robin and **allows uneven hands** (needed for 3/5/6 players), so no `UnevenNumberOfCardsPerPlayerException` handling is required.
+- A constructor accepting an explicit `ClaimMode` (default `AscendingRankClaimMode`) mirrors how `slapRules`/`penality` are injected into `BatailleCorse`.
+- Single 52-card deck → each `Card` is unique by rank+suit, so frenchcards' "equal by rank+suit only" limitation does not bite `Hand.play`/`possesses` here.
+
 ### Other behaviour
 
 - **`forfeit(playerId)`** — N-player: remove the player and their hand from rotation. If exactly one player remains, that player wins. No-op if the game is already finished (mirrors `BatailleCorse.concede`'s race-safety).
@@ -116,7 +154,7 @@ Game-specific checked exceptions mirroring the BatailleCorse style: `NotPlayersT
 
 ## Testing
 
-Per project testing rules: **no Mockito on domain classes.** Plain unit tests with Builders + Fixtures — a `BullshitBuilder`, `BullshitFixtures`, and `PlayerFixtures`/`PlayerBuilder` analog, following the existing `core/domain` test conventions (`givenX_thenY` naming).
+Per project testing rules: **no Mockito on domain classes.** Plain unit tests with Builders + Fixtures — a `BullshitBuilder`, `BullshitFixtures`, and `PlayerFixtures`/`PlayerBuilder` analog, following the existing `core/domain` test conventions (`givenX_thenY` naming). Card/Hand test data comes from the frenchcards `testhelpers` test-jar (`CardBuilder.aCard().withRank(...)`, `HandBuilder.aHand().withCards(...)`). Where a test needs a reproducible real deal, use the 0.2.0 deterministic seed: `new DeckCreationOptions(Visibility.HIDDEN, <seed>)`.
 
 Coverage targets the rules that matter:
 - Forced-ascending claim target; rank wrap-around `K→A`.
