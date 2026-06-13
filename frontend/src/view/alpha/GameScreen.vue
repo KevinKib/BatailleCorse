@@ -82,17 +82,7 @@
       <div class="right_side"></div>
     </div>
 
-    <div v-if="isWaiting" class="waiting-overlay">
-      <div class="waiting-card">
-        <h2 class="waiting-title">Waiting for opponent…</h2>
-        <p class="waiting-sub">Share this link to invite a player</p>
-        <div class="share-row">
-          <InputText :value="shareLink" readonly class="share-input" />
-          <Button label="Copy" icon="pi pi-copy" rounded @click="copyShareLink" />
-        </div>
-        <p v-if="copied" class="waiting-copied">Copied!</p>
-      </div>
-    </div>
+    <WaitingOverlay v-if="isWaiting" />
 
     <div v-if="opponentDisconnected" class="disconnect-overlay" data-cy="disconnect-overlay">
       <div class="disconnect-card">
@@ -170,7 +160,8 @@ import PlayingCard from '../../components/PlayingCard.vue';
 import CardCounter from '../../components/CardCounter.vue';
 import RulesPanel from '../../components/RulesPanel.vue';
 import GameTimer from '../../components/GameTimer.vue';
-import { Button, InputText } from 'primevue';
+import WaitingOverlay from '../../components/WaitingOverlay.vue';
+import { Button } from 'primevue';
 import { storeToRefs } from 'pinia';
 import { useBatailleCorseStore } from '../../state/BatailleCorse.store';
 import { useSettingsStore } from '../../state/Settings.store';
@@ -298,13 +289,6 @@ function slap(playerIndex: number) {
   batailleCorseStore.slap(playerIndex);
 }
 
-const copied = ref(false);
-async function copyShareLink() {
-  await navigator.clipboard.writeText(shareLink.value);
-  copied.value = true;
-  setTimeout(() => { copied.value = false; }, 1500);
-}
-
 const settingsStore = useSettingsStore();
 const route = useRoute();
 const router = useRouter();
@@ -316,10 +300,6 @@ const isSolo = computed(() => mode.value === 'solo');
 const isWaiting = computed(() => waiting.value);
 const opponentLabel = computed(() =>
   isSolo.value ? `Computer (${difficultyLabel.value})` : (opponentName.value ?? 'Opponent'));
-const shareLink = computed(() => {
-  const { href } = router.resolve({ name: 'join', params: { id: route.params.id } });
-  return `${window.location.origin}${href}`;
-});
 
 const pileIsEmpty = computed(() => (batailleCorse.value?.pile.cards.length ?? 0) === 0);
 
@@ -818,62 +798,6 @@ onBeforeUnmount(() => {
 
 .card-delta--negative {
   color: rgb(var(--accent-negative-rgb));
-}
-
-.waiting-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 2000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.78);
-  backdrop-filter: blur(3px);
-}
-
-.waiting-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 14px;
-  background: var(--panel-bg);
-  border: 1px solid var(--panel-border);
-  box-shadow: var(--panel-shadow);
-  border-radius: 16px;
-  padding: 36px 40px;
-  max-width: 460px;
-}
-
-.waiting-title {
-  font-family: "Gabarito", sans-serif;
-  font-size: 1.6rem;
-  font-weight: 700;
-  color: var(--gold);
-  margin: 0;
-}
-
-.waiting-sub {
-  font-size: 0.72rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.5);
-  margin: 0;
-}
-
-.share-row {
-  display: flex;
-  gap: 8px;
-  width: 100%;
-}
-
-.share-input {
-  flex: 1;
-}
-
-.waiting-copied {
-  font-size: 0.72rem;
-  color: #4ade80;
-  margin: 0;
 }
 
 .disconnect-overlay {
