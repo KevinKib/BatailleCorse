@@ -155,10 +155,11 @@ import { useHotkeys } from '../../composables/useHotkeys';
 import { useEndScreen } from '../../composables/useEndScreen';
 import { useGameDuration } from '../../composables/useGameDuration';
 import { useDisconnectCountdown } from '../../composables/useDisconnectCountdown';
+import { useLeaveGuard } from '../../composables/useLeaveGuard';
 import { useTurnIndicator } from '../../composables/useTurnIndicator';
 import { Action } from '../../model/Action';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue';
-import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import webSocketService from '../../service/WebSocketService';
 import type BatailleCorse from '../../model/BatailleCorse';
 import { endGameMessage } from '../../model/endGameMessage';
@@ -334,29 +335,11 @@ const { opponentDisconnected, secondsRemaining, cancel: cancelDisconnectCountdow
   isGameOver: () => isGameOver.value,
 });
 
-// --- Leave confirmation ---
-// An in-progress game prompts before leaving. Confirming in multiplayer forfeits
-// (the opponent wins immediately); solo just leaves. A finished game leaves freely.
-onBeforeRouteLeave(() => {
-  if (!isInProgress.value) return true;
-  const message = mode.value === 'multiplayer'
-    ? 'Leave the game? You will forfeit and your opponent wins.'
-    : 'Leave the game? Your current game will be lost.';
-  const confirmed = window.confirm(message);
-  if (!confirmed) return false;
-  if (mode.value === 'multiplayer') {
-    batailleCorseStore.forfeit(myPlayerIndex.value);
-  }
-  return true;
+useLeaveGuard({
+  isInProgress: () => isInProgress.value,
+  mode: () => mode.value,
+  forfeit: () => batailleCorseStore.forfeit(myPlayerIndex.value),
 });
-
-// Browser close/refresh: native prompt only (we cannot reliably send a forfeit on
-// unload — a hard close falls back to the server disconnect timer).
-function handleBeforeUnload(event: BeforeUnloadEvent) {
-  if (!isInProgress.value) return;
-  event.preventDefault();
-  event.returnValue = '';
-}
 
 const { showMyTurn, showOpponentTurn, showFirstTurnHint, YOUR_TURN_LABEL, cancel: cancelTurnIndicator } = useTurnIndicator({
   state: () => batailleCorse.value,
@@ -394,7 +377,6 @@ onMounted(async () => {
   batailleCorseStore.restoreSession(JSON.parse(stored));
   await batailleCorseStore.loadSessionView(gameId);
   webSocketService.subscribeToGame(gameId);
-  window.addEventListener('beforeunload', handleBeforeUnload);
 });
 
 onBeforeUnmount(() => {
@@ -406,7 +388,6 @@ onBeforeUnmount(() => {
   cancelDisconnectCountdown();
   cancelTurnIndicator();
   if (slapImpactTimer !== null) clearTimeout(slapImpactTimer);
-  window.removeEventListener('beforeunload', handleBeforeUnload);
 });
 </script>
 
