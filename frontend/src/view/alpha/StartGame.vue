@@ -127,7 +127,7 @@
         severity="secondary"
         size="small"
         text
-        @click="router.push('/')"
+        @click="router.push({ name: 'home' })"
       />
 
 
@@ -153,7 +153,7 @@ const { playerName, sendKey, slapKey, difficulty } = storeToRefs(settingsStore);
 
 const route = useRoute();
 const screenMode = computed<'create' | 'join'>(() =>
-  route.path.startsWith('/join') ? 'join' : 'create');
+  route.name === 'join' ? 'join' : 'create');
 
 // New Game toggle: false = 2-player vs human (default), true = solo vs computer
 const vsComputer = ref(false);
@@ -222,7 +222,7 @@ function startGame() {
   const unwatch = watch(() => batailleCorseStore.gameId, (id) => {
     if (id) {
       unwatch();
-      router.push(`/room/${id}`);
+      router.push({ name: 'room', params: { id } });
     }
   });
 }
@@ -232,7 +232,7 @@ async function joinGame() {
   if (!id) return;
   try {
     await batailleCorseStore.join(id, playerName.value || undefined);
-    router.push(`/room/${id}`);
+    router.push({ name: 'room', params: { id } });
   } catch (e) {
     joinError.value = 'Could not join this game. Check the ID and try again.';
   }

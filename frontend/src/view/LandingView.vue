@@ -1,9 +1,7 @@
 <template>
   <div class="titlescreen">
     <div class="title-panel">
-
       <TitleCardFan />
-
       <div class="title-block">
         <div class="suit-row">
           <span class="suit-accent">♠</span>
@@ -13,44 +11,26 @@
         </div>
         <h1 class="game-title">Bataille Corse</h1>
       </div>
-
       <div class="panel-divider" />
-
       <Button
-        class="menu-button"
-        label="New Game"
-        icon="pi pi-plus"
+        class="play-button"
+        label="Play"
+        icon="pi pi-play"
         severity="success"
         size="large"
         rounded
-        @click="router.push({ name: 'create' })"
+        @click="router.push({ name: 'home' })"
       />
-
-      <Button
-        class="menu-button"
-        label="Join Game"
-        icon="pi pi-users"
-        severity="secondary"
-        size="large"
-        rounded
-        @click="router.push({ name: 'join' })"
-      />
-
-
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { Button } from 'primevue';
-import TitleCardFan from '../../components/TitleCardFan.vue';
-import { preloadAllCards } from '../../composables/useCardAnimation';
+import TitleCardFan from '../components/TitleCardFan.vue';
 
 const router = useRouter();
-
-onMounted(() => preloadAllCards());
 </script>
 
 <style scoped>
@@ -122,9 +102,8 @@ onMounted(() => preloadAllCards());
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
 }
 
-.menu-button {
+.play-button {
   width: 100%;
   letter-spacing: 0.08em;
 }
-
 </style>

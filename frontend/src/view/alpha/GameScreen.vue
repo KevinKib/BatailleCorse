@@ -45,7 +45,7 @@
 
     <div class="gamescreen_bottom flex">
       <div class="left_side">
-        <RouterLink to="/" class="back_button">
+        <RouterLink :to="{ name: 'home' }" class="back_button">
           <Button severity="secondary" label="Back" icon="pi pi-undo" variant="text" rounded />
         </RouterLink>
       </div>
@@ -120,7 +120,7 @@
             data-cy="play-again"
             @click="onPlayAgain"
           />
-          <RouterLink to="/" class="end-home-button">
+          <RouterLink :to="{ name: 'home' }" class="end-home-button">
             <Button label="Back to home" icon="pi pi-home" rounded />
           </RouterLink>
         </div>
@@ -316,8 +316,10 @@ const isSolo = computed(() => mode.value === 'solo');
 const isWaiting = computed(() => waiting.value);
 const opponentLabel = computed(() =>
   isSolo.value ? `Computer (${difficultyLabel.value})` : (opponentName.value ?? 'Opponent'));
-const shareLink = computed(() =>
-  `${window.location.origin}/join/${route.params.id}`);
+const shareLink = computed(() => {
+  const { href } = router.resolve({ name: 'join', params: { id: route.params.id } });
+  return `${window.location.origin}${href}`;
+});
 
 const pileIsEmpty = computed(() => (batailleCorse.value?.pile.cards.length ?? 0) === 0);
 
@@ -460,13 +462,13 @@ onMounted(async () => {
 
   const stored = localStorage.getItem(`tokens:${gameId}`);
   if (!stored) {
-    router.replace('/');
+    router.replace({ name: 'home' });
     return;
   }
 
   const response = await fetch(`/api/game/${gameId}`);
   if (!response.ok) {
-    router.replace('/');
+    router.replace({ name: 'home' });
     return;
   }
 
