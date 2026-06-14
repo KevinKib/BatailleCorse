@@ -1,4 +1,5 @@
 package org.kevinkib.cardgames.bullshit.domain;
+import org.kevinkib.cardgames.game.GameId;
 
 import org.kevinkib.cardgames.bullshit.domain.claim.AscendingRankClaimMode;
 import org.kevinkib.cardgames.bullshit.domain.claim.ClaimMode;
@@ -22,7 +23,7 @@ import java.util.Optional;
 
 public class Bullshit {
 
-    private final BullshitId id;
+    private final GameId id;
     private final List<Player> players;
     private final ClaimMode claimMode;
     private final DiscardPile discardPile;
@@ -32,15 +33,15 @@ public class Bullshit {
     private PlayerId pendingWinner;
     private Result result;
 
-    public Bullshit(BullshitId id, int nbPlayers) {
+    public Bullshit(GameId id, int nbPlayers) {
         this(id, nbPlayers, new AscendingRankClaimMode());
     }
 
-    public Bullshit(BullshitId id, int nbPlayers, ClaimMode claimMode) {
+    public Bullshit(GameId id, int nbPlayers, ClaimMode claimMode) {
         this(id, deal(nbPlayers), claimMode, claimMode.initial(), 0);
     }
 
-    Bullshit(BullshitId id, List<Player> players, ClaimMode claimMode, ClaimTarget currentTarget, int currentPlayerIndex) {
+    Bullshit(GameId id, List<Player> players, ClaimMode claimMode, ClaimTarget currentTarget, int currentPlayerIndex) {
         this.id = id;
         this.players = new ArrayList<>(players);
         this.claimMode = claimMode;
@@ -192,7 +193,7 @@ public class Bullshit {
         return -1;
     }
 
-    public BullshitId getId() {
+    public GameId getId() {
         return id;
     }
 
