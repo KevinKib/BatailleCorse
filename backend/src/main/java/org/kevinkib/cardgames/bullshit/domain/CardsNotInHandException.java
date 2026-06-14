@@ -1,5 +1,7 @@
 package org.kevinkib.cardgames.bullshit.domain;
 
+import org.kevinkib.cardgames.bullshit.domain.player.PlayerId;
+
 public class CardsNotInHandException extends Exception {
 
     public CardsNotInHandException(PlayerId playerId) {

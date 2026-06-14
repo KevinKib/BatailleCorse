@@ -1,5 +1,7 @@
 package org.kevinkib.cardgames.bullshit.domain;
 
+import org.kevinkib.cardgames.bullshit.domain.player.Player;
+import org.kevinkib.cardgames.bullshit.domain.player.PlayerBuilder;
 import org.kevinkib.cards.domain.deck.french.FrenchRank;
 
 public final class BullshitFixtures {

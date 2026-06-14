@@ -1,6 +1,12 @@
 package org.kevinkib.cardgames.bullshit.domain;
 
 import org.junit.jupiter.api.Test;
+import org.kevinkib.cardgames.bullshit.domain.claim.AlternatingColorClaimMode;
+import org.kevinkib.cardgames.bullshit.domain.claim.ColorTarget;
+import org.kevinkib.cardgames.bullshit.domain.claim.RankTarget;
+import org.kevinkib.cardgames.bullshit.domain.player.Player;
+import org.kevinkib.cardgames.bullshit.domain.player.PlayerId;
+import org.kevinkib.cards.domain.deck.french.Color;
 import org.kevinkib.cards.domain.deck.french.FrenchRank;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -221,6 +227,19 @@ class BullshitTest {
         game.forfeit(new PlayerId(1)); // already finished -> ignored
 
         assertThat(game.getWinner(), is(winnerBefore));
+    }
+
+    @Test
+    void givenColorClaimMode_thenForcedClaimsAlternateByColour() throws Exception {
+        Bullshit game = BullshitBuilder.aBullshit()
+                .withClaimMode(new AlternatingColorClaimMode())
+                .withPlayers(playerWithRanks(0, FrenchRank.ACE, FrenchRank.KING), playerWithRanks(1, FrenchRank.TWO))
+                .build();
+        assertThat(game.getCurrentTarget(), is(new ColorTarget(Color.RED)));
+
+        game.discard(new PlayerId(0), game.getPlayers().get(0).getCards().subList(0, 1));
+
+        assertThat(game.getCurrentTarget(), is(new ColorTarget(Color.BLACK)));
     }
 
     @Test

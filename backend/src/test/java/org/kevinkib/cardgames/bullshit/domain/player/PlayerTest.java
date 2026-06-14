@@ -1,4 +1,4 @@
-package org.kevinkib.cardgames.bullshit.domain;
+package org.kevinkib.cardgames.bullshit.domain.player;
 
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cards.domain.Card;

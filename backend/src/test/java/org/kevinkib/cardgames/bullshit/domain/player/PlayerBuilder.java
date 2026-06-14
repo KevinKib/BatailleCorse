@@ -1,4 +1,4 @@
-package org.kevinkib.cardgames.bullshit.domain;
+package org.kevinkib.cardgames.bullshit.domain.player;
 
 import org.kevinkib.cards.domain.Card;
 import org.kevinkib.cards.domain.deck.french.FrenchRank;

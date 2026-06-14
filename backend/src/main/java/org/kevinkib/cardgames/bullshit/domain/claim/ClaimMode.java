@@ -1,4 +1,4 @@
-package org.kevinkib.cardgames.bullshit.domain;
+package org.kevinkib.cardgames.bullshit.domain.claim;
 
 import org.kevinkib.cards.domain.Card;
 
