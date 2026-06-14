@@ -1,13 +1,13 @@
 package org.kevinkib.cardgames.bullshit.domain;
 
 import org.junit.jupiter.api.Test;
-import org.kevinkib.cardgames.bullshit.domain.claim.AlternatingColorClaimMode;
-import org.kevinkib.cardgames.bullshit.domain.claim.ColorTarget;
+import org.kevinkib.cardgames.bullshit.domain.claim.CyclingSuitClaimMode;
 import org.kevinkib.cardgames.bullshit.domain.claim.RankTarget;
+import org.kevinkib.cardgames.bullshit.domain.claim.SuitTarget;
 import org.kevinkib.cardgames.bullshit.domain.player.Player;
 import org.kevinkib.cardgames.bullshit.domain.player.PlayerId;
-import org.kevinkib.cards.domain.deck.french.Color;
 import org.kevinkib.cards.domain.deck.french.FrenchRank;
+import org.kevinkib.cards.domain.deck.french.FrenchSuit;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
@@ -230,16 +230,16 @@ class BullshitTest {
     }
 
     @Test
-    void givenColorClaimMode_thenForcedClaimsAlternateByColour() throws Exception {
+    void givenSuitClaimMode_thenForcedClaimsCycleBySuit() throws Exception {
         Bullshit game = BullshitBuilder.aBullshit()
-                .withClaimMode(new AlternatingColorClaimMode())
+                .withClaimMode(new CyclingSuitClaimMode())
                 .withPlayers(playerWithRanks(0, FrenchRank.ACE, FrenchRank.KING), playerWithRanks(1, FrenchRank.TWO))
                 .build();
-        assertThat(game.getCurrentTarget(), is(new ColorTarget(Color.RED)));
+        assertThat(game.getCurrentTarget(), is(new SuitTarget(FrenchSuit.HEART)));
 
         game.discard(new PlayerId(0), game.getPlayers().get(0).getCards().subList(0, 1));
 
-        assertThat(game.getCurrentTarget(), is(new ColorTarget(Color.BLACK)));
+        assertThat(game.getCurrentTarget(), is(new SuitTarget(FrenchSuit.DIAMOND)));
     }
 
     @Test
