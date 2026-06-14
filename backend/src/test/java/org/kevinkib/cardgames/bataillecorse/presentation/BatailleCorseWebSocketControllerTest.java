@@ -1,4 +1,5 @@
-package org.kevinkib.cardgames.presentation;
+package org.kevinkib.cardgames.bataillecorse.presentation;
+import org.kevinkib.cardgames.presentation.*;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -31,15 +32,7 @@ class BatailleCorseWebSocketControllerTest {
         sessionService = new SessionService(new InMemorySessionRepository(java.time.Clock.systemUTC()), new org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseFactory());
         template = mock(SimpMessagingTemplate.class);
         GameMessagingService messaging = new GameMessagingService(template);
-        org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler scheduler =
-                new org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler();
-        scheduler.initialize();
-        ForfeitReasonRegistry forfeitReasonRegistry = new ForfeitReasonRegistry();
-        GameLifecycleBroadcasters broadcasters = new GameLifecycleBroadcasters(
-                java.util.List.of(new BatailleCorseLifecycleBroadcaster(messaging, forfeitReasonRegistry)));
-        DisconnectForfeitService forfeitService = new DisconnectForfeitService(
-                sessionService, new StompSessionSeatRegistry(), scheduler, java.time.Clock.systemUTC(), forfeitReasonRegistry, broadcasters);
-        controller = new BatailleCorseWebSocketController(sessionService, messaging, forfeitService);
+        controller = new BatailleCorseWebSocketController(sessionService, messaging);
     }
 
     @Nested

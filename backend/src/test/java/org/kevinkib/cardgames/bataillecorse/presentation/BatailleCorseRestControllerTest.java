@@ -1,4 +1,5 @@
-package org.kevinkib.cardgames.presentation;
+package org.kevinkib.cardgames.bataillecorse.presentation;
+import org.kevinkib.cardgames.presentation.*;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,14 +34,14 @@ class GameRestControllerTest {
 
     private SessionService sessionService;
     private ForfeitReasonRegistry forfeitReasonRegistry;
-    private GameRestController controller;
+    private BatailleCorseRestController controller;
 
     @BeforeEach
     void setUp() {
         Clock clock = Clock.fixed(Instant.parse("2026-06-11T10:00:00Z"), ZoneOffset.UTC);
         sessionService = new SessionService(new InMemorySessionRepository(clock), new org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseFactory());
         forfeitReasonRegistry = new ForfeitReasonRegistry();
-        controller = new GameRestController(sessionService, new RecordingMessaging(), forfeitReasonRegistry);
+        controller = new BatailleCorseRestController(sessionService, new RecordingMessaging(), forfeitReasonRegistry);
     }
 
     @Test

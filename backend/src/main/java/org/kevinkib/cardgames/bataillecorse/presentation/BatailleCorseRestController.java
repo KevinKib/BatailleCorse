@@ -1,4 +1,5 @@
-package org.kevinkib.cardgames.presentation;
+package org.kevinkib.cardgames.bataillecorse.presentation;
+import org.kevinkib.cardgames.presentation.*;
 
 import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorse;
 import org.kevinkib.cardgames.game.GameId;
@@ -30,13 +31,13 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api")
-public class GameRestController {
+public class BatailleCorseRestController {
 
     private final SessionService sessionService;
     private final GameMessagingService gameMessagingService;
     private final ForfeitReasonRegistry forfeitReasonRegistry;
 
-    public GameRestController(SessionService sessionService, GameMessagingService gameMessagingService,
+    public BatailleCorseRestController(SessionService sessionService, GameMessagingService gameMessagingService,
                               ForfeitReasonRegistry forfeitReasonRegistry) {
         this.sessionService = sessionService;
         this.gameMessagingService = gameMessagingService;
@@ -49,17 +50,6 @@ public class GameRestController {
             GameId gameId = new GameId(id);
             BatailleCorse game = sessionService.getGame(gameId, BatailleCorse.class);
             return ResponseEntity.ok(BatailleCorseDto.from(game, forfeitReasonRegistry.reasonsBySeat(gameId)));
-        } catch (InvalidGameIdException | IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
-    @GetMapping("/game/{id}/session")
-    public ResponseEntity<SessionViewDto> getSession(@PathVariable String id) {
-        try {
-            GameId gameId = new GameId(id);
-            List<SessionPlayer> seats = sessionService.getSeats(gameId);
-            return ResponseEntity.ok(SessionViewDto.from(seats));
         } catch (InvalidGameIdException | IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
         }

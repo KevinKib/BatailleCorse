@@ -6,7 +6,7 @@ import org.kevinkib.cardgames.sessionmanagement.application.GameCleanupService;
 import org.kevinkib.cardgames.sessionmanagement.application.SessionService;
 import org.kevinkib.cardgames.sessionmanagement.application.port.SessionRepository;
 import org.kevinkib.cardgames.sessionmanagement.infrastructure.InMemorySessionRepository;
-import org.kevinkib.cardgames.presentation.BatailleCorseLifecycleBroadcaster;
+import org.kevinkib.cardgames.bataillecorse.presentation.BatailleCorseLifecycleBroadcaster;
 import org.kevinkib.cardgames.presentation.DisconnectForfeitService;
 import org.kevinkib.cardgames.presentation.ForfeitReasonRegistry;
 import org.kevinkib.cardgames.presentation.GameLifecycleBroadcaster;

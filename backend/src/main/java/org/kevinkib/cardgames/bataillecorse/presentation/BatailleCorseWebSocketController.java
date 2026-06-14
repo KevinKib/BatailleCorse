@@ -1,4 +1,5 @@
-package org.kevinkib.cardgames.presentation;
+package org.kevinkib.cardgames.bataillecorse.presentation;
+import org.kevinkib.cardgames.presentation.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -35,14 +36,11 @@ public class BatailleCorseWebSocketController {
 
     private final SessionService sessionService;
     private final GameMessagingService gameMessagingService;
-    private final DisconnectForfeitService disconnectForfeitService;
 
     public BatailleCorseWebSocketController(SessionService sessionService,
-                                            GameMessagingService gameMessagingService,
-                                            DisconnectForfeitService disconnectForfeitService) {
+                                            GameMessagingService gameMessagingService) {
         this.sessionService = sessionService;
         this.gameMessagingService = gameMessagingService;
-        this.disconnectForfeitService = disconnectForfeitService;
     }
 
     @MessageMapping("/create")
@@ -161,32 +159,6 @@ public class BatailleCorseWebSocketController {
         }
 
         gameMessagingService.sendToGame(payload.gameId(), response);
-    }
-
-    @MessageMapping("/presence")
-    public void presence(@Payload PresencePayload payload, SimpMessageHeaderAccessor headers) {
-        GameId gameId = new GameId(payload.gameId());
-        try {
-            PlayerId playerId = sessionService
-                    .findPlayerIdByToken(gameId, new SessionToken(payload.token()))
-                    .orElseThrow(InvalidTokenException::new);
-            disconnectForfeitService.onPresence(headers.getSessionId(), gameId, playerId);
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
-        }
-    }
-
-    @MessageMapping("/forfeit")
-    public void forfeit(GameActionPayload payload) {
-        GameId gameId = new GameId(payload.gameId());
-        try {
-            PlayerId playerId = sessionService
-                    .findPlayerIdByToken(gameId, new SessionToken(payload.token()))
-                    .orElseThrow(InvalidTokenException::new);
-            disconnectForfeitService.forfeit(new Seat(gameId, playerId), ForfeitReason.RESIGNED);
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
-        }
     }
 
     @MessageMapping("/rematch")

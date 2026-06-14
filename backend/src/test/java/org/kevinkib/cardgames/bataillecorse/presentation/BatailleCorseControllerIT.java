@@ -1,4 +1,5 @@
-package org.kevinkib.cardgames.presentation;
+package org.kevinkib.cardgames.bataillecorse.presentation;
+import org.kevinkib.cardgames.presentation.*;
 
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.presentation.api.Response;
@@ -12,8 +13,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.kevinkib.cardgames.presentation.BatailleCorseWebSocketController.GAME_CREATED_MESSAGE;
-import static org.kevinkib.cardgames.presentation.BatailleCorseWebSocketController.NB_PLAYERS;
+import static org.kevinkib.cardgames.bataillecorse.presentation.BatailleCorseWebSocketController.GAME_CREATED_MESSAGE;
+import static org.kevinkib.cardgames.bataillecorse.presentation.BatailleCorseWebSocketController.NB_PLAYERS;
 
 @SpringBootTest
 class BatailleCorseControllerIT {
