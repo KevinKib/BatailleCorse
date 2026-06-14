@@ -11,7 +11,7 @@ import static org.hamcrest.Matchers.is;
 class BatailleCorseFactoryTest {
 
     @Test
-    void createsAPlayableBatailleCorseWithTheGivenId() {
+    void givenId_whenCreate_thenReturnsPlayableGameWithThatId() {
         GameId id = GameId.generate();
 
         Game game = new BatailleCorseFactory().create(id, 2);
