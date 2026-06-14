@@ -1,7 +1,7 @@
 package org.kevinkib.cardgames.bullshit.domain;
+
 import org.kevinkib.cardgames.game.Game;
 import org.kevinkib.cardgames.game.GameId;
-
 import org.kevinkib.cardgames.bullshit.domain.claim.AscendingRankClaimMode;
 import org.kevinkib.cardgames.bullshit.domain.claim.ClaimMode;
 import org.kevinkib.cardgames.bullshit.domain.claim.ClaimTarget;

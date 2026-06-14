@@ -1,6 +1,6 @@
 package org.kevinkib.cardgames.bullshit.domain.player;
-import org.kevinkib.cardgames.game.PlayerId;
 
+import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cards.domain.Card;
 import org.kevinkib.cards.domain.hand.CannotPlayNonPossessedCardException;
 import org.kevinkib.cards.domain.hand.Hand;
