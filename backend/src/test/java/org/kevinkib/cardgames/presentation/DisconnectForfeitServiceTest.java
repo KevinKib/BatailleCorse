@@ -10,8 +10,8 @@ import org.kevinkib.cardgames.sessionmanagement.domain.GameMode;
 import org.kevinkib.cardgames.sessionmanagement.infrastructure.InMemorySessionRepository;
 import org.kevinkib.cardgames.presentation.api.Response;
 import org.kevinkib.cardgames.presentation.api.SuccessResponse;
-import org.kevinkib.cardgames.presentation.dto.BatailleCorseDto;
-import org.kevinkib.cardgames.presentation.dto.PlayerDto;
+import org.kevinkib.cardgames.bataillecorse.presentation.dto.BatailleCorseDto;
+import org.kevinkib.cardgames.bataillecorse.presentation.dto.PlayerDto;
 import org.springframework.scheduling.Trigger;
 import org.springframework.scheduling.TaskScheduler;
 

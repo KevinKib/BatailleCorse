@@ -3,7 +3,7 @@ package org.kevinkib.cardgames.presentation;
 import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorse;
 import org.kevinkib.cardgames.game.Game;
 import org.kevinkib.cardgames.presentation.api.SuccessResponse;
-import org.kevinkib.cardgames.presentation.dto.BatailleCorseDto;
+import org.kevinkib.cardgames.bataillecorse.presentation.dto.BatailleCorseDto;
 import org.kevinkib.cardgames.presentation.dto.event.LifecycleEventType;
 import org.kevinkib.cardgames.presentation.dto.event.ForfeitEventData;
 import org.kevinkib.cardgames.presentation.dto.event.OpponentDisconnectedEventData;
