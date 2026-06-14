@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorse;
-import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseId;
+import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.bataillecorse.domain.Player;
 import org.kevinkib.cardgames.bataillecorse.domain.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.application.InvalidTokenException;
@@ -69,7 +69,7 @@ public class BatailleCorseWebSocketController {
     public void send(GameActionPayload payload) {
         EventType eventType = EventType.SEND;
 
-        BatailleCorseId gameId = new BatailleCorseId(payload.gameId());
+        GameId gameId = new GameId(payload.gameId());
         BatailleCorse batailleCorse = sessionService.getGame(gameId);
 
         Response response;
@@ -101,7 +101,7 @@ public class BatailleCorseWebSocketController {
     public void slap(GameActionPayload payload) {
         EventType eventType = EventType.SLAP;
 
-        BatailleCorseId gameId = new BatailleCorseId(payload.gameId());
+        GameId gameId = new GameId(payload.gameId());
         BatailleCorse batailleCorse = sessionService.getGame(gameId);
 
         Response response;
@@ -134,7 +134,7 @@ public class BatailleCorseWebSocketController {
     public void grab(GameActionPayload payload) {
         EventType eventType = EventType.GRAB;
 
-        BatailleCorseId gameId = new BatailleCorseId(payload.gameId());
+        GameId gameId = new GameId(payload.gameId());
         BatailleCorse batailleCorse = sessionService.getGame(gameId);
 
         Response response;
@@ -163,7 +163,7 @@ public class BatailleCorseWebSocketController {
 
     @MessageMapping("/presence")
     public void presence(@Payload PresencePayload payload, SimpMessageHeaderAccessor headers) {
-        BatailleCorseId gameId = new BatailleCorseId(payload.gameId());
+        GameId gameId = new GameId(payload.gameId());
         try {
             PlayerId playerId = sessionService
                     .findPlayerIdByToken(gameId, new SessionToken(payload.token()))
@@ -176,7 +176,7 @@ public class BatailleCorseWebSocketController {
 
     @MessageMapping("/forfeit")
     public void forfeit(GameActionPayload payload) {
-        BatailleCorseId gameId = new BatailleCorseId(payload.gameId());
+        GameId gameId = new GameId(payload.gameId());
         try {
             PlayerId playerId = sessionService
                     .findPlayerIdByToken(gameId, new SessionToken(payload.token()))
@@ -189,7 +189,7 @@ public class BatailleCorseWebSocketController {
 
     @MessageMapping("/rematch")
     public void rematch(GameActionPayload payload) {
-        BatailleCorseId gameId = new BatailleCorseId(payload.gameId());
+        GameId gameId = new GameId(payload.gameId());
         try {
             PlayerId playerId = sessionService
                     .findPlayerIdByToken(gameId, new SessionToken(payload.token()))

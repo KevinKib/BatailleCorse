@@ -2,7 +2,7 @@ package org.kevinkib.cardgames.presentation.dto;
 
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorse;
-import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseId;
+import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.bataillecorse.domain.Player;
 import org.kevinkib.cardgames.presentation.ForfeitReason;
 
@@ -15,7 +15,7 @@ import static org.hamcrest.Matchers.nullValue;
 class PlayerDtoTest {
 
     private Player aPlayer() {
-        BatailleCorse game = new BatailleCorse(BatailleCorseId.generate(), 2);
+        BatailleCorse game = new BatailleCorse(GameId.generate(), 2);
         return game.getPlayerByIndex(0);
     }
 

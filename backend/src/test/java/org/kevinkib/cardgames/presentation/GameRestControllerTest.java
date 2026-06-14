@@ -3,7 +3,7 @@ package org.kevinkib.cardgames.presentation;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorse;
-import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseId;
+import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.bataillecorse.domain.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.application.SessionService;
 import org.kevinkib.cardgames.sessionmanagement.domain.GameMode;
@@ -46,7 +46,7 @@ class GameRestControllerTest {
     @Test
     void givenForfeitedGame_whenGetGame_thenLosingPlayerHasForfeitReason() {
         BatailleCorse game = sessionService.createGame(2, GameMode.MULTIPLAYER);
-        BatailleCorseId gameId = game.getId();
+        GameId gameId = game.getId();
         game.concede(new PlayerId(0));
         forfeitReasonRegistry.record(new Seat(gameId, new PlayerId(0)), ForfeitReason.RESIGNED);
 

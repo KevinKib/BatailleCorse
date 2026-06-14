@@ -1,7 +1,7 @@
 package org.kevinkib.cardgames.sessionmanagement.application;
 
 import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorse;
-import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseId;
+import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.bataillecorse.domain.Player;
 import org.kevinkib.cardgames.bataillecorse.domain.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.application.port.SessionRepository;
@@ -32,7 +32,7 @@ public class SessionService {
     }
 
     public BatailleCorse createGame(int nbPlayers, GameMode mode, String creatorName) {
-        BatailleCorseId id = BatailleCorseId.generate();
+        GameId id = GameId.generate();
         BatailleCorse batailleCorse = new BatailleCorse(id, nbPlayers);
 
         SessionGame sessionGame = SessionGame.create(id, batailleCorse.getPlayers());
@@ -51,11 +51,11 @@ public class SessionService {
         return batailleCorse;
     }
 
-    public JoinResult joinGame(BatailleCorseId gameId) {
+    public JoinResult joinGame(GameId gameId) {
         return joinGame(gameId, null);
     }
 
-    public JoinResult joinGame(BatailleCorseId gameId, String name) {
+    public JoinResult joinGame(GameId gameId, String name) {
         SessionGame sessionGame = repository.loadSessionGame(gameId);
 
         if (sessionGame.isClaimed(JOINER_SEAT)) {
@@ -69,11 +69,11 @@ public class SessionService {
         return new JoinResult(JOINER_SEAT, token);
     }
 
-    public SessionGame getGameSession(BatailleCorseId id) {
+    public SessionGame getGameSession(GameId id) {
         return repository.loadSessionGame(id);
     }
 
-    public BatailleCorse rematch(BatailleCorseId id) {
+    public BatailleCorse rematch(GameId id) {
         SessionGame session = repository.loadSessionGame(id);
         BatailleCorse fresh = new BatailleCorse(id, session.seats().size());
         session.clearRematch();
@@ -81,15 +81,15 @@ public class SessionService {
         return fresh;
     }
 
-    public List<SessionPlayer> getSeats(BatailleCorseId gameId) {
+    public List<SessionPlayer> getSeats(GameId gameId) {
         return repository.loadSessionGame(gameId).seats();
     }
 
-    public boolean isSeatClaimed(BatailleCorseId gameId, PlayerId playerId) {
+    public boolean isSeatClaimed(GameId gameId, PlayerId playerId) {
         return repository.loadSessionGame(gameId).isClaimed(playerId);
     }
 
-    public BatailleCorse getGame(BatailleCorseId id) throws InvalidGameIdException {
+    public BatailleCorse getGame(GameId id) throws InvalidGameIdException {
         try {
             return repository.load(id);
         } catch (IllegalArgumentException e) {
@@ -97,15 +97,15 @@ public class SessionService {
         }
     }
 
-    public void touch(BatailleCorseId id) {
+    public void touch(GameId id) {
         repository.touch(id);
     }
 
-    public SessionToken loadTokenByPlayerId(BatailleCorseId batailleCorseId, PlayerId playerId) {
+    public SessionToken loadTokenByPlayerId(GameId batailleCorseId, PlayerId playerId) {
         return repository.loadSessionToken(batailleCorseId, playerId);
     }
 
-    public Optional<PlayerId> findPlayerIdByToken(BatailleCorseId gameId, SessionToken token) {
+    public Optional<PlayerId> findPlayerIdByToken(GameId gameId, SessionToken token) {
         return repository.loadSessionGame(gameId).findPlayerByToken(token);
     }
 

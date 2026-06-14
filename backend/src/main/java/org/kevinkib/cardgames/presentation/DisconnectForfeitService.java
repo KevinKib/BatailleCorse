@@ -1,7 +1,7 @@
 package org.kevinkib.cardgames.presentation;
 
 import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorse;
-import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseId;
+import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.bataillecorse.domain.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.application.InvalidGameIdException;
 import org.kevinkib.cardgames.sessionmanagement.application.SessionService;
@@ -56,7 +56,7 @@ public class DisconnectForfeitService {
     }
 
     /** Records presence; if this seat had a pending forfeit, cancels it and announces the return. */
-    public void onPresence(String sessionId, BatailleCorseId gameId, PlayerId playerId) {
+    public void onPresence(String sessionId, GameId gameId, PlayerId playerId) {
         Seat seat = new Seat(gameId, playerId);
         registry.bind(sessionId, seat);
 
@@ -128,11 +128,11 @@ public class DisconnectForfeitService {
                 BatailleCorseDto.from(game)));
     }
 
-    private void broadcast(BatailleCorseId gameId, Response response) {
+    private void broadcast(GameId gameId, Response response) {
         messaging.sendToGame(gameId.uuid().toString(), response);
     }
 
-    private BatailleCorse findGame(BatailleCorseId gameId) {
+    private BatailleCorse findGame(GameId gameId) {
         try {
             return sessionService.getGame(gameId);
         } catch (InvalidGameIdException e) {

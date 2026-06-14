@@ -3,7 +3,7 @@ package org.kevinkib.cardgames.presentation;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorse;
-import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseId;
+import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.bataillecorse.domain.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.application.SessionService;
 import org.kevinkib.cardgames.sessionmanagement.domain.GameMode;
@@ -70,7 +70,7 @@ class DisconnectForfeitServiceTest {
     private StompSessionSeatRegistry registry;
     private ForfeitReasonRegistry forfeitReasonRegistry;
     private DisconnectForfeitService service;
-    private BatailleCorseId gameId;
+    private GameId gameId;
 
     @BeforeEach
     void setUp() {

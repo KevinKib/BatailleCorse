@@ -4,7 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorse;
-import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseId;
+import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.bataillecorse.domain.Player;
 import org.kevinkib.cardgames.bataillecorse.domain.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.application.SessionService;
@@ -113,7 +113,7 @@ class BatailleCorseWebSocketControllerTest {
         void givenValidToken_whenGrab_thenBroadcastsSuccessResponse() {
             var game = sessionService.createGame(2);
             String gameId = game.getId().uuid().toString();
-            BatailleCorseId batailleCorseId = game.getId();
+            GameId batailleCorseId = game.getId();
             SessionToken token0 = sessionService.loadTokenByPlayerId(batailleCorseId, new PlayerId(0));
             SessionToken token1 = sessionService.loadTokenByPlayerId(batailleCorseId, new PlayerId(1));
 

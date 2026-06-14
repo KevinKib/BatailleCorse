@@ -1,6 +1,6 @@
 package org.kevinkib.cardgames.sessionmanagement.domain;
 
-import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseId;
+import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.bataillecorse.domain.Player;
 import org.kevinkib.cardgames.bataillecorse.domain.PlayerId;
 
@@ -10,9 +10,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public record SessionGame(BatailleCorseId id, Map<PlayerId, SessionPlayer> players) {
+public record SessionGame(GameId id, Map<PlayerId, SessionPlayer> players) {
 
-    public static SessionGame create(BatailleCorseId id, List<Player> players) {
+    public static SessionGame create(GameId id, List<Player> players) {
         Map<PlayerId, SessionPlayer> seats = new LinkedHashMap<>();
         for (Player player : players) {
             seats.put(player.id(), new SessionPlayer(player.id(), SessionToken.generate()));

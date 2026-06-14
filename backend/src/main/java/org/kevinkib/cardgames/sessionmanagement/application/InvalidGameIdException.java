@@ -1,10 +1,10 @@
 package org.kevinkib.cardgames.sessionmanagement.application;
 
-import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseId;
+import org.kevinkib.cardgames.game.GameId;
 
 public class InvalidGameIdException extends RuntimeException {
 
-    public InvalidGameIdException(BatailleCorseId id) {
+    public InvalidGameIdException(GameId id) {
         super("The game with id "+id+" does not exist.");
     }
 }

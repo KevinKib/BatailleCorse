@@ -1,4 +1,5 @@
 package org.kevinkib.cardgames.bataillecorse.domain;
+import org.kevinkib.cardgames.game.GameId;
 
 import org.junit.jupiter.api.Test;
 
@@ -9,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class BatailleCorseConcedeTest {
 
     private BatailleCorse newTwoPlayerGame() {
-        return new BatailleCorse(BatailleCorseId.generate(), 2);
+        return new BatailleCorse(GameId.generate(), 2);
     }
 
     @Test
@@ -34,7 +35,7 @@ class BatailleCorseConcedeTest {
 
     @Test
     void givenMoreThanTwoPlayers_whenConcede_thenThrows() {
-        BatailleCorse game = new BatailleCorse(BatailleCorseId.generate(), 4);
+        BatailleCorse game = new BatailleCorse(GameId.generate(), 4);
 
         assertThrows(UnsupportedOperationException.class, () -> game.concede(new PlayerId(0)));
     }

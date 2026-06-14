@@ -1,6 +1,6 @@
 package org.kevinkib.cardgames.presentation;
 
-import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseId;
+import org.kevinkib.cardgames.game.GameId;
 
 import java.util.Map;
 import java.util.Optional;
@@ -22,7 +22,7 @@ public class StompSessionSeatRegistry {
         return Optional.ofNullable(seatBySession.remove(sessionId));
     }
 
-    public void removeGame(BatailleCorseId gameId) {
+    public void removeGame(GameId gameId) {
         seatBySession.values().removeIf(seat -> seat.gameId().equals(gameId));
     }
 }
