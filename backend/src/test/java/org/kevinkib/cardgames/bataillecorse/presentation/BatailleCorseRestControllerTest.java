@@ -23,7 +23,7 @@ import java.util.List;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
-class GameRestControllerTest {
+class BatailleCorseRestControllerTest {
 
     /** Records every broadcast instead of touching a real broker. */
     private static final class RecordingMessaging extends GameMessagingService {

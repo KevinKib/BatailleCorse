@@ -21,11 +21,9 @@ import org.kevinkib.cardgames.presentation.dto.*;
 import org.kevinkib.cardgames.bataillecorse.presentation.dto.*;
 import org.kevinkib.cardgames.presentation.dto.event.*;
 import org.kevinkib.cardgames.bataillecorse.presentation.dto.event.*;
-import org.kevinkib.cardgames.presentation.api.PresencePayload;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
-import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.stereotype.Controller;
 
 @Controller
