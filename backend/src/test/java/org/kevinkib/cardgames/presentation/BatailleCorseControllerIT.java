@@ -6,7 +6,7 @@ import org.kevinkib.cardgames.presentation.api.SuccessResponse;
 import org.kevinkib.cardgames.presentation.dto.BatailleCorseDto;
 import org.kevinkib.cardgames.presentation.dto.event.CreateEventData;
 import org.kevinkib.cardgames.presentation.dto.event.EmptyEventData;
-import org.kevinkib.cardgames.presentation.dto.event.EventType;
+import org.kevinkib.cardgames.presentation.dto.event.LifecycleEventType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -26,7 +26,7 @@ class BatailleCorseControllerIT {
         Response response = controller.createGame(null);
 
         assertThat(response, instanceOf(SuccessResponse.class));
-        assertThat(response.getEventType(), is(EventType.CREATE.toString()));
+        assertThat(response.getEventType(), is(LifecycleEventType.CREATE.toString()));
         assertThat(response.getEventData(), instanceOf(CreateEventData.class));
         assertThat(response.getMessage(), is(GAME_CREATED_MESSAGE));
         assertThat(response.getState(), notNullValue());

@@ -15,7 +15,7 @@ import org.kevinkib.cardgames.presentation.dto.BatailleCorseDto;
 import org.kevinkib.cardgames.presentation.dto.JoinResponseDto;
 import org.kevinkib.cardgames.presentation.dto.PlayerIdDto;
 import org.kevinkib.cardgames.presentation.dto.SessionViewDto;
-import org.kevinkib.cardgames.presentation.dto.event.EventType;
+import org.kevinkib.cardgames.presentation.dto.event.LifecycleEventType;
 import org.kevinkib.cardgames.presentation.dto.event.JoinEventData;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -78,7 +78,7 @@ public class GameRestController {
             Player joiner = game.getPlayerByIndex(result.playerId().id());
             SessionViewDto sessionView = SessionViewDto.from(sessionService.getSeats(gameId));
             Response broadcast = new SuccessResponse(
-                    EventType.JOIN.toString(),
+                    LifecycleEventType.JOIN.toString(),
                     new JoinEventData(PlayerIdDto.from(joiner), sessionView.players()),
                     "Player " + result.playerId().id() + " joined.",
                     BatailleCorseDto.from(game));

@@ -59,7 +59,7 @@ public class BatailleCorseWebSocketController {
         }
 
         return new SuccessResponse(
-                EventType.CREATE.toString(),
+                LifecycleEventType.CREATE.toString(),
                 new CreateEventData(new BatailleCorseIdDto(batailleCorse.getId()), tokens),
                 GAME_CREATED_MESSAGE,
                 BatailleCorseDto.from(batailleCorse));
@@ -67,7 +67,7 @@ public class BatailleCorseWebSocketController {
 
     @MessageMapping("/send")
     public void send(GameActionPayload payload) {
-        EventType eventType = EventType.SEND;
+        BatailleCorseEventType eventType = BatailleCorseEventType.SEND;
 
         GameId gameId = new GameId(payload.gameId());
         BatailleCorse batailleCorse = sessionService.getGame(gameId, BatailleCorse.class);
@@ -99,7 +99,7 @@ public class BatailleCorseWebSocketController {
 
     @MessageMapping("/slap")
     public void slap(GameActionPayload payload) {
-        EventType eventType = EventType.SLAP;
+        BatailleCorseEventType eventType = BatailleCorseEventType.SLAP;
 
         GameId gameId = new GameId(payload.gameId());
         BatailleCorse batailleCorse = sessionService.getGame(gameId, BatailleCorse.class);
@@ -132,7 +132,7 @@ public class BatailleCorseWebSocketController {
 
     @MessageMapping("/grab")
     public void grab(GameActionPayload payload) {
-        EventType eventType = EventType.GRAB;
+        BatailleCorseEventType eventType = BatailleCorseEventType.GRAB;
 
         GameId gameId = new GameId(payload.gameId());
         BatailleCorse batailleCorse = sessionService.getGame(gameId, BatailleCorse.class);
@@ -201,14 +201,14 @@ public class BatailleCorseWebSocketController {
             if (sessionService.getGameSession(gameId).isRematchUnanimous()) {
                 BatailleCorse fresh = (BatailleCorse) sessionService.rematch(gameId);
                 response = new SuccessResponse(
-                        EventType.REMATCH.toString(),
+                        LifecycleEventType.REMATCH.toString(),
                         new RematchEventData(RematchStatus.STARTED, new PlayerIdDto(String.valueOf(playerId.id()))),
                         "Rematch started.",
                         BatailleCorseDto.from(fresh));
             } else {
                 BatailleCorse current = sessionService.getGame(gameId, BatailleCorse.class);
                 response = new SuccessResponse(
-                        EventType.REMATCH.toString(),
+                        LifecycleEventType.REMATCH.toString(),
                         new RematchEventData(RematchStatus.PENDING, new PlayerIdDto(String.valueOf(playerId.id()))),
                         "Rematch requested.",
                         BatailleCorseDto.from(current));
