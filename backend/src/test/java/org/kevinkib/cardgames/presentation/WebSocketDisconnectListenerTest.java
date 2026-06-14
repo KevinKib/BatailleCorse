@@ -13,7 +13,7 @@ class WebSocketDisconnectListenerTest {
 
     private static final class RecordingService extends DisconnectForfeitService {
         String lastSessionId;
-        RecordingService() { super(null, null, null, null, null, new ForfeitReasonRegistry()); }
+        RecordingService() { super(null, null, null, null, null, null); }
         @Override public void onDisconnect(String sessionId) { this.lastSessionId = sessionId; }
     }
 

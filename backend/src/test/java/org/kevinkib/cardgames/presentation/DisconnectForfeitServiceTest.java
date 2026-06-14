@@ -81,7 +81,9 @@ class DisconnectForfeitServiceTest {
         messaging = new RecordingMessaging();
         registry = new StompSessionSeatRegistry();
         forfeitReasonRegistry = new ForfeitReasonRegistry();
-        service = new DisconnectForfeitService(sessionService, messaging, registry, scheduler, clock, forfeitReasonRegistry);
+        var broadcaster = new BatailleCorseLifecycleBroadcaster(messaging, forfeitReasonRegistry);
+        var broadcasters = new GameLifecycleBroadcasters(List.of(broadcaster));
+        service = new DisconnectForfeitService(sessionService, registry, scheduler, clock, forfeitReasonRegistry, broadcasters);
 
         BatailleCorse game = (BatailleCorse) sessionService.createGame(2, GameMode.MULTIPLAYER);
         gameId = game.getId();

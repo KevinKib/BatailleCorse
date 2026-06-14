@@ -6,11 +6,16 @@ import org.kevinkib.cardgames.sessionmanagement.application.GameCleanupService;
 import org.kevinkib.cardgames.sessionmanagement.application.SessionService;
 import org.kevinkib.cardgames.sessionmanagement.application.port.SessionRepository;
 import org.kevinkib.cardgames.sessionmanagement.infrastructure.InMemorySessionRepository;
+import org.kevinkib.cardgames.presentation.BatailleCorseLifecycleBroadcaster;
 import org.kevinkib.cardgames.presentation.DisconnectForfeitService;
 import org.kevinkib.cardgames.presentation.ForfeitReasonRegistry;
+import org.kevinkib.cardgames.presentation.GameLifecycleBroadcaster;
+import org.kevinkib.cardgames.presentation.GameLifecycleBroadcasters;
 import org.kevinkib.cardgames.presentation.GameMessagingService;
 import org.kevinkib.cardgames.presentation.StompSessionSeatRegistry;
 import org.kevinkib.cardgames.presentation.WebSocketDisconnectListener;
+
+import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -69,9 +74,20 @@ public class AppConfig {
     }
 
     @Bean
-    public DisconnectForfeitService disconnectForfeitService(GameMessagingService gameMessagingService) {
+    public GameLifecycleBroadcaster batailleCorseLifecycleBroadcaster(GameMessagingService gameMessagingService) {
+        return new BatailleCorseLifecycleBroadcaster(gameMessagingService, forfeitReasonRegistry());
+    }
+
+    @Bean
+    public GameLifecycleBroadcasters gameLifecycleBroadcasters(List<GameLifecycleBroadcaster> broadcasters) {
+        return new GameLifecycleBroadcasters(broadcasters);
+    }
+
+    @Bean
+    public DisconnectForfeitService disconnectForfeitService(GameLifecycleBroadcasters gameLifecycleBroadcasters) {
         return new DisconnectForfeitService(
-                sessionService(), gameMessagingService, stompSessionSeatRegistry(), taskScheduler(), clock(), forfeitReasonRegistry());
+                sessionService(), stompSessionSeatRegistry(), taskScheduler(), clock(), forfeitReasonRegistry(),
+                gameLifecycleBroadcasters);
     }
 
     @Bean

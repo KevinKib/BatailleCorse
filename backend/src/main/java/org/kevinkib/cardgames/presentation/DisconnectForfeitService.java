@@ -1,17 +1,10 @@
 package org.kevinkib.cardgames.presentation;
 
-import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorse;
+import org.kevinkib.cardgames.game.Game;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.application.InvalidGameIdException;
 import org.kevinkib.cardgames.sessionmanagement.application.SessionService;
-import org.kevinkib.cardgames.presentation.api.Response;
-import org.kevinkib.cardgames.presentation.api.SuccessResponse;
-import org.kevinkib.cardgames.presentation.dto.BatailleCorseDto;
-import org.kevinkib.cardgames.presentation.dto.event.EventType;
-import org.kevinkib.cardgames.presentation.dto.event.ForfeitEventData;
-import org.kevinkib.cardgames.presentation.dto.event.OpponentDisconnectedEventData;
-import org.kevinkib.cardgames.presentation.dto.event.OpponentReconnectedEventData;
 import org.springframework.scheduling.TaskScheduler;
 
 import java.time.Clock;
@@ -25,7 +18,8 @@ import java.util.concurrent.ScheduledFuture;
 /**
  * Detects multiplayer disconnects and runs the 60s auto-loss timer, plus the
  * shared forfeit path. Reconnect (a fresh presence for the same seat) cancels a
- * pending timer. The timer firing — and explicit forfeit — both run {@link #forfeit}.
+ * pending timer. Broadcasting is delegated to the per-game {@link GameLifecycleBroadcaster};
+ * this service knows only the lifecycle, never a game's state shape.
  */
 public class DisconnectForfeitService {
 
@@ -33,26 +27,26 @@ public class DisconnectForfeitService {
     public static final Duration FORFEIT_GRACE = Duration.ofSeconds(60);
 
     private final SessionService sessionService;
-    private final GameMessagingService messaging;
     private final StompSessionSeatRegistry registry;
     private final TaskScheduler scheduler;
     private final Clock clock;
     private final ForfeitReasonRegistry forfeitReasonRegistry;
+    private final GameLifecycleBroadcasters broadcasters;
 
     private final Map<Seat, ScheduledFuture<?>> pendingForfeits = new ConcurrentHashMap<>();
 
     public DisconnectForfeitService(SessionService sessionService,
-                                    GameMessagingService messaging,
                                     StompSessionSeatRegistry registry,
                                     TaskScheduler scheduler,
                                     Clock clock,
-                                    ForfeitReasonRegistry forfeitReasonRegistry) {
+                                    ForfeitReasonRegistry forfeitReasonRegistry,
+                                    GameLifecycleBroadcasters broadcasters) {
         this.sessionService = sessionService;
-        this.messaging = messaging;
         this.registry = registry;
         this.scheduler = scheduler;
         this.clock = clock;
         this.forfeitReasonRegistry = forfeitReasonRegistry;
+        this.broadcasters = broadcasters;
     }
 
     /** Records presence; if this seat had a pending forfeit, cancels it and announces the return. */
@@ -63,7 +57,10 @@ public class DisconnectForfeitService {
         ScheduledFuture<?> pending = pendingForfeits.remove(seat);
         if (pending != null) {
             pending.cancel(false);
-            broadcastReconnected(seat);
+            Game game = findGame(seat.gameId());
+            if (game != null) {
+                broadcasters.broadcasterFor(game).reconnected(game, seat);
+            }
         }
     }
 
@@ -75,7 +72,7 @@ public class DisconnectForfeitService {
         }
         Seat seat = maybeSeat.get();
 
-        BatailleCorse game = findGame(seat.gameId());
+        Game game = findGame(seat.gameId());
         if (game == null || game.isFinished()) {
             return;
         }
@@ -83,58 +80,26 @@ public class DisconnectForfeitService {
         Instant deadline = clock.instant().plus(FORFEIT_GRACE);
         ScheduledFuture<?> task = scheduler.schedule(() -> forfeit(seat, ForfeitReason.DISCONNECTED), deadline);
         pendingForfeits.put(seat, task);
-        broadcastDisconnected(seat, deadline.toEpochMilli());
+        broadcasters.broadcasterFor(game).disconnected(game, seat, deadline.toEpochMilli());
     }
 
     /** Terminal path shared by the timer (DISCONNECTED) and explicit /app/forfeit (RESIGNED). Idempotent on a finished game. */
     public void forfeit(Seat seat, ForfeitReason reason) {
         pendingForfeits.remove(seat);
 
-        BatailleCorse game = findGame(seat.gameId());
+        Game game = findGame(seat.gameId());
         if (game == null || game.isFinished()) {
             return;
         }
         game.forfeit(seat.playerId());
         forfeitReasonRegistry.record(seat, reason);
         sessionService.touch(seat.gameId()); // start the finished-grace clock
-        broadcast(seat.gameId(), new SuccessResponse(
-                EventType.FORFEIT.toString(),
-                new ForfeitEventData(seat.playerId().id()),
-                "Player " + seat.playerId() + " forfeited.",
-                BatailleCorseDto.from(game, forfeitReasonRegistry.reasonsBySeat(seat.gameId()))));
+        broadcasters.broadcasterFor(game).forfeited(game, seat, reason);
     }
 
-    private void broadcastDisconnected(Seat seat, long deadlineEpochMs) {
-        BatailleCorse game = findGame(seat.gameId());
-        if (game == null) {
-            return;
-        }
-        broadcast(seat.gameId(), new SuccessResponse(
-                EventType.OPPONENT_DISCONNECTED.toString(),
-                new OpponentDisconnectedEventData(seat.playerId().id(), deadlineEpochMs),
-                "Player " + seat.playerId() + " disconnected.",
-                BatailleCorseDto.from(game)));
-    }
-
-    private void broadcastReconnected(Seat seat) {
-        BatailleCorse game = findGame(seat.gameId());
-        if (game == null) {
-            return;
-        }
-        broadcast(seat.gameId(), new SuccessResponse(
-                EventType.OPPONENT_RECONNECTED.toString(),
-                new OpponentReconnectedEventData(seat.playerId().id()),
-                "Player " + seat.playerId() + " reconnected.",
-                BatailleCorseDto.from(game)));
-    }
-
-    private void broadcast(GameId gameId, Response response) {
-        messaging.sendToGame(gameId.uuid().toString(), response);
-    }
-
-    private BatailleCorse findGame(GameId gameId) {
+    private Game findGame(GameId gameId) {
         try {
-            return (BatailleCorse) sessionService.getGame(gameId);
+            return sessionService.getGame(gameId);
         } catch (InvalidGameIdException e) {
             return null;
         }

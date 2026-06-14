@@ -34,8 +34,11 @@ class BatailleCorseWebSocketControllerTest {
         org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler scheduler =
                 new org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler();
         scheduler.initialize();
+        ForfeitReasonRegistry forfeitReasonRegistry = new ForfeitReasonRegistry();
+        GameLifecycleBroadcasters broadcasters = new GameLifecycleBroadcasters(
+                java.util.List.of(new BatailleCorseLifecycleBroadcaster(messaging, forfeitReasonRegistry)));
         DisconnectForfeitService forfeitService = new DisconnectForfeitService(
-                sessionService, messaging, new StompSessionSeatRegistry(), scheduler, java.time.Clock.systemUTC(), new ForfeitReasonRegistry());
+                sessionService, new StompSessionSeatRegistry(), scheduler, java.time.Clock.systemUTC(), forfeitReasonRegistry, broadcasters);
         controller = new BatailleCorseWebSocketController(sessionService, messaging, forfeitService);
     }
 
