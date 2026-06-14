@@ -1,4 +1,5 @@
 package org.kevinkib.cardgames.bullshit.domain;
+import org.kevinkib.cardgames.game.Game;
 import org.kevinkib.cardgames.game.GameId;
 
 import org.kevinkib.cardgames.bullshit.domain.claim.AscendingRankClaimMode;
@@ -21,7 +22,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-public class Bullshit {
+public class Bullshit implements Game {
 
     private final GameId id;
     private final List<Player> players;
@@ -126,6 +127,7 @@ public class Bullshit {
         return new CallBullshitOutcome(truthful, pickerId);
     }
 
+    @Override
     public synchronized void forfeit(PlayerId playerId) {
         if (isFinished()) {
             return;
@@ -193,12 +195,18 @@ public class Bullshit {
         return -1;
     }
 
+    @Override
     public GameId getId() {
         return id;
     }
 
     public List<Player> getPlayers() {
         return new ArrayList<>(players);
+    }
+
+    @Override
+    public List<PlayerId> getPlayerIds() {
+        return players.stream().map(Player::id).toList();
     }
 
     public Player getCurrentPlayer() {
@@ -221,6 +229,7 @@ public class Bullshit {
         return discardPile.size();
     }
 
+    @Override
     public boolean isFinished() {
         return result.isFinished();
     }
