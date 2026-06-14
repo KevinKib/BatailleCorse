@@ -5,9 +5,9 @@ import org.kevinkib.cards.domain.deck.french.FrenchRank;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.kevinkib.cardgames.bullshit.domain.BullshitFixtures.playerWithRanks;
 
 class BullshitTest {
@@ -52,7 +52,7 @@ class BullshitTest {
                 .build();
     }
 
-    @org.junit.jupiter.api.Test
+    @Test
     void givenValidDiscard_thenCardsLeaveHandAndPileGrowsAndTurnAdvances() throws Exception {
         Bullshit game = BullshitBuilder.aBullshit()
                 .withPlayers(playerWithRanks(0, FrenchRank.ACE, FrenchRank.ACE), playerWithRanks(1, FrenchRank.TWO))
@@ -67,36 +67,36 @@ class BullshitTest {
         assertThat(game.getLastDiscard().isPresent(), is(true));
     }
 
-    @org.junit.jupiter.api.Test
+    @Test
     void givenNotYourTurn_whenDiscard_thenThrows() {
         Bullshit game = BullshitBuilder.aBullshit()
                 .withPlayers(playerWithRanks(0, FrenchRank.ACE), playerWithRanks(1, FrenchRank.TWO))
                 .build();
-        org.junit.jupiter.api.Assertions.assertThrows(NotPlayersTurnException.class,
+        assertThrows(NotPlayersTurnException.class,
                 () -> game.discard(new PlayerId(1), game.getPlayers().get(1).getCards()));
     }
 
-    @org.junit.jupiter.api.Test
+    @Test
     void givenFiveCards_whenDiscard_thenInvalidCount() {
         Bullshit game = BullshitBuilder.aBullshit()
                 .withPlayers(playerWithRanks(0, FrenchRank.ACE, FrenchRank.ACE, FrenchRank.ACE, FrenchRank.ACE, FrenchRank.KING),
                         playerWithRanks(1, FrenchRank.TWO))
                 .build();
-        org.junit.jupiter.api.Assertions.assertThrows(InvalidDiscardCountException.class,
+        assertThrows(InvalidDiscardCountException.class,
                 () -> game.discard(new PlayerId(0), game.getPlayers().get(0).getCards()));
     }
 
-    @org.junit.jupiter.api.Test
+    @Test
     void givenCardsNotHeld_whenDiscard_thenThrows() {
         Player p0 = playerWithRanks(0, FrenchRank.ACE);
         Player p1 = playerWithRanks(1, FrenchRank.TWO);
         Bullshit game = BullshitBuilder.aBullshit().withPlayers(p0, p1).build();
 
-        org.junit.jupiter.api.Assertions.assertThrows(CardsNotInHandException.class,
+        assertThrows(CardsNotInHandException.class,
                 () -> game.discard(new PlayerId(0), p1.getCards()));
     }
 
-    @org.junit.jupiter.api.Test
+    @Test
     void givenLie_whenCalled_thenLiarTakesPileAndRoundResets() throws Exception {
         // p0 must claim ACE but actually holds a KING -> a lie.
         Bullshit game = BullshitBuilder.aBullshit()
@@ -115,7 +115,7 @@ class BullshitTest {
         assertThat(game.getPlayers().get(0).handSize(), is(1));     // took the pile back
     }
 
-    @org.junit.jupiter.api.Test
+    @Test
     void givenTruthfulClaim_whenCalled_thenCallerTakesPile() throws Exception {
         // p0 keeps a KING so it does NOT empty its hand (avoids the win branch);
         // it discards only the ACE, truthfully claiming ACE.
@@ -134,7 +134,7 @@ class BullshitTest {
         assertThat(game.getPlayers().get(1).handSize(), is(2));     // had 1, took the 1-card pile
     }
 
-    @org.junit.jupiter.api.Test
+    @Test
     void givenTruthfulFinalDiscard_whenCalled_thenClaimantWins() throws Exception {
         // p0's only card is an ACE, claimed as ACE -> empties hand truthfully.
         Bullshit game = BullshitBuilder.aBullshit()
@@ -149,7 +149,7 @@ class BullshitTest {
         assertThat(game.getWinner().id(), is(new PlayerId(0)));
     }
 
-    @org.junit.jupiter.api.Test
+    @Test
     void givenOwnDiscard_whenCallBullshit_thenThrows() throws Exception {
         Bullshit game = BullshitBuilder.aBullshit()
                 .withPlayers(playerWithRanks(0, FrenchRank.ACE, FrenchRank.ACE), playerWithRanks(1, FrenchRank.TWO))
@@ -157,20 +157,20 @@ class BullshitTest {
                 .build();
         game.discard(new PlayerId(0), game.getPlayers().get(0).getCards().subList(0, 1));
 
-        org.junit.jupiter.api.Assertions.assertThrows(CannotCallBullshitException.class,
+        assertThrows(CannotCallBullshitException.class,
                 () -> game.callBullshit(new PlayerId(0)));
     }
 
-    @org.junit.jupiter.api.Test
+    @Test
     void givenNoDiscardYet_whenCallBullshit_thenThrows() {
         Bullshit game = BullshitBuilder.aBullshit()
                 .withPlayers(playerWithRanks(0, FrenchRank.ACE), playerWithRanks(1, FrenchRank.TWO))
                 .build();
-        org.junit.jupiter.api.Assertions.assertThrows(CannotCallBullshitException.class,
+        assertThrows(CannotCallBullshitException.class,
                 () -> game.callBullshit(new PlayerId(1)));
     }
 
-    @org.junit.jupiter.api.Test
+    @Test
     void givenEmptyHandThenNextPlayerPlaysOn_thenBluffStandsAndWins() throws Exception {
         // p0 empties hand (pendingWinner); p1 declines to call by discarding -> p0 wins.
         Bullshit game = BullshitBuilder.aBullshit()
@@ -186,7 +186,7 @@ class BullshitTest {
         assertThat(game.getWinner().id(), is(new PlayerId(0)));
     }
 
-    @org.junit.jupiter.api.Test
+    @Test
     void givenThreePlayers_whenOneForfeits_thenRemovedFromRotation() {
         Bullshit game = BullshitBuilder.aBullshit()
                 .withPlayers(playerWithRanks(0, FrenchRank.ACE), playerWithRanks(1, FrenchRank.TWO), playerWithRanks(2, FrenchRank.THREE))
@@ -198,7 +198,7 @@ class BullshitTest {
         assertThat(game.isFinished(), is(false));
     }
 
-    @org.junit.jupiter.api.Test
+    @Test
     void givenTwoPlayers_whenOneForfeits_thenOtherWins() {
         Bullshit game = BullshitBuilder.aBullshit()
                 .withPlayers(playerWithRanks(0, FrenchRank.ACE), playerWithRanks(1, FrenchRank.TWO))
@@ -210,7 +210,7 @@ class BullshitTest {
         assertThat(game.getWinner().id(), is(new PlayerId(1)));
     }
 
-    @org.junit.jupiter.api.Test
+    @Test
     void givenFinishedGame_whenForfeit_thenNoOp() {
         Bullshit game = BullshitBuilder.aBullshit()
                 .withPlayers(playerWithRanks(0, FrenchRank.ACE), playerWithRanks(1, FrenchRank.TWO))
@@ -221,5 +221,69 @@ class BullshitTest {
         game.forfeit(new PlayerId(1)); // already finished -> ignored
 
         assertThat(game.getWinner(), is(winnerBefore));
+    }
+
+    @Test
+    void givenForfeitOfPlayerBeforeCurrent_thenCurrentPlayersTurnPreserved() {
+        Bullshit game = BullshitBuilder.aBullshit()
+                .withPlayers(playerWithRanks(0, FrenchRank.ACE),
+                        playerWithRanks(1, FrenchRank.TWO),
+                        playerWithRanks(2, FrenchRank.THREE))
+                .withCurrentPlayerIndex(2)
+                .build();
+
+        game.forfeit(new PlayerId(0)); // removed before the current player
+
+        assertThat(game.getCurrentPlayer().id(), is(new PlayerId(2)));
+    }
+
+    @Test
+    void givenForfeitOfCurrentPlayer_thenTurnPassesToNext() {
+        Bullshit game = BullshitBuilder.aBullshit()
+                .withPlayers(playerWithRanks(0, FrenchRank.ACE),
+                        playerWithRanks(1, FrenchRank.TWO),
+                        playerWithRanks(2, FrenchRank.THREE))
+                .withCurrentPlayerIndex(1)
+                .build();
+
+        game.forfeit(new PlayerId(1)); // the current player leaves
+
+        assertThat(game.getCurrentPlayer().id(), is(new PlayerId(2)));
+    }
+
+    @Test
+    void givenThreePlayersTruthfulCall_thenCallerStartsNextRoundAtAce() throws Exception {
+        Bullshit game = BullshitBuilder.aBullshit()
+                .withPlayers(playerWithRanks(0, FrenchRank.ACE, FrenchRank.KING),
+                        playerWithRanks(1, FrenchRank.TWO),
+                        playerWithRanks(2, FrenchRank.THREE))
+                .withCurrentTarget(FrenchRank.ACE)
+                .build();
+        game.discard(new PlayerId(0), game.getPlayers().get(0).getCards().subList(0, 1)); // truthful ACE
+
+        game.callBullshit(new PlayerId(2)); // truthful -> p2 takes pile and starts
+
+        assertThat(game.getCurrentPlayer().id(), is(new PlayerId(2)));
+        assertThat(game.getCurrentTarget(), is(new RankTarget(FrenchRank.ACE)));
+    }
+
+    @Test
+    void givenThreePlayersLieCalled_thenLiarStartsNextRoundAndPendingWinnerCleared() throws Exception {
+        // p1 (current) holds only a KING but the forced claim is ACE -> a lie that empties its hand.
+        Bullshit game = BullshitBuilder.aBullshit()
+                .withPlayers(playerWithRanks(0, FrenchRank.ACE),
+                        playerWithRanks(1, FrenchRank.KING),
+                        playerWithRanks(2, FrenchRank.THREE))
+                .withCurrentTarget(FrenchRank.ACE)
+                .withCurrentPlayerIndex(1)
+                .build();
+        game.discard(new PlayerId(1), game.getPlayers().get(1).getCards()); // lie, p1 now empty -> pending
+        assertThat(game.getPendingWinner().isPresent(), is(true));
+
+        game.callBullshit(new PlayerId(2)); // lie exposed -> p1 takes pile back, no longer pending
+
+        assertThat(game.getCurrentPlayer().id(), is(new PlayerId(1))); // liar starts next round
+        assertThat(game.getPendingWinner().isEmpty(), is(true));
+        assertThat(game.isFinished(), is(false));
     }
 }

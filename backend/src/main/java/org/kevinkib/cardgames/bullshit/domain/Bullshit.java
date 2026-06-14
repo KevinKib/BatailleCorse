@@ -64,7 +64,9 @@ public class Bullshit {
             throw new NotPlayersTurnException(playerId);
         }
         if (pendingWinner != null) {
-            // The next player plays on instead of calling BS: the unchallenged claim stands and wins.
+            // Reached only by the legitimate next player (turn check above). Choosing to discard
+            // rather than call BS is a decline: the unchallenged claim stands and the pending
+            // winner wins. The submitted cards are intentionally not applied.
             result = new Result(playerById(pendingWinner));
             return;
         }
@@ -127,10 +129,19 @@ public class Bullshit {
         if (playerId.equals(pendingWinner)) {
             pendingWinner = null;
         }
+
+        Player current = players.get(currentPlayerIndex);
+        boolean removingCurrent = current.id().equals(playerId);
         players.remove(index);
-        if (currentPlayerIndex >= players.size()) {
-            currentPlayerIndex = 0;
+
+        if (removingCurrent) {
+            // Turn passes to whoever now occupies the removed slot (wrap to first if it was last).
+            currentPlayerIndex = players.isEmpty() ? 0 : index % players.size();
+        } else {
+            // Keep the turn on the same player, whose index shifts down if the removal was before it.
+            currentPlayerIndex = players.indexOf(current);
         }
+
         if (players.size() == 1) {
             result = new Result(players.get(0));
         }
