@@ -24,7 +24,7 @@ class SessionServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new SessionService(new InMemorySessionRepository(java.time.Clock.systemUTC()), new BatailleCorseFactory());
+        service = new SessionService(new InMemorySessionRepository(java.time.Clock.systemUTC()), new GameFactories(java.util.List.of(new BatailleCorseFactory())));
     }
 
     @Nested
@@ -32,7 +32,7 @@ class SessionServiceTest {
 
         @Test
         void givenSoloMode_whenCreateGame_thenBothSeatsClaimed() {
-            var game = service.createGame(2, GameMode.SOLO);
+            var game = service.createGame("bataille-corse", 2, GameMode.SOLO);
 
             assertThat(service.isSeatClaimed(game.getId(), new PlayerId(0)), is(true));
             assertThat(service.isSeatClaimed(game.getId(), new PlayerId(1)), is(true));
@@ -40,7 +40,7 @@ class SessionServiceTest {
 
         @Test
         void givenMultiplayerMode_whenCreateGame_thenOnlySeatZeroClaimed() {
-            var game = service.createGame(2, GameMode.MULTIPLAYER);
+            var game = service.createGame("bataille-corse", 2, GameMode.MULTIPLAYER);
 
             assertThat(service.isSeatClaimed(game.getId(), new PlayerId(0)), is(true));
             assertThat(service.isSeatClaimed(game.getId(), new PlayerId(1)), is(false));
@@ -52,7 +52,7 @@ class SessionServiceTest {
 
         @Test
         void givenMultiplayerGame_whenJoin_thenSeatOneClaimedAndTokenReturned() {
-            var game = service.createGame(2, GameMode.MULTIPLAYER);
+            var game = service.createGame("bataille-corse", 2, GameMode.MULTIPLAYER);
 
             JoinResult result = service.joinGame(game.getId());
 
@@ -63,14 +63,14 @@ class SessionServiceTest {
 
         @Test
         void givenSoloGame_whenJoin_thenThrowsSeatUnavailable() {
-            var game = service.createGame(2, GameMode.SOLO);
+            var game = service.createGame("bataille-corse", 2, GameMode.SOLO);
 
             assertThrows(SeatUnavailableException.class, () -> service.joinGame(game.getId()));
         }
 
         @Test
         void givenAlreadyJoinedGame_whenJoinAgain_thenThrowsSeatUnavailable() {
-            var game = service.createGame(2, GameMode.MULTIPLAYER);
+            var game = service.createGame("bataille-corse", 2, GameMode.MULTIPLAYER);
             service.joinGame(game.getId());
 
             assertThrows(SeatUnavailableException.class, () -> service.joinGame(game.getId()));
@@ -82,7 +82,7 @@ class SessionServiceTest {
 
         @Test
         void givenValidToken_whenFindPlayerIdByToken_thenReturnsPlayerId() {
-            var game = service.createGame(2);
+            var game = service.createGame("bataille-corse", 2);
             SessionToken token = service.loadTokenByPlayerId(game.getId(), new PlayerId(0));
 
             Optional<PlayerId> result = service.findPlayerIdByToken(game.getId(), token);
@@ -92,7 +92,7 @@ class SessionServiceTest {
 
         @Test
         void givenInvalidToken_whenFindPlayerIdByToken_thenReturnsEmpty() {
-            var game = service.createGame(2);
+            var game = service.createGame("bataille-corse", 2);
 
             Optional<PlayerId> result = service.findPlayerIdByToken(game.getId(), SessionToken.generate());
 
@@ -102,7 +102,7 @@ class SessionServiceTest {
 
     @Test
     public void givenMultiplayerCreateWithName_whenCreating_thenSeatZeroClaimedWithName() {
-        var game = service.createGame(2, GameMode.MULTIPLAYER, "Alice");
+        var game = service.createGame("bataille-corse", 2, GameMode.MULTIPLAYER, "Alice");
 
         List<SessionPlayer> seats = service.getSeats(game.getId());
         assertThat(seats.get(0).isClaimed(), is(true));
@@ -112,7 +112,7 @@ class SessionServiceTest {
 
     @Test
     public void givenMultiplayerCreateWithBlankName_whenCreating_thenSeatZeroGetsDefaultName() {
-        var game = service.createGame(2, GameMode.MULTIPLAYER, "  ");
+        var game = service.createGame("bataille-corse", 2, GameMode.MULTIPLAYER, "  ");
 
         List<SessionPlayer> seats = service.getSeats(game.getId());
         assertThat(seats.get(0).name(), is("Player 1"));
@@ -120,7 +120,7 @@ class SessionServiceTest {
 
     @Test
     public void givenMultiplayerGame_whenJoiningWithName_thenSeatOneClaimedWithName() {
-        var game = service.createGame(2, GameMode.MULTIPLAYER, "Alice");
+        var game = service.createGame("bataille-corse", 2, GameMode.MULTIPLAYER, "Alice");
 
         service.joinGame(game.getId(), "Bob");
 
@@ -131,7 +131,7 @@ class SessionServiceTest {
 
     @Test
     public void givenMultiplayerGame_whenJoiningWithBlankName_thenSeatOneGetsDefaultName() {
-        var game = service.createGame(2, GameMode.MULTIPLAYER, null);
+        var game = service.createGame("bataille-corse", 2, GameMode.MULTIPLAYER, null);
 
         service.joinGame(game.getId(), null);
 
@@ -144,7 +144,7 @@ class SessionServiceTest {
 
         @Test
         void givenSoloGame_whenRematch_thenSameIdAndSeatsPreserved() {
-            var game = service.createGame(2, GameMode.SOLO, "Alice");
+            var game = service.createGame("bataille-corse", 2, GameMode.SOLO, "Alice");
             SessionToken seat0TokenBefore = service.loadTokenByPlayerId(game.getId(), new PlayerId(0));
             String seat0NameBefore = service.getSeats(game.getId()).get(0).name();
 
@@ -160,7 +160,7 @@ class SessionServiceTest {
 
         @Test
         void givenRequestedRematch_whenRematch_thenRequestFlagsCleared() {
-            var game = service.createGame(2, GameMode.SOLO);
+            var game = service.createGame("bataille-corse", 2, GameMode.SOLO);
             service.getGameSession(game.getId()).requestRematch(new PlayerId(0));
             service.getGameSession(game.getId()).requestRematch(new PlayerId(1));
 
@@ -175,7 +175,7 @@ class SessionServiceTest {
 
         @Test
         void givenExistingGame_whenTouch_thenDoesNotThrow() {
-            var game = service.createGame(2, GameMode.MULTIPLAYER);
+            var game = service.createGame("bataille-corse", 2, GameMode.MULTIPLAYER);
             service.touch(game.getId()); // smoke: delegation wired
         }
     }
@@ -185,7 +185,7 @@ class SessionServiceTest {
 
         @Test
         void givenMatchingType_whenGetGame_thenReturnsTypedGame() {
-            var game = service.createGame(2, GameMode.SOLO);
+            var game = service.createGame("bataille-corse", 2, GameMode.SOLO);
 
             org.kevinkib.cardgames.bataillecorse.domain.BatailleCorse typed =
                     service.getGame(game.getId(), org.kevinkib.cardgames.bataillecorse.domain.BatailleCorse.class);
@@ -195,7 +195,7 @@ class SessionServiceTest {
 
         @Test
         void givenWrongType_whenGetGame_thenThrows() {
-            var game = service.createGame(2, GameMode.SOLO);
+            var game = service.createGame("bataille-corse", 2, GameMode.SOLO);
 
             assertThrows(IllegalStateException.class,
                     () -> service.getGame(game.getId(), org.kevinkib.cardgames.game.FakeGame.class));

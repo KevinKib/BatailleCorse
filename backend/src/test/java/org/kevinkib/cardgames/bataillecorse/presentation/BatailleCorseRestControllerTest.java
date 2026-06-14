@@ -39,14 +39,14 @@ class BatailleCorseRestControllerTest {
     @BeforeEach
     void setUp() {
         Clock clock = Clock.fixed(Instant.parse("2026-06-11T10:00:00Z"), ZoneOffset.UTC);
-        sessionService = new SessionService(new InMemorySessionRepository(clock), new org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseFactory());
+        sessionService = new SessionService(new InMemorySessionRepository(clock), new org.kevinkib.cardgames.sessionmanagement.application.GameFactories(java.util.List.of(new org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseFactory())));
         forfeitReasonRegistry = new ForfeitReasonRegistry();
         controller = new BatailleCorseRestController(sessionService, new RecordingMessaging(), forfeitReasonRegistry);
     }
 
     @Test
     void givenForfeitedGame_whenGetGame_thenLosingPlayerHasForfeitReason() {
-        BatailleCorse game = (BatailleCorse) sessionService.createGame(2, GameMode.MULTIPLAYER);
+        BatailleCorse game = (BatailleCorse) sessionService.createGame("bataille-corse", 2, GameMode.MULTIPLAYER);
         GameId gameId = game.getId();
         game.forfeit(new PlayerId(0));
         forfeitReasonRegistry.record(new Seat(gameId, new PlayerId(0)), ForfeitReason.RESIGNED);

@@ -1,8 +1,9 @@
 package org.kevinkib.cardgames.config;
 
 import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseFactory;
-import org.kevinkib.cardgames.game.GameFactory;
+import org.kevinkib.cardgames.bullshit.domain.BullshitFactory;
 import org.kevinkib.cardgames.sessionmanagement.application.GameCleanupService;
+import org.kevinkib.cardgames.sessionmanagement.application.GameFactories;
 import org.kevinkib.cardgames.sessionmanagement.application.SessionService;
 import org.kevinkib.cardgames.sessionmanagement.application.port.SessionRepository;
 import org.kevinkib.cardgames.sessionmanagement.infrastructure.InMemorySessionRepository;
@@ -35,13 +36,23 @@ public class AppConfig {
     }
 
     @Bean
-    public GameFactory gameFactory() {
+    public BatailleCorseFactory batailleCorseFactory() {
         return new BatailleCorseFactory();
     }
 
     @Bean
+    public BullshitFactory bullshitFactory() {
+        return new BullshitFactory();
+    }
+
+    @Bean
+    public GameFactories gameFactories() {
+        return new GameFactories(List.of(batailleCorseFactory(), bullshitFactory()));
+    }
+
+    @Bean
     public SessionService sessionService() {
-        return new SessionService(sessionRepository(), gameFactory());
+        return new SessionService(sessionRepository(), gameFactories());
     }
 
     @Bean

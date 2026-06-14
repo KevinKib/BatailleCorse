@@ -25,7 +25,7 @@ class SessionGameTest {
         public void givenPlayers_whenCreating_thenEachSeatHasAToken() {
             var players = playerIds(2);
 
-            var sessionGame = SessionGame.create(GameId.generate(), players);
+            var sessionGame = SessionGame.create(GameId.generate(), players, "bataille-corse");
 
             assertThat(sessionGame.findTokenByPlayer(new PlayerId(0)).isPresent(), is(true));
             assertThat(sessionGame.findTokenByPlayer(new PlayerId(1)).isPresent(), is(true));
@@ -35,7 +35,7 @@ class SessionGameTest {
         public void givenPlayers_whenCreating_thenEachSeatHasADistinctToken() {
             var players = playerIds(2);
 
-            var sessionGame = SessionGame.create(GameId.generate(), players);
+            var sessionGame = SessionGame.create(GameId.generate(), players, "bataille-corse");
 
             var token0 = sessionGame.findTokenByPlayer(new PlayerId(0)).orElseThrow();
             var token1 = sessionGame.findTokenByPlayer(new PlayerId(1)).orElseThrow();
@@ -46,7 +46,7 @@ class SessionGameTest {
         public void givenPlayers_whenCreating_thenSeatsAreOrderedById() {
             var players = playerIds(2);
 
-            var sessionGame = SessionGame.create(GameId.generate(), players);
+            var sessionGame = SessionGame.create(GameId.generate(), players, "bataille-corse");
 
             var seats = sessionGame.seats();
             assertThat(seats, hasSize(2));
@@ -62,7 +62,7 @@ class SessionGameTest {
         public void givenNewSessionGame_whenCreated_thenNoSeatsAreClaimed() {
             var players = playerIds(2);
 
-            var sessionGame = SessionGame.create(GameId.generate(), players);
+            var sessionGame = SessionGame.create(GameId.generate(), players, "bataille-corse");
 
             assertThat(sessionGame.isClaimed(new PlayerId(0)), is(false));
             assertThat(sessionGame.isClaimed(new PlayerId(1)), is(false));
@@ -71,7 +71,7 @@ class SessionGameTest {
         @Test
         public void givenSeat_whenClaimedWithName_thenIsClaimedWithThatName() {
             var players = playerIds(2);
-            var sessionGame = SessionGame.create(GameId.generate(), players);
+            var sessionGame = SessionGame.create(GameId.generate(), players, "bataille-corse");
 
             sessionGame.claim(new PlayerId(0), "Alice");
 
@@ -87,7 +87,7 @@ class SessionGameTest {
         @Test
         public void givenSessionGame_withToken_whenLookingUp_thenReturnPlayerId() {
             var players = playerIds(2);
-            var sessionGame = SessionGame.create(GameId.generate(), players);
+            var sessionGame = SessionGame.create(GameId.generate(), players, "bataille-corse");
             var tokenForPlayer0 = sessionGame.findTokenByPlayer(new PlayerId(0)).orElseThrow();
 
             Optional<PlayerId> result = sessionGame.findPlayerByToken(tokenForPlayer0);
@@ -98,7 +98,7 @@ class SessionGameTest {
         @Test
         public void givenSessionGame_withUnknownToken_whenLookingUp_thenReturnEmpty() {
             var players = playerIds(2);
-            var sessionGame = SessionGame.create(GameId.generate(), players);
+            var sessionGame = SessionGame.create(GameId.generate(), players, "bataille-corse");
 
             Optional<PlayerId> result = sessionGame.findPlayerByToken(SessionToken.generate());
 
@@ -110,7 +110,7 @@ class SessionGameTest {
     class RematchTest {
 
         private SessionGame newSession() {
-            return SessionGame.create(GameId.generate(), playerIds(2));
+            return SessionGame.create(GameId.generate(), playerIds(2), "bataille-corse");
         }
 
         @Test
