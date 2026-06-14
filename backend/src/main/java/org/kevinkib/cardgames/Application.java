@@ -1,4 +1,4 @@
-package org.kevinkib.cardgames.presentation;
+package org.kevinkib.cardgames;
 
 import org.kevinkib.cardgames.config.AppConfig;
 import org.springframework.boot.SpringApplication;
