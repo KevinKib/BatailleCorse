@@ -16,7 +16,7 @@ import org.kevinkib.cardgames.presentation.dto.JoinResponseDto;
 import org.kevinkib.cardgames.bataillecorse.presentation.dto.PlayerIdDto;
 import org.kevinkib.cardgames.presentation.dto.SessionViewDto;
 import org.kevinkib.cardgames.presentation.dto.event.LifecycleEventType;
-import org.kevinkib.cardgames.presentation.dto.event.JoinEventData;
+import org.kevinkib.cardgames.bataillecorse.presentation.dto.event.JoinEventData;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

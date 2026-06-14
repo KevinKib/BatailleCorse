@@ -8,7 +8,7 @@ import org.kevinkib.cardgames.bataillecorse.presentation.dto.BatailleCorseDto;
 import org.kevinkib.cardgames.presentation.dto.JoinResponseDto;
 import org.kevinkib.cardgames.bataillecorse.presentation.dto.PlayerDto;
 import org.kevinkib.cardgames.presentation.dto.SessionViewDto;
-import org.kevinkib.cardgames.presentation.dto.event.CreateEventData;
+import org.kevinkib.cardgames.bataillecorse.presentation.dto.event.CreateEventData;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;

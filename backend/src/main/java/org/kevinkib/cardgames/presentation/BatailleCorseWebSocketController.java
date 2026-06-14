@@ -19,6 +19,7 @@ import org.kevinkib.cardgames.presentation.api.SuccessResponse;
 import org.kevinkib.cardgames.presentation.dto.*;
 import org.kevinkib.cardgames.bataillecorse.presentation.dto.*;
 import org.kevinkib.cardgames.presentation.dto.event.*;
+import org.kevinkib.cardgames.bataillecorse.presentation.dto.event.*;
 import org.kevinkib.cardgames.presentation.api.PresencePayload;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;

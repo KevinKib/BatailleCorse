@@ -175,7 +175,7 @@ class BatailleCorseWebSocketControllerTest {
             verify(template).convertAndSend(
                     eq("/topic/game/" + gameId),
                     (Object) argThat(r -> ((Response) r).isSuccess()
-                            && ((org.kevinkib.cardgames.presentation.dto.event.RematchEventData)
+                            && ((org.kevinkib.cardgames.bataillecorse.presentation.dto.event.RematchEventData)
                                     ((Response) r).getEventData()).status()
                                == org.kevinkib.cardgames.presentation.dto.event.RematchStatus.STARTED)
             );
@@ -193,7 +193,7 @@ class BatailleCorseWebSocketControllerTest {
             verify(template).convertAndSend(
                     eq("/topic/game/" + gameId),
                     (Object) argThat(r -> ((Response) r).isSuccess()
-                            && ((org.kevinkib.cardgames.presentation.dto.event.RematchEventData)
+                            && ((org.kevinkib.cardgames.bataillecorse.presentation.dto.event.RematchEventData)
                                     ((Response) r).getEventData()).status()
                                == org.kevinkib.cardgames.presentation.dto.event.RematchStatus.PENDING)
             );

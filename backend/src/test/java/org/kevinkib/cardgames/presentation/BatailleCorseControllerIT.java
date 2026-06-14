@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.presentation.api.Response;
 import org.kevinkib.cardgames.presentation.api.SuccessResponse;
 import org.kevinkib.cardgames.bataillecorse.presentation.dto.BatailleCorseDto;
-import org.kevinkib.cardgames.presentation.dto.event.CreateEventData;
+import org.kevinkib.cardgames.bataillecorse.presentation.dto.event.CreateEventData;
 import org.kevinkib.cardgames.presentation.dto.event.EmptyEventData;
 import org.kevinkib.cardgames.presentation.dto.event.LifecycleEventType;
 import org.springframework.beans.factory.annotation.Autowired;

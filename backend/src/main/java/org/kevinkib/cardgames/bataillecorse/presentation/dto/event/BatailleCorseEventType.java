@@ -1,4 +1,4 @@
-package org.kevinkib.cardgames.presentation.dto.event;
+package org.kevinkib.cardgames.bataillecorse.presentation.dto.event;
 
 public enum BatailleCorseEventType {
 
