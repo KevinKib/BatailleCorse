@@ -99,6 +99,15 @@ public class SessionService {
         }
     }
 
+    public <T extends Game> T getGame(GameId id, Class<T> type) throws InvalidGameIdException {
+        Game game = getGame(id);
+        if (!type.isInstance(game)) {
+            throw new IllegalStateException(
+                    "Game " + id + " is " + game.getClass().getSimpleName() + ", not " + type.getSimpleName());
+        }
+        return type.cast(game);
+    }
+
     public void touch(GameId id) {
         repository.touch(id);
     }

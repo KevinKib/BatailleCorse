@@ -70,7 +70,7 @@ public class BatailleCorseWebSocketController {
         EventType eventType = EventType.SEND;
 
         GameId gameId = new GameId(payload.gameId());
-        BatailleCorse batailleCorse = (BatailleCorse) sessionService.getGame(gameId);
+        BatailleCorse batailleCorse = sessionService.getGame(gameId, BatailleCorse.class);
 
         Response response;
         try {
@@ -102,7 +102,7 @@ public class BatailleCorseWebSocketController {
         EventType eventType = EventType.SLAP;
 
         GameId gameId = new GameId(payload.gameId());
-        BatailleCorse batailleCorse = (BatailleCorse) sessionService.getGame(gameId);
+        BatailleCorse batailleCorse = sessionService.getGame(gameId, BatailleCorse.class);
 
         Response response;
         try {
@@ -135,7 +135,7 @@ public class BatailleCorseWebSocketController {
         EventType eventType = EventType.GRAB;
 
         GameId gameId = new GameId(payload.gameId());
-        BatailleCorse batailleCorse = (BatailleCorse) sessionService.getGame(gameId);
+        BatailleCorse batailleCorse = sessionService.getGame(gameId, BatailleCorse.class);
 
         Response response;
         try {
@@ -206,7 +206,7 @@ public class BatailleCorseWebSocketController {
                         "Rematch started.",
                         BatailleCorseDto.from(fresh));
             } else {
-                BatailleCorse current = (BatailleCorse) sessionService.getGame(gameId);
+                BatailleCorse current = sessionService.getGame(gameId, BatailleCorse.class);
                 response = new SuccessResponse(
                         EventType.REMATCH.toString(),
                         new RematchEventData(RematchStatus.PENDING, new PlayerIdDto(String.valueOf(playerId.id()))),

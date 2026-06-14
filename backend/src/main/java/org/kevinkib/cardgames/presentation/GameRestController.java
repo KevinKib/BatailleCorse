@@ -47,7 +47,7 @@ public class GameRestController {
     public ResponseEntity<BatailleCorseDto> getGame(@PathVariable String id) {
         try {
             GameId gameId = new GameId(id);
-            BatailleCorse game = (BatailleCorse) sessionService.getGame(gameId);
+            BatailleCorse game = sessionService.getGame(gameId, BatailleCorse.class);
             return ResponseEntity.ok(BatailleCorseDto.from(game, forfeitReasonRegistry.reasonsBySeat(gameId)));
         } catch (InvalidGameIdException | IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
@@ -71,7 +71,7 @@ public class GameRestController {
             @RequestBody(required = false) JoinGamePayload payload) {
         try {
             GameId gameId = new GameId(id);
-            BatailleCorse game = (BatailleCorse) sessionService.getGame(gameId);
+            BatailleCorse game = sessionService.getGame(gameId, BatailleCorse.class);
             String name = (payload != null) ? payload.name() : null;
             JoinResult result = sessionService.joinGame(gameId, name);
 
