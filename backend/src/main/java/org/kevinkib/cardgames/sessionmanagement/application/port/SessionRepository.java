@@ -1,6 +1,6 @@
 package org.kevinkib.cardgames.sessionmanagement.application.port;
 
-import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorse;
+import org.kevinkib.cardgames.game.Game;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.domain.SessionGame;
@@ -11,11 +11,11 @@ import java.util.List;
 
 public interface SessionRepository {
 
-    void save(BatailleCorse batailleCorse, SessionGame sessionGame);
+    void save(Game game, SessionGame sessionGame);
 
-    BatailleCorse load(GameId id);
+    Game load(GameId id);
 
-    SessionToken loadSessionToken(GameId batailleCorseId, PlayerId playerId);
+    SessionToken loadSessionToken(GameId gameId, PlayerId playerId);
 
     SessionGame loadSessionGame(GameId id);
 

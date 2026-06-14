@@ -1,8 +1,8 @@
 package org.kevinkib.cardgames.sessionmanagement.application;
 
-import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorse;
+import org.kevinkib.cardgames.game.Game;
+import org.kevinkib.cardgames.game.GameFactory;
 import org.kevinkib.cardgames.game.GameId;
-import org.kevinkib.cardgames.bataillecorse.domain.Player;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.application.port.SessionRepository;
 import org.kevinkib.cardgames.sessionmanagement.domain.GameMode;
@@ -18,37 +18,39 @@ public class SessionService {
     private static final PlayerId JOINER_SEAT = new PlayerId(1);
 
     private final SessionRepository repository;
+    private final GameFactory gameFactory;
 
-    public SessionService(SessionRepository repository) {
+    public SessionService(SessionRepository repository, GameFactory gameFactory) {
         this.repository = repository;
+        this.gameFactory = gameFactory;
     }
 
-    public BatailleCorse createGame(int nbPlayers) {
+    public Game createGame(int nbPlayers) {
         return createGame(nbPlayers, GameMode.SOLO, null);
     }
 
-    public BatailleCorse createGame(int nbPlayers, GameMode mode) {
+    public Game createGame(int nbPlayers, GameMode mode) {
         return createGame(nbPlayers, mode, null);
     }
 
-    public BatailleCorse createGame(int nbPlayers, GameMode mode, String creatorName) {
+    public Game createGame(int nbPlayers, GameMode mode, String creatorName) {
         GameId id = GameId.generate();
-        BatailleCorse batailleCorse = new BatailleCorse(id, nbPlayers);
+        Game game = gameFactory.create(id, nbPlayers);
 
-        SessionGame sessionGame = SessionGame.create(id, batailleCorse.getPlayers());
+        SessionGame sessionGame = SessionGame.create(id, game.getPlayerIds());
 
         if (mode == GameMode.SOLO) {
-            for (Player player : batailleCorse.getPlayers()) {
-                sessionGame.claim(player.id(), defaultNameFor(player.id()));
+            for (PlayerId playerId : game.getPlayerIds()) {
+                sessionGame.claim(playerId, defaultNameFor(playerId));
             }
         } else {
             PlayerId creatorSeat = new PlayerId(0);
             sessionGame.claim(creatorSeat, resolveName(creatorSeat, creatorName));
         }
 
-        repository.save(batailleCorse, sessionGame);
+        repository.save(game, sessionGame);
 
-        return batailleCorse;
+        return game;
     }
 
     public JoinResult joinGame(GameId gameId) {
@@ -73,9 +75,9 @@ public class SessionService {
         return repository.loadSessionGame(id);
     }
 
-    public BatailleCorse rematch(GameId id) {
+    public Game rematch(GameId id) {
         SessionGame session = repository.loadSessionGame(id);
-        BatailleCorse fresh = new BatailleCorse(id, session.seats().size());
+        Game fresh = gameFactory.create(id, session.seats().size());
         session.clearRematch();
         repository.save(fresh, session);
         return fresh;
@@ -89,7 +91,7 @@ public class SessionService {
         return repository.loadSessionGame(gameId).isClaimed(playerId);
     }
 
-    public BatailleCorse getGame(GameId id) throws InvalidGameIdException {
+    public Game getGame(GameId id) throws InvalidGameIdException {
         try {
             return repository.load(id);
         } catch (IllegalArgumentException e) {
@@ -101,8 +103,8 @@ public class SessionService {
         repository.touch(id);
     }
 
-    public SessionToken loadTokenByPlayerId(GameId batailleCorseId, PlayerId playerId) {
-        return repository.loadSessionToken(batailleCorseId, playerId);
+    public SessionToken loadTokenByPlayerId(GameId gameId, PlayerId playerId) {
+        return repository.loadSessionToken(gameId, playerId);
     }
 
     public Optional<PlayerId> findPlayerIdByToken(GameId gameId, SessionToken token) {

@@ -3,7 +3,7 @@ package org.kevinkib.cardgames.sessionmanagement.application;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorse;
+import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseFactory;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.domain.GameMode;
 import org.kevinkib.cardgames.sessionmanagement.domain.SessionPlayer;
@@ -24,7 +24,7 @@ class SessionServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new SessionService(new InMemorySessionRepository(java.time.Clock.systemUTC()));
+        service = new SessionService(new InMemorySessionRepository(java.time.Clock.systemUTC()), new BatailleCorseFactory());
     }
 
     @Nested
@@ -102,7 +102,7 @@ class SessionServiceTest {
 
     @Test
     public void givenMultiplayerCreateWithName_whenCreating_thenSeatZeroClaimedWithName() {
-        BatailleCorse game = service.createGame(2, GameMode.MULTIPLAYER, "Alice");
+        var game = service.createGame(2, GameMode.MULTIPLAYER, "Alice");
 
         List<SessionPlayer> seats = service.getSeats(game.getId());
         assertThat(seats.get(0).isClaimed(), is(true));
@@ -112,7 +112,7 @@ class SessionServiceTest {
 
     @Test
     public void givenMultiplayerCreateWithBlankName_whenCreating_thenSeatZeroGetsDefaultName() {
-        BatailleCorse game = service.createGame(2, GameMode.MULTIPLAYER, "  ");
+        var game = service.createGame(2, GameMode.MULTIPLAYER, "  ");
 
         List<SessionPlayer> seats = service.getSeats(game.getId());
         assertThat(seats.get(0).name(), is("Player 1"));
@@ -120,7 +120,7 @@ class SessionServiceTest {
 
     @Test
     public void givenMultiplayerGame_whenJoiningWithName_thenSeatOneClaimedWithName() {
-        BatailleCorse game = service.createGame(2, GameMode.MULTIPLAYER, "Alice");
+        var game = service.createGame(2, GameMode.MULTIPLAYER, "Alice");
 
         service.joinGame(game.getId(), "Bob");
 
@@ -131,7 +131,7 @@ class SessionServiceTest {
 
     @Test
     public void givenMultiplayerGame_whenJoiningWithBlankName_thenSeatOneGetsDefaultName() {
-        BatailleCorse game = service.createGame(2, GameMode.MULTIPLAYER, null);
+        var game = service.createGame(2, GameMode.MULTIPLAYER, null);
 
         service.joinGame(game.getId(), null);
 
@@ -144,11 +144,11 @@ class SessionServiceTest {
 
         @Test
         void givenSoloGame_whenRematch_thenSameIdAndSeatsPreserved() {
-            BatailleCorse game = service.createGame(2, GameMode.SOLO, "Alice");
+            var game = service.createGame(2, GameMode.SOLO, "Alice");
             SessionToken seat0TokenBefore = service.loadTokenByPlayerId(game.getId(), new PlayerId(0));
             String seat0NameBefore = service.getSeats(game.getId()).get(0).name();
 
-            BatailleCorse fresh = service.rematch(game.getId());
+            var fresh = service.rematch(game.getId());
 
             assertThat(fresh.getId(), is(game.getId()));
             assertThat(fresh.isFinished(), is(false));
@@ -160,7 +160,7 @@ class SessionServiceTest {
 
         @Test
         void givenRequestedRematch_whenRematch_thenRequestFlagsCleared() {
-            BatailleCorse game = service.createGame(2, GameMode.SOLO);
+            var game = service.createGame(2, GameMode.SOLO);
             service.getGameSession(game.getId()).requestRematch(new PlayerId(0));
             service.getGameSession(game.getId()).requestRematch(new PlayerId(1));
 

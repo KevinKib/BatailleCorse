@@ -134,7 +134,7 @@ public class DisconnectForfeitService {
 
     private BatailleCorse findGame(GameId gameId) {
         try {
-            return sessionService.getGame(gameId);
+            return (BatailleCorse) sessionService.getGame(gameId);
         } catch (InvalidGameIdException e) {
             return null;
         }

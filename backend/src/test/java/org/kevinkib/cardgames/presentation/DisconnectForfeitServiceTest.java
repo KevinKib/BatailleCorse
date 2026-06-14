@@ -75,14 +75,14 @@ class DisconnectForfeitServiceTest {
     @BeforeEach
     void setUp() {
         Clock clock = Clock.fixed(Instant.parse("2026-06-09T12:00:00Z"), ZoneOffset.UTC);
-        sessionService = new SessionService(new InMemorySessionRepository(clock));
+        sessionService = new SessionService(new InMemorySessionRepository(clock), new org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseFactory());
         scheduler = new CapturingScheduler();
         messaging = new RecordingMessaging();
         registry = new StompSessionSeatRegistry();
         forfeitReasonRegistry = new ForfeitReasonRegistry();
         service = new DisconnectForfeitService(sessionService, messaging, registry, scheduler, clock, forfeitReasonRegistry);
 
-        BatailleCorse game = sessionService.createGame(2, GameMode.MULTIPLAYER);
+        BatailleCorse game = (BatailleCorse) sessionService.createGame(2, GameMode.MULTIPLAYER);
         gameId = game.getId();
     }
 
@@ -127,7 +127,7 @@ class DisconnectForfeitServiceTest {
 
         scheduler.lastTask.run(); // simulate the 60s elapsing
 
-        BatailleCorse game = sessionService.getGame(gameId);
+        BatailleCorse game = (BatailleCorse) sessionService.getGame(gameId);
         assertThat(game.isFinished(), is(true));
         assertThat(game.getWinner().id(), is(new PlayerId(1)));
         assertThat(eventTypes(), contains("OPPONENT_DISCONNECTED", "FORFEIT"));
@@ -149,7 +149,7 @@ class DisconnectForfeitServiceTest {
     void whenForfeitCalledDirectly_thenConcedesAndBroadcastsForfeitWithResigned() {
         service.forfeit(new Seat(gameId, new PlayerId(1)), ForfeitReason.RESIGNED);
 
-        BatailleCorse game = sessionService.getGame(gameId);
+        BatailleCorse game = (BatailleCorse) sessionService.getGame(gameId);
         assertThat(game.getWinner().id(), is(new PlayerId(0)));
         assertThat(eventTypes(), contains("FORFEIT"));
         assertThat(forfeitReasonInLastStateForSeat("1"), is("RESIGNED"));
@@ -165,7 +165,7 @@ class DisconnectForfeitServiceTest {
         scheduler.scheduled.get(0).run(); // seat 0's timer -> seat 1 wins, game over
         scheduler.scheduled.get(1).run(); // seat 1's timer -> no-op on finished game
 
-        BatailleCorse game = sessionService.getGame(gameId);
+        BatailleCorse game = (BatailleCorse) sessionService.getGame(gameId);
         assertThat(game.getWinner().id(), is(new PlayerId(1)));
         long forfeits = eventTypes().stream().filter("FORFEIT"::equals).count();
         assertThat(forfeits, is(1L));
@@ -179,7 +179,7 @@ class DisconnectForfeitServiceTest {
 
         service.onPresence("sess-0b", gameId, new PlayerId(0)); // reconnect arrives too late
 
-        BatailleCorse game = sessionService.getGame(gameId);
+        BatailleCorse game = (BatailleCorse) sessionService.getGame(gameId);
         assertThat(game.getWinner().id(), is(new PlayerId(1)));
         assertThat(eventTypes(), contains("OPPONENT_DISCONNECTED", "FORFEIT")); // no OPPONENT_RECONNECTED
     }

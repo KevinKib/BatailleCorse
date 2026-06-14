@@ -1,7 +1,7 @@
 package org.kevinkib.cardgames.sessionmanagement.application;
 
 import org.junit.jupiter.api.Test;
-import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorse;
+import org.kevinkib.cardgames.game.Game;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.sessionmanagement.application.port.SessionRepository;
 import org.kevinkib.cardgames.sessionmanagement.domain.SessionGame;
@@ -22,8 +22,8 @@ class GameCleanupServiceTest {
         Duration lastFinishedGrace;
         Duration lastIdleTtl;
         final List<GameId> toEvict = new ArrayList<>();
-        public void save(BatailleCorse b, SessionGame s) {}
-        public BatailleCorse load(GameId id) { return null; }
+        public void save(Game game, SessionGame s) {}
+        public Game load(GameId id) { return null; }
         public org.kevinkib.cardgames.sessionmanagement.domain.SessionToken loadSessionToken(GameId i, org.kevinkib.cardgames.game.PlayerId p) { return null; }
         public SessionGame loadSessionGame(GameId id) { return null; }
         public void touch(GameId id) {}

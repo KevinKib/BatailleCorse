@@ -5,20 +5,25 @@ import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.IntStream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.kevinkib.cardgames.bataillecorse.domain.PlayerFixtures.createNumberOfPlayers;
 
 class SessionGameTest {
+
+    private static List<PlayerId> playerIds(int count) {
+        return IntStream.range(0, count).mapToObj(PlayerId::new).toList();
+    }
 
     @Nested
     class CreateTest {
 
         @Test
         public void givenPlayers_whenCreating_thenEachSeatHasAToken() {
-            var players = createNumberOfPlayers(2);
+            var players = playerIds(2);
 
             var sessionGame = SessionGame.create(GameId.generate(), players);
 
@@ -28,7 +33,7 @@ class SessionGameTest {
 
         @Test
         public void givenPlayers_whenCreating_thenEachSeatHasADistinctToken() {
-            var players = createNumberOfPlayers(2);
+            var players = playerIds(2);
 
             var sessionGame = SessionGame.create(GameId.generate(), players);
 
@@ -39,7 +44,7 @@ class SessionGameTest {
 
         @Test
         public void givenPlayers_whenCreating_thenSeatsAreOrderedById() {
-            var players = createNumberOfPlayers(2);
+            var players = playerIds(2);
 
             var sessionGame = SessionGame.create(GameId.generate(), players);
 
@@ -55,7 +60,7 @@ class SessionGameTest {
 
         @Test
         public void givenNewSessionGame_whenCreated_thenNoSeatsAreClaimed() {
-            var players = createNumberOfPlayers(2);
+            var players = playerIds(2);
 
             var sessionGame = SessionGame.create(GameId.generate(), players);
 
@@ -65,7 +70,7 @@ class SessionGameTest {
 
         @Test
         public void givenSeat_whenClaimedWithName_thenIsClaimedWithThatName() {
-            var players = createNumberOfPlayers(2);
+            var players = playerIds(2);
             var sessionGame = SessionGame.create(GameId.generate(), players);
 
             sessionGame.claim(new PlayerId(0), "Alice");
@@ -81,7 +86,7 @@ class SessionGameTest {
 
         @Test
         public void givenSessionGame_withToken_whenLookingUp_thenReturnPlayerId() {
-            var players = createNumberOfPlayers(2);
+            var players = playerIds(2);
             var sessionGame = SessionGame.create(GameId.generate(), players);
             var tokenForPlayer0 = sessionGame.findTokenByPlayer(new PlayerId(0)).orElseThrow();
 
@@ -92,7 +97,7 @@ class SessionGameTest {
 
         @Test
         public void givenSessionGame_withUnknownToken_whenLookingUp_thenReturnEmpty() {
-            var players = createNumberOfPlayers(2);
+            var players = playerIds(2);
             var sessionGame = SessionGame.create(GameId.generate(), players);
 
             Optional<PlayerId> result = sessionGame.findPlayerByToken(SessionToken.generate());
@@ -105,7 +110,7 @@ class SessionGameTest {
     class RematchTest {
 
         private SessionGame newSession() {
-            return SessionGame.create(GameId.generate(), createNumberOfPlayers(2));
+            return SessionGame.create(GameId.generate(), playerIds(2));
         }
 
         @Test

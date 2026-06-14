@@ -39,7 +39,7 @@ class InMemorySessionRepositoryTest {
         var repo = new InMemorySessionRepository(Clock.systemUTC());
         var id = GameId.generate();
         var game = newGame(id);
-        repo.save(game, SessionGame.create(id, game.getPlayers()));
+        repo.save(game, SessionGame.create(id, game.getPlayerIds()));
 
         assertThat(repo.load(id), is(game));
     }
@@ -56,7 +56,7 @@ class InMemorySessionRepositoryTest {
         var repo = new InMemorySessionRepository(clock);
         var id = GameId.generate();
         var game = newGame(id);
-        repo.save(game, SessionGame.create(id, game.getPlayers()));
+        repo.save(game, SessionGame.create(id, game.getPlayerIds()));
 
         clock.advance(Duration.ofMinutes(31));
         List<GameId> evicted = repo.evictStale(Duration.ofMinutes(2), Duration.ofMinutes(30));
@@ -71,7 +71,7 @@ class InMemorySessionRepositoryTest {
         var repo = new InMemorySessionRepository(clock);
         var id = GameId.generate();
         var game = newGame(id);
-        repo.save(game, SessionGame.create(id, game.getPlayers()));
+        repo.save(game, SessionGame.create(id, game.getPlayerIds()));
 
         clock.advance(Duration.ofMinutes(10));
         List<GameId> evicted = repo.evictStale(Duration.ofMinutes(2), Duration.ofMinutes(30));
@@ -86,7 +86,7 @@ class InMemorySessionRepositoryTest {
         var repo = new InMemorySessionRepository(clock);
         var id = GameId.generate();
         var game = newGame(id);
-        repo.save(game, SessionGame.create(id, game.getPlayers()));
+        repo.save(game, SessionGame.create(id, game.getPlayerIds()));
         game.forfeit(new PlayerId(0)); // now finished
         repo.touch(id);                // grace counts from here
 
@@ -102,7 +102,7 @@ class InMemorySessionRepositoryTest {
         var repo = new InMemorySessionRepository(clock);
         var id = GameId.generate();
         var game = newGame(id);
-        repo.save(game, SessionGame.create(id, game.getPlayers()));
+        repo.save(game, SessionGame.create(id, game.getPlayerIds()));
 
         clock.advance(Duration.ofMinutes(20));
         repo.touch(id);                       // reset activity

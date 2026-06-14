@@ -28,7 +28,7 @@ class BatailleCorseWebSocketControllerTest {
 
     @BeforeEach
     void setUp() {
-        sessionService = new SessionService(new InMemorySessionRepository(java.time.Clock.systemUTC()));
+        sessionService = new SessionService(new InMemorySessionRepository(java.time.Clock.systemUTC()), new org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseFactory());
         template = mock(SimpMessagingTemplate.class);
         GameMessagingService messaging = new GameMessagingService(template);
         org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler scheduler =
@@ -118,7 +118,7 @@ class BatailleCorseWebSocketControllerTest {
             SessionToken token1 = sessionService.loadTokenByPlayerId(batailleCorseId, new PlayerId(1));
 
             // Alternate sends until the pile becomes grabbable
-            BatailleCorse batailleCorse = sessionService.getGame(batailleCorseId);
+            BatailleCorse batailleCorse = (BatailleCorse) sessionService.getGame(batailleCorseId);
             int currentPlayer = 0;
             while (!batailleCorse.isPileGrabbable()) {
                 SessionToken currentToken = currentPlayer == 0 ? token0 : token1;

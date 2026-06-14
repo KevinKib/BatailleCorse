@@ -1,5 +1,7 @@
 package org.kevinkib.cardgames.config;
 
+import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseFactory;
+import org.kevinkib.cardgames.game.GameFactory;
 import org.kevinkib.cardgames.sessionmanagement.application.GameCleanupService;
 import org.kevinkib.cardgames.sessionmanagement.application.SessionService;
 import org.kevinkib.cardgames.sessionmanagement.application.port.SessionRepository;
@@ -28,8 +30,13 @@ public class AppConfig {
     }
 
     @Bean
+    public GameFactory gameFactory() {
+        return new BatailleCorseFactory();
+    }
+
+    @Bean
     public SessionService sessionService() {
-        return new SessionService(sessionRepository());
+        return new SessionService(sessionRepository(), gameFactory());
     }
 
     @Bean

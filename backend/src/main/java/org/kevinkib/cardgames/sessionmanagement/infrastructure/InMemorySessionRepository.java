@@ -1,6 +1,6 @@
 package org.kevinkib.cardgames.sessionmanagement.infrastructure;
 
-import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorse;
+import org.kevinkib.cardgames.game.Game;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.application.port.SessionRepository;
@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class InMemorySessionRepository implements SessionRepository {
 
     private final Clock clock;
-    private final Map<GameId, BatailleCorse> games = new ConcurrentHashMap<>();
+    private final Map<GameId, Game> games = new ConcurrentHashMap<>();
     private final Map<GameId, SessionGame> sessionGames = new ConcurrentHashMap<>();
     private final Map<GameId, Instant> lastActivityAt = new ConcurrentHashMap<>();
 
@@ -27,16 +27,16 @@ public class InMemorySessionRepository implements SessionRepository {
     }
 
     @Override
-    public void save(BatailleCorse batailleCorse, SessionGame sessionGame) {
-        GameId id = batailleCorse.getId();
-        games.put(id, batailleCorse);
+    public void save(Game game, SessionGame sessionGame) {
+        GameId id = game.getId();
+        games.put(id, game);
         sessionGames.put(id, sessionGame);
         lastActivityAt.put(id, clock.instant());
     }
 
     @Override
-    public BatailleCorse load(GameId id) {
-        BatailleCorse game = games.get(id);
+    public Game load(GameId id) {
+        Game game = games.get(id);
         if (game == null) {
             throw new IllegalArgumentException("Unknown game " + id);
         }
@@ -44,8 +44,8 @@ public class InMemorySessionRepository implements SessionRepository {
     }
 
     @Override
-    public SessionToken loadSessionToken(GameId batailleCorseId, PlayerId playerId) {
-        return loadSessionGame(batailleCorseId)
+    public SessionToken loadSessionToken(GameId gameId, PlayerId playerId) {
+        return loadSessionGame(gameId)
                 .findTokenByPlayer(playerId)
                 .orElseThrow(IllegalArgumentException::new);
     }
@@ -77,7 +77,7 @@ public class InMemorySessionRepository implements SessionRepository {
     public List<GameId> evictStale(Duration finishedGrace, Duration idleTtl) {
         Instant now = clock.instant();
         List<GameId> evicted = new ArrayList<>();
-        for (Map.Entry<GameId, BatailleCorse> entry : games.entrySet()) {
+        for (Map.Entry<GameId, Game> entry : games.entrySet()) {
             GameId id = entry.getKey();
             Instant last = lastActivityAt.getOrDefault(id, Instant.EPOCH);
             Duration idle = Duration.between(last, now);
