@@ -98,7 +98,7 @@ public class DisconnectForfeitService {
         forfeitReasonRegistry.record(seat, reason);
         sessionService.touch(seat.gameId()); // start the finished-grace clock
         broadcast(seat.gameId(), new SuccessResponse(
-                EventType.FORFEIT,
+                EventType.FORFEIT.toString(),
                 new ForfeitEventData(seat.playerId().id()),
                 "Player " + seat.playerId() + " forfeited.",
                 BatailleCorseDto.from(game, forfeitReasonRegistry.reasonsBySeat(seat.gameId()))));
@@ -110,7 +110,7 @@ public class DisconnectForfeitService {
             return;
         }
         broadcast(seat.gameId(), new SuccessResponse(
-                EventType.OPPONENT_DISCONNECTED,
+                EventType.OPPONENT_DISCONNECTED.toString(),
                 new OpponentDisconnectedEventData(seat.playerId().id(), deadlineEpochMs),
                 "Player " + seat.playerId() + " disconnected.",
                 BatailleCorseDto.from(game)));
@@ -122,7 +122,7 @@ public class DisconnectForfeitService {
             return;
         }
         broadcast(seat.gameId(), new SuccessResponse(
-                EventType.OPPONENT_RECONNECTED,
+                EventType.OPPONENT_RECONNECTED.toString(),
                 new OpponentReconnectedEventData(seat.playerId().id()),
                 "Player " + seat.playerId() + " reconnected.",
                 BatailleCorseDto.from(game)));

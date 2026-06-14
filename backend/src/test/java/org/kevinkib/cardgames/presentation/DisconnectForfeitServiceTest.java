@@ -10,6 +10,7 @@ import org.kevinkib.cardgames.sessionmanagement.domain.GameMode;
 import org.kevinkib.cardgames.sessionmanagement.infrastructure.InMemorySessionRepository;
 import org.kevinkib.cardgames.presentation.api.Response;
 import org.kevinkib.cardgames.presentation.api.SuccessResponse;
+import org.kevinkib.cardgames.presentation.dto.BatailleCorseDto;
 import org.kevinkib.cardgames.presentation.dto.PlayerDto;
 import org.springframework.scheduling.Trigger;
 import org.springframework.scheduling.TaskScheduler;
@@ -92,7 +93,7 @@ class DisconnectForfeitServiceTest {
 
     private String forfeitReasonInLastStateForSeat(String seatId) {
         Response last = messaging.sent.get(messaging.sent.size() - 1);
-        return last.getState().getPlayers().stream()
+        return ((BatailleCorseDto) last.getState()).getPlayers().stream()
                 .filter(p -> p.getId().equals(seatId))
                 .map(PlayerDto::getForfeitReason)
                 .findFirst()

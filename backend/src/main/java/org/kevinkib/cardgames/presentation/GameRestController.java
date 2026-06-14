@@ -78,7 +78,7 @@ public class GameRestController {
             Player joiner = game.getPlayerByIndex(result.playerId().id());
             SessionViewDto sessionView = SessionViewDto.from(sessionService.getSeats(gameId));
             Response broadcast = new SuccessResponse(
-                    EventType.JOIN,
+                    EventType.JOIN.toString(),
                     new JoinEventData(PlayerIdDto.from(joiner), sessionView.players()),
                     "Player " + result.playerId().id() + " joined.",
                     BatailleCorseDto.from(game));

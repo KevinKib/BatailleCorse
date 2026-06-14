@@ -3,6 +3,7 @@ package org.kevinkib.cardgames.presentation;
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.presentation.api.Response;
 import org.kevinkib.cardgames.presentation.api.SuccessResponse;
+import org.kevinkib.cardgames.presentation.dto.BatailleCorseDto;
 import org.kevinkib.cardgames.presentation.dto.event.CreateEventData;
 import org.kevinkib.cardgames.presentation.dto.event.EmptyEventData;
 import org.kevinkib.cardgames.presentation.dto.event.EventType;
@@ -29,6 +30,6 @@ class BatailleCorseControllerIT {
         assertThat(response.getEventData(), instanceOf(CreateEventData.class));
         assertThat(response.getMessage(), is(GAME_CREATED_MESSAGE));
         assertThat(response.getState(), notNullValue());
-        assertThat(response.getState().getPlayers(), hasSize(NB_PLAYERS));
+        assertThat(((BatailleCorseDto) response.getState()).getPlayers(), hasSize(NB_PLAYERS));
     }
 }
