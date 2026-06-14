@@ -1,12 +1,12 @@
 package org.kevinkib.cardgames.presentation.dto;
 
-import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseId;
+import org.kevinkib.cardgames.game.GameId;
 
 public class BatailleCorseIdDto {
 
-    private final BatailleCorseId batailleCorseId;
+    private final GameId batailleCorseId;
 
-    public BatailleCorseIdDto(BatailleCorseId batailleCorseId) {
+    public BatailleCorseIdDto(GameId batailleCorseId) {
         this.batailleCorseId = batailleCorseId;
     }
 

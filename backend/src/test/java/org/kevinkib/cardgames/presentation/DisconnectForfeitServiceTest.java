@@ -3,8 +3,8 @@ package org.kevinkib.cardgames.presentation;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorse;
-import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseId;
-import org.kevinkib.cardgames.bataillecorse.domain.PlayerId;
+import org.kevinkib.cardgames.game.GameId;
+import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.application.SessionService;
 import org.kevinkib.cardgames.sessionmanagement.domain.GameMode;
 import org.kevinkib.cardgames.sessionmanagement.infrastructure.InMemorySessionRepository;
@@ -70,19 +70,19 @@ class DisconnectForfeitServiceTest {
     private StompSessionSeatRegistry registry;
     private ForfeitReasonRegistry forfeitReasonRegistry;
     private DisconnectForfeitService service;
-    private BatailleCorseId gameId;
+    private GameId gameId;
 
     @BeforeEach
     void setUp() {
         Clock clock = Clock.fixed(Instant.parse("2026-06-09T12:00:00Z"), ZoneOffset.UTC);
-        sessionService = new SessionService(new InMemorySessionRepository(clock));
+        sessionService = new SessionService(new InMemorySessionRepository(clock), new org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseFactory());
         scheduler = new CapturingScheduler();
         messaging = new RecordingMessaging();
         registry = new StompSessionSeatRegistry();
         forfeitReasonRegistry = new ForfeitReasonRegistry();
         service = new DisconnectForfeitService(sessionService, messaging, registry, scheduler, clock, forfeitReasonRegistry);
 
-        BatailleCorse game = sessionService.createGame(2, GameMode.MULTIPLAYER);
+        BatailleCorse game = (BatailleCorse) sessionService.createGame(2, GameMode.MULTIPLAYER);
         gameId = game.getId();
     }
 
@@ -127,7 +127,7 @@ class DisconnectForfeitServiceTest {
 
         scheduler.lastTask.run(); // simulate the 60s elapsing
 
-        BatailleCorse game = sessionService.getGame(gameId);
+        BatailleCorse game = (BatailleCorse) sessionService.getGame(gameId);
         assertThat(game.isFinished(), is(true));
         assertThat(game.getWinner().id(), is(new PlayerId(1)));
         assertThat(eventTypes(), contains("OPPONENT_DISCONNECTED", "FORFEIT"));
@@ -136,7 +136,7 @@ class DisconnectForfeitServiceTest {
 
     @Test
     void givenFinishedGame_whenDisconnect_thenNoScheduleNoBroadcast() {
-        sessionService.getGame(gameId).concede(new PlayerId(1)); // already over
+        sessionService.getGame(gameId).forfeit(new PlayerId(1)); // already over
         service.onPresence("sess-0", gameId, new PlayerId(0));
 
         service.onDisconnect("sess-0");
@@ -149,7 +149,7 @@ class DisconnectForfeitServiceTest {
     void whenForfeitCalledDirectly_thenConcedesAndBroadcastsForfeitWithResigned() {
         service.forfeit(new Seat(gameId, new PlayerId(1)), ForfeitReason.RESIGNED);
 
-        BatailleCorse game = sessionService.getGame(gameId);
+        BatailleCorse game = (BatailleCorse) sessionService.getGame(gameId);
         assertThat(game.getWinner().id(), is(new PlayerId(0)));
         assertThat(eventTypes(), contains("FORFEIT"));
         assertThat(forfeitReasonInLastStateForSeat("1"), is("RESIGNED"));
@@ -165,7 +165,7 @@ class DisconnectForfeitServiceTest {
         scheduler.scheduled.get(0).run(); // seat 0's timer -> seat 1 wins, game over
         scheduler.scheduled.get(1).run(); // seat 1's timer -> no-op on finished game
 
-        BatailleCorse game = sessionService.getGame(gameId);
+        BatailleCorse game = (BatailleCorse) sessionService.getGame(gameId);
         assertThat(game.getWinner().id(), is(new PlayerId(1)));
         long forfeits = eventTypes().stream().filter("FORFEIT"::equals).count();
         assertThat(forfeits, is(1L));
@@ -179,7 +179,7 @@ class DisconnectForfeitServiceTest {
 
         service.onPresence("sess-0b", gameId, new PlayerId(0)); // reconnect arrives too late
 
-        BatailleCorse game = sessionService.getGame(gameId);
+        BatailleCorse game = (BatailleCorse) sessionService.getGame(gameId);
         assertThat(game.getWinner().id(), is(new PlayerId(1)));
         assertThat(eventTypes(), contains("OPPONENT_DISCONNECTED", "FORFEIT")); // no OPPONENT_RECONNECTED
     }

@@ -2,7 +2,7 @@ package org.kevinkib.cardgames.presentation.dto;
 
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorse;
-import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseId;
+import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.presentation.ForfeitReason;
 
 import java.util.Map;
@@ -14,7 +14,7 @@ import static org.hamcrest.Matchers.nullValue;
 class BatailleCorseDtoTest {
 
     private BatailleCorse twoPlayerGame() {
-        return new BatailleCorse(BatailleCorseId.generate(), 2);
+        return new BatailleCorse(GameId.generate(), 2);
     }
 
     @Test

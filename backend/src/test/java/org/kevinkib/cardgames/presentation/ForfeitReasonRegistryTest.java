@@ -1,8 +1,8 @@
 package org.kevinkib.cardgames.presentation;
 
 import org.junit.jupiter.api.Test;
-import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseId;
-import org.kevinkib.cardgames.bataillecorse.domain.PlayerId;
+import org.kevinkib.cardgames.game.GameId;
+import org.kevinkib.cardgames.game.PlayerId;
 
 import java.util.Map;
 
@@ -15,7 +15,7 @@ class ForfeitReasonRegistryTest {
 
     @Test
     void givenReasonRecorded_thenReasonsBySeatContainsItKeyedBySeatIndex() {
-        BatailleCorseId gameId = BatailleCorseId.generate();
+        GameId gameId = GameId.generate();
         registry.record(new Seat(gameId, new PlayerId(1)), ForfeitReason.DISCONNECTED);
 
         Map<Integer, ForfeitReason> reasons = registry.reasonsBySeat(gameId);
@@ -26,8 +26,8 @@ class ForfeitReasonRegistryTest {
 
     @Test
     void givenReasonForAnotherGame_thenNotReturned() {
-        BatailleCorseId gameId = BatailleCorseId.generate();
-        BatailleCorseId otherGame = BatailleCorseId.generate();
+        GameId gameId = GameId.generate();
+        GameId otherGame = GameId.generate();
         registry.record(new Seat(otherGame, new PlayerId(0)), ForfeitReason.RESIGNED);
 
         assertThat(registry.reasonsBySeat(gameId).isEmpty(), is(true));
@@ -35,7 +35,7 @@ class ForfeitReasonRegistryTest {
 
     @Test
     void givenRemoveGame_thenItsReasonsCleared() {
-        BatailleCorseId gameId = BatailleCorseId.generate();
+        GameId gameId = GameId.generate();
         registry.record(new Seat(gameId, new PlayerId(0)), ForfeitReason.RESIGNED);
 
         registry.removeGame(gameId);

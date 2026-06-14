@@ -1,4 +1,4 @@
-package org.kevinkib.cardgames.bataillecorse.domain;
+package org.kevinkib.cardgames.game;
 
 public record PlayerId(Integer id) {
 

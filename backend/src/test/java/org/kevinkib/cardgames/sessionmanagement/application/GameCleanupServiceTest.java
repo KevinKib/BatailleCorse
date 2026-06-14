@@ -1,8 +1,8 @@
 package org.kevinkib.cardgames.sessionmanagement.application;
 
 import org.junit.jupiter.api.Test;
-import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorse;
-import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseId;
+import org.kevinkib.cardgames.game.Game;
+import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.sessionmanagement.application.port.SessionRepository;
 import org.kevinkib.cardgames.sessionmanagement.domain.SessionGame;
 import org.kevinkib.cardgames.presentation.ForfeitReasonRegistry;
@@ -21,14 +21,14 @@ class GameCleanupServiceTest {
     private static final class StubRepository implements SessionRepository {
         Duration lastFinishedGrace;
         Duration lastIdleTtl;
-        final List<BatailleCorseId> toEvict = new ArrayList<>();
-        public void save(BatailleCorse b, SessionGame s) {}
-        public BatailleCorse load(BatailleCorseId id) { return null; }
-        public org.kevinkib.cardgames.sessionmanagement.domain.SessionToken loadSessionToken(BatailleCorseId i, org.kevinkib.cardgames.bataillecorse.domain.PlayerId p) { return null; }
-        public SessionGame loadSessionGame(BatailleCorseId id) { return null; }
-        public void touch(BatailleCorseId id) {}
-        public void remove(BatailleCorseId id) {}
-        public List<BatailleCorseId> evictStale(Duration finishedGrace, Duration idleTtl) {
+        final List<GameId> toEvict = new ArrayList<>();
+        public void save(Game game, SessionGame s) {}
+        public Game load(GameId id) { return null; }
+        public org.kevinkib.cardgames.sessionmanagement.domain.SessionToken loadSessionToken(GameId i, org.kevinkib.cardgames.game.PlayerId p) { return null; }
+        public SessionGame loadSessionGame(GameId id) { return null; }
+        public void touch(GameId id) {}
+        public void remove(GameId id) {}
+        public List<GameId> evictStale(Duration finishedGrace, Duration idleTtl) {
             this.lastFinishedGrace = finishedGrace;
             this.lastIdleTtl = idleTtl;
             return new ArrayList<>(toEvict);
@@ -38,14 +38,14 @@ class GameCleanupServiceTest {
     @Test
     void givenEvictedGames_whenSweep_thenPresenceCleared() {
         var repo = new StubRepository();
-        var id = BatailleCorseId.generate();
+        var id = GameId.generate();
         repo.toEvict.add(id);
         var registry = new StompSessionSeatRegistry();
         var service = new GameCleanupService(repo, registry, new ForfeitReasonRegistry());
 
         var spySession = "sess-1";
         registry.bind(spySession, new org.kevinkib.cardgames.presentation.Seat(
-                id, new org.kevinkib.cardgames.bataillecorse.domain.PlayerId(1)));
+                id, new org.kevinkib.cardgames.game.PlayerId(1)));
 
         service.sweep();
 

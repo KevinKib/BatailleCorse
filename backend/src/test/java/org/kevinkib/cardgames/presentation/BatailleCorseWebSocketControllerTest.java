@@ -4,9 +4,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorse;
-import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseId;
+import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.bataillecorse.domain.Player;
-import org.kevinkib.cardgames.bataillecorse.domain.PlayerId;
+import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.application.SessionService;
 import org.kevinkib.cardgames.sessionmanagement.domain.SessionToken;
 import org.kevinkib.cardgames.sessionmanagement.infrastructure.InMemorySessionRepository;
@@ -28,7 +28,7 @@ class BatailleCorseWebSocketControllerTest {
 
     @BeforeEach
     void setUp() {
-        sessionService = new SessionService(new InMemorySessionRepository(java.time.Clock.systemUTC()));
+        sessionService = new SessionService(new InMemorySessionRepository(java.time.Clock.systemUTC()), new org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseFactory());
         template = mock(SimpMessagingTemplate.class);
         GameMessagingService messaging = new GameMessagingService(template);
         org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler scheduler =
@@ -113,12 +113,12 @@ class BatailleCorseWebSocketControllerTest {
         void givenValidToken_whenGrab_thenBroadcastsSuccessResponse() {
             var game = sessionService.createGame(2);
             String gameId = game.getId().uuid().toString();
-            BatailleCorseId batailleCorseId = game.getId();
+            GameId batailleCorseId = game.getId();
             SessionToken token0 = sessionService.loadTokenByPlayerId(batailleCorseId, new PlayerId(0));
             SessionToken token1 = sessionService.loadTokenByPlayerId(batailleCorseId, new PlayerId(1));
 
             // Alternate sends until the pile becomes grabbable
-            BatailleCorse batailleCorse = sessionService.getGame(batailleCorseId);
+            BatailleCorse batailleCorse = (BatailleCorse) sessionService.getGame(batailleCorseId);
             int currentPlayer = 0;
             while (!batailleCorse.isPileGrabbable()) {
                 SessionToken currentToken = currentPlayer == 0 ? token0 : token1;

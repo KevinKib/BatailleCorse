@@ -1,6 +1,6 @@
 package org.kevinkib.cardgames.presentation;
 
-import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseId;
+import org.kevinkib.cardgames.game.GameId;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -20,7 +20,7 @@ public class ForfeitReasonRegistry {
     }
 
     /** Seat-index -> reason for the given game (empty if no seat forfeited). */
-    public Map<Integer, ForfeitReason> reasonsBySeat(BatailleCorseId gameId) {
+    public Map<Integer, ForfeitReason> reasonsBySeat(GameId gameId) {
         Map<Integer, ForfeitReason> result = new HashMap<>();
         reasonBySeat.forEach((seat, reason) -> {
             if (seat.gameId().equals(gameId)) {
@@ -30,7 +30,7 @@ public class ForfeitReasonRegistry {
         return result;
     }
 
-    public void removeGame(BatailleCorseId gameId) {
+    public void removeGame(GameId gameId) {
         reasonBySeat.keySet().removeIf(seat -> seat.gameId().equals(gameId));
     }
 }

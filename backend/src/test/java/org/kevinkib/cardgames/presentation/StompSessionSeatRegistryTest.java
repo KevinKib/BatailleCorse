@@ -1,15 +1,15 @@
 package org.kevinkib.cardgames.presentation;
 
 import org.junit.jupiter.api.Test;
-import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseId;
-import org.kevinkib.cardgames.bataillecorse.domain.PlayerId;
+import org.kevinkib.cardgames.game.GameId;
+import org.kevinkib.cardgames.game.PlayerId;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
 class StompSessionSeatRegistryTest {
 
-    private final BatailleCorseId gameId = BatailleCorseId.generate();
+    private final GameId gameId = GameId.generate();
 
     @Test
     void givenBoundSession_whenSeatOf_thenReturnsSeat() {
@@ -41,7 +41,7 @@ class StompSessionSeatRegistryTest {
         var registry = new StompSessionSeatRegistry();
         registry.bind("a", new Seat(gameId, new PlayerId(0)));
         registry.bind("b", new Seat(gameId, new PlayerId(1)));
-        var otherGame = BatailleCorseId.generate();
+        var otherGame = GameId.generate();
         registry.bind("c", new Seat(otherGame, new PlayerId(0)));
 
         registry.removeGame(gameId);

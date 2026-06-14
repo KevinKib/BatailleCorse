@@ -1,6 +1,6 @@
 package org.kevinkib.cardgames.sessionmanagement.domain;
 
-import org.kevinkib.cardgames.bataillecorse.domain.PlayerId;
+import org.kevinkib.cardgames.game.PlayerId;
 
 public class SessionPlayer {
 

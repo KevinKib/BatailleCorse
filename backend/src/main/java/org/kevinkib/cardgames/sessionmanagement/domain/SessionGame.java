@@ -1,8 +1,7 @@
 package org.kevinkib.cardgames.sessionmanagement.domain;
 
-import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseId;
-import org.kevinkib.cardgames.bataillecorse.domain.Player;
-import org.kevinkib.cardgames.bataillecorse.domain.PlayerId;
+import org.kevinkib.cardgames.game.GameId;
+import org.kevinkib.cardgames.game.PlayerId;
 
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -10,12 +9,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public record SessionGame(BatailleCorseId id, Map<PlayerId, SessionPlayer> players) {
+public record SessionGame(GameId id, Map<PlayerId, SessionPlayer> players) {
 
-    public static SessionGame create(BatailleCorseId id, List<Player> players) {
+    public static SessionGame create(GameId id, List<PlayerId> playerIds) {
         Map<PlayerId, SessionPlayer> seats = new LinkedHashMap<>();
-        for (Player player : players) {
-            seats.put(player.id(), new SessionPlayer(player.id(), SessionToken.generate()));
+        for (PlayerId playerId : playerIds) {
+            seats.put(playerId, new SessionPlayer(playerId, SessionToken.generate()));
         }
         return new SessionGame(id, seats);
     }

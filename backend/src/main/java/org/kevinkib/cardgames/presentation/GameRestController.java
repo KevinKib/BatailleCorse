@@ -1,7 +1,7 @@
 package org.kevinkib.cardgames.presentation;
 
 import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorse;
-import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseId;
+import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.bataillecorse.domain.Player;
 import org.kevinkib.cardgames.sessionmanagement.application.InvalidGameIdException;
 import org.kevinkib.cardgames.sessionmanagement.application.JoinResult;
@@ -46,8 +46,8 @@ public class GameRestController {
     @GetMapping("/game/{id}")
     public ResponseEntity<BatailleCorseDto> getGame(@PathVariable String id) {
         try {
-            BatailleCorseId gameId = new BatailleCorseId(id);
-            BatailleCorse game = sessionService.getGame(gameId);
+            GameId gameId = new GameId(id);
+            BatailleCorse game = (BatailleCorse) sessionService.getGame(gameId);
             return ResponseEntity.ok(BatailleCorseDto.from(game, forfeitReasonRegistry.reasonsBySeat(gameId)));
         } catch (InvalidGameIdException | IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
@@ -57,7 +57,7 @@ public class GameRestController {
     @GetMapping("/game/{id}/session")
     public ResponseEntity<SessionViewDto> getSession(@PathVariable String id) {
         try {
-            BatailleCorseId gameId = new BatailleCorseId(id);
+            GameId gameId = new GameId(id);
             List<SessionPlayer> seats = sessionService.getSeats(gameId);
             return ResponseEntity.ok(SessionViewDto.from(seats));
         } catch (InvalidGameIdException | IllegalArgumentException e) {
@@ -70,8 +70,8 @@ public class GameRestController {
             @PathVariable String id,
             @RequestBody(required = false) JoinGamePayload payload) {
         try {
-            BatailleCorseId gameId = new BatailleCorseId(id);
-            BatailleCorse game = sessionService.getGame(gameId);
+            GameId gameId = new GameId(id);
+            BatailleCorse game = (BatailleCorse) sessionService.getGame(gameId);
             String name = (payload != null) ? payload.name() : null;
             JoinResult result = sessionService.joinGame(gameId, name);
 

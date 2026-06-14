@@ -1,4 +1,7 @@
 package org.kevinkib.cardgames.bataillecorse.domain;
+import org.kevinkib.cardgames.game.Game;
+import org.kevinkib.cardgames.game.PlayerId;
+import org.kevinkib.cardgames.game.GameId;
 
 import org.kevinkib.cardgames.bataillecorse.domain.slaprules.SlapRules;
 import org.kevinkib.cardgames.bataillecorse.domain.penality.Penality;
@@ -14,9 +17,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class BatailleCorse {
+public class BatailleCorse implements Game {
 
-    private final BatailleCorseId id;
+    private final GameId id;
     private List<Player> players;
     private CentralPile pile;
     private SlapRules slapRules;
@@ -24,13 +27,13 @@ public class BatailleCorse {
     private IndexHandler indexHandler;
     private Result result;
 
-    public BatailleCorse(BatailleCorseId id, int nbPlayers) {
+    public BatailleCorse(GameId id, int nbPlayers) {
         this.id = id;
         initializePlayersAndHands(nbPlayers);
         initializeData();
     }
 
-    public BatailleCorse(BatailleCorseId id, List<Player> players, int currentPlayer, CentralPile pile, SlapRules slapRules, Penality penality) {
+    public BatailleCorse(GameId id, List<Player> players, int currentPlayer, CentralPile pile, SlapRules slapRules, Penality penality) {
         this.id = id;
         this.players = players;
         this.pile = pile;
@@ -86,13 +89,14 @@ public class BatailleCorse {
     }
 
     // No-op when already finished: a natural win can race the disconnect-forfeit timer.
-    public synchronized void concede(PlayerId loser) {
+    @Override
+    public synchronized void forfeit(PlayerId loser) {
         if (isFinished()) {
             return;
         }
         if (players.size() != 2) {
             throw new UnsupportedOperationException(
-                    "concede only defines a winner for 2-player games; got " + players.size());
+                    "forfeit only defines a winner for 2-player games; got " + players.size());
         }
         Player winner = players.stream()
                 .filter(player -> !player.id().equals(loser))
@@ -156,7 +160,8 @@ public class BatailleCorse {
         return allowedActions;
     }
 
-    public BatailleCorseId getId() {
+    @Override
+    public GameId getId() {
         return id;
     }
 
@@ -204,6 +209,12 @@ public class BatailleCorse {
         return new ArrayList<>(players);
     }
 
+    @Override
+    public List<PlayerId> getPlayerIds() {
+        return players.stream().map(Player::id).toList();
+    }
+
+    @Override
     public boolean isFinished() {
         return result.isFinished();
     }

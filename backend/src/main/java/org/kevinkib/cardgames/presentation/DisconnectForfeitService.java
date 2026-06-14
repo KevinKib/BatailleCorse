@@ -1,8 +1,8 @@
 package org.kevinkib.cardgames.presentation;
 
 import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorse;
-import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseId;
-import org.kevinkib.cardgames.bataillecorse.domain.PlayerId;
+import org.kevinkib.cardgames.game.GameId;
+import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.application.InvalidGameIdException;
 import org.kevinkib.cardgames.sessionmanagement.application.SessionService;
 import org.kevinkib.cardgames.presentation.api.Response;
@@ -56,7 +56,7 @@ public class DisconnectForfeitService {
     }
 
     /** Records presence; if this seat had a pending forfeit, cancels it and announces the return. */
-    public void onPresence(String sessionId, BatailleCorseId gameId, PlayerId playerId) {
+    public void onPresence(String sessionId, GameId gameId, PlayerId playerId) {
         Seat seat = new Seat(gameId, playerId);
         registry.bind(sessionId, seat);
 
@@ -94,7 +94,7 @@ public class DisconnectForfeitService {
         if (game == null || game.isFinished()) {
             return;
         }
-        game.concede(seat.playerId());
+        game.forfeit(seat.playerId());
         forfeitReasonRegistry.record(seat, reason);
         sessionService.touch(seat.gameId()); // start the finished-grace clock
         broadcast(seat.gameId(), new SuccessResponse(
@@ -128,13 +128,13 @@ public class DisconnectForfeitService {
                 BatailleCorseDto.from(game)));
     }
 
-    private void broadcast(BatailleCorseId gameId, Response response) {
+    private void broadcast(GameId gameId, Response response) {
         messaging.sendToGame(gameId.uuid().toString(), response);
     }
 
-    private BatailleCorse findGame(BatailleCorseId gameId) {
+    private BatailleCorse findGame(GameId gameId) {
         try {
-            return sessionService.getGame(gameId);
+            return (BatailleCorse) sessionService.getGame(gameId);
         } catch (InvalidGameIdException e) {
             return null;
         }

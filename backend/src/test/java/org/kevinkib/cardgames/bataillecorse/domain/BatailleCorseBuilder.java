@@ -1,4 +1,5 @@
 package org.kevinkib.cardgames.bataillecorse.domain;
+import org.kevinkib.cardgames.game.GameId;
 
 import org.kevinkib.cardgames.bataillecorse.domain.slaprules.SlapRules;
 import org.kevinkib.cardgames.bataillecorse.domain.penality.Penality;
@@ -8,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class BatailleCorseBuilder {
-    private BatailleCorseId id;
+    private GameId id;
     private List<Player> players;
     private int currentPlayer;
     private CentralPile pile;
@@ -22,7 +23,7 @@ public final class BatailleCorseBuilder {
         return new BatailleCorseBuilder();
     }
 
-    public BatailleCorseBuilder withId(BatailleCorseId id) {
+    public BatailleCorseBuilder withId(GameId id) {
         this.id = id;
         return this;
     }

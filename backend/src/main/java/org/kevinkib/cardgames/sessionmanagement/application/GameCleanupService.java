@@ -1,6 +1,6 @@
 package org.kevinkib.cardgames.sessionmanagement.application;
 
-import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseId;
+import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.sessionmanagement.application.port.SessionRepository;
 import org.kevinkib.cardgames.presentation.ForfeitReasonRegistry;
 import org.kevinkib.cardgames.presentation.StompSessionSeatRegistry;
@@ -32,7 +32,7 @@ public class GameCleanupService {
 
     @Scheduled(fixedDelayString = "PT1M")
     public void sweep() {
-        List<BatailleCorseId> evicted = repository.evictStale(FINISHED_GRACE, IDLE_TTL);
+        List<GameId> evicted = repository.evictStale(FINISHED_GRACE, IDLE_TTL);
         if (!evicted.isEmpty()) {
             log.info("Evicted {} stale game(s): {}", evicted.size(), evicted);
             evicted.forEach(presenceRegistry::removeGame);

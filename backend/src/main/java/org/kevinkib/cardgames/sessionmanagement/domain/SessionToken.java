@@ -1,7 +1,5 @@
 package org.kevinkib.cardgames.sessionmanagement.domain;
 
-import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseId;
-
 import java.util.UUID;
 
 public record SessionToken(UUID uuid) {
