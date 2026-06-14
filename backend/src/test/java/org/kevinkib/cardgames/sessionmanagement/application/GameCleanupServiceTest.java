@@ -24,7 +24,7 @@ class GameCleanupServiceTest {
         final List<GameId> toEvict = new ArrayList<>();
         public void save(BatailleCorse b, SessionGame s) {}
         public BatailleCorse load(GameId id) { return null; }
-        public org.kevinkib.cardgames.sessionmanagement.domain.SessionToken loadSessionToken(GameId i, org.kevinkib.cardgames.bataillecorse.domain.PlayerId p) { return null; }
+        public org.kevinkib.cardgames.sessionmanagement.domain.SessionToken loadSessionToken(GameId i, org.kevinkib.cardgames.game.PlayerId p) { return null; }
         public SessionGame loadSessionGame(GameId id) { return null; }
         public void touch(GameId id) {}
         public void remove(GameId id) {}
@@ -45,7 +45,7 @@ class GameCleanupServiceTest {
 
         var spySession = "sess-1";
         registry.bind(spySession, new org.kevinkib.cardgames.presentation.Seat(
-                id, new org.kevinkib.cardgames.bataillecorse.domain.PlayerId(1)));
+                id, new org.kevinkib.cardgames.game.PlayerId(1)));
 
         service.sweep();
 

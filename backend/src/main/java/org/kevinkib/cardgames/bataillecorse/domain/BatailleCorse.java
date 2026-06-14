@@ -1,4 +1,5 @@
 package org.kevinkib.cardgames.bataillecorse.domain;
+import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.game.GameId;
 
 import org.kevinkib.cardgames.bataillecorse.domain.slaprules.SlapRules;

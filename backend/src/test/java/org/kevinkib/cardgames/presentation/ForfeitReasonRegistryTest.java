@@ -2,7 +2,7 @@ package org.kevinkib.cardgames.presentation;
 
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.game.GameId;
-import org.kevinkib.cardgames.bataillecorse.domain.PlayerId;
+import org.kevinkib.cardgames.game.PlayerId;
 
 import java.util.Map;
 

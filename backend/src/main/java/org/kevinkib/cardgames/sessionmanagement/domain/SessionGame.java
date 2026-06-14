@@ -2,7 +2,7 @@ package org.kevinkib.cardgames.sessionmanagement.domain;
 
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.bataillecorse.domain.Player;
-import org.kevinkib.cardgames.bataillecorse.domain.PlayerId;
+import org.kevinkib.cardgames.game.PlayerId;
 
 import java.util.Comparator;
 import java.util.LinkedHashMap;

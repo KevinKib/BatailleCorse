@@ -2,7 +2,7 @@ package org.kevinkib.cardgames.sessionmanagement.application.port;
 
 import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorse;
 import org.kevinkib.cardgames.game.GameId;
-import org.kevinkib.cardgames.bataillecorse.domain.PlayerId;
+import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.domain.SessionGame;
 import org.kevinkib.cardgames.sessionmanagement.domain.SessionToken;
 
