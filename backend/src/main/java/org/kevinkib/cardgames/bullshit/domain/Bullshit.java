@@ -7,7 +7,7 @@ import org.kevinkib.cardgames.bullshit.domain.claim.ClaimTarget;
 import org.kevinkib.cardgames.bullshit.domain.pile.Discard;
 import org.kevinkib.cardgames.bullshit.domain.pile.DiscardPile;
 import org.kevinkib.cardgames.bullshit.domain.player.Player;
-import org.kevinkib.cardgames.bullshit.domain.player.PlayerId;
+import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cards.CardsService;
 import org.kevinkib.cards.domain.Card;
 import org.kevinkib.cards.domain.Visibility;

@@ -1,6 +1,6 @@
 package org.kevinkib.cardgames.bullshit.domain;
 
-import org.kevinkib.cardgames.bullshit.domain.player.PlayerId;
+import org.kevinkib.cardgames.game.PlayerId;
 
 public class CannotCallBullshitException extends Exception {
 

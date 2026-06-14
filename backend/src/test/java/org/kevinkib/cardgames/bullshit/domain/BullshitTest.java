@@ -6,7 +6,7 @@ import org.kevinkib.cardgames.bullshit.domain.claim.CyclingSuitClaimMode;
 import org.kevinkib.cardgames.bullshit.domain.claim.RankTarget;
 import org.kevinkib.cardgames.bullshit.domain.claim.SuitTarget;
 import org.kevinkib.cardgames.bullshit.domain.player.Player;
-import org.kevinkib.cardgames.bullshit.domain.player.PlayerId;
+import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cards.domain.deck.french.FrenchRank;
 import org.kevinkib.cards.domain.deck.french.FrenchSuit;
 
