@@ -94,7 +94,7 @@ public class DisconnectForfeitService {
         if (game == null || game.isFinished()) {
             return;
         }
-        game.concede(seat.playerId());
+        game.forfeit(seat.playerId());
         forfeitReasonRegistry.record(seat, reason);
         sessionService.touch(seat.gameId()); // start the finished-grace clock
         broadcast(seat.gameId(), new SuccessResponse(

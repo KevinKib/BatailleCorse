@@ -47,7 +47,7 @@ class GameRestControllerTest {
     void givenForfeitedGame_whenGetGame_thenLosingPlayerHasForfeitReason() {
         BatailleCorse game = sessionService.createGame(2, GameMode.MULTIPLAYER);
         GameId gameId = game.getId();
-        game.concede(new PlayerId(0));
+        game.forfeit(new PlayerId(0));
         forfeitReasonRegistry.record(new Seat(gameId, new PlayerId(0)), ForfeitReason.RESIGNED);
 
         ResponseEntity<BatailleCorseDto> response = controller.getGame(gameId.uuid().toString());

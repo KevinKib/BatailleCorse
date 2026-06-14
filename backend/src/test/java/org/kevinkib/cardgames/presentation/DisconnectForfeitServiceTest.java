@@ -136,7 +136,7 @@ class DisconnectForfeitServiceTest {
 
     @Test
     void givenFinishedGame_whenDisconnect_thenNoScheduleNoBroadcast() {
-        sessionService.getGame(gameId).concede(new PlayerId(1)); // already over
+        sessionService.getGame(gameId).forfeit(new PlayerId(1)); // already over
         service.onPresence("sess-0", gameId, new PlayerId(0));
 
         service.onDisconnect("sess-0");

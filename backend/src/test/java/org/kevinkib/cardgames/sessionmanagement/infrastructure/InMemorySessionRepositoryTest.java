@@ -87,7 +87,7 @@ class InMemorySessionRepositoryTest {
         var id = GameId.generate();
         var game = newGame(id);
         repo.save(game, SessionGame.create(id, game.getPlayers()));
-        game.concede(new PlayerId(0)); // now finished
+        game.forfeit(new PlayerId(0)); // now finished
         repo.touch(id);                // grace counts from here
 
         clock.advance(Duration.ofMinutes(3)); // > 2m grace, < 30m idle
