@@ -1,4 +1,5 @@
-package org.kevinkib.cardgames.presentation;
+package org.kevinkib.cardgames.bataillecorse.presentation;
+import org.kevinkib.cardgames.presentation.*;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -9,8 +10,8 @@ import org.kevinkib.cardgames.sessionmanagement.application.SessionService;
 import org.kevinkib.cardgames.sessionmanagement.domain.GameMode;
 import org.kevinkib.cardgames.sessionmanagement.infrastructure.InMemorySessionRepository;
 import org.kevinkib.cardgames.presentation.api.Response;
-import org.kevinkib.cardgames.presentation.dto.BatailleCorseDto;
-import org.kevinkib.cardgames.presentation.dto.PlayerDto;
+import org.kevinkib.cardgames.bataillecorse.presentation.dto.BatailleCorseDto;
+import org.kevinkib.cardgames.bataillecorse.presentation.dto.PlayerDto;
 import org.springframework.http.ResponseEntity;
 
 import java.time.Clock;
@@ -22,7 +23,7 @@ import java.util.List;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
-class GameRestControllerTest {
+class BatailleCorseRestControllerTest {
 
     /** Records every broadcast instead of touching a real broker. */
     private static final class RecordingMessaging extends GameMessagingService {
@@ -33,14 +34,14 @@ class GameRestControllerTest {
 
     private SessionService sessionService;
     private ForfeitReasonRegistry forfeitReasonRegistry;
-    private GameRestController controller;
+    private BatailleCorseRestController controller;
 
     @BeforeEach
     void setUp() {
         Clock clock = Clock.fixed(Instant.parse("2026-06-11T10:00:00Z"), ZoneOffset.UTC);
         sessionService = new SessionService(new InMemorySessionRepository(clock), new org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseFactory());
         forfeitReasonRegistry = new ForfeitReasonRegistry();
-        controller = new GameRestController(sessionService, new RecordingMessaging(), forfeitReasonRegistry);
+        controller = new BatailleCorseRestController(sessionService, new RecordingMessaging(), forfeitReasonRegistry);
     }
 
     @Test

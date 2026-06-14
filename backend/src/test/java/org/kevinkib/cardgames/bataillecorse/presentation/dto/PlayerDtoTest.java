@@ -1,4 +1,4 @@
-package org.kevinkib.cardgames.presentation.dto;
+package org.kevinkib.cardgames.bataillecorse.presentation.dto;
 
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorse;

@@ -1,18 +1,16 @@
 package org.kevinkib.cardgames.presentation.api;
 
-import org.kevinkib.cardgames.presentation.dto.BatailleCorseDto;
 import org.kevinkib.cardgames.presentation.dto.event.EventData;
-import org.kevinkib.cardgames.presentation.dto.event.EventType;
 
 public abstract class Response {
 
     private final boolean success;
-    private final EventType eventType;
+    private final String eventType;
     private final EventData eventData;
     private final String message;
-    private final BatailleCorseDto state;
+    private final Object state;
 
-    public Response(boolean success, EventType eventType, EventData eventData, String message, BatailleCorseDto state) {
+    public Response(boolean success, String eventType, EventData eventData, String message, Object state) {
         this.success = success;
         this.eventType = eventType;
         this.eventData = eventData;
@@ -25,7 +23,7 @@ public abstract class Response {
     }
 
     public String getEventType() {
-        return eventType.toString();
+        return eventType;
     }
 
     public EventData getEventData() {
@@ -36,7 +34,7 @@ public abstract class Response {
         return message;
     }
 
-    public BatailleCorseDto getState() {
+    public Object getState() {
         return state;
     }
 }

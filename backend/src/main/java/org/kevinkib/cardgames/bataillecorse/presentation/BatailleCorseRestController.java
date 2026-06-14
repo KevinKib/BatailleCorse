@@ -1,4 +1,5 @@
-package org.kevinkib.cardgames.presentation;
+package org.kevinkib.cardgames.bataillecorse.presentation;
+import org.kevinkib.cardgames.presentation.*;
 
 import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorse;
 import org.kevinkib.cardgames.game.GameId;
@@ -11,12 +12,12 @@ import org.kevinkib.cardgames.sessionmanagement.domain.SessionPlayer;
 import org.kevinkib.cardgames.presentation.api.JoinGamePayload;
 import org.kevinkib.cardgames.presentation.api.Response;
 import org.kevinkib.cardgames.presentation.api.SuccessResponse;
-import org.kevinkib.cardgames.presentation.dto.BatailleCorseDto;
+import org.kevinkib.cardgames.bataillecorse.presentation.dto.BatailleCorseDto;
 import org.kevinkib.cardgames.presentation.dto.JoinResponseDto;
-import org.kevinkib.cardgames.presentation.dto.PlayerIdDto;
+import org.kevinkib.cardgames.bataillecorse.presentation.dto.PlayerIdDto;
 import org.kevinkib.cardgames.presentation.dto.SessionViewDto;
-import org.kevinkib.cardgames.presentation.dto.event.EventType;
-import org.kevinkib.cardgames.presentation.dto.event.JoinEventData;
+import org.kevinkib.cardgames.presentation.dto.event.LifecycleEventType;
+import org.kevinkib.cardgames.bataillecorse.presentation.dto.event.JoinEventData;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,13 +31,13 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api")
-public class GameRestController {
+public class BatailleCorseRestController {
 
     private final SessionService sessionService;
     private final GameMessagingService gameMessagingService;
     private final ForfeitReasonRegistry forfeitReasonRegistry;
 
-    public GameRestController(SessionService sessionService, GameMessagingService gameMessagingService,
+    public BatailleCorseRestController(SessionService sessionService, GameMessagingService gameMessagingService,
                               ForfeitReasonRegistry forfeitReasonRegistry) {
         this.sessionService = sessionService;
         this.gameMessagingService = gameMessagingService;
@@ -47,19 +48,8 @@ public class GameRestController {
     public ResponseEntity<BatailleCorseDto> getGame(@PathVariable String id) {
         try {
             GameId gameId = new GameId(id);
-            BatailleCorse game = (BatailleCorse) sessionService.getGame(gameId);
+            BatailleCorse game = sessionService.getGame(gameId, BatailleCorse.class);
             return ResponseEntity.ok(BatailleCorseDto.from(game, forfeitReasonRegistry.reasonsBySeat(gameId)));
-        } catch (InvalidGameIdException | IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
-    @GetMapping("/game/{id}/session")
-    public ResponseEntity<SessionViewDto> getSession(@PathVariable String id) {
-        try {
-            GameId gameId = new GameId(id);
-            List<SessionPlayer> seats = sessionService.getSeats(gameId);
-            return ResponseEntity.ok(SessionViewDto.from(seats));
         } catch (InvalidGameIdException | IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
         }
@@ -71,14 +61,14 @@ public class GameRestController {
             @RequestBody(required = false) JoinGamePayload payload) {
         try {
             GameId gameId = new GameId(id);
-            BatailleCorse game = (BatailleCorse) sessionService.getGame(gameId);
+            BatailleCorse game = sessionService.getGame(gameId, BatailleCorse.class);
             String name = (payload != null) ? payload.name() : null;
             JoinResult result = sessionService.joinGame(gameId, name);
 
             Player joiner = game.getPlayerByIndex(result.playerId().id());
             SessionViewDto sessionView = SessionViewDto.from(sessionService.getSeats(gameId));
             Response broadcast = new SuccessResponse(
-                    EventType.JOIN,
+                    LifecycleEventType.JOIN.toString(),
                     new JoinEventData(PlayerIdDto.from(joiner), sessionView.players()),
                     "Player " + result.playerId().id() + " joined.",
                     BatailleCorseDto.from(game));

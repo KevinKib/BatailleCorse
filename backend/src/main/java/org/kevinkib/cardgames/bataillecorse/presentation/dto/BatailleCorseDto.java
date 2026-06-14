@@ -1,4 +1,4 @@
-package org.kevinkib.cardgames.presentation.dto;
+package org.kevinkib.cardgames.bataillecorse.presentation.dto;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

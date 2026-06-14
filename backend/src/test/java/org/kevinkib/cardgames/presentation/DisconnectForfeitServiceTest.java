@@ -1,4 +1,5 @@
 package org.kevinkib.cardgames.presentation;
+import org.kevinkib.cardgames.bataillecorse.presentation.BatailleCorseLifecycleBroadcaster;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -10,7 +11,8 @@ import org.kevinkib.cardgames.sessionmanagement.domain.GameMode;
 import org.kevinkib.cardgames.sessionmanagement.infrastructure.InMemorySessionRepository;
 import org.kevinkib.cardgames.presentation.api.Response;
 import org.kevinkib.cardgames.presentation.api.SuccessResponse;
-import org.kevinkib.cardgames.presentation.dto.PlayerDto;
+import org.kevinkib.cardgames.bataillecorse.presentation.dto.BatailleCorseDto;
+import org.kevinkib.cardgames.bataillecorse.presentation.dto.PlayerDto;
 import org.springframework.scheduling.Trigger;
 import org.springframework.scheduling.TaskScheduler;
 
@@ -80,7 +82,9 @@ class DisconnectForfeitServiceTest {
         messaging = new RecordingMessaging();
         registry = new StompSessionSeatRegistry();
         forfeitReasonRegistry = new ForfeitReasonRegistry();
-        service = new DisconnectForfeitService(sessionService, messaging, registry, scheduler, clock, forfeitReasonRegistry);
+        var broadcaster = new BatailleCorseLifecycleBroadcaster(messaging, forfeitReasonRegistry);
+        var broadcasters = new GameLifecycleBroadcasters(List.of(broadcaster));
+        service = new DisconnectForfeitService(sessionService, registry, scheduler, clock, forfeitReasonRegistry, broadcasters);
 
         BatailleCorse game = (BatailleCorse) sessionService.createGame(2, GameMode.MULTIPLAYER);
         gameId = game.getId();
@@ -92,7 +96,7 @@ class DisconnectForfeitServiceTest {
 
     private String forfeitReasonInLastStateForSeat(String seatId) {
         Response last = messaging.sent.get(messaging.sent.size() - 1);
-        return last.getState().getPlayers().stream()
+        return ((BatailleCorseDto) last.getState()).getPlayers().stream()
                 .filter(p -> p.getId().equals(seatId))
                 .map(PlayerDto::getForfeitReason)
                 .findFirst()

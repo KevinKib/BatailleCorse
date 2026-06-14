@@ -179,4 +179,26 @@ class SessionServiceTest {
             service.touch(game.getId()); // smoke: delegation wired
         }
     }
+
+    @Nested
+    class TypedGetGameTest {
+
+        @Test
+        void givenMatchingType_whenGetGame_thenReturnsTypedGame() {
+            var game = service.createGame(2, GameMode.SOLO);
+
+            org.kevinkib.cardgames.bataillecorse.domain.BatailleCorse typed =
+                    service.getGame(game.getId(), org.kevinkib.cardgames.bataillecorse.domain.BatailleCorse.class);
+
+            assertThat(typed.getId(), is(game.getId()));
+        }
+
+        @Test
+        void givenWrongType_whenGetGame_thenThrows() {
+            var game = service.createGame(2, GameMode.SOLO);
+
+            assertThrows(IllegalStateException.class,
+                    () -> service.getGame(game.getId(), org.kevinkib.cardgames.game.FakeGame.class));
+        }
+    }
 }

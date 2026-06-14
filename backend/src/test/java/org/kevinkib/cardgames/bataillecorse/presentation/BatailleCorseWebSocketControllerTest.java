@@ -1,4 +1,5 @@
-package org.kevinkib.cardgames.presentation;
+package org.kevinkib.cardgames.bataillecorse.presentation;
+import org.kevinkib.cardgames.presentation.*;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -31,12 +32,7 @@ class BatailleCorseWebSocketControllerTest {
         sessionService = new SessionService(new InMemorySessionRepository(java.time.Clock.systemUTC()), new org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseFactory());
         template = mock(SimpMessagingTemplate.class);
         GameMessagingService messaging = new GameMessagingService(template);
-        org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler scheduler =
-                new org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler();
-        scheduler.initialize();
-        DisconnectForfeitService forfeitService = new DisconnectForfeitService(
-                sessionService, messaging, new StompSessionSeatRegistry(), scheduler, java.time.Clock.systemUTC(), new ForfeitReasonRegistry());
-        controller = new BatailleCorseWebSocketController(sessionService, messaging, forfeitService);
+        controller = new BatailleCorseWebSocketController(sessionService, messaging);
     }
 
     @Nested
@@ -172,7 +168,7 @@ class BatailleCorseWebSocketControllerTest {
             verify(template).convertAndSend(
                     eq("/topic/game/" + gameId),
                     (Object) argThat(r -> ((Response) r).isSuccess()
-                            && ((org.kevinkib.cardgames.presentation.dto.event.RematchEventData)
+                            && ((org.kevinkib.cardgames.bataillecorse.presentation.dto.event.RematchEventData)
                                     ((Response) r).getEventData()).status()
                                == org.kevinkib.cardgames.presentation.dto.event.RematchStatus.STARTED)
             );
@@ -190,7 +186,7 @@ class BatailleCorseWebSocketControllerTest {
             verify(template).convertAndSend(
                     eq("/topic/game/" + gameId),
                     (Object) argThat(r -> ((Response) r).isSuccess()
-                            && ((org.kevinkib.cardgames.presentation.dto.event.RematchEventData)
+                            && ((org.kevinkib.cardgames.bataillecorse.presentation.dto.event.RematchEventData)
                                     ((Response) r).getEventData()).status()
                                == org.kevinkib.cardgames.presentation.dto.event.RematchStatus.PENDING)
             );

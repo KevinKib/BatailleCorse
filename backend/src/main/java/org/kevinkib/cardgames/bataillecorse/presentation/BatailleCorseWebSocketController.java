@@ -1,4 +1,5 @@
-package org.kevinkib.cardgames.presentation;
+package org.kevinkib.cardgames.bataillecorse.presentation;
+import org.kevinkib.cardgames.presentation.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -17,12 +18,12 @@ import org.kevinkib.cardgames.presentation.api.GameActionPayload;
 import org.kevinkib.cardgames.presentation.api.Response;
 import org.kevinkib.cardgames.presentation.api.SuccessResponse;
 import org.kevinkib.cardgames.presentation.dto.*;
+import org.kevinkib.cardgames.bataillecorse.presentation.dto.*;
 import org.kevinkib.cardgames.presentation.dto.event.*;
-import org.kevinkib.cardgames.presentation.api.PresencePayload;
+import org.kevinkib.cardgames.bataillecorse.presentation.dto.event.*;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
-import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.stereotype.Controller;
 
 @Controller
@@ -33,14 +34,11 @@ public class BatailleCorseWebSocketController {
 
     private final SessionService sessionService;
     private final GameMessagingService gameMessagingService;
-    private final DisconnectForfeitService disconnectForfeitService;
 
     public BatailleCorseWebSocketController(SessionService sessionService,
-                                            GameMessagingService gameMessagingService,
-                                            DisconnectForfeitService disconnectForfeitService) {
+                                            GameMessagingService gameMessagingService) {
         this.sessionService = sessionService;
         this.gameMessagingService = gameMessagingService;
-        this.disconnectForfeitService = disconnectForfeitService;
     }
 
     @MessageMapping("/create")
@@ -59,7 +57,7 @@ public class BatailleCorseWebSocketController {
         }
 
         return new SuccessResponse(
-                EventType.CREATE,
+                LifecycleEventType.CREATE.toString(),
                 new CreateEventData(new BatailleCorseIdDto(batailleCorse.getId()), tokens),
                 GAME_CREATED_MESSAGE,
                 BatailleCorseDto.from(batailleCorse));
@@ -67,10 +65,10 @@ public class BatailleCorseWebSocketController {
 
     @MessageMapping("/send")
     public void send(GameActionPayload payload) {
-        EventType eventType = EventType.SEND;
+        BatailleCorseEventType eventType = BatailleCorseEventType.SEND;
 
         GameId gameId = new GameId(payload.gameId());
-        BatailleCorse batailleCorse = (BatailleCorse) sessionService.getGame(gameId);
+        BatailleCorse batailleCorse = sessionService.getGame(gameId, BatailleCorse.class);
 
         Response response;
         try {
@@ -86,12 +84,12 @@ public class BatailleCorseWebSocketController {
             BatailleCorseDto batailleCorseDto = BatailleCorseDto.from(batailleCorse);
             String message = "Player " + player.id() + " sent " + cardDto.getName() + ".";
             SendEventData eventData = new SendEventData(PlayerIdDto.from(player));
-            response = new SuccessResponse(eventType, eventData, message, batailleCorseDto);
+            response = new SuccessResponse(eventType.toString(), eventData, message, batailleCorseDto);
 
         } catch (Exception e) {
             System.err.println(e.getMessage());
             BatailleCorseDto batailleCorseDto = BatailleCorseDto.from(batailleCorse);
-            response = new ErrorResponse(eventType, e.getMessage(), batailleCorseDto);
+            response = new ErrorResponse(eventType.toString(), e.getMessage(), batailleCorseDto);
         }
 
         gameMessagingService.sendToGame(payload.gameId(), response);
@@ -99,10 +97,10 @@ public class BatailleCorseWebSocketController {
 
     @MessageMapping("/slap")
     public void slap(GameActionPayload payload) {
-        EventType eventType = EventType.SLAP;
+        BatailleCorseEventType eventType = BatailleCorseEventType.SLAP;
 
         GameId gameId = new GameId(payload.gameId());
-        BatailleCorse batailleCorse = (BatailleCorse) sessionService.getGame(gameId);
+        BatailleCorse batailleCorse = sessionService.getGame(gameId, BatailleCorse.class);
 
         Response response;
         try {
@@ -119,12 +117,12 @@ public class BatailleCorseWebSocketController {
 
             BatailleCorseDto batailleCorseDto = BatailleCorseDto.from(batailleCorse);
             SlapEventData eventData = new SlapEventData(successfulSlap, PlayerIdDto.from(player));
-            response = new SuccessResponse(eventType, eventData, message, batailleCorseDto);
+            response = new SuccessResponse(eventType.toString(), eventData, message, batailleCorseDto);
 
         } catch (Exception e) {
             System.err.println(e.getMessage());
             BatailleCorseDto batailleCorseDto = BatailleCorseDto.from(batailleCorse);
-            response = new ErrorResponse(eventType, e.getMessage(), batailleCorseDto);
+            response = new ErrorResponse(eventType.toString(), e.getMessage(), batailleCorseDto);
         }
 
         gameMessagingService.sendToGame(payload.gameId(), response);
@@ -132,10 +130,10 @@ public class BatailleCorseWebSocketController {
 
     @MessageMapping("/grab")
     public void grab(GameActionPayload payload) {
-        EventType eventType = EventType.GRAB;
+        BatailleCorseEventType eventType = BatailleCorseEventType.GRAB;
 
         GameId gameId = new GameId(payload.gameId());
-        BatailleCorse batailleCorse = (BatailleCorse) sessionService.getGame(gameId);
+        BatailleCorse batailleCorse = sessionService.getGame(gameId, BatailleCorse.class);
 
         Response response;
         try {
@@ -150,41 +148,15 @@ public class BatailleCorseWebSocketController {
             BatailleCorseDto batailleCorseDto = BatailleCorseDto.from(batailleCorse);
             String message = "Player " + player.id() + " grabbed the pile. ";
             GrabEventData eventData = new GrabEventData(PlayerIdDto.from(player));
-            response = new SuccessResponse(eventType, eventData, message, batailleCorseDto);
+            response = new SuccessResponse(eventType.toString(), eventData, message, batailleCorseDto);
 
         } catch (Exception e) {
             System.err.println(e.getMessage());
             BatailleCorseDto batailleCorseDto = BatailleCorseDto.from(batailleCorse);
-            response = new ErrorResponse(eventType, e.getMessage(), batailleCorseDto);
+            response = new ErrorResponse(eventType.toString(), e.getMessage(), batailleCorseDto);
         }
 
         gameMessagingService.sendToGame(payload.gameId(), response);
-    }
-
-    @MessageMapping("/presence")
-    public void presence(@Payload PresencePayload payload, SimpMessageHeaderAccessor headers) {
-        GameId gameId = new GameId(payload.gameId());
-        try {
-            PlayerId playerId = sessionService
-                    .findPlayerIdByToken(gameId, new SessionToken(payload.token()))
-                    .orElseThrow(InvalidTokenException::new);
-            disconnectForfeitService.onPresence(headers.getSessionId(), gameId, playerId);
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
-        }
-    }
-
-    @MessageMapping("/forfeit")
-    public void forfeit(GameActionPayload payload) {
-        GameId gameId = new GameId(payload.gameId());
-        try {
-            PlayerId playerId = sessionService
-                    .findPlayerIdByToken(gameId, new SessionToken(payload.token()))
-                    .orElseThrow(InvalidTokenException::new);
-            disconnectForfeitService.forfeit(new Seat(gameId, playerId), ForfeitReason.RESIGNED);
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
-        }
     }
 
     @MessageMapping("/rematch")
@@ -201,14 +173,14 @@ public class BatailleCorseWebSocketController {
             if (sessionService.getGameSession(gameId).isRematchUnanimous()) {
                 BatailleCorse fresh = (BatailleCorse) sessionService.rematch(gameId);
                 response = new SuccessResponse(
-                        EventType.REMATCH,
+                        LifecycleEventType.REMATCH.toString(),
                         new RematchEventData(RematchStatus.STARTED, new PlayerIdDto(String.valueOf(playerId.id()))),
                         "Rematch started.",
                         BatailleCorseDto.from(fresh));
             } else {
-                BatailleCorse current = (BatailleCorse) sessionService.getGame(gameId);
+                BatailleCorse current = sessionService.getGame(gameId, BatailleCorse.class);
                 response = new SuccessResponse(
-                        EventType.REMATCH,
+                        LifecycleEventType.REMATCH.toString(),
                         new RematchEventData(RematchStatus.PENDING, new PlayerIdDto(String.valueOf(playerId.id()))),
                         "Rematch requested.",
                         BatailleCorseDto.from(current));

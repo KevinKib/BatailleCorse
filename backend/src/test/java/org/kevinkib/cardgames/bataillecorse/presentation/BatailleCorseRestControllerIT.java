@@ -1,14 +1,15 @@
-package org.kevinkib.cardgames.presentation;
+package org.kevinkib.cardgames.bataillecorse.presentation;
+import org.kevinkib.cardgames.presentation.*;
 
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.sessionmanagement.domain.GameMode;
 import org.kevinkib.cardgames.presentation.api.CreateGamePayload;
 import org.kevinkib.cardgames.presentation.api.Response;
-import org.kevinkib.cardgames.presentation.dto.BatailleCorseDto;
+import org.kevinkib.cardgames.bataillecorse.presentation.dto.BatailleCorseDto;
 import org.kevinkib.cardgames.presentation.dto.JoinResponseDto;
-import org.kevinkib.cardgames.presentation.dto.PlayerDto;
+import org.kevinkib.cardgames.bataillecorse.presentation.dto.PlayerDto;
 import org.kevinkib.cardgames.presentation.dto.SessionViewDto;
-import org.kevinkib.cardgames.presentation.dto.event.CreateEventData;
+import org.kevinkib.cardgames.bataillecorse.presentation.dto.event.CreateEventData;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -26,7 +27,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class GameRestControllerIT {
+class BatailleCorseRestControllerIT {
 
     @LocalServerPort
     private int port;
