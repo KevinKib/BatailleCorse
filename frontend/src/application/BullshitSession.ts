@@ -20,7 +20,6 @@ export interface BullshitSessionCallbacks {
 
 export default class BullshitSession {
   private gameId: string | null = null;
-  private mySeat = 0;
   private myToken: string | null = null;
   private pendingCreate = false;
 
@@ -69,7 +68,6 @@ export default class BullshitSession {
 
   private bind(gameId: string, seat: number, token: string): void {
     this.gameId = gameId;
-    this.mySeat = seat;
     this.myToken = token;
     this.webSocket.subscribeToSeat(gameId, seat, token, r => this.onResponse(r));
     this.callbacks.onEvent({ type: 'game-id-change', gameId });

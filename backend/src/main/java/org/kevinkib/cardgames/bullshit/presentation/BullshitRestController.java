@@ -69,7 +69,8 @@ public class BullshitRestController {
 
             return ResponseEntity.ok(new JoinResponseDto(
                     result.playerId().id(), result.token().uuid().toString()));
-        } catch (InvalidGameIdException | IllegalArgumentException e) {
+        } catch (InvalidGameIdException | IllegalArgumentException | IllegalStateException e) {
+            // IllegalStateException: the id resolves to a non-Bullshit game.
             return ResponseEntity.notFound().build();
         } catch (SeatUnavailableException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();

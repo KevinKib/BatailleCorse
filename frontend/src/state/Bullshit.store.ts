@@ -13,7 +13,6 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
   const mySeat = ref<number>(0);
   const waiting = ref<boolean>(false);
   const reveal = ref<CallBullshitEventData | null>(null);
-  const lastMessage = ref<string>('');
   const selectedCards = ref<Card[]>([]);
 
   const session = new BullshitSession(webSocketService, {
@@ -26,7 +25,6 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
       case 'game-id-change': gameId.value = event.gameId; break;
       case 'seat-change': mySeat.value = event.seat; break;
       case 'event':
-        lastMessage.value = event.message;
         if (event.eventType === 'JOIN') waiting.value = false;
         if (event.eventType === 'CALL_BULLSHIT') reveal.value = event.eventData as CallBullshitEventData;
         else reveal.value = null;
@@ -57,8 +55,8 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
   function clearSelection() { selectedCards.value = []; }
 
   return {
-    state, gameId, mySeat, waiting, reveal, lastMessage, selectedCards,
-    me, isMyTurn, canDiscard, canCallBullshit, iWon, phase,
+    state, gameId, mySeat, waiting, reveal, selectedCards,
+    isMyTurn, canDiscard, canCallBullshit, iWon, phase,
     applyEvent, markCreated, toggleCard, clearSelection,
     create: (name?: string) => { markCreated(); session.create(name); },
     join: (id: string, name?: string) => session.join(id, name),
