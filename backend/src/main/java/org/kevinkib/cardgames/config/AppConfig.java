@@ -8,7 +8,10 @@ import org.kevinkib.cardgames.sessionmanagement.application.SessionService;
 import org.kevinkib.cardgames.sessionmanagement.application.port.SessionRepository;
 import org.kevinkib.cardgames.sessionmanagement.infrastructure.InMemorySessionRepository;
 import org.kevinkib.cardgames.bataillecorse.presentation.BatailleCorseLifecycleBroadcaster;
+import org.kevinkib.cardgames.bullshit.presentation.BullshitLifecycleBroadcaster;
+import org.kevinkib.cardgames.bullshit.presentation.BullshitStateBroadcaster;
 import org.kevinkib.cardgames.presentation.DisconnectForfeitService;
+import org.kevinkib.cardgames.presentation.SeatSubscriptionInterceptor;
 import org.kevinkib.cardgames.presentation.ForfeitReasonRegistry;
 import org.kevinkib.cardgames.presentation.GameLifecycleBroadcaster;
 import org.kevinkib.cardgames.presentation.GameLifecycleBroadcasters;
@@ -87,6 +90,21 @@ public class AppConfig {
     @Bean
     public GameLifecycleBroadcaster batailleCorseLifecycleBroadcaster(GameMessagingService gameMessagingService) {
         return new BatailleCorseLifecycleBroadcaster(gameMessagingService, forfeitReasonRegistry());
+    }
+
+    @Bean
+    public BullshitStateBroadcaster bullshitStateBroadcaster(GameMessagingService gameMessagingService) {
+        return new BullshitStateBroadcaster(gameMessagingService);
+    }
+
+    @Bean
+    public GameLifecycleBroadcaster bullshitLifecycleBroadcaster(BullshitStateBroadcaster bullshitStateBroadcaster) {
+        return new BullshitLifecycleBroadcaster(bullshitStateBroadcaster);
+    }
+
+    @Bean
+    public SeatSubscriptionInterceptor seatSubscriptionInterceptor() {
+        return new SeatSubscriptionInterceptor(sessionService());
     }
 
     @Bean
