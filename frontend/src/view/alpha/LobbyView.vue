@@ -36,6 +36,16 @@
         @click="router.push({ name: 'join' })"
       />
 
+      <Button
+        class="menu-button"
+        label="Play Bullshit"
+        icon="pi pi-bolt"
+        severity="warn"
+        size="large"
+        rounded
+        @click="router.push({ name: 'bullshit-create' })"
+      />
+
 
     </div>
   </div>
