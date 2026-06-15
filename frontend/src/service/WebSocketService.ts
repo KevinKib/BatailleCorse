@@ -11,6 +11,9 @@ class WebSocketService {
   private currentGameId: string | null = null;
   private currentGameSubscription: { unsubscribe: () => void } | null = null;
   private currentPresence: string | null = null;
+  private seatSubscription: { gameId: string; seat: number; token: string; onMessage: (r: any) => void } | null = null;
+  private currentSeatSub: { unsubscribe: () => void } | null = null;
+  private lobbyListener: ((response: any) => void) | null = null;
 
   public init() {
     this.log("Creating SockJS...");
@@ -30,11 +33,16 @@ class WebSocketService {
         stompClient.subscribe('/topic/game', message => {
           const response = JSON.parse(message.body);
           useBatailleCorseStore().onResponse(response);
+          this.lobbyListener?.(response);
         });
 
         // Re-subscribe to per-game channel after reconnect.
         if (this.currentGameId) {
           this.doSubscribeToGame(this.currentGameId);
+        }
+
+        if (this.seatSubscription) {
+          this.doSubscribeToSeat();
         }
 
         // Re-assert presence after every (re)connect so the server can re-bind
@@ -56,6 +64,23 @@ class WebSocketService {
     stompClient.activate();
 
     this.client = stompClient;
+  }
+
+  public setLobbyListener(fn: ((response: any) => void) | null) {
+    this.lobbyListener = fn;
+  }
+
+  public subscribeToSeat(gameId: string, seat: number, token: string, onMessage: (response: any) => void) {
+    this.seatSubscription = { gameId, seat, token, onMessage };
+    if (this.client?.connected) {
+      this.doSubscribeToSeat();
+    }
+  }
+
+  public unsubscribeFromSeat() {
+    this.currentSeatSub?.unsubscribe();
+    this.currentSeatSub = null;
+    this.seatSubscription = null;
   }
 
   public subscribeToGame(gameId: string) {
@@ -85,6 +110,17 @@ class WebSocketService {
 
   public publish(destination: string, body?: any) {
     this.client.publish({ destination, body });
+  }
+
+  private doSubscribeToSeat() {
+    if (!this.seatSubscription) return;
+    this.currentSeatSub?.unsubscribe();
+    const { gameId, seat, token, onMessage } = this.seatSubscription;
+    this.currentSeatSub = this.client.subscribe(
+      `/topic/game/${gameId}/seat/${seat}`,
+      message => onMessage(JSON.parse(message.body)),
+      { token },
+    );
   }
 
   private doSubscribeToGame(gameId: string) {
