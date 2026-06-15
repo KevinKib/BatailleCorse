@@ -1,7 +1,6 @@
 package org.kevinkib.cardgames.sessionmanagement.application;
 
 import org.kevinkib.cardgames.game.Game;
-import org.kevinkib.cardgames.game.GameFactory;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.application.port.SessionRepository;
@@ -18,26 +17,26 @@ public class SessionService {
     private static final PlayerId JOINER_SEAT = new PlayerId(1);
 
     private final SessionRepository repository;
-    private final GameFactory gameFactory;
+    private final GameFactories gameFactories;
 
-    public SessionService(SessionRepository repository, GameFactory gameFactory) {
+    public SessionService(SessionRepository repository, GameFactories gameFactories) {
         this.repository = repository;
-        this.gameFactory = gameFactory;
+        this.gameFactories = gameFactories;
     }
 
-    public Game createGame(int nbPlayers) {
-        return createGame(nbPlayers, GameMode.SOLO, null);
+    public Game createGame(String gameType, int nbPlayers) {
+        return createGame(gameType, nbPlayers, GameMode.SOLO, null);
     }
 
-    public Game createGame(int nbPlayers, GameMode mode) {
-        return createGame(nbPlayers, mode, null);
+    public Game createGame(String gameType, int nbPlayers, GameMode mode) {
+        return createGame(gameType, nbPlayers, mode, null);
     }
 
-    public Game createGame(int nbPlayers, GameMode mode, String creatorName) {
+    public Game createGame(String gameType, int nbPlayers, GameMode mode, String creatorName) {
         GameId id = GameId.generate();
-        Game game = gameFactory.create(id, nbPlayers);
+        Game game = gameFactories.factoryFor(gameType).create(id, nbPlayers);
 
-        SessionGame sessionGame = SessionGame.create(id, game.getPlayerIds());
+        SessionGame sessionGame = SessionGame.create(id, game.getPlayerIds(), gameType);
 
         if (mode == GameMode.SOLO) {
             for (PlayerId playerId : game.getPlayerIds()) {
@@ -77,7 +76,7 @@ public class SessionService {
 
     public Game rematch(GameId id) {
         SessionGame session = repository.loadSessionGame(id);
-        Game fresh = gameFactory.create(id, session.seats().size());
+        Game fresh = gameFactories.factoryFor(session.gameType()).create(id, session.seats().size());
         session.clearRematch();
         repository.save(fresh, session);
         return fresh;

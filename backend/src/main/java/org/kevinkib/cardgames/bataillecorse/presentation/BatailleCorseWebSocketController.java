@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorse;
+import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseFactory;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.bataillecorse.domain.Player;
 import org.kevinkib.cardgames.game.PlayerId;
@@ -47,7 +48,7 @@ public class BatailleCorseWebSocketController {
         GameMode mode = (payload != null && payload.mode() != null) ? payload.mode() : GameMode.SOLO;
         String name = (payload != null) ? payload.name() : null;
 
-        BatailleCorse batailleCorse = (BatailleCorse) sessionService.createGame(NB_PLAYERS, mode, name);
+        BatailleCorse batailleCorse = (BatailleCorse) sessionService.createGame(BatailleCorseFactory.GAME_TYPE, NB_PLAYERS, mode, name);
 
         int seatsToReturn = (mode == GameMode.SOLO) ? NB_PLAYERS : 1;
         Map<Integer, String> tokens = new HashMap<>();

@@ -29,7 +29,7 @@ class BatailleCorseWebSocketControllerTest {
 
     @BeforeEach
     void setUp() {
-        sessionService = new SessionService(new InMemorySessionRepository(java.time.Clock.systemUTC()), new org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseFactory());
+        sessionService = new SessionService(new InMemorySessionRepository(java.time.Clock.systemUTC()), new org.kevinkib.cardgames.sessionmanagement.application.GameFactories(java.util.List.of(new org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseFactory())));
         template = mock(SimpMessagingTemplate.class);
         GameMessagingService messaging = new GameMessagingService(template);
         controller = new BatailleCorseWebSocketController(sessionService, messaging);
@@ -40,7 +40,7 @@ class BatailleCorseWebSocketControllerTest {
 
         @Test
         void givenValidToken_whenSend_thenBroadcastsSuccessResponse() {
-            var game = sessionService.createGame(2);
+            var game = sessionService.createGame("bataille-corse", 2);
             String gameId = game.getId().uuid().toString();
             SessionToken token = sessionService.loadTokenByPlayerId(game.getId(), new PlayerId(0));
 
@@ -54,7 +54,7 @@ class BatailleCorseWebSocketControllerTest {
 
         @Test
         void givenInvalidToken_whenSend_thenBroadcastsErrorResponse() {
-            var game = sessionService.createGame(2);
+            var game = sessionService.createGame("bataille-corse", 2);
             String gameId = game.getId().uuid().toString();
 
             controller.send(new GameActionPayload(gameId, SessionToken.generate().uuid().toString()));
@@ -71,7 +71,7 @@ class BatailleCorseWebSocketControllerTest {
 
         @Test
         void givenValidToken_whenSlap_thenBroadcastsSuccessResponse() {
-            var game = sessionService.createGame(2);
+            var game = sessionService.createGame("bataille-corse", 2);
             String gameId = game.getId().uuid().toString();
             SessionToken token0 = sessionService.loadTokenByPlayerId(game.getId(), new PlayerId(0));
             SessionToken token1 = sessionService.loadTokenByPlayerId(game.getId(), new PlayerId(1));
@@ -90,7 +90,7 @@ class BatailleCorseWebSocketControllerTest {
 
         @Test
         void givenInvalidToken_whenSlap_thenBroadcastsErrorResponse() {
-            var game = sessionService.createGame(2);
+            var game = sessionService.createGame("bataille-corse", 2);
             String gameId = game.getId().uuid().toString();
 
             controller.slap(new GameActionPayload(gameId, SessionToken.generate().uuid().toString()));
@@ -107,7 +107,7 @@ class BatailleCorseWebSocketControllerTest {
 
         @Test
         void givenValidToken_whenGrab_thenBroadcastsSuccessResponse() {
-            var game = sessionService.createGame(2);
+            var game = sessionService.createGame("bataille-corse", 2);
             String gameId = game.getId().uuid().toString();
             GameId batailleCorseId = game.getId();
             SessionToken token0 = sessionService.loadTokenByPlayerId(batailleCorseId, new PlayerId(0));
@@ -138,7 +138,7 @@ class BatailleCorseWebSocketControllerTest {
 
         @Test
         void givenInvalidToken_whenGrab_thenBroadcastsErrorResponse() {
-            var game = sessionService.createGame(2);
+            var game = sessionService.createGame("bataille-corse", 2);
             String gameId = game.getId().uuid().toString();
 
             controller.grab(new GameActionPayload(gameId, SessionToken.generate().uuid().toString()));
@@ -155,7 +155,7 @@ class BatailleCorseWebSocketControllerTest {
 
         @Test
         void givenSoloBothSeatsRequest_whenSecondRematch_thenBroadcastsStarted() {
-            var game = sessionService.createGame(2, org.kevinkib.cardgames.sessionmanagement.domain.GameMode.SOLO);
+            var game = sessionService.createGame("bataille-corse", 2, org.kevinkib.cardgames.sessionmanagement.domain.GameMode.SOLO);
             String gameId = game.getId().uuid().toString();
             SessionToken token0 = sessionService.loadTokenByPlayerId(game.getId(), new PlayerId(0));
             SessionToken token1 = sessionService.loadTokenByPlayerId(game.getId(), new PlayerId(1));
@@ -176,7 +176,7 @@ class BatailleCorseWebSocketControllerTest {
 
         @Test
         void givenMultiplayerSingleRequest_whenRematch_thenBroadcastsPending() {
-            var game = sessionService.createGame(2, org.kevinkib.cardgames.sessionmanagement.domain.GameMode.MULTIPLAYER);
+            var game = sessionService.createGame("bataille-corse", 2, org.kevinkib.cardgames.sessionmanagement.domain.GameMode.MULTIPLAYER);
             sessionService.joinGame(game.getId()); // claim seat 1 so the game has two humans
             String gameId = game.getId().uuid().toString();
             SessionToken token0 = sessionService.loadTokenByPlayerId(game.getId(), new PlayerId(0));
@@ -194,7 +194,7 @@ class BatailleCorseWebSocketControllerTest {
 
         @Test
         void givenInvalidToken_whenRematch_thenDoesNotBroadcast() {
-            var game = sessionService.createGame(2);
+            var game = sessionService.createGame("bataille-corse", 2);
             String gameId = game.getId().uuid().toString();
 
             controller.rematch(new GameActionPayload(gameId, SessionToken.generate().uuid().toString()));

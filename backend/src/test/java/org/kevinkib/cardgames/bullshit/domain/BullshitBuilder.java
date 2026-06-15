@@ -1,4 +1,5 @@
 package org.kevinkib.cardgames.bullshit.domain;
+import org.kevinkib.cardgames.game.GameId;
 
 import org.kevinkib.cardgames.bullshit.domain.claim.AscendingRankClaimMode;
 import org.kevinkib.cardgames.bullshit.domain.claim.ClaimMode;
@@ -13,7 +14,7 @@ import java.util.List;
 
 public final class BullshitBuilder {
 
-    private BullshitId id = BullshitId.generate();
+    private GameId id = GameId.generate();
     private List<Player> players = new ArrayList<>();
     private ClaimMode claimMode = new AscendingRankClaimMode();
     private ClaimTarget currentTarget = null;

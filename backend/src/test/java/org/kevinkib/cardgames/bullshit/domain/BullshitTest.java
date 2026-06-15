@@ -1,11 +1,12 @@
 package org.kevinkib.cardgames.bullshit.domain;
+import org.kevinkib.cardgames.game.GameId;
 
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.bullshit.domain.claim.CyclingSuitClaimMode;
 import org.kevinkib.cardgames.bullshit.domain.claim.RankTarget;
 import org.kevinkib.cardgames.bullshit.domain.claim.SuitTarget;
 import org.kevinkib.cardgames.bullshit.domain.player.Player;
-import org.kevinkib.cardgames.bullshit.domain.player.PlayerId;
+import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cards.domain.deck.french.FrenchRank;
 import org.kevinkib.cards.domain.deck.french.FrenchSuit;
 
@@ -20,7 +21,7 @@ class BullshitTest {
 
     @Test
     void givenFreshGame_thenWholeDeckDealtAndAceClaimedFirst() {
-        Bullshit game = new Bullshit(BullshitId.generate(), 4);
+        Bullshit game = new Bullshit(GameId.generate(), 4);
 
         int totalCards = game.getPlayers().stream().mapToInt(Player::handSize).sum();
         assertThat(totalCards, is(52));
@@ -31,7 +32,7 @@ class BullshitTest {
 
     @Test
     void givenThreePlayers_thenDealtUnevenlyWithoutError() {
-        Bullshit game = new Bullshit(BullshitId.generate(), 3);
+        Bullshit game = new Bullshit(GameId.generate(), 3);
         int totalCards = game.getPlayers().stream().mapToInt(Player::handSize).sum();
         assertThat(totalCards, is(52));
         assertThat(game.getPlayers(), hasSize(3));

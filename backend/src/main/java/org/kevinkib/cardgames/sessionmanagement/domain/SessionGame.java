@@ -9,14 +9,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public record SessionGame(GameId id, Map<PlayerId, SessionPlayer> players) {
+public record SessionGame(GameId id, String gameType, Map<PlayerId, SessionPlayer> players) {
 
-    public static SessionGame create(GameId id, List<PlayerId> playerIds) {
+    public static SessionGame create(GameId id, List<PlayerId> playerIds, String gameType) {
         Map<PlayerId, SessionPlayer> seats = new LinkedHashMap<>();
         for (PlayerId playerId : playerIds) {
             seats.put(playerId, new SessionPlayer(playerId, SessionToken.generate()));
         }
-        return new SessionGame(id, seats);
+        return new SessionGame(id, gameType, seats);
     }
 
     public void claim(PlayerId playerId, String name) {

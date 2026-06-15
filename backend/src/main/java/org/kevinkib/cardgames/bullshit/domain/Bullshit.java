@@ -1,12 +1,14 @@
 package org.kevinkib.cardgames.bullshit.domain;
 
+import org.kevinkib.cardgames.game.Game;
+import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.bullshit.domain.claim.AscendingRankClaimMode;
 import org.kevinkib.cardgames.bullshit.domain.claim.ClaimMode;
 import org.kevinkib.cardgames.bullshit.domain.claim.ClaimTarget;
 import org.kevinkib.cardgames.bullshit.domain.pile.Discard;
 import org.kevinkib.cardgames.bullshit.domain.pile.DiscardPile;
 import org.kevinkib.cardgames.bullshit.domain.player.Player;
-import org.kevinkib.cardgames.bullshit.domain.player.PlayerId;
+import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cards.CardsService;
 import org.kevinkib.cards.domain.Card;
 import org.kevinkib.cards.domain.Visibility;
@@ -20,9 +22,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-public class Bullshit {
+public class Bullshit implements Game {
 
-    private final BullshitId id;
+    private final GameId id;
     private final List<Player> players;
     private final ClaimMode claimMode;
     private final DiscardPile discardPile;
@@ -32,15 +34,15 @@ public class Bullshit {
     private PlayerId pendingWinner;
     private Result result;
 
-    public Bullshit(BullshitId id, int nbPlayers) {
+    public Bullshit(GameId id, int nbPlayers) {
         this(id, nbPlayers, new AscendingRankClaimMode());
     }
 
-    public Bullshit(BullshitId id, int nbPlayers, ClaimMode claimMode) {
+    public Bullshit(GameId id, int nbPlayers, ClaimMode claimMode) {
         this(id, deal(nbPlayers), claimMode, claimMode.initial(), 0);
     }
 
-    Bullshit(BullshitId id, List<Player> players, ClaimMode claimMode, ClaimTarget currentTarget, int currentPlayerIndex) {
+    Bullshit(GameId id, List<Player> players, ClaimMode claimMode, ClaimTarget currentTarget, int currentPlayerIndex) {
         this.id = id;
         this.players = new ArrayList<>(players);
         this.claimMode = claimMode;
@@ -125,6 +127,7 @@ public class Bullshit {
         return new CallBullshitOutcome(truthful, pickerId);
     }
 
+    @Override
     public synchronized void forfeit(PlayerId playerId) {
         if (isFinished()) {
             return;
@@ -192,12 +195,18 @@ public class Bullshit {
         return -1;
     }
 
-    public BullshitId getId() {
+    @Override
+    public GameId getId() {
         return id;
     }
 
     public List<Player> getPlayers() {
         return new ArrayList<>(players);
+    }
+
+    @Override
+    public List<PlayerId> getPlayerIds() {
+        return players.stream().map(Player::id).toList();
     }
 
     public Player getCurrentPlayer() {
@@ -220,6 +229,7 @@ public class Bullshit {
         return discardPile.size();
     }
 
+    @Override
     public boolean isFinished() {
         return result.isFinished();
     }

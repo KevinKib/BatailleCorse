@@ -77,7 +77,7 @@ class DisconnectForfeitServiceTest {
     @BeforeEach
     void setUp() {
         Clock clock = Clock.fixed(Instant.parse("2026-06-09T12:00:00Z"), ZoneOffset.UTC);
-        sessionService = new SessionService(new InMemorySessionRepository(clock), new org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseFactory());
+        sessionService = new SessionService(new InMemorySessionRepository(clock), new org.kevinkib.cardgames.sessionmanagement.application.GameFactories(java.util.List.of(new org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseFactory())));
         scheduler = new CapturingScheduler();
         messaging = new RecordingMessaging();
         registry = new StompSessionSeatRegistry();
@@ -86,7 +86,7 @@ class DisconnectForfeitServiceTest {
         var broadcasters = new GameLifecycleBroadcasters(List.of(broadcaster));
         service = new DisconnectForfeitService(sessionService, registry, scheduler, clock, forfeitReasonRegistry, broadcasters);
 
-        BatailleCorse game = (BatailleCorse) sessionService.createGame(2, GameMode.MULTIPLAYER);
+        BatailleCorse game = (BatailleCorse) sessionService.createGame("bataille-corse", 2, GameMode.MULTIPLAYER);
         gameId = game.getId();
     }
 
