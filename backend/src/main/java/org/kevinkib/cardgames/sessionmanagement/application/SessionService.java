@@ -98,6 +98,26 @@ public class SessionService {
         return lobby;
     }
 
+    public Game startGame(GameId id, SessionToken hostToken) {
+        if (repository.findGame(id).isPresent()) {
+            throw new GameAlreadyStartedException(id);
+        }
+        SessionGame lobby = repository.loadSessionGame(id);
+        PlayerId actor = lobby.findPlayerByToken(hostToken)
+                .orElseThrow(() -> new NotHostException(id));
+        if (actor.id() != 0) {
+            throw new NotHostException(id);
+        }
+        int claimed = (int) lobby.seats().stream().filter(SessionPlayer::isClaimed).count();
+        int min = gameFactories.minPlayers(lobby.gameType());
+        if (claimed < min) {
+            throw new NotEnoughPlayersException(id, claimed, min);
+        }
+        Game game = gameFactories.factoryFor(lobby.gameType()).create(id, claimed);
+        repository.save(game, lobby);
+        return game;
+    }
+
     public Optional<Game> findGame(GameId id) {
         return repository.findGame(id);
     }

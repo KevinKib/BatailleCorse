@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.bullshit.domain.BullshitFactory;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.domain.SessionGame;
+import org.kevinkib.cardgames.sessionmanagement.domain.SessionToken;
 import org.kevinkib.cardgames.sessionmanagement.infrastructure.InMemorySessionRepository;
 
 import java.time.Clock;
@@ -56,5 +57,58 @@ class SessionLobbyTest {
 
         org.junit.jupiter.api.Assertions.assertThrows(
                 RoomFullException.class, () -> service.joinRoom(lobby.id(), "Late"));
+    }
+
+    @Test
+    void givenHostAndEnoughPlayers_whenStartGame_thenAggregateDealtToJoined() {
+        SessionGame lobby = service.createRoom("bullshit", "Alice");
+        service.joinRoom(lobby.id(), "Bob");
+        service.joinRoom(lobby.id(), "Cara");
+        SessionToken hostToken = lobby.findTokenByPlayer(new PlayerId(0)).orElseThrow();
+
+        var game = service.startGame(lobby.id(), hostToken);
+
+        assertThat(service.findGame(lobby.id()).isPresent(), is(true));
+        assertThat(game.getPlayerIds().size(), is(3));
+    }
+
+    @Test
+    void givenNonHostToken_whenStartGame_thenThrowsNotHost() {
+        SessionGame lobby = service.createRoom("bullshit", "Alice");
+        JoinResult bob = service.joinRoom(lobby.id(), "Bob");
+
+        org.junit.jupiter.api.Assertions.assertThrows(
+                NotHostException.class, () -> service.startGame(lobby.id(), bob.token()));
+    }
+
+    @Test
+    void givenOnlyHost_whenStartGame_thenThrowsNotEnoughPlayers() {
+        SessionGame lobby = service.createRoom("bullshit", "Alice");
+        SessionToken hostToken = lobby.findTokenByPlayer(new PlayerId(0)).orElseThrow();
+
+        org.junit.jupiter.api.Assertions.assertThrows(
+                NotEnoughPlayersException.class, () -> service.startGame(lobby.id(), hostToken));
+    }
+
+    @Test
+    void givenAlreadyStarted_whenStartAgain_thenThrowsAlreadyStarted() {
+        SessionGame lobby = service.createRoom("bullshit", "Alice");
+        service.joinRoom(lobby.id(), "Bob");
+        SessionToken hostToken = lobby.findTokenByPlayer(new PlayerId(0)).orElseThrow();
+        service.startGame(lobby.id(), hostToken);
+
+        org.junit.jupiter.api.Assertions.assertThrows(
+                GameAlreadyStartedException.class, () -> service.startGame(lobby.id(), hostToken));
+    }
+
+    @Test
+    void givenStartedGame_whenJoinRoom_thenThrowsAlreadyStarted() {
+        SessionGame lobby = service.createRoom("bullshit", "Alice");
+        service.joinRoom(lobby.id(), "Bob");
+        SessionToken hostToken = lobby.findTokenByPlayer(new PlayerId(0)).orElseThrow();
+        service.startGame(lobby.id(), hostToken);
+
+        org.junit.jupiter.api.Assertions.assertThrows(
+                GameAlreadyStartedException.class, () -> service.joinRoom(lobby.id(), "Late"));
     }
 }
