@@ -7,11 +7,14 @@ import org.kevinkib.cardgames.bullshit.domain.BullshitFactory;
 import org.kevinkib.cardgames.bullshit.presentation.dto.BullshitDto;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
+import org.kevinkib.cardgames.presentation.LobbyBroadcaster;
 import org.kevinkib.cardgames.presentation.api.JoinGamePayload;
 import org.kevinkib.cardgames.presentation.dto.JoinResponseDto;
+import org.kevinkib.cardgames.presentation.dto.LobbyDto;
 import org.kevinkib.cardgames.sessionmanagement.application.GameFactories;
 import org.kevinkib.cardgames.sessionmanagement.application.SessionService;
 import org.kevinkib.cardgames.sessionmanagement.domain.GameMode;
+import org.kevinkib.cardgames.sessionmanagement.domain.SessionGame;
 import org.kevinkib.cardgames.sessionmanagement.domain.SessionToken;
 import org.kevinkib.cardgames.sessionmanagement.infrastructure.InMemorySessionRepository;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +25,7 @@ import java.util.UUID;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.everyItem;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 
@@ -49,44 +53,59 @@ class BullshitRestControllerTest {
                 new InMemorySessionRepository(Clock.systemUTC()),
                 new GameFactories(List.of(new BullshitFactory())));
         messaging = new RecordingMessaging();
-        controller = new BullshitRestController(sessionService, new BullshitStateBroadcaster(messaging));
+        controller = new BullshitRestController(
+                sessionService,
+                new BullshitStateBroadcaster(messaging),
+                new LobbyBroadcaster(messaging, new GameFactories(List.of(new BullshitFactory()))));
     }
 
     @Test
-    void givenValidToken_whenGetGame_thenReturnsOwnView() {
+    void givenStartedGameAndSeatToken_whenGetGame_thenReturnsGameView() {
         Bullshit game = (Bullshit) sessionService.createGame("bullshit", 2, GameMode.SOLO);
         GameId id = game.getId();
         SessionToken t0 = sessionService.loadTokenByPlayerId(id, new PlayerId(0));
 
-        ResponseEntity<BullshitDto> response = controller.getGame(id.uuid().toString(), t0.uuid().toString());
+        ResponseEntity<?> response = controller.getGame(id.uuid().toString(), t0.uuid().toString());
 
         assertThat(response.getStatusCode().value(), is(200));
-        assertThat(response.getBody().myHand().isEmpty(), is(false));
+        assertThat(response.getBody(), instanceOf(BullshitDto.class));
+        assertThat(((BullshitDto) response.getBody()).started(), is(true));
+    }
+
+    @Test
+    void givenLobbyAndHostToken_whenGetGame_thenReturnsLobbyView() {
+        SessionGame lobby = sessionService.createRoom("bullshit", "Alice");
+        String token = lobby.findTokenByPlayer(new PlayerId(0)).orElseThrow().uuid().toString();
+
+        ResponseEntity<?> response = controller.getGame(lobby.id().uuid().toString(), token);
+
+        assertThat(response.getStatusCode().value(), is(200));
+        assertThat(response.getBody(), instanceOf(LobbyDto.class));
+        assertThat(((LobbyDto) response.getBody()).started(), is(false));
     }
 
     @Test
     void givenNoToken_whenGetGame_thenForbidden() {
-        Bullshit game = (Bullshit) sessionService.createGame("bullshit", 2, GameMode.SOLO);
+        SessionGame lobby = sessionService.createRoom("bullshit", "Alice");
 
-        ResponseEntity<BullshitDto> response = controller.getGame(game.getId().uuid().toString(), null);
+        ResponseEntity<?> response = controller.getGame(lobby.id().uuid().toString(), null);
 
         assertThat(response.getStatusCode().value(), is(403));
     }
 
     @Test
     void givenUnknownGame_whenGetGame_thenNotFound() {
-        ResponseEntity<BullshitDto> response = controller.getGame(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+        ResponseEntity<?> response = controller.getGame(UUID.randomUUID().toString(), UUID.randomUUID().toString());
 
         assertThat(response.getStatusCode().value(), is(404));
     }
 
     @Test
-    void givenOpenSeat_whenJoin_thenReturnsSeat1TokenAndBroadcastsJoinToAllSeats() {
-        Bullshit game = (Bullshit) sessionService.createGame("bullshit", 2, GameMode.MULTIPLAYER);
-        String id = game.getId().uuid().toString();
+    void givenOpenRoom_whenJoin_thenReturnsSeat1AndBroadcastsLobbyToClaimedSeats() {
+        SessionGame lobby = sessionService.createRoom("bullshit", "Alice");
 
         ResponseEntity<JoinResponseDto> response =
-                controller.joinGame(id, new JoinGamePayload("Bob"));
+                controller.joinGame(lobby.id().uuid().toString(), new JoinGamePayload("Bob"));
 
         assertThat(response.getStatusCode().value(), is(200));
         assertThat(response.getBody().playerId(), is(1));
@@ -96,20 +115,34 @@ class BullshitRestControllerTest {
     }
 
     @Test
-    void givenSeatAlreadyTaken_whenJoin_thenConflict() {
-        Bullshit game = (Bullshit) sessionService.createGame("bullshit", 2, GameMode.MULTIPLAYER);
-        String id = game.getId().uuid().toString();
-        controller.joinGame(id, new JoinGamePayload("Bob"));
+    void givenStartedGame_whenJoin_thenConflict() {
+        SessionGame lobby = sessionService.createRoom("bullshit", "Alice");
+        sessionService.joinRoom(lobby.id(), "Bob");
+        sessionService.startGame(lobby.id(), lobby.findTokenByPlayer(new PlayerId(0)).orElseThrow());
 
-        ResponseEntity<JoinResponseDto> second = controller.joinGame(id, new JoinGamePayload("Carol"));
+        ResponseEntity<JoinResponseDto> response =
+                controller.joinGame(lobby.id().uuid().toString(), new JoinGamePayload("Late"));
 
-        assertThat(second.getStatusCode().value(), is(409));
+        assertThat(response.getStatusCode().value(), is(409));
+    }
+
+    @Test
+    void givenFullRoom_whenJoin_thenConflict() {
+        SessionGame lobby = sessionService.createRoom("bullshit", "Alice");
+        for (int i = 1; i < 6; i++) {
+            sessionService.joinRoom(lobby.id(), "P" + i);
+        }
+
+        ResponseEntity<JoinResponseDto> response =
+                controller.joinGame(lobby.id().uuid().toString(), new JoinGamePayload("Late"));
+
+        assertThat(response.getStatusCode().value(), is(409));
     }
 
     @Test
     void givenUnknownGame_whenJoin_thenNotFound() {
         ResponseEntity<JoinResponseDto> response =
-                controller.joinGame(java.util.UUID.randomUUID().toString(), null);
+                controller.joinGame(UUID.randomUUID().toString(), null);
 
         assertThat(response.getStatusCode().value(), is(404));
     }
