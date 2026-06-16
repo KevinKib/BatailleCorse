@@ -20,7 +20,11 @@ public class SessionPlayer {
 
     public void claim(String name) {
         this.claimed = true;
-        this.name = name;
+        this.name = (name == null || name.isBlank()) ? defaultName() : name.trim();
+    }
+
+    public String defaultName() {
+        return "Player " + (id.id() + 1);
     }
 
     public void requestRematch() {

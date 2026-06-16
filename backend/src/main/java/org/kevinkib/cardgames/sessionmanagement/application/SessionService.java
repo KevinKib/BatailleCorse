@@ -42,11 +42,10 @@ public class SessionService {
 
         if (mode == GameMode.SOLO) {
             for (PlayerId playerId : game.getPlayerIds()) {
-                sessionGame.claim(playerId, defaultNameFor(playerId));
+                sessionGame.claim(playerId, null);
             }
         } else {
-            PlayerId creatorSeat = new PlayerId(0);
-            sessionGame.claim(creatorSeat, resolveName(creatorSeat, creatorName));
+            sessionGame.claim(HOST_SEAT, creatorName);
         }
 
         repository.save(game, sessionGame);
@@ -65,7 +64,7 @@ public class SessionService {
             throw new SeatUnavailableException(JOINER_SEAT);
         }
 
-        sessionGame.claim(JOINER_SEAT, resolveName(JOINER_SEAT, name));
+        sessionGame.claim(JOINER_SEAT, name);
         SessionToken token = sessionGame.findTokenByPlayer(JOINER_SEAT)
                 .orElseThrow(() -> new IllegalStateException("Seat " + JOINER_SEAT.id() + " has no token"));
 
@@ -77,15 +76,8 @@ public class SessionService {
             throw new GameAlreadyStartedException(id);
         }
         SessionGame lobby = repository.loadSessionGame(id);
-        PlayerId free = lobby.seats().stream()
-                .filter(seat -> !seat.isClaimed())
-                .map(SessionPlayer::id)
-                .findFirst()
-                .orElseThrow(() -> new RoomFullException(id));
-        lobby.claim(free, resolveName(free, name));
-        SessionToken token = lobby.findTokenByPlayer(free)
-                .orElseThrow(() -> new IllegalStateException("Seat " + free.id() + " has no token"));
-        return new JoinResult(free, token);
+        SessionPlayer claimed = lobby.claimNextFreeSeat(name);
+        return new JoinResult(claimed.id(), claimed.token());
     }
 
     public SessionGame createRoom(String gameType, String hostName) {
@@ -93,7 +85,7 @@ public class SessionService {
         int max = gameFactories.maxPlayers(gameType);
         List<PlayerId> seats = IntStream.range(0, max).mapToObj(PlayerId::new).toList();
         SessionGame lobby = SessionGame.create(id, seats, gameType);
-        lobby.claim(HOST_SEAT, resolveName(HOST_SEAT, hostName));
+        lobby.claim(HOST_SEAT, hostName);
         repository.saveLobby(lobby);
         return lobby;
     }
@@ -177,16 +169,5 @@ public class SessionService {
 
     public Optional<PlayerId> findPlayerIdByToken(GameId gameId, SessionToken token) {
         return repository.loadSessionGame(gameId).findPlayerByToken(token);
-    }
-
-    private String resolveName(PlayerId seat, String provided) {
-        if (provided == null || provided.isBlank()) {
-            return defaultNameFor(seat);
-        }
-        return provided.trim();
-    }
-
-    private String defaultNameFor(PlayerId seat) {
-        return "Player " + (seat.id() + 1);
     }
 }

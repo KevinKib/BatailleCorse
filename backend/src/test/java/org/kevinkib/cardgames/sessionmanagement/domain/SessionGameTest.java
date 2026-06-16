@@ -82,6 +82,41 @@ class SessionGameTest {
     }
 
     @Nested
+    class ClaimNextFreeSeatTest {
+
+        @Test
+        public void givenHostInSeatZero_whenClaimNextFreeSeat_thenLowestFreeSeatClaimed() {
+            var sessionGame = SessionGame.create(GameId.generate(), playerIds(6), "bullshit");
+            sessionGame.claim(new PlayerId(0), "Host");
+
+            var claimed = sessionGame.claimNextFreeSeat("Bob");
+
+            assertThat(claimed.id(), is(new PlayerId(1)));
+            assertThat(claimed.name(), is("Bob"));
+            assertThat(claimed.token(), is(notNullValue()));
+        }
+
+        @Test
+        public void givenAllSeatsClaimed_whenClaimNextFreeSeat_thenThrowsRoomFull() {
+            var sessionGame = SessionGame.create(GameId.generate(), playerIds(2), "bullshit");
+            sessionGame.claim(new PlayerId(0), "Host");
+            sessionGame.claim(new PlayerId(1), "Bob");
+
+            org.junit.jupiter.api.Assertions.assertThrows(
+                    RoomFullException.class, () -> sessionGame.claimNextFreeSeat("Late"));
+        }
+
+        @Test
+        public void givenBlankName_whenClaimNextFreeSeat_thenSeatGetsDefaultName() {
+            var sessionGame = SessionGame.create(GameId.generate(), playerIds(2), "bullshit");
+
+            var claimed = sessionGame.claimNextFreeSeat("  ");
+
+            assertThat(claimed.name(), is("Player 1"));
+        }
+    }
+
+    @Nested
     class FindPlayerByTokenTest {
 
         @Test

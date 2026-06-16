@@ -27,6 +27,16 @@ public record SessionGame(GameId id, String gameType, Map<PlayerId, SessionPlaye
         seat.claim(name);
     }
 
+    /** Claims the lowest-numbered free seat and returns it; the room is full if none remain. */
+    public SessionPlayer claimNextFreeSeat(String name) {
+        SessionPlayer free = players.values().stream()
+                .filter(seat -> !seat.isClaimed())
+                .min(Comparator.comparingInt(seat -> seat.id().id()))
+                .orElseThrow(() -> new RoomFullException(id));
+        free.claim(name);
+        return free;
+    }
+
     public boolean isClaimed(PlayerId playerId) {
         SessionPlayer seat = players.get(playerId);
         return seat != null && seat.isClaimed();
