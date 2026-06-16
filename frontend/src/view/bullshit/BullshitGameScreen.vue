@@ -14,26 +14,47 @@ const opponents = computed(() =>
   (store.game?.players ?? []).filter(p => p.id !== String(store.mySeat)));
 const isSelected = (card: Card) => store.selectedCards.some(c => c.name === card.name);
 const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.gameId}`);
+
+const joinedPlayers = computed(() => (store.lobby?.players ?? []).filter(p => p.joined));
+const playersNeeded = computed(() =>
+  Math.max(0, (store.lobby?.minPlayers ?? 0) - joinedPlayers.value.length));
+
+function selectAll(event: FocusEvent) {
+  (event.target as HTMLInputElement).select();
+}
 </script>
 
 <template>
   <div class="bullshit-screen">
-    <div v-if="store.phase === 'lobby'" data-test="lobby" class="panel">
+    <div v-if="store.phase === 'lobby'" data-test="lobby" class="panel lobby">
       <h2>Lobby</h2>
+      <p class="count" data-test="player-count">
+        {{ joinedPlayers.length }} / {{ store.lobby?.maxPlayers }} players
+      </p>
       <ul class="players">
-        <li v-for="p in store.lobby?.players.filter(pl => pl.joined) ?? []" :key="p.seat">
-          Player {{ p.seat + 1 }}: {{ p.name }}
+        <li v-for="p in joinedPlayers" :key="p.seat">
+          Player {{ p.seat + 1 }}: {{ p.name }}<span v-if="p.seat === store.mySeat"> (you)</span>
         </li>
       </ul>
-      <p class="share">Share: <code>{{ joinLink }}</code></p>
-      <button
-        v-if="store.isHost"
-        data-test="start"
-        type="button"
-        :disabled="!store.canStart"
-        @click="store.startGame()">
-        Start game
-      </button>
+
+      <label class="share">
+        Invite players with this link:
+        <input :value="joinLink" readonly @focus="selectAll" />
+      </label>
+
+      <template v-if="store.isHost">
+        <button
+          data-test="start"
+          type="button"
+          class="btn primary"
+          :disabled="!store.canStart"
+          @click="store.startGame()">
+          Start game
+        </button>
+        <p v-if="!store.canStart" class="hint" data-test="start-hint">
+          Waiting for {{ playersNeeded }} more player{{ playersNeeded === 1 ? '' : 's' }} to start…
+        </p>
+      </template>
       <p v-else class="hint">Waiting for the host to start…</p>
     </div>
 
@@ -103,9 +124,15 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
 <style scoped>
 .bullshit-screen { display: flex; flex-direction: column; gap: 1rem; padding: 1rem; align-items: center; }
 .panel { text-align: center; }
-.share code { word-break: break-all; }
-.players { list-style: none; padding: 0; }
-.hint { opacity: 0.7; }
+.lobby { display: flex; flex-direction: column; gap: 0.75rem; align-items: center; min-width: 22rem; }
+.count { font-weight: 600; margin: 0; }
+.players { list-style: none; padding: 0; margin: 0; }
+.share { display: flex; flex-direction: column; gap: 0.25rem; width: 100%; font-size: 0.85rem; }
+.share input { width: 100%; font-family: monospace; padding: 0.4rem; box-sizing: border-box; }
+.hint { opacity: 0.7; margin: 0; }
+.btn { padding: 0.6rem 1.4rem; border-radius: 0.5rem; border: 1px solid var(--p-primary-color); font-size: 1rem; cursor: pointer; }
+.btn.primary { background: var(--p-primary-color); color: var(--p-primary-contrast-color, #fff); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .opponents { display: flex; gap: 1rem; }
 .opponent.active { outline: 2px solid var(--p-primary-color); border-radius: 0.5rem; }
 .hand { display: flex; gap: 0.25rem; flex-wrap: wrap; justify-content: center; }

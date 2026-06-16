@@ -31,15 +31,18 @@ async function onJoin() {
     <label>Your name <input v-model="name" type="text" /></label>
 
     <template v-if="!isJoin">
-      <button type="button" @click="onCreate">Create game</button>
+      <button type="button" class="btn primary" @click="onCreate">Create game</button>
     </template>
     <template v-else>
       <label>Game ID <input v-model="joinId" type="text" /></label>
-      <button type="button" :disabled="!joinId" @click="onJoin">Join game</button>
+      <button type="button" class="btn primary" :disabled="!joinId" @click="onJoin">Join game</button>
     </template>
   </div>
 </template>
 
 <style scoped>
 .start { display: flex; flex-direction: column; gap: 1rem; padding: 2rem; max-width: 28rem; margin: 0 auto; }
+.btn { padding: 0.6rem 1.4rem; border-radius: 0.5rem; border: 1px solid var(--p-primary-color); font-size: 1rem; cursor: pointer; }
+.btn.primary { background: var(--p-primary-color); color: var(--p-primary-contrast-color, #fff); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
 </style>

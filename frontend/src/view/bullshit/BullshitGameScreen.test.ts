@@ -90,6 +90,22 @@ describe('BullshitGameScreen', () => {
     expect(items[0].text()).toContain('Alice');
   });
 
+  it('shows the player count and how many more players are needed when the host cannot start yet', () => {
+    const store = useBullshitStore();
+    store.applyEvent({ type: 'seat-change', seat: 0 });
+    store.applyEvent({ type: 'state-update', state: lobbyView({
+      players: [
+        { seat: 0, name: 'Alice', joined: true },
+        { seat: 1, name: null, joined: false },
+      ],
+      canStart: false,
+    }) });
+    const wrapper = mount(BullshitGameScreen, { props: { gameId: 'g1' }, global: { plugins: [router] } });
+
+    expect(wrapper.get('[data-test="player-count"]').text()).toContain('1 / 6');
+    expect(wrapper.get('[data-test="start-hint"]').text()).toContain('1 more player');
+  });
+
   it('shows a host Start button that is disabled until canStart and calls startGame on click', async () => {
     const store = useBullshitStore();
     store.applyEvent({ type: 'seat-change', seat: 0 });
