@@ -6,6 +6,7 @@ import org.kevinkib.cardgames.bullshit.domain.Bullshit;
 import org.kevinkib.cardgames.bullshit.domain.BullshitFactory;
 import org.kevinkib.cardgames.bullshit.presentation.api.BullshitCreatePayload;
 import org.kevinkib.cardgames.bullshit.presentation.api.BullshitDiscardPayload;
+import org.kevinkib.cardgames.bullshit.presentation.dto.BullshitDto;
 import org.kevinkib.cardgames.bullshit.presentation.dto.CardDto;
 import org.kevinkib.cardgames.bullshit.presentation.dto.event.BullshitCreateEventData;
 import org.kevinkib.cardgames.bullshit.presentation.dto.event.CallBullshitEventData;
@@ -93,6 +94,7 @@ class BullshitWebSocketControllerTest {
         assertThat(messaging.seats.size(), is(2));
         assertThat(messaging.payloads.get(0).getEventType(), is("START"));
         assertThat(messaging.payloads.get(0).isSuccess(), is(true));
+        assertThat(messaging.payloads.get(0).getState(), instanceOf(BullshitDto.class));
     }
 
     @Test
