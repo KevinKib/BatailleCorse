@@ -31,7 +31,7 @@ async function onJoin() {
     <label>Your name <input v-model="name" type="text" /></label>
 
     <template v-if="!isJoin">
-      <button type="button" @click="onCreate">Create 2-player game</button>
+      <button type="button" @click="onCreate">Create game</button>
     </template>
     <template v-else>
       <label>Game ID <input v-model="joinId" type="text" /></label>

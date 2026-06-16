@@ -11,16 +11,30 @@ const store = useBullshitStore();
 useBullshitBootstrap(props.gameId);
 
 const opponents = computed(() =>
-  (store.state?.players ?? []).filter(p => p.id !== String(store.mySeat)));
+  (store.game?.players ?? []).filter(p => p.id !== String(store.mySeat)));
 const isSelected = (card: Card) => store.selectedCards.some(c => c.name === card.name);
 const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.gameId}`);
 </script>
 
 <template>
   <div class="bullshit-screen">
-    <div v-if="store.phase === 'waiting'" data-test="waiting" class="panel">
-      <p>Waiting for opponent…</p>
+    <div v-if="store.phase === 'lobby'" data-test="lobby" class="panel">
+      <h2>Lobby</h2>
+      <ul class="players">
+        <li v-for="p in store.lobby?.players.filter(pl => pl.joined) ?? []" :key="p.seat">
+          Player {{ p.seat + 1 }}: {{ p.name }}
+        </li>
+      </ul>
       <p class="share">Share: <code>{{ joinLink }}</code></p>
+      <button
+        v-if="store.isHost"
+        data-test="start"
+        type="button"
+        :disabled="!store.canStart"
+        @click="store.startGame()">
+        Start game
+      </button>
+      <p v-else class="hint">Waiting for the host to start…</p>
     </div>
 
     <div v-else-if="store.phase === 'finished'" data-test="end" class="panel">
@@ -36,11 +50,11 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
       </div>
 
       <div class="table">
-        <p class="claim">Claim: {{ store.state?.currentTarget.label }}</p>
-        <p v-if="store.state?.table.state === 'CLAIM'" class="last-claim">
-          Player {{ store.state.table.claimantId }} played {{ store.state.table.count }} card(s) face-down
+        <p class="claim">Claim: {{ store.game?.currentTarget.label }}</p>
+        <p v-if="store.game?.table.state === 'CLAIM'" class="last-claim">
+          Player {{ store.game.table.claimantId }} played {{ store.game.table.count }} card(s) face-down
         </p>
-        <p class="pile">Discard pile: {{ store.state?.discardPileSize }}</p>
+        <p class="pile">Discard pile: {{ store.game?.discardPileSize }}</p>
       </div>
 
       <div v-if="store.reveal" data-test="reveal" class="reveal">
@@ -55,7 +69,7 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
 
       <div class="hand">
         <button
-          v-for="(card, i) in store.state?.myHand ?? []"
+          v-for="(card, i) in store.game?.myHand ?? []"
           :key="card.name"
           :data-test="`hand-card-${i}`"
           class="hand-card"
@@ -72,7 +86,7 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
           type="button"
           :disabled="!store.isMyTurn || store.selectedCards.length === 0"
           @click="store.discard()">
-          Discard as {{ store.state?.currentTarget.label }}
+          Discard as {{ store.game?.currentTarget.label }}
         </button>
         <button
           data-test="call"
@@ -90,6 +104,8 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
 .bullshit-screen { display: flex; flex-direction: column; gap: 1rem; padding: 1rem; align-items: center; }
 .panel { text-align: center; }
 .share code { word-break: break-all; }
+.players { list-style: none; padding: 0; }
+.hint { opacity: 0.7; }
 .opponents { display: flex; gap: 1rem; }
 .opponent.active { outline: 2px solid var(--p-primary-color); border-radius: 0.5rem; }
 .hand { display: flex; gap: 0.25rem; flex-wrap: wrap; justify-content: center; }
