@@ -8,6 +8,7 @@ import org.kevinkib.cardgames.sessionmanagement.domain.SessionToken;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Optional;
 
 public interface SessionRepository {
 
@@ -30,4 +31,10 @@ public interface SessionRepository {
      * for finished games, {@code idleTtl} for unfinished ones. Returns the evicted ids.
      */
     List<GameId> evictStale(Duration finishedGrace, Duration idleTtl);
+
+    /** Stores a session that has no game yet (a lobby). */
+    void saveLobby(SessionGame sessionGame);
+
+    /** The started game for this id, or empty if it is still a lobby / unknown. */
+    Optional<Game> findGame(GameId id);
 }

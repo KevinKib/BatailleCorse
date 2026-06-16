@@ -14,6 +14,16 @@ public class BullshitFactory implements GameFactory {
     }
 
     @Override
+    public int minPlayers() {
+        return 2;
+    }
+
+    @Override
+    public int maxPlayers() {
+        return 6;
+    }
+
+    @Override
     public Game create(GameId id, int nbPlayers) {
         return new Bullshit(id, nbPlayers);
     }

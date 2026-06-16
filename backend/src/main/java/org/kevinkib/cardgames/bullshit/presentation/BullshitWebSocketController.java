@@ -21,10 +21,11 @@ import org.kevinkib.cardgames.presentation.api.ErrorResponse;
 import org.kevinkib.cardgames.presentation.api.GameActionPayload;
 import org.kevinkib.cardgames.presentation.api.Response;
 import org.kevinkib.cardgames.presentation.api.SuccessResponse;
+import org.kevinkib.cardgames.presentation.dto.event.EmptyEventData;
 import org.kevinkib.cardgames.presentation.dto.event.LifecycleEventType;
 import org.kevinkib.cardgames.sessionmanagement.application.InvalidTokenException;
 import org.kevinkib.cardgames.sessionmanagement.application.SessionService;
-import org.kevinkib.cardgames.sessionmanagement.domain.GameMode;
+import org.kevinkib.cardgames.sessionmanagement.domain.SessionGame;
 import org.kevinkib.cardgames.sessionmanagement.domain.SessionToken;
 import org.kevinkib.cards.domain.Card;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -32,15 +33,11 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @Controller
 public class BullshitWebSocketController {
-
-    private static final int MIN_PLAYERS = 2;
-    private static final int MAX_PLAYERS = 6;
 
     private final SessionService sessionService;
     private final BullshitStateBroadcaster broadcaster;
@@ -57,28 +54,36 @@ public class BullshitWebSocketController {
     @MessageMapping("/bullshit/create")
     @SendTo("/topic/game")
     public Response createGame(@Payload(required = false) BullshitCreatePayload payload) {
-        int nbPlayers = (payload != null && payload.nbPlayers() != null) ? payload.nbPlayers() : MIN_PLAYERS;
-        if (nbPlayers < MIN_PLAYERS || nbPlayers > MAX_PLAYERS) {
-            return new ErrorResponse(LifecycleEventType.CREATE.toString(),
-                    "Bullshit requires " + MIN_PLAYERS + " to " + MAX_PLAYERS + " players.", null);
-        }
-        GameMode mode = (payload != null && payload.mode() != null) ? payload.mode() : GameMode.SOLO;
         String name = (payload != null) ? payload.name() : null;
-
-        Bullshit game = (Bullshit) sessionService.createGame(BullshitFactory.GAME_TYPE, nbPlayers, mode, name);
-
-        int seatsToReturn = (mode == GameMode.SOLO) ? nbPlayers : 1;
-        Map<Integer, String> tokens = new HashMap<>();
-        for (int i = 0; i < seatsToReturn; i++) {
-            SessionToken token = sessionService.loadTokenByPlayerId(game.getId(), new PlayerId(i));
-            tokens.put(i, token.uuid().toString());
-        }
+        SessionGame lobby = sessionService.createRoom(BullshitFactory.GAME_TYPE, name);
+        SessionToken hostToken = lobby.findTokenByPlayer(new PlayerId(0))
+                .orElseThrow(() -> new IllegalStateException("Host seat has no token"));
+        Map<Integer, String> tokens = Map.of(0, hostToken.uuid().toString());
 
         return new SuccessResponse(
                 LifecycleEventType.CREATE.toString(),
-                new BullshitCreateEventData(game.getId().uuid().toString(), BullshitFactory.GAME_TYPE, tokens),
-                "Game created",
+                new BullshitCreateEventData(lobby.id().uuid().toString(), BullshitFactory.GAME_TYPE, tokens),
+                "Room created",
                 null);
+    }
+
+    @MessageMapping("/bullshit/start")
+    public void start(@Payload GameActionPayload payload) {
+        GameId gameId = new GameId(payload.gameId());
+        SessionToken token = new SessionToken(payload.token());
+        PlayerId actor = sessionService.findPlayerIdByToken(gameId, token).orElse(null);
+        if (actor == null) {
+            return;
+        }
+        try {
+            Bullshit game = (Bullshit) sessionService.startGame(gameId, token);
+            sessionService.touch(gameId);
+            broadcaster.broadcast(game, BullshitEventType.START.toString(), new EmptyEventData(), "Game started.");
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+            messaging.sendToSeat(gameId, actor, new ErrorResponse(
+                    BullshitEventType.START.toString(), e.getMessage(), null));
+        }
     }
 
     @MessageMapping("/discard")

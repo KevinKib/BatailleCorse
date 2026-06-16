@@ -13,6 +13,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class InMemorySessionRepository implements SessionRepository {
@@ -60,8 +61,20 @@ public class InMemorySessionRepository implements SessionRepository {
     }
 
     @Override
+    public void saveLobby(SessionGame sessionGame) {
+        GameId id = sessionGame.id();
+        sessionGames.put(id, sessionGame);
+        lastActivityAt.put(id, clock.instant());
+    }
+
+    @Override
+    public Optional<Game> findGame(GameId id) {
+        return Optional.ofNullable(games.get(id));
+    }
+
+    @Override
     public void touch(GameId id) {
-        if (games.containsKey(id)) {
+        if (games.containsKey(id) || sessionGames.containsKey(id)) {
             lastActivityAt.put(id, clock.instant());
         }
     }
@@ -77,11 +90,11 @@ public class InMemorySessionRepository implements SessionRepository {
     public List<GameId> evictStale(Duration finishedGrace, Duration idleTtl) {
         Instant now = clock.instant();
         List<GameId> evicted = new ArrayList<>();
-        for (Map.Entry<GameId, Game> entry : games.entrySet()) {
-            GameId id = entry.getKey();
+        for (GameId id : sessionGames.keySet()) {
             Instant last = lastActivityAt.getOrDefault(id, Instant.EPOCH);
             Duration idle = Duration.between(last, now);
-            Duration threshold = entry.getValue().isFinished() ? finishedGrace : idleTtl;
+            Game game = games.get(id);
+            Duration threshold = (game != null && game.isFinished()) ? finishedGrace : idleTtl;
             if (idle.compareTo(threshold) >= 0) {
                 evicted.add(id);
             }

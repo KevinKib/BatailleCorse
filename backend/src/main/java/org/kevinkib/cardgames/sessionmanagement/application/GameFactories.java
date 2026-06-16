@@ -18,4 +18,12 @@ public class GameFactories {
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Unknown game type " + gameType));
     }
+
+    public int minPlayers(String gameType) {
+        return factoryFor(gameType).minPlayers();
+    }
+
+    public int maxPlayers(String gameType) {
+        return factoryFor(gameType).maxPlayers();
+    }
 }

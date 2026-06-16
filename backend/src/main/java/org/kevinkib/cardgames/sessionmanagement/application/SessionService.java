@@ -39,12 +39,9 @@ public class SessionService {
         SessionGame sessionGame = SessionGame.create(id, game.getPlayerIds(), gameType);
 
         if (mode == GameMode.SOLO) {
-            for (PlayerId playerId : game.getPlayerIds()) {
-                sessionGame.claim(playerId, defaultNameFor(playerId));
-            }
+            sessionGame.claimAllSeats();
         } else {
-            PlayerId creatorSeat = new PlayerId(0);
-            sessionGame.claim(creatorSeat, resolveName(creatorSeat, creatorName));
+            sessionGame.claimHost(creatorName);
         }
 
         repository.save(game, sessionGame);
@@ -58,16 +55,57 @@ public class SessionService {
 
     public JoinResult joinGame(GameId gameId, String name) {
         SessionGame sessionGame = repository.loadSessionGame(gameId);
+        SessionPlayer claimed = sessionGame.claimSeat(JOINER_SEAT, name);
+        return new JoinResult(claimed.id(), claimed.token());
+    }
 
-        if (sessionGame.isClaimed(JOINER_SEAT)) {
-            throw new SeatUnavailableException(JOINER_SEAT);
+    public JoinResult joinRoom(GameId id, String name) {
+        if (repository.findGame(id).isPresent()) {
+            throw new GameAlreadyStartedException(id);
         }
+        SessionGame lobby = repository.loadSessionGame(id);
+        SessionPlayer claimed = lobby.claimNextFreeSeat(name);
+        return new JoinResult(claimed.id(), claimed.token());
+    }
 
-        sessionGame.claim(JOINER_SEAT, resolveName(JOINER_SEAT, name));
-        SessionToken token = sessionGame.findTokenByPlayer(JOINER_SEAT)
-                .orElseThrow(() -> new IllegalStateException("Seat " + JOINER_SEAT.id() + " has no token"));
+    public SessionGame createRoom(String gameType, String hostName) {
+        GameId id = GameId.generate();
+        SessionGame lobby = SessionGame.create(id, gameFactories.maxPlayers(gameType), gameType);
+        lobby.claimHost(hostName);
+        repository.saveLobby(lobby);
+        return lobby;
+    }
 
-        return new JoinResult(JOINER_SEAT, token);
+    public Game startGame(GameId id, SessionToken hostToken) {
+        if (repository.findGame(id).isPresent()) {
+            throw new GameAlreadyStartedException(id);
+        }
+        SessionGame lobby = repository.loadSessionGame(id);
+        PlayerId actor = lobby.findPlayerByToken(hostToken)
+                .orElseThrow(() -> new NotHostException(id));
+        if (!lobby.isHost(actor)) {
+            throw new NotHostException(id);
+        }
+        int claimed = lobby.claimedCount();
+        int min = gameFactories.minPlayers(lobby.gameType());
+        if (claimed < min) {
+            throw new NotEnoughPlayersException(id, claimed, min);
+        }
+        Game game = gameFactories.factoryFor(lobby.gameType()).create(id, claimed);
+        repository.save(game, lobby);
+        return game;
+    }
+
+    public Optional<Game> findGame(GameId id) {
+        return repository.findGame(id);
+    }
+
+    public int minPlayers(String gameType) {
+        return gameFactories.minPlayers(gameType);
+    }
+
+    public int maxPlayers(String gameType) {
+        return gameFactories.maxPlayers(gameType);
     }
 
     public SessionGame getGameSession(GameId id) {
@@ -76,7 +114,7 @@ public class SessionService {
 
     public Game rematch(GameId id) {
         SessionGame session = repository.loadSessionGame(id);
-        Game fresh = gameFactories.factoryFor(session.gameType()).create(id, session.seats().size());
+        Game fresh = gameFactories.factoryFor(session.gameType()).create(id, session.seatCount());
         session.clearRematch();
         repository.save(fresh, session);
         return fresh;
@@ -117,16 +155,5 @@ public class SessionService {
 
     public Optional<PlayerId> findPlayerIdByToken(GameId gameId, SessionToken token) {
         return repository.loadSessionGame(gameId).findPlayerByToken(token);
-    }
-
-    private String resolveName(PlayerId seat, String provided) {
-        if (provided == null || provided.isBlank()) {
-            return defaultNameFor(seat);
-        }
-        return provided.trim();
-    }
-
-    private String defaultNameFor(PlayerId seat) {
-        return "Player " + (seat.id() + 1);
     }
 }

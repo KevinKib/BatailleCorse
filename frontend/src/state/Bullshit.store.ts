@@ -3,15 +3,15 @@ import { ref, computed } from 'vue';
 
 import webSocketService from '../service/WebSocketService';
 import BullshitSession, { type BullshitSessionEvent } from '../application/BullshitSession';
-import type { BullshitState } from '../model/bullshit/BullshitState';
+import type { BullshitState, BullshitView } from '../model/bullshit/BullshitState';
+import type { LobbyView } from '../model/bullshit/LobbyView';
 import type { CallBullshitEventData } from '../model/bullshit/BullshitEvents';
 import type Card from '../model/Card';
 
 export const useBullshitStore = defineStore('bullshit-store', () => {
-  const state = ref<BullshitState | null>(null);
+  const state = ref<BullshitView | null>(null);
   const gameId = ref<string | null>(null);
   const mySeat = ref<number>(0);
-  const waiting = ref<boolean>(false);
   const reveal = ref<CallBullshitEventData | null>(null);
   const selectedCards = ref<Card[]>([]);
 
@@ -25,25 +25,29 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
       case 'game-id-change': gameId.value = event.gameId; break;
       case 'seat-change': mySeat.value = event.seat; break;
       case 'event':
-        if (event.eventType === 'JOIN') waiting.value = false;
         if (event.eventType === 'CALL_BULLSHIT') reveal.value = event.eventData as CallBullshitEventData;
         else reveal.value = null;
         break;
     }
   }
 
-  function markCreated() { waiting.value = true; }
+  const game = computed<BullshitState | null>(() =>
+    state.value && state.value.started ? state.value : null);
+  const lobby = computed<LobbyView | null>(() =>
+    state.value && !state.value.started ? state.value : null);
 
-  const me = computed(() => state.value?.players.find(p => p.id === String(mySeat.value)) ?? null);
+  const me = computed(() => game.value?.players.find(p => p.id === String(mySeat.value)) ?? null);
   const isMyTurn = computed(() => me.value?.isCurrentPlayer ?? false);
-  const canDiscard = computed(() => state.value?.availableActions.includes('DISCARD') ?? false);
-  const canCallBullshit = computed(() => state.value?.availableActions.includes('CALL_BULLSHIT') ?? false);
+  const canDiscard = computed(() => game.value?.availableActions.includes('DISCARD') ?? false);
+  const canCallBullshit = computed(() => game.value?.availableActions.includes('CALL_BULLSHIT') ?? false);
   const iWon = computed(() =>
-    state.value?.outcome.status === 'FINISHED' && state.value.outcome.winnerId === String(mySeat.value));
-  const phase = computed<'connecting' | 'waiting' | 'playing' | 'finished'>(() => {
+    game.value?.outcome.status === 'FINISHED' && game.value.outcome.winnerId === String(mySeat.value));
+  const isHost = computed(() => mySeat.value === 0);
+  const canStart = computed(() => lobby.value?.canStart ?? false);
+  const phase = computed<'connecting' | 'lobby' | 'playing' | 'finished'>(() => {
     if (!state.value) return 'connecting';
+    if (!state.value.started) return 'lobby';
     if (state.value.outcome.status === 'FINISHED') return 'finished';
-    if (waiting.value) return 'waiting';
     return 'playing';
   });
 
@@ -55,13 +59,14 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
   function clearSelection() { selectedCards.value = []; }
 
   return {
-    state, gameId, mySeat, waiting, reveal, selectedCards,
-    isMyTurn, canDiscard, canCallBullshit, iWon, phase,
-    applyEvent, markCreated, toggleCard, clearSelection,
-    create: (name?: string) => { markCreated(); session.create(name); },
+    state, game, lobby, gameId, mySeat, reveal, selectedCards,
+    isMyTurn, canDiscard, canCallBullshit, iWon, isHost, canStart, phase,
+    applyEvent, toggleCard, clearSelection,
+    create: (name?: string) => session.create(name),
     join: (id: string, name?: string) => session.join(id, name),
     restore: (id: string, seat: number, token: string) => session.restore(id, seat, token),
     hydrate: () => session.hydrate(),
+    startGame: () => session.startGame(),
     discard: () => { session.discard(selectedCards.value); clearSelection(); },
     callBullshit: () => session.callBullshit(),
   };

@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 public record BullshitDto(
+        boolean started,
         String id,
         String gameType,
         List<CardDto> myHand,
@@ -41,6 +42,7 @@ public record BullshitDto(
                 .toList();
 
         return new BullshitDto(
+                true,
                 game.getId().uuid().toString(),
                 BullshitFactory.GAME_TYPE,
                 myHand,

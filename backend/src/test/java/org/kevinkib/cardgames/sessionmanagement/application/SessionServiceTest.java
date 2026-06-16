@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseFactory;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.domain.GameMode;
+import org.kevinkib.cardgames.sessionmanagement.domain.SeatUnavailableException;
 import org.kevinkib.cardgames.sessionmanagement.domain.SessionPlayer;
 import org.kevinkib.cardgames.sessionmanagement.domain.SessionToken;
 import org.kevinkib.cardgames.sessionmanagement.infrastructure.InMemorySessionRepository;

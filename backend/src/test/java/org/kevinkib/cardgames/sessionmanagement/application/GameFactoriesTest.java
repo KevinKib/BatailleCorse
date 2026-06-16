@@ -11,12 +11,13 @@ import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class GameFactoriesTest {
 
-    private final GameFactories factories = new GameFactories(
-            List.of(new BatailleCorseFactory(), new BullshitFactory()));
+    private final GameFactories factories =
+            new GameFactories(List.of(new BatailleCorseFactory(), new BullshitFactory()));
 
     @Test
     void givenBullshitSlug_whenFactoryFor_thenCreatesBullshit() {
@@ -33,5 +34,17 @@ class GameFactoriesTest {
     @Test
     void givenUnknownSlug_whenFactoryFor_thenThrows() {
         assertThrows(IllegalArgumentException.class, () -> factories.factoryFor("chess"));
+    }
+
+    @Test
+    void givenBullshit_whenLookupBounds_thenTwoToSix() {
+        assertThat(factories.minPlayers("bullshit"), is(2));
+        assertThat(factories.maxPlayers("bullshit"), is(6));
+    }
+
+    @Test
+    void givenBatailleCorse_whenLookupBounds_thenTwoToTwo() {
+        assertThat(factories.minPlayers("bataille-corse"), is(2));
+        assertThat(factories.maxPlayers("bataille-corse"), is(2));
     }
 }
