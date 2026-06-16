@@ -1,4 +1,5 @@
 import type Card from '../Card';
+import type { LobbyView } from './LobbyView';
 
 export interface BullshitPlayer {
   id: string;
@@ -19,6 +20,7 @@ export type OutcomeView =
   | { status: 'FINISHED'; winnerId: string };
 
 export interface BullshitState {
+  started: true;
   id: string;
   gameType: string;
   myHand: Card[];
@@ -30,3 +32,5 @@ export interface BullshitState {
   pendingWinner: PendingWinnerView;
   outcome: OutcomeView;
 }
+
+export type BullshitView = LobbyView | BullshitState;

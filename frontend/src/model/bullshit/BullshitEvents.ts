@@ -1,5 +1,5 @@
 import type Card from '../Card';
-import type { BullshitState } from './BullshitState';
+import type { BullshitView } from './BullshitState';
 
 export interface DiscardEventData {
   claimantSeat: number;
@@ -20,5 +20,5 @@ export interface BullshitResponse {
   eventType: string;
   eventData: unknown;
   message: string;
-  state: BullshitState | null;
+  state: BullshitView | null;
 }
