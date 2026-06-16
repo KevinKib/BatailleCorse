@@ -71,6 +71,22 @@ public class SessionService {
         return new JoinResult(JOINER_SEAT, token);
     }
 
+    public JoinResult joinRoom(GameId id, String name) {
+        if (repository.findGame(id).isPresent()) {
+            throw new GameAlreadyStartedException(id);
+        }
+        SessionGame lobby = repository.loadSessionGame(id);
+        PlayerId free = lobby.seats().stream()
+                .filter(seat -> !seat.isClaimed())
+                .map(SessionPlayer::id)
+                .findFirst()
+                .orElseThrow(() -> new RoomFullException(id));
+        lobby.claim(free, resolveName(free, name));
+        SessionToken token = lobby.findTokenByPlayer(free)
+                .orElseThrow(() -> new IllegalStateException("Seat " + free.id() + " has no token"));
+        return new JoinResult(free, token);
+    }
+
     public SessionGame createRoom(String gameType, String hostName) {
         GameId id = GameId.generate();
         int max = gameFactories.maxPlayers(gameType);

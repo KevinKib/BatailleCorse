@@ -34,4 +34,27 @@ class SessionLobbyTest {
         assertThat(lobby.isClaimed(new PlayerId(1)), is(false));
         assertThat(service.findGame(lobby.id()).isPresent(), is(false));
     }
+
+    @Test
+    void givenOpenRoom_whenJoinRoom_thenNextSeatClaimed() {
+        SessionGame lobby = service.createRoom("bullshit", "Alice");
+
+        JoinResult first = service.joinRoom(lobby.id(), "Bob");
+        JoinResult second = service.joinRoom(lobby.id(), "Cara");
+
+        assertThat(first.playerId(), is(new PlayerId(1)));
+        assertThat(second.playerId(), is(new PlayerId(2)));
+        assertThat(service.getGameSession(lobby.id()).seats().get(1).name(), is("Bob"));
+    }
+
+    @Test
+    void givenFullRoom_whenJoinRoom_thenThrowsRoomFull() {
+        SessionGame lobby = service.createRoom("bullshit", "Alice");
+        for (int i = 1; i < 6; i++) {
+            service.joinRoom(lobby.id(), "P" + i);
+        }
+
+        org.junit.jupiter.api.Assertions.assertThrows(
+                RoomFullException.class, () -> service.joinRoom(lobby.id(), "Late"));
+    }
 }
