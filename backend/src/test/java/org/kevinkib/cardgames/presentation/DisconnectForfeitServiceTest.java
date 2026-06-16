@@ -12,6 +12,8 @@ import org.kevinkib.cardgames.sessionmanagement.infrastructure.InMemorySessionRe
 import org.kevinkib.cardgames.presentation.api.Response;
 import org.kevinkib.cardgames.sessionmanagement.presence.domain.ForfeitReason;
 import org.kevinkib.cardgames.sessionmanagement.presence.domain.Seat;
+import org.kevinkib.cardgames.sessionmanagement.presence.infrastructure.InMemoryConnectionRegistry;
+import org.kevinkib.cardgames.sessionmanagement.presence.port.ConnectionRegistry;
 import org.kevinkib.cardgames.presentation.api.SuccessResponse;
 import org.kevinkib.cardgames.bataillecorse.presentation.dto.BatailleCorseDto;
 import org.kevinkib.cardgames.bataillecorse.presentation.dto.PlayerDto;
@@ -71,7 +73,7 @@ class DisconnectForfeitServiceTest {
     private SessionService sessionService;
     private CapturingScheduler scheduler;
     private RecordingMessaging messaging;
-    private StompSessionSeatRegistry registry;
+    private ConnectionRegistry registry;
     private ForfeitReasonRegistry forfeitReasonRegistry;
     private DisconnectForfeitService service;
     private GameId gameId;
@@ -82,7 +84,7 @@ class DisconnectForfeitServiceTest {
         sessionService = new SessionService(new InMemorySessionRepository(clock), new org.kevinkib.cardgames.sessionmanagement.application.GameFactories(java.util.List.of(new org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseFactory())));
         scheduler = new CapturingScheduler();
         messaging = new RecordingMessaging();
-        registry = new StompSessionSeatRegistry();
+        registry = new InMemoryConnectionRegistry();
         forfeitReasonRegistry = new ForfeitReasonRegistry();
         var broadcaster = new BatailleCorseLifecycleBroadcaster(messaging, forfeitReasonRegistry);
         var broadcasters = new GameLifecycleBroadcasters(List.of(broadcaster));

@@ -1,20 +1,21 @@
-package org.kevinkib.cardgames.presentation;
+package org.kevinkib.cardgames.sessionmanagement.presence.infrastructure;
 
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.presence.domain.Seat;
+import org.kevinkib.cardgames.sessionmanagement.presence.port.ConnectionRegistry;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
-class StompSessionSeatRegistryTest {
+class InMemoryConnectionRegistryTest {
 
     private final GameId gameId = GameId.generate();
 
     @Test
     void givenBoundSession_whenSeatOf_thenReturnsSeat() {
-        var registry = new StompSessionSeatRegistry();
+        ConnectionRegistry registry = new InMemoryConnectionRegistry();
         var seat = new Seat(gameId, new PlayerId(0));
         registry.bind("sess-1", seat);
 
@@ -23,7 +24,7 @@ class StompSessionSeatRegistryTest {
 
     @Test
     void givenBoundSession_whenUnbind_thenReturnsSeatAndForgets() {
-        var registry = new StompSessionSeatRegistry();
+        ConnectionRegistry registry = new InMemoryConnectionRegistry();
         var seat = new Seat(gameId, new PlayerId(1));
         registry.bind("sess-2", seat);
 
@@ -33,13 +34,13 @@ class StompSessionSeatRegistryTest {
 
     @Test
     void whenUnbindUnknownSession_thenEmpty() {
-        var registry = new StompSessionSeatRegistry();
+        ConnectionRegistry registry = new InMemoryConnectionRegistry();
         assertThat(registry.unbind("nope").isEmpty(), is(true));
     }
 
     @Test
     void givenSessionsForGame_whenRemoveGame_thenAllForgotten() {
-        var registry = new StompSessionSeatRegistry();
+        ConnectionRegistry registry = new InMemoryConnectionRegistry();
         registry.bind("a", new Seat(gameId, new PlayerId(0)));
         registry.bind("b", new Seat(gameId, new PlayerId(1)));
         var otherGame = GameId.generate();

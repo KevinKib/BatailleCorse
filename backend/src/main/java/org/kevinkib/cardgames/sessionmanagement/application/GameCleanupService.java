@@ -3,7 +3,7 @@ package org.kevinkib.cardgames.sessionmanagement.application;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.sessionmanagement.application.port.SessionRepository;
 import org.kevinkib.cardgames.presentation.ForfeitReasonRegistry;
-import org.kevinkib.cardgames.presentation.StompSessionSeatRegistry;
+import org.kevinkib.cardgames.sessionmanagement.presence.port.ConnectionRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -21,10 +21,10 @@ public class GameCleanupService {
     public static final Duration IDLE_TTL = Duration.ofMinutes(30);
 
     private final SessionRepository repository;
-    private final StompSessionSeatRegistry presenceRegistry;
+    private final ConnectionRegistry presenceRegistry;
     private final ForfeitReasonRegistry forfeitReasonRegistry;
 
-    public GameCleanupService(SessionRepository repository, StompSessionSeatRegistry presenceRegistry, ForfeitReasonRegistry forfeitReasonRegistry) {
+    public GameCleanupService(SessionRepository repository, ConnectionRegistry presenceRegistry, ForfeitReasonRegistry forfeitReasonRegistry) {
         this.repository = repository;
         this.presenceRegistry = presenceRegistry;
         this.forfeitReasonRegistry = forfeitReasonRegistry;

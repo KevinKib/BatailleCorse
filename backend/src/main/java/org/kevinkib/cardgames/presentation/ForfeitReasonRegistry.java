@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Session-owned record of which seat forfeited a game and why. Reused across
  * games (and, in future, other game types) so the reason can be merged into
- * game state. Cleared per game on eviction, mirroring StompSessionSeatRegistry.
+ * game state. Cleared per game on eviction, mirroring ConnectionRegistry.
  */
 public class ForfeitReasonRegistry {
 

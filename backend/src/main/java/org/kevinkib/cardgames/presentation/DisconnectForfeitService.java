@@ -7,6 +7,7 @@ import org.kevinkib.cardgames.sessionmanagement.application.InvalidGameIdExcepti
 import org.kevinkib.cardgames.sessionmanagement.application.SessionService;
 import org.kevinkib.cardgames.sessionmanagement.presence.domain.ForfeitReason;
 import org.kevinkib.cardgames.sessionmanagement.presence.domain.Seat;
+import org.kevinkib.cardgames.sessionmanagement.presence.port.ConnectionRegistry;
 import org.springframework.scheduling.TaskScheduler;
 
 import java.time.Clock;
@@ -29,7 +30,7 @@ public class DisconnectForfeitService {
     public static final Duration FORFEIT_GRACE = Duration.ofSeconds(60);
 
     private final SessionService sessionService;
-    private final StompSessionSeatRegistry registry;
+    private final ConnectionRegistry registry;
     private final TaskScheduler scheduler;
     private final Clock clock;
     private final ForfeitReasonRegistry forfeitReasonRegistry;
@@ -38,7 +39,7 @@ public class DisconnectForfeitService {
     private final Map<Seat, ScheduledFuture<?>> pendingForfeits = new ConcurrentHashMap<>();
 
     public DisconnectForfeitService(SessionService sessionService,
-                                    StompSessionSeatRegistry registry,
+                                    ConnectionRegistry registry,
                                     TaskScheduler scheduler,
                                     Clock clock,
                                     ForfeitReasonRegistry forfeitReasonRegistry,

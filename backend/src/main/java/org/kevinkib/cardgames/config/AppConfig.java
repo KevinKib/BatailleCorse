@@ -17,7 +17,8 @@ import org.kevinkib.cardgames.presentation.GameLifecycleBroadcaster;
 import org.kevinkib.cardgames.presentation.GameLifecycleBroadcasters;
 import org.kevinkib.cardgames.presentation.GameMessagingService;
 import org.kevinkib.cardgames.presentation.LobbyBroadcaster;
-import org.kevinkib.cardgames.presentation.StompSessionSeatRegistry;
+import org.kevinkib.cardgames.sessionmanagement.presence.infrastructure.InMemoryConnectionRegistry;
+import org.kevinkib.cardgames.sessionmanagement.presence.port.ConnectionRegistry;
 import org.kevinkib.cardgames.presentation.WebSocketDisconnectListener;
 
 import java.util.List;
@@ -74,8 +75,8 @@ public class AppConfig {
     }
 
     @Bean
-    public StompSessionSeatRegistry stompSessionSeatRegistry() {
-        return new StompSessionSeatRegistry();
+    public ConnectionRegistry connectionRegistry() {
+        return new InMemoryConnectionRegistry();
     }
 
     @Bean
@@ -121,7 +122,7 @@ public class AppConfig {
     @Bean
     public DisconnectForfeitService disconnectForfeitService(GameLifecycleBroadcasters gameLifecycleBroadcasters) {
         return new DisconnectForfeitService(
-                sessionService(), stompSessionSeatRegistry(), taskScheduler(), clock(), forfeitReasonRegistry(),
+                sessionService(), connectionRegistry(), taskScheduler(), clock(), forfeitReasonRegistry(),
                 gameLifecycleBroadcasters);
     }
 
@@ -132,6 +133,6 @@ public class AppConfig {
 
     @Bean
     public GameCleanupService gameCleanupService() {
-        return new GameCleanupService(sessionRepository(), stompSessionSeatRegistry(), forfeitReasonRegistry());
+        return new GameCleanupService(sessionRepository(), connectionRegistry(), forfeitReasonRegistry());
     }
 }
