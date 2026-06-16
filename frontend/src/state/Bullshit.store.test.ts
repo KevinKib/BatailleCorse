@@ -2,9 +2,11 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { setActivePinia, createPinia } from 'pinia';
 import { useBullshitStore } from './Bullshit.store';
 import type { BullshitState } from '../model/bullshit/BullshitState';
+import type { LobbyView } from '../model/bullshit/LobbyView';
 
 function state(overrides: Partial<BullshitState> = {}): BullshitState {
   return {
+    started: true,
     id: 'g1', gameType: 'bullshit',
     myHand: [{ rank: 'ACE', suit: 'HEART', name: 'HEART_ACE' }, { rank: 'KING', suit: 'SPADE', name: 'SPADE_KING' }],
     availableActions: ['DISCARD'],
@@ -21,6 +23,23 @@ function state(overrides: Partial<BullshitState> = {}): BullshitState {
   };
 }
 
+function lobbyView(overrides: Partial<LobbyView> = {}): LobbyView {
+  return {
+    started: false,
+    gameId: 'g1',
+    players: [
+      { seat: 0, name: 'Alice', joined: true },
+      { seat: 1, name: null, joined: false },
+    ],
+    hostSeat: 0,
+    mySeat: 0,
+    minPlayers: 2,
+    maxPlayers: 6,
+    canStart: false,
+    ...overrides,
+  };
+}
+
 describe('Bullshit store', () => {
   beforeEach(() => { setActivePinia(createPinia()); localStorage.clear(); });
 
@@ -33,13 +52,24 @@ describe('Bullshit store', () => {
     expect(store.canCallBullshit).toBe(false);
   });
 
-  it('phase is waiting until a JOIN event arrives, then playing', () => {
+  it('a lobby view yields phase lobby and exposes isHost/canStart', () => {
     const store = useBullshitStore();
-    store.markCreated();
+    store.applyEvent({ type: 'seat-change', seat: 0 });
+    store.applyEvent({ type: 'state-update', state: lobbyView({ canStart: true }) });
+    expect(store.phase).toBe('lobby');
+    expect(store.lobby).not.toBeNull();
+    expect(store.game).toBeNull();
+    expect(store.isHost).toBe(true);
+    expect(store.canStart).toBe(true);
+  });
+
+  it('a started view yields phase playing and exposes game', () => {
+    const store = useBullshitStore();
+    store.applyEvent({ type: 'seat-change', seat: 0 });
     store.applyEvent({ type: 'state-update', state: state() });
-    expect(store.phase).toBe('waiting');
-    store.applyEvent({ type: 'event', eventType: 'JOIN', eventData: {}, message: '' });
     expect(store.phase).toBe('playing');
+    expect(store.game).not.toBeNull();
+    expect(store.lobby).toBeNull();
   });
 
   it('phase is finished and iWon true when I am the winner', () => {

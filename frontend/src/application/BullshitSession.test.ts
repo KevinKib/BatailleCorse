@@ -4,6 +4,7 @@ import type { BullshitState } from '../model/bullshit/BullshitState';
 
 function sampleState(overrides: Partial<BullshitState> = {}): BullshitState {
   return {
+    started: true,
     id: 'g1', gameType: 'bullshit',
     myHand: [{ rank: 'ACE', suit: 'HEART', name: 'HEART_ACE' }],
     availableActions: ['DISCARD'],
@@ -45,10 +46,10 @@ describe('BullshitSession', () => {
   beforeEach(() => { localStorage.clear(); });
   afterEach(() => { vi.restoreAllMocks(); });
 
-  it('create publishes nbPlayers=2 MULTIPLAYER and registers a lobby listener', () => {
+  it('create publishes only the name and registers a lobby listener', () => {
     const { session, published } = makeSession();
     session.create('Alice');
-    expect(published).toContainEqual({ dest: '/app/bullshit/create', body: JSON.stringify({ nbPlayers: 2, mode: 'MULTIPLAYER', name: 'Alice' }) });
+    expect(published).toContainEqual({ dest: '/app/bullshit/create', body: JSON.stringify({ name: 'Alice' }) });
   });
 
   it('on its own CREATE ack, subscribes seat 0 with the token and persists it', async () => {
@@ -93,6 +94,13 @@ describe('BullshitSession', () => {
     session.restore('g1', 1, 'tok-1');
     session.callBullshit();
     expect(published).toContainEqual({ dest: '/app/callBullshit', body: JSON.stringify({ gameId: 'g1', token: 'tok-1' }) });
+  });
+
+  it('startGame publishes to /app/bullshit/start with the gameId and token', () => {
+    const { session, published } = makeSession();
+    session.restore('g1', 0, 'tok-0');
+    session.startGame();
+    expect(published).toContainEqual({ dest: '/app/bullshit/start', body: JSON.stringify({ gameId: 'g1', token: 'tok-0' }) });
   });
 
   it('on an incoming seat message, emits state-update and the event', () => {

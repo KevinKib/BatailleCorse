@@ -1,5 +1,5 @@
 import type Card from '../model/Card';
-import type { BullshitState } from '../model/bullshit/BullshitState';
+import type { BullshitView } from '../model/bullshit/BullshitState';
 import type { BullshitResponse } from '../model/bullshit/BullshitEvents';
 
 export interface BullshitWebSocketPort {
@@ -9,7 +9,7 @@ export interface BullshitWebSocketPort {
 }
 
 export type BullshitSessionEvent =
-  | { type: 'state-update'; state: BullshitState }
+  | { type: 'state-update'; state: BullshitView }
   | { type: 'game-id-change'; gameId: string }
   | { type: 'seat-change'; seat: number }
   | { type: 'event'; eventType: string; eventData: unknown; message: string };
@@ -31,7 +31,7 @@ export default class BullshitSession {
   create(name?: string): void {
     this.pendingCreate = true;
     this.webSocket.setLobbyListener(r => this.onLobby(r));
-    this.webSocket.publish('/app/bullshit/create', JSON.stringify({ nbPlayers: 2, mode: 'MULTIPLAYER', name: name ?? null }));
+    this.webSocket.publish('/app/bullshit/create', JSON.stringify({ name: name ?? null }));
   }
 
   private onLobby(response: any): void {
@@ -78,7 +78,7 @@ export default class BullshitSession {
     if (!this.gameId || this.myToken === null) return;
     const res = await fetch(`/api/bullshit/game/${this.gameId}?token=${this.myToken}`);
     if (res.ok) {
-      const state = await res.json() as BullshitState;
+      const state = await res.json() as BullshitView;
       this.callbacks.onEvent({ type: 'state-update', state });
     }
   }
@@ -89,6 +89,10 @@ export default class BullshitSession {
 
   callBullshit(): void {
     this.webSocket.publish('/app/callBullshit', JSON.stringify({ gameId: this.gameId, token: this.myToken }));
+  }
+
+  startGame(): void {
+    this.webSocket.publish('/app/bullshit/start', JSON.stringify({ gameId: this.gameId, token: this.myToken }));
   }
 
   onResponse(response: BullshitResponse): void {
