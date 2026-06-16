@@ -11,6 +11,7 @@ import org.kevinkib.cardgames.sessionmanagement.domain.SessionToken;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.IntStream;
 
 public class SessionService {
 
@@ -68,6 +69,29 @@ public class SessionService {
                 .orElseThrow(() -> new IllegalStateException("Seat " + JOINER_SEAT.id() + " has no token"));
 
         return new JoinResult(JOINER_SEAT, token);
+    }
+
+    public SessionGame createRoom(String gameType, String hostName) {
+        GameId id = GameId.generate();
+        int max = gameFactories.maxPlayers(gameType);
+        List<PlayerId> seats = IntStream.range(0, max).mapToObj(PlayerId::new).toList();
+        SessionGame lobby = SessionGame.create(id, seats, gameType);
+        PlayerId host = new PlayerId(0);
+        lobby.claim(host, resolveName(host, hostName));
+        repository.saveLobby(lobby);
+        return lobby;
+    }
+
+    public Optional<Game> findGame(GameId id) {
+        return repository.findGame(id);
+    }
+
+    public int minPlayers(String gameType) {
+        return gameFactories.minPlayers(gameType);
+    }
+
+    public int maxPlayers(String gameType) {
+        return gameFactories.maxPlayers(gameType);
     }
 
     public SessionGame getGameSession(GameId id) {
