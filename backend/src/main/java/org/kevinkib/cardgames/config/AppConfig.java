@@ -16,6 +16,7 @@ import org.kevinkib.cardgames.presentation.ForfeitReasonRegistry;
 import org.kevinkib.cardgames.presentation.GameLifecycleBroadcaster;
 import org.kevinkib.cardgames.presentation.GameLifecycleBroadcasters;
 import org.kevinkib.cardgames.presentation.GameMessagingService;
+import org.kevinkib.cardgames.presentation.LobbyBroadcaster;
 import org.kevinkib.cardgames.presentation.StompSessionSeatRegistry;
 import org.kevinkib.cardgames.presentation.WebSocketDisconnectListener;
 
@@ -95,6 +96,11 @@ public class AppConfig {
     @Bean
     public BullshitStateBroadcaster bullshitStateBroadcaster(GameMessagingService gameMessagingService) {
         return new BullshitStateBroadcaster(gameMessagingService);
+    }
+
+    @Bean
+    public LobbyBroadcaster lobbyBroadcaster(GameMessagingService gameMessagingService) {
+        return new LobbyBroadcaster(gameMessagingService, gameFactories());
     }
 
     @Bean
