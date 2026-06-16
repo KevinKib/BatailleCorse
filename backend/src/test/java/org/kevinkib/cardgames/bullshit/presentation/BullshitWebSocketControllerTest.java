@@ -68,21 +68,46 @@ class BullshitWebSocketControllerTest {
     }
 
     @Test
-    void givenSoloCreate_whenCreate_thenLobbyInfoNoState() {
-        Response response = controller.createGame(new BullshitCreatePayload(3, GameMode.SOLO, "Alice"));
+    void givenCreate_whenCreate_thenRoomAckWithHostTokenNoState() {
+        Response response = controller.createGame(new BullshitCreatePayload(null, null, "Alice"));
 
+        assertThat(response.isSuccess(), is(true));
         assertThat(response.getEventType(), is("CREATE"));
         assertThat(response.getState(), is(nullValue()));
         BullshitCreateEventData data = (BullshitCreateEventData) response.getEventData();
         assertThat(data.gameType(), is("bullshit"));
-        assertThat(data.tokens().size(), is(3));
+        assertThat(data.tokens().size(), is(1));
+        assertThat(data.tokens().containsKey(0), is(true));
     }
 
     @Test
-    void givenTooManyPlayers_whenCreate_thenError() {
-        Response response = controller.createGame(new BullshitCreatePayload(7, GameMode.SOLO, null));
+    void givenHostStartsWithEnoughPlayers_whenStart_thenBroadcastsGameToAllSeats() {
+        Response create = controller.createGame(new BullshitCreatePayload(null, null, "Alice"));
+        BullshitCreateEventData data = (BullshitCreateEventData) create.getEventData();
+        GameId id = new GameId(data.gameId());
+        sessionService.joinRoom(id, "Bob");
+        String hostToken = data.tokens().get(0);
 
-        assertThat(response.isSuccess(), is(false));
+        controller.start(new GameActionPayload(data.gameId(), hostToken));
+
+        assertThat(messaging.seats.size(), is(2));
+        assertThat(messaging.payloads.get(0).getEventType(), is("START"));
+        assertThat(messaging.payloads.get(0).isSuccess(), is(true));
+    }
+
+    @Test
+    void givenNonHostStart_whenStart_thenErrorToActingSeatOnly() {
+        Response create = controller.createGame(new BullshitCreatePayload(null, null, "Alice"));
+        BullshitCreateEventData data = (BullshitCreateEventData) create.getEventData();
+        GameId id = new GameId(data.gameId());
+        var bob = sessionService.joinRoom(id, "Bob");
+
+        controller.start(new GameActionPayload(data.gameId(), bob.token().uuid().toString()));
+
+        assertThat(messaging.seats.size(), is(1));
+        assertThat(messaging.seats.get(0), is(new PlayerId(1)));
+        assertThat(messaging.payloads.get(0).isSuccess(), is(false));
+        assertThat(messaging.payloads.get(0).getEventType(), is("START"));
     }
 
     @Test
