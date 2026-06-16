@@ -9,7 +9,8 @@ import org.kevinkib.cardgames.sessionmanagement.presence.domain.ForfeitReason;
 import org.kevinkib.cardgames.sessionmanagement.presence.domain.Seat;
 import org.kevinkib.cardgames.sessionmanagement.presence.port.ConnectionRegistry;
 import org.kevinkib.cardgames.sessionmanagement.presence.port.ForfeitLog;
-import org.springframework.scheduling.TaskScheduler;
+import org.kevinkib.cardgames.sessionmanagement.presence.port.ForfeitScheduler;
+import org.kevinkib.cardgames.sessionmanagement.presence.port.ScheduledForfeit;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -17,7 +18,6 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ScheduledFuture;
 
 /**
  * Detects multiplayer disconnects and runs the 60s auto-loss timer, plus the
@@ -32,16 +32,16 @@ public class DisconnectForfeitService {
 
     private final SessionService sessionService;
     private final ConnectionRegistry registry;
-    private final TaskScheduler scheduler;
+    private final ForfeitScheduler scheduler;
     private final Clock clock;
     private final ForfeitLog forfeitLog;
     private final GameLifecycleBroadcasters broadcasters;
 
-    private final Map<Seat, ScheduledFuture<?>> pendingForfeits = new ConcurrentHashMap<>();
+    private final Map<Seat, ScheduledForfeit> pendingForfeits = new ConcurrentHashMap<>();
 
     public DisconnectForfeitService(SessionService sessionService,
                                     ConnectionRegistry registry,
-                                    TaskScheduler scheduler,
+                                    ForfeitScheduler scheduler,
                                     Clock clock,
                                     ForfeitLog forfeitLog,
                                     GameLifecycleBroadcasters broadcasters) {
@@ -58,9 +58,9 @@ public class DisconnectForfeitService {
         Seat seat = new Seat(gameId, playerId);
         registry.bind(sessionId, seat);
 
-        ScheduledFuture<?> pending = pendingForfeits.remove(seat);
+        ScheduledForfeit pending = pendingForfeits.remove(seat);
         if (pending != null) {
-            pending.cancel(false);
+            pending.cancel();
             Game game = findGame(seat.gameId());
             if (game != null) {
                 broadcasters.broadcasterFor(game).reconnected(game, seat);
@@ -82,7 +82,7 @@ public class DisconnectForfeitService {
         }
 
         Instant deadline = clock.instant().plus(FORFEIT_GRACE);
-        ScheduledFuture<?> task = scheduler.schedule(() -> forfeit(seat, ForfeitReason.DISCONNECTED), deadline);
+        ScheduledForfeit task = scheduler.schedule(deadline, () -> forfeit(seat, ForfeitReason.DISCONNECTED));
         pendingForfeits.put(seat, task);
         broadcasters.broadcasterFor(game).disconnected(game, seat, deadline.toEpochMilli());
     }

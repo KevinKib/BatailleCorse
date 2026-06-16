@@ -19,7 +19,9 @@ import org.kevinkib.cardgames.presentation.GameLifecycleBroadcasters;
 import org.kevinkib.cardgames.presentation.GameMessagingService;
 import org.kevinkib.cardgames.presentation.LobbyBroadcaster;
 import org.kevinkib.cardgames.sessionmanagement.presence.infrastructure.InMemoryConnectionRegistry;
+import org.kevinkib.cardgames.sessionmanagement.presence.infrastructure.TaskSchedulerForfeitScheduler;
 import org.kevinkib.cardgames.sessionmanagement.presence.port.ConnectionRegistry;
+import org.kevinkib.cardgames.sessionmanagement.presence.port.ForfeitScheduler;
 import org.kevinkib.cardgames.presentation.WebSocketDisconnectListener;
 
 import java.util.List;
@@ -121,9 +123,14 @@ public class AppConfig {
     }
 
     @Bean
+    public ForfeitScheduler forfeitScheduler() {
+        return new TaskSchedulerForfeitScheduler(taskScheduler());
+    }
+
+    @Bean
     public DisconnectForfeitService disconnectForfeitService(GameLifecycleBroadcasters gameLifecycleBroadcasters) {
         return new DisconnectForfeitService(
-                sessionService(), connectionRegistry(), taskScheduler(), clock(), forfeitLog(),
+                sessionService(), connectionRegistry(), forfeitScheduler(), clock(), forfeitLog(),
                 gameLifecycleBroadcasters);
     }
 

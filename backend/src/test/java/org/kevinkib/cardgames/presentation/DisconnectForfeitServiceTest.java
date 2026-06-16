@@ -16,18 +16,17 @@ import org.kevinkib.cardgames.sessionmanagement.presence.infrastructure.InMemory
 import org.kevinkib.cardgames.sessionmanagement.presence.infrastructure.InMemoryForfeitLog;
 import org.kevinkib.cardgames.sessionmanagement.presence.port.ConnectionRegistry;
 import org.kevinkib.cardgames.sessionmanagement.presence.port.ForfeitLog;
+import org.kevinkib.cardgames.sessionmanagement.presence.port.ForfeitScheduler;
+import org.kevinkib.cardgames.sessionmanagement.presence.port.ScheduledForfeit;
 import org.kevinkib.cardgames.presentation.api.SuccessResponse;
 import org.kevinkib.cardgames.bataillecorse.presentation.dto.BatailleCorseDto;
 import org.kevinkib.cardgames.bataillecorse.presentation.dto.PlayerDto;
-import org.springframework.scheduling.Trigger;
-import org.springframework.scheduling.TaskScheduler;
 
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ScheduledFuture;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
@@ -35,33 +34,20 @@ import static org.hamcrest.Matchers.is;
 
 class DisconnectForfeitServiceTest {
 
-    /** Captures scheduled tasks (last one, plus all in order); run() invokes them; cancel flips a flag. */
-    private static final class CapturingScheduler implements TaskScheduler {
+    /** Captures scheduled forfeits (last one, plus all in order); run() invokes them; cancel flips a flag. */
+    private static final class CapturingScheduler implements ForfeitScheduler {
         Runnable lastTask;
         Instant lastTime;
         boolean cancelled;
         final List<Runnable> scheduled = new ArrayList<>();
-        public ScheduledFuture<?> schedule(Runnable task, Instant startTime) {
+
+        @Override
+        public ScheduledForfeit schedule(Instant deadline, Runnable task) {
             this.lastTask = task;
-            this.lastTime = startTime;
+            this.lastTime = deadline;
             this.cancelled = false;
             this.scheduled.add(task);
-            return new FakeFuture();
-        }
-        public ScheduledFuture<?> schedule(Runnable task, Trigger trigger) { throw new UnsupportedOperationException(); }
-        public ScheduledFuture<?> scheduleAtFixedRate(Runnable task, Instant startTime, java.time.Duration period) { throw new UnsupportedOperationException(); }
-        public ScheduledFuture<?> scheduleAtFixedRate(Runnable task, java.time.Duration period) { throw new UnsupportedOperationException(); }
-        public ScheduledFuture<?> scheduleWithFixedDelay(Runnable task, Instant startTime, java.time.Duration delay) { throw new UnsupportedOperationException(); }
-        public ScheduledFuture<?> scheduleWithFixedDelay(Runnable task, java.time.Duration delay) { throw new UnsupportedOperationException(); }
-
-        private final class FakeFuture implements ScheduledFuture<Object> {
-            public long getDelay(java.util.concurrent.TimeUnit unit) { return 0; }
-            public int compareTo(java.util.concurrent.Delayed o) { return 0; }
-            public boolean cancel(boolean mayInterrupt) { cancelled = true; return true; }
-            public boolean isCancelled() { return cancelled; }
-            public boolean isDone() { return false; }
-            public Object get() { return null; }
-            public Object get(long t, java.util.concurrent.TimeUnit u) { return null; }
+            return () -> this.cancelled = true;
         }
     }
 
