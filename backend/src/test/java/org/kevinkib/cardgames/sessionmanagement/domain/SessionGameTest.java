@@ -56,32 +56,6 @@ class SessionGameTest {
     }
 
     @Nested
-    class ClaimTest {
-
-        @Test
-        public void givenNewSessionGame_whenCreated_thenNoSeatsAreClaimed() {
-            var players = playerIds(2);
-
-            var sessionGame = SessionGame.create(GameId.generate(), players, "bataille-corse");
-
-            assertThat(sessionGame.isClaimed(new PlayerId(0)), is(false));
-            assertThat(sessionGame.isClaimed(new PlayerId(1)), is(false));
-        }
-
-        @Test
-        public void givenSeat_whenClaimedWithName_thenIsClaimedWithThatName() {
-            var players = playerIds(2);
-            var sessionGame = SessionGame.create(GameId.generate(), players, "bataille-corse");
-
-            sessionGame.claimSeat(new PlayerId(0), "Alice");
-
-            assertThat(sessionGame.isClaimed(new PlayerId(0)), is(true));
-            assertThat(sessionGame.isClaimed(new PlayerId(1)), is(false));
-            assertThat(sessionGame.seats().get(0).name(), is("Alice"));
-        }
-    }
-
-    @Nested
     class ClaimNextFreeSeatTest {
 
         @Test
@@ -118,6 +92,25 @@ class SessionGameTest {
 
     @Nested
     class ClaimSeatTest {
+
+        @Test
+        public void givenNewSessionGame_whenCreated_thenNoSeatsAreClaimed() {
+            var sessionGame = SessionGame.create(GameId.generate(), playerIds(2), "bullshit");
+
+            assertThat(sessionGame.isClaimed(new PlayerId(0)), is(false));
+            assertThat(sessionGame.isClaimed(new PlayerId(1)), is(false));
+        }
+
+        @Test
+        public void givenSeat_whenClaimSeatWithName_thenIsClaimedWithThatName() {
+            var sessionGame = SessionGame.create(GameId.generate(), playerIds(2), "bullshit");
+
+            sessionGame.claimSeat(new PlayerId(0), "Alice");
+
+            assertThat(sessionGame.isClaimed(new PlayerId(0)), is(true));
+            assertThat(sessionGame.isClaimed(new PlayerId(1)), is(false));
+            assertThat(sessionGame.seats().get(0).name(), is("Alice"));
+        }
 
         @Test
         public void givenClaimedSeat_whenClaimSeatAgain_thenThrowsSeatUnavailable() {
