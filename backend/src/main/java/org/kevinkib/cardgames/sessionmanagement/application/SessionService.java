@@ -15,6 +15,7 @@ import java.util.stream.IntStream;
 
 public class SessionService {
 
+    private static final PlayerId HOST_SEAT = new PlayerId(0);
     private static final PlayerId JOINER_SEAT = new PlayerId(1);
 
     private final SessionRepository repository;
@@ -92,8 +93,7 @@ public class SessionService {
         int max = gameFactories.maxPlayers(gameType);
         List<PlayerId> seats = IntStream.range(0, max).mapToObj(PlayerId::new).toList();
         SessionGame lobby = SessionGame.create(id, seats, gameType);
-        PlayerId host = new PlayerId(0);
-        lobby.claim(host, resolveName(host, hostName));
+        lobby.claim(HOST_SEAT, resolveName(HOST_SEAT, hostName));
         repository.saveLobby(lobby);
         return lobby;
     }
@@ -105,7 +105,7 @@ public class SessionService {
         SessionGame lobby = repository.loadSessionGame(id);
         PlayerId actor = lobby.findPlayerByToken(hostToken)
                 .orElseThrow(() -> new NotHostException(id));
-        if (actor.id() != 0) {
+        if (!actor.equals(HOST_SEAT)) {
             throw new NotHostException(id);
         }
         int claimed = (int) lobby.seats().stream().filter(SessionPlayer::isClaimed).count();
