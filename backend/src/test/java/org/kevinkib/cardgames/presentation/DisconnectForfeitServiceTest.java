@@ -1,5 +1,6 @@
 package org.kevinkib.cardgames.presentation;
 import org.kevinkib.cardgames.bataillecorse.presentation.BatailleCorseLifecycleBroadcaster;
+import org.kevinkib.cardgames.sessionmanagement.presence.application.GameLifecycleBroadcasters;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

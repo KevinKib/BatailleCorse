@@ -2,7 +2,7 @@ package org.kevinkib.cardgames.bullshit.presentation;
 
 import org.kevinkib.cardgames.bullshit.domain.Bullshit;
 import org.kevinkib.cardgames.game.Game;
-import org.kevinkib.cardgames.presentation.GameLifecycleBroadcaster;
+import org.kevinkib.cardgames.sessionmanagement.presence.port.GameLifecycleBroadcaster;
 import org.kevinkib.cardgames.sessionmanagement.presence.domain.ForfeitReason;
 import org.kevinkib.cardgames.sessionmanagement.presence.domain.Seat;
 import org.kevinkib.cardgames.presentation.dto.event.ForfeitEventData;

@@ -1,4 +1,4 @@
-package org.kevinkib.cardgames.presentation;
+package org.kevinkib.cardgames.sessionmanagement.presence.port;
 
 import org.kevinkib.cardgames.game.Game;
 import org.kevinkib.cardgames.sessionmanagement.presence.domain.ForfeitReason;

@@ -11,6 +11,7 @@ import org.kevinkib.cardgames.sessionmanagement.presence.port.ConnectionRegistry
 import org.kevinkib.cardgames.sessionmanagement.presence.port.ForfeitLog;
 import org.kevinkib.cardgames.sessionmanagement.presence.port.ForfeitScheduler;
 import org.kevinkib.cardgames.sessionmanagement.presence.port.ScheduledForfeit;
+import org.kevinkib.cardgames.sessionmanagement.presence.application.GameLifecycleBroadcasters;
 
 import java.time.Clock;
 import java.time.Duration;
