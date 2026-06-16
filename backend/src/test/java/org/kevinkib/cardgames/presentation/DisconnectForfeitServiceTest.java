@@ -10,6 +10,8 @@ import org.kevinkib.cardgames.sessionmanagement.application.SessionService;
 import org.kevinkib.cardgames.sessionmanagement.domain.GameMode;
 import org.kevinkib.cardgames.sessionmanagement.infrastructure.InMemorySessionRepository;
 import org.kevinkib.cardgames.presentation.api.Response;
+import org.kevinkib.cardgames.sessionmanagement.presence.domain.ForfeitReason;
+import org.kevinkib.cardgames.sessionmanagement.presence.domain.Seat;
 import org.kevinkib.cardgames.presentation.api.SuccessResponse;
 import org.kevinkib.cardgames.bataillecorse.presentation.dto.BatailleCorseDto;
 import org.kevinkib.cardgames.bataillecorse.presentation.dto.PlayerDto;

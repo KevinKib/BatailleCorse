@@ -3,6 +3,7 @@ package org.kevinkib.cardgames.presentation;
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
+import org.kevinkib.cardgames.sessionmanagement.presence.domain.Seat;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;

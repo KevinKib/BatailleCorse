@@ -5,6 +5,8 @@ import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.application.InvalidTokenException;
 import org.kevinkib.cardgames.sessionmanagement.application.SessionService;
 import org.kevinkib.cardgames.sessionmanagement.domain.SessionToken;
+import org.kevinkib.cardgames.sessionmanagement.presence.domain.ForfeitReason;
+import org.kevinkib.cardgames.sessionmanagement.presence.domain.Seat;
 import org.kevinkib.cardgames.presentation.api.GameActionPayload;
 import org.kevinkib.cardgames.presentation.api.PresencePayload;
 import org.springframework.messaging.handler.annotation.MessageMapping;

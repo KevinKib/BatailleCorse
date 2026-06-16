@@ -1,6 +1,7 @@
 package org.kevinkib.cardgames.presentation;
 
 import org.kevinkib.cardgames.game.GameId;
+import org.kevinkib.cardgames.sessionmanagement.presence.domain.Seat;
 
 import java.util.Map;
 import java.util.Optional;

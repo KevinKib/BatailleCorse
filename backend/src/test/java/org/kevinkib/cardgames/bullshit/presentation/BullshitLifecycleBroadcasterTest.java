@@ -4,9 +4,9 @@ import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.bullshit.domain.Bullshit;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
-import org.kevinkib.cardgames.presentation.ForfeitReason;
 import org.kevinkib.cardgames.presentation.GameMessagingService;
-import org.kevinkib.cardgames.presentation.Seat;
+import org.kevinkib.cardgames.sessionmanagement.presence.domain.ForfeitReason;
+import org.kevinkib.cardgames.sessionmanagement.presence.domain.Seat;
 
 import java.util.ArrayList;
 import java.util.List;

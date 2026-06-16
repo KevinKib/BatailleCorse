@@ -5,6 +5,8 @@ import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.application.InvalidGameIdException;
 import org.kevinkib.cardgames.sessionmanagement.application.SessionService;
+import org.kevinkib.cardgames.sessionmanagement.presence.domain.ForfeitReason;
+import org.kevinkib.cardgames.sessionmanagement.presence.domain.Seat;
 import org.springframework.scheduling.TaskScheduler;
 
 import java.time.Clock;

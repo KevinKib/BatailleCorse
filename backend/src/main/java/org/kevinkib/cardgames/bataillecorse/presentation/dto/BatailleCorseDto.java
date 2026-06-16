@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorse;
 import org.kevinkib.cardgames.bataillecorse.domain.Player;
-import org.kevinkib.cardgames.presentation.ForfeitReason;
+import org.kevinkib.cardgames.sessionmanagement.presence.domain.ForfeitReason;
 
 import java.util.List;
 import java.util.Map;

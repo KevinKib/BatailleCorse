@@ -1,5 +1,7 @@
 package org.kevinkib.cardgames.bataillecorse.presentation;
 import org.kevinkib.cardgames.presentation.*;
+import org.kevinkib.cardgames.sessionmanagement.presence.domain.ForfeitReason;
+import org.kevinkib.cardgames.sessionmanagement.presence.domain.Seat;
 
 import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorse;
 import org.kevinkib.cardgames.game.Game;

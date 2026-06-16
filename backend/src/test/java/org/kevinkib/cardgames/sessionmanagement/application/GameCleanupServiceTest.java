@@ -47,7 +47,7 @@ class GameCleanupServiceTest {
         var service = new GameCleanupService(repo, registry, new ForfeitReasonRegistry());
 
         var spySession = "sess-1";
-        registry.bind(spySession, new org.kevinkib.cardgames.presentation.Seat(
+        registry.bind(spySession, new org.kevinkib.cardgames.sessionmanagement.presence.domain.Seat(
                 id, new org.kevinkib.cardgames.game.PlayerId(1)));
 
         service.sweep();
