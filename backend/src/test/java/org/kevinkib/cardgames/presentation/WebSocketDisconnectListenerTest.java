@@ -1,6 +1,7 @@
 package org.kevinkib.cardgames.presentation;
 
 import org.junit.jupiter.api.Test;
+import org.kevinkib.cardgames.sessionmanagement.presence.application.PresenceService;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
@@ -11,7 +12,7 @@ import static org.hamcrest.Matchers.is;
 
 class WebSocketDisconnectListenerTest {
 
-    private static final class RecordingService extends DisconnectForfeitService {
+    private static final class RecordingService extends PresenceService {
         String lastSessionId;
         RecordingService() { super(null, null, null, null, null, null); }
         @Override public void onDisconnect(String sessionId) { this.lastSessionId = sessionId; }

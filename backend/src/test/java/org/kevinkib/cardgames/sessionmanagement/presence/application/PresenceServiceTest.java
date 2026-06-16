@@ -1,6 +1,5 @@
-package org.kevinkib.cardgames.presentation;
+package org.kevinkib.cardgames.sessionmanagement.presence.application;
 import org.kevinkib.cardgames.bataillecorse.presentation.BatailleCorseLifecycleBroadcaster;
-import org.kevinkib.cardgames.sessionmanagement.presence.application.GameLifecycleBroadcasters;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,6 +21,7 @@ import org.kevinkib.cardgames.sessionmanagement.presence.port.ScheduledForfeit;
 import org.kevinkib.cardgames.presentation.api.SuccessResponse;
 import org.kevinkib.cardgames.bataillecorse.presentation.dto.BatailleCorseDto;
 import org.kevinkib.cardgames.bataillecorse.presentation.dto.PlayerDto;
+import org.kevinkib.cardgames.presentation.GameMessagingService;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -33,7 +33,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.is;
 
-class DisconnectForfeitServiceTest {
+class PresenceServiceTest {
 
     /** Captures scheduled forfeits (last one, plus all in order); run() invokes them; cancel flips a flag. */
     private static final class CapturingScheduler implements ForfeitScheduler {
@@ -64,7 +64,7 @@ class DisconnectForfeitServiceTest {
     private RecordingMessaging messaging;
     private ConnectionRegistry registry;
     private ForfeitLog forfeitLog;
-    private DisconnectForfeitService service;
+    private PresenceService service;
     private GameId gameId;
 
     @BeforeEach
@@ -77,7 +77,7 @@ class DisconnectForfeitServiceTest {
         forfeitLog = new InMemoryForfeitLog();
         var broadcaster = new BatailleCorseLifecycleBroadcaster(messaging, forfeitLog);
         var broadcasters = new GameLifecycleBroadcasters(List.of(broadcaster));
-        service = new DisconnectForfeitService(sessionService, registry, scheduler, clock, forfeitLog, broadcasters);
+        service = new PresenceService(sessionService, registry, scheduler, clock, forfeitLog, broadcasters);
 
         BatailleCorse game = (BatailleCorse) sessionService.createGame("bataille-corse", 2, GameMode.MULTIPLAYER);
         gameId = game.getId();

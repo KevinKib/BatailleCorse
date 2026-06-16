@@ -1,13 +1,14 @@
 package org.kevinkib.cardgames.presentation;
 
+import org.kevinkib.cardgames.sessionmanagement.presence.application.PresenceService;
 import org.springframework.context.event.EventListener;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
 public class WebSocketDisconnectListener {
 
-    private final DisconnectForfeitService forfeitService;
+    private final PresenceService forfeitService;
 
-    public WebSocketDisconnectListener(DisconnectForfeitService forfeitService) {
+    public WebSocketDisconnectListener(PresenceService forfeitService) {
         this.forfeitService = forfeitService;
     }
 

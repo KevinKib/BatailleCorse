@@ -10,7 +10,7 @@ import org.kevinkib.cardgames.sessionmanagement.infrastructure.InMemorySessionRe
 import org.kevinkib.cardgames.bataillecorse.presentation.BatailleCorseLifecycleBroadcaster;
 import org.kevinkib.cardgames.bullshit.presentation.BullshitLifecycleBroadcaster;
 import org.kevinkib.cardgames.bullshit.presentation.BullshitStateBroadcaster;
-import org.kevinkib.cardgames.presentation.DisconnectForfeitService;
+import org.kevinkib.cardgames.sessionmanagement.presence.application.PresenceService;
 import org.kevinkib.cardgames.presentation.SeatSubscriptionInterceptor;
 import org.kevinkib.cardgames.sessionmanagement.presence.port.ForfeitLog;
 import org.kevinkib.cardgames.sessionmanagement.presence.infrastructure.InMemoryForfeitLog;
@@ -128,15 +128,15 @@ public class AppConfig {
     }
 
     @Bean
-    public DisconnectForfeitService disconnectForfeitService(GameLifecycleBroadcasters gameLifecycleBroadcasters) {
-        return new DisconnectForfeitService(
+    public PresenceService presenceService(GameLifecycleBroadcasters gameLifecycleBroadcasters) {
+        return new PresenceService(
                 sessionService(), connectionRegistry(), forfeitScheduler(), clock(), forfeitLog(),
                 gameLifecycleBroadcasters);
     }
 
     @Bean
-    public WebSocketDisconnectListener webSocketDisconnectListener(DisconnectForfeitService disconnectForfeitService) {
-        return new WebSocketDisconnectListener(disconnectForfeitService);
+    public WebSocketDisconnectListener webSocketDisconnectListener(PresenceService presenceService) {
+        return new WebSocketDisconnectListener(presenceService);
     }
 
     @Bean

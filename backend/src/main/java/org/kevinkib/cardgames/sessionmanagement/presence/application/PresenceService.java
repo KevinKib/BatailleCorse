@@ -1,4 +1,4 @@
-package org.kevinkib.cardgames.presentation;
+package org.kevinkib.cardgames.sessionmanagement.presence.application;
 
 import org.kevinkib.cardgames.game.Game;
 import org.kevinkib.cardgames.game.GameId;
@@ -11,7 +11,6 @@ import org.kevinkib.cardgames.sessionmanagement.presence.port.ConnectionRegistry
 import org.kevinkib.cardgames.sessionmanagement.presence.port.ForfeitLog;
 import org.kevinkib.cardgames.sessionmanagement.presence.port.ForfeitScheduler;
 import org.kevinkib.cardgames.sessionmanagement.presence.port.ScheduledForfeit;
-import org.kevinkib.cardgames.sessionmanagement.presence.application.GameLifecycleBroadcasters;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -23,10 +22,10 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Detects multiplayer disconnects and runs the 60s auto-loss timer, plus the
  * shared forfeit path. Reconnect (a fresh presence for the same seat) cancels a
- * pending timer. Broadcasting is delegated to the per-game {@link GameLifecycleBroadcaster};
+ * pending timer. Broadcasting is delegated to the per-game {@link GameLifecycleBroadcasters};
  * this service knows only the lifecycle, never a game's state shape.
  */
-public class DisconnectForfeitService {
+public class PresenceService {
 
     /** Grace before a dropped player auto-loses. */
     public static final Duration FORFEIT_GRACE = Duration.ofSeconds(60);
@@ -40,12 +39,12 @@ public class DisconnectForfeitService {
 
     private final Map<Seat, ScheduledForfeit> pendingForfeits = new ConcurrentHashMap<>();
 
-    public DisconnectForfeitService(SessionService sessionService,
-                                    ConnectionRegistry registry,
-                                    ForfeitScheduler scheduler,
-                                    Clock clock,
-                                    ForfeitLog forfeitLog,
-                                    GameLifecycleBroadcasters broadcasters) {
+    public PresenceService(SessionService sessionService,
+                           ConnectionRegistry registry,
+                           ForfeitScheduler scheduler,
+                           Clock clock,
+                           ForfeitLog forfeitLog,
+                           GameLifecycleBroadcasters broadcasters) {
         this.sessionService = sessionService;
         this.registry = registry;
         this.scheduler = scheduler;
@@ -55,9 +54,9 @@ public class DisconnectForfeitService {
     }
 
     /** Records presence; if this seat had a pending forfeit, cancels it and announces the return. */
-    public void onPresence(String sessionId, GameId gameId, PlayerId playerId) {
+    public void onPresence(String connectionId, GameId gameId, PlayerId playerId) {
         Seat seat = new Seat(gameId, playerId);
-        registry.bind(sessionId, seat);
+        registry.bind(connectionId, seat);
 
         ScheduledForfeit pending = pendingForfeits.remove(seat);
         if (pending != null) {
@@ -69,9 +68,9 @@ public class DisconnectForfeitService {
         }
     }
 
-    /** Attributes a dropped session to a seat and, if the game is live, starts the auto-loss timer. */
-    public void onDisconnect(String sessionId) {
-        Optional<Seat> maybeSeat = registry.unbind(sessionId);
+    /** Attributes a dropped connection to a seat and, if the game is live, starts the auto-loss timer. */
+    public void onDisconnect(String connectionId) {
+        Optional<Seat> maybeSeat = registry.unbind(connectionId);
         if (maybeSeat.isEmpty()) {
             return;
         }

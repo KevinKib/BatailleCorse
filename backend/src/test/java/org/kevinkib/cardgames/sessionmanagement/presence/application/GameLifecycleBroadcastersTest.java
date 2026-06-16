@@ -1,10 +1,9 @@
-package org.kevinkib.cardgames.presentation;
+package org.kevinkib.cardgames.sessionmanagement.presence.application;
 
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorse;
 import org.kevinkib.cardgames.bataillecorse.presentation.BatailleCorseLifecycleBroadcaster;
 import org.kevinkib.cardgames.sessionmanagement.presence.port.GameLifecycleBroadcaster;
-import org.kevinkib.cardgames.sessionmanagement.presence.application.GameLifecycleBroadcasters;
 import org.kevinkib.cardgames.game.FakeGame;
 import org.kevinkib.cardgames.game.GameId;
 
