@@ -6,14 +6,14 @@ import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
 public class WebSocketDisconnectListener {
 
-    private final PresenceService forfeitService;
+    private final PresenceService presenceService;
 
-    public WebSocketDisconnectListener(PresenceService forfeitService) {
-        this.forfeitService = forfeitService;
+    public WebSocketDisconnectListener(PresenceService presenceService) {
+        this.presenceService = presenceService;
     }
 
     @EventListener
     public void onDisconnect(SessionDisconnectEvent event) {
-        forfeitService.onDisconnect(event.getSessionId());
+        presenceService.onDisconnect(event.getSessionId());
     }
 }
