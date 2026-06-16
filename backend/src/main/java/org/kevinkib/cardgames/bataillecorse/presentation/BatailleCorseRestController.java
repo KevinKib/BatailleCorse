@@ -1,5 +1,6 @@
 package org.kevinkib.cardgames.bataillecorse.presentation;
 import org.kevinkib.cardgames.presentation.*;
+import org.kevinkib.cardgames.sessionmanagement.presence.port.ForfeitLog;
 
 import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorse;
 import org.kevinkib.cardgames.game.GameId;
@@ -35,13 +36,13 @@ public class BatailleCorseRestController {
 
     private final SessionService sessionService;
     private final GameMessagingService gameMessagingService;
-    private final ForfeitReasonRegistry forfeitReasonRegistry;
+    private final ForfeitLog forfeitLog;
 
     public BatailleCorseRestController(SessionService sessionService, GameMessagingService gameMessagingService,
-                              ForfeitReasonRegistry forfeitReasonRegistry) {
+                              ForfeitLog forfeitLog) {
         this.sessionService = sessionService;
         this.gameMessagingService = gameMessagingService;
-        this.forfeitReasonRegistry = forfeitReasonRegistry;
+        this.forfeitLog = forfeitLog;
     }
 
     @GetMapping("/game/{id}")
@@ -49,7 +50,7 @@ public class BatailleCorseRestController {
         try {
             GameId gameId = new GameId(id);
             BatailleCorse game = sessionService.getGame(gameId, BatailleCorse.class);
-            return ResponseEntity.ok(BatailleCorseDto.from(game, forfeitReasonRegistry.reasonsBySeat(gameId)));
+            return ResponseEntity.ok(BatailleCorseDto.from(game, forfeitLog.reasonsBySeat(gameId)));
         } catch (InvalidGameIdException | IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
         }

@@ -5,7 +5,7 @@ import org.kevinkib.cardgames.game.Game;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.sessionmanagement.application.port.SessionRepository;
 import org.kevinkib.cardgames.sessionmanagement.domain.SessionGame;
-import org.kevinkib.cardgames.presentation.ForfeitReasonRegistry;
+import org.kevinkib.cardgames.sessionmanagement.presence.infrastructure.InMemoryForfeitLog;
 import org.kevinkib.cardgames.sessionmanagement.presence.infrastructure.InMemoryConnectionRegistry;
 
 import java.time.Duration;
@@ -44,7 +44,7 @@ class GameCleanupServiceTest {
         var id = GameId.generate();
         repo.toEvict.add(id);
         var registry = new InMemoryConnectionRegistry();
-        var service = new GameCleanupService(repo, registry, new ForfeitReasonRegistry());
+        var service = new GameCleanupService(repo, registry, new InMemoryForfeitLog());
 
         var spySession = "sess-1";
         registry.bind(spySession, new org.kevinkib.cardgames.sessionmanagement.presence.domain.Seat(
@@ -59,7 +59,7 @@ class GameCleanupServiceTest {
     @Test
     void whenSweep_thenUsesConfiguredThresholds() {
         var repo = new StubRepository();
-        var service = new GameCleanupService(repo, new InMemoryConnectionRegistry(), new ForfeitReasonRegistry());
+        var service = new GameCleanupService(repo, new InMemoryConnectionRegistry(), new InMemoryForfeitLog());
 
         service.sweep();
 

@@ -2,7 +2,7 @@ package org.kevinkib.cardgames.sessionmanagement.application;
 
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.sessionmanagement.application.port.SessionRepository;
-import org.kevinkib.cardgames.presentation.ForfeitReasonRegistry;
+import org.kevinkib.cardgames.sessionmanagement.presence.port.ForfeitLog;
 import org.kevinkib.cardgames.sessionmanagement.presence.port.ConnectionRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,12 +22,12 @@ public class GameCleanupService {
 
     private final SessionRepository repository;
     private final ConnectionRegistry presenceRegistry;
-    private final ForfeitReasonRegistry forfeitReasonRegistry;
+    private final ForfeitLog forfeitLog;
 
-    public GameCleanupService(SessionRepository repository, ConnectionRegistry presenceRegistry, ForfeitReasonRegistry forfeitReasonRegistry) {
+    public GameCleanupService(SessionRepository repository, ConnectionRegistry presenceRegistry, ForfeitLog forfeitLog) {
         this.repository = repository;
         this.presenceRegistry = presenceRegistry;
-        this.forfeitReasonRegistry = forfeitReasonRegistry;
+        this.forfeitLog = forfeitLog;
     }
 
     @Scheduled(fixedDelayString = "PT1M")
@@ -36,7 +36,7 @@ public class GameCleanupService {
         if (!evicted.isEmpty()) {
             log.info("Evicted {} stale game(s): {}", evicted.size(), evicted);
             evicted.forEach(presenceRegistry::removeGame);
-            evicted.forEach(forfeitReasonRegistry::removeGame);
+            evicted.forEach(forfeitLog::removeGame);
         }
     }
 }

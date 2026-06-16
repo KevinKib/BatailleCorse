@@ -5,7 +5,8 @@ import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorse;
 import org.kevinkib.cardgames.bataillecorse.presentation.dto.BatailleCorseDto;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
-import org.kevinkib.cardgames.presentation.ForfeitReasonRegistry;
+import org.kevinkib.cardgames.sessionmanagement.presence.infrastructure.InMemoryForfeitLog;
+import org.kevinkib.cardgames.sessionmanagement.presence.port.ForfeitLog;
 import org.kevinkib.cardgames.presentation.GameMessagingService;
 import org.kevinkib.cardgames.sessionmanagement.presence.domain.ForfeitReason;
 import org.kevinkib.cardgames.sessionmanagement.presence.domain.Seat;
@@ -25,7 +26,7 @@ class BatailleCorseLifecycleBroadcasterTest {
     }
 
     private final RecordingMessaging messaging = new RecordingMessaging();
-    private final ForfeitReasonRegistry reasons = new ForfeitReasonRegistry();
+    private final ForfeitLog reasons = new InMemoryForfeitLog();
     private final BatailleCorseLifecycleBroadcaster broadcaster =
             new BatailleCorseLifecycleBroadcaster(messaging, reasons);
 

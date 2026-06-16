@@ -8,6 +8,7 @@ import org.kevinkib.cardgames.sessionmanagement.application.SessionService;
 import org.kevinkib.cardgames.sessionmanagement.presence.domain.ForfeitReason;
 import org.kevinkib.cardgames.sessionmanagement.presence.domain.Seat;
 import org.kevinkib.cardgames.sessionmanagement.presence.port.ConnectionRegistry;
+import org.kevinkib.cardgames.sessionmanagement.presence.port.ForfeitLog;
 import org.springframework.scheduling.TaskScheduler;
 
 import java.time.Clock;
@@ -33,7 +34,7 @@ public class DisconnectForfeitService {
     private final ConnectionRegistry registry;
     private final TaskScheduler scheduler;
     private final Clock clock;
-    private final ForfeitReasonRegistry forfeitReasonRegistry;
+    private final ForfeitLog forfeitLog;
     private final GameLifecycleBroadcasters broadcasters;
 
     private final Map<Seat, ScheduledFuture<?>> pendingForfeits = new ConcurrentHashMap<>();
@@ -42,13 +43,13 @@ public class DisconnectForfeitService {
                                     ConnectionRegistry registry,
                                     TaskScheduler scheduler,
                                     Clock clock,
-                                    ForfeitReasonRegistry forfeitReasonRegistry,
+                                    ForfeitLog forfeitLog,
                                     GameLifecycleBroadcasters broadcasters) {
         this.sessionService = sessionService;
         this.registry = registry;
         this.scheduler = scheduler;
         this.clock = clock;
-        this.forfeitReasonRegistry = forfeitReasonRegistry;
+        this.forfeitLog = forfeitLog;
         this.broadcasters = broadcasters;
     }
 
@@ -95,7 +96,7 @@ public class DisconnectForfeitService {
             return;
         }
         game.forfeit(seat.playerId());
-        forfeitReasonRegistry.record(seat, reason);
+        forfeitLog.record(seat, reason);
         sessionService.touch(seat.gameId()); // start the finished-grace clock
         broadcasters.broadcasterFor(game).forfeited(game, seat, reason);
     }

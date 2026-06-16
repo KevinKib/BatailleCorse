@@ -1,27 +1,24 @@
-package org.kevinkib.cardgames.presentation;
+package org.kevinkib.cardgames.sessionmanagement.presence.infrastructure;
 
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.sessionmanagement.presence.domain.ForfeitReason;
 import org.kevinkib.cardgames.sessionmanagement.presence.domain.Seat;
+import org.kevinkib.cardgames.sessionmanagement.presence.port.ForfeitLog;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Session-owned record of which seat forfeited a game and why. Reused across
- * games (and, in future, other game types) so the reason can be merged into
- * game state. Cleared per game on eviction, mirroring ConnectionRegistry.
- */
-public class ForfeitReasonRegistry {
+public class InMemoryForfeitLog implements ForfeitLog {
 
     private final Map<Seat, ForfeitReason> reasonBySeat = new ConcurrentHashMap<>();
 
+    @Override
     public void record(Seat seat, ForfeitReason reason) {
         reasonBySeat.put(seat, reason);
     }
 
-    /** Seat-index -> reason for the given game (empty if no seat forfeited). */
+    @Override
     public Map<Integer, ForfeitReason> reasonsBySeat(GameId gameId) {
         Map<Integer, ForfeitReason> result = new HashMap<>();
         reasonBySeat.forEach((seat, reason) -> {
@@ -32,6 +29,7 @@ public class ForfeitReasonRegistry {
         return result;
     }
 
+    @Override
     public void removeGame(GameId gameId) {
         reasonBySeat.keySet().removeIf(seat -> seat.gameId().equals(gameId));
     }

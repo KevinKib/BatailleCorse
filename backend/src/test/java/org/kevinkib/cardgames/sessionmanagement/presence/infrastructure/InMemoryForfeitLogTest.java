@@ -1,19 +1,20 @@
-package org.kevinkib.cardgames.presentation;
+package org.kevinkib.cardgames.sessionmanagement.presence.infrastructure;
 
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.presence.domain.ForfeitReason;
 import org.kevinkib.cardgames.sessionmanagement.presence.domain.Seat;
+import org.kevinkib.cardgames.sessionmanagement.presence.port.ForfeitLog;
 
 import java.util.Map;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
-class ForfeitReasonRegistryTest {
+class InMemoryForfeitLogTest {
 
-    private final ForfeitReasonRegistry registry = new ForfeitReasonRegistry();
+    private final ForfeitLog registry = new InMemoryForfeitLog();
 
     @Test
     void givenReasonRecorded_thenReasonsBySeatContainsItKeyedBySeatIndex() {

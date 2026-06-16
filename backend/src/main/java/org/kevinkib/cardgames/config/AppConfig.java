@@ -12,7 +12,8 @@ import org.kevinkib.cardgames.bullshit.presentation.BullshitLifecycleBroadcaster
 import org.kevinkib.cardgames.bullshit.presentation.BullshitStateBroadcaster;
 import org.kevinkib.cardgames.presentation.DisconnectForfeitService;
 import org.kevinkib.cardgames.presentation.SeatSubscriptionInterceptor;
-import org.kevinkib.cardgames.presentation.ForfeitReasonRegistry;
+import org.kevinkib.cardgames.sessionmanagement.presence.port.ForfeitLog;
+import org.kevinkib.cardgames.sessionmanagement.presence.infrastructure.InMemoryForfeitLog;
 import org.kevinkib.cardgames.presentation.GameLifecycleBroadcaster;
 import org.kevinkib.cardgames.presentation.GameLifecycleBroadcasters;
 import org.kevinkib.cardgames.presentation.GameMessagingService;
@@ -80,8 +81,8 @@ public class AppConfig {
     }
 
     @Bean
-    public ForfeitReasonRegistry forfeitReasonRegistry() {
-        return new ForfeitReasonRegistry();
+    public ForfeitLog forfeitLog() {
+        return new InMemoryForfeitLog();
     }
 
     @Bean
@@ -91,7 +92,7 @@ public class AppConfig {
 
     @Bean
     public GameLifecycleBroadcaster batailleCorseLifecycleBroadcaster(GameMessagingService gameMessagingService) {
-        return new BatailleCorseLifecycleBroadcaster(gameMessagingService, forfeitReasonRegistry());
+        return new BatailleCorseLifecycleBroadcaster(gameMessagingService, forfeitLog());
     }
 
     @Bean
@@ -122,7 +123,7 @@ public class AppConfig {
     @Bean
     public DisconnectForfeitService disconnectForfeitService(GameLifecycleBroadcasters gameLifecycleBroadcasters) {
         return new DisconnectForfeitService(
-                sessionService(), connectionRegistry(), taskScheduler(), clock(), forfeitReasonRegistry(),
+                sessionService(), connectionRegistry(), taskScheduler(), clock(), forfeitLog(),
                 gameLifecycleBroadcasters);
     }
 
@@ -133,6 +134,6 @@ public class AppConfig {
 
     @Bean
     public GameCleanupService gameCleanupService() {
-        return new GameCleanupService(sessionRepository(), connectionRegistry(), forfeitReasonRegistry());
+        return new GameCleanupService(sessionRepository(), connectionRegistry(), forfeitLog());
     }
 }

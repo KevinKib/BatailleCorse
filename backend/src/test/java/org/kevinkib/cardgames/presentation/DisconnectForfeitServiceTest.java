@@ -13,7 +13,9 @@ import org.kevinkib.cardgames.presentation.api.Response;
 import org.kevinkib.cardgames.sessionmanagement.presence.domain.ForfeitReason;
 import org.kevinkib.cardgames.sessionmanagement.presence.domain.Seat;
 import org.kevinkib.cardgames.sessionmanagement.presence.infrastructure.InMemoryConnectionRegistry;
+import org.kevinkib.cardgames.sessionmanagement.presence.infrastructure.InMemoryForfeitLog;
 import org.kevinkib.cardgames.sessionmanagement.presence.port.ConnectionRegistry;
+import org.kevinkib.cardgames.sessionmanagement.presence.port.ForfeitLog;
 import org.kevinkib.cardgames.presentation.api.SuccessResponse;
 import org.kevinkib.cardgames.bataillecorse.presentation.dto.BatailleCorseDto;
 import org.kevinkib.cardgames.bataillecorse.presentation.dto.PlayerDto;
@@ -74,7 +76,7 @@ class DisconnectForfeitServiceTest {
     private CapturingScheduler scheduler;
     private RecordingMessaging messaging;
     private ConnectionRegistry registry;
-    private ForfeitReasonRegistry forfeitReasonRegistry;
+    private ForfeitLog forfeitLog;
     private DisconnectForfeitService service;
     private GameId gameId;
 
@@ -85,10 +87,10 @@ class DisconnectForfeitServiceTest {
         scheduler = new CapturingScheduler();
         messaging = new RecordingMessaging();
         registry = new InMemoryConnectionRegistry();
-        forfeitReasonRegistry = new ForfeitReasonRegistry();
-        var broadcaster = new BatailleCorseLifecycleBroadcaster(messaging, forfeitReasonRegistry);
+        forfeitLog = new InMemoryForfeitLog();
+        var broadcaster = new BatailleCorseLifecycleBroadcaster(messaging, forfeitLog);
         var broadcasters = new GameLifecycleBroadcasters(List.of(broadcaster));
-        service = new DisconnectForfeitService(sessionService, registry, scheduler, clock, forfeitReasonRegistry, broadcasters);
+        service = new DisconnectForfeitService(sessionService, registry, scheduler, clock, forfeitLog, broadcasters);
 
         BatailleCorse game = (BatailleCorse) sessionService.createGame("bataille-corse", 2, GameMode.MULTIPLAYER);
         gameId = game.getId();
