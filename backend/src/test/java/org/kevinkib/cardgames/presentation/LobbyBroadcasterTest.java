@@ -35,8 +35,8 @@ class LobbyBroadcasterTest {
                 GameId.generate(),
                 List.of(new PlayerId(0), new PlayerId(1), new PlayerId(2)),
                 "bullshit");
-        lobby.claim(new PlayerId(0), "Host");
-        lobby.claim(new PlayerId(1), "Bob");
+        lobby.claimSeat(new PlayerId(0), "Host");
+        lobby.claimSeat(new PlayerId(1), "Bob");
 
         RecordingMessaging messaging = new RecordingMessaging();
         LobbyBroadcaster broadcaster = new LobbyBroadcaster(

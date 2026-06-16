@@ -19,22 +19,18 @@ public record LobbyDto(
     public record LobbyPlayerDto(int seat, String name, boolean joined) {
     }
 
-    private static final int HOST_SEAT = 0;
-
     public static LobbyDto forViewer(SessionGame lobby, int minPlayers, int maxPlayers, PlayerId viewer) {
         List<LobbyPlayerDto> players = lobby.seats().stream()
                 .map(seat -> new LobbyPlayerDto(seat.id().id(), seat.name(), seat.isClaimed()))
                 .toList();
 
-        long claimed = lobby.seats().stream().filter(seat -> seat.isClaimed()).count();
-        boolean viewerIsHost = viewer.id() == HOST_SEAT;
-        boolean canStart = viewerIsHost && claimed >= minPlayers;
+        boolean canStart = lobby.isHost(viewer) && lobby.claimedCount() >= minPlayers;
 
         return new LobbyDto(
                 false,
                 lobby.id().uuid().toString(),
                 players,
-                HOST_SEAT,
+                SessionGame.HOST_SEAT.id(),
                 viewer.id(),
                 minPlayers,
                 maxPlayers,

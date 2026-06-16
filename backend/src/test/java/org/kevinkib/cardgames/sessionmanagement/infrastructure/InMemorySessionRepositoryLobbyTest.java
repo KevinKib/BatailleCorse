@@ -20,7 +20,7 @@ class InMemorySessionRepositoryLobbyTest {
 
     private SessionGame lobbyOf(GameId id) {
         SessionGame lobby = SessionGame.create(id, List.of(new PlayerId(0), new PlayerId(1)), "fake");
-        lobby.claim(new PlayerId(0), "Host");
+        lobby.claimSeat(new PlayerId(0), "Host");
         return lobby;
     }
 

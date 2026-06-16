@@ -8,8 +8,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.IntStream;
 
 public record SessionGame(GameId id, String gameType, Map<PlayerId, SessionPlayer> players) {
+
+    public static final PlayerId HOST_SEAT = new PlayerId(0);
 
     public static SessionGame create(GameId id, List<PlayerId> playerIds, String gameType) {
         Map<PlayerId, SessionPlayer> seats = new LinkedHashMap<>();
@@ -19,12 +22,32 @@ public record SessionGame(GameId id, String gameType, Map<PlayerId, SessionPlaye
         return new SessionGame(id, gameType, seats);
     }
 
-    public void claim(PlayerId playerId, String name) {
+    /** Creates a session with {@code seatCount} seats numbered 0..seatCount-1. */
+    public static SessionGame create(GameId id, int seatCount, String gameType) {
+        return create(id, IntStream.range(0, seatCount).mapToObj(PlayerId::new).toList(), gameType);
+    }
+
+    /** Claims a specific seat and returns it; fails if the seat is unknown or already taken. */
+    public SessionPlayer claimSeat(PlayerId playerId, String name) {
         SessionPlayer seat = players.get(playerId);
         if (seat == null) {
             throw new IllegalArgumentException("Unknown seat " + playerId.id());
         }
+        if (seat.isClaimed()) {
+            throw new SeatUnavailableException(playerId);
+        }
         seat.claim(name);
+        return seat;
+    }
+
+    /** Claims the host seat (seat 0) and returns it. */
+    public SessionPlayer claimHost(String name) {
+        return claimSeat(HOST_SEAT, name);
+    }
+
+    /** Claims every seat (used when a single owner controls all players, e.g. solo mode). */
+    public void claimAllSeats() {
+        players.values().forEach(seat -> seat.claim(null));
     }
 
     /** Claims the lowest-numbered free seat and returns it; the room is full if none remain. */
@@ -37,9 +60,21 @@ public record SessionGame(GameId id, String gameType, Map<PlayerId, SessionPlaye
         return free;
     }
 
+    public boolean isHost(PlayerId playerId) {
+        return HOST_SEAT.equals(playerId);
+    }
+
     public boolean isClaimed(PlayerId playerId) {
         SessionPlayer seat = players.get(playerId);
         return seat != null && seat.isClaimed();
+    }
+
+    public int claimedCount() {
+        return (int) players.values().stream().filter(SessionPlayer::isClaimed).count();
+    }
+
+    public int seatCount() {
+        return players.size();
     }
 
     public void requestRematch(PlayerId playerId) {

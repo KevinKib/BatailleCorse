@@ -19,7 +19,7 @@ class LobbyDtoTest {
         }
         SessionGame lobby = SessionGame.create(GameId.generate(), seats, "bullshit");
         for (int i = 0; i < claimedSeats; i++) {
-            lobby.claim(new PlayerId(i), "P" + i);
+            lobby.claimSeat(new PlayerId(i), "P" + i);
         }
         return lobby;
     }

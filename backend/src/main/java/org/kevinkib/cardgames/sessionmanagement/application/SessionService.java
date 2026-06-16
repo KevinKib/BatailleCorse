@@ -11,11 +11,9 @@ import org.kevinkib.cardgames.sessionmanagement.domain.SessionToken;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.IntStream;
 
 public class SessionService {
 
-    private static final PlayerId HOST_SEAT = new PlayerId(0);
     private static final PlayerId JOINER_SEAT = new PlayerId(1);
 
     private final SessionRepository repository;
@@ -41,11 +39,9 @@ public class SessionService {
         SessionGame sessionGame = SessionGame.create(id, game.getPlayerIds(), gameType);
 
         if (mode == GameMode.SOLO) {
-            for (PlayerId playerId : game.getPlayerIds()) {
-                sessionGame.claim(playerId, null);
-            }
+            sessionGame.claimAllSeats();
         } else {
-            sessionGame.claim(HOST_SEAT, creatorName);
+            sessionGame.claimHost(creatorName);
         }
 
         repository.save(game, sessionGame);
@@ -59,16 +55,8 @@ public class SessionService {
 
     public JoinResult joinGame(GameId gameId, String name) {
         SessionGame sessionGame = repository.loadSessionGame(gameId);
-
-        if (sessionGame.isClaimed(JOINER_SEAT)) {
-            throw new SeatUnavailableException(JOINER_SEAT);
-        }
-
-        sessionGame.claim(JOINER_SEAT, name);
-        SessionToken token = sessionGame.findTokenByPlayer(JOINER_SEAT)
-                .orElseThrow(() -> new IllegalStateException("Seat " + JOINER_SEAT.id() + " has no token"));
-
-        return new JoinResult(JOINER_SEAT, token);
+        SessionPlayer claimed = sessionGame.claimSeat(JOINER_SEAT, name);
+        return new JoinResult(claimed.id(), claimed.token());
     }
 
     public JoinResult joinRoom(GameId id, String name) {
@@ -82,10 +70,8 @@ public class SessionService {
 
     public SessionGame createRoom(String gameType, String hostName) {
         GameId id = GameId.generate();
-        int max = gameFactories.maxPlayers(gameType);
-        List<PlayerId> seats = IntStream.range(0, max).mapToObj(PlayerId::new).toList();
-        SessionGame lobby = SessionGame.create(id, seats, gameType);
-        lobby.claim(HOST_SEAT, hostName);
+        SessionGame lobby = SessionGame.create(id, gameFactories.maxPlayers(gameType), gameType);
+        lobby.claimHost(hostName);
         repository.saveLobby(lobby);
         return lobby;
     }
@@ -97,10 +83,10 @@ public class SessionService {
         SessionGame lobby = repository.loadSessionGame(id);
         PlayerId actor = lobby.findPlayerByToken(hostToken)
                 .orElseThrow(() -> new NotHostException(id));
-        if (!actor.equals(HOST_SEAT)) {
+        if (!lobby.isHost(actor)) {
             throw new NotHostException(id);
         }
-        int claimed = (int) lobby.seats().stream().filter(SessionPlayer::isClaimed).count();
+        int claimed = lobby.claimedCount();
         int min = gameFactories.minPlayers(lobby.gameType());
         if (claimed < min) {
             throw new NotEnoughPlayersException(id, claimed, min);
@@ -128,7 +114,7 @@ public class SessionService {
 
     public Game rematch(GameId id) {
         SessionGame session = repository.loadSessionGame(id);
-        Game fresh = gameFactories.factoryFor(session.gameType()).create(id, session.seats().size());
+        Game fresh = gameFactories.factoryFor(session.gameType()).create(id, session.seatCount());
         session.clearRematch();
         repository.save(fresh, session);
         return fresh;
