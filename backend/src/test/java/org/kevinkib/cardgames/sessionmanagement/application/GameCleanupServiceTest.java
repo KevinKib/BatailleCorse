@@ -11,6 +11,7 @@ import org.kevinkib.cardgames.presentation.StompSessionSeatRegistry;
 import java.time.Duration;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
@@ -28,6 +29,8 @@ class GameCleanupServiceTest {
         public SessionGame loadSessionGame(GameId id) { return null; }
         public void touch(GameId id) {}
         public void remove(GameId id) {}
+        public void saveLobby(SessionGame s) {}
+        public Optional<Game> findGame(GameId id) { return Optional.empty(); }
         public List<GameId> evictStale(Duration finishedGrace, Duration idleTtl) {
             this.lastFinishedGrace = finishedGrace;
             this.lastIdleTtl = idleTtl;
