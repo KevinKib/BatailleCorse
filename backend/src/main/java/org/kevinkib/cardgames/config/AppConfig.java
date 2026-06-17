@@ -3,6 +3,7 @@ package org.kevinkib.cardgames.config;
 import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseFactory;
 import org.kevinkib.cardgames.bullshit.domain.BullshitFactory;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameCleanupService;
+import org.kevinkib.cardgames.sessionmanagement.core.application.GameEvictionListener;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameFactories;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameDirectory;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
@@ -11,6 +12,7 @@ import org.kevinkib.cardgames.sessionmanagement.core.infrastructure.InMemorySess
 import org.kevinkib.cardgames.bataillecorse.presentation.BatailleCorseLifecycleBroadcaster;
 import org.kevinkib.cardgames.bullshit.presentation.BullshitLifecycleBroadcaster;
 import org.kevinkib.cardgames.bullshit.presentation.BullshitStateBroadcaster;
+import org.kevinkib.cardgames.sessionmanagement.presence.application.PresenceEvictionCleanup;
 import org.kevinkib.cardgames.sessionmanagement.presence.application.PresenceService;
 import org.kevinkib.cardgames.presentation.SeatSubscriptionInterceptor;
 import org.kevinkib.cardgames.sessionmanagement.presence.port.ForfeitLog;
@@ -146,7 +148,12 @@ public class AppConfig {
     }
 
     @Bean
-    public GameCleanupService gameCleanupService() {
-        return new GameCleanupService(sessionRepository(), connectionRegistry(), forfeitLog());
+    public GameEvictionListener presenceEvictionCleanup() {
+        return new PresenceEvictionCleanup(connectionRegistry(), forfeitLog());
+    }
+
+    @Bean
+    public GameCleanupService gameCleanupService(List<GameEvictionListener> evictionListeners) {
+        return new GameCleanupService(sessionRepository(), evictionListeners);
     }
 }
