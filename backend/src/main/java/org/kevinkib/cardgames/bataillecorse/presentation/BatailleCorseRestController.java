@@ -8,7 +8,7 @@ import org.kevinkib.cardgames.bataillecorse.domain.Player;
 import org.kevinkib.cardgames.sessionmanagement.core.application.InvalidGameIdException;
 import org.kevinkib.cardgames.sessionmanagement.core.application.JoinResult;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
-import org.kevinkib.cardgames.sessionmanagement.core.domain.SeatUnavailableException;
+import org.kevinkib.cardgames.sessionmanagement.core.application.SeatUnavailableException;
 import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionPlayer;
 import org.kevinkib.cardgames.presentation.api.JoinGamePayload;
 import org.kevinkib.cardgames.presentation.api.Response;

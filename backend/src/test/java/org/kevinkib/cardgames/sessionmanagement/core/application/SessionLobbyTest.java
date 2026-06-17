@@ -4,7 +4,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.bullshit.domain.BullshitFactory;
 import org.kevinkib.cardgames.game.PlayerId;
-import org.kevinkib.cardgames.sessionmanagement.core.domain.RoomFullException;
 import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionGame;
 import org.kevinkib.cardgames.sessionmanagement.core.infrastructure.InMemorySessionRepository;
 

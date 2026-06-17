@@ -5,6 +5,8 @@ import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.core.application.port.SessionRepository;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameMode;
+import org.kevinkib.cardgames.sessionmanagement.core.domain.NoFreeSeatException;
+import org.kevinkib.cardgames.sessionmanagement.core.domain.SeatTakenException;
 import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionGame;
 import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionPlayer;
 import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionToken;
@@ -55,8 +57,12 @@ public class SessionService implements GameDirectory {
 
     public JoinResult joinGame(GameId gameId, String name) {
         SessionGame sessionGame = repository.loadSessionGame(gameId);
-        SessionPlayer claimed = sessionGame.claimSeat(JOINER_SEAT, name);
-        return new JoinResult(claimed.id(), claimed.token().uuid().toString());
+        try {
+            SessionPlayer claimed = sessionGame.claimSeat(JOINER_SEAT, name);
+            return new JoinResult(claimed.id(), claimed.token().uuid().toString());
+        } catch (SeatTakenException e) {
+            throw new SeatUnavailableException(JOINER_SEAT);
+        }
     }
 
     public JoinResult joinRoom(GameId id, String name) {
@@ -64,8 +70,12 @@ public class SessionService implements GameDirectory {
             throw new GameAlreadyStartedException(id);
         }
         SessionGame lobby = repository.loadSessionGame(id);
-        SessionPlayer claimed = lobby.claimNextFreeSeat(name);
-        return new JoinResult(claimed.id(), claimed.token().uuid().toString());
+        try {
+            SessionPlayer claimed = lobby.claimNextFreeSeat(name);
+            return new JoinResult(claimed.id(), claimed.token().uuid().toString());
+        } catch (NoFreeSeatException e) {
+            throw new RoomFullException(id);
+        }
     }
 
     public SessionGame createRoom(String gameType, String hostName) {

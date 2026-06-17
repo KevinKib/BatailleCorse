@@ -34,7 +34,7 @@ public record SessionGame(GameId id, String gameType, Map<PlayerId, SessionPlaye
             throw new IllegalArgumentException("Unknown seat " + playerId.id());
         }
         if (seat.isClaimed()) {
-            throw new SeatUnavailableException(playerId);
+            throw new SeatTakenException(playerId);
         }
         seat.claim(name);
         return seat;
@@ -55,7 +55,7 @@ public record SessionGame(GameId id, String gameType, Map<PlayerId, SessionPlaye
         SessionPlayer free = players.values().stream()
                 .filter(seat -> !seat.isClaimed())
                 .min(Comparator.comparingInt(seat -> seat.id().id()))
-                .orElseThrow(() -> new RoomFullException(id));
+                .orElseThrow(() -> new NoFreeSeatException(id));
         free.claim(name);
         return free;
     }
