@@ -11,8 +11,7 @@ import org.kevinkib.cardgames.bataillecorse.domain.Player;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.core.application.InvalidTokenException;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
-import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionToken;
-import org.kevinkib.cardgames.sessionmanagement.core.domain.GameMode;
+import org.kevinkib.cardgames.sessionmanagement.core.application.GameMode;
 import org.kevinkib.cardgames.presentation.api.CreateGamePayload;
 import org.kevinkib.cardgames.presentation.api.ErrorResponse;
 import org.kevinkib.cardgames.presentation.api.GameActionPayload;
@@ -53,8 +52,7 @@ public class BatailleCorseWebSocketController {
         int seatsToReturn = (mode == GameMode.SOLO) ? NB_PLAYERS : 1;
         Map<Integer, String> tokens = new HashMap<>();
         for (int i = 0; i < seatsToReturn; i++) {
-            SessionToken token = sessionService.loadTokenByPlayerId(batailleCorse.getId(), new PlayerId(i));
-            tokens.put(i, token.uuid().toString());
+            tokens.put(i, sessionService.tokenForSeat(batailleCorse.getId(), new PlayerId(i)));
         }
 
         return new SuccessResponse(
@@ -74,7 +72,7 @@ public class BatailleCorseWebSocketController {
         Response response;
         try {
             PlayerId playerId = sessionService
-                    .findPlayerIdByToken(gameId, new SessionToken(payload.token()))
+                    .findPlayerIdByToken(gameId, payload.token())
                     .orElseThrow(InvalidTokenException::new);
             Player player = batailleCorse.getPlayerByIndex(playerId.id());
 
@@ -106,7 +104,7 @@ public class BatailleCorseWebSocketController {
         Response response;
         try {
             PlayerId playerId = sessionService
-                    .findPlayerIdByToken(gameId, new SessionToken(payload.token()))
+                    .findPlayerIdByToken(gameId, payload.token())
                     .orElseThrow(InvalidTokenException::new);
             Player player = batailleCorse.getPlayerByIndex(playerId.id());
 
@@ -139,7 +137,7 @@ public class BatailleCorseWebSocketController {
         Response response;
         try {
             PlayerId playerId = sessionService
-                    .findPlayerIdByToken(gameId, new SessionToken(payload.token()))
+                    .findPlayerIdByToken(gameId, payload.token())
                     .orElseThrow(InvalidTokenException::new);
             Player player = batailleCorse.getPlayerByIndex(playerId.id());
 
@@ -165,13 +163,13 @@ public class BatailleCorseWebSocketController {
         GameId gameId = new GameId(payload.gameId());
         try {
             PlayerId playerId = sessionService
-                    .findPlayerIdByToken(gameId, new SessionToken(payload.token()))
+                    .findPlayerIdByToken(gameId, payload.token())
                     .orElseThrow(InvalidTokenException::new);
 
-            sessionService.getGameSession(gameId).requestRematch(playerId);
+            boolean unanimous = sessionService.requestRematch(gameId, playerId);
 
             Response response;
-            if (sessionService.getGameSession(gameId).isRematchUnanimous()) {
+            if (unanimous) {
                 BatailleCorse fresh = (BatailleCorse) sessionService.rematch(gameId);
                 response = new SuccessResponse(
                         LifecycleEventType.REMATCH.toString(),

@@ -77,7 +77,7 @@ class SessionGameTest {
             sessionGame.claimSeat(new PlayerId(1), "Bob");
 
             org.junit.jupiter.api.Assertions.assertThrows(
-                    RoomFullException.class, () -> sessionGame.claimNextFreeSeat("Late"));
+                    NoFreeSeatException.class, () -> sessionGame.claimNextFreeSeat("Late"));
         }
 
         @Test
@@ -118,7 +118,7 @@ class SessionGameTest {
             sessionGame.claimSeat(new PlayerId(1), "Bob");
 
             org.junit.jupiter.api.Assertions.assertThrows(
-                    SeatUnavailableException.class, () -> sessionGame.claimSeat(new PlayerId(1), "Carol"));
+                    SeatTakenException.class, () -> sessionGame.claimSeat(new PlayerId(1), "Carol"));
         }
 
         @Test

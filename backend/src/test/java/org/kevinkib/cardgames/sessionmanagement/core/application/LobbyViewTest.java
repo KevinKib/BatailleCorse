@@ -1,4 +1,4 @@
-package org.kevinkib.cardgames.presentation.dto;
+package org.kevinkib.cardgames.sessionmanagement.core.application;
 
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.game.GameId;
@@ -10,7 +10,7 @@ import java.util.List;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
-class LobbyDtoTest {
+class LobbyViewTest {
 
     private SessionGame lobbyWith(int claimedSeats, int maxSeats) {
         List<PlayerId> seats = new java.util.ArrayList<>();
@@ -28,7 +28,7 @@ class LobbyDtoTest {
     void givenHostViewerAtMin_whenForViewer_thenCanStartTrueAndNotStarted() {
         SessionGame lobby = lobbyWith(2, 6);
 
-        LobbyDto dto = LobbyDto.forViewer(lobby, 2, 6, new PlayerId(0));
+        LobbyView dto = LobbyView.forViewer(lobby, 2, 6, new PlayerId(0));
 
         assertThat(dto.started(), is(false));
         assertThat(dto.hostSeat(), is(0));
@@ -45,7 +45,7 @@ class LobbyDtoTest {
     void givenNonHostViewer_whenForViewer_thenCanStartFalse() {
         SessionGame lobby = lobbyWith(2, 6);
 
-        LobbyDto dto = LobbyDto.forViewer(lobby, 2, 6, new PlayerId(1));
+        LobbyView dto = LobbyView.forViewer(lobby, 2, 6, new PlayerId(1));
 
         assertThat(dto.mySeat(), is(1));
         assertThat(dto.canStart(), is(false));
@@ -55,7 +55,7 @@ class LobbyDtoTest {
     void givenHostBelowMin_whenForViewer_thenCanStartFalse() {
         SessionGame lobby = lobbyWith(1, 6);
 
-        LobbyDto dto = LobbyDto.forViewer(lobby, 2, 6, new PlayerId(0));
+        LobbyView dto = LobbyView.forViewer(lobby, 2, 6, new PlayerId(0));
 
         assertThat(dto.canStart(), is(false));
     }

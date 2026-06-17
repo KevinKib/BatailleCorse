@@ -2,7 +2,6 @@ package org.kevinkib.cardgames.presentation;
 
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
-import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionToken;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompCommand;
@@ -48,7 +47,7 @@ public class SeatSubscriptionInterceptor implements ChannelInterceptor {
         try {
             GameId gameId = new GameId(matcher.group(1));
             int seatId = Integer.parseInt(matcher.group(2));
-            return sessionService.findPlayerIdByToken(gameId, new SessionToken(token))
+            return sessionService.findPlayerIdByToken(gameId, token)
                     .filter(seat -> seat.id() == seatId)
                     .map(seat -> message)
                     .orElse(null);

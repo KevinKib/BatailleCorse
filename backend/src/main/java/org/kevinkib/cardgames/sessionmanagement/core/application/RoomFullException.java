@@ -1,4 +1,4 @@
-package org.kevinkib.cardgames.sessionmanagement.core.domain;
+package org.kevinkib.cardgames.sessionmanagement.core.application;
 
 import org.kevinkib.cardgames.game.GameId;
 

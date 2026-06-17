@@ -4,7 +4,6 @@ import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.core.application.InvalidTokenException;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
-import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionToken;
 import org.kevinkib.cardgames.sessionmanagement.presence.application.PresenceService;
 import org.kevinkib.cardgames.sessionmanagement.presence.domain.ForfeitReason;
 import org.kevinkib.cardgames.sessionmanagement.presence.domain.Seat;
@@ -32,7 +31,7 @@ public class LifecycleController {
         GameId gameId = new GameId(payload.gameId());
         try {
             PlayerId playerId = sessionService
-                    .findPlayerIdByToken(gameId, new SessionToken(payload.token()))
+                    .findPlayerIdByToken(gameId, payload.token())
                     .orElseThrow(InvalidTokenException::new);
             presenceService.onPresence(headers.getSessionId(), gameId, playerId);
         } catch (Exception e) {
@@ -45,7 +44,7 @@ public class LifecycleController {
         GameId gameId = new GameId(payload.gameId());
         try {
             PlayerId playerId = sessionService
-                    .findPlayerIdByToken(gameId, new SessionToken(payload.token()))
+                    .findPlayerIdByToken(gameId, payload.token())
                     .orElseThrow(InvalidTokenException::new);
             presenceService.forfeit(new Seat(gameId, playerId), ForfeitReason.RESIGNED);
         } catch (Exception e) {

@@ -9,15 +9,12 @@ import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.presentation.LobbyBroadcaster;
 import org.kevinkib.cardgames.presentation.api.JoinGamePayload;
 import org.kevinkib.cardgames.presentation.dto.JoinResponseDto;
-import org.kevinkib.cardgames.presentation.dto.LobbyDto;
 import org.kevinkib.cardgames.presentation.dto.event.EmptyEventData;
 import org.kevinkib.cardgames.presentation.dto.event.LifecycleEventType;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameAlreadyStartedException;
 import org.kevinkib.cardgames.sessionmanagement.core.application.JoinResult;
+import org.kevinkib.cardgames.sessionmanagement.core.application.RoomFullException;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
-import org.kevinkib.cardgames.sessionmanagement.core.domain.RoomFullException;
-import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionGame;
-import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionToken;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -53,17 +50,17 @@ public class BullshitRestController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         GameId gameId;
-        SessionGame session;
+        String type;
         try {
             gameId = new GameId(id);
-            session = sessionService.getGameSession(gameId);
+            type = sessionService.gameType(gameId);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
         }
-        if (!BullshitFactory.GAME_TYPE.equals(session.gameType())) {
+        if (!BullshitFactory.GAME_TYPE.equals(type)) {
             return ResponseEntity.notFound().build();
         }
-        PlayerId seat = sessionService.findPlayerIdByToken(gameId, new SessionToken(token)).orElse(null);
+        PlayerId seat = sessionService.findPlayerIdByToken(gameId, token).orElse(null);
         if (seat == null) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
@@ -72,23 +69,21 @@ public class BullshitRestController {
         if (game.isPresent()) {
             return ResponseEntity.ok(BullshitDto.forViewer((Bullshit) game.get(), seat));
         }
-        int min = sessionService.minPlayers(session.gameType());
-        int max = sessionService.maxPlayers(session.gameType());
-        return ResponseEntity.ok(LobbyDto.forViewer(session, min, max, seat));
+        return ResponseEntity.ok(sessionService.lobbyView(gameId, token));
     }
 
     @PostMapping("/game/{id}/join")
     public ResponseEntity<JoinResponseDto> joinGame(@PathVariable String id,
                                                     @RequestBody(required = false) JoinGamePayload payload) {
         GameId gameId;
-        SessionGame session;
+        String type;
         try {
             gameId = new GameId(id);
-            session = sessionService.getGameSession(gameId);
+            type = sessionService.gameType(gameId);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
         }
-        if (!BullshitFactory.GAME_TYPE.equals(session.gameType())) {
+        if (!BullshitFactory.GAME_TYPE.equals(type)) {
             return ResponseEntity.notFound().build();
         }
         try {
@@ -96,12 +91,11 @@ public class BullshitRestController {
             JoinResult result = sessionService.joinRoom(gameId, name);
             sessionService.touch(gameId);
 
-            SessionGame updated = sessionService.getGameSession(gameId);
-            lobbyBroadcaster.broadcast(updated, LifecycleEventType.JOIN.toString(), new EmptyEventData(),
+            lobbyBroadcaster.broadcast(gameId, LifecycleEventType.JOIN.toString(), new EmptyEventData(),
                     "Player " + (result.playerId().id() + 1) + " joined.");
 
             return ResponseEntity.ok(new JoinResponseDto(
-                    result.playerId().id(), result.token().uuid().toString()));
+                    result.playerId().id(), result.token()));
         } catch (GameAlreadyStartedException | RoomFullException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }

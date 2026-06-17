@@ -4,7 +4,9 @@ import org.kevinkib.cardgames.game.Game;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.core.application.port.SessionRepository;
-import org.kevinkib.cardgames.sessionmanagement.core.domain.GameMode;
+import org.kevinkib.cardgames.sessionmanagement.core.application.GameMode;
+import org.kevinkib.cardgames.sessionmanagement.core.domain.NoFreeSeatException;
+import org.kevinkib.cardgames.sessionmanagement.core.domain.SeatTakenException;
 import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionGame;
 import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionPlayer;
 import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionToken;
@@ -55,8 +57,12 @@ public class SessionService implements GameDirectory {
 
     public JoinResult joinGame(GameId gameId, String name) {
         SessionGame sessionGame = repository.loadSessionGame(gameId);
-        SessionPlayer claimed = sessionGame.claimSeat(JOINER_SEAT, name);
-        return new JoinResult(claimed.id(), claimed.token());
+        try {
+            SessionPlayer claimed = sessionGame.claimSeat(JOINER_SEAT, name);
+            return new JoinResult(claimed.id(), claimed.token().uuid().toString());
+        } catch (SeatTakenException e) {
+            throw new SeatUnavailableException(JOINER_SEAT);
+        }
     }
 
     public JoinResult joinRoom(GameId id, String name) {
@@ -64,24 +70,34 @@ public class SessionService implements GameDirectory {
             throw new GameAlreadyStartedException(id);
         }
         SessionGame lobby = repository.loadSessionGame(id);
-        SessionPlayer claimed = lobby.claimNextFreeSeat(name);
-        return new JoinResult(claimed.id(), claimed.token());
+        try {
+            SessionPlayer claimed = lobby.claimNextFreeSeat(name);
+            return new JoinResult(claimed.id(), claimed.token().uuid().toString());
+        } catch (NoFreeSeatException e) {
+            throw new RoomFullException(id);
+        }
     }
 
-    public SessionGame createRoom(String gameType, String hostName) {
+    public RoomCreated createRoom(String gameType, String hostName) {
         GameId id = GameId.generate();
         SessionGame lobby = SessionGame.create(id, gameFactories.maxPlayers(gameType), gameType);
         lobby.claimHost(hostName);
         repository.saveLobby(lobby);
-        return lobby;
+        SessionToken hostToken = lobby.findTokenByPlayer(new PlayerId(0))
+                .orElseThrow(() -> new IllegalStateException("Host seat has no token"));
+        return new RoomCreated(id.uuid().toString(), hostToken.uuid().toString());
     }
 
-    public Game startGame(GameId id, SessionToken hostToken) {
+    public String gameType(GameId id) {
+        return repository.loadSessionGame(id).gameType();
+    }
+
+    public Game startGame(GameId id, String hostToken) {
         if (repository.findGame(id).isPresent()) {
             throw new GameAlreadyStartedException(id);
         }
         SessionGame lobby = repository.loadSessionGame(id);
-        PlayerId actor = lobby.findPlayerByToken(hostToken)
+        PlayerId actor = lobby.findPlayerByToken(new SessionToken(hostToken))
                 .orElseThrow(() -> new NotHostException(id));
         if (!lobby.isHost(actor)) {
             throw new NotHostException(id);
@@ -109,8 +125,11 @@ public class SessionService implements GameDirectory {
         return gameFactories.maxPlayers(gameType);
     }
 
-    public SessionGame getGameSession(GameId id) {
-        return repository.loadSessionGame(id);
+    /** Records this seat's rematch request; returns true when all seats have requested. */
+    public boolean requestRematch(GameId id, PlayerId playerId) {
+        SessionGame session = repository.loadSessionGame(id);
+        session.requestRematch(playerId);
+        return session.isRematchUnanimous();
     }
 
     public Game rematch(GameId id) {
@@ -121,8 +140,10 @@ public class SessionService implements GameDirectory {
         return fresh;
     }
 
-    public List<SessionPlayer> getSeats(GameId gameId) {
-        return repository.loadSessionGame(gameId).seats();
+    public List<SeatView> seats(GameId gameId) {
+        return repository.loadSessionGame(gameId).seats().stream()
+                .map(s -> new SeatView(s.id().id(), s.name(), s.isClaimed()))
+                .toList();
     }
 
     public boolean isSeatClaimed(GameId gameId, PlayerId playerId) {
@@ -151,11 +172,28 @@ public class SessionService implements GameDirectory {
         repository.touch(id);
     }
 
-    public SessionToken loadTokenByPlayerId(GameId gameId, PlayerId playerId) {
-        return repository.loadSessionToken(gameId, playerId);
+    public String tokenForSeat(GameId gameId, PlayerId playerId) {
+        return repository.loadSessionToken(gameId, playerId).uuid().toString();
     }
 
-    public Optional<PlayerId> findPlayerIdByToken(GameId gameId, SessionToken token) {
-        return repository.loadSessionGame(gameId).findPlayerByToken(token);
+    public Optional<PlayerId> findPlayerIdByToken(GameId gameId, String token) {
+        return repository.loadSessionGame(gameId).findPlayerByToken(new SessionToken(token));
+    }
+
+    public LobbyView lobbyView(GameId id, String token) {
+        SessionGame lobby = repository.loadSessionGame(id);
+        PlayerId viewer = lobby.findPlayerByToken(new SessionToken(token))
+                .orElseThrow(InvalidTokenException::new);
+        return LobbyView.forViewer(lobby, minPlayers(lobby.gameType()), maxPlayers(lobby.gameType()), viewer);
+    }
+
+    public List<LobbyView> lobbyViews(GameId id) {
+        SessionGame lobby = repository.loadSessionGame(id);
+        int min = minPlayers(lobby.gameType());
+        int max = maxPlayers(lobby.gameType());
+        return lobby.seats().stream()
+                .filter(SessionPlayer::isClaimed)
+                .map(seat -> LobbyView.forViewer(lobby, min, max, seat.id()))
+                .toList();
     }
 }

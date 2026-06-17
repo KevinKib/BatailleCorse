@@ -24,9 +24,8 @@ import org.kevinkib.cardgames.presentation.api.SuccessResponse;
 import org.kevinkib.cardgames.presentation.dto.event.EmptyEventData;
 import org.kevinkib.cardgames.presentation.dto.event.LifecycleEventType;
 import org.kevinkib.cardgames.sessionmanagement.core.application.InvalidTokenException;
+import org.kevinkib.cardgames.sessionmanagement.core.application.RoomCreated;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
-import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionGame;
-import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionToken;
 import org.kevinkib.cards.domain.Card;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -55,14 +54,12 @@ public class BullshitWebSocketController {
     @SendTo("/topic/game")
     public Response createGame(@Payload(required = false) BullshitCreatePayload payload) {
         String name = (payload != null) ? payload.name() : null;
-        SessionGame lobby = sessionService.createRoom(BullshitFactory.GAME_TYPE, name);
-        SessionToken hostToken = lobby.findTokenByPlayer(new PlayerId(0))
-                .orElseThrow(() -> new IllegalStateException("Host seat has no token"));
-        Map<Integer, String> tokens = Map.of(0, hostToken.uuid().toString());
+        RoomCreated room = sessionService.createRoom(BullshitFactory.GAME_TYPE, name);
+        Map<Integer, String> tokens = Map.of(0, room.hostToken());
 
         return new SuccessResponse(
                 LifecycleEventType.CREATE.toString(),
-                new BullshitCreateEventData(lobby.id().uuid().toString(), BullshitFactory.GAME_TYPE, tokens),
+                new BullshitCreateEventData(room.gameId(), BullshitFactory.GAME_TYPE, tokens),
                 "Room created",
                 null);
     }
@@ -70,13 +67,12 @@ public class BullshitWebSocketController {
     @MessageMapping("/bullshit/start")
     public void start(@Payload GameActionPayload payload) {
         GameId gameId = new GameId(payload.gameId());
-        SessionToken token = new SessionToken(payload.token());
-        PlayerId actor = sessionService.findPlayerIdByToken(gameId, token).orElse(null);
+        PlayerId actor = sessionService.findPlayerIdByToken(gameId, payload.token()).orElse(null);
         if (actor == null) {
             return;
         }
         try {
-            Bullshit game = (Bullshit) sessionService.startGame(gameId, token);
+            Bullshit game = (Bullshit) sessionService.startGame(gameId, payload.token());
             sessionService.touch(gameId);
             broadcaster.broadcast(game, BullshitEventType.START.toString(), new EmptyEventData(), "Game started.");
         } catch (Exception e) {
@@ -93,7 +89,7 @@ public class BullshitWebSocketController {
 
         PlayerId playerId;
         try {
-            playerId = sessionService.findPlayerIdByToken(gameId, new SessionToken(payload.token()))
+            playerId = sessionService.findPlayerIdByToken(gameId, payload.token())
                     .orElseThrow(InvalidTokenException::new);
         } catch (Exception e) {
             System.err.println(e.getMessage());
@@ -123,7 +119,7 @@ public class BullshitWebSocketController {
 
         PlayerId callerId;
         try {
-            callerId = sessionService.findPlayerIdByToken(gameId, new SessionToken(payload.token()))
+            callerId = sessionService.findPlayerIdByToken(gameId, payload.token())
                     .orElseThrow(InvalidTokenException::new);
         } catch (Exception e) {
             System.err.println(e.getMessage());

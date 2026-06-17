@@ -8,8 +8,7 @@ import org.kevinkib.cardgames.bataillecorse.domain.Player;
 import org.kevinkib.cardgames.sessionmanagement.core.application.InvalidGameIdException;
 import org.kevinkib.cardgames.sessionmanagement.core.application.JoinResult;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
-import org.kevinkib.cardgames.sessionmanagement.core.domain.SeatUnavailableException;
-import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionPlayer;
+import org.kevinkib.cardgames.sessionmanagement.core.application.SeatUnavailableException;
 import org.kevinkib.cardgames.presentation.api.JoinGamePayload;
 import org.kevinkib.cardgames.presentation.api.Response;
 import org.kevinkib.cardgames.presentation.api.SuccessResponse;
@@ -67,7 +66,7 @@ public class BatailleCorseRestController {
             JoinResult result = sessionService.joinGame(gameId, name);
 
             Player joiner = game.getPlayerByIndex(result.playerId().id());
-            SessionViewDto sessionView = SessionViewDto.from(sessionService.getSeats(gameId));
+            SessionViewDto sessionView = SessionViewDto.from(sessionService.seats(gameId));
             Response broadcast = new SuccessResponse(
                     LifecycleEventType.JOIN.toString(),
                     new JoinEventData(PlayerIdDto.from(joiner), sessionView.players()),
@@ -76,7 +75,7 @@ public class BatailleCorseRestController {
             gameMessagingService.sendToGame(id, broadcast);
 
             return ResponseEntity.ok(new JoinResponseDto(
-                    result.playerId().id(), result.token().uuid().toString()));
+                    result.playerId().id(), result.token()));
         } catch (InvalidGameIdException | IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
         } catch (SeatUnavailableException e) {
