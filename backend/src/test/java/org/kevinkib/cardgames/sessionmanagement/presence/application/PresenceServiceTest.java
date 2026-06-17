@@ -22,6 +22,8 @@ import org.kevinkib.cardgames.bataillecorse.presentation.dto.BatailleCorseDto;
 import org.kevinkib.cardgames.bataillecorse.presentation.dto.PlayerDto;
 import org.kevinkib.cardgames.presentation.GameMessagingService;
 
+import org.kevinkib.cardgames.sessionmanagement.presence.domain.Seat;
+
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -178,5 +180,15 @@ class PresenceServiceTest {
         BatailleCorse game = (BatailleCorse) sessionService.getGame(gameId);
         assertThat(game.getWinner().id(), is(new PlayerId(1)));
         assertThat(eventTypes(), contains("OPPONENT_DISCONNECTED", "FORFEIT")); // no OPPONENT_RECONNECTED
+    }
+
+    @Test
+    void givenConnectedAndForfeitedSeats_whenActiveSeats_thenExcludesForfeitedAndDisconnected() {
+        registry.bind("c0", new Seat(gameId, new PlayerId(0)));
+        registry.bind("c1", new Seat(gameId, new PlayerId(1)));
+        forfeitLog.record(new Seat(gameId, new PlayerId(0)), ForfeitReason.RESIGNED);
+        // seat 2 is never bound -> disconnected -> excluded
+
+        assertThat(service.activeSeats(gameId), contains(new PlayerId(1)));
     }
 }

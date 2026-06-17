@@ -16,7 +16,9 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * Detects multiplayer disconnects and runs the 60s auto-loss timer, plus the
@@ -24,7 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * pending timer. Broadcasting is delegated to the per-game {@link GameLifecycleBroadcasters};
  * this service knows only the lifecycle, never a game's state shape.
  */
-public class PresenceService {
+public class PresenceService implements SeatPresence {
 
     /** Grace before a dropped player auto-loses. */
     public static final Duration FORFEIT_GRACE = Duration.ofSeconds(60);
@@ -100,6 +102,14 @@ public class PresenceService {
         forfeitLog.record(seat, reason);
         games.touch(gameId); // start the finished-grace clock
         broadcasters.broadcasterFor(game).forfeited(game, playerId, reason);
+    }
+
+    @Override
+    public Set<PlayerId> activeSeats(GameId gameId) {
+        Set<Integer> forfeited = forfeitLog.reasonsBySeat(gameId).keySet();
+        return registry.seatsFor(gameId).stream()
+                .filter(playerId -> !forfeited.contains(playerId.id()))
+                .collect(Collectors.toSet());
     }
 
     private Game findGame(GameId gameId) {
