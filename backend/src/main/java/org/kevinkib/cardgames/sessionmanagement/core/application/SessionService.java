@@ -78,12 +78,18 @@ public class SessionService implements GameDirectory {
         }
     }
 
-    public SessionGame createRoom(String gameType, String hostName) {
+    public RoomCreated createRoom(String gameType, String hostName) {
         GameId id = GameId.generate();
         SessionGame lobby = SessionGame.create(id, gameFactories.maxPlayers(gameType), gameType);
         lobby.claimHost(hostName);
         repository.saveLobby(lobby);
-        return lobby;
+        SessionToken hostToken = lobby.findTokenByPlayer(new PlayerId(0))
+                .orElseThrow(() -> new IllegalStateException("Host seat has no token"));
+        return new RoomCreated(id.uuid().toString(), hostToken.uuid().toString());
+    }
+
+    public String gameType(GameId id) {
+        return repository.loadSessionGame(id).gameType();
     }
 
     public Game startGame(GameId id, String hostToken) {

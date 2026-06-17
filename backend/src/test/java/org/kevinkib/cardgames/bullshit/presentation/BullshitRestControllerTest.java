@@ -12,9 +12,9 @@ import org.kevinkib.cardgames.presentation.api.JoinGamePayload;
 import org.kevinkib.cardgames.presentation.dto.JoinResponseDto;
 import org.kevinkib.cardgames.presentation.dto.LobbyDto;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameFactories;
+import org.kevinkib.cardgames.sessionmanagement.core.application.RoomCreated;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameMode;
-import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionGame;
 import org.kevinkib.cardgames.sessionmanagement.core.infrastructure.InMemorySessionRepository;
 import org.springframework.http.ResponseEntity;
 
@@ -73,10 +73,9 @@ class BullshitRestControllerTest {
 
     @Test
     void givenLobbyAndHostToken_whenGetGame_thenReturnsLobbyView() {
-        SessionGame lobby = sessionService.createRoom("bullshit", "Alice");
-        String token = lobby.findTokenByPlayer(new PlayerId(0)).orElseThrow().uuid().toString();
+        RoomCreated room = sessionService.createRoom("bullshit", "Alice");
 
-        ResponseEntity<?> response = controller.getGame(lobby.id().uuid().toString(), token);
+        ResponseEntity<?> response = controller.getGame(room.gameId(), room.hostToken());
 
         assertThat(response.getStatusCode().value(), is(200));
         assertThat(response.getBody(), instanceOf(LobbyDto.class));
@@ -85,9 +84,9 @@ class BullshitRestControllerTest {
 
     @Test
     void givenNoToken_whenGetGame_thenForbidden() {
-        SessionGame lobby = sessionService.createRoom("bullshit", "Alice");
+        RoomCreated room = sessionService.createRoom("bullshit", "Alice");
 
-        ResponseEntity<?> response = controller.getGame(lobby.id().uuid().toString(), null);
+        ResponseEntity<?> response = controller.getGame(room.gameId(), null);
 
         assertThat(response.getStatusCode().value(), is(403));
     }
@@ -101,10 +100,10 @@ class BullshitRestControllerTest {
 
     @Test
     void givenOpenRoom_whenJoin_thenReturnsSeat1AndBroadcastsLobbyToClaimedSeats() {
-        SessionGame lobby = sessionService.createRoom("bullshit", "Alice");
+        RoomCreated room = sessionService.createRoom("bullshit", "Alice");
 
         ResponseEntity<JoinResponseDto> response =
-                controller.joinGame(lobby.id().uuid().toString(), new JoinGamePayload("Bob"));
+                controller.joinGame(room.gameId(), new JoinGamePayload("Bob"));
 
         assertThat(response.getStatusCode().value(), is(200));
         assertThat(response.getBody().playerId(), is(1));
@@ -115,25 +114,27 @@ class BullshitRestControllerTest {
 
     @Test
     void givenStartedGame_whenJoin_thenConflict() {
-        SessionGame lobby = sessionService.createRoom("bullshit", "Alice");
-        sessionService.joinRoom(lobby.id(), "Bob");
-        sessionService.startGame(lobby.id(), lobby.findTokenByPlayer(new PlayerId(0)).orElseThrow().uuid().toString());
+        RoomCreated room = sessionService.createRoom("bullshit", "Alice");
+        GameId id = new GameId(room.gameId());
+        sessionService.joinRoom(id, "Bob");
+        sessionService.startGame(id, room.hostToken());
 
         ResponseEntity<JoinResponseDto> response =
-                controller.joinGame(lobby.id().uuid().toString(), new JoinGamePayload("Late"));
+                controller.joinGame(room.gameId(), new JoinGamePayload("Late"));
 
         assertThat(response.getStatusCode().value(), is(409));
     }
 
     @Test
     void givenFullRoom_whenJoin_thenConflict() {
-        SessionGame lobby = sessionService.createRoom("bullshit", "Alice");
+        RoomCreated room = sessionService.createRoom("bullshit", "Alice");
+        GameId id = new GameId(room.gameId());
         for (int i = 1; i < 6; i++) {
-            sessionService.joinRoom(lobby.id(), "P" + i);
+            sessionService.joinRoom(id, "P" + i);
         }
 
         ResponseEntity<JoinResponseDto> response =
-                controller.joinGame(lobby.id().uuid().toString(), new JoinGamePayload("Late"));
+                controller.joinGame(room.gameId(), new JoinGamePayload("Late"));
 
         assertThat(response.getStatusCode().value(), is(409));
     }
