@@ -160,12 +160,12 @@ class SessionServiceTest {
         @Test
         void givenRequestedRematch_whenRematch_thenRequestFlagsCleared() {
             var game = service.createGame("bataille-corse", 2, GameMode.SOLO);
-            service.getGameSession(game.getId()).requestRematch(new PlayerId(0));
-            service.getGameSession(game.getId()).requestRematch(new PlayerId(1));
+            service.requestRematch(game.getId(), new PlayerId(0));
+            service.requestRematch(game.getId(), new PlayerId(1));
 
             service.rematch(game.getId());
 
-            assertThat(service.getGameSession(game.getId()).isRematchUnanimous(), is(false));
+            assertThat(service.requestRematch(game.getId(), new PlayerId(0)), is(false));
         }
     }
 

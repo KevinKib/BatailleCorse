@@ -166,10 +166,10 @@ public class BatailleCorseWebSocketController {
                     .findPlayerIdByToken(gameId, payload.token())
                     .orElseThrow(InvalidTokenException::new);
 
-            sessionService.getGameSession(gameId).requestRematch(playerId);
+            boolean unanimous = sessionService.requestRematch(gameId, playerId);
 
             Response response;
-            if (sessionService.getGameSession(gameId).isRematchUnanimous()) {
+            if (unanimous) {
                 BatailleCorse fresh = (BatailleCorse) sessionService.rematch(gameId);
                 response = new SuccessResponse(
                         LifecycleEventType.REMATCH.toString(),

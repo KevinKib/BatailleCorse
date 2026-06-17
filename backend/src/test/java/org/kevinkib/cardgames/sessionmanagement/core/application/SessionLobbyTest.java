@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.bullshit.domain.BullshitFactory;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
-import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionGame;
 import org.kevinkib.cardgames.sessionmanagement.core.infrastructure.InMemorySessionRepository;
 
 import java.time.Clock;
@@ -29,12 +28,11 @@ class SessionLobbyTest {
     void givenBullshit_whenCreateRoom_thenMaxSeatsHostClaimedNoGame() {
         RoomCreated room = service.createRoom("bullshit", "Alice");
         GameId id = new GameId(room.gameId());
-        SessionGame lobby = service.getGameSession(id);
 
-        assertThat(lobby.seats().size(), is(6));
-        assertThat(lobby.isClaimed(new PlayerId(0)), is(true));
+        assertThat(service.seats(id).size(), is(6));
+        assertThat(service.seats(id).get(0).joined(), is(true));
         assertThat(service.seats(id).get(0).name(), is("Alice"));
-        assertThat(lobby.isClaimed(new PlayerId(1)), is(false));
+        assertThat(service.seats(id).get(1).joined(), is(false));
         assertThat(service.findGame(id).isPresent(), is(false));
     }
 

@@ -125,8 +125,11 @@ public class SessionService implements GameDirectory {
         return gameFactories.maxPlayers(gameType);
     }
 
-    public SessionGame getGameSession(GameId id) {
-        return repository.loadSessionGame(id);
+    /** Records this seat's rematch request; returns true when all seats have requested. */
+    public boolean requestRematch(GameId id, PlayerId playerId) {
+        SessionGame session = repository.loadSessionGame(id);
+        session.requestRematch(playerId);
+        return session.isRematchUnanimous();
     }
 
     public Game rematch(GameId id) {
