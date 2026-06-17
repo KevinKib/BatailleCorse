@@ -3,6 +3,7 @@ import { mount } from '@vue/test-utils';
 import { setActivePinia, createPinia } from 'pinia';
 import { createRouter, createMemoryHistory } from 'vue-router';
 import BullshitGameScreen from './BullshitGameScreen.vue';
+import EndGameOverlay from '../../components/EndGameOverlay.vue';
 import { useBullshitStore } from '../../state/Bullshit.store';
 import type { BullshitState } from '../../model/bullshit/BullshitState';
 import type { LobbyView } from '../../model/bullshit/LobbyView';
@@ -122,5 +123,28 @@ describe('BullshitGameScreen', () => {
 
     await startBtn.trigger('click');
     expect(startGame).toHaveBeenCalled();
+  });
+
+  it('renders the end-game overlay when finished and play-again calls rematch', async () => {
+    const store = useBullshitStore();
+    store.applyEvent({ type: 'seat-change', seat: 0 });
+    store.applyEvent({ type: 'state-update', state: playingState({
+      outcome: { status: 'FINISHED', winnerId: '0' },
+    }) });
+
+    const wrapper = mount(BullshitGameScreen, {
+      props: { gameId: 'g1' },
+      global: {
+        plugins: [router],
+        stubs: { RouterLink: true, Button: true },
+      },
+    });
+
+    const overlay = wrapper.findComponent(EndGameOverlay);
+    expect(overlay.exists()).toBe(true);
+
+    const spy = vi.spyOn(store, 'rematch').mockImplementation(async () => {});
+    await overlay.vm.$emit('playAgain');
+    expect(spy).toHaveBeenCalled();
   });
 });

@@ -4,6 +4,7 @@ import { useBullshitStore } from '../../state/Bullshit.store';
 import { useBullshitBootstrap } from '../../composables/useBullshitBootstrap';
 import PlayingCard from '../../components/PlayingCard.vue';
 import CardCounter from '../../components/CardCounter.vue';
+import EndGameOverlay from '../../components/EndGameOverlay.vue';
 import type Card from '../../model/Card';
 
 const props = defineProps<{ gameId: string }>();
@@ -58,9 +59,14 @@ function selectAll(event: FocusEvent) {
       <p v-else class="hint">Waiting for the host to start…</p>
     </div>
 
-    <div v-else-if="store.phase === 'finished'" data-test="end" class="panel">
-      <h2>{{ store.iWon ? 'You win!' : 'You lose' }}</h2>
-    </div>
+    <EndGameOverlay
+      v-else-if="store.phase === 'finished'"
+      data-test="end"
+      :did-i-win="store.iWon"
+      :subtitle="store.iWon ? 'You emptied your hand first.' : 'Another player emptied their hand first.'"
+      :rematch-button="store.rematchButton"
+      @play-again="store.rematch()"
+    />
 
     <template v-else>
       <div class="opponents">
