@@ -10,8 +10,8 @@ import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.presentation.LobbyBroadcaster;
 import org.kevinkib.cardgames.presentation.api.JoinGamePayload;
 import org.kevinkib.cardgames.presentation.dto.JoinResponseDto;
-import org.kevinkib.cardgames.presentation.dto.LobbyDto;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameFactories;
+import org.kevinkib.cardgames.sessionmanagement.core.application.LobbyView;
 import org.kevinkib.cardgames.sessionmanagement.core.application.RoomCreated;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameMode;
@@ -55,7 +55,7 @@ class BullshitRestControllerTest {
         controller = new BullshitRestController(
                 sessionService,
                 new BullshitStateBroadcaster(messaging),
-                new LobbyBroadcaster(messaging, new GameFactories(List.of(new BullshitFactory()))));
+                new LobbyBroadcaster(messaging, sessionService));
     }
 
     @Test
@@ -78,8 +78,8 @@ class BullshitRestControllerTest {
         ResponseEntity<?> response = controller.getGame(room.gameId(), room.hostToken());
 
         assertThat(response.getStatusCode().value(), is(200));
-        assertThat(response.getBody(), instanceOf(LobbyDto.class));
-        assertThat(((LobbyDto) response.getBody()).started(), is(false));
+        assertThat(response.getBody(), instanceOf(LobbyView.class));
+        assertThat(((LobbyView) response.getBody()).started(), is(false));
     }
 
     @Test
