@@ -103,6 +103,13 @@ describe('BullshitSession', () => {
     expect(published).toContainEqual({ dest: '/app/bullshit/start', body: JSON.stringify({ gameId: 'g1', token: 'tok-0' }) });
   });
 
+  it('rematch publishes to /app/bullshit/rematch with gameId and token', () => {
+    const { session, published } = makeSession();
+    session.restore('g1', 0, 'tok-0');
+    session.rematch();
+    expect(published).toContainEqual({ dest: '/app/bullshit/rematch', body: JSON.stringify({ gameId: 'g1', token: 'tok-0' }) });
+  });
+
   it('on an incoming seat message, emits state-update and the event', () => {
     const { session, events, fireSeat } = makeSession();
     session.restore('g1', 0, 'tok-0');
