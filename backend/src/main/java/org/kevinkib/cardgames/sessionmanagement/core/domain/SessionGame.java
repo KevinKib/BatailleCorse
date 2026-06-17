@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.IntStream;
 
 public record SessionGame(GameId id, String gameType, Map<PlayerId, SessionPlayer> players) {
@@ -88,6 +89,15 @@ public record SessionGame(GameId id, String gameType, Map<PlayerId, SessionPlaye
     public boolean isRematchUnanimous() {
         return !players.isEmpty()
                 && players.values().stream().allMatch(SessionPlayer::hasRequestedRematch);
+    }
+
+    public boolean hasRequestedRematch(PlayerId playerId) {
+        SessionPlayer seat = players.get(playerId);
+        return seat != null && seat.hasRequestedRematch();
+    }
+
+    public boolean isRematchUnanimousAmong(Set<PlayerId> eligible) {
+        return !eligible.isEmpty() && eligible.stream().allMatch(this::hasRequestedRematch);
     }
 
     public void clearRematch() {

@@ -11,6 +11,7 @@ import org.kevinkib.cardgames.sessionmanagement.core.infrastructure.InMemorySess
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -166,6 +167,31 @@ class SessionServiceTest {
             service.rematch(game.getId());
 
             assertThat(service.requestRematch(game.getId(), new PlayerId(0)), is(false));
+        }
+
+        @Test
+        void givenOnlyOneSeatEligible_whenThatSeatRequests_thenUnanimousAmongEligible() {
+            var game = service.createGame("bataille-corse", 2, GameMode.SOLO);
+            var id = game.getId();
+
+            RematchTally tally = service.requestRematch(id, new PlayerId(0), Set.of(new PlayerId(0)));
+
+            assertThat(tally.unanimous(), is(true));   // seat 1 not eligible, so seat 0 alone suffices
+            assertThat(tally.ready(), is(1));
+            assertThat(tally.eligible(), is(1));
+        }
+
+        @Test
+        void givenTwoEligibleAndOneRequested_whenRequest_thenPendingWithReadyOne() {
+            var game = service.createGame("bataille-corse", 2, GameMode.SOLO);
+            var id = game.getId();
+
+            RematchTally tally = service.requestRematch(id, new PlayerId(0),
+                    Set.of(new PlayerId(0), new PlayerId(1)));
+
+            assertThat(tally.unanimous(), is(false));
+            assertThat(tally.ready(), is(1));
+            assertThat(tally.eligible(), is(2));
         }
     }
 

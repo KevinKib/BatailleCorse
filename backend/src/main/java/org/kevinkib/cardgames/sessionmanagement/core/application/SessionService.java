@@ -13,6 +13,7 @@ import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionToken;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public class SessionService implements GameDirectory {
 
@@ -130,6 +131,14 @@ public class SessionService implements GameDirectory {
         SessionGame session = repository.loadSessionGame(id);
         session.requestRematch(playerId);
         return session.isRematchUnanimous();
+    }
+
+    /** Records this seat's request and tallies it against the eligible (connected, non-forfeited) seats. */
+    public RematchTally requestRematch(GameId id, PlayerId playerId, Set<PlayerId> eligibleSeats) {
+        SessionGame session = repository.loadSessionGame(id);
+        session.requestRematch(playerId);
+        int ready = (int) eligibleSeats.stream().filter(session::hasRequestedRematch).count();
+        return new RematchTally(session.isRematchUnanimousAmong(eligibleSeats), ready, eligibleSeats.size());
     }
 
     public Game rematch(GameId id) {

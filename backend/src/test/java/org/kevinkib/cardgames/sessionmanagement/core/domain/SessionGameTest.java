@@ -7,6 +7,7 @@ import org.kevinkib.cardgames.game.PlayerId;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.IntStream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -217,6 +218,30 @@ class SessionGameTest {
             session.clearRematch();
 
             assertThat(session.isRematchUnanimous(), is(false));
+        }
+
+        @Test
+        void givenSubsetRequested_whenUnanimousAmongThatSubset_thenTrue() {
+            SessionGame session = SessionGame.create(GameId.generate(), 3, "bullshit");
+            session.requestRematch(new PlayerId(0));
+            session.requestRematch(new PlayerId(2));
+
+            assertThat(session.isRematchUnanimousAmong(Set.of(new PlayerId(0), new PlayerId(2))), is(true));
+        }
+
+        @Test
+        void givenAnEligibleSeatHasNotRequested_thenNotUnanimousAmong() {
+            SessionGame session = SessionGame.create(GameId.generate(), 3, "bullshit");
+            session.requestRematch(new PlayerId(0));
+
+            assertThat(session.isRematchUnanimousAmong(Set.of(new PlayerId(0), new PlayerId(1))), is(false));
+        }
+
+        @Test
+        void givenEmptyEligible_thenNotUnanimousAmong() {
+            SessionGame session = SessionGame.create(GameId.generate(), 2, "bullshit");
+
+            assertThat(session.isRematchUnanimousAmong(Set.of()), is(false));
         }
     }
 }
