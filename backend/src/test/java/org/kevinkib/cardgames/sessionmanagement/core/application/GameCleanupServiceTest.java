@@ -3,10 +3,13 @@ package org.kevinkib.cardgames.sessionmanagement.core.application;
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.game.Game;
 import org.kevinkib.cardgames.game.GameId;
+import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.core.application.port.SessionRepository;
 import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionGame;
-import org.kevinkib.cardgames.sessionmanagement.presence.infrastructure.InMemoryForfeitLog;
+import org.kevinkib.cardgames.sessionmanagement.presence.application.PresenceEvictionCleanup;
+import org.kevinkib.cardgames.sessionmanagement.presence.domain.Seat;
 import org.kevinkib.cardgames.sessionmanagement.presence.infrastructure.InMemoryConnectionRegistry;
+import org.kevinkib.cardgames.sessionmanagement.presence.infrastructure.InMemoryForfeitLog;
 
 import java.time.Duration;
 import java.util.List;
@@ -15,6 +18,7 @@ import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.is;
 
 class GameCleanupServiceTest {
 
@@ -43,23 +47,21 @@ class GameCleanupServiceTest {
         var repo = new StubRepository();
         var id = GameId.generate();
         repo.toEvict.add(id);
-        var registry = new InMemoryConnectionRegistry();
-        var service = new GameCleanupService(repo, registry, new InMemoryForfeitLog());
+        var connections = new InMemoryConnectionRegistry();
+        var forfeits = new InMemoryForfeitLog();
+        var service = new GameCleanupService(repo, List.of(new PresenceEvictionCleanup(connections, forfeits)));
 
-        var spySession = "sess-1";
-        registry.bind(spySession, new org.kevinkib.cardgames.sessionmanagement.presence.domain.Seat(
-                id, new org.kevinkib.cardgames.game.PlayerId(1)));
+        connections.bind("sess-1", new Seat(id, new PlayerId(1)));
 
         service.sweep();
 
-        // The evicted game's presence entries are gone.
-        assertThat(registry.seatOf(spySession).isEmpty(), org.hamcrest.Matchers.is(true));
+        assertThat(connections.seatOf("sess-1").isEmpty(), is(true));
     }
 
     @Test
     void whenSweep_thenUsesConfiguredThresholds() {
         var repo = new StubRepository();
-        var service = new GameCleanupService(repo, new InMemoryConnectionRegistry(), new InMemoryForfeitLog());
+        var service = new GameCleanupService(repo, List.of());
 
         service.sweep();
 

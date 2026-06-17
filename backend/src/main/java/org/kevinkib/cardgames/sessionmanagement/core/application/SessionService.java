@@ -12,7 +12,7 @@ import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionToken;
 import java.util.List;
 import java.util.Optional;
 
-public class SessionService {
+public class SessionService implements GameDirectory {
 
     private static final PlayerId JOINER_SEAT = new PlayerId(1);
 
@@ -96,6 +96,7 @@ public class SessionService {
         return game;
     }
 
+    @Override
     public Optional<Game> findGame(GameId id) {
         return repository.findGame(id);
     }
@@ -145,6 +146,7 @@ public class SessionService {
         return type.cast(game);
     }
 
+    @Override
     public void touch(GameId id) {
         repository.touch(id);
     }

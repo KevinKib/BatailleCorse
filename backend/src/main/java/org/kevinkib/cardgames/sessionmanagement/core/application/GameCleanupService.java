@@ -2,8 +2,6 @@ package org.kevinkib.cardgames.sessionmanagement.core.application;
 
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.sessionmanagement.core.application.port.SessionRepository;
-import org.kevinkib.cardgames.sessionmanagement.presence.port.ForfeitLog;
-import org.kevinkib.cardgames.sessionmanagement.presence.port.ConnectionRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -15,19 +13,15 @@ public class GameCleanupService {
 
     private static final Logger log = LoggerFactory.getLogger(GameCleanupService.class);
 
-    /** Finished/forfeited games linger this long so a reconnecting loser can still read the result. */
     public static final Duration FINISHED_GRACE = Duration.ofMinutes(2);
-    /** Unfinished games with no activity for this long are abandoned and removed. */
     public static final Duration IDLE_TTL = Duration.ofMinutes(30);
 
     private final SessionRepository repository;
-    private final ConnectionRegistry presenceRegistry;
-    private final ForfeitLog forfeitLog;
+    private final List<GameEvictionListener> listeners;
 
-    public GameCleanupService(SessionRepository repository, ConnectionRegistry presenceRegistry, ForfeitLog forfeitLog) {
+    public GameCleanupService(SessionRepository repository, List<GameEvictionListener> listeners) {
         this.repository = repository;
-        this.presenceRegistry = presenceRegistry;
-        this.forfeitLog = forfeitLog;
+        this.listeners = listeners;
     }
 
     @Scheduled(fixedDelayString = "PT1M")
@@ -35,8 +29,7 @@ public class GameCleanupService {
         List<GameId> evicted = repository.evictStale(FINISHED_GRACE, IDLE_TTL);
         if (!evicted.isEmpty()) {
             log.info("Evicted {} stale game(s): {}", evicted.size(), evicted);
-            evicted.forEach(presenceRegistry::removeGame);
-            evicted.forEach(forfeitLog::removeGame);
+            evicted.forEach(id -> listeners.forEach(l -> l.onEvicted(id)));
         }
     }
 }
