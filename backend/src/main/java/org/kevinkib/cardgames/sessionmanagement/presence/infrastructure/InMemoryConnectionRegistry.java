@@ -1,12 +1,15 @@
 package org.kevinkib.cardgames.sessionmanagement.presence.infrastructure;
 
 import org.kevinkib.cardgames.game.GameId;
+import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.presence.domain.Seat;
 import org.kevinkib.cardgames.sessionmanagement.presence.port.ConnectionRegistry;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 public class InMemoryConnectionRegistry implements ConnectionRegistry {
 
@@ -30,5 +33,13 @@ public class InMemoryConnectionRegistry implements ConnectionRegistry {
     @Override
     public void removeGame(GameId gameId) {
         seatByConnection.values().removeIf(seat -> seat.gameId().equals(gameId));
+    }
+
+    @Override
+    public Set<PlayerId> seatsFor(GameId gameId) {
+        return seatByConnection.values().stream()
+                .filter(seat -> seat.gameId().equals(gameId))
+                .map(Seat::playerId)
+                .collect(Collectors.toSet());
     }
 }
