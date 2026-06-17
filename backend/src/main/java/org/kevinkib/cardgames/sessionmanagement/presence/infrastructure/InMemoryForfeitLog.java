@@ -1,9 +1,9 @@
 package org.kevinkib.cardgames.sessionmanagement.presence.infrastructure;
 
 import org.kevinkib.cardgames.game.GameId;
-import org.kevinkib.cardgames.sessionmanagement.presence.domain.ForfeitReason;
 import org.kevinkib.cardgames.sessionmanagement.presence.domain.Seat;
 import org.kevinkib.cardgames.sessionmanagement.presence.port.ForfeitLog;
+import org.kevinkib.cardgames.sessionmanagement.presence.port.ForfeitReason;
 
 import java.util.HashMap;
 import java.util.Map;

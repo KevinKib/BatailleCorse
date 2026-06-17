@@ -8,8 +8,8 @@ import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.presence.infrastructure.InMemoryForfeitLog;
 import org.kevinkib.cardgames.sessionmanagement.presence.port.ForfeitLog;
 import org.kevinkib.cardgames.presentation.GameMessagingService;
-import org.kevinkib.cardgames.sessionmanagement.presence.domain.ForfeitReason;
 import org.kevinkib.cardgames.sessionmanagement.presence.domain.Seat;
+import org.kevinkib.cardgames.sessionmanagement.presence.port.ForfeitReason;
 import org.kevinkib.cardgames.presentation.api.Response;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -36,7 +36,7 @@ class BatailleCorseLifecycleBroadcasterTest {
         Seat seat = new Seat(game.getId(), new PlayerId(0));
         reasons.record(seat, ForfeitReason.RESIGNED);
 
-        broadcaster.forfeited(game, seat, ForfeitReason.RESIGNED);
+        broadcaster.forfeited(game, new PlayerId(0), ForfeitReason.RESIGNED);
 
         assertThat(messaging.last.getEventType(), is("FORFEIT"));
         assertThat(messaging.last.getState(), instanceOf(BatailleCorseDto.class));
@@ -45,9 +45,8 @@ class BatailleCorseLifecycleBroadcasterTest {
     @Test
     void givenDisconnect_whenBroadcast_thenSendsDisconnectedResponse() {
         BatailleCorse game = new BatailleCorse(GameId.generate(), 2);
-        Seat seat = new Seat(game.getId(), new PlayerId(0));
 
-        broadcaster.disconnected(game, seat, 123L);
+        broadcaster.disconnected(game, new PlayerId(0), 123L);
 
         assertThat(messaging.last.getEventType(), is("OPPONENT_DISCONNECTED"));
         assertThat(messaging.last.getState(), instanceOf(BatailleCorseDto.class));
