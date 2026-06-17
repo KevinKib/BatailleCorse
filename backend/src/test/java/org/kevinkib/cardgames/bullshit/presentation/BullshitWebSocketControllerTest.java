@@ -9,8 +9,11 @@ import org.kevinkib.cardgames.bullshit.presentation.api.BullshitDiscardPayload;
 import org.kevinkib.cardgames.bullshit.presentation.dto.BullshitDto;
 import org.kevinkib.cardgames.bullshit.presentation.dto.CardDto;
 import org.kevinkib.cardgames.bullshit.presentation.dto.event.BullshitCreateEventData;
+import org.kevinkib.cardgames.bullshit.presentation.dto.event.BullshitRematchEventData;
 import org.kevinkib.cardgames.bullshit.presentation.dto.event.CallBullshitEventData;
 import org.kevinkib.cardgames.bullshit.presentation.dto.event.DiscardEventData;
+import org.kevinkib.cardgames.presentation.dto.event.RematchStatus;
+import org.kevinkib.cardgames.sessionmanagement.presence.application.SeatPresence;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.presentation.GameMessagingService;
@@ -25,6 +28,7 @@ import org.kevinkib.cards.domain.Card;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
@@ -63,8 +67,9 @@ class BullshitWebSocketControllerTest {
                 new InMemorySessionRepository(Clock.systemUTC()),
                 new GameFactories(List.of(new BullshitFactory())));
         messaging = new RecordingMessaging();
+        SeatPresence seatPresence = gid -> Set.of(new PlayerId(0), new PlayerId(1));
         controller = new BullshitWebSocketController(
-                sessionService, new BullshitStateBroadcaster(messaging), messaging);
+                sessionService, new BullshitStateBroadcaster(messaging), messaging, seatPresence);
     }
 
     @Test
@@ -160,5 +165,39 @@ class BullshitWebSocketControllerTest {
         assertThat(r.getEventType(), is("CALL_BULLSHIT"));
         CallBullshitEventData data = (CallBullshitEventData) r.getEventData();
         assertThat(data.revealedCards().size(), is(1));
+    }
+
+    @Test
+    void givenFirstSeatRequestsRematch_whenRematch_thenBroadcastsPendingToAllSeats() {
+        Bullshit game = (Bullshit) sessionService.createGame("bullshit", 2, GameMode.SOLO);
+        GameId id = game.getId();
+        String t0 = sessionService.tokenForSeat(id, new PlayerId(0));
+
+        controller.rematch(new GameActionPayload(id.uuid().toString(), t0));
+
+        assertThat(messaging.seats.size(), is(2));
+        Response r = messaging.payloads.get(0);
+        assertThat(r.getEventType(), is("REMATCH"));
+        BullshitRematchEventData data = (BullshitRematchEventData) r.getEventData();
+        assertThat(data.status(), is(RematchStatus.PENDING));
+        assertThat(data.ready(), is(1));
+        assertThat(data.eligible(), is(2));
+    }
+
+    @Test
+    void givenAllEligibleSeatsRequest_whenLastRematch_thenBroadcastsStartedWithFreshState() {
+        Bullshit game = (Bullshit) sessionService.createGame("bullshit", 2, GameMode.SOLO);
+        GameId id = game.getId();
+        String t0 = sessionService.tokenForSeat(id, new PlayerId(0));
+        String t1 = sessionService.tokenForSeat(id, new PlayerId(1));
+        controller.rematch(new GameActionPayload(id.uuid().toString(), t0));
+        messaging.clear();
+
+        controller.rematch(new GameActionPayload(id.uuid().toString(), t1));
+
+        Response r = messaging.payloads.get(0);
+        assertThat(r.getEventType(), is("REMATCH"));
+        assertThat(((BullshitRematchEventData) r.getEventData()).status(), is(RematchStatus.STARTED));
+        assertThat(r.getState(), instanceOf(BullshitDto.class));
     }
 }

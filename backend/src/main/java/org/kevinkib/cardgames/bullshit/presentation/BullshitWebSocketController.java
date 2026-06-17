@@ -12,6 +12,7 @@ import org.kevinkib.cardgames.bullshit.presentation.dto.BullshitDto;
 import org.kevinkib.cardgames.bullshit.presentation.dto.CardDto;
 import org.kevinkib.cardgames.bullshit.presentation.dto.event.BullshitCreateEventData;
 import org.kevinkib.cardgames.bullshit.presentation.dto.event.BullshitEventType;
+import org.kevinkib.cardgames.bullshit.presentation.dto.event.BullshitRematchEventData;
 import org.kevinkib.cardgames.bullshit.presentation.dto.event.CallBullshitEventData;
 import org.kevinkib.cardgames.bullshit.presentation.dto.event.DiscardEventData;
 import org.kevinkib.cardgames.game.GameId;
@@ -23,9 +24,12 @@ import org.kevinkib.cardgames.presentation.api.Response;
 import org.kevinkib.cardgames.presentation.api.SuccessResponse;
 import org.kevinkib.cardgames.presentation.dto.event.EmptyEventData;
 import org.kevinkib.cardgames.presentation.dto.event.LifecycleEventType;
+import org.kevinkib.cardgames.presentation.dto.event.RematchStatus;
 import org.kevinkib.cardgames.sessionmanagement.core.application.InvalidTokenException;
+import org.kevinkib.cardgames.sessionmanagement.core.application.RematchTally;
 import org.kevinkib.cardgames.sessionmanagement.core.application.RoomCreated;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
+import org.kevinkib.cardgames.sessionmanagement.presence.application.SeatPresence;
 import org.kevinkib.cards.domain.Card;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -34,6 +38,7 @@ import org.springframework.stereotype.Controller;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Controller
 public class BullshitWebSocketController {
@@ -41,13 +46,16 @@ public class BullshitWebSocketController {
     private final SessionService sessionService;
     private final BullshitStateBroadcaster broadcaster;
     private final GameMessagingService messaging;
+    private final SeatPresence seatPresence;
 
     public BullshitWebSocketController(SessionService sessionService,
                                        BullshitStateBroadcaster broadcaster,
-                                       GameMessagingService messaging) {
+                                       GameMessagingService messaging,
+                                       SeatPresence seatPresence) {
         this.sessionService = sessionService;
         this.broadcaster = broadcaster;
         this.messaging = messaging;
+        this.seatPresence = seatPresence;
     }
 
     @MessageMapping("/bullshit/create")
@@ -109,6 +117,33 @@ public class BullshitWebSocketController {
             System.err.println(e.getMessage());
             messaging.sendToSeat(gameId, playerId, new ErrorResponse(
                     BullshitEventType.DISCARD.toString(), e.getMessage(), BullshitDto.forViewer(game, playerId)));
+        }
+    }
+
+    @MessageMapping("/bullshit/rematch")
+    public void rematch(@Payload GameActionPayload payload) {
+        GameId gameId = new GameId(payload.gameId());
+        PlayerId actor = sessionService.findPlayerIdByToken(gameId, payload.token()).orElse(null);
+        if (actor == null) {
+            return;
+        }
+        try {
+            Set<PlayerId> eligible = seatPresence.activeSeats(gameId);
+            RematchTally tally = sessionService.requestRematch(gameId, actor, eligible);
+            if (tally.unanimous()) {
+                Bullshit fresh = (Bullshit) sessionService.rematch(gameId);
+                sessionService.touch(gameId);
+                broadcaster.broadcast(fresh, LifecycleEventType.REMATCH.toString(),
+                        new BullshitRematchEventData(RematchStatus.STARTED, tally.ready(), tally.eligible()),
+                        "Rematch started.");
+            } else {
+                Bullshit current = sessionService.getGame(gameId, Bullshit.class);
+                broadcaster.broadcast(current, LifecycleEventType.REMATCH.toString(),
+                        new BullshitRematchEventData(RematchStatus.PENDING, tally.ready(), tally.eligible()),
+                        "Rematch requested.");
+            }
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
         }
     }
 
