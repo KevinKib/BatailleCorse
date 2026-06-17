@@ -12,7 +12,7 @@ import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.core.application.InvalidTokenException;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
 import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionToken;
-import org.kevinkib.cardgames.sessionmanagement.core.domain.GameMode;
+import org.kevinkib.cardgames.sessionmanagement.core.application.GameMode;
 import org.kevinkib.cardgames.presentation.api.CreateGamePayload;
 import org.kevinkib.cardgames.presentation.api.ErrorResponse;
 import org.kevinkib.cardgames.presentation.api.GameActionPayload;

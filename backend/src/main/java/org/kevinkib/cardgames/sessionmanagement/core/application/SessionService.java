@@ -4,7 +4,7 @@ import org.kevinkib.cardgames.game.Game;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.core.application.port.SessionRepository;
-import org.kevinkib.cardgames.sessionmanagement.core.domain.GameMode;
+import org.kevinkib.cardgames.sessionmanagement.core.application.GameMode;
 import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionGame;
 import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionPlayer;
 import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionToken;

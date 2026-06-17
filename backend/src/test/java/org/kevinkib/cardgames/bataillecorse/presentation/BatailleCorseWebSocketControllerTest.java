@@ -155,7 +155,7 @@ class BatailleCorseWebSocketControllerTest {
 
         @Test
         void givenSoloBothSeatsRequest_whenSecondRematch_thenBroadcastsStarted() {
-            var game = sessionService.createGame("bataille-corse", 2, org.kevinkib.cardgames.sessionmanagement.core.domain.GameMode.SOLO);
+            var game = sessionService.createGame("bataille-corse", 2, org.kevinkib.cardgames.sessionmanagement.core.application.GameMode.SOLO);
             String gameId = game.getId().uuid().toString();
             SessionToken token0 = sessionService.loadTokenByPlayerId(game.getId(), new PlayerId(0));
             SessionToken token1 = sessionService.loadTokenByPlayerId(game.getId(), new PlayerId(1));
@@ -176,7 +176,7 @@ class BatailleCorseWebSocketControllerTest {
 
         @Test
         void givenMultiplayerSingleRequest_whenRematch_thenBroadcastsPending() {
-            var game = sessionService.createGame("bataille-corse", 2, org.kevinkib.cardgames.sessionmanagement.core.domain.GameMode.MULTIPLAYER);
+            var game = sessionService.createGame("bataille-corse", 2, org.kevinkib.cardgames.sessionmanagement.core.application.GameMode.MULTIPLAYER);
             sessionService.joinGame(game.getId()); // claim seat 1 so the game has two humans
             String gameId = game.getId().uuid().toString();
             SessionToken token0 = sessionService.loadTokenByPlayerId(game.getId(), new PlayerId(0));
