@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseFactory;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameMode;
-import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionPlayer;
+import org.kevinkib.cardgames.sessionmanagement.core.application.SeatView;
 import org.kevinkib.cardgames.sessionmanagement.core.infrastructure.InMemorySessionRepository;
 
 import java.util.List;
@@ -103,17 +103,17 @@ class SessionServiceTest {
     public void givenMultiplayerCreateWithName_whenCreating_thenSeatZeroClaimedWithName() {
         var game = service.createGame("bataille-corse", 2, GameMode.MULTIPLAYER, "Alice");
 
-        List<SessionPlayer> seats = service.getSeats(game.getId());
-        assertThat(seats.get(0).isClaimed(), is(true));
+        List<SeatView> seats = service.seats(game.getId());
+        assertThat(seats.get(0).joined(), is(true));
         assertThat(seats.get(0).name(), is("Alice"));
-        assertThat(seats.get(1).isClaimed(), is(false));
+        assertThat(seats.get(1).joined(), is(false));
     }
 
     @Test
     public void givenMultiplayerCreateWithBlankName_whenCreating_thenSeatZeroGetsDefaultName() {
         var game = service.createGame("bataille-corse", 2, GameMode.MULTIPLAYER, "  ");
 
-        List<SessionPlayer> seats = service.getSeats(game.getId());
+        List<SeatView> seats = service.seats(game.getId());
         assertThat(seats.get(0).name(), is("Player 1"));
     }
 
@@ -123,8 +123,8 @@ class SessionServiceTest {
 
         service.joinGame(game.getId(), "Bob");
 
-        List<SessionPlayer> seats = service.getSeats(game.getId());
-        assertThat(seats.get(1).isClaimed(), is(true));
+        List<SeatView> seats = service.seats(game.getId());
+        assertThat(seats.get(1).joined(), is(true));
         assertThat(seats.get(1).name(), is("Bob"));
     }
 
@@ -134,7 +134,7 @@ class SessionServiceTest {
 
         service.joinGame(game.getId(), null);
 
-        List<SessionPlayer> seats = service.getSeats(game.getId());
+        List<SeatView> seats = service.seats(game.getId());
         assertThat(seats.get(1).name(), is("Player 2"));
     }
 
@@ -145,7 +145,7 @@ class SessionServiceTest {
         void givenSoloGame_whenRematch_thenSameIdAndSeatsPreserved() {
             var game = service.createGame("bataille-corse", 2, GameMode.SOLO, "Alice");
             String seat0TokenBefore = service.tokenForSeat(game.getId(), new PlayerId(0));
-            String seat0NameBefore = service.getSeats(game.getId()).get(0).name();
+            String seat0NameBefore = service.seats(game.getId()).get(0).name();
 
             var fresh = service.rematch(game.getId());
 
@@ -153,7 +153,7 @@ class SessionServiceTest {
             assertThat(fresh.isFinished(), is(false));
             assertThat(service.isSeatClaimed(game.getId(), new PlayerId(0)), is(true));
             assertThat(service.isSeatClaimed(game.getId(), new PlayerId(1)), is(true));
-            assertThat(service.getSeats(game.getId()).get(0).name(), is(seat0NameBefore));
+            assertThat(service.seats(game.getId()).get(0).name(), is(seat0NameBefore));
             assertThat(service.tokenForSeat(game.getId(), new PlayerId(0)), is(seat0TokenBefore));
         }
 

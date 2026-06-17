@@ -137,8 +137,10 @@ public class SessionService implements GameDirectory {
         return fresh;
     }
 
-    public List<SessionPlayer> getSeats(GameId gameId) {
-        return repository.loadSessionGame(gameId).seats();
+    public List<SeatView> seats(GameId gameId) {
+        return repository.loadSessionGame(gameId).seats().stream()
+                .map(s -> new SeatView(s.id().id(), s.name(), s.isClaimed()))
+                .toList();
     }
 
     public boolean isSeatClaimed(GameId gameId, PlayerId playerId) {

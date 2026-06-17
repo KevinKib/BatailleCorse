@@ -33,7 +33,7 @@ class SessionLobbyTest {
 
         assertThat(lobby.seats().size(), is(6));
         assertThat(lobby.isClaimed(new PlayerId(0)), is(true));
-        assertThat(lobby.seats().get(0).name(), is("Alice"));
+        assertThat(service.seats(id).get(0).name(), is("Alice"));
         assertThat(lobby.isClaimed(new PlayerId(1)), is(false));
         assertThat(service.findGame(id).isPresent(), is(false));
     }
@@ -47,7 +47,7 @@ class SessionLobbyTest {
 
         assertThat(first.playerId(), is(new PlayerId(1)));
         assertThat(second.playerId(), is(new PlayerId(2)));
-        assertThat(service.getGameSession(id).seats().get(1).name(), is("Bob"));
+        assertThat(service.seats(id).get(1).name(), is("Bob"));
     }
 
     @Test
