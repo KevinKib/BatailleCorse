@@ -2,9 +2,9 @@ package org.kevinkib.cardgames.presentation;
 
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
-import org.kevinkib.cardgames.sessionmanagement.application.InvalidTokenException;
-import org.kevinkib.cardgames.sessionmanagement.application.SessionService;
-import org.kevinkib.cardgames.sessionmanagement.domain.SessionToken;
+import org.kevinkib.cardgames.sessionmanagement.session.application.InvalidTokenException;
+import org.kevinkib.cardgames.sessionmanagement.session.application.SessionService;
+import org.kevinkib.cardgames.sessionmanagement.session.domain.SessionToken;
 import org.kevinkib.cardgames.sessionmanagement.presence.application.PresenceService;
 import org.kevinkib.cardgames.sessionmanagement.presence.domain.ForfeitReason;
 import org.kevinkib.cardgames.sessionmanagement.presence.domain.Seat;

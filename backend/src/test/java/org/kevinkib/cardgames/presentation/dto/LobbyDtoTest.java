@@ -3,7 +3,7 @@ package org.kevinkib.cardgames.presentation.dto;
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
-import org.kevinkib.cardgames.sessionmanagement.domain.SessionGame;
+import org.kevinkib.cardgames.sessionmanagement.session.domain.SessionGame;
 
 import java.util.List;
 

@@ -3,9 +3,9 @@ package org.kevinkib.cardgames.presentation;
 import org.kevinkib.cardgames.presentation.api.SuccessResponse;
 import org.kevinkib.cardgames.presentation.dto.LobbyDto;
 import org.kevinkib.cardgames.presentation.dto.event.EventData;
-import org.kevinkib.cardgames.sessionmanagement.application.GameFactories;
-import org.kevinkib.cardgames.sessionmanagement.domain.SessionGame;
-import org.kevinkib.cardgames.sessionmanagement.domain.SessionPlayer;
+import org.kevinkib.cardgames.sessionmanagement.session.application.GameFactories;
+import org.kevinkib.cardgames.sessionmanagement.session.domain.SessionGame;
+import org.kevinkib.cardgames.sessionmanagement.session.domain.SessionPlayer;
 
 /** Sends a per-viewer {@link LobbyDto} to each claimed seat of a not-yet-started session. */
 public class LobbyBroadcaster {

@@ -1,8 +1,8 @@
 package org.kevinkib.cardgames.presentation;
 
 import org.kevinkib.cardgames.game.GameId;
-import org.kevinkib.cardgames.sessionmanagement.application.SessionService;
-import org.kevinkib.cardgames.sessionmanagement.domain.SessionToken;
+import org.kevinkib.cardgames.sessionmanagement.session.application.SessionService;
+import org.kevinkib.cardgames.sessionmanagement.session.domain.SessionToken;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompCommand;
