@@ -8,7 +8,6 @@ import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameMode;
 import org.kevinkib.cardgames.sessionmanagement.core.domain.SeatUnavailableException;
 import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionPlayer;
-import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionToken;
 import org.kevinkib.cardgames.sessionmanagement.core.infrastructure.InMemorySessionRepository;
 
 import java.util.List;
@@ -84,7 +83,7 @@ class SessionServiceTest {
         @Test
         void givenValidToken_whenFindPlayerIdByToken_thenReturnsPlayerId() {
             var game = service.createGame("bataille-corse", 2);
-            SessionToken token = service.loadTokenByPlayerId(game.getId(), new PlayerId(0));
+            String token = service.tokenForSeat(game.getId(), new PlayerId(0));
 
             Optional<PlayerId> result = service.findPlayerIdByToken(game.getId(), token);
 
@@ -95,7 +94,7 @@ class SessionServiceTest {
         void givenInvalidToken_whenFindPlayerIdByToken_thenReturnsEmpty() {
             var game = service.createGame("bataille-corse", 2);
 
-            Optional<PlayerId> result = service.findPlayerIdByToken(game.getId(), SessionToken.generate());
+            Optional<PlayerId> result = service.findPlayerIdByToken(game.getId(), java.util.UUID.randomUUID().toString());
 
             assertThat(result, is(Optional.empty()));
         }
@@ -146,7 +145,7 @@ class SessionServiceTest {
         @Test
         void givenSoloGame_whenRematch_thenSameIdAndSeatsPreserved() {
             var game = service.createGame("bataille-corse", 2, GameMode.SOLO, "Alice");
-            SessionToken seat0TokenBefore = service.loadTokenByPlayerId(game.getId(), new PlayerId(0));
+            String seat0TokenBefore = service.tokenForSeat(game.getId(), new PlayerId(0));
             String seat0NameBefore = service.getSeats(game.getId()).get(0).name();
 
             var fresh = service.rematch(game.getId());
@@ -156,7 +155,7 @@ class SessionServiceTest {
             assertThat(service.isSeatClaimed(game.getId(), new PlayerId(0)), is(true));
             assertThat(service.isSeatClaimed(game.getId(), new PlayerId(1)), is(true));
             assertThat(service.getSeats(game.getId()).get(0).name(), is(seat0NameBefore));
-            assertThat(service.loadTokenByPlayerId(game.getId(), new PlayerId(0)), is(seat0TokenBefore));
+            assertThat(service.tokenForSeat(game.getId(), new PlayerId(0)), is(seat0TokenBefore));
         }
 
         @Test

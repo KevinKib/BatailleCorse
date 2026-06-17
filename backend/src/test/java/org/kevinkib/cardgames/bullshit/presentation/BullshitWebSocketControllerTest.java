@@ -19,7 +19,6 @@ import org.kevinkib.cardgames.presentation.api.Response;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameFactories;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameMode;
-import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionToken;
 import org.kevinkib.cardgames.sessionmanagement.core.infrastructure.InMemorySessionRepository;
 import org.kevinkib.cards.domain.Card;
 
@@ -104,7 +103,7 @@ class BullshitWebSocketControllerTest {
         GameId id = new GameId(data.gameId());
         var bob = sessionService.joinRoom(id, "Bob");
 
-        controller.start(new GameActionPayload(data.gameId(), bob.token().uuid().toString()));
+        controller.start(new GameActionPayload(data.gameId(), bob.token()));
 
         assertThat(messaging.seats.size(), is(1));
         assertThat(messaging.seats.get(0), is(new PlayerId(1)));
@@ -116,11 +115,11 @@ class BullshitWebSocketControllerTest {
     void givenValidDiscard_whenDiscard_thenBroadcastsDiscardToAllSeats() {
         Bullshit game = (Bullshit) sessionService.createGame("bullshit", 2, GameMode.SOLO);
         GameId id = game.getId();
-        SessionToken t0 = sessionService.loadTokenByPlayerId(id, new PlayerId(0));
+        String t0 = sessionService.tokenForSeat(id, new PlayerId(0));
         Card card = game.getPlayers().get(0).getCards().get(0);
 
         controller.discard(new BullshitDiscardPayload(
-                id.uuid().toString(), t0.uuid().toString(), List.of(CardDto.from(card))));
+                id.uuid().toString(), t0, List.of(CardDto.from(card))));
 
         assertThat(messaging.seats.size(), is(2));
         Response r = messaging.payloads.get(0);
@@ -133,11 +132,11 @@ class BullshitWebSocketControllerTest {
     void givenNotYourTurn_whenDiscard_thenErrorToActingSeatOnly() {
         Bullshit game = (Bullshit) sessionService.createGame("bullshit", 2, GameMode.SOLO);
         GameId id = game.getId();
-        SessionToken t1 = sessionService.loadTokenByPlayerId(id, new PlayerId(1));
+        String t1 = sessionService.tokenForSeat(id, new PlayerId(1));
         Card card = game.getPlayers().get(1).getCards().get(0);
 
         controller.discard(new BullshitDiscardPayload(
-                id.uuid().toString(), t1.uuid().toString(), List.of(CardDto.from(card))));
+                id.uuid().toString(), t1, List.of(CardDto.from(card))));
 
         assertThat(messaging.seats.size(), is(1));
         assertThat(messaging.seats.get(0), is(new PlayerId(1)));
@@ -148,14 +147,14 @@ class BullshitWebSocketControllerTest {
     void givenClaimOnTable_whenCallBullshit_thenBroadcastsRevealWithCards() {
         Bullshit game = (Bullshit) sessionService.createGame("bullshit", 2, GameMode.SOLO);
         GameId id = game.getId();
-        SessionToken t0 = sessionService.loadTokenByPlayerId(id, new PlayerId(0));
+        String t0 = sessionService.tokenForSeat(id, new PlayerId(0));
         Card c0 = game.getPlayers().get(0).getCards().get(0);
         controller.discard(new BullshitDiscardPayload(
-                id.uuid().toString(), t0.uuid().toString(), List.of(CardDto.from(c0))));
+                id.uuid().toString(), t0, List.of(CardDto.from(c0))));
         messaging.clear();
 
-        SessionToken t1 = sessionService.loadTokenByPlayerId(id, new PlayerId(1));
-        controller.callBullshit(new GameActionPayload(id.uuid().toString(), t1.uuid().toString()));
+        String t1 = sessionService.tokenForSeat(id, new PlayerId(1));
+        controller.callBullshit(new GameActionPayload(id.uuid().toString(), t1));
 
         Response r = messaging.payloads.get(0);
         assertThat(r.getEventType(), is("CALL_BULLSHIT"));

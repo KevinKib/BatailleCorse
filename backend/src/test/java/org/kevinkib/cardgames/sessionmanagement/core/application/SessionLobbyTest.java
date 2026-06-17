@@ -6,7 +6,6 @@ import org.kevinkib.cardgames.bullshit.domain.BullshitFactory;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.core.domain.RoomFullException;
 import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionGame;
-import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionToken;
 import org.kevinkib.cardgames.sessionmanagement.core.infrastructure.InMemorySessionRepository;
 
 import java.time.Clock;
@@ -65,7 +64,7 @@ class SessionLobbyTest {
         SessionGame lobby = service.createRoom("bullshit", "Alice");
         service.joinRoom(lobby.id(), "Bob");
         service.joinRoom(lobby.id(), "Cara");
-        SessionToken hostToken = lobby.findTokenByPlayer(new PlayerId(0)).orElseThrow();
+        String hostToken = lobby.findTokenByPlayer(new PlayerId(0)).orElseThrow().uuid().toString();
 
         var game = service.startGame(lobby.id(), hostToken);
 
@@ -85,7 +84,7 @@ class SessionLobbyTest {
     @Test
     void givenOnlyHost_whenStartGame_thenThrowsNotEnoughPlayers() {
         SessionGame lobby = service.createRoom("bullshit", "Alice");
-        SessionToken hostToken = lobby.findTokenByPlayer(new PlayerId(0)).orElseThrow();
+        String hostToken = lobby.findTokenByPlayer(new PlayerId(0)).orElseThrow().uuid().toString();
 
         org.junit.jupiter.api.Assertions.assertThrows(
                 NotEnoughPlayersException.class, () -> service.startGame(lobby.id(), hostToken));
@@ -95,7 +94,7 @@ class SessionLobbyTest {
     void givenAlreadyStarted_whenStartAgain_thenThrowsAlreadyStarted() {
         SessionGame lobby = service.createRoom("bullshit", "Alice");
         service.joinRoom(lobby.id(), "Bob");
-        SessionToken hostToken = lobby.findTokenByPlayer(new PlayerId(0)).orElseThrow();
+        String hostToken = lobby.findTokenByPlayer(new PlayerId(0)).orElseThrow().uuid().toString();
         service.startGame(lobby.id(), hostToken);
 
         org.junit.jupiter.api.Assertions.assertThrows(
@@ -106,7 +105,7 @@ class SessionLobbyTest {
     void givenStartedGame_whenJoinRoom_thenThrowsAlreadyStarted() {
         SessionGame lobby = service.createRoom("bullshit", "Alice");
         service.joinRoom(lobby.id(), "Bob");
-        SessionToken hostToken = lobby.findTokenByPlayer(new PlayerId(0)).orElseThrow();
+        String hostToken = lobby.findTokenByPlayer(new PlayerId(0)).orElseThrow().uuid().toString();
         service.startGame(lobby.id(), hostToken);
 
         org.junit.jupiter.api.Assertions.assertThrows(

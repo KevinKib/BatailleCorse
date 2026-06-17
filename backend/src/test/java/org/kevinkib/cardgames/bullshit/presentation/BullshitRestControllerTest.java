@@ -15,7 +15,6 @@ import org.kevinkib.cardgames.sessionmanagement.core.application.GameFactories;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameMode;
 import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionGame;
-import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionToken;
 import org.kevinkib.cardgames.sessionmanagement.core.infrastructure.InMemorySessionRepository;
 import org.springframework.http.ResponseEntity;
 
@@ -63,9 +62,9 @@ class BullshitRestControllerTest {
     void givenStartedGameAndSeatToken_whenGetGame_thenReturnsGameView() {
         Bullshit game = (Bullshit) sessionService.createGame("bullshit", 2, GameMode.SOLO);
         GameId id = game.getId();
-        SessionToken t0 = sessionService.loadTokenByPlayerId(id, new PlayerId(0));
+        String t0 = sessionService.tokenForSeat(id, new PlayerId(0));
 
-        ResponseEntity<?> response = controller.getGame(id.uuid().toString(), t0.uuid().toString());
+        ResponseEntity<?> response = controller.getGame(id.uuid().toString(), t0);
 
         assertThat(response.getStatusCode().value(), is(200));
         assertThat(response.getBody(), instanceOf(BullshitDto.class));
@@ -118,7 +117,7 @@ class BullshitRestControllerTest {
     void givenStartedGame_whenJoin_thenConflict() {
         SessionGame lobby = sessionService.createRoom("bullshit", "Alice");
         sessionService.joinRoom(lobby.id(), "Bob");
-        sessionService.startGame(lobby.id(), lobby.findTokenByPlayer(new PlayerId(0)).orElseThrow());
+        sessionService.startGame(lobby.id(), lobby.findTokenByPlayer(new PlayerId(0)).orElseThrow().uuid().toString());
 
         ResponseEntity<JoinResponseDto> response =
                 controller.joinGame(lobby.id().uuid().toString(), new JoinGamePayload("Late"));

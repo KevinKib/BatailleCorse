@@ -42,9 +42,9 @@ class BatailleCorseWebSocketControllerTest {
         void givenValidToken_whenSend_thenBroadcastsSuccessResponse() {
             var game = sessionService.createGame("bataille-corse", 2);
             String gameId = game.getId().uuid().toString();
-            SessionToken token = sessionService.loadTokenByPlayerId(game.getId(), new PlayerId(0));
+            String token = sessionService.tokenForSeat(game.getId(), new PlayerId(0));
 
-            controller.send(new GameActionPayload(gameId, token.uuid().toString()));
+            controller.send(new GameActionPayload(gameId, token));
 
             verify(template).convertAndSend(
                     eq("/topic/game/" + gameId),
@@ -73,14 +73,14 @@ class BatailleCorseWebSocketControllerTest {
         void givenValidToken_whenSlap_thenBroadcastsSuccessResponse() {
             var game = sessionService.createGame("bataille-corse", 2);
             String gameId = game.getId().uuid().toString();
-            SessionToken token0 = sessionService.loadTokenByPlayerId(game.getId(), new PlayerId(0));
-            SessionToken token1 = sessionService.loadTokenByPlayerId(game.getId(), new PlayerId(1));
+            String token0 = sessionService.tokenForSeat(game.getId(), new PlayerId(0));
+            String token1 = sessionService.tokenForSeat(game.getId(), new PlayerId(1));
 
             // Send a card first so the pile is non-empty, enabling a slap
-            controller.send(new GameActionPayload(gameId, token0.uuid().toString()));
+            controller.send(new GameActionPayload(gameId, token0));
             clearInvocations(template);
 
-            controller.slap(new GameActionPayload(gameId, token1.uuid().toString()));
+            controller.slap(new GameActionPayload(gameId, token1));
 
             verify(template).convertAndSend(
                     eq("/topic/game/" + gameId),
@@ -110,15 +110,15 @@ class BatailleCorseWebSocketControllerTest {
             var game = sessionService.createGame("bataille-corse", 2);
             String gameId = game.getId().uuid().toString();
             GameId batailleCorseId = game.getId();
-            SessionToken token0 = sessionService.loadTokenByPlayerId(batailleCorseId, new PlayerId(0));
-            SessionToken token1 = sessionService.loadTokenByPlayerId(batailleCorseId, new PlayerId(1));
+            String token0 = sessionService.tokenForSeat(batailleCorseId, new PlayerId(0));
+            String token1 = sessionService.tokenForSeat(batailleCorseId, new PlayerId(1));
 
             // Alternate sends until the pile becomes grabbable
             BatailleCorse batailleCorse = (BatailleCorse) sessionService.getGame(batailleCorseId);
             int currentPlayer = 0;
             while (!batailleCorse.isPileGrabbable()) {
-                SessionToken currentToken = currentPlayer == 0 ? token0 : token1;
-                controller.send(new GameActionPayload(gameId, currentToken.uuid().toString()));
+                String currentToken = currentPlayer == 0 ? token0 : token1;
+                controller.send(new GameActionPayload(gameId, currentToken));
                 currentPlayer = batailleCorse.getCurrentPlayerIndex();
             }
             clearInvocations(template);
@@ -126,9 +126,9 @@ class BatailleCorseWebSocketControllerTest {
             // The player who added the last honour card can grab
             Player grabber = batailleCorse.getPile().getPlayerThatAddedLastHonourCard();
             PlayerId grabberId = grabber.id();
-            SessionToken grabToken = sessionService.loadTokenByPlayerId(batailleCorseId, grabberId);
+            String grabToken = sessionService.tokenForSeat(batailleCorseId, grabberId);
 
-            controller.grab(new GameActionPayload(gameId, grabToken.uuid().toString()));
+            controller.grab(new GameActionPayload(gameId, grabToken));
 
             verify(template).convertAndSend(
                     eq("/topic/game/" + gameId),
@@ -157,13 +157,13 @@ class BatailleCorseWebSocketControllerTest {
         void givenSoloBothSeatsRequest_whenSecondRematch_thenBroadcastsStarted() {
             var game = sessionService.createGame("bataille-corse", 2, org.kevinkib.cardgames.sessionmanagement.core.application.GameMode.SOLO);
             String gameId = game.getId().uuid().toString();
-            SessionToken token0 = sessionService.loadTokenByPlayerId(game.getId(), new PlayerId(0));
-            SessionToken token1 = sessionService.loadTokenByPlayerId(game.getId(), new PlayerId(1));
+            String token0 = sessionService.tokenForSeat(game.getId(), new PlayerId(0));
+            String token1 = sessionService.tokenForSeat(game.getId(), new PlayerId(1));
 
-            controller.rematch(new GameActionPayload(gameId, token0.uuid().toString())); // PENDING
+            controller.rematch(new GameActionPayload(gameId, token0)); // PENDING
             clearInvocations(template);
 
-            controller.rematch(new GameActionPayload(gameId, token1.uuid().toString())); // STARTED
+            controller.rematch(new GameActionPayload(gameId, token1)); // STARTED
 
             verify(template).convertAndSend(
                     eq("/topic/game/" + gameId),
@@ -179,9 +179,9 @@ class BatailleCorseWebSocketControllerTest {
             var game = sessionService.createGame("bataille-corse", 2, org.kevinkib.cardgames.sessionmanagement.core.application.GameMode.MULTIPLAYER);
             sessionService.joinGame(game.getId()); // claim seat 1 so the game has two humans
             String gameId = game.getId().uuid().toString();
-            SessionToken token0 = sessionService.loadTokenByPlayerId(game.getId(), new PlayerId(0));
+            String token0 = sessionService.tokenForSeat(game.getId(), new PlayerId(0));
 
-            controller.rematch(new GameActionPayload(gameId, token0.uuid().toString()));
+            controller.rematch(new GameActionPayload(gameId, token0));
 
             verify(template).convertAndSend(
                     eq("/topic/game/" + gameId),

@@ -17,7 +17,6 @@ import org.kevinkib.cardgames.sessionmanagement.core.application.JoinResult;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
 import org.kevinkib.cardgames.sessionmanagement.core.domain.RoomFullException;
 import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionGame;
-import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionToken;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -63,7 +62,7 @@ public class BullshitRestController {
         if (!BullshitFactory.GAME_TYPE.equals(session.gameType())) {
             return ResponseEntity.notFound().build();
         }
-        PlayerId seat = sessionService.findPlayerIdByToken(gameId, new SessionToken(token)).orElse(null);
+        PlayerId seat = sessionService.findPlayerIdByToken(gameId, token).orElse(null);
         if (seat == null) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
@@ -101,7 +100,7 @@ public class BullshitRestController {
                     "Player " + (result.playerId().id() + 1) + " joined.");
 
             return ResponseEntity.ok(new JoinResponseDto(
-                    result.playerId().id(), result.token().uuid().toString()));
+                    result.playerId().id(), result.token()));
         } catch (GameAlreadyStartedException | RoomFullException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }

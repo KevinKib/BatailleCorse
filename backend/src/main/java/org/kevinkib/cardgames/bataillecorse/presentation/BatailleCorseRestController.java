@@ -76,7 +76,7 @@ public class BatailleCorseRestController {
             gameMessagingService.sendToGame(id, broadcast);
 
             return ResponseEntity.ok(new JoinResponseDto(
-                    result.playerId().id(), result.token().uuid().toString()));
+                    result.playerId().id(), result.token()));
         } catch (InvalidGameIdException | IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
         } catch (SeatUnavailableException e) {

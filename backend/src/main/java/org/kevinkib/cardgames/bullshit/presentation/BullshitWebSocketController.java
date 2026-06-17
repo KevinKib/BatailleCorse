@@ -70,13 +70,12 @@ public class BullshitWebSocketController {
     @MessageMapping("/bullshit/start")
     public void start(@Payload GameActionPayload payload) {
         GameId gameId = new GameId(payload.gameId());
-        SessionToken token = new SessionToken(payload.token());
-        PlayerId actor = sessionService.findPlayerIdByToken(gameId, token).orElse(null);
+        PlayerId actor = sessionService.findPlayerIdByToken(gameId, payload.token()).orElse(null);
         if (actor == null) {
             return;
         }
         try {
-            Bullshit game = (Bullshit) sessionService.startGame(gameId, token);
+            Bullshit game = (Bullshit) sessionService.startGame(gameId, payload.token());
             sessionService.touch(gameId);
             broadcaster.broadcast(game, BullshitEventType.START.toString(), new EmptyEventData(), "Game started.");
         } catch (Exception e) {
@@ -93,7 +92,7 @@ public class BullshitWebSocketController {
 
         PlayerId playerId;
         try {
-            playerId = sessionService.findPlayerIdByToken(gameId, new SessionToken(payload.token()))
+            playerId = sessionService.findPlayerIdByToken(gameId, payload.token())
                     .orElseThrow(InvalidTokenException::new);
         } catch (Exception e) {
             System.err.println(e.getMessage());
@@ -123,7 +122,7 @@ public class BullshitWebSocketController {
 
         PlayerId callerId;
         try {
-            callerId = sessionService.findPlayerIdByToken(gameId, new SessionToken(payload.token()))
+            callerId = sessionService.findPlayerIdByToken(gameId, payload.token())
                     .orElseThrow(InvalidTokenException::new);
         } catch (Exception e) {
             System.err.println(e.getMessage());

@@ -36,7 +36,7 @@ class SeatSubscriptionInterceptorTest {
                 new GameFactories(List.of(new BullshitFactory())));
         interceptor = new SeatSubscriptionInterceptor(sessionService);
         gameId = sessionService.createGame("bullshit", 2, GameMode.SOLO).getId();
-        seat0Token = sessionService.loadTokenByPlayerId(gameId, new PlayerId(0)).uuid().toString();
+        seat0Token = sessionService.tokenForSeat(gameId, new PlayerId(0));
     }
 
     private Message<byte[]> subscribe(String destination, String token) {

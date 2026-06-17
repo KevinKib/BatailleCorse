@@ -56,7 +56,7 @@ public class SessionService implements GameDirectory {
     public JoinResult joinGame(GameId gameId, String name) {
         SessionGame sessionGame = repository.loadSessionGame(gameId);
         SessionPlayer claimed = sessionGame.claimSeat(JOINER_SEAT, name);
-        return new JoinResult(claimed.id(), claimed.token());
+        return new JoinResult(claimed.id(), claimed.token().uuid().toString());
     }
 
     public JoinResult joinRoom(GameId id, String name) {
@@ -65,7 +65,7 @@ public class SessionService implements GameDirectory {
         }
         SessionGame lobby = repository.loadSessionGame(id);
         SessionPlayer claimed = lobby.claimNextFreeSeat(name);
-        return new JoinResult(claimed.id(), claimed.token());
+        return new JoinResult(claimed.id(), claimed.token().uuid().toString());
     }
 
     public SessionGame createRoom(String gameType, String hostName) {
@@ -76,12 +76,12 @@ public class SessionService implements GameDirectory {
         return lobby;
     }
 
-    public Game startGame(GameId id, SessionToken hostToken) {
+    public Game startGame(GameId id, String hostToken) {
         if (repository.findGame(id).isPresent()) {
             throw new GameAlreadyStartedException(id);
         }
         SessionGame lobby = repository.loadSessionGame(id);
-        PlayerId actor = lobby.findPlayerByToken(hostToken)
+        PlayerId actor = lobby.findPlayerByToken(new SessionToken(hostToken))
                 .orElseThrow(() -> new NotHostException(id));
         if (!lobby.isHost(actor)) {
             throw new NotHostException(id);
@@ -151,11 +151,11 @@ public class SessionService implements GameDirectory {
         repository.touch(id);
     }
 
-    public SessionToken loadTokenByPlayerId(GameId gameId, PlayerId playerId) {
-        return repository.loadSessionToken(gameId, playerId);
+    public String tokenForSeat(GameId gameId, PlayerId playerId) {
+        return repository.loadSessionToken(gameId, playerId).uuid().toString();
     }
 
-    public Optional<PlayerId> findPlayerIdByToken(GameId gameId, SessionToken token) {
-        return repository.loadSessionGame(gameId).findPlayerByToken(token);
+    public Optional<PlayerId> findPlayerIdByToken(GameId gameId, String token) {
+        return repository.loadSessionGame(gameId).findPlayerByToken(new SessionToken(token));
     }
 }
