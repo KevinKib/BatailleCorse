@@ -1,5 +1,9 @@
 package org.kevinkib.cardgames.bataillecorse.presentation;
-import org.kevinkib.cardgames.presentation.*;
+import org.kevinkib.cardgames.presentation.GameMessagingService;
+import org.kevinkib.cardgames.sessionmanagement.presence.port.GameLifecycleBroadcaster;
+import org.kevinkib.cardgames.sessionmanagement.presence.domain.ForfeitReason;
+import org.kevinkib.cardgames.sessionmanagement.presence.domain.Seat;
+import org.kevinkib.cardgames.sessionmanagement.presence.port.ForfeitLog;
 
 import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorse;
 import org.kevinkib.cardgames.game.Game;
@@ -13,12 +17,12 @@ import org.kevinkib.cardgames.presentation.dto.event.OpponentReconnectedEventDat
 public class BatailleCorseLifecycleBroadcaster implements GameLifecycleBroadcaster {
 
     private final GameMessagingService messaging;
-    private final ForfeitReasonRegistry forfeitReasonRegistry;
+    private final ForfeitLog forfeitLog;
 
     public BatailleCorseLifecycleBroadcaster(GameMessagingService messaging,
-                                             ForfeitReasonRegistry forfeitReasonRegistry) {
+                                             ForfeitLog forfeitLog) {
         this.messaging = messaging;
-        this.forfeitReasonRegistry = forfeitReasonRegistry;
+        this.forfeitLog = forfeitLog;
     }
 
     @Override
@@ -53,6 +57,6 @@ public class BatailleCorseLifecycleBroadcaster implements GameLifecycleBroadcast
                 LifecycleEventType.FORFEIT.toString(),
                 new ForfeitEventData(seat.playerId().id()),
                 "Player " + seat.playerId() + " forfeited.",
-                BatailleCorseDto.from(bc, forfeitReasonRegistry.reasonsBySeat(seat.gameId()))));
+                BatailleCorseDto.from(bc, forfeitLog.reasonsBySeat(seat.gameId()))));
     }
 }

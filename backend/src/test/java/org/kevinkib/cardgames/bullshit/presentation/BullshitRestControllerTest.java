@@ -11,12 +11,12 @@ import org.kevinkib.cardgames.presentation.LobbyBroadcaster;
 import org.kevinkib.cardgames.presentation.api.JoinGamePayload;
 import org.kevinkib.cardgames.presentation.dto.JoinResponseDto;
 import org.kevinkib.cardgames.presentation.dto.LobbyDto;
-import org.kevinkib.cardgames.sessionmanagement.application.GameFactories;
-import org.kevinkib.cardgames.sessionmanagement.application.SessionService;
-import org.kevinkib.cardgames.sessionmanagement.domain.GameMode;
-import org.kevinkib.cardgames.sessionmanagement.domain.SessionGame;
-import org.kevinkib.cardgames.sessionmanagement.domain.SessionToken;
-import org.kevinkib.cardgames.sessionmanagement.infrastructure.InMemorySessionRepository;
+import org.kevinkib.cardgames.sessionmanagement.core.application.GameFactories;
+import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
+import org.kevinkib.cardgames.sessionmanagement.core.domain.GameMode;
+import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionGame;
+import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionToken;
+import org.kevinkib.cardgames.sessionmanagement.core.infrastructure.InMemorySessionRepository;
 import org.springframework.http.ResponseEntity;
 
 import java.time.Clock;

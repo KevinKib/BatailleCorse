@@ -2,9 +2,12 @@ package org.kevinkib.cardgames.presentation;
 
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
-import org.kevinkib.cardgames.sessionmanagement.application.InvalidTokenException;
-import org.kevinkib.cardgames.sessionmanagement.application.SessionService;
-import org.kevinkib.cardgames.sessionmanagement.domain.SessionToken;
+import org.kevinkib.cardgames.sessionmanagement.core.application.InvalidTokenException;
+import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
+import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionToken;
+import org.kevinkib.cardgames.sessionmanagement.presence.application.PresenceService;
+import org.kevinkib.cardgames.sessionmanagement.presence.domain.ForfeitReason;
+import org.kevinkib.cardgames.sessionmanagement.presence.domain.Seat;
 import org.kevinkib.cardgames.presentation.api.GameActionPayload;
 import org.kevinkib.cardgames.presentation.api.PresencePayload;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -17,11 +20,11 @@ import org.springframework.stereotype.Controller;
 public class LifecycleController {
 
     private final SessionService sessionService;
-    private final DisconnectForfeitService disconnectForfeitService;
+    private final PresenceService presenceService;
 
-    public LifecycleController(SessionService sessionService, DisconnectForfeitService disconnectForfeitService) {
+    public LifecycleController(SessionService sessionService, PresenceService presenceService) {
         this.sessionService = sessionService;
-        this.disconnectForfeitService = disconnectForfeitService;
+        this.presenceService = presenceService;
     }
 
     @MessageMapping("/presence")
@@ -31,7 +34,7 @@ public class LifecycleController {
             PlayerId playerId = sessionService
                     .findPlayerIdByToken(gameId, new SessionToken(payload.token()))
                     .orElseThrow(InvalidTokenException::new);
-            disconnectForfeitService.onPresence(headers.getSessionId(), gameId, playerId);
+            presenceService.onPresence(headers.getSessionId(), gameId, playerId);
         } catch (Exception e) {
             System.err.println(e.getMessage());
         }
@@ -44,7 +47,7 @@ public class LifecycleController {
             PlayerId playerId = sessionService
                     .findPlayerIdByToken(gameId, new SessionToken(payload.token()))
                     .orElseThrow(InvalidTokenException::new);
-            disconnectForfeitService.forfeit(new Seat(gameId, playerId), ForfeitReason.RESIGNED);
+            presenceService.forfeit(new Seat(gameId, playerId), ForfeitReason.RESIGNED);
         } catch (Exception e) {
             System.err.println(e.getMessage());
         }

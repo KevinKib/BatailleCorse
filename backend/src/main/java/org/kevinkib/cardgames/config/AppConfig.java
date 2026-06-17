@@ -2,22 +2,26 @@ package org.kevinkib.cardgames.config;
 
 import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseFactory;
 import org.kevinkib.cardgames.bullshit.domain.BullshitFactory;
-import org.kevinkib.cardgames.sessionmanagement.application.GameCleanupService;
-import org.kevinkib.cardgames.sessionmanagement.application.GameFactories;
-import org.kevinkib.cardgames.sessionmanagement.application.SessionService;
-import org.kevinkib.cardgames.sessionmanagement.application.port.SessionRepository;
-import org.kevinkib.cardgames.sessionmanagement.infrastructure.InMemorySessionRepository;
+import org.kevinkib.cardgames.sessionmanagement.core.application.GameCleanupService;
+import org.kevinkib.cardgames.sessionmanagement.core.application.GameFactories;
+import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
+import org.kevinkib.cardgames.sessionmanagement.core.application.port.SessionRepository;
+import org.kevinkib.cardgames.sessionmanagement.core.infrastructure.InMemorySessionRepository;
 import org.kevinkib.cardgames.bataillecorse.presentation.BatailleCorseLifecycleBroadcaster;
 import org.kevinkib.cardgames.bullshit.presentation.BullshitLifecycleBroadcaster;
 import org.kevinkib.cardgames.bullshit.presentation.BullshitStateBroadcaster;
-import org.kevinkib.cardgames.presentation.DisconnectForfeitService;
+import org.kevinkib.cardgames.sessionmanagement.presence.application.PresenceService;
 import org.kevinkib.cardgames.presentation.SeatSubscriptionInterceptor;
-import org.kevinkib.cardgames.presentation.ForfeitReasonRegistry;
-import org.kevinkib.cardgames.presentation.GameLifecycleBroadcaster;
-import org.kevinkib.cardgames.presentation.GameLifecycleBroadcasters;
+import org.kevinkib.cardgames.sessionmanagement.presence.port.ForfeitLog;
+import org.kevinkib.cardgames.sessionmanagement.presence.infrastructure.InMemoryForfeitLog;
+import org.kevinkib.cardgames.sessionmanagement.presence.port.GameLifecycleBroadcaster;
+import org.kevinkib.cardgames.sessionmanagement.presence.application.GameLifecycleBroadcasters;
 import org.kevinkib.cardgames.presentation.GameMessagingService;
 import org.kevinkib.cardgames.presentation.LobbyBroadcaster;
-import org.kevinkib.cardgames.presentation.StompSessionSeatRegistry;
+import org.kevinkib.cardgames.sessionmanagement.presence.infrastructure.InMemoryConnectionRegistry;
+import org.kevinkib.cardgames.sessionmanagement.presence.infrastructure.TaskSchedulerForfeitScheduler;
+import org.kevinkib.cardgames.sessionmanagement.presence.port.ConnectionRegistry;
+import org.kevinkib.cardgames.sessionmanagement.presence.port.ForfeitScheduler;
 import org.kevinkib.cardgames.presentation.WebSocketDisconnectListener;
 
 import java.util.List;
@@ -74,13 +78,13 @@ public class AppConfig {
     }
 
     @Bean
-    public StompSessionSeatRegistry stompSessionSeatRegistry() {
-        return new StompSessionSeatRegistry();
+    public ConnectionRegistry connectionRegistry() {
+        return new InMemoryConnectionRegistry();
     }
 
     @Bean
-    public ForfeitReasonRegistry forfeitReasonRegistry() {
-        return new ForfeitReasonRegistry();
+    public ForfeitLog forfeitLog() {
+        return new InMemoryForfeitLog();
     }
 
     @Bean
@@ -90,7 +94,7 @@ public class AppConfig {
 
     @Bean
     public GameLifecycleBroadcaster batailleCorseLifecycleBroadcaster(GameMessagingService gameMessagingService) {
-        return new BatailleCorseLifecycleBroadcaster(gameMessagingService, forfeitReasonRegistry());
+        return new BatailleCorseLifecycleBroadcaster(gameMessagingService, forfeitLog());
     }
 
     @Bean
@@ -119,19 +123,24 @@ public class AppConfig {
     }
 
     @Bean
-    public DisconnectForfeitService disconnectForfeitService(GameLifecycleBroadcasters gameLifecycleBroadcasters) {
-        return new DisconnectForfeitService(
-                sessionService(), stompSessionSeatRegistry(), taskScheduler(), clock(), forfeitReasonRegistry(),
+    public ForfeitScheduler forfeitScheduler() {
+        return new TaskSchedulerForfeitScheduler(taskScheduler());
+    }
+
+    @Bean
+    public PresenceService presenceService(GameLifecycleBroadcasters gameLifecycleBroadcasters) {
+        return new PresenceService(
+                sessionService(), connectionRegistry(), forfeitScheduler(), clock(), forfeitLog(),
                 gameLifecycleBroadcasters);
     }
 
     @Bean
-    public WebSocketDisconnectListener webSocketDisconnectListener(DisconnectForfeitService disconnectForfeitService) {
-        return new WebSocketDisconnectListener(disconnectForfeitService);
+    public WebSocketDisconnectListener webSocketDisconnectListener(PresenceService presenceService) {
+        return new WebSocketDisconnectListener(presenceService);
     }
 
     @Bean
     public GameCleanupService gameCleanupService() {
-        return new GameCleanupService(sessionRepository(), stompSessionSeatRegistry(), forfeitReasonRegistry());
+        return new GameCleanupService(sessionRepository(), connectionRegistry(), forfeitLog());
     }
 }

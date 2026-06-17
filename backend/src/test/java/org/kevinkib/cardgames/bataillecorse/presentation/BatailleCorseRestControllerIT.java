@@ -2,7 +2,7 @@ package org.kevinkib.cardgames.bataillecorse.presentation;
 import org.kevinkib.cardgames.presentation.*;
 
 import org.junit.jupiter.api.Test;
-import org.kevinkib.cardgames.sessionmanagement.domain.GameMode;
+import org.kevinkib.cardgames.sessionmanagement.core.domain.GameMode;
 import org.kevinkib.cardgames.presentation.api.CreateGamePayload;
 import org.kevinkib.cardgames.presentation.api.Response;
 import org.kevinkib.cardgames.bataillecorse.presentation.dto.BatailleCorseDto;

@@ -8,9 +8,9 @@ import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorse;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.bataillecorse.domain.Player;
 import org.kevinkib.cardgames.game.PlayerId;
-import org.kevinkib.cardgames.sessionmanagement.application.SessionService;
-import org.kevinkib.cardgames.sessionmanagement.domain.SessionToken;
-import org.kevinkib.cardgames.sessionmanagement.infrastructure.InMemorySessionRepository;
+import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
+import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionToken;
+import org.kevinkib.cardgames.sessionmanagement.core.infrastructure.InMemorySessionRepository;
 import org.kevinkib.cardgames.presentation.api.GameActionPayload;
 import org.kevinkib.cardgames.presentation.api.Response;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -29,7 +29,7 @@ class BatailleCorseWebSocketControllerTest {
 
     @BeforeEach
     void setUp() {
-        sessionService = new SessionService(new InMemorySessionRepository(java.time.Clock.systemUTC()), new org.kevinkib.cardgames.sessionmanagement.application.GameFactories(java.util.List.of(new org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseFactory())));
+        sessionService = new SessionService(new InMemorySessionRepository(java.time.Clock.systemUTC()), new org.kevinkib.cardgames.sessionmanagement.core.application.GameFactories(java.util.List.of(new org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseFactory())));
         template = mock(SimpMessagingTemplate.class);
         GameMessagingService messaging = new GameMessagingService(template);
         controller = new BatailleCorseWebSocketController(sessionService, messaging);
@@ -155,7 +155,7 @@ class BatailleCorseWebSocketControllerTest {
 
         @Test
         void givenSoloBothSeatsRequest_whenSecondRematch_thenBroadcastsStarted() {
-            var game = sessionService.createGame("bataille-corse", 2, org.kevinkib.cardgames.sessionmanagement.domain.GameMode.SOLO);
+            var game = sessionService.createGame("bataille-corse", 2, org.kevinkib.cardgames.sessionmanagement.core.domain.GameMode.SOLO);
             String gameId = game.getId().uuid().toString();
             SessionToken token0 = sessionService.loadTokenByPlayerId(game.getId(), new PlayerId(0));
             SessionToken token1 = sessionService.loadTokenByPlayerId(game.getId(), new PlayerId(1));
@@ -176,7 +176,7 @@ class BatailleCorseWebSocketControllerTest {
 
         @Test
         void givenMultiplayerSingleRequest_whenRematch_thenBroadcastsPending() {
-            var game = sessionService.createGame("bataille-corse", 2, org.kevinkib.cardgames.sessionmanagement.domain.GameMode.MULTIPLAYER);
+            var game = sessionService.createGame("bataille-corse", 2, org.kevinkib.cardgames.sessionmanagement.core.domain.GameMode.MULTIPLAYER);
             sessionService.joinGame(game.getId()); // claim seat 1 so the game has two humans
             String gameId = game.getId().uuid().toString();
             SessionToken token0 = sessionService.loadTokenByPlayerId(game.getId(), new PlayerId(0));
