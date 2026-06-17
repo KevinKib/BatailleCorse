@@ -1,9 +1,9 @@
 package org.kevinkib.cardgames.presentation;
 
 import org.kevinkib.cardgames.game.GameId;
-import org.kevinkib.cardgames.sessionmanagement.session.application.InvalidGameIdException;
-import org.kevinkib.cardgames.sessionmanagement.session.application.SessionService;
-import org.kevinkib.cardgames.sessionmanagement.session.domain.SessionPlayer;
+import org.kevinkib.cardgames.sessionmanagement.core.application.InvalidGameIdException;
+import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
+import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionPlayer;
 import org.kevinkib.cardgames.presentation.dto.SessionViewDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

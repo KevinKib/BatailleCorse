@@ -2,11 +2,11 @@ package org.kevinkib.cardgames.config;
 
 import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseFactory;
 import org.kevinkib.cardgames.bullshit.domain.BullshitFactory;
-import org.kevinkib.cardgames.sessionmanagement.session.application.GameCleanupService;
-import org.kevinkib.cardgames.sessionmanagement.session.application.GameFactories;
-import org.kevinkib.cardgames.sessionmanagement.session.application.SessionService;
-import org.kevinkib.cardgames.sessionmanagement.session.application.port.SessionRepository;
-import org.kevinkib.cardgames.sessionmanagement.session.infrastructure.InMemorySessionRepository;
+import org.kevinkib.cardgames.sessionmanagement.core.application.GameCleanupService;
+import org.kevinkib.cardgames.sessionmanagement.core.application.GameFactories;
+import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
+import org.kevinkib.cardgames.sessionmanagement.core.application.port.SessionRepository;
+import org.kevinkib.cardgames.sessionmanagement.core.infrastructure.InMemorySessionRepository;
 import org.kevinkib.cardgames.bataillecorse.presentation.BatailleCorseLifecycleBroadcaster;
 import org.kevinkib.cardgames.bullshit.presentation.BullshitLifecycleBroadcaster;
 import org.kevinkib.cardgames.bullshit.presentation.BullshitStateBroadcaster;

@@ -1,6 +1,6 @@
 package org.kevinkib.cardgames.presentation.dto;
 
-import org.kevinkib.cardgames.sessionmanagement.session.domain.SessionPlayer;
+import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionPlayer;
 
 import java.util.List;
 

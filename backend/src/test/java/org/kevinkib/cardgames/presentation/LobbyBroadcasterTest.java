@@ -7,9 +7,9 @@ import org.kevinkib.cardgames.presentation.api.Response;
 import org.kevinkib.cardgames.presentation.dto.LobbyDto;
 import org.kevinkib.cardgames.presentation.dto.event.EmptyEventData;
 import org.kevinkib.cardgames.presentation.dto.event.LifecycleEventType;
-import org.kevinkib.cardgames.sessionmanagement.session.application.GameFactories;
+import org.kevinkib.cardgames.sessionmanagement.core.application.GameFactories;
 import org.kevinkib.cardgames.bullshit.domain.BullshitFactory;
-import org.kevinkib.cardgames.sessionmanagement.session.domain.SessionGame;
+import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionGame;
 
 import java.util.ArrayList;
 import java.util.List;

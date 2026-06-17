@@ -6,9 +6,9 @@ import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorse;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
-import org.kevinkib.cardgames.sessionmanagement.session.application.SessionService;
-import org.kevinkib.cardgames.sessionmanagement.session.domain.GameMode;
-import org.kevinkib.cardgames.sessionmanagement.session.infrastructure.InMemorySessionRepository;
+import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
+import org.kevinkib.cardgames.sessionmanagement.core.domain.GameMode;
+import org.kevinkib.cardgames.sessionmanagement.core.infrastructure.InMemorySessionRepository;
 import org.kevinkib.cardgames.presentation.api.Response;
 import org.kevinkib.cardgames.sessionmanagement.presence.domain.ForfeitReason;
 import org.kevinkib.cardgames.sessionmanagement.presence.domain.Seat;
@@ -70,7 +70,7 @@ class PresenceServiceTest {
     @BeforeEach
     void setUp() {
         Clock clock = Clock.fixed(Instant.parse("2026-06-09T12:00:00Z"), ZoneOffset.UTC);
-        sessionService = new SessionService(new InMemorySessionRepository(clock), new org.kevinkib.cardgames.sessionmanagement.session.application.GameFactories(java.util.List.of(new org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseFactory())));
+        sessionService = new SessionService(new InMemorySessionRepository(clock), new org.kevinkib.cardgames.sessionmanagement.core.application.GameFactories(java.util.List.of(new org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseFactory())));
         scheduler = new CapturingScheduler();
         messaging = new RecordingMessaging();
         registry = new InMemoryConnectionRegistry();
