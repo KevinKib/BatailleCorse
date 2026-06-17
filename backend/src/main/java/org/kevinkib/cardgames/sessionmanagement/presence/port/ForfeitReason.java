@@ -1,4 +1,4 @@
-package org.kevinkib.cardgames.sessionmanagement.presence.domain;
+package org.kevinkib.cardgames.sessionmanagement.presence.port;
 
 /**
  * Why a seat left the game, as classified by the session layer.

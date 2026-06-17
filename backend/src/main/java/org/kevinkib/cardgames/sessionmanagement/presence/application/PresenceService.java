@@ -4,10 +4,10 @@ import org.kevinkib.cardgames.game.Game;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameDirectory;
-import org.kevinkib.cardgames.sessionmanagement.presence.domain.ForfeitReason;
 import org.kevinkib.cardgames.sessionmanagement.presence.domain.Seat;
 import org.kevinkib.cardgames.sessionmanagement.presence.port.ConnectionRegistry;
 import org.kevinkib.cardgames.sessionmanagement.presence.port.ForfeitLog;
+import org.kevinkib.cardgames.sessionmanagement.presence.port.ForfeitReason;
 import org.kevinkib.cardgames.sessionmanagement.presence.port.ForfeitScheduler;
 import org.kevinkib.cardgames.sessionmanagement.presence.port.ScheduledForfeit;
 
@@ -62,7 +62,7 @@ public class PresenceService {
             pending.cancel();
             Game game = findGame(seat.gameId());
             if (game != null) {
-                broadcasters.broadcasterFor(game).reconnected(game, seat);
+                broadcasters.broadcasterFor(game).reconnected(game, seat.playerId());
             }
         }
     }
@@ -81,23 +81,25 @@ public class PresenceService {
         }
 
         Instant deadline = clock.instant().plus(FORFEIT_GRACE);
-        ScheduledForfeit task = scheduler.schedule(deadline, () -> forfeit(seat, ForfeitReason.DISCONNECTED));
+        ScheduledForfeit task = scheduler.schedule(deadline,
+                () -> forfeit(seat.gameId(), seat.playerId(), ForfeitReason.DISCONNECTED));
         pendingForfeits.put(seat, task);
-        broadcasters.broadcasterFor(game).disconnected(game, seat, deadline.toEpochMilli());
+        broadcasters.broadcasterFor(game).disconnected(game, seat.playerId(), deadline.toEpochMilli());
     }
 
     /** Terminal path shared by the timer (DISCONNECTED) and explicit /app/forfeit (RESIGNED). Idempotent on a finished game. */
-    public void forfeit(Seat seat, ForfeitReason reason) {
+    public void forfeit(GameId gameId, PlayerId playerId, ForfeitReason reason) {
+        Seat seat = new Seat(gameId, playerId);
         pendingForfeits.remove(seat);
 
-        Game game = findGame(seat.gameId());
+        Game game = findGame(gameId);
         if (game == null || game.isFinished()) {
             return;
         }
-        game.forfeit(seat.playerId());
+        game.forfeit(playerId);
         forfeitLog.record(seat, reason);
-        games.touch(seat.gameId()); // start the finished-grace clock
-        broadcasters.broadcasterFor(game).forfeited(game, seat, reason);
+        games.touch(gameId); // start the finished-grace clock
+        broadcasters.broadcasterFor(game).forfeited(game, playerId, reason);
     }
 
     private Game findGame(GameId gameId) {

@@ -5,8 +5,7 @@ import org.kevinkib.cardgames.bullshit.domain.Bullshit;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.presentation.GameMessagingService;
-import org.kevinkib.cardgames.sessionmanagement.presence.domain.ForfeitReason;
-import org.kevinkib.cardgames.sessionmanagement.presence.domain.Seat;
+import org.kevinkib.cardgames.sessionmanagement.presence.port.ForfeitReason;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -54,7 +53,7 @@ class BullshitLifecycleBroadcasterTest {
         BullshitLifecycleBroadcaster broadcaster =
                 new BullshitLifecycleBroadcaster(new BullshitStateBroadcaster(messaging));
 
-        broadcaster.forfeited(game, new Seat(game.getId(), new PlayerId(1)), ForfeitReason.RESIGNED);
+        broadcaster.forfeited(game, new PlayerId(1), ForfeitReason.RESIGNED);
 
         List<Integer> seatIds = messaging.seats.stream().map(PlayerId::id).toList();
         assertThat(seatIds.size(), is(2));

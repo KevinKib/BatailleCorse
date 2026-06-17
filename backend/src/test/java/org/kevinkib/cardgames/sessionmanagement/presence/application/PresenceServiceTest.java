@@ -10,12 +10,11 @@ import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameMode;
 import org.kevinkib.cardgames.sessionmanagement.core.infrastructure.InMemorySessionRepository;
 import org.kevinkib.cardgames.presentation.api.Response;
-import org.kevinkib.cardgames.sessionmanagement.presence.domain.ForfeitReason;
-import org.kevinkib.cardgames.sessionmanagement.presence.domain.Seat;
 import org.kevinkib.cardgames.sessionmanagement.presence.infrastructure.InMemoryConnectionRegistry;
 import org.kevinkib.cardgames.sessionmanagement.presence.infrastructure.InMemoryForfeitLog;
 import org.kevinkib.cardgames.sessionmanagement.presence.port.ConnectionRegistry;
 import org.kevinkib.cardgames.sessionmanagement.presence.port.ForfeitLog;
+import org.kevinkib.cardgames.sessionmanagement.presence.port.ForfeitReason;
 import org.kevinkib.cardgames.sessionmanagement.presence.port.ForfeitScheduler;
 import org.kevinkib.cardgames.sessionmanagement.presence.port.ScheduledForfeit;
 import org.kevinkib.cardgames.presentation.api.SuccessResponse;
@@ -144,7 +143,7 @@ class PresenceServiceTest {
 
     @Test
     void whenForfeitCalledDirectly_thenConcedesAndBroadcastsForfeitWithResigned() {
-        service.forfeit(new Seat(gameId, new PlayerId(1)), ForfeitReason.RESIGNED);
+        service.forfeit(gameId, new PlayerId(1), ForfeitReason.RESIGNED);
 
         BatailleCorse game = (BatailleCorse) sessionService.getGame(gameId);
         assertThat(game.getWinner().id(), is(new PlayerId(0)));
