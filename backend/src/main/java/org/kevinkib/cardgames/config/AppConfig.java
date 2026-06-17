@@ -4,6 +4,7 @@ import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseFactory;
 import org.kevinkib.cardgames.bullshit.domain.BullshitFactory;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameCleanupService;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameFactories;
+import org.kevinkib.cardgames.sessionmanagement.core.application.GameDirectory;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
 import org.kevinkib.cardgames.sessionmanagement.core.application.port.SessionRepository;
 import org.kevinkib.cardgames.sessionmanagement.core.infrastructure.InMemorySessionRepository;
@@ -61,6 +62,11 @@ public class AppConfig {
     @Bean
     public SessionService sessionService() {
         return new SessionService(sessionRepository(), gameFactories());
+    }
+
+    @Bean
+    public GameDirectory gameDirectory() {
+        return sessionService();
     }
 
     @Bean
@@ -130,7 +136,7 @@ public class AppConfig {
     @Bean
     public PresenceService presenceService(GameLifecycleBroadcasters gameLifecycleBroadcasters) {
         return new PresenceService(
-                sessionService(), connectionRegistry(), forfeitScheduler(), clock(), forfeitLog(),
+                gameDirectory(), connectionRegistry(), forfeitScheduler(), clock(), forfeitLog(),
                 gameLifecycleBroadcasters);
     }
 

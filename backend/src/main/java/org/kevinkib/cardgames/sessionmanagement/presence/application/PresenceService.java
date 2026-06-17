@@ -3,8 +3,7 @@ package org.kevinkib.cardgames.sessionmanagement.presence.application;
 import org.kevinkib.cardgames.game.Game;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
-import org.kevinkib.cardgames.sessionmanagement.core.application.InvalidGameIdException;
-import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
+import org.kevinkib.cardgames.sessionmanagement.core.application.GameDirectory;
 import org.kevinkib.cardgames.sessionmanagement.presence.domain.ForfeitReason;
 import org.kevinkib.cardgames.sessionmanagement.presence.domain.Seat;
 import org.kevinkib.cardgames.sessionmanagement.presence.port.ConnectionRegistry;
@@ -30,7 +29,7 @@ public class PresenceService {
     /** Grace before a dropped player auto-loses. */
     public static final Duration FORFEIT_GRACE = Duration.ofSeconds(60);
 
-    private final SessionService sessionService;
+    private final GameDirectory games;
     private final ConnectionRegistry registry;
     private final ForfeitScheduler scheduler;
     private final Clock clock;
@@ -39,13 +38,13 @@ public class PresenceService {
 
     private final Map<Seat, ScheduledForfeit> pendingForfeits = new ConcurrentHashMap<>();
 
-    public PresenceService(SessionService sessionService,
+    public PresenceService(GameDirectory games,
                            ConnectionRegistry registry,
                            ForfeitScheduler scheduler,
                            Clock clock,
                            ForfeitLog forfeitLog,
                            GameLifecycleBroadcasters broadcasters) {
-        this.sessionService = sessionService;
+        this.games = games;
         this.registry = registry;
         this.scheduler = scheduler;
         this.clock = clock;
@@ -97,15 +96,11 @@ public class PresenceService {
         }
         game.forfeit(seat.playerId());
         forfeitLog.record(seat, reason);
-        sessionService.touch(seat.gameId()); // start the finished-grace clock
+        games.touch(seat.gameId()); // start the finished-grace clock
         broadcasters.broadcasterFor(game).forfeited(game, seat, reason);
     }
 
     private Game findGame(GameId gameId) {
-        try {
-            return sessionService.getGame(gameId);
-        } catch (InvalidGameIdException e) {
-            return null;
-        }
+        return games.findGame(gameId).orElse(null);
     }
 }
