@@ -1,8 +1,9 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { setActivePinia, createPinia } from 'pinia';
 import { useBullshitStore } from './Bullshit.store';
 import type { BullshitState } from '../model/bullshit/BullshitState';
 import type { LobbyView } from '../model/bullshit/LobbyView';
+import webSocketService from '../service/WebSocketService';
 
 function state(overrides: Partial<BullshitState> = {}): BullshitState {
   return {
@@ -94,5 +95,25 @@ describe('Bullshit store', () => {
     expect(store.selectedCards).toHaveLength(1);
     store.toggleCard(card);
     expect(store.selectedCards).toHaveLength(0);
+  });
+
+  it('tracks rematch progress from a PENDING REMATCH event', () => {
+    const store = useBullshitStore();
+    store.applyEvent({ type: 'event', eventType: 'REMATCH',
+      eventData: { status: 'PENDING', ready: 1, eligible: 3 }, message: '' });
+
+    expect(store.rematchReady).toBe(1);
+    expect(store.rematchEligible).toBe(3);
+  });
+
+  it('rematch() marks me as requested so the button shows waiting', () => {
+    const store = useBullshitStore();
+    vi.spyOn(webSocketService, 'publish').mockImplementation(() => {});
+    store.applyEvent({ type: 'event', eventType: 'REMATCH',
+      eventData: { status: 'PENDING', ready: 1, eligible: 2 }, message: '' });
+
+    store.rematch();
+
+    expect(store.rematchButton).toEqual({ label: 'Waiting… 1/2 ready', disabled: true });
   });
 });

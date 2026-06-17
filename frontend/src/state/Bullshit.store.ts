@@ -7,6 +7,7 @@ import type { BullshitState, BullshitView } from '../model/bullshit/BullshitStat
 import type { LobbyView } from '../model/bullshit/LobbyView';
 import type { CallBullshitEventData } from '../model/bullshit/BullshitEvents';
 import type Card from '../model/Card';
+import { bullshitRematchButton } from '../model/bullshit/BullshitRematch';
 
 export const useBullshitStore = defineStore('bullshit-store', () => {
   const state = ref<BullshitView | null>(null);
@@ -14,6 +15,9 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
   const mySeat = ref<number>(0);
   const reveal = ref<CallBullshitEventData | null>(null);
   const selectedCards = ref<Card[]>([]);
+  const rematchRequested = ref(false);
+  const rematchReady = ref(0);
+  const rematchEligible = ref(0);
 
   const session = new BullshitSession(webSocketService, {
     onEvent(event: BullshitSessionEvent) { applyEvent(event); },
@@ -27,6 +31,12 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
       case 'event':
         if (event.eventType === 'CALL_BULLSHIT') reveal.value = event.eventData as CallBullshitEventData;
         else reveal.value = null;
+        if (event.eventType === 'REMATCH') {
+          const d = event.eventData as { status: string; ready: number; eligible: number };
+          rematchReady.value = d.ready;
+          rematchEligible.value = d.eligible;
+          if (d.status === 'STARTED') rematchRequested.value = false;
+        }
         break;
     }
   }
@@ -51,6 +61,14 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
     return 'playing';
   });
 
+  const rematchButton = computed(() =>
+    bullshitRematchButton({ iRequested: rematchRequested.value, ready: rematchReady.value, eligible: rematchEligible.value }));
+
+  function requestRematch() {
+    rematchRequested.value = true;
+    session.rematch();
+  }
+
   function toggleCard(card: Card) {
     const i = selectedCards.value.findIndex(c => c.name === card.name);
     if (i >= 0) selectedCards.value.splice(i, 1);
@@ -61,6 +79,7 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
   return {
     state, game, lobby, gameId, mySeat, reveal, selectedCards,
     isMyTurn, canDiscard, canCallBullshit, iWon, isHost, canStart, phase,
+    rematchRequested, rematchReady, rematchEligible, rematchButton,
     applyEvent, toggleCard, clearSelection,
     create: (name?: string) => session.create(name),
     join: (id: string, name?: string) => session.join(id, name),
@@ -69,5 +88,6 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
     startGame: () => session.startGame(),
     discard: () => { session.discard(selectedCards.value); clearSelection(); },
     callBullshit: () => session.callBullshit(),
+    rematch: requestRematch,
   };
 });
