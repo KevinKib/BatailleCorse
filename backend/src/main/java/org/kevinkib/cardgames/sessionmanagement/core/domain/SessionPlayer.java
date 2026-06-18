@@ -9,7 +9,6 @@ public class SessionPlayer {
     private boolean claimed;
     private String name;
     private boolean rematchRequested;
-    private boolean leftRematch;
 
     public SessionPlayer(PlayerId id, SessionToken token) {
         this.id = id;
@@ -17,7 +16,6 @@ public class SessionPlayer {
         this.claimed = false;
         this.name = null;
         this.rematchRequested = false;
-        this.leftRematch = false;
     }
 
     public void claim(String name) {
@@ -31,25 +29,14 @@ public class SessionPlayer {
 
     public void requestRematch() {
         this.rematchRequested = true;
-        this.leftRematch = false; // clicking Play Again means this seat is staying
-    }
-
-    public void leaveRematch() {
-        this.leftRematch = true;
-        this.rematchRequested = false;
     }
 
     public void clearRematch() {
         this.rematchRequested = false;
-        this.leftRematch = false;
     }
 
     public boolean hasRequestedRematch() {
         return rematchRequested;
-    }
-
-    public boolean hasLeftRematch() {
-        return leftRematch;
     }
 
     public PlayerId id() {

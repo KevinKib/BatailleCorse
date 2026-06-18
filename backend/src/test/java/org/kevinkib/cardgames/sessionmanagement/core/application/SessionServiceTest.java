@@ -173,31 +173,6 @@ class SessionServiceTest {
             assertThat(service.requestRematch(game.getId(), new PlayerId(0)), is(false));
         }
 
-        @Test
-        void givenOneSeatLeft_whenTheOtherJoins_thenRematchStartsAmongStayers() {
-            var game = service.createGame("bataille-corse", 2, GameMode.SOLO);
-            var id = game.getId();
-            service.leaveRematch(id, new PlayerId(0)); // seat 0 went home
-
-            RematchOutcome outcome = service.joinRematch(id, new PlayerId(1));
-
-            assertThat(outcome.started(), is(true));   // only seat 1 is staying, and it asked
-            assertThat(outcome.game().getId(), is(id)); // fresh game surfaced under the same id
-            assertThat(outcome.ready(), is(1));
-            assertThat(outcome.eligible(), is(1));
-        }
-
-        @Test
-        void givenTwoStayers_whenOneJoins_thenPendingWithReadyOne() {
-            var game = service.createGame("bataille-corse", 2, GameMode.SOLO);
-            var id = game.getId();
-
-            RematchOutcome outcome = service.joinRematch(id, new PlayerId(0));
-
-            assertThat(outcome.started(), is(false));
-            assertThat(outcome.ready(), is(1));
-            assertThat(outcome.eligible(), is(2));
-        }
     }
 
     @Nested

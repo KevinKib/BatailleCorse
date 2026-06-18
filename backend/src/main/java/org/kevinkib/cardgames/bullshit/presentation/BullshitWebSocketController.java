@@ -12,7 +12,6 @@ import org.kevinkib.cardgames.bullshit.presentation.dto.BullshitDto;
 import org.kevinkib.cardgames.bullshit.presentation.dto.CardDto;
 import org.kevinkib.cardgames.bullshit.presentation.dto.event.BullshitCreateEventData;
 import org.kevinkib.cardgames.bullshit.presentation.dto.event.BullshitEventType;
-import org.kevinkib.cardgames.bullshit.presentation.dto.event.BullshitRematchEventData;
 import org.kevinkib.cardgames.bullshit.presentation.dto.event.CallBullshitEventData;
 import org.kevinkib.cardgames.bullshit.presentation.dto.event.DiscardEventData;
 import org.kevinkib.cardgames.game.GameId;
@@ -24,9 +23,7 @@ import org.kevinkib.cardgames.presentation.api.Response;
 import org.kevinkib.cardgames.presentation.api.SuccessResponse;
 import org.kevinkib.cardgames.presentation.dto.event.EmptyEventData;
 import org.kevinkib.cardgames.presentation.dto.event.LifecycleEventType;
-import org.kevinkib.cardgames.presentation.dto.event.RematchStatus;
 import org.kevinkib.cardgames.sessionmanagement.core.application.InvalidTokenException;
-import org.kevinkib.cardgames.sessionmanagement.core.application.RematchOutcome;
 import org.kevinkib.cardgames.sessionmanagement.core.application.RoomCreated;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
 import org.kevinkib.cards.domain.Card;
@@ -112,35 +109,6 @@ public class BullshitWebSocketController {
             System.err.println(e.getMessage());
             messaging.sendToSeat(gameId, playerId, new ErrorResponse(
                     BullshitEventType.DISCARD.toString(), e.getMessage(), BullshitDto.forViewer(game, playerId)));
-        }
-    }
-
-    @MessageMapping("/bullshit/rematch")
-    public void rematch(@Payload GameActionPayload payload) {
-        settleRematch(payload, true);
-    }
-
-    @MessageMapping("/bullshit/leaveRematch")
-    public void leaveRematch(@Payload GameActionPayload payload) {
-        settleRematch(payload, false);
-    }
-
-    private void settleRematch(GameActionPayload payload, boolean joining) {
-        GameId gameId = new GameId(payload.gameId());
-        PlayerId actor = sessionService.findPlayerIdByToken(gameId, payload.token()).orElse(null);
-        if (actor == null) {
-            return;
-        }
-        try {
-            RematchOutcome outcome = joining
-                    ? sessionService.joinRematch(gameId, actor)
-                    : sessionService.leaveRematch(gameId, actor);
-            RematchStatus status = outcome.started() ? RematchStatus.STARTED : RematchStatus.PENDING;
-            String message = outcome.started() ? "Rematch started." : "Rematch pending.";
-            broadcaster.broadcast((Bullshit) outcome.game(), LifecycleEventType.REMATCH.toString(),
-                    new BullshitRematchEventData(status, outcome.ready(), outcome.eligible()), message);
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
         }
     }
 

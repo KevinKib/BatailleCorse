@@ -9,10 +9,8 @@ import org.kevinkib.cardgames.bullshit.presentation.api.BullshitDiscardPayload;
 import org.kevinkib.cardgames.bullshit.presentation.dto.BullshitDto;
 import org.kevinkib.cardgames.bullshit.presentation.dto.CardDto;
 import org.kevinkib.cardgames.bullshit.presentation.dto.event.BullshitCreateEventData;
-import org.kevinkib.cardgames.bullshit.presentation.dto.event.BullshitRematchEventData;
 import org.kevinkib.cardgames.bullshit.presentation.dto.event.CallBullshitEventData;
 import org.kevinkib.cardgames.bullshit.presentation.dto.event.DiscardEventData;
-import org.kevinkib.cardgames.presentation.dto.event.RematchStatus;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.presentation.GameMessagingService;
@@ -164,110 +162,4 @@ class BullshitWebSocketControllerTest {
         assertThat(data.revealedCards().size(), is(1));
     }
 
-    @Test
-    void givenFirstSeatRequestsRematch_whenRematch_thenBroadcastsPendingToAllSeats() {
-        Bullshit game = (Bullshit) sessionService.createGame("bullshit", 2, GameMode.SOLO);
-        GameId id = game.getId();
-        String t0 = sessionService.tokenForSeat(id, new PlayerId(0));
-
-        controller.rematch(new GameActionPayload(id.uuid().toString(), t0));
-
-        assertThat(messaging.seats.size(), is(2));
-        Response r = messaging.payloads.get(0);
-        assertThat(r.getEventType(), is("REMATCH"));
-        BullshitRematchEventData data = (BullshitRematchEventData) r.getEventData();
-        assertThat(data.status(), is(RematchStatus.PENDING));
-        assertThat(data.ready(), is(1));
-        assertThat(data.eligible(), is(2));
-    }
-
-    @Test
-    void givenAllEligibleSeatsRequest_whenLastRematch_thenBroadcastsStartedWithFreshState() {
-        Bullshit game = (Bullshit) sessionService.createGame("bullshit", 2, GameMode.SOLO);
-        GameId id = game.getId();
-        String t0 = sessionService.tokenForSeat(id, new PlayerId(0));
-        String t1 = sessionService.tokenForSeat(id, new PlayerId(1));
-        controller.rematch(new GameActionPayload(id.uuid().toString(), t0));
-        messaging.clear();
-
-        controller.rematch(new GameActionPayload(id.uuid().toString(), t1));
-
-        Response r = messaging.payloads.get(0);
-        assertThat(r.getEventType(), is("REMATCH"));
-        assertThat(((BullshitRematchEventData) r.getEventData()).status(), is(RematchStatus.STARTED));
-        assertThat(r.getState(), instanceOf(BullshitDto.class));
-    }
-
-    @Test
-    void givenOneSeatLeaves_whenRemainingStayersAllRequest_thenRematchStarts() {
-        Bullshit game = (Bullshit) sessionService.createGame("bullshit", 3, GameMode.SOLO);
-        GameId id = game.getId();
-        String t0 = sessionService.tokenForSeat(id, new PlayerId(0));
-        String t1 = sessionService.tokenForSeat(id, new PlayerId(1));
-        String t2 = sessionService.tokenForSeat(id, new PlayerId(2));
-        controller.rematch(new GameActionPayload(id.uuid().toString(), t0));      // seat 0 wants a rematch
-        controller.leaveRematch(new GameActionPayload(id.uuid().toString(), t1)); // seat 1 goes home
-        messaging.clear();
-
-        controller.rematch(new GameActionPayload(id.uuid().toString(), t2));      // last stayer asks
-
-        Response r = messaging.payloads.get(0);
-        assertThat(r.getEventType(), is("REMATCH"));
-        assertThat(((BullshitRematchEventData) r.getEventData()).status(), is(RematchStatus.STARTED));
-    }
-
-    @Test
-    void givenThreeSeats_whenOneRequests_thenPendingCountsExcludeNobodyUntilLeave() {
-        Bullshit game = (Bullshit) sessionService.createGame("bullshit", 3, GameMode.SOLO);
-        GameId id = game.getId();
-        String t0 = sessionService.tokenForSeat(id, new PlayerId(0));
-
-        controller.rematch(new GameActionPayload(id.uuid().toString(), t0));
-
-        BullshitRematchEventData data = (BullshitRematchEventData) messaging.payloads.get(0).getEventData();
-        assertThat(data.status(), is(RematchStatus.PENDING));
-        assertThat(data.ready(), is(1));
-        assertThat(data.eligible(), is(3));
-    }
-
-    @Test
-    void givenThreePlayersJoinedASixSeatRoom_whenRematch_thenCountsOnlyTheThreeWhoJoined() {
-        Response create = controller.createGame(new BullshitCreatePayload(null, null, "Alice"));
-        BullshitCreateEventData data = (BullshitCreateEventData) create.getEventData();
-        GameId id = new GameId(data.gameId());
-        sessionService.joinRoom(id, "Bob");
-        sessionService.joinRoom(id, "Cara");                 // 3 of Bullshit's 6 seats claimed
-        String hostToken = data.tokens().get(0);
-        controller.start(new GameActionPayload(data.gameId(), hostToken));
-        messaging.clear();
-
-        controller.rematch(new GameActionPayload(data.gameId(), hostToken));
-
-        BullshitRematchEventData ev = (BullshitRematchEventData) messaging.payloads.get(0).getEventData();
-        assertThat(ev.eligible(), is(3));                    // not 6 — unclaimed seats excluded
-        assertThat(ev.ready(), is(1));
-    }
-
-    @Test
-    void givenThreePlayerRoom_whenRematchStarts_thenFreshGameHasThreePlayersNotSixSeats() {
-        Response create = controller.createGame(new BullshitCreatePayload(null, null, "Alice"));
-        BullshitCreateEventData data = (BullshitCreateEventData) create.getEventData();
-        GameId id = new GameId(data.gameId());
-        sessionService.joinRoom(id, "Bob");
-        sessionService.joinRoom(id, "Cara");                 // 3 of 6 seats claimed
-        String hostToken = data.tokens().get(0);
-        String t1 = sessionService.tokenForSeat(id, new PlayerId(1));
-        String t2 = sessionService.tokenForSeat(id, new PlayerId(2));
-        controller.start(new GameActionPayload(data.gameId(), hostToken));
-        controller.rematch(new GameActionPayload(data.gameId(), hostToken));
-        controller.rematch(new GameActionPayload(data.gameId(), t1));
-        messaging.clear();
-
-        controller.rematch(new GameActionPayload(data.gameId(), t2)); // last stayer -> rematch starts
-
-        // STARTED broadcast fans over the fresh game's players: 3 who joined, not all 6 seats.
-        assertThat(messaging.seats.size(), is(3));
-        Response r = messaging.payloads.get(0);
-        assertThat(((BullshitRematchEventData) r.getEventData()).status(), is(RematchStatus.STARTED));
-    }
 }

@@ -147,35 +147,6 @@ public class SessionService implements GameDirectory {
         return session.isRematchUnanimous();
     }
 
-    /** This seat opts into the rematch; starts it once every staying seat has asked. */
-    public RematchOutcome joinRematch(GameId id, PlayerId playerId) {
-        SessionGame session = repository.loadSessionGame(id);
-        session.requestRematch(playerId);
-        return settleRematch(id, session);
-    }
-
-    /** This seat opts out (went back home); may complete the rematch for the seats that stayed. */
-    public RematchOutcome leaveRematch(GameId id, PlayerId playerId) {
-        SessionGame session = repository.loadSessionGame(id);
-        session.leaveRematch(playerId);
-        return settleRematch(id, session);
-    }
-
-    /**
-     * Settles the rematch after a join/leave: if every staying seat has asked, starts the fresh game;
-     * otherwise reports the current game and the staying tally. Callers only render the outcome.
-     */
-    private RematchOutcome settleRematch(GameId id, SessionGame session) {
-        int ready = session.rematchReadyCount();
-        int staying = session.rematchStayingCount();
-        if (session.isRematchReady()) {
-            Game fresh = rematch(id);
-            touch(id);
-            return new RematchOutcome(true, fresh, ready, staying);
-        }
-        return new RematchOutcome(false, getGame(id), ready, staying);
-    }
-
     public Game rematch(GameId id) {
         SessionGame session = repository.loadSessionGame(id);
         // Deal the rematch to the players who actually joined, not every room seat (matches startGame).
