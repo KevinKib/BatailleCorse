@@ -7,6 +7,7 @@ import type { BullshitState, BullshitView } from '../model/bullshit/BullshitStat
 import type { LobbyView } from '../model/bullshit/LobbyView';
 import type { CallBullshitEventData } from '../model/bullshit/BullshitEvents';
 import type Card from '../model/Card';
+
 export const useBullshitStore = defineStore('bullshit-store', () => {
   const state = ref<BullshitView | null>(null);
   const gameId = ref<string | null>(null);
