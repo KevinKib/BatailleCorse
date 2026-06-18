@@ -15,7 +15,7 @@
           data-cy="play-again"
           @click="emit('playAgain')"
         />
-        <RouterLink :to="{ name: 'home' }" class="end-home-button" @click="emit('leave')">
+        <RouterLink :to="{ name: 'home' }" class="end-home-button">
           <Button label="Back to home" icon="pi pi-home" rounded />
         </RouterLink>
       </div>
@@ -35,7 +35,6 @@ interface Props {
 
 interface Emits {
   playAgain: [];
-  leave: [];
 }
 
 defineProps<Props>();

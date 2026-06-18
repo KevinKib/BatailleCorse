@@ -64,9 +64,8 @@ function selectAll(event: FocusEvent) {
       data-test="end"
       :did-i-win="store.iWon"
       :subtitle="store.iWon ? 'You emptied your hand first.' : 'Another player emptied their hand first.'"
-      :rematch-button="store.rematchButton"
-      @play-again="store.rematch()"
-      @leave="store.leaveRematch()"
+      :rematch-button="{ label: 'Play again', disabled: false }"
+      @play-again="store.playAgain()"
     />
 
     <template v-else>

@@ -125,7 +125,7 @@ describe('BullshitGameScreen', () => {
     expect(startGame).toHaveBeenCalled();
   });
 
-  it('renders the end-game overlay when finished and play-again calls rematch', async () => {
+  it('renders the end-game overlay when finished and play-again calls playAgain', async () => {
     const store = useBullshitStore();
     store.applyEvent({ type: 'seat-change', seat: 0 });
     store.applyEvent({ type: 'state-update', state: playingState({
@@ -143,7 +143,7 @@ describe('BullshitGameScreen', () => {
     const overlay = wrapper.findComponent(EndGameOverlay);
     expect(overlay.exists()).toBe(true);
 
-    const spy = vi.spyOn(store, 'rematch').mockImplementation(async () => {});
+    const spy = vi.spyOn(store, 'playAgain').mockResolvedValue(undefined);
     await overlay.vm.$emit('playAgain');
     expect(spy).toHaveBeenCalled();
   });
