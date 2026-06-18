@@ -163,7 +163,8 @@ public class SessionService implements GameDirectory {
 
     public Game rematch(GameId id) {
         SessionGame session = repository.loadSessionGame(id);
-        Game fresh = gameFactories.factoryFor(session.gameType()).create(id, session.seatCount());
+        // Deal the rematch to the players who actually joined, not every room seat (matches startGame).
+        Game fresh = gameFactories.factoryFor(session.gameType()).create(id, session.claimedCount());
         session.clearRematch();
         repository.save(fresh, session);
         return fresh;

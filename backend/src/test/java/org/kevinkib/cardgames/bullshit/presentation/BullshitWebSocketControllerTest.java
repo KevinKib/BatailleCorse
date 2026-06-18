@@ -247,4 +247,27 @@ class BullshitWebSocketControllerTest {
         assertThat(ev.eligible(), is(3));                    // not 6 — unclaimed seats excluded
         assertThat(ev.ready(), is(1));
     }
+
+    @Test
+    void givenThreePlayerRoom_whenRematchStarts_thenFreshGameHasThreePlayersNotSixSeats() {
+        Response create = controller.createGame(new BullshitCreatePayload(null, null, "Alice"));
+        BullshitCreateEventData data = (BullshitCreateEventData) create.getEventData();
+        GameId id = new GameId(data.gameId());
+        sessionService.joinRoom(id, "Bob");
+        sessionService.joinRoom(id, "Cara");                 // 3 of 6 seats claimed
+        String hostToken = data.tokens().get(0);
+        String t1 = sessionService.tokenForSeat(id, new PlayerId(1));
+        String t2 = sessionService.tokenForSeat(id, new PlayerId(2));
+        controller.start(new GameActionPayload(data.gameId(), hostToken));
+        controller.rematch(new GameActionPayload(data.gameId(), hostToken));
+        controller.rematch(new GameActionPayload(data.gameId(), t1));
+        messaging.clear();
+
+        controller.rematch(new GameActionPayload(data.gameId(), t2)); // last stayer -> rematch starts
+
+        // STARTED broadcast fans over the fresh game's players: 3 who joined, not all 6 seats.
+        assertThat(messaging.seats.size(), is(3));
+        Response r = messaging.payloads.get(0);
+        assertThat(((BullshitRematchEventData) r.getEventData()).status(), is(RematchStatus.STARTED));
+    }
 }
