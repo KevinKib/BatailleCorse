@@ -97,32 +97,17 @@ describe('Bullshit store', () => {
     expect(store.selectedCards).toHaveLength(0);
   });
 
-  it('tracks rematch progress from a PENDING REMATCH event', () => {
+  it('playAgain() posts to the play-again endpoint', async () => {
     const store = useBullshitStore();
-    store.applyEvent({ type: 'event', eventType: 'REMATCH',
-      eventData: { status: 'PENDING', ready: 1, eligible: 3 }, message: '' });
+    store.restore('g1', 0, 'tok');
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(() =>
+      Promise.resolve(new Response(JSON.stringify({ playerId: 0, token: 't' }), { status: 200 })));
 
-    expect(store.rematchReady).toBe(1);
-    expect(store.rematchEligible).toBe(3);
-  });
+    await store.playAgain();
 
-  it('rematch() marks me as requested so the button shows waiting', () => {
-    const store = useBullshitStore();
-    vi.spyOn(webSocketService, 'publish').mockImplementation(() => {});
-    store.applyEvent({ type: 'event', eventType: 'REMATCH',
-      eventData: { status: 'PENDING', ready: 1, eligible: 2 }, message: '' });
-
-    store.rematch();
-
-    expect(store.rematchButton).toEqual({ label: 'Waiting… 1/2 ready', disabled: true });
-  });
-
-  it('leaveRematch() publishes the leave frame', () => {
-    const store = useBullshitStore();
-    const spy = vi.spyOn(webSocketService, 'publish').mockImplementation(() => {});
-
-    store.leaveRematch();
-
-    expect(spy).toHaveBeenCalledWith('/app/bullshit/leaveRematch', expect.any(String));
+    expect(fetchSpy).toHaveBeenCalledWith(
+      expect.stringContaining('/api/bullshit/game/g1/play-again'),
+      expect.objectContaining({ method: 'POST' }));
+    fetchSpy.mockRestore();
   });
 });
