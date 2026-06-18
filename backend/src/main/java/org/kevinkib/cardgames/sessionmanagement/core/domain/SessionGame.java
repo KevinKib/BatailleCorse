@@ -74,10 +74,6 @@ public record SessionGame(GameId id, String gameType, Map<PlayerId, SessionPlaye
         return (int) players.values().stream().filter(SessionPlayer::isClaimed).count();
     }
 
-    public int seatCount() {
-        return players.size();
-    }
-
     public void requestRematch(PlayerId playerId) {
         seatOrThrow(playerId).requestRematch();
     }
