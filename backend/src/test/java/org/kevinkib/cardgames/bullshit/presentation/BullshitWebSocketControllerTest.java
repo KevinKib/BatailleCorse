@@ -229,4 +229,22 @@ class BullshitWebSocketControllerTest {
         assertThat(data.ready(), is(1));
         assertThat(data.eligible(), is(3));
     }
+
+    @Test
+    void givenThreePlayersJoinedASixSeatRoom_whenRematch_thenCountsOnlyTheThreeWhoJoined() {
+        Response create = controller.createGame(new BullshitCreatePayload(null, null, "Alice"));
+        BullshitCreateEventData data = (BullshitCreateEventData) create.getEventData();
+        GameId id = new GameId(data.gameId());
+        sessionService.joinRoom(id, "Bob");
+        sessionService.joinRoom(id, "Cara");                 // 3 of Bullshit's 6 seats claimed
+        String hostToken = data.tokens().get(0);
+        controller.start(new GameActionPayload(data.gameId(), hostToken));
+        messaging.clear();
+
+        controller.rematch(new GameActionPayload(data.gameId(), hostToken));
+
+        BullshitRematchEventData ev = (BullshitRematchEventData) messaging.payloads.get(0).getEventData();
+        assertThat(ev.eligible(), is(3));                    // not 6 — unclaimed seats excluded
+        assertThat(ev.ready(), is(1));
+    }
 }

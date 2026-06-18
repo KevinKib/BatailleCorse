@@ -112,8 +112,11 @@ public record SessionGame(GameId id, String gameType, Map<PlayerId, SessionPlaye
         players.values().forEach(SessionPlayer::clearRematch);
     }
 
+    /** Seats that actually joined this game and have not opted out — the rematch participants. */
     private Stream<SessionPlayer> staying() {
-        return players.values().stream().filter(seat -> !seat.hasLeftRematch());
+        return players.values().stream()
+                .filter(SessionPlayer::isClaimed)
+                .filter(seat -> !seat.hasLeftRematch());
     }
 
     private SessionPlayer seatOrThrow(PlayerId playerId) {
