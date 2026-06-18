@@ -133,12 +133,21 @@ public class SessionService implements GameDirectory {
         return session.isRematchUnanimous();
     }
 
-    /** Records this seat's request and tallies it against the eligible (connected, non-forfeited) seats. */
-    public RematchTally requestRematch(GameId id, PlayerId playerId, Set<PlayerId> eligibleSeats) {
+    /**
+     * Records this seat's request and, once every eligible (connected, non-forfeited) seat has asked,
+     * starts the rematch. Returns the resulting game (fresh when started, the current one otherwise)
+     * and the tally — so callers only render the outcome, never decide whether to start it.
+     */
+    public RematchOutcome requestRematch(GameId id, PlayerId playerId, Set<PlayerId> eligibleSeats) {
         SessionGame session = repository.loadSessionGame(id);
         session.requestRematch(playerId);
         int ready = (int) eligibleSeats.stream().filter(session::hasRequestedRematch).count();
-        return new RematchTally(session.isRematchUnanimousAmong(eligibleSeats), ready, eligibleSeats.size());
+        if (session.isRematchUnanimousAmong(eligibleSeats)) {
+            Game fresh = rematch(id);
+            touch(id);
+            return new RematchOutcome(true, fresh, ready, eligibleSeats.size());
+        }
+        return new RematchOutcome(false, getGame(id), ready, eligibleSeats.size());
     }
 
     public Game rematch(GameId id) {

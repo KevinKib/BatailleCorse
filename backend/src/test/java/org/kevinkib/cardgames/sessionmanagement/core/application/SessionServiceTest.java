@@ -174,11 +174,12 @@ class SessionServiceTest {
             var game = service.createGame("bataille-corse", 2, GameMode.SOLO);
             var id = game.getId();
 
-            RematchTally tally = service.requestRematch(id, new PlayerId(0), Set.of(new PlayerId(0)));
+            RematchOutcome outcome = service.requestRematch(id, new PlayerId(0), Set.of(new PlayerId(0)));
 
-            assertThat(tally.unanimous(), is(true));   // seat 1 not eligible, so seat 0 alone suffices
-            assertThat(tally.ready(), is(1));
-            assertThat(tally.eligible(), is(1));
+            assertThat(outcome.started(), is(true));   // seat 1 not eligible, so seat 0 alone suffices
+            assertThat(outcome.game().getId(), is(id)); // fresh game surfaced under the same id
+            assertThat(outcome.ready(), is(1));
+            assertThat(outcome.eligible(), is(1));
         }
 
         @Test
@@ -186,12 +187,12 @@ class SessionServiceTest {
             var game = service.createGame("bataille-corse", 2, GameMode.SOLO);
             var id = game.getId();
 
-            RematchTally tally = service.requestRematch(id, new PlayerId(0),
+            RematchOutcome outcome = service.requestRematch(id, new PlayerId(0),
                     Set.of(new PlayerId(0), new PlayerId(1)));
 
-            assertThat(tally.unanimous(), is(false));
-            assertThat(tally.ready(), is(1));
-            assertThat(tally.eligible(), is(2));
+            assertThat(outcome.started(), is(false));
+            assertThat(outcome.ready(), is(1));
+            assertThat(outcome.eligible(), is(2));
         }
     }
 

@@ -26,7 +26,7 @@ import org.kevinkib.cardgames.presentation.dto.event.EmptyEventData;
 import org.kevinkib.cardgames.presentation.dto.event.LifecycleEventType;
 import org.kevinkib.cardgames.presentation.dto.event.RematchStatus;
 import org.kevinkib.cardgames.sessionmanagement.core.application.InvalidTokenException;
-import org.kevinkib.cardgames.sessionmanagement.core.application.RematchTally;
+import org.kevinkib.cardgames.sessionmanagement.core.application.RematchOutcome;
 import org.kevinkib.cardgames.sessionmanagement.core.application.RoomCreated;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
 import org.kevinkib.cardgames.sessionmanagement.presence.application.SeatPresence;
@@ -38,7 +38,6 @@ import org.springframework.stereotype.Controller;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 @Controller
 public class BullshitWebSocketController {
@@ -128,20 +127,11 @@ public class BullshitWebSocketController {
             return;
         }
         try {
-            Set<PlayerId> eligible = seatPresence.activeSeats(gameId);
-            RematchTally tally = sessionService.requestRematch(gameId, actor, eligible);
-            if (tally.unanimous()) {
-                Bullshit fresh = (Bullshit) sessionService.rematch(gameId);
-                sessionService.touch(gameId);
-                broadcaster.broadcast(fresh, LifecycleEventType.REMATCH.toString(),
-                        new BullshitRematchEventData(RematchStatus.STARTED, tally.ready(), tally.eligible()),
-                        "Rematch started.");
-            } else {
-                Bullshit current = sessionService.getGame(gameId, Bullshit.class);
-                broadcaster.broadcast(current, LifecycleEventType.REMATCH.toString(),
-                        new BullshitRematchEventData(RematchStatus.PENDING, tally.ready(), tally.eligible()),
-                        "Rematch requested.");
-            }
+            RematchOutcome outcome = sessionService.requestRematch(gameId, actor, seatPresence.activeSeats(gameId));
+            RematchStatus status = outcome.started() ? RematchStatus.STARTED : RematchStatus.PENDING;
+            String message = outcome.started() ? "Rematch started." : "Rematch requested.";
+            broadcaster.broadcast((Bullshit) outcome.game(), LifecycleEventType.REMATCH.toString(),
+                    new BullshitRematchEventData(status, outcome.ready(), outcome.eligible()), message);
         } catch (Exception e) {
             System.err.println(e.getMessage());
         }
