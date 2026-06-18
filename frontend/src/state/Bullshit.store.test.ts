@@ -116,4 +116,13 @@ describe('Bullshit store', () => {
 
     expect(store.rematchButton).toEqual({ label: 'Waiting… 1/2 ready', disabled: true });
   });
+
+  it('leaveRematch() publishes the leave frame', () => {
+    const store = useBullshitStore();
+    const spy = vi.spyOn(webSocketService, 'publish').mockImplementation(() => {});
+
+    store.leaveRematch();
+
+    expect(spy).toHaveBeenCalledWith('/app/bullshit/leaveRematch', expect.any(String));
+  });
 });

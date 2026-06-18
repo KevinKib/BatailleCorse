@@ -11,7 +11,6 @@ import org.kevinkib.cardgames.sessionmanagement.core.infrastructure.InMemorySess
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -170,25 +169,25 @@ class SessionServiceTest {
         }
 
         @Test
-        void givenOnlyOneSeatEligible_whenThatSeatRequests_thenUnanimousAmongEligible() {
+        void givenOneSeatLeft_whenTheOtherJoins_thenRematchStartsAmongStayers() {
             var game = service.createGame("bataille-corse", 2, GameMode.SOLO);
             var id = game.getId();
+            service.leaveRematch(id, new PlayerId(0)); // seat 0 went home
 
-            RematchOutcome outcome = service.requestRematch(id, new PlayerId(0), Set.of(new PlayerId(0)));
+            RematchOutcome outcome = service.joinRematch(id, new PlayerId(1));
 
-            assertThat(outcome.started(), is(true));   // seat 1 not eligible, so seat 0 alone suffices
+            assertThat(outcome.started(), is(true));   // only seat 1 is staying, and it asked
             assertThat(outcome.game().getId(), is(id)); // fresh game surfaced under the same id
             assertThat(outcome.ready(), is(1));
             assertThat(outcome.eligible(), is(1));
         }
 
         @Test
-        void givenTwoEligibleAndOneRequested_whenRequest_thenPendingWithReadyOne() {
+        void givenTwoStayers_whenOneJoins_thenPendingWithReadyOne() {
             var game = service.createGame("bataille-corse", 2, GameMode.SOLO);
             var id = game.getId();
 
-            RematchOutcome outcome = service.requestRematch(id, new PlayerId(0),
-                    Set.of(new PlayerId(0), new PlayerId(1)));
+            RematchOutcome outcome = service.joinRematch(id, new PlayerId(0));
 
             assertThat(outcome.started(), is(false));
             assertThat(outcome.ready(), is(1));

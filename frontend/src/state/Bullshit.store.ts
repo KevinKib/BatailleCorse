@@ -69,6 +69,10 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
     session.rematch();
   }
 
+  function leaveRematch() {
+    session.leaveRematch();
+  }
+
   function toggleCard(card: Card) {
     const i = selectedCards.value.findIndex(c => c.name === card.name);
     if (i >= 0) selectedCards.value.splice(i, 1);
@@ -89,5 +93,6 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
     discard: () => { session.discard(selectedCards.value); clearSelection(); },
     callBullshit: () => session.callBullshit(),
     rematch: requestRematch,
+    leaveRematch,
   };
 });

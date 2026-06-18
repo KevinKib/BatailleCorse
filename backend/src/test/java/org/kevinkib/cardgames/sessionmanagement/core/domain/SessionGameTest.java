@@ -7,7 +7,6 @@ import org.kevinkib.cardgames.game.PlayerId;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.IntStream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -221,27 +220,44 @@ class SessionGameTest {
         }
 
         @Test
-        void givenSubsetRequested_whenUnanimousAmongThatSubset_thenTrue() {
+        void givenLeaverAndRemainingAllRequested_whenReady_thenTrue() {
             SessionGame session = SessionGame.create(GameId.generate(), 3, "bullshit");
             session.requestRematch(new PlayerId(0));
             session.requestRematch(new PlayerId(2));
+            session.leaveRematch(new PlayerId(1)); // seat 1 went home
 
-            assertThat(session.isRematchUnanimousAmong(Set.of(new PlayerId(0), new PlayerId(2))), is(true));
+            assertThat(session.isRematchReady(), is(true));
+            assertThat(session.rematchStayingCount(), is(2));
+            assertThat(session.rematchReadyCount(), is(2));
         }
 
         @Test
-        void givenAnEligibleSeatHasNotRequested_thenNotUnanimousAmong() {
+        void givenAStayingSeatHasNotRequested_thenNotReady() {
             SessionGame session = SessionGame.create(GameId.generate(), 3, "bullshit");
-            session.requestRematch(new PlayerId(0));
+            session.requestRematch(new PlayerId(0)); // seats 1 and 2 are still staying, undecided
 
-            assertThat(session.isRematchUnanimousAmong(Set.of(new PlayerId(0), new PlayerId(1))), is(false));
+            assertThat(session.isRematchReady(), is(false));
+            assertThat(session.rematchStayingCount(), is(3));
+            assertThat(session.rematchReadyCount(), is(1));
         }
 
         @Test
-        void givenEmptyEligible_thenNotUnanimousAmong() {
+        void givenEveryoneLeft_thenNotReady() {
             SessionGame session = SessionGame.create(GameId.generate(), 2, "bullshit");
+            session.leaveRematch(new PlayerId(0));
+            session.leaveRematch(new PlayerId(1));
 
-            assertThat(session.isRematchUnanimousAmong(Set.of()), is(false));
+            assertThat(session.isRematchReady(), is(false));
+            assertThat(session.rematchStayingCount(), is(0));
+        }
+
+        @Test
+        void givenLeaverThenRejoins_whenRequest_thenCountedAgain() {
+            SessionGame session = SessionGame.create(GameId.generate(), 2, "bullshit");
+            session.leaveRematch(new PlayerId(0));
+            session.requestRematch(new PlayerId(0)); // changed their mind, clicked Play Again
+
+            assertThat(session.rematchStayingCount(), is(2));
         }
     }
 }

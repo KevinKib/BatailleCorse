@@ -99,6 +99,10 @@ export default class BullshitSession {
     this.webSocket.publish('/app/bullshit/rematch', JSON.stringify({ gameId: this.gameId, token: this.myToken }));
   }
 
+  leaveRematch(): void {
+    this.webSocket.publish('/app/bullshit/leaveRematch', JSON.stringify({ gameId: this.gameId, token: this.myToken }));
+  }
+
   onResponse(response: BullshitResponse): void {
     if (response.state) {
       this.callbacks.onEvent({ type: 'state-update', state: response.state });

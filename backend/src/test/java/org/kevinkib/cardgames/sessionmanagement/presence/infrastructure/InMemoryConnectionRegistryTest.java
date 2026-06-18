@@ -7,7 +7,6 @@ import org.kevinkib.cardgames.sessionmanagement.presence.domain.Seat;
 import org.kevinkib.cardgames.sessionmanagement.presence.port.ConnectionRegistry;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
 
 class InMemoryConnectionRegistryTest {
@@ -37,18 +36,6 @@ class InMemoryConnectionRegistryTest {
     void whenUnbindUnknownSession_thenEmpty() {
         ConnectionRegistry registry = new InMemoryConnectionRegistry();
         assertThat(registry.unbind("nope").isEmpty(), is(true));
-    }
-
-    @Test
-    void givenSeatsAcrossTwoGames_whenSeatsFor_thenOnlyThatGamesPlayerIds() {
-        InMemoryConnectionRegistry registry = new InMemoryConnectionRegistry();
-        GameId g1 = GameId.generate();
-        GameId g2 = GameId.generate();
-        registry.bind("c0", new Seat(g1, new PlayerId(0)));
-        registry.bind("c1", new Seat(g1, new PlayerId(1)));
-        registry.bind("c2", new Seat(g2, new PlayerId(0)));
-
-        assertThat(registry.seatsFor(g1), containsInAnyOrder(new PlayerId(0), new PlayerId(1)));
     }
 
     @Test

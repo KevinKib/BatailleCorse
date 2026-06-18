@@ -8,8 +8,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public record SessionGame(GameId id, String gameType, Map<PlayerId, SessionPlayer> players) {
 
@@ -79,11 +79,12 @@ public record SessionGame(GameId id, String gameType, Map<PlayerId, SessionPlaye
     }
 
     public void requestRematch(PlayerId playerId) {
-        SessionPlayer seat = players.get(playerId);
-        if (seat == null) {
-            throw new IllegalArgumentException("Unknown seat " + playerId.id());
-        }
-        seat.requestRematch();
+        seatOrThrow(playerId).requestRematch();
+    }
+
+    /** Opt this seat out of the rematch (e.g. the player went back home). */
+    public void leaveRematch(PlayerId playerId) {
+        seatOrThrow(playerId).leaveRematch();
     }
 
     public boolean isRematchUnanimous() {
@@ -91,17 +92,36 @@ public record SessionGame(GameId id, String gameType, Map<PlayerId, SessionPlaye
                 && players.values().stream().allMatch(SessionPlayer::hasRequestedRematch);
     }
 
-    public boolean hasRequestedRematch(PlayerId playerId) {
-        SessionPlayer seat = players.get(playerId);
-        return seat != null && seat.hasRequestedRematch();
+    /** Seats still in the rematch — those that have not left. */
+    public int rematchStayingCount() {
+        return (int) staying().count();
     }
 
-    public boolean isRematchUnanimousAmong(Set<PlayerId> eligible) {
-        return !eligible.isEmpty() && eligible.stream().allMatch(this::hasRequestedRematch);
+    /** Staying seats that have asked for a rematch. */
+    public int rematchReadyCount() {
+        return (int) staying().filter(SessionPlayer::hasRequestedRematch).count();
+    }
+
+    /** A rematch can start once at least one seat is staying and every staying seat has asked. */
+    public boolean isRematchReady() {
+        List<SessionPlayer> staying = staying().toList();
+        return !staying.isEmpty() && staying.stream().allMatch(SessionPlayer::hasRequestedRematch);
     }
 
     public void clearRematch() {
         players.values().forEach(SessionPlayer::clearRematch);
+    }
+
+    private Stream<SessionPlayer> staying() {
+        return players.values().stream().filter(seat -> !seat.hasLeftRematch());
+    }
+
+    private SessionPlayer seatOrThrow(PlayerId playerId) {
+        SessionPlayer seat = players.get(playerId);
+        if (seat == null) {
+            throw new IllegalArgumentException("Unknown seat " + playerId.id());
+        }
+        return seat;
     }
 
     public Optional<SessionToken> findTokenByPlayer(PlayerId playerId) {

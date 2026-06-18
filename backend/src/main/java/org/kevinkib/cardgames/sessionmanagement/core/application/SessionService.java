@@ -13,7 +13,6 @@ import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionToken;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 public class SessionService implements GameDirectory {
 
@@ -133,21 +132,33 @@ public class SessionService implements GameDirectory {
         return session.isRematchUnanimous();
     }
 
-    /**
-     * Records this seat's request and, once every eligible (connected, non-forfeited) seat has asked,
-     * starts the rematch. Returns the resulting game (fresh when started, the current one otherwise)
-     * and the tally — so callers only render the outcome, never decide whether to start it.
-     */
-    public RematchOutcome requestRematch(GameId id, PlayerId playerId, Set<PlayerId> eligibleSeats) {
+    /** This seat opts into the rematch; starts it once every staying seat has asked. */
+    public RematchOutcome joinRematch(GameId id, PlayerId playerId) {
         SessionGame session = repository.loadSessionGame(id);
         session.requestRematch(playerId);
-        int ready = (int) eligibleSeats.stream().filter(session::hasRequestedRematch).count();
-        if (session.isRematchUnanimousAmong(eligibleSeats)) {
+        return settleRematch(id, session);
+    }
+
+    /** This seat opts out (went back home); may complete the rematch for the seats that stayed. */
+    public RematchOutcome leaveRematch(GameId id, PlayerId playerId) {
+        SessionGame session = repository.loadSessionGame(id);
+        session.leaveRematch(playerId);
+        return settleRematch(id, session);
+    }
+
+    /**
+     * Settles the rematch after a join/leave: if every staying seat has asked, starts the fresh game;
+     * otherwise reports the current game and the staying tally. Callers only render the outcome.
+     */
+    private RematchOutcome settleRematch(GameId id, SessionGame session) {
+        int ready = session.rematchReadyCount();
+        int staying = session.rematchStayingCount();
+        if (session.isRematchReady()) {
             Game fresh = rematch(id);
             touch(id);
-            return new RematchOutcome(true, fresh, ready, eligibleSeats.size());
+            return new RematchOutcome(true, fresh, ready, staying);
         }
-        return new RematchOutcome(false, getGame(id), ready, eligibleSeats.size());
+        return new RematchOutcome(false, getGame(id), ready, staying);
     }
 
     public Game rematch(GameId id) {
