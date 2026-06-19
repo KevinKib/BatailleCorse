@@ -21,7 +21,7 @@ class BatailleCorseLifecycleBroadcasterTest {
     /** Records the last broadcast instead of touching a real broker. */
     private static final class RecordingMessaging extends GameMessagingService {
         Response last;
-        RecordingMessaging() { super(null); }
+        RecordingMessaging() { super(null, null); }
         @Override public void sendToGame(String gameId, Object payload) { last = (Response) payload; }
     }
 

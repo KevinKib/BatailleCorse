@@ -25,7 +25,7 @@ class LobbyBroadcasterTest {
     static final class RecordingMessaging extends GameMessagingService {
         final List<PlayerId> seats = new ArrayList<>();
         final List<Response> payloads = new ArrayList<>();
-        RecordingMessaging() { super(null); }
+        RecordingMessaging() { super(null, null); }
         @Override public void sendToSeat(GameId gameId, PlayerId seat, Object payload) {
             seats.add(seat);
             payloads.add((Response) payload);

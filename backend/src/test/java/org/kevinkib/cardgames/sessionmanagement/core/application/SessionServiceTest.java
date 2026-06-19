@@ -19,6 +19,7 @@ import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -185,24 +186,105 @@ class SessionServiceTest {
         }
     }
 
-    @Test
-    void playAgain_reopensRoom_andNextGameHasOnlyReturningPlayers() {
-        var bullshitService = new SessionService(
-                new InMemorySessionRepository(Clock.systemUTC()),
-                new GameFactories(List.of(new BullshitFactory())));
-        RoomCreated room = bullshitService.createRoom("bullshit", "Alice");
-        GameId id = new GameId(room.gameId());
-        bullshitService.joinRoom(id, "Bob");
-        bullshitService.joinRoom(id, "Cara");                  // 3 joined of a 6-seat room
-        bullshitService.startGame(id, room.hostToken());       // game dealt to 3
+    /**
+     * Exercises the Bullshit reopen-the-room rematch workflow across the multi-participant
+     * permutations where the recurring bugs lived: who returns, in what order, and who stays away.
+     * Pure service level — deterministic and CI-friendly. (Message routing on reopen is covered
+     * separately by GameMessagingServiceTest / SeatSubscriptionInterceptorTest.)
+     */
+    @Nested
+    class PlayAgainTest {
 
-        JoinResult first = bullshitService.playAgain(id, "Alice");  // reopens -> seat 0 (host)
-        JoinResult second = bullshitService.playAgain(id, "Bob");   // joins reopened lobby -> seat 1
-        Game fresh = bullshitService.startGame(id, first.token());
+        private SessionService bullshit() {
+            return new SessionService(
+                    new InMemorySessionRepository(Clock.systemUTC()),
+                    new GameFactories(List.of(new BullshitFactory())));
+        }
 
-        assertThat(first.playerId(), is(new PlayerId(0)));
-        assertThat(second.playerId(), is(new PlayerId(1)));
-        assertThat(fresh.getPlayerIds().size(), is(2));     // only the two who came back, not 3 or 6
+        /** Alice (seat 0, host) + Bob (1) + Cara (2), game started — the shared starting point. */
+        private GameId startedThreePlayerRoom(SessionService service) {
+            RoomCreated room = service.createRoom("bullshit", "Alice");
+            GameId id = new GameId(room.gameId());
+            service.joinRoom(id, "Bob");
+            service.joinRoom(id, "Cara");
+            service.startGame(id, room.hostToken());
+            return id;
+        }
+
+        @Test
+        void givenAllReturn_whenPlayAgain_thenFirstIsHostAndNextGameHasOnlyReturners() {
+            var service = bullshit();
+            GameId id = startedThreePlayerRoom(service);
+
+            JoinResult first = service.playAgain(id, "Alice");   // reopens -> seat 0 (host)
+            JoinResult second = service.playAgain(id, "Bob");    // joins reopened lobby -> seat 1
+            Game fresh = service.startGame(id, first.token());
+
+            assertThat(first.playerId(), is(new PlayerId(0)));
+            assertThat(second.playerId(), is(new PlayerId(1)));
+            assertThat(fresh.getPlayerIds().size(), is(2));      // the two who came back, not 3 or 6
+        }
+
+        @Test
+        void givenMiddleSeatStaysAway_whenRemainingReturn_thenTheyGetContiguousSeats() {
+            var service = bullshit();
+            GameId id = startedThreePlayerRoom(service);          // Alice=0, Bob=1, Cara=2
+
+            JoinResult alice = service.playAgain(id, "Alice");    // reopens -> seat 0
+            JoinResult cara = service.playAgain(id, "Cara");      // Bob (seat 1) does not return
+            Game fresh = service.startGame(id, alice.token());
+
+            assertThat(alice.playerId(), is(new PlayerId(0)));
+            assertThat(cara.playerId(), is(new PlayerId(1)));     // contiguous — no gap where Bob was
+            assertThat(fresh.getPlayerIds().size(), is(2));
+        }
+
+        @Test
+        void givenRoomAlreadyReopened_whenSecondReturns_thenJoinsWithoutEvictingTheFirst() {
+            var service = bullshit();
+            GameId id = startedThreePlayerRoom(service);
+
+            JoinResult first = service.playAgain(id, "Alice");    // reopens -> seat 0
+            JoinResult second = service.playAgain(id, "Bob");     // must only join, not re-reopen
+
+            assertThat(second.playerId(), is(new PlayerId(1)));
+            assertThat(service.isSeatClaimed(id, new PlayerId(0)), is(true));   // first not evicted
+            assertThat(service.findPlayerIdByToken(id, first.token()),
+                    is(Optional.of(new PlayerId(0))));                          // first's token still valid
+        }
+
+        @Test
+        void givenFormerLastSeatReturnsFirst_thenTheyBecomeSeatZeroHost() {
+            var service = bullshit();
+            GameId id = startedThreePlayerRoom(service);          // Cara was seat 2
+
+            JoinResult cara = service.playAgain(id, "Cara");      // first to return
+            JoinResult alice = service.playAgain(id, "Alice");
+
+            assertThat(cara.playerId(), is(new PlayerId(0)));     // recycled to seat 0
+            assertThat(alice.playerId(), is(new PlayerId(1)));
+            assertThat(service.seats(id).get(0).name(), is("Cara"));
+            // Cara is the new host: she can start the reopened game with her token.
+            Game fresh = service.startGame(id, cara.token());
+            assertThat(fresh.getPlayerIds().size(), is(2));
+        }
+
+        @Test
+        void givenStartedGame_whenReopened_thenEveryFormerSeatTokenStopsResolving() {
+            var service = bullshit();
+            GameId id = startedThreePlayerRoom(service);
+            String t0 = service.tokenForSeat(id, new PlayerId(0));
+            String t1 = service.tokenForSeat(id, new PlayerId(1));
+            String t2 = service.tokenForSeat(id, new PlayerId(2));
+
+            service.playAgain(id, "Alice");   // reopen
+
+            // Stale tokens no longer resolve -> stale token-addressed subscriptions can never match.
+            assertThat(service.findPlayerIdByToken(id, t0), is(Optional.empty()));
+            assertThat(service.findPlayerIdByToken(id, t1), is(Optional.empty()));
+            assertThat(service.findPlayerIdByToken(id, t2), is(Optional.empty()));
+            assertThat(service.tokenForSeat(id, new PlayerId(0)), is(not(t0)));   // recycled seat gets a fresh token
+        }
     }
 
     @Nested

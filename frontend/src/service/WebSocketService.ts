@@ -115,9 +115,12 @@ class WebSocketService {
   private doSubscribeToSeat() {
     if (!this.seatSubscription) return;
     this.currentSeatSub?.unsubscribe();
-    const { gameId, seat, token, onMessage } = this.seatSubscription;
+    // Per-seat channels are addressed by token, not seat index: indices are recycled when a room
+    // reopens for a rematch (same gameId), so an index-keyed topic would leak the new occupant's
+    // messages to the previous occupant's still-live subscription. The token is unique per claim.
+    const { gameId, token, onMessage } = this.seatSubscription;
     this.currentSeatSub = this.client.subscribe(
-      `/topic/game/${gameId}/seat/${seat}`,
+      `/topic/game/${gameId}/seat/${token}`,
       message => onMessage(JSON.parse(message.body)),
       { token },
     );

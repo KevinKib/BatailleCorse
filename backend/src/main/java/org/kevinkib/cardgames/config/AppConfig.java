@@ -97,7 +97,7 @@ public class AppConfig {
 
     @Bean
     public GameMessagingService gameMessagingService(SimpMessagingTemplate messagingTemplate) {
-        return new GameMessagingService(messagingTemplate);
+        return new GameMessagingService(messagingTemplate, sessionService());
     }
 
     @Bean
