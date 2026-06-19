@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { setActivePinia, createPinia } from 'pinia';
-import { useBullshitStore } from './Bullshit.store';
+import { useBullshitStore, REVEAL_HOLD_MS } from './Bullshit.store';
 import type { BullshitState } from '../model/bullshit/BullshitState';
 import type { LobbyView } from '../model/bullshit/LobbyView';
 import webSocketService from '../service/WebSocketService';
@@ -86,6 +86,34 @@ describe('Bullshit store', () => {
     const reveal = { callerSeat: 1, claimantSeat: 0, truthful: false, pickerSeat: 0, revealedCards: [] };
     store.applyEvent({ type: 'event', eventType: 'CALL_BULLSHIT', eventData: reveal, message: 'm' });
     expect(store.reveal).toEqual(reveal);
+  });
+
+  describe('reveal timed hold', () => {
+    beforeEach(() => { vi.useFakeTimers(); });
+    afterEach(() => { vi.useRealTimers(); });
+
+    it('clears the reveal after the hold window', () => {
+      const store = useBullshitStore();
+      const reveal = { callerSeat: 1, claimantSeat: 0, truthful: false, pickerSeat: 0, revealedCards: [] };
+      store.applyEvent({ type: 'event', eventType: 'CALL_BULLSHIT', eventData: reveal, message: 'm' });
+      expect(store.reveal).toEqual(reveal);
+
+      vi.advanceTimersByTime(REVEAL_HOLD_MS);
+      expect(store.reveal).toBeNull();
+    });
+
+    it('does not clear the reveal early when another event arrives during the hold', () => {
+      const store = useBullshitStore();
+      const reveal = { callerSeat: 1, claimantSeat: 0, truthful: true, pickerSeat: 1, revealedCards: [] };
+      store.applyEvent({ type: 'event', eventType: 'CALL_BULLSHIT', eventData: reveal, message: 'm' });
+
+      vi.advanceTimersByTime(REVEAL_HOLD_MS - 1);
+      store.applyEvent({ type: 'event', eventType: 'DISCARD', eventData: {}, message: 'm' });
+      expect(store.reveal).toEqual(reveal);   // still showing — the timer owns dismissal
+
+      vi.advanceTimersByTime(1);
+      expect(store.reveal).toBeNull();
+    });
   });
 
   it('toggleCard selects and deselects from the hand', () => {
