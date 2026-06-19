@@ -4,10 +4,15 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseFactory;
+import org.kevinkib.cardgames.bullshit.domain.BullshitFactory;
+import org.kevinkib.cardgames.game.Game;
+import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameMode;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SeatView;
 import org.kevinkib.cardgames.sessionmanagement.core.infrastructure.InMemorySessionRepository;
+
+import java.time.Clock;
 
 import java.util.List;
 import java.util.Optional;
@@ -167,6 +172,7 @@ class SessionServiceTest {
 
             assertThat(service.requestRematch(game.getId(), new PlayerId(0)), is(false));
         }
+
     }
 
     @Nested
@@ -177,6 +183,26 @@ class SessionServiceTest {
             var game = service.createGame("bataille-corse", 2, GameMode.MULTIPLAYER);
             service.touch(game.getId()); // smoke: delegation wired
         }
+    }
+
+    @Test
+    void playAgain_reopensRoom_andNextGameHasOnlyReturningPlayers() {
+        var bullshitService = new SessionService(
+                new InMemorySessionRepository(Clock.systemUTC()),
+                new GameFactories(List.of(new BullshitFactory())));
+        RoomCreated room = bullshitService.createRoom("bullshit", "Alice");
+        GameId id = new GameId(room.gameId());
+        bullshitService.joinRoom(id, "Bob");
+        bullshitService.joinRoom(id, "Cara");                  // 3 joined of a 6-seat room
+        bullshitService.startGame(id, room.hostToken());       // game dealt to 3
+
+        JoinResult first = bullshitService.playAgain(id, "Alice");  // reopens -> seat 0 (host)
+        JoinResult second = bullshitService.playAgain(id, "Bob");   // joins reopened lobby -> seat 1
+        Game fresh = bullshitService.startGame(id, first.token());
+
+        assertThat(first.playerId(), is(new PlayerId(0)));
+        assertThat(second.playerId(), is(new PlayerId(1)));
+        assertThat(fresh.getPlayerIds().size(), is(2));     // only the two who came back, not 3 or 6
     }
 
     @Nested

@@ -51,6 +51,10 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
     return 'playing';
   });
 
+  function playAgain() {
+    return session.playAgain();
+  }
+
   function toggleCard(card: Card) {
     const i = selectedCards.value.findIndex(c => c.name === card.name);
     if (i >= 0) selectedCards.value.splice(i, 1);
@@ -69,5 +73,6 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
     startGame: () => session.startGame(),
     discard: () => { session.discard(selectedCards.value); clearSelection(); },
     callBullshit: () => session.callBullshit(),
+    playAgain,
   };
 });

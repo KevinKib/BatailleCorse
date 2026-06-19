@@ -73,16 +73,8 @@ public record SessionGame(GameId id, String gameType, Map<PlayerId, SessionPlaye
         return (int) players.values().stream().filter(SessionPlayer::isClaimed).count();
     }
 
-    public int seatCount() {
-        return players.size();
-    }
-
     public void requestRematch(PlayerId playerId) {
-        SessionPlayer seat = players.get(playerId);
-        if (seat == null) {
-            throw new IllegalArgumentException("Unknown seat " + playerId.id());
-        }
-        seat.requestRematch();
+        seatOrThrow(playerId).requestRematch();
     }
 
     public boolean isRematchUnanimous() {
@@ -92,6 +84,14 @@ public record SessionGame(GameId id, String gameType, Map<PlayerId, SessionPlaye
 
     public void clearRematch() {
         players.values().forEach(SessionPlayer::clearRematch);
+    }
+
+    private SessionPlayer seatOrThrow(PlayerId playerId) {
+        SessionPlayer seat = players.get(playerId);
+        if (seat == null) {
+            throw new IllegalArgumentException("Unknown seat " + playerId.id());
+        }
+        return seat;
     }
 
     public Optional<SessionToken> findTokenByPlayer(PlayerId playerId) {

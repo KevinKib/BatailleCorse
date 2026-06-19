@@ -103,6 +103,21 @@ describe('BullshitSession', () => {
     expect(published).toContainEqual({ dest: '/app/bullshit/start', body: JSON.stringify({ gameId: 'g1', token: 'tok-0' }) });
   });
 
+  it('playAgain posts to play-again, re-binds to the new seat, and hydrates', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ playerId: 0, token: 'new-tok' }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => sampleState() });
+    vi.stubGlobal('fetch', fetchMock);
+    const { session, seatSubs, events } = makeSession();
+    session.restore('g1', 2, 'old-tok');
+    await session.playAgain('Alice');
+    expect(fetchMock.mock.calls[0][0]).toContain('/api/bullshit/game/g1/play-again');
+    expect(fetchMock.mock.calls[0][1]).toMatchObject({ method: 'POST' });
+    expect(seatSubs).toContainEqual({ gameId: 'g1', seat: 0, token: 'new-tok' });
+    expect(JSON.parse(localStorage.getItem('bullshit:tokens:g1')!)).toEqual({ 0: 'new-tok' });
+    expect(events.some(e => e.type === 'seat-change' && (e as any).seat === 0)).toBe(true);
+  });
+
   it('on an incoming seat message, emits state-update and the event', () => {
     const { session, events, fireSeat } = makeSession();
     session.restore('g1', 0, 'tok-0');

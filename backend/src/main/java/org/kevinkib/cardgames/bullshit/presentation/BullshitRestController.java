@@ -100,4 +100,30 @@ public class BullshitRestController {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
     }
+
+    @PostMapping("/game/{id}/play-again")
+    public ResponseEntity<JoinResponseDto> playAgain(@PathVariable String id,
+                                                     @RequestBody(required = false) JoinGamePayload payload) {
+        GameId gameId;
+        String type;
+        try {
+            gameId = new GameId(id);
+            type = sessionService.gameType(gameId);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
+        if (!BullshitFactory.GAME_TYPE.equals(type)) {
+            return ResponseEntity.notFound().build();
+        }
+        try {
+            String name = (payload != null) ? payload.name() : null;
+            JoinResult result = sessionService.playAgain(gameId, name);
+            sessionService.touch(gameId);
+            lobbyBroadcaster.broadcast(gameId, LifecycleEventType.JOIN.toString(), new EmptyEventData(),
+                    "Player " + (result.playerId().id() + 1) + " joined.");
+            return ResponseEntity.ok(new JoinResponseDto(result.playerId().id(), result.token()));
+        } catch (RoomFullException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+    }
 }

@@ -218,5 +218,6 @@ class SessionGameTest {
 
             assertThat(session.isRematchUnanimous(), is(false));
         }
+
     }
 }

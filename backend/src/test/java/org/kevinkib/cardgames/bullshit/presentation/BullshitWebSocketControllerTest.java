@@ -161,4 +161,5 @@ class BullshitWebSocketControllerTest {
         CallBullshitEventData data = (CallBullshitEventData) r.getEventData();
         assertThat(data.revealedCards().size(), is(1));
     }
+
 }

@@ -95,6 +95,20 @@ export default class BullshitSession {
     this.webSocket.publish('/app/bullshit/start', JSON.stringify({ gameId: this.gameId, token: this.myToken }));
   }
 
+  async playAgain(name?: string): Promise<void> {
+    if (!this.gameId) return;
+    const res = await fetch(`/api/bullshit/game/${this.gameId}/play-again`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: name ?? null }),
+    });
+    if (!res.ok) throw new Error(`Play again failed: ${res.status}`);
+    const body = await res.json() as { playerId: number; token: string };
+    this.bind(this.gameId, body.playerId, body.token);
+    localStorage.setItem(`bullshit:tokens:${this.gameId}`, JSON.stringify({ [body.playerId]: body.token }));
+    await this.hydrate();
+  }
+
   onResponse(response: BullshitResponse): void {
     if (response.state) {
       this.callbacks.onEvent({ type: 'state-update', state: response.state });

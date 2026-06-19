@@ -16,6 +16,7 @@ import org.kevinkib.cardgames.sessionmanagement.core.application.RoomCreated;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameMode;
 import org.kevinkib.cardgames.sessionmanagement.core.infrastructure.InMemorySessionRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.time.Clock;
@@ -145,5 +146,19 @@ class BullshitRestControllerTest {
                 controller.joinGame(UUID.randomUUID().toString(), null);
 
         assertThat(response.getStatusCode().value(), is(404));
+    }
+
+    @Test
+    void playAgain_onFinishedRoom_reopensAndReturnsHostSeat() {
+        RoomCreated room = sessionService.createRoom("bullshit", "Alice");
+        GameId id = new GameId(room.gameId());
+        sessionService.joinRoom(id, "Bob");
+        sessionService.startGame(id, room.hostToken());
+
+        ResponseEntity<JoinResponseDto> response =
+                controller.playAgain(room.gameId(), new JoinGamePayload("Alice"));
+
+        assertThat(response.getStatusCode(), is(HttpStatus.OK));
+        assertThat(response.getBody().playerId(), is(0));
     }
 }

@@ -1,8 +1,9 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { setActivePinia, createPinia } from 'pinia';
 import { useBullshitStore } from './Bullshit.store';
 import type { BullshitState } from '../model/bullshit/BullshitState';
 import type { LobbyView } from '../model/bullshit/LobbyView';
+import webSocketService from '../service/WebSocketService';
 
 function state(overrides: Partial<BullshitState> = {}): BullshitState {
   return {
@@ -94,5 +95,19 @@ describe('Bullshit store', () => {
     expect(store.selectedCards).toHaveLength(1);
     store.toggleCard(card);
     expect(store.selectedCards).toHaveLength(0);
+  });
+
+  it('playAgain() posts to the play-again endpoint', async () => {
+    const store = useBullshitStore();
+    store.restore('g1', 0, 'tok');
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(() =>
+      Promise.resolve(new Response(JSON.stringify({ playerId: 0, token: 't' }), { status: 200 })));
+
+    await store.playAgain();
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      expect.stringContaining('/api/bullshit/game/g1/play-again'),
+      expect.objectContaining({ method: 'POST' }));
+    fetchSpy.mockRestore();
   });
 });
