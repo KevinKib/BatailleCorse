@@ -12,6 +12,18 @@
 
 ---
 
+## Status: ✅ COMPLETE (PR #66)
+
+All six tasks shipped. Backend **267 green**, frontend **148 green**, `npm run build` clean. Final holistic review: **APPROVED_WITH_NITS**.
+
+Commits: `1d87aaf` (Task 1) · `188c150` (Task 2) · `1031cf9` (Task 3) · `b50f89f` (Task 4) · `477dc4d` (Task 5) · `54cb0d1` (Task 6) · `2b31fbf` (nit: blank line after store imports).
+
+**Deviations from the plan text as written:**
+- **Task 5 store test** binds with `store.restore('g1', 0, 'tok')` (real session method) instead of the `applyEvent({ type: 'game-id-change' })` sketch — `restore` sets `gameId` so the fetch URL resolves.
+- **Review nits:** (1) missing blank line after the store imports — **fixed** (`2b31fbf`); (2) `bind()` doesn't unsubscribe the old seat topic on re-bind — judged **pre-existing/harmless**, left unchanged (out of scope).
+
+---
+
 ## File Structure
 
 **Backend — modified**
@@ -41,7 +53,7 @@
 - Modify: `backend/src/main/java/org/kevinkib/cardgames/sessionmanagement/core/application/SessionService.java`
 - Test: `backend/src/test/java/org/kevinkib/cardgames/sessionmanagement/core/application/SessionServiceTest.java`
 
-- [ ] **Step 1: Write the failing test.** Add to `SessionServiceTest` (self-contained — builds its own service so it doesn't depend on the class's `@BeforeEach` factory set). Add any missing imports: `org.kevinkib.cardgames.sessionmanagement.core.application.RoomCreated`, `org.kevinkib.cardgames.game.Game`, `org.kevinkib.cardgames.bullshit.domain.BullshitFactory`, `org.kevinkib.cardgames.sessionmanagement.core.infrastructure.InMemorySessionRepository`, `java.time.Clock`, `java.util.List`.
+- [x] **Step 1: Write the failing test.** Add to `SessionServiceTest` (self-contained — builds its own service so it doesn't depend on the class's `@BeforeEach` factory set). Add any missing imports: `org.kevinkib.cardgames.sessionmanagement.core.application.RoomCreated`, `org.kevinkib.cardgames.game.Game`, `org.kevinkib.cardgames.bullshit.domain.BullshitFactory`, `org.kevinkib.cardgames.sessionmanagement.core.infrastructure.InMemorySessionRepository`, `java.time.Clock`, `java.util.List`.
 
 ```java
 @Test
@@ -65,9 +77,9 @@ void playAgain_reopensRoom_andNextGameHasOnlyReturningPlayers() {
 }
 ```
 
-- [ ] **Step 2: Run to verify it fails:** `cd backend && "...mvn.cmd" -q test -Dtest=SessionServiceTest` → compile failure (`playAgain` undefined).
+- [x] **Step 2: Run to verify it fails:** `cd backend && "...mvn.cmd" -q test -Dtest=SessionServiceTest` → compile failure (`playAgain` undefined).
 
-- [ ] **Step 3: Implement `playAgain`.** In `SessionService.java`, add (next to `joinRoom`):
+- [x] **Step 3: Implement `playAgain`.** In `SessionService.java`, add (next to `joinRoom`):
 
 ```java
     /**
@@ -88,9 +100,9 @@ void playAgain_reopensRoom_andNextGameHasOnlyReturningPlayers() {
 
 (`repository.remove(id)` drops both the game and the old session; `saveLobby(...)` re-adds a fresh empty lobby. `joinRoom` then claims the lowest free seat — seat 0 first — and returns the `JoinResult`. `joinRoom` already throws `RoomFullException` if somehow full.)
 
-- [ ] **Step 4: Run to verify it passes:** `-Dtest=SessionServiceTest` → PASS.
+- [x] **Step 4: Run to verify it passes:** `-Dtest=SessionServiceTest` → PASS.
 
-- [ ] **Step 5: Commit:**
+- [x] **Step 5: Commit:**
 ```bash
 cd "C:\Users\kevin\Documents\GitHub\IntelliJ\BatailleCorse\.claude\worktrees\sharp-leakey-22c0d5"
 git add -A backend/
@@ -107,7 +119,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - Modify: `backend/src/main/java/org/kevinkib/cardgames/bullshit/presentation/BullshitRestController.java`
 - Test: `backend/src/test/java/org/kevinkib/cardgames/bullshit/presentation/BullshitRestControllerTest.java`
 
-- [ ] **Step 1: Write the failing test.** Open `BullshitRestControllerTest` and mirror its existing `joinGame` test's setup (how it builds the controller + `sessionService`). Add a test that: creates a room (`sessionService.createRoom("bullshit","Alice")`), joins two more (`sessionService.joinRoom`), starts (`sessionService.startGame(id, hostToken)`), then calls `controller.playAgain(room.gameId(), new JoinGamePayload(null))` and asserts the response is `200 OK` with a body whose `playerId()` is `0` (reopened → first seat). Use the same `JoinGamePayload`/`JoinResponseDto` types the join test uses. Concrete body:
+- [x] **Step 1: Write the failing test.** Open `BullshitRestControllerTest` and mirror its existing `joinGame` test's setup (how it builds the controller + `sessionService`). Add a test that: creates a room (`sessionService.createRoom("bullshit","Alice")`), joins two more (`sessionService.joinRoom`), starts (`sessionService.startGame(id, hostToken)`), then calls `controller.playAgain(room.gameId(), new JoinGamePayload(null))` and asserts the response is `200 OK` with a body whose `playerId()` is `0` (reopened → first seat). Use the same `JoinGamePayload`/`JoinResponseDto` types the join test uses. Concrete body:
 
 ```java
 @Test
@@ -126,9 +138,9 @@ void playAgain_onFinishedRoom_reopensAndReturnsHostSeat() {
 
 Add imports as needed (`RoomCreated`, `GameId`, `HttpStatus`, `ResponseEntity`, `JoinResponseDto`, `JoinGamePayload`). If `JoinGamePayload`'s constructor differs, match the join test's usage.
 
-- [ ] **Step 2: Run to verify it fails:** `-Dtest=BullshitRestControllerTest` → compile failure (`playAgain` undefined on controller).
+- [x] **Step 2: Run to verify it fails:** `-Dtest=BullshitRestControllerTest` → compile failure (`playAgain` undefined on controller).
 
-- [ ] **Step 3: Implement the endpoint.** In `BullshitRestController.java`, add (next to `joinGame`), reusing its imports (`JoinResult`, `RoomFullException`, `LobbyBroadcaster`, `EmptyEventData`, `LifecycleEventType`, `JoinResponseDto`, `JoinGamePayload`):
+- [x] **Step 3: Implement the endpoint.** In `BullshitRestController.java`, add (next to `joinGame`), reusing its imports (`JoinResult`, `RoomFullException`, `LobbyBroadcaster`, `EmptyEventData`, `LifecycleEventType`, `JoinResponseDto`, `JoinGamePayload`):
 
 ```java
     @PostMapping("/game/{id}/play-again")
@@ -158,9 +170,9 @@ Add imports as needed (`RoomCreated`, `GameId`, `HttpStatus`, `ResponseEntity`, 
     }
 ```
 
-- [ ] **Step 4: Run to verify it passes:** `-Dtest=BullshitRestControllerTest` → PASS.
+- [x] **Step 4: Run to verify it passes:** `-Dtest=BullshitRestControllerTest` → PASS.
 
-- [ ] **Step 5: Commit:**
+- [x] **Step 5: Commit:**
 ```bash
 git add -A backend/
 git commit -m "feat(bullshit): POST /game/{id}/play-again reopens the room and re-joins
@@ -179,11 +191,11 @@ Deletes the old Bullshit rematch tally. **Do not touch** BatailleCorse's path: k
 - Delete: `core/application/RematchOutcome.java`, `bullshit/presentation/dto/event/BullshitRematchEventData.java`
 - Tests: `SessionServiceTest.java`, `SessionGameTest.java`, `BullshitWebSocketControllerTest.java`
 
-- [ ] **Step 1: Remove from `SessionService.java`** the methods `joinRematch`, `leaveRematch`, and the private `settleRematch` (the three added for the tally). Remove the `import ...RematchOutcome;`. Keep `rematch(GameId)` and `requestRematch(GameId, PlayerId)`.
+- [x] **Step 1: Remove from `SessionService.java`** the methods `joinRematch`, `leaveRematch`, and the private `settleRematch` (the three added for the tally). Remove the `import ...RematchOutcome;`. Keep `rematch(GameId)` and `requestRematch(GameId, PlayerId)`.
 
-- [ ] **Step 2: Remove from `SessionGame.java`** the methods `leaveRematch(PlayerId)`, `rematchStayingCount()`, `rematchReadyCount()`, `isRematchReady()`, and the private `staying()` helper. Remove the now-unused `import java.util.stream.Stream;` (verify no other use). Keep `requestRematch`, `isRematchUnanimous`, `clearRematch`, `seatOrThrow`, `claimedCount`.
+- [x] **Step 2: Remove from `SessionGame.java`** the methods `leaveRematch(PlayerId)`, `rematchStayingCount()`, `rematchReadyCount()`, `isRematchReady()`, and the private `staying()` helper. Remove the now-unused `import java.util.stream.Stream;` (verify no other use). Keep `requestRematch`, `isRematchUnanimous`, `clearRematch`, `seatOrThrow`, `claimedCount`.
 
-- [ ] **Step 3: Revert `SessionPlayer.java`** to the no-`leftRematch` state:
+- [x] **Step 3: Revert `SessionPlayer.java`** to the no-`leftRematch` state:
 ```java
     private boolean rematchRequested;
     // ... constructor sets this.rematchRequested = false; (remove the leftRematch field + its init)
@@ -202,23 +214,23 @@ Deletes the old Bullshit rematch tally. **Do not touch** BatailleCorse's path: k
 ```
 Remove the `leftRematch` field, `leaveRematch()`, and `hasLeftRematch()`.
 
-- [ ] **Step 4: Remove from `BullshitWebSocketController.java`** the `@MessageMapping("/bullshit/rematch")` and `@MessageMapping("/bullshit/leaveRematch")` handlers and the private `settleRematch` helper. Remove the now-unused imports: `BullshitRematchEventData`, `RematchStatus`, `RematchOutcome`. (Leave `create`/`start`/`discard`/`callBullshit` intact.)
+- [x] **Step 4: Remove from `BullshitWebSocketController.java`** the `@MessageMapping("/bullshit/rematch")` and `@MessageMapping("/bullshit/leaveRematch")` handlers and the private `settleRematch` helper. Remove the now-unused imports: `BullshitRematchEventData`, `RematchStatus`, `RematchOutcome`. (Leave `create`/`start`/`discard`/`callBullshit` intact.)
 
-- [ ] **Step 5: Delete the dead files:**
+- [x] **Step 5: Delete the dead files:**
 ```bash
 cd "C:\Users\kevin\Documents\GitHub\IntelliJ\BatailleCorse\.claude\worktrees\sharp-leakey-22c0d5\backend"
 git rm src/main/java/org/kevinkib/cardgames/sessionmanagement/core/application/RematchOutcome.java
 git rm src/main/java/org/kevinkib/cardgames/bullshit/presentation/dto/event/BullshitRematchEventData.java
 ```
 
-- [ ] **Step 6: Remove the dead tests.**
+- [x] **Step 6: Remove the dead tests.**
   - `SessionGameTest` (`RematchTest` nested class): remove the tests that call `isRematchReady`/`rematchStayingCount`/`rematchReadyCount`/`leaveRematch` — i.e. `givenLeaverAndRemainingAllRequested_whenReady_thenTrue`, `givenAStayingSeatHasNotRequested_thenNotReady`, `givenEveryoneLeft_thenNotReady`, `givenLeaverThenRejoins_whenRequest_thenCountedAgain`, `givenRoomWithUnclaimedSeats_whenRematch_thenOnlyClaimedSeatsCount`. Keep the original `isRematchUnanimous`/`clearRematch` tests. Remove `import java.util.Set;` if now unused.
   - `SessionServiceTest` (`RematchTest`): remove the tests calling `joinRematch`/`leaveRematch` (`givenOneSeatLeft_whenTheOtherJoins_thenRematchStartsAmongStayers`, `givenTwoStayers_whenOneJoins_thenPendingWithReadyOne`). Keep `requestRematch(GameId, PlayerId)` and `rematch` tests if present. Keep the `playAgain` test from Task 1.
   - `BullshitWebSocketControllerTest`: remove the rematch tests (`givenFirstSeatRequestsRematch_*`, `givenAllEligibleSeatsRequest_*`, `givenThreeSeats_*`, `givenOneSeatLeaves_*`, `givenThreePlayersJoinedASixSeatRoom_*`, `givenThreePlayerRoom_whenRematchStarts_*`) and the now-unused imports (`BullshitRematchEventData`, `RematchStatus`). Keep create/start/discard/callBullshit tests.
 
-- [ ] **Step 7: Full backend suite:** `cd backend && "...mvn.cmd" test` → BUILD SUCCESS, all green. Fix any stragglers (a leftover reference will fail compilation — remove it).
+- [x] **Step 7: Full backend suite:** `cd backend && "...mvn.cmd" test` → BUILD SUCCESS, all green. Fix any stragglers (a leftover reference will fail compilation — remove it).
 
-- [ ] **Step 8: Commit:**
+- [x] **Step 8: Commit:**
 ```bash
 git add -A backend/
 git commit -m "refactor(bullshit): remove the bespoke rematch tally (superseded by play-again)
@@ -238,11 +250,11 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - Modify: `frontend/src/application/BullshitSession.ts`
 - Test: `frontend/src/application/BullshitSession.test.ts`
 
-- [ ] **Step 1: Write the failing test.** `playAgain` calls a REST endpoint, like `join`. Open `BullshitSession.test.ts` and mirror however it tests `join` (it stubs `fetch`). Add a test: bind via `restore('g1', 2, 'old-tok')`, stub `fetch` to resolve `{ ok: true, json: async () => ({ playerId: 0, token: 'new-tok' }) }`, call `await session.playAgain('Alice')`, and assert `fetch` was called with `/api/bullshit/game/g1/play-again` and that a `seat-change` event with seat `0` was emitted (re-bind). Reuse the file's existing fetch-stub helper and event capture. If the join test asserts `localStorage`, mirror that too.
+- [x] **Step 1: Write the failing test.** `playAgain` calls a REST endpoint, like `join`. Open `BullshitSession.test.ts` and mirror however it tests `join` (it stubs `fetch`). Add a test: bind via `restore('g1', 2, 'old-tok')`, stub `fetch` to resolve `{ ok: true, json: async () => ({ playerId: 0, token: 'new-tok' }) }`, call `await session.playAgain('Alice')`, and assert `fetch` was called with `/api/bullshit/game/g1/play-again` and that a `seat-change` event with seat `0` was emitted (re-bind). Reuse the file's existing fetch-stub helper and event capture. If the join test asserts `localStorage`, mirror that too.
 
-- [ ] **Step 2: Run to verify it fails:** `cd frontend && npx vitest run src/application/BullshitSession.test.ts` → FAIL (`playAgain` not a function).
+- [x] **Step 2: Run to verify it fails:** `cd frontend && npx vitest run src/application/BullshitSession.test.ts` → FAIL (`playAgain` not a function).
 
-- [ ] **Step 3: Implement.** In `BullshitSession.ts`, remove `rematch()` and `leaveRematch()`. Add (next to `join`):
+- [x] **Step 3: Implement.** In `BullshitSession.ts`, remove `rematch()` and `leaveRematch()`. Add (next to `join`):
 
 ```ts
   async playAgain(name?: string): Promise<void> {
@@ -262,9 +274,9 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 (`bind` re-subscribes to the new seat topic — `WebSocketService.subscribeToSeat` unsubscribes the previous one — and emits `game-id-change`/`seat-change`. `hydrate` then pulls the fresh lobby view so the store's `phase` flips to `lobby`.)
 
-- [ ] **Step 4: Run to verify it passes:** same command → PASS.
+- [x] **Step 4: Run to verify it passes:** same command → PASS.
 
-- [ ] **Step 5: Commit:**
+- [x] **Step 5: Commit:**
 ```bash
 cd "C:\Users\kevin\Documents\GitHub\IntelliJ\BatailleCorse\.claude\worktrees\sharp-leakey-22c0d5"
 git add -A frontend/
@@ -281,7 +293,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - Modify: `frontend/src/state/Bullshit.store.ts`
 - Test: `frontend/src/state/Bullshit.store.test.ts`
 
-- [ ] **Step 1: Write the failing test.** In `Bullshit.store.test.ts`, add (reuse the existing pinia setup + the `vi.spyOn(webSocketService, 'publish')` pattern — but `playAgain` uses `fetch`, so stub `fetch` instead). Simplest: spy on the session via the store boundary — assert calling `store.playAgain()` invokes a `fetch` to `.../play-again`. Mirror how the store test for `join`/network is done if present; otherwise:
+- [x] **Step 1: Write the failing test.** In `Bullshit.store.test.ts`, add (reuse the existing pinia setup + the `vi.spyOn(webSocketService, 'publish')` pattern — but `playAgain` uses `fetch`, so stub `fetch` instead). Simplest: spy on the session via the store boundary — assert calling `store.playAgain()` invokes a `fetch` to `.../play-again`. Mirror how the store test for `join`/network is done if present; otherwise:
 
 ```ts
 it('playAgain() posts to the play-again endpoint', async () => {
@@ -301,9 +313,9 @@ it('playAgain() posts to the play-again endpoint', async () => {
 
 Also remove the existing rematch-progress store tests (`tracks rematch progress from a PENDING REMATCH event`, `rematch() marks me as requested...`, `leaveRematch() publishes the leave frame`).
 
-- [ ] **Step 2: Run to verify it fails:** `npx vitest run src/state/Bullshit.store.test.ts` → FAIL (`playAgain` undefined).
+- [x] **Step 2: Run to verify it fails:** `npx vitest run src/state/Bullshit.store.test.ts` → FAIL (`playAgain` undefined).
 
-- [ ] **Step 3: Implement.** In `Bullshit.store.ts`:
+- [x] **Step 3: Implement.** In `Bullshit.store.ts`:
   - Remove the refs `rematchRequested`, `rematchReady`, `rematchEligible`; the `rematchButton` computed; the `requestRematch`/`leaveRematch` functions; the `REMATCH` handling block inside the `'event'` case (keep the `CALL_BULLSHIT`/reveal lines); the `import { bullshitRematchButton } ...`; and the returned keys `rematchRequested, rematchReady, rematchEligible, rematchButton, rematch, leaveRematch`.
   - Add a `playAgain` action and expose it:
 ```ts
@@ -314,9 +326,9 @@ Also remove the existing rematch-progress store tests (`tracks rematch progress 
   add `playAgain,` to the returned object.
   - Delete `frontend/src/model/bullshit/BullshitRematch.ts` and `BullshitRematch.test.ts` (`git rm`) — the static button no longer needs the model.
 
-- [ ] **Step 4: Run to verify it passes:** `npx vitest run src/state/Bullshit.store.test.ts` → PASS.
+- [x] **Step 4: Run to verify it passes:** `npx vitest run src/state/Bullshit.store.test.ts` → PASS.
 
-- [ ] **Step 5: Commit:**
+- [x] **Step 5: Commit:**
 ```bash
 git add -A frontend/
 git commit -m "feat(frontend): store playAgain action; drop rematch-progress state
@@ -333,11 +345,11 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - Modify: `frontend/src/components/EndGameOverlay.vue`
 - Test: `frontend/src/view/bullshit/BullshitGameScreen.test.ts`
 
-- [ ] **Step 1: Write the failing test.** In `BullshitGameScreen.test.ts`, update the finished-phase test: drive the store to `finished` (as the existing test does), mount, find `EndGameOverlay`, emit `playAgain`, and assert `store.playAgain` is called (`vi.spyOn(store, 'playAgain')`). Remove any assertion about a rematch button label/`@leave`.
+- [x] **Step 1: Write the failing test.** In `BullshitGameScreen.test.ts`, update the finished-phase test: drive the store to `finished` (as the existing test does), mount, find `EndGameOverlay`, emit `playAgain`, and assert `store.playAgain` is called (`vi.spyOn(store, 'playAgain')`). Remove any assertion about a rematch button label/`@leave`.
 
-- [ ] **Step 2: Run to verify it fails:** `npx vitest run src/view/bullshit/BullshitGameScreen.test.ts` → FAIL (screen still wires `@play-again="store.rematch()"` / `@leave`).
+- [x] **Step 2: Run to verify it fails:** `npx vitest run src/view/bullshit/BullshitGameScreen.test.ts` → FAIL (screen still wires `@play-again="store.rematch()"` / `@leave`).
 
-- [ ] **Step 3: Implement.**
+- [x] **Step 3: Implement.**
   - `EndGameOverlay.vue`: remove the `leave` emit from the `Emits` interface and the `@click="emit('leave')"` on the "Back to home" `RouterLink` (added earlier for the tally). Keep `rematchButton` prop, the `playAgain` emit, and the RouterLink navigation. (BatailleCorse still passes `rematchButton` and listens to `playAgain`.)
   - `BullshitGameScreen.vue`: change the `EndGameOverlay` usage to pass a static button and the new handler, and drop `@leave`:
 ```html
@@ -351,13 +363,13 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
     />
 ```
 
-- [ ] **Step 4: Run to verify it passes:** `npx vitest run src/view/bullshit/BullshitGameScreen.test.ts` → PASS.
+- [x] **Step 4: Run to verify it passes:** `npx vitest run src/view/bullshit/BullshitGameScreen.test.ts` → PASS.
 
-- [ ] **Step 5: Frontend gate:**
+- [x] **Step 5: Frontend gate:**
   - `cd frontend && npx vitest run` → all suites pass.
   - `cd frontend && npm run build` → succeeds (type-check gate).
 
-- [ ] **Step 6: Commit:**
+- [x] **Step 6: Commit:**
 ```bash
 git add -A frontend/
 git commit -m "feat(frontend): end screen Play Again reopens the room (lobby rematch)
@@ -369,10 +381,10 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 ## Final verification
 
-- [ ] Backend full suite green: `cd backend && "...mvn.cmd" test`.
-- [ ] Frontend build green: `cd frontend && npm run build`.
-- [ ] Grep clean: no remaining references to `joinRematch`, `leaveRematch`, `RematchOutcome`, `BullshitRematchEventData`, `isRematchReady`, `rematchStayingCount`, `leftRematch`, `/bullshit/rematch`, `/bullshit/leaveRematch` in `backend/src` or `frontend/src` (BatailleCorse's `requestRematch`/`isRematchUnanimous`/`rematch`/`RematchStatus`/`RematchEventData` must remain).
-- [ ] Manual smoke (optional): 3-player room, finish, two click Play Again + one Back to Home → those two land in the lobby, host Starts → fresh **2-player** game.
+- [x] Backend full suite green: `cd backend && "...mvn.cmd" test`.
+- [x] Frontend build green: `cd frontend && npm run build`.
+- [x] Grep clean: no remaining references to `joinRematch`, `leaveRematch`, `RematchOutcome`, `BullshitRematchEventData`, `isRematchReady`, `rematchStayingCount`, `leftRematch`, `/bullshit/rematch`, `/bullshit/leaveRematch` in `backend/src` or `frontend/src` (BatailleCorse's `requestRematch`/`isRematchUnanimous`/`rematch`/`RematchStatus`/`RematchEventData` must remain).
+- [x] Manual smoke (optional): 3-player room, finish, two click Play Again + one Back to Home → those two land in the lobby, host Starts → fresh **2-player** game.
 
 ---
 
