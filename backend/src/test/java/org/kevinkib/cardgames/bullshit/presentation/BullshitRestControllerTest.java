@@ -38,7 +38,7 @@ class BullshitRestControllerTest {
     static final class RecordingMessaging extends org.kevinkib.cardgames.presentation.GameMessagingService {
         final java.util.List<Integer> seats = new java.util.ArrayList<>();
         final java.util.List<String> eventTypes = new java.util.ArrayList<>();
-        RecordingMessaging() { super(null); }
+        RecordingMessaging() { super(null, null); }
         @Override
         public void sendToSeat(org.kevinkib.cardgames.game.GameId gameId,
                                org.kevinkib.cardgames.game.PlayerId seat, Object payload) {

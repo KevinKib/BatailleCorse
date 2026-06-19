@@ -25,7 +25,7 @@ class BullshitLifecycleBroadcasterTest {
         final List<PlayerId> seats = new ArrayList<>();
 
         RecordingMessaging() {
-            super(null);
+            super(null, null);
         }
 
         @Override

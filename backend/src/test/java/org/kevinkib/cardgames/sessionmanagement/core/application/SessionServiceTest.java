@@ -19,6 +19,7 @@ import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -203,6 +204,28 @@ class SessionServiceTest {
         assertThat(first.playerId(), is(new PlayerId(0)));
         assertThat(second.playerId(), is(new PlayerId(1)));
         assertThat(fresh.getPlayerIds().size(), is(2));     // only the two who came back, not 3 or 6
+    }
+
+    @Test
+    void playAgain_reopensRoom_regeneratesSeat0Token_soStaleSubscriptionsCannotMatch() {
+        var bullshitService = new SessionService(
+                new InMemorySessionRepository(Clock.systemUTC()),
+                new GameFactories(List.of(new BullshitFactory())));
+        RoomCreated room = bullshitService.createRoom("bullshit", "Alice");  // Alice = host, seat 0
+        GameId id = new GameId(room.gameId());
+        bullshitService.joinRoom(id, "Bob");
+        bullshitService.startGame(id, room.hostToken());
+        String hostSeatTokenBefore = bullshitService.tokenForSeat(id, new PlayerId(0));
+
+        // A non-host (Bob) presses Play Again first -> reopens the room and claims the recycled seat 0.
+        JoinResult bobsNewSeat = bullshitService.playAgain(id, "Bob");
+
+        assertThat(bobsNewSeat.playerId(), is(new PlayerId(0)));                 // seat index is reused
+        assertThat(bullshitService.tokenForSeat(id, new PlayerId(0)),
+                is(not(hostSeatTokenBefore)));                                   // but the token is fresh
+        // The former host's old token no longer resolves, so its stale per-seat (token-addressed)
+        // subscription can never match the reopened seat's topic.
+        assertThat(bullshitService.findPlayerIdByToken(id, hostSeatTokenBefore), is(Optional.empty()));
     }
 
     @Nested

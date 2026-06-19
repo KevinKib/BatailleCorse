@@ -27,7 +27,7 @@ class BullshitStateBroadcasterTest {
         final List<Object> payloads = new ArrayList<>();
 
         RecordingMessaging() {
-            super(null);
+            super(null, null);
         }
 
         @Override

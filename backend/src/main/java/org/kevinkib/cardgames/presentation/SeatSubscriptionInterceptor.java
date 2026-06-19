@@ -12,12 +12,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Guards private per-seat topics. A SUBSCRIBE to /topic/game/{id}/seat/{seat} is allowed only when the
- * frame carries a "token" header that resolves to that exact seat. Non-seat destinations pass through.
+ * Guards private per-seat topics. Per-seat channels are addressed by token (/topic/game/{id}/seat/{token}),
+ * so a SUBSCRIBE is allowed only when the frame carries a "token" header equal to the topic's token and that
+ * token still resolves to a seat in the game. A stale token (e.g. from a room that has since reopened) no
+ * longer resolves, so the subscribe is rejected. Non-seat destinations pass through.
  */
 public class SeatSubscriptionInterceptor implements ChannelInterceptor {
 
-    private static final Pattern SEAT_DESTINATION = Pattern.compile("/topic/game/([^/]+)/seat/(\\d+)");
+    private static final Pattern SEAT_DESTINATION = Pattern.compile("/topic/game/([^/]+)/seat/([^/]+)");
 
     private final SessionService sessionService;
 
@@ -41,14 +43,13 @@ public class SeatSubscriptionInterceptor implements ChannelInterceptor {
         }
 
         String token = accessor.getFirstNativeHeader("token");
-        if (token == null) {
+        String topicToken = matcher.group(2);
+        if (token == null || !token.equals(topicToken)) {
             return null;
         }
         try {
             GameId gameId = new GameId(matcher.group(1));
-            int seatId = Integer.parseInt(matcher.group(2));
             return sessionService.findPlayerIdByToken(gameId, token)
-                    .filter(seat -> seat.id() == seatId)
                     .map(seat -> message)
                     .orElse(null);
         } catch (Exception e) {

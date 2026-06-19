@@ -32,7 +32,7 @@ class BatailleCorseRestControllerTest {
     /** Records every broadcast instead of touching a real broker. */
     private static final class RecordingMessaging extends GameMessagingService {
         final List<Response> sent = new ArrayList<>();
-        RecordingMessaging() { super(null); }
+        RecordingMessaging() { super(null, null); }
         @Override public void sendToGame(String gameId, Object payload) { sent.add((Response) payload); }
     }
 
