@@ -12,6 +12,16 @@
 
 ---
 
+## Status: ✅ COMPLETE ([PR #67](https://github.com/KevinKib/BatailleCorse/pull/67))
+
+All four tasks shipped. **153/153 frontend tests green**, `npm run build` clean. Final holistic review: **APPROVED** (no Critical/Important findings).
+
+Commits: `9d87aeb` (Task 1 OpponentSeat) · `ec014c7` (Task 2 opponent ring) · `0288a95` (Task 3 center well) · `a88e8c5` (Task 4 my-zone + cleanup).
+
+**Deviation worth noting:** seat numbering is now consistently 1-based (`id + 1`) on the playing screen — this fixes a pre-existing off-by-one where the table showed `Player 0` while the lobby showed `Player 1` for the same seat. Two optional review nits (parametrized 1/5-opponent positioning test; unit-test `seatAngles` directly) left undone — low-risk, not blocking.
+
+---
+
 ## File Structure
 
 **Frontend — created**
@@ -32,7 +42,7 @@
 - Create: `frontend/src/components/bullshit/OpponentSeat.vue`
 - Test: `frontend/src/components/bullshit/OpponentSeat.test.ts`
 
-- [ ] **Step 1: Write the failing test.**
+- [x] **Step 1: Write the failing test.**
 
 ```ts
 import { describe, it, expect } from 'vitest';
@@ -56,9 +66,9 @@ describe('OpponentSeat', () => {
 });
 ```
 
-- [ ] **Step 2: Run to verify it fails:** `cd frontend && npx vitest run src/components/bullshit/OpponentSeat.test.ts` → FAIL (cannot resolve `./OpponentSeat.vue`).
+- [x] **Step 2: Run to verify it fails:** `cd frontend && npx vitest run src/components/bullshit/OpponentSeat.test.ts` → FAIL (cannot resolve `./OpponentSeat.vue`).
 
-- [ ] **Step 3: Implement the component.**
+- [x] **Step 3: Implement the component.**
 
 ```vue
 <template>
@@ -137,9 +147,9 @@ defineProps<{ label: string; handCount: number; active: boolean }>();
 </style>
 ```
 
-- [ ] **Step 4: Run to verify it passes:** `npx vitest run src/components/bullshit/OpponentSeat.test.ts` → PASS (both tests).
+- [x] **Step 4: Run to verify it passes:** `npx vitest run src/components/bullshit/OpponentSeat.test.ts` → PASS (both tests).
 
-- [ ] **Step 5: Commit:**
+- [x] **Step 5: Commit:**
 ```bash
 cd "C:\Users\kevin\Documents\GitHub\IntelliJ\BatailleCorse\.claude\worktrees\sharp-leakey-22c0d5"
 git add frontend/src/components/bullshit/OpponentSeat.vue frontend/src/components/bullshit/OpponentSeat.test.ts
@@ -158,7 +168,7 @@ Replaces the flat `.opponents` row. Adds the felt frame, the seat-positioning co
 - Modify: `frontend/src/view/bullshit/BullshitGameScreen.vue`
 - Test: `frontend/src/view/bullshit/BullshitGameScreen.test.ts`
 
-- [ ] **Step 1: Write the failing test.** Add to `BullshitGameScreen.test.ts` (reuse the file's `playingState`/`router`/pinia setup):
+- [x] **Step 1: Write the failing test.** Add to `BullshitGameScreen.test.ts` (reuse the file's `playingState`/`router`/pinia setup):
 
 ```ts
 it('renders one opponent seat per opponent, positioned around the table', () => {
@@ -185,9 +195,9 @@ Add the import at the top of the test file (next to the existing imports):
 import OpponentSeat from '../../components/bullshit/OpponentSeat.vue';
 ```
 
-- [ ] **Step 2: Run to verify it fails:** `npx vitest run src/view/bullshit/BullshitGameScreen.test.ts` → FAIL (no `OpponentSeat` rendered).
+- [x] **Step 2: Run to verify it fails:** `npx vitest run src/view/bullshit/BullshitGameScreen.test.ts` → FAIL (no `OpponentSeat` rendered).
 
-- [ ] **Step 3: Implement.** In `BullshitGameScreen.vue`:
+- [x] **Step 3: Implement.** In `BullshitGameScreen.vue`:
 
   **(a)** Add the import and the seat-position computed to the `<script setup>` block. Add `OpponentSeat` to the imports and replace the `opponents` computed with one that carries position + active, leaving the rest of the script intact:
 
@@ -281,9 +291,9 @@ const seatPositions = computed(() => {
 
   Leave the existing `.opponent`/`.opponents` CSS in place for now if other rules reference it — it will be removed in Task 4's cleanup; the new classes don't collide.
 
-- [ ] **Step 4: Run to verify it passes:** `npx vitest run src/view/bullshit/BullshitGameScreen.test.ts` → PASS (new test green; existing tests still green).
+- [x] **Step 4: Run to verify it passes:** `npx vitest run src/view/bullshit/BullshitGameScreen.test.ts` → PASS (new test green; existing tests still green).
 
-- [ ] **Step 5: Commit:**
+- [x] **Step 5: Commit:**
 ```bash
 git add frontend/src/view/bullshit/BullshitGameScreen.vue frontend/src/view/bullshit/BullshitGameScreen.test.ts
 git commit -m "feat(frontend): position Bullshit opponents around an oval felt table
@@ -301,7 +311,7 @@ Restyles the center of the table: claim badge, recessed pile well with a face-do
 - Modify: `frontend/src/view/bullshit/BullshitGameScreen.vue`
 - Test: `frontend/src/view/bullshit/BullshitGameScreen.test.ts`
 
-- [ ] **Step 1: Write the failing test.** Add to `BullshitGameScreen.test.ts`:
+- [x] **Step 1: Write the failing test.** Add to `BullshitGameScreen.test.ts`:
 
 ```ts
 it('shows the claim badge and a last-play caption only when a claim is on the table', () => {
@@ -329,9 +339,9 @@ it('hides the last-play caption when there is no claim', () => {
 });
 ```
 
-- [ ] **Step 2: Run to verify it fails:** `npx vitest run src/view/bullshit/BullshitGameScreen.test.ts` → FAIL (`[data-test="claim-badge"]` not found).
+- [x] **Step 2: Run to verify it fails:** `npx vitest run src/view/bullshit/BullshitGameScreen.test.ts` → FAIL (`[data-test="claim-badge"]` not found).
 
-- [ ] **Step 3: Implement.** In `BullshitGameScreen.vue`, replace the existing `<div class="table"> … </div>` block (the `Claim:` / `last-claim` / `pile` text) and the existing `<div v-if="store.reveal" …>` block with a single centered well:
+- [x] **Step 3: Implement.** In `BullshitGameScreen.vue`, replace the existing `<div class="table"> … </div>` block (the `Claim:` / `last-claim` / `pile` text) and the existing `<div v-if="store.reveal" …>` block with a single centered well:
 
 ```html
       <div class="table-center">
@@ -447,9 +457,9 @@ it('hides the last-play caption when there is no claim', () => {
 
   Note: the test mounts `playingState` whose default `reveal` is unset, so the reveal block is absent unless a `CALL_BULLSHIT` event fired — the existing "shows the reveal panel after a CALL_BULLSHIT event" test still finds `[data-test="reveal"]`.
 
-- [ ] **Step 4: Run to verify it passes:** `npx vitest run src/view/bullshit/BullshitGameScreen.test.ts` → PASS (new + existing, including the reveal test).
+- [x] **Step 4: Run to verify it passes:** `npx vitest run src/view/bullshit/BullshitGameScreen.test.ts` → PASS (new + existing, including the reveal test).
 
-- [ ] **Step 5: Commit:**
+- [x] **Step 5: Commit:**
 ```bash
 git add frontend/src/view/bullshit/BullshitGameScreen.vue frontend/src/view/bullshit/BullshitGameScreen.test.ts
 git commit -m "feat(frontend): center pile well + claim badge + reveal on the Bullshit table
@@ -466,7 +476,7 @@ Sits my hand on a felt placemat at the bottom edge, glows my name when it's my t
 **Files:**
 - Modify: `frontend/src/view/bullshit/BullshitGameScreen.vue`
 
-- [ ] **Step 1: Implement the bottom zone.** In the `playing` branch, the hand + actions already exist (`.hand`, `.actions`). Wrap them in a bottom placemat with a "you" name tag that glows on your turn. Replace the existing `<div class="hand"> … </div>` and `<div class="actions"> … </div>` with:
+- [x] **Step 1: Implement the bottom zone.** In the `playing` branch, the hand + actions already exist (`.hand`, `.actions`). Wrap them in a bottom placemat with a "you" name tag that glows on your turn. Replace the existing `<div class="hand"> … </div>` and `<div class="actions"> … </div>` with:
 
 ```html
       <div class="my-zone">
@@ -505,7 +515,7 @@ Sits my hand on a felt placemat at the bottom edge, glows my name when it's my t
   The `.my-zone` is a sibling of `.table-frame` inside the playing-branch `<template v-else>` (it sits below the table, not on the oval). Confirm the structure inside `<template v-else>` is now:
   `<div class="table-frame"> <div class="opponents-ring">…</div> <div class="table-center">…</div> </div>` followed by `<div class="my-zone">…</div>`.
 
-- [ ] **Step 2: Add styles + remove dead CSS.** In `<style scoped>`: remove the now-unused `.opponents`, `.opponent`, `.opponent.active`, `.table`, `.claim`, `.last-claim`, `.pile`, `.reveal` (old, replaced by Task 3's `.reveal`), and `.revealed-cards` (old) rules — keep only the new rules added in Tasks 2–3. Add:
+- [x] **Step 2: Add styles + remove dead CSS.** In `<style scoped>`: remove the now-unused `.opponents`, `.opponent`, `.opponent.active`, `.table`, `.claim`, `.last-claim`, `.pile`, `.reveal` (old, replaced by Task 3's `.reveal`), and `.revealed-cards` (old) rules — keep only the new rules added in Tasks 2–3. Add:
 
 ```css
 .my-zone {
@@ -555,13 +565,13 @@ Sits my hand on a felt placemat at the bottom edge, glows my name when it's my t
 }
 ```
 
-- [ ] **Step 3: Run the screen suite:** `npx vitest run src/view/bullshit/BullshitGameScreen.test.ts` → PASS (all, including discard enable/disable and reveal).
+- [x] **Step 3: Run the screen suite:** `npx vitest run src/view/bullshit/BullshitGameScreen.test.ts` → PASS (all, including discard enable/disable and reveal).
 
-- [ ] **Step 4: Full frontend gate:**
+- [x] **Step 4: Full frontend gate:**
   - `cd frontend && npx vitest run` → all suites pass.
   - `cd frontend && npm run build` → succeeds (type-check gate).
 
-- [ ] **Step 5: Commit:**
+- [x] **Step 5: Commit:**
 ```bash
 git add frontend/src/view/bullshit/BullshitGameScreen.vue
 git commit -m "feat(frontend): seat my hand on a felt placemat with my-turn glow; drop flat-row CSS
@@ -573,9 +583,9 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 ## Final verification
 
-- [ ] Frontend suite green: `cd frontend && npx vitest run`.
-- [ ] Build green: `cd frontend && npm run build`.
-- [ ] Visual smoke (optional, dev server): 2/3/6-player games render opponents around the oval, current player's seat glows, center shows claim badge + pile chip, reveal overlays the well, my hand sits on the bottom placemat.
+- [x] Frontend suite green: `cd frontend && npx vitest run`.
+- [x] Build green: `cd frontend && npm run build`.
+- [x] Visual smoke (optional, dev server): 2/3/6-player games render opponents around the oval, current player's seat glows, center shows claim badge + pile chip, reveal overlays the well, my hand sits on the bottom placemat.
 
 ---
 
