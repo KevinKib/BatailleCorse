@@ -134,35 +134,38 @@ function selectAll(event: FocusEvent) {
         </p>
       </div>
 
-      <div class="hand">
-        <button
-          v-for="(card, i) in store.game?.myHand ?? []"
-          :key="card.name"
-          :data-test="`hand-card-${i}`"
-          class="hand-card"
-          :class="{ selected: isSelected(card) }"
-          type="button"
-          @click="store.toggleCard(card)">
-          <PlayingCard :rank="card.rank" :suit="card.suit" />
-        </button>
       </div>
 
-      <div class="actions">
-        <button
-          data-test="discard"
-          type="button"
-          :disabled="!store.isMyTurn || store.selectedCards.length === 0"
-          @click="store.discard()">
-          Discard as {{ store.game?.currentTarget.label }}
-        </button>
-        <button
-          data-test="call"
-          type="button"
-          :disabled="!store.canCallBullshit"
-          @click="store.callBullshit()">
-          Call Bullshit
-        </button>
-      </div>
+      <div class="my-zone">
+        <span :class="['my-tag', { 'my-tag--active': store.isMyTurn }]">You</span>
+        <div class="hand">
+          <button
+            v-for="(card, i) in store.game?.myHand ?? []"
+            :key="card.name"
+            :data-test="`hand-card-${i}`"
+            class="hand-card"
+            :class="{ selected: isSelected(card) }"
+            type="button"
+            @click="store.toggleCard(card)">
+            <PlayingCard :rank="card.rank" :suit="card.suit" />
+          </button>
+        </div>
+        <div class="actions">
+          <button
+            data-test="discard"
+            type="button"
+            :disabled="!store.isMyTurn || store.selectedCards.length === 0"
+            @click="store.discard()">
+            Discard as {{ store.game?.currentTarget.label }}
+          </button>
+          <button
+            data-test="call"
+            type="button"
+            :disabled="!store.canCallBullshit"
+            @click="store.callBullshit()">
+            Call Bullshit
+          </button>
+        </div>
       </div>
     </template>
   </div>
@@ -216,14 +219,10 @@ function selectAll(event: FocusEvent) {
   --seat-card-w: clamp(40px, 7vmin, 60px);
 }
 
-.opponents { display: flex; gap: 1rem; }
-.opponent.active { outline: 2px solid var(--p-primary-color); border-radius: 0.5rem; }
 .hand { display: flex; gap: 0.25rem; flex-wrap: wrap; justify-content: center; }
 .hand-card { background: none; border: none; padding: 0; cursor: pointer; }
 .hand-card.selected { transform: translateY(-12px); }
 .actions { display: flex; gap: 1rem; }
-.reveal { text-align: center; }
-.revealed-cards { display: flex; gap: 0.25rem; justify-content: center; }
 
 .table-center {
   position: absolute;
@@ -302,5 +301,50 @@ function selectAll(event: FocusEvent) {
   margin: 0;
   font-size: 0.78rem;
   color: rgba(255, 255, 255, 0.7);
+}
+
+.my-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  width: 100%;
+  max-width: 900px;
+  padding: 12px 0 calc(8px + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.30) 0%, rgba(0, 0, 0, 0.04) 100%);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 14px 14px 0 0;
+}
+
+.my-tag {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  padding: 4px 14px;
+}
+.my-tag--active {
+  color: #ffffff;
+  border-color: rgba(var(--accent-active-rgb), 0.9);
+  box-shadow: 0 0 16px 3px rgba(var(--accent-active-rgb), 0.55);
+  animation: seat-glow-pulse 1.8s ease-in-out infinite;
+}
+@keyframes seat-glow-pulse {
+  0%, 100% { box-shadow: 0 0 12px 2px rgba(var(--accent-active-rgb), 0.40); }
+  50%      { box-shadow: 0 0 22px 6px rgba(var(--accent-active-rgb), 0.70); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .my-tag--active { animation: none; }
+}
+
+.hand :deep(.playing_card) {
+  width: clamp(48px, 9vmin, 76px);
+  height: auto;
+  aspect-ratio: 167.575 / 243.1375;
 }
 </style>
