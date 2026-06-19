@@ -4,6 +4,7 @@ import { setActivePinia, createPinia } from 'pinia';
 import { createRouter, createMemoryHistory } from 'vue-router';
 import BullshitGameScreen from './BullshitGameScreen.vue';
 import EndGameOverlay from '../../components/EndGameOverlay.vue';
+import OpponentSeat from '../../components/bullshit/OpponentSeat.vue';
 import { useBullshitStore } from '../../state/Bullshit.store';
 import type { BullshitState } from '../../model/bullshit/BullshitState';
 import type { LobbyView } from '../../model/bullshit/LobbyView';
@@ -123,6 +124,24 @@ describe('BullshitGameScreen', () => {
 
     await startBtn.trigger('click');
     expect(startGame).toHaveBeenCalled();
+  });
+
+  it('renders one opponent seat per opponent, positioned around the table', () => {
+    const store = useBullshitStore();
+    store.applyEvent({ type: 'seat-change', seat: 0 });
+    store.applyEvent({ type: 'state-update', state: playingState({
+      players: [
+        { id: '0', handCount: 5, isCurrentPlayer: false },
+        { id: '1', handCount: 4, isCurrentPlayer: true },
+        { id: '2', handCount: 3, isCurrentPlayer: false },
+        { id: '3', handCount: 2, isCurrentPlayer: false },
+      ],
+    }) });
+    const wrapper = mount(BullshitGameScreen, { props: { gameId: 'g1' }, global: { plugins: [router] } });
+
+    const seats = wrapper.findAllComponents(OpponentSeat);
+    expect(seats).toHaveLength(3);                       // 4 players, minus me (seat 0)
+    expect(seats.some(s => s.props('active') === true)).toBe(true);  // seat 1 is current
   });
 
   it('renders the end-game overlay when finished and play-again calls playAgain', async () => {

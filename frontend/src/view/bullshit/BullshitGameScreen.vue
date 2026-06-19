@@ -5,14 +5,38 @@ import { useBullshitBootstrap } from '../../composables/useBullshitBootstrap';
 import PlayingCard from '../../components/PlayingCard.vue';
 import CardCounter from '../../components/CardCounter.vue';
 import EndGameOverlay from '../../components/EndGameOverlay.vue';
+import OpponentSeat from '../../components/bullshit/OpponentSeat.vue';
 import type Card from '../../model/Card';
 
 const props = defineProps<{ gameId: string }>();
 const store = useBullshitStore();
 useBullshitBootstrap(props.gameId);
 
+// Opponents are everyone but me, in seat order.
 const opponents = computed(() =>
   (store.game?.players ?? []).filter(p => p.id !== String(store.mySeat)));
+
+// Angles (degrees) around the table for K opponents, skipping the bottom (my zone).
+// 0 = right, 90 = top, 180 = left. Single opp sits at top; pairs sit up on the
+// top corners; 3+ spread evenly from left, over the top, to the right.
+function seatAngles(count: number): number[] {
+  if (count <= 0) return [];
+  if (count === 1) return [90];
+  if (count === 2) return [135, 45];
+  return Array.from({ length: count }, (_, i) => 180 - i * (180 / (count - 1)));
+}
+
+// Map each opponent to a point on the table ellipse (percent of the frame).
+const RX = 44; // horizontal radius (%)
+const RY = 40; // vertical radius (%)
+const seatPositions = computed(() => {
+  const angles = seatAngles(opponents.value.length);
+  return angles.map(deg => {
+    const r = (deg * Math.PI) / 180;
+    return { left: 50 + RX * Math.cos(r), top: 50 - RY * Math.sin(r) };
+  });
+});
+
 const isSelected = (card: Card) => store.selectedCards.some(c => c.name === card.name);
 const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.gameId}`);
 
@@ -69,10 +93,17 @@ function selectAll(event: FocusEvent) {
     />
 
     <template v-else>
-      <div class="opponents">
-        <div v-for="opp in opponents" :key="opp.id" class="opponent" :class="{ active: opp.isCurrentPlayer }">
-          <span class="seat">Player {{ opp.id }}</span>
-          <CardCounter :count="opp.handCount" />
+      <div class="table-frame">
+      <div class="opponents-ring">
+        <div
+          v-for="(opp, i) in opponents"
+          :key="opp.id"
+          class="seat-slot"
+          :style="{ left: seatPositions[i].left + '%', top: seatPositions[i].top + '%' }">
+          <OpponentSeat
+            :label="`Player ${Number(opp.id) + 1}`"
+            :hand-count="opp.handCount"
+            :active="opp.isCurrentPlayer" />
         </div>
       </div>
 
@@ -123,6 +154,7 @@ function selectAll(event: FocusEvent) {
           Call Bullshit
         </button>
       </div>
+      </div>
     </template>
   </div>
 </template>
@@ -139,6 +171,42 @@ function selectAll(event: FocusEvent) {
 .btn { padding: 0.6rem 1.4rem; border-radius: 0.5rem; border: 1px solid var(--p-primary-color); font-size: 1rem; cursor: pointer; }
 .btn.primary { background: var(--p-primary-color); color: var(--p-primary-contrast-color, #fff); }
 .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.table-frame {
+  position: relative;
+  width: 100%;
+  max-width: 900px;
+  /* Oval play area; height tracks width so the ellipse math stays proportional. */
+  aspect-ratio: 16 / 11;
+  margin: 0 auto;
+  border-radius: 50% / 42%;
+  /* Felt: radial gradient + vignette, reusing the shared felt tokens. */
+  background:
+    radial-gradient(ellipse at 50% 46%, transparent 18%, rgba(0, 0, 0, 0.55) 100%),
+    radial-gradient(ellipse at 50% 42%, var(--felt-center) 0%, var(--felt-mid) 52%, var(--felt-edge) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 2px 30px rgba(0, 0, 0, 0.55), 0 10px 40px rgba(0, 0, 0, 0.45);
+  isolation: isolate;
+  /* Fluid card sizes consumed by seats and the center. */
+  --seat-card-w: clamp(40px, 7vmin, 60px);
+  --pile-card-w: clamp(60px, 13vmin, 104px);
+}
+
+.opponents-ring {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.seat-slot {
+  position: absolute;
+  transform: translate(-50%, -50%);
+}
+
+/* Pass the fluid seat-card width down into each seat. */
+.seat-slot :deep(.opponent-seat) {
+  --seat-card-w: clamp(40px, 7vmin, 60px);
+}
+
 .opponents { display: flex; gap: 1rem; }
 .opponent.active { outline: 2px solid var(--p-primary-color); border-radius: 0.5rem; }
 .hand { display: flex; gap: 0.25rem; flex-wrap: wrap; justify-content: center; }
