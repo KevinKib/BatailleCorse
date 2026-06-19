@@ -4,6 +4,7 @@ import { setActivePinia, createPinia } from 'pinia';
 import { createRouter, createMemoryHistory } from 'vue-router';
 import BullshitGameScreen from './BullshitGameScreen.vue';
 import EndGameOverlay from '../../components/EndGameOverlay.vue';
+import OpponentSeat from '../../components/bullshit/OpponentSeat.vue';
 import { useBullshitStore } from '../../state/Bullshit.store';
 import type { BullshitState } from '../../model/bullshit/BullshitState';
 import type { LobbyView } from '../../model/bullshit/LobbyView';
@@ -79,6 +80,30 @@ describe('BullshitGameScreen', () => {
     expect(wrapper.find('[data-test="reveal"]').exists()).toBe(true);
   });
 
+  it('shows the claim badge and a last-play caption only when a claim is on the table', () => {
+    const store = useBullshitStore();
+    store.applyEvent({ type: 'seat-change', seat: 0 });
+    store.applyEvent({ type: 'state-update', state: playingState({
+      currentTarget: { label: 'QUEEN' },
+      table: { state: 'CLAIM', claimantId: '1', count: 3 },
+      discardPileSize: 7,
+    }) });
+    const wrapper = mount(BullshitGameScreen, { props: { gameId: 'g1' }, global: { plugins: [router] } });
+
+    expect(wrapper.get('[data-test="claim-badge"]').text()).toContain('QUEEN');
+    expect(wrapper.get('[data-test="last-play"]').text()).toContain('Player 2');  // claimantId 1 -> "Player 2"
+    expect(wrapper.get('[data-test="last-play"]').text()).toContain('3');
+  });
+
+  it('hides the last-play caption when there is no claim', () => {
+    const store = useBullshitStore();
+    store.applyEvent({ type: 'seat-change', seat: 0 });
+    store.applyEvent({ type: 'state-update', state: playingState({ table: { state: 'NO_CLAIM' } }) });
+    const wrapper = mount(BullshitGameScreen, { props: { gameId: 'g1' }, global: { plugins: [router] } });
+
+    expect(wrapper.find('[data-test="last-play"]').exists()).toBe(false);
+  });
+
   it('renders the lobby panel with joined players', () => {
     const store = useBullshitStore();
     store.applyEvent({ type: 'seat-change', seat: 0 });
@@ -123,6 +148,24 @@ describe('BullshitGameScreen', () => {
 
     await startBtn.trigger('click');
     expect(startGame).toHaveBeenCalled();
+  });
+
+  it('renders one opponent seat per opponent, positioned around the table', () => {
+    const store = useBullshitStore();
+    store.applyEvent({ type: 'seat-change', seat: 0 });
+    store.applyEvent({ type: 'state-update', state: playingState({
+      players: [
+        { id: '0', handCount: 5, isCurrentPlayer: false },
+        { id: '1', handCount: 4, isCurrentPlayer: true },
+        { id: '2', handCount: 3, isCurrentPlayer: false },
+        { id: '3', handCount: 2, isCurrentPlayer: false },
+      ],
+    }) });
+    const wrapper = mount(BullshitGameScreen, { props: { gameId: 'g1' }, global: { plugins: [router] } });
+
+    const seats = wrapper.findAllComponents(OpponentSeat);
+    expect(seats).toHaveLength(3);                       // 4 players, minus me (seat 0)
+    expect(seats.some(s => s.props('active') === true)).toBe(true);  // seat 1 is current
   });
 
   it('renders the end-game overlay when finished and play-again calls playAgain', async () => {
