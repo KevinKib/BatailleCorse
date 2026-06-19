@@ -107,22 +107,31 @@ function selectAll(event: FocusEvent) {
         </div>
       </div>
 
-      <div class="table">
-        <p class="claim">Claim: {{ store.game?.currentTarget.label }}</p>
-        <p v-if="store.game?.table.state === 'CLAIM'" class="last-claim">
-          Player {{ store.game.table.claimantId }} played {{ store.game.table.count }} card(s) face-down
-        </p>
-        <p class="pile">Discard pile: {{ store.game?.discardPileSize }}</p>
-      </div>
-
-      <div v-if="store.reveal" data-test="reveal" class="reveal">
-        <p>
-          Player {{ store.reveal.callerSeat }} called bullshit on Player {{ store.reveal.claimantSeat }} —
-          claim was {{ store.reveal.truthful ? 'TRUE' : 'FALSE' }} — Player {{ store.reveal.pickerSeat }} takes the pile
-        </p>
-        <div class="revealed-cards">
-          <PlayingCard v-for="(c, i) in store.reveal.revealedCards" :key="i" :rank="c.rank" :suit="c.suit" />
+      <div class="table-center">
+        <div class="claim-badge" data-test="claim-badge">
+          Claim: <strong>{{ store.game?.currentTarget.label }}</strong>
         </div>
+
+        <div class="pile-well">
+          <PlayingCard :hidden="true" rank="10" suit="spade" />
+          <div class="pile-chip">
+            <CardCounter :count="store.game?.discardPileSize ?? 0" />
+          </div>
+
+          <div v-if="store.reveal" data-test="reveal" class="reveal">
+            <div class="revealed-cards">
+              <PlayingCard v-for="(c, i) in store.reveal.revealedCards" :key="i" :rank="c.rank" :suit="c.suit" />
+            </div>
+            <p class="reveal-caption">
+              Player {{ store.reveal.callerSeat + 1 }} called bullshit on Player {{ store.reveal.claimantSeat + 1 }} —
+              claim was {{ store.reveal.truthful ? 'TRUE' : 'FALSE' }} — Player {{ store.reveal.pickerSeat + 1 }} takes the pile
+            </p>
+          </div>
+        </div>
+
+        <p v-if="store.game?.table.state === 'CLAIM'" class="last-play" data-test="last-play">
+          Player {{ Number(store.game.table.claimantId) + 1 }} played {{ store.game.table.count }} card(s) face-down
+        </p>
       </div>
 
       <div class="hand">
@@ -215,4 +224,83 @@ function selectAll(event: FocusEvent) {
 .actions { display: flex; gap: 1rem; }
 .reveal { text-align: center; }
 .revealed-cards { display: flex; gap: 0.25rem; justify-content: center; }
+
+.table-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.claim-badge {
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(var(--accent-active-rgb), 0.4);
+  border-radius: 999px;
+  padding: 4px 14px;
+}
+.claim-badge strong { color: var(--gold); }
+
+.pile-well {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(8px, 2vmin, 16px) clamp(12px, 3vmin, 22px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 14px;
+  background: radial-gradient(ellipse at 50% 45%, rgba(0, 0, 0, 0.28) 0%, rgba(0, 0, 0, 0.5) 100%);
+  box-shadow: inset 0 3px 22px rgba(0, 0, 0, 0.65), inset 0 0 0 1px rgba(0, 0, 0, 0.35);
+}
+.pile-well :deep(.playing_card) {
+  width: var(--pile-card-w);
+  height: auto;
+  aspect-ratio: 167.575 / 243.1375;
+}
+.pile-chip {
+  position: absolute;
+  bottom: 4px;
+  right: -10px;
+}
+
+.reveal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: max-content;
+  max-width: 60vw;
+}
+.revealed-cards { display: flex; gap: 0.25rem; justify-content: center; }
+.revealed-cards :deep(.playing_card) {
+  width: var(--seat-card-w);
+  height: auto;
+  aspect-ratio: 167.575 / 243.1375;
+}
+.reveal-caption {
+  margin: 0;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 8px;
+  padding: 4px 8px;
+}
+
+.last-play {
+  margin: 0;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.7);
+}
 </style>

@@ -80,6 +80,30 @@ describe('BullshitGameScreen', () => {
     expect(wrapper.find('[data-test="reveal"]').exists()).toBe(true);
   });
 
+  it('shows the claim badge and a last-play caption only when a claim is on the table', () => {
+    const store = useBullshitStore();
+    store.applyEvent({ type: 'seat-change', seat: 0 });
+    store.applyEvent({ type: 'state-update', state: playingState({
+      currentTarget: { label: 'QUEEN' },
+      table: { state: 'CLAIM', claimantId: '1', count: 3 },
+      discardPileSize: 7,
+    }) });
+    const wrapper = mount(BullshitGameScreen, { props: { gameId: 'g1' }, global: { plugins: [router] } });
+
+    expect(wrapper.get('[data-test="claim-badge"]').text()).toContain('QUEEN');
+    expect(wrapper.get('[data-test="last-play"]').text()).toContain('Player 2');  // claimantId 1 -> "Player 2"
+    expect(wrapper.get('[data-test="last-play"]').text()).toContain('3');
+  });
+
+  it('hides the last-play caption when there is no claim', () => {
+    const store = useBullshitStore();
+    store.applyEvent({ type: 'seat-change', seat: 0 });
+    store.applyEvent({ type: 'state-update', state: playingState({ table: { state: 'NO_CLAIM' } }) });
+    const wrapper = mount(BullshitGameScreen, { props: { gameId: 'g1' }, global: { plugins: [router] } });
+
+    expect(wrapper.find('[data-test="last-play"]').exists()).toBe(false);
+  });
+
   it('renders the lobby panel with joined players', () => {
     const store = useBullshitStore();
     store.applyEvent({ type: 'seat-change', seat: 0 });
