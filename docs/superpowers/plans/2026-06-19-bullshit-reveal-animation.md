@@ -28,7 +28,7 @@
 - Modify: `frontend/src/state/Bullshit.store.ts`
 - Test: `frontend/src/state/Bullshit.store.test.ts`
 
-- [ ] **Step 1: Write the failing tests.** In `Bullshit.store.test.ts`, add an import for the constant and three tests (reuse the existing pinia `beforeEach`):
+- [x] **Step 1: Write the failing tests.** In `Bullshit.store.test.ts`, add an import for the constant and three tests (reuse the existing pinia `beforeEach`):
 
 ```ts
 import { useBullshitStore, REVEAL_HOLD_MS } from './Bullshit.store';
@@ -66,9 +66,9 @@ describe('reveal timed hold', () => {
 
 The existing `records a CALL_BULLSHIT reveal` test stays as-is (it asserts the reveal is set; it does not advance timers).
 
-- [ ] **Step 2: Run to verify it fails:** `cd frontend && npx vitest run src/state/Bullshit.store.test.ts` → FAIL (`REVEAL_HOLD_MS` is not exported; reveal still clears on the DISCARD event).
+- [x] **Step 2: Run to verify it fails:** `cd frontend && npx vitest run src/state/Bullshit.store.test.ts` → FAIL (`REVEAL_HOLD_MS` is not exported; reveal still clears on the DISCARD event).
 
-- [ ] **Step 3: Implement.** In `Bullshit.store.ts`:
+- [x] **Step 3: Implement.** In `Bullshit.store.ts`:
 
   (a) Add the exported constant at module top level, just after the imports (before `export const useBullshitStore`):
 
@@ -103,9 +103,9 @@ export const REVEAL_HOLD_MS = 3000;
         break;
 ```
 
-- [ ] **Step 4: Run to verify it passes:** `npx vitest run src/state/Bullshit.store.test.ts` → PASS (new tests + the existing reveal/toggle tests).
+- [x] **Step 4: Run to verify it passes:** `npx vitest run src/state/Bullshit.store.test.ts` → PASS (new tests + the existing reveal/toggle tests).
 
-- [ ] **Step 5: Commit:**
+- [x] **Step 5: Commit:**
 ```bash
 cd "C:\Users\kevin\Documents\GitHub\IntelliJ\BatailleCorse\.claude\worktrees\sharp-leakey-22c0d5"
 git add frontend/src/state/Bullshit.store.ts frontend/src/state/Bullshit.store.test.ts
@@ -122,7 +122,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - Modify: `frontend/src/view/bullshit/BullshitGameScreen.vue`
 - Test: `frontend/src/view/bullshit/BullshitGameScreen.test.ts`
 
-- [ ] **Step 1: Write the failing test.** In `BullshitGameScreen.test.ts`, update/extend the reveal test. Add a test that drives a CALL_BULLSHIT reveal and asserts the verdict badge text and that a flip front+back face render per card. Reuse the file's `playingState`/`router`/pinia setup:
+- [x] **Step 1: Write the failing test.** In `BullshitGameScreen.test.ts`, update/extend the reveal test. Add a test that drives a CALL_BULLSHIT reveal and asserts the verdict badge text and that a flip front+back face render per card. Reuse the file's `playingState`/`router`/pinia setup:
 
 ```ts
 it('shows a BLUFF verdict and a flip face per revealed card on a false claim', () => {
@@ -154,9 +154,9 @@ it('shows a TRUTHFUL verdict on a true claim', () => {
 
 The existing "shows the reveal panel after a CALL_BULLSHIT event" test (asserts `[data-test="reveal"]` exists) stays green.
 
-- [ ] **Step 2: Run to verify it fails:** `npx vitest run src/view/bullshit/BullshitGameScreen.test.ts` → FAIL (no `[data-test="verdict"]` / no `.flip-card`).
+- [x] **Step 2: Run to verify it fails:** `npx vitest run src/view/bullshit/BullshitGameScreen.test.ts` → FAIL (no `[data-test="verdict"]` / no `.flip-card`).
 
-- [ ] **Step 3: Implement.** In `BullshitGameScreen.vue`, replace the current reveal block:
+- [x] **Step 3: Implement.** In `BullshitGameScreen.vue`, replace the current reveal block:
 
 ```html
           <div v-if="store.reveal" data-test="reveal" class="reveal">
@@ -309,13 +309,13 @@ The existing "shows the reveal panel after a CALL_BULLSHIT event" test (asserts 
 
   Keep the existing `.reveal-caption` rule as-is.
 
-- [ ] **Step 4: Run to verify it passes:** `npx vitest run src/view/bullshit/BullshitGameScreen.test.ts` → PASS (new verdict/face tests + existing reveal/discard/lobby/end tests).
+- [x] **Step 4: Run to verify it passes:** `npx vitest run src/view/bullshit/BullshitGameScreen.test.ts` → PASS (new verdict/face tests + existing reveal/discard/lobby/end tests).
 
-- [ ] **Step 5: Frontend gate:**
+- [x] **Step 5: Frontend gate:**
   - `cd frontend && npx vitest run` → all suites pass.
   - `cd frontend && npm run build` → succeeds (type-check gate).
 
-- [ ] **Step 6: Commit:**
+- [x] **Step 6: Commit:**
 ```bash
 git add frontend/src/view/bullshit/BullshitGameScreen.vue frontend/src/view/bullshit/BullshitGameScreen.test.ts
 git commit -m "feat(frontend): flip the revealed cards + TRUTHFUL/BLUFF verdict on call-Bullshit
@@ -327,9 +327,9 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 ## Final verification
 
-- [ ] Frontend suite green: `cd frontend && npx vitest run`.
-- [ ] Build green: `cd frontend && npm run build`.
-- [ ] Visual smoke (optional, dev server): call Bullshit → cards flip in sequence over the well, verdict badge appears (green TRUTHFUL / red BLUFF), reveal fades after ~3s while the board updates behind it.
+- [x] Frontend suite green: `cd frontend && npx vitest run`.
+- [x] Build green: `cd frontend && npm run build`.
+- [x] Visual smoke (optional, dev server): call Bullshit → cards flip in sequence over the well, verdict badge appears (green TRUTHFUL / red BLUFF), reveal fades after ~3s while the board updates behind it.
 
 ---
 
