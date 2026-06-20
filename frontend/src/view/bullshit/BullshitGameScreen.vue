@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import { Button } from 'primevue';
 import { useBullshitStore } from '../../state/Bullshit.store';
 import { useBullshitBootstrap } from '../../composables/useBullshitBootstrap';
 import PlayingCard from '../../components/PlayingCard.vue';
@@ -163,20 +164,22 @@ function selectAll(event: FocusEvent) {
           </button>
         </div>
         <div class="actions">
-          <button
+          <Button
             data-test="discard"
-            type="button"
+            :label="`Discard as ${store.game?.currentTarget.label ?? ''}`"
+            icon="pi pi-arrow-up"
+            severity="success"
+            rounded
             :disabled="!store.isMyTurn || store.selectedCards.length === 0"
-            @click="store.discard()">
-            Discard as {{ store.game?.currentTarget.label }}
-          </button>
-          <button
+            @click="store.discard()" />
+          <Button
             data-test="call"
-            type="button"
+            label="Call Bullshit"
+            icon="pi pi-flag"
+            severity="danger"
+            rounded
             :disabled="!store.canCallBullshit"
-            @click="store.callBullshit()">
-            Call Bullshit
-          </button>
+            @click="store.callBullshit()" />
         </div>
       </div>
     </template>
@@ -184,7 +187,23 @@ function selectAll(event: FocusEvent) {
 </template>
 
 <style scoped>
-.bullshit-screen { display: flex; flex-direction: column; gap: 1rem; padding: 1rem; align-items: center; }
+.bullshit-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  align-items: center;
+  box-sizing: border-box;
+  /* Paint our own felt so it covers the full scrollable content, not just the
+     first viewport — the shared app-background is only viewport-tall, which left
+     a bare strip when the screen scrolled on small displays. Mirrors the
+     BatailleCorse game screen, which also paints its own opaque felt. */
+  min-height: 100vh;
+  min-height: 100dvh;
+  background:
+    radial-gradient(ellipse at 50% 42%, transparent 15%, rgba(0, 0, 0, 0.62) 100%),
+    radial-gradient(ellipse at 50% 38%, var(--felt-center) 0%, var(--felt-mid) 48%, var(--felt-edge) 100%);
+}
 .panel { text-align: center; }
 .lobby { display: flex; flex-direction: column; gap: 0.75rem; align-items: center; min-width: 22rem; }
 .count { font-weight: 600; margin: 0; }
@@ -340,15 +359,16 @@ function selectAll(event: FocusEvent) {
   animation: verdict-in 360ms ease-out forwards;
   animation-delay: calc((var(--n) - 1) * 120ms + 520ms);
 }
+/* Opaque fills so the flipped cards never show through the verdict pill. */
 .verdict--truthful {
-  background: rgba(var(--accent-positive-rgb), 0.25);
-  border: 1px solid rgba(var(--accent-positive-rgb), 0.8);
-  box-shadow: 0 0 18px 2px rgba(var(--accent-positive-rgb), 0.5);
+  background: rgb(var(--accent-positive-rgb));
+  color: #06210f;
+  box-shadow: 0 0 18px 2px rgba(var(--accent-positive-rgb), 0.55);
 }
 .verdict--bluff {
-  background: rgba(var(--accent-negative-rgb), 0.25);
-  border: 1px solid rgba(var(--accent-negative-rgb), 0.8);
-  box-shadow: 0 0 18px 2px rgba(var(--accent-negative-rgb), 0.5);
+  background: rgb(var(--accent-negative-rgb));
+  color: #2a0606;
+  box-shadow: 0 0 18px 2px rgba(var(--accent-negative-rgb), 0.55);
 }
 @keyframes verdict-in {
   from { opacity: 0; transform: scale(0.8); }
