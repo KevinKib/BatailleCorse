@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
 import { setActivePinia, createPinia } from 'pinia';
 import { createRouter, createMemoryHistory } from 'vue-router';
+import PrimeVue from 'primevue/config';
 import BullshitGameScreen from './BullshitGameScreen.vue';
 import EndGameOverlay from '../../components/EndGameOverlay.vue';
 import OpponentSeat from '../../components/bullshit/OpponentSeat.vue';
@@ -60,7 +61,7 @@ describe('BullshitGameScreen', () => {
     const store = useBullshitStore();
     store.applyEvent({ type: 'seat-change', seat: 0 });
     store.applyEvent({ type: 'state-update', state: playingState() });
-    const wrapper = mount(BullshitGameScreen, { props: { gameId: 'g1' }, global: { plugins: [router] } });
+    const wrapper = mount(BullshitGameScreen, { props: { gameId: 'g1' }, global: { plugins: [router, PrimeVue] } });
 
     const discardBtn = wrapper.get('[data-test="discard"]');
     expect((discardBtn.element as HTMLButtonElement).disabled).toBe(true);
@@ -75,9 +76,35 @@ describe('BullshitGameScreen', () => {
     store.applyEvent({ type: 'state-update', state: playingState() });
     store.applyEvent({ type: 'event', eventType: 'CALL_BULLSHIT', message: '',
       eventData: { callerSeat: 1, claimantSeat: 0, truthful: false, pickerSeat: 0, revealedCards: [{ rank: 'KING', suit: 'SPADE', name: 'SPADE_KING' }] } });
-    const wrapper = mount(BullshitGameScreen, { props: { gameId: 'g1' }, global: { plugins: [router] } });
+    const wrapper = mount(BullshitGameScreen, { props: { gameId: 'g1' }, global: { plugins: [router, PrimeVue] } });
 
     expect(wrapper.find('[data-test="reveal"]').exists()).toBe(true);
+  });
+
+  it('shows a BLUFF verdict and a flip face per revealed card on a false claim', () => {
+    const store = useBullshitStore();
+    store.applyEvent({ type: 'seat-change', seat: 0 });
+    store.applyEvent({ type: 'state-update', state: playingState() });
+    store.applyEvent({ type: 'event', eventType: 'CALL_BULLSHIT', message: '',
+      eventData: { callerSeat: 1, claimantSeat: 0, truthful: false, pickerSeat: 0,
+        revealedCards: [{ rank: 'KING', suit: 'SPADE', name: 'SPADE_KING' }, { rank: 'ACE', suit: 'HEART', name: 'HEART_ACE' }] } });
+    const wrapper = mount(BullshitGameScreen, { props: { gameId: 'g1' }, global: { plugins: [router, PrimeVue] } });
+
+    expect(wrapper.get('[data-test="verdict"]').text()).toBe('BLUFF');
+    expect(wrapper.findAll('.flip-card')).toHaveLength(2);
+    expect(wrapper.findAll('.flip-front').length).toBe(2);
+    expect(wrapper.findAll('.flip-back').length).toBe(2);
+  });
+
+  it('shows a TRUTHFUL verdict on a true claim', () => {
+    const store = useBullshitStore();
+    store.applyEvent({ type: 'seat-change', seat: 0 });
+    store.applyEvent({ type: 'state-update', state: playingState() });
+    store.applyEvent({ type: 'event', eventType: 'CALL_BULLSHIT', message: '',
+      eventData: { callerSeat: 1, claimantSeat: 0, truthful: true, pickerSeat: 1, revealedCards: [{ rank: 'ACE', suit: 'HEART', name: 'HEART_ACE' }] } });
+    const wrapper = mount(BullshitGameScreen, { props: { gameId: 'g1' }, global: { plugins: [router, PrimeVue] } });
+
+    expect(wrapper.get('[data-test="verdict"]').text()).toBe('TRUTHFUL');
   });
 
   it('shows the claim badge and a last-play caption only when a claim is on the table', () => {
@@ -88,7 +115,7 @@ describe('BullshitGameScreen', () => {
       table: { state: 'CLAIM', claimantId: '1', count: 3 },
       discardPileSize: 7,
     }) });
-    const wrapper = mount(BullshitGameScreen, { props: { gameId: 'g1' }, global: { plugins: [router] } });
+    const wrapper = mount(BullshitGameScreen, { props: { gameId: 'g1' }, global: { plugins: [router, PrimeVue] } });
 
     expect(wrapper.get('[data-test="claim-badge"]').text()).toContain('QUEEN');
     expect(wrapper.get('[data-test="last-play"]').text()).toContain('Player 2');  // claimantId 1 -> "Player 2"
@@ -99,7 +126,7 @@ describe('BullshitGameScreen', () => {
     const store = useBullshitStore();
     store.applyEvent({ type: 'seat-change', seat: 0 });
     store.applyEvent({ type: 'state-update', state: playingState({ table: { state: 'NO_CLAIM' } }) });
-    const wrapper = mount(BullshitGameScreen, { props: { gameId: 'g1' }, global: { plugins: [router] } });
+    const wrapper = mount(BullshitGameScreen, { props: { gameId: 'g1' }, global: { plugins: [router, PrimeVue] } });
 
     expect(wrapper.find('[data-test="last-play"]').exists()).toBe(false);
   });
@@ -108,7 +135,7 @@ describe('BullshitGameScreen', () => {
     const store = useBullshitStore();
     store.applyEvent({ type: 'seat-change', seat: 0 });
     store.applyEvent({ type: 'state-update', state: lobbyView() });
-    const wrapper = mount(BullshitGameScreen, { props: { gameId: 'g1' }, global: { plugins: [router] } });
+    const wrapper = mount(BullshitGameScreen, { props: { gameId: 'g1' }, global: { plugins: [router, PrimeVue] } });
 
     expect(wrapper.find('[data-test="lobby"]').exists()).toBe(true);
     const items = wrapper.findAll('[data-test="lobby"] .players li');
@@ -126,7 +153,7 @@ describe('BullshitGameScreen', () => {
       ],
       canStart: false,
     }) });
-    const wrapper = mount(BullshitGameScreen, { props: { gameId: 'g1' }, global: { plugins: [router] } });
+    const wrapper = mount(BullshitGameScreen, { props: { gameId: 'g1' }, global: { plugins: [router, PrimeVue] } });
 
     expect(wrapper.get('[data-test="player-count"]').text()).toContain('1 / 6');
     expect(wrapper.get('[data-test="start-hint"]').text()).toContain('1 more player');
@@ -137,7 +164,7 @@ describe('BullshitGameScreen', () => {
     store.applyEvent({ type: 'seat-change', seat: 0 });
     store.applyEvent({ type: 'state-update', state: lobbyView({ canStart: false }) });
     const startGame = vi.spyOn(store, 'startGame').mockImplementation(() => {});
-    const wrapper = mount(BullshitGameScreen, { props: { gameId: 'g1' }, global: { plugins: [router] } });
+    const wrapper = mount(BullshitGameScreen, { props: { gameId: 'g1' }, global: { plugins: [router, PrimeVue] } });
 
     const startBtn = wrapper.get('[data-test="start"]');
     expect((startBtn.element as HTMLButtonElement).disabled).toBe(true);
@@ -161,7 +188,7 @@ describe('BullshitGameScreen', () => {
         { id: '3', handCount: 2, isCurrentPlayer: false },
       ],
     }) });
-    const wrapper = mount(BullshitGameScreen, { props: { gameId: 'g1' }, global: { plugins: [router] } });
+    const wrapper = mount(BullshitGameScreen, { props: { gameId: 'g1' }, global: { plugins: [router, PrimeVue] } });
 
     const seats = wrapper.findAllComponents(OpponentSeat);
     expect(seats).toHaveLength(3);                       // 4 players, minus me (seat 0)

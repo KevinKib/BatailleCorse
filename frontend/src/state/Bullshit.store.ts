@@ -8,12 +8,15 @@ import type { LobbyView } from '../model/bullshit/LobbyView';
 import type { CallBullshitEventData } from '../model/bullshit/BullshitEvents';
 import type Card from '../model/Card';
 
+export const REVEAL_HOLD_MS = 3000;
+
 export const useBullshitStore = defineStore('bullshit-store', () => {
   const state = ref<BullshitView | null>(null);
   const gameId = ref<string | null>(null);
   const mySeat = ref<number>(0);
   const reveal = ref<CallBullshitEventData | null>(null);
   const selectedCards = ref<Card[]>([]);
+  let revealTimer: ReturnType<typeof setTimeout> | null = null;
 
   const session = new BullshitSession(webSocketService, {
     onEvent(event: BullshitSessionEvent) { applyEvent(event); },
@@ -25,8 +28,11 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
       case 'game-id-change': gameId.value = event.gameId; break;
       case 'seat-change': mySeat.value = event.seat; break;
       case 'event':
-        if (event.eventType === 'CALL_BULLSHIT') reveal.value = event.eventData as CallBullshitEventData;
-        else reveal.value = null;
+        if (event.eventType === 'CALL_BULLSHIT') {
+          reveal.value = event.eventData as CallBullshitEventData;
+          if (revealTimer !== null) clearTimeout(revealTimer);
+          revealTimer = setTimeout(() => { reveal.value = null; revealTimer = null; }, REVEAL_HOLD_MS);
+        }
         break;
     }
   }

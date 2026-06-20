@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import { Button } from 'primevue';
 import { useBullshitStore } from '../../state/Bullshit.store';
 import { useBullshitBootstrap } from '../../composables/useBullshitBootstrap';
 import PlayingCard from '../../components/PlayingCard.vue';
@@ -118,15 +119,27 @@ function selectAll(event: FocusEvent) {
             <CardCounter :count="store.game?.discardPileSize ?? 0" />
           </div>
 
-          <div v-if="store.reveal" data-test="reveal" class="reveal">
-            <div class="revealed-cards">
-              <PlayingCard v-for="(c, i) in store.reveal.revealedCards" :key="i" :rank="c.rank" :suit="c.suit" />
+          <Transition name="reveal-fade">
+            <div v-if="store.reveal" data-test="reveal" class="reveal"
+                 :style="{ '--n': store.reveal.revealedCards.length }">
+              <div class="revealed-cards">
+                <div v-for="(c, i) in store.reveal.revealedCards" :key="i" class="flip-card" :style="{ '--i': i }">
+                  <div class="flip-inner">
+                    <div class="flip-face flip-back"><PlayingCard :hidden="true" rank="10" suit="spade" /></div>
+                    <div class="flip-face flip-front"><PlayingCard :rank="c.rank" :suit="c.suit" /></div>
+                  </div>
+                </div>
+              </div>
+              <div class="verdict" data-test="verdict"
+                   :class="store.reveal.truthful ? 'verdict--truthful' : 'verdict--bluff'">
+                {{ store.reveal.truthful ? 'TRUTHFUL' : 'BLUFF' }}
+              </div>
+              <p class="reveal-caption">
+                Player {{ store.reveal.callerSeat + 1 }} called bullshit on Player {{ store.reveal.claimantSeat + 1 }} —
+                Player {{ store.reveal.pickerSeat + 1 }} takes the pile
+              </p>
             </div>
-            <p class="reveal-caption">
-              Player {{ store.reveal.callerSeat + 1 }} called bullshit on Player {{ store.reveal.claimantSeat + 1 }} —
-              claim was {{ store.reveal.truthful ? 'TRUE' : 'FALSE' }} — Player {{ store.reveal.pickerSeat + 1 }} takes the pile
-            </p>
-          </div>
+          </Transition>
         </div>
 
         <p v-if="store.game?.table.state === 'CLAIM'" class="last-play" data-test="last-play">
@@ -151,20 +164,22 @@ function selectAll(event: FocusEvent) {
           </button>
         </div>
         <div class="actions">
-          <button
+          <Button
             data-test="discard"
-            type="button"
+            :label="`Discard as ${store.game?.currentTarget.label ?? ''}`"
+            icon="pi pi-arrow-up"
+            severity="success"
+            rounded
             :disabled="!store.isMyTurn || store.selectedCards.length === 0"
-            @click="store.discard()">
-            Discard as {{ store.game?.currentTarget.label }}
-          </button>
-          <button
+            @click="store.discard()" />
+          <Button
             data-test="call"
-            type="button"
+            label="Call Bullshit"
+            icon="pi pi-flag"
+            severity="danger"
+            rounded
             :disabled="!store.canCallBullshit"
-            @click="store.callBullshit()">
-            Call Bullshit
-          </button>
+            @click="store.callBullshit()" />
         </div>
       </div>
     </template>
@@ -172,7 +187,23 @@ function selectAll(event: FocusEvent) {
 </template>
 
 <style scoped>
-.bullshit-screen { display: flex; flex-direction: column; gap: 1rem; padding: 1rem; align-items: center; }
+.bullshit-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  align-items: center;
+  box-sizing: border-box;
+  /* Paint our own felt so it covers the full scrollable content, not just the
+     first viewport — the shared app-background is only viewport-tall, which left
+     a bare strip when the screen scrolled on small displays. Mirrors the
+     BatailleCorse game screen, which also paints its own opaque felt. */
+  min-height: 100vh;
+  min-height: 100dvh;
+  background:
+    radial-gradient(ellipse at 50% 42%, transparent 15%, rgba(0, 0, 0, 0.62) 100%),
+    radial-gradient(ellipse at 50% 38%, var(--felt-center) 0%, var(--felt-mid) 48%, var(--felt-edge) 100%);
+}
 .panel { text-align: center; }
 .lobby { display: flex; flex-direction: column; gap: 0.75rem; align-items: center; min-width: 22rem; }
 .count { font-weight: 600; margin: 0; }
@@ -272,21 +303,86 @@ function selectAll(event: FocusEvent) {
 
 .reveal {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  width: max-content;
-  max-width: 60vw;
+  justify-content: center;
+  gap: 8px;
+  pointer-events: none;
 }
-.revealed-cards { display: flex; gap: 0.25rem; justify-content: center; }
-.revealed-cards :deep(.playing_card) {
+
+.revealed-cards { display: flex; gap: 0.3rem; justify-content: center; perspective: 800px; }
+
+.flip-card {
   width: var(--seat-card-w);
+  aspect-ratio: 167.575 / 243.1375;
+}
+.flip-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transform: rotateY(180deg);
+  animation: card-flip 520ms ease-out forwards;
+  animation-delay: calc(var(--i) * 120ms);
+}
+.flip-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.flip-face :deep(.playing_card) {
+  width: 100%;
   height: auto;
   aspect-ratio: 167.575 / 243.1375;
+}
+.flip-front { transform: rotateY(0deg); }
+.flip-back { transform: rotateY(180deg); }
+
+@keyframes card-flip {
+  from { transform: rotateY(180deg); }
+  to   { transform: rotateY(0deg); }
+}
+
+.verdict {
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  font-size: 0.95rem;
+  color: #fff;
+  padding: 4px 16px;
+  border-radius: 999px;
+  opacity: 0;
+  animation: verdict-in 360ms ease-out forwards;
+  animation-delay: calc((var(--n) - 1) * 120ms + 520ms);
+}
+/* Opaque fills so the flipped cards never show through the verdict pill. */
+.verdict--truthful {
+  background: rgb(var(--accent-positive-rgb));
+  color: #06210f;
+  box-shadow: 0 0 18px 2px rgba(var(--accent-positive-rgb), 0.55);
+}
+.verdict--bluff {
+  background: rgb(var(--accent-negative-rgb));
+  color: #2a0606;
+  box-shadow: 0 0 18px 2px rgba(var(--accent-negative-rgb), 0.55);
+}
+@keyframes verdict-in {
+  from { opacity: 0; transform: scale(0.8); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.reveal-fade-enter-active { transition: opacity 0.2s ease; }
+.reveal-fade-leave-active { transition: opacity 0.35s ease, transform 0.35s ease; }
+.reveal-fade-enter-from { opacity: 0; }
+.reveal-fade-leave-to { opacity: 0; transform: scale(0.92); }
+
+@media (prefers-reduced-motion: reduce) {
+  .flip-inner { animation: none; transform: rotateY(0deg); }
+  .verdict { animation: none; opacity: 1; }
 }
 .reveal-caption {
   margin: 0;
