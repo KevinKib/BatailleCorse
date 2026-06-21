@@ -238,3 +238,29 @@ screen is 1-based; consistent with the reveal/last-play copy).
 - **Migrating BatailleCorse onto the new bricks** — its working
   `useDisconnectCountdown` / `DisconnectOverlay` are left untouched; a focused
   follow-up PR can adopt the bricks (BC's single-opponent case is a 1-entry map).
+
+## Addendum (2026-06-21): presence wiring + leave guard
+
+Manual testing revealed the rendered UI never appeared, because the events it
+listens for were **never emitted for Bullshit**. Root cause (traced end-to-end):
+the backend attributes a socket drop to a seat only if that STOMP session was
+bound via `/app/presence` (`PresenceService.onDisconnect` returns early when
+`ConnectionRegistry.unbind` finds nothing). The frontend sends `/app/presence`
+only through `WebSocketService.setPresence()`, whose sole caller was BatailleCorse's
+`GameSession` — `BullshitSession` never registered presence. So Bullshit sessions
+were absent from the registry and a tab-close no-op'd the whole chain.
+
+Fix (frontend-only, still in scope):
+- `BullshitSession.bind()` now calls `setPresence(JSON.stringify({ gameId, token }))`
+  (added to `BullshitWebSocketPort`); `WebSocketService` already re-asserts presence
+  on reconnect, so the `OPPONENT_RECONNECTED` path comes for free.
+- Explicit leave path mirroring BatailleCorse **exactly, reusing the same code**:
+  the shared `useLeaveGuard` composable (navigate away → `window.confirm` → forfeit)
+  + the same `RouterLink` Back button. `BullshitSession.forfeit()` publishes
+  `/app/forfeit`, surfaced as the store's `forfeit()` action. A hard tab-close still
+  falls back to the 60s disconnect-grace timer.
+
+This establishes the **reusable presence/leave framework** for future games: a new
+game gets the full disconnect/forfeit experience by (1) calling `setPresence` on
+bind, (2) exposing a `forfeit()` that publishes `/app/forfeit`, (3) reusing
+`useLeaveGuard` + the per-seat presence bricks. No backend or per-game UI rebuild.
