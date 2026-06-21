@@ -28,6 +28,9 @@ This change wires those events into the UI.
 | `OPPONENT_RECONNECTED`   | `{ reconnectedSeat: int }`                            |
 | `FORFEIT`                | `{ loserSeat: Integer }`                              |
 
+These are generic `LifecycleEventType` values, **not** Bullshit-specific — any game
+built on the shared session/presence layer emits the same three.
+
 A 60s grace timer lives in `PresenceService`; on expiry the disconnected player is
 forfeited. `Bullshit.forfeit(playerId)` is a **clean server-side elimination**
 (`backend/.../bullshit/domain/Bullshit.java`):
@@ -47,108 +50,139 @@ to explain *why* a seat vanished.
 
 1. **Disconnect indicator = per-seat badge** (not a full-screen overlay). Bullshit
    is N-player (2–6) seated around the table; a per-seat badge scales to multiple
-   simultaneous disconnects and points at *who* dropped. BatailleCorse's
-   full-screen `DisconnectOverlay` (2-player) stays untouched and is **not** reused.
+   simultaneous disconnects and points at *who* dropped.
 2. **Forfeit notice = transient banner.** A brief auto-dismissing
    `Player N forfeited`, mirroring the existing `reveal` timed-hold pattern; then the
    seat is gone via the next state-update. (A persistent badge has nothing to attach
    to once the seat is removed.)
-3. **New Bullshit-specific countdown composable** rather than reusing
-   `useDisconnectCountdown`. The BatailleCorse composable models a *single* opponent
-   connection; Bullshit needs a *map* of disconnected seats. Reuse the **shape**
-   (250ms ticker, server-provided absolute deadline, `ceil` seconds, `cancel()`),
-   not the code. BatailleCorse's composable is left untouched.
+3. **Build game-agnostic, reusable bricks.** Future games use the same shared
+   session/presence layer and emit these same three events, so the new pieces are
+   designed as game-neutral building blocks (live in the shared `composables/` and
+   `components/` roots, not under `bullshit/`). Bullshit is the first consumer; the
+   N-seat model is strictly more general than a 2-player one (a 2-player game is a
+   map with ≤1 disconnected seat).
+4. **Reuse BatailleCorse's shape, leave its code untouched.** The new countdown brick
+   is modeled on BatailleCorse's `useDisconnectCountdown` (250ms ticker,
+   server-provided absolute deadline, `ceil` seconds, `cancel()`), generalized from a
+   single connection to a map of seats. The badge reuses `DisconnectOverlay`'s visual
+   language (`--accent-negative-rgb`, copy). BatailleCorse's own composable/overlay
+   are **left as-is** this PR; a focused follow-up can migrate BatailleCorse onto the
+   bricks (its single-opponent case is a 1-entry map).
 
 ## Architecture
 
-Three layers, mirroring the existing `reveal` transient-state pattern. Transient
-connection state lives in the store, separate from authoritative game state;
-`state-update` never touches it.
+Transient connection state lives in the store, separate from authoritative game
+state — exactly like `reveal`. `state-update` never touches it. The logic that
+*reduces* lifecycle events into that state, and the clock that renders countdowns,
+are extracted into two game-agnostic composable bricks; the badge and banner are two
+game-agnostic component bricks.
 
-### Store — `frontend/src/state/Bullshit.store.ts`
+### Brick A — `frontend/src/composables/useSeatPresence.ts` (new, generic)
 
-New transient state:
+Owns the transient presence state and the event-reduction logic (honors
+logic-in-models: the store just forwards events to it). Single source of truth for
+the lifecycle event-type strings and the forfeit hold duration.
 
 ```ts
-const disconnections = ref<Record<number, number>>({}); // seat → deadlineEpochMs
-const forfeitNotice  = ref<{ seat: number } | null>(null);
-export const FORFEIT_NOTICE_HOLD_MS = 4000; // mirrors REVEAL_HOLD_MS
-let forfeitTimer: ReturnType<typeof setTimeout> | null = null;
+export const SEAT_LIFECYCLE_EVENT = {
+  OPPONENT_DISCONNECTED: 'OPPONENT_DISCONNECTED',
+  OPPONENT_RECONNECTED:  'OPPONENT_RECONNECTED',
+  FORFEIT:               'FORFEIT',
+} as const;
+export const FORFEIT_NOTICE_HOLD_MS = 4000;
+
+useSeatPresence(options?: { presentSeats?: () => number[]; forfeitNoticeHoldMs?: number }) => {
+  disconnections:     Ref<Record<number, number>>,        // seat → deadlineEpochMs
+  forfeitNotice:      Ref<{ seat: number } | null>,        // transient, timed-hold
+  liveDisconnections: ComputedRef<Record<number, number>>, // filtered to present seats
+  applyPresenceEvent(eventType: string, eventData: unknown): void,
+  reset(): void,                                            // clears state + timer
+}
 ```
 
-New `applyEvent` `'event'` cases (added alongside `CALL_BULLSHIT`):
+- `applyPresenceEvent` switches on `SEAT_LIFECYCLE_EVENT`:
+  - `OPPONENT_DISCONNECTED` → `disconnections.value = { ...disconnections.value, [disconnectedSeat]: deadlineEpochMs }`
+  - `OPPONENT_RECONNECTED` → remove `reconnectedSeat` (new object, no mutation)
+  - `FORFEIT` → remove `loserSeat` from the map **and** set `forfeitNotice = { seat: loserSeat }`
+    with an auto-clear timer (own timer ref, cleared before re-arming)
+  - unknown eventType → no-op
+- `liveDisconnections` filters `disconnections` to seats still in `presentSeats()`
+  (defensive against a missed reconnect, or the forfeited seat in the gap between
+  event and state-update). When no `presentSeats` getter is supplied it returns the
+  raw map.
+- Typed event-data shapes added to `frontend/src/model/bullshit/BullshitEvents.ts`
+  (re-exported as the brick's expected payloads):
+  ```ts
+  export interface OpponentDisconnectedEventData { disconnectedSeat: number; deadlineEpochMs: number; }
+  export interface OpponentReconnectedEventData  { reconnectedSeat: number; }
+  export interface ForfeitEventData              { loserSeat: number; }
+  ```
 
-- `OPPONENT_DISCONNECTED` → `disconnections.value = { ...disconnections.value, [disconnectedSeat]: deadlineEpochMs }`
-- `OPPONENT_RECONNECTED` → remove `reconnectedSeat` from the map (new object, no mutation)
-- `FORFEIT` → remove `loserSeat` from the map **and** set `forfeitNotice = { seat: loserSeat }`
-  with an auto-clear timer (own `forfeitTimer`, cleared before re-arming, exactly like
-  `revealTimer`)
+### Brick B — `frontend/src/composables/useSeatDisconnectCountdown.ts` (new, generic)
 
-Event-data types added to `frontend/src/model/bullshit/BullshitEvents.ts`:
-
-```ts
-export interface OpponentDisconnectedEventData { disconnectedSeat: number; deadlineEpochMs: number; }
-export interface OpponentReconnectedEventData  { reconnectedSeat: number; }
-export interface ForfeitEventData              { loserSeat: number; }
-```
-
-Derived getter exposed for the view (defensive against stale entries — a missed
-reconnect, or the forfeited seat in the gap between event and state-update):
-
-```ts
-const liveDisconnections = computed<Record<number, number>>(() => {
-  const present = new Set((game.value?.players ?? []).map(p => Number(p.id)));
-  return Object.fromEntries(
-    Object.entries(disconnections.value).filter(([seat]) => present.has(Number(seat)))
-  );
-});
-```
-
-Store exports add: `disconnections`, `liveDisconnections`, `forfeitNotice`.
-
-### Composable — `frontend/src/composables/useBullshitSeatCountdown.ts` (new)
+The multi-seat generalization of BatailleCorse's `useDisconnectCountdown`.
 
 ```ts
-useBullshitSeatCountdown({
+useSeatDisconnectCountdown(options: {
   disconnections: () => Record<number, number>,
   isGameOver: () => boolean,
 }) => { secondsRemainingFor(deadlineEpochMs: number): number, cancel(): void }
 ```
 
-- A single `now = ref(Date.now())` and one 250ms `setInterval`.
-- The ticker runs only while `Object.keys(disconnections()).length > 0 && !isGameOver()`
-  (driven by a `watch`, same as `useDisconnectCountdown`); cleared otherwise.
-- `secondsRemainingFor(deadline)` returns `Math.max(0, Math.ceil((deadline - now.value) / 1000))`.
+- One `now = ref(Date.now())` and one 250ms `setInterval`.
+- A `watch` runs the ticker only while
+  `Object.keys(disconnections()).length > 0 && !isGameOver()`; cleared otherwise.
+- `secondsRemainingFor(deadline)` = `Math.max(0, Math.ceil((deadline - now.value) / 1000))`.
 - `cancel()` stops the watcher and clears the interval; the view wires it into
   `onBeforeUnmount`.
 
-### Components
+### Brick C — `frontend/src/components/SeatDisconnectBadge.vue` (new, generic)
 
-**`frontend/src/components/bullshit/OpponentSeat.vue`** — two new optional props,
-existing props/behavior unchanged:
+A small badge overlaid on a seat, reusing `DisconnectOverlay`'s visual language.
 
 ```ts
-defineProps<{
-  label: string; handCount: number; active: boolean;
-  disconnected?: boolean; secondsRemaining?: number | null;
-}>();
+defineProps<{ secondsRemaining: number | null }>();
 ```
 
-When `disconnected`: dim/desaturate the seat card and overlay a small badge styled
-off `--accent-negative-rgb` (consistent with `DisconnectOverlay`) reading
-`Reconnecting… {{ secondsRemaining }}s`. `prefers-reduced-motion` is honored for any
-animation (the component already duplicates the glow keyframes).
+Renders `Reconnecting… {{ secondsRemaining }}s` (drops the `Ns` when null), styled off
+`--accent-negative-rgb`. `prefers-reduced-motion` honored for any pulse.
 
-**`frontend/src/view/bullshit/BullshitGameScreen.vue`**:
+### Brick D — `frontend/src/components/ForfeitBanner.vue` (new, generic)
 
-- Instantiate `useBullshitSeatCountdown` from `store.liveDisconnections` and
-  `() => store.phase === 'finished'`.
+A transient top banner. Game-neutral: takes the text to show.
+
+```ts
+defineProps<{ label: string }>();   // e.g. "Player 3 forfeited"
+```
+
+Styled consistently with the disconnect visual language; the caller wraps it in the
+`<Transition>` and supplies the copy.
+
+### Store — `frontend/src/state/Bullshit.store.ts`
+
+Thin consumer of Brick A:
+
+```ts
+const presence = useSeatPresence({ presentSeats: () => (game.value?.players ?? []).map(p => Number(p.id)) });
+```
+
+`applyEvent`'s `'event'` case keeps the `CALL_BULLSHIT` branch and adds a single
+delegation for the rest: `presence.applyPresenceEvent(event.eventType, event.eventData)`.
+Re-export `disconnections`, `liveDisconnections`, `forfeitNotice` (and
+`FORFEIT_NOTICE_HOLD_MS` from the brick) for the view and tests.
+
+### View — `frontend/src/view/bullshit/BullshitGameScreen.vue`
+
+- Instantiate Brick B from `store.liveDisconnections` and `() => store.phase === 'finished'`.
 - For each opponent, compute `disconnected = seat in liveDisconnections` and
   `secondsRemaining = disconnected ? secondsRemainingFor(deadline) : null`; pass both
   to `OpponentSeat`.
-- Add a `<Transition>` forfeit banner driven by `store.forfeitNotice`, reading
-  `Player {{ forfeitNotice.seat + 1 }} forfeited`, positioned near the top of the
-  table (does not obstruct the pile/reveal).
+- `OpponentSeat.vue` gets two new optional props (`disconnected?`, `secondsRemaining?`),
+  existing props/behavior unchanged; when `disconnected` it dims the seat card and
+  mounts `SeatDisconnectBadge`.
+- Render `ForfeitBanner` near the top of the table inside a `<Transition>`, driven by
+  `store.forfeitNotice`, with `Player {{ forfeitNotice.seat + 1 }} forfeited`
+  (does not obstruct the pile/reveal).
 - `onBeforeUnmount(() => countdown.cancel())`.
 
 Labels follow the established inline `Player ${id + 1}` convention (the playing
@@ -156,17 +190,33 @@ screen is 1-based; consistent with the reveal/last-play copy).
 
 ## Testing
 
-- **Store tests** (`Bullshit.store.spec.ts`), fake timers:
-  - `OPPONENT_DISCONNECTED` adds `{ seat: deadline }` to `disconnections`.
-  - `OPPONENT_RECONNECTED` removes that seat.
-  - `FORFEIT` removes the seat from `disconnections`, sets `forfeitNotice`, and
-    auto-clears it after `FORFEIT_NOTICE_HOLD_MS`.
-  - `liveDisconnections` drops a seat no longer present in `game.players`.
-- **Screen tests** (`BullshitGameScreen.spec.ts`):
-  - A disconnected opponent renders the badge with countdown text.
-  - A forfeit renders the banner with the right player number.
+- **Brick A** (`useSeatPresence.spec.ts`), fake timers: disconnect adds
+  `{ seat: deadline }`; reconnect removes it; forfeit removes the seat, sets
+  `forfeitNotice`, and auto-clears after `FORFEIT_NOTICE_HOLD_MS`;
+  `liveDisconnections` drops a seat absent from `presentSeats()`; unknown eventType is
+  a no-op.
+- **Brick B** (`useSeatDisconnectCountdown.spec.ts`), fake timers: ticker advances
+  `secondsRemainingFor`; stops when the map empties and when `isGameOver` is true;
+  `cancel()` clears it.
+- **Store tests** (`Bullshit.store.spec.ts`): the `'event'` cases delegate correctly
+  (disconnect/reconnect/forfeit reflected in the exposed refs) and `CALL_BULLSHIT`
+  still works.
+- **Component bricks**: `SeatDisconnectBadge` renders countdown text; `ForfeitBanner`
+  renders its label.
+- **Screen tests** (`BullshitGameScreen.spec.ts`): a disconnected opponent renders
+  the badge with countdown; a forfeit renders the banner with the right player number.
 - **Gate:** `npm run build` (worktrees lack `node_modules` → `npm ci` first; a bare
   `vue-tsc` gives a false pass) and `npm run test`.
+
+## Reuse summary
+
+| Need | Reuse / new |
+|------|-------------|
+| Countdown ticker logic | New generic Brick B, **modeled on** BatailleCorse's `useDisconnectCountdown` (generalized to N seats) |
+| Disconnect visual language | Reuse `DisconnectOverlay`'s tokens/copy in Brick C |
+| Transient timed-hold pattern | Reuse the existing `reveal` pattern in Brick A's forfeit notice |
+| Per-seat anchor | Reuse existing `OpponentSeat.vue` (two additive props) |
+| Felt/accent tokens | Reuse shared `--accent-negative-rgb` / `--accent-active-rgb` |
 
 ## Out of scope
 
@@ -174,4 +224,6 @@ screen is 1-based; consistent with the reveal/last-play copy).
   a parallel session for issue #59).
 - "Me disconnected" UX — the backend only sends `OPPONENT_*` to other seats, so the
   local player never appears as disconnected; the view renders only opponents anyway.
-- BatailleCorse's `DisconnectOverlay` / `useDisconnectCountdown` — left untouched.
+- **Migrating BatailleCorse onto the new bricks** — its working
+  `useDisconnectCountdown` / `DisconnectOverlay` are left untouched; a focused
+  follow-up PR can adopt the bricks (BC's single-opponent case is a 1-entry map).
