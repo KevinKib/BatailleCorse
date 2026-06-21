@@ -498,8 +498,8 @@ function selectAll(event: FocusEvent) {
 
 .leave-button {
   position: absolute;
-  top: 10px;
   left: 10px;
+  bottom: calc(10px + env(safe-area-inset-bottom, 0px));
   z-index: 1700;
   text-decoration: none;
 }
