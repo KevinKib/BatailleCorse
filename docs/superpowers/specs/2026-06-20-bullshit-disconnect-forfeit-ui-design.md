@@ -110,8 +110,11 @@ useSeatPresence(options?: { presentSeats?: () => number[]; forfeitNoticeHoldMs?:
   (defensive against a missed reconnect, or the forfeited seat in the gap between
   event and state-update). When no `presentSeats` getter is supplied it returns the
   raw map.
-- Typed event-data shapes added to `frontend/src/model/bullshit/BullshitEvents.ts`
-  (re-exported as the brick's expected payloads):
+- Typed event-data shapes go in a **new shared, game-agnostic** model file
+  `frontend/src/model/SeatLifecycleEvents.ts` (mirroring the backend, where these
+  records live in the shared `presentation.dto.event` package — *not* under
+  `bullshit`). Keeping them out of `model/bullshit/BullshitEvents.ts` is what makes
+  the brick reusable by the next game.
   ```ts
   export interface OpponentDisconnectedEventData { disconnectedSeat: number; deadlineEpochMs: number; }
   export interface OpponentReconnectedEventData  { reconnectedSeat: number; }
@@ -171,6 +174,13 @@ delegation for the rest: `presence.applyPresenceEvent(event.eventType, event.eve
 Re-export `disconnections`, `liveDisconnections`, `forfeitNotice` (and
 `FORFEIT_NOTICE_HOLD_MS` from the brick) for the view and tests.
 
+**Resetting stale presence (the store is a singleton reused across reopen-room
+rematches).** A disconnect/forfeit from the previous game must not bleed into the
+fresh one. Call `presence.reset()` in the `playAgain` action (before/at re-bind).
+Defensively, also reset when `phase` transitions back to `'lobby'` (a `watch(phase)`
+in the store) — covers any reopen path that lands in the lobby without `playAgain`.
+`reset()` clears `disconnections`, `forfeitNotice`, and the forfeit timer.
+
 ### View — `frontend/src/view/bullshit/BullshitGameScreen.vue`
 
 - Instantiate Brick B from `store.liveDisconnections` and `() => store.phase === 'finished'`.
@@ -200,7 +210,8 @@ screen is 1-based; consistent with the reveal/last-play copy).
   `cancel()` clears it.
 - **Store tests** (`Bullshit.store.spec.ts`): the `'event'` cases delegate correctly
   (disconnect/reconnect/forfeit reflected in the exposed refs) and `CALL_BULLSHIT`
-  still works.
+  still works; `playAgain` and a `phase`→`'lobby'` transition clear stale
+  `disconnections`/`forfeitNotice`.
 - **Component bricks**: `SeatDisconnectBadge` renders countdown text; `ForfeitBanner`
   renders its label.
 - **Screen tests** (`BullshitGameScreen.spec.ts`): a disconnected opponent renders
