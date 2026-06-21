@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
 import { setActivePinia, createPinia } from 'pinia';
 import { createRouter, createMemoryHistory } from 'vue-router';
@@ -216,5 +216,34 @@ describe('BullshitGameScreen', () => {
     const spy = vi.spyOn(store, 'playAgain').mockResolvedValue(undefined);
     await overlay.vm.$emit('playAgain');
     expect(spy).toHaveBeenCalled();
+  });
+
+  describe('opponent presence', () => {
+    beforeEach(() => vi.useFakeTimers({ now: 1_000_000 }));
+    afterEach(() => vi.useRealTimers());
+
+    it('shows a disconnect badge with countdown on a dropped opponent seat', () => {
+      const store = useBullshitStore();
+      store.applyEvent({ type: 'seat-change', seat: 0 });
+      store.applyEvent({ type: 'state-update', state: playingState() });   // players 0 (me) + 1
+      store.applyEvent({ type: 'event', eventType: 'OPPONENT_DISCONNECTED',
+        eventData: { disconnectedSeat: 1, deadlineEpochMs: Date.now() + 30_000 }, message: '' });
+
+      const wrapper = mount(BullshitGameScreen, { props: { gameId: 'g1' }, global: { plugins: [router, PrimeVue] } });
+
+      const badge = wrapper.get('[data-test="seat-disconnect-badge"]');
+      expect(badge.text()).toContain('30');
+    });
+
+    it('shows a forfeit banner naming the forfeiting player', async () => {
+      const store = useBullshitStore();
+      store.applyEvent({ type: 'seat-change', seat: 0 });
+      store.applyEvent({ type: 'state-update', state: playingState() });
+      store.applyEvent({ type: 'event', eventType: 'FORFEIT', eventData: { loserSeat: 1 }, message: '' });
+
+      const wrapper = mount(BullshitGameScreen, { props: { gameId: 'g1' }, global: { plugins: [router, PrimeVue] } });
+
+      expect(wrapper.get('[data-test="forfeit-banner"]').text()).toBe('Player 2 forfeited');
+    });
   });
 });

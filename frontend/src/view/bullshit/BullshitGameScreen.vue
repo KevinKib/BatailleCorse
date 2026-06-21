@@ -1,17 +1,33 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onBeforeUnmount } from 'vue';
 import { Button } from 'primevue';
 import { useBullshitStore } from '../../state/Bullshit.store';
 import { useBullshitBootstrap } from '../../composables/useBullshitBootstrap';
+import { useSeatDisconnectCountdown } from '../../composables/useSeatDisconnectCountdown';
 import PlayingCard from '../../components/PlayingCard.vue';
 import CardCounter from '../../components/CardCounter.vue';
 import EndGameOverlay from '../../components/EndGameOverlay.vue';
+import ForfeitBanner from '../../components/ForfeitBanner.vue';
 import OpponentSeat from '../../components/bullshit/OpponentSeat.vue';
 import type Card from '../../model/Card';
 
 const props = defineProps<{ gameId: string }>();
 const store = useBullshitStore();
 useBullshitBootstrap(props.gameId);
+
+const countdown = useSeatDisconnectCountdown({
+  disconnections: () => store.liveDisconnections,
+  isGameOver: () => store.phase === 'finished',
+});
+onBeforeUnmount(() => countdown.cancel());
+
+function seatDisconnected(seat: number): boolean {
+  return seat in store.liveDisconnections;
+}
+function seatSecondsRemaining(seat: number): number | null {
+  const deadline = store.liveDisconnections[seat];
+  return deadline == null ? null : countdown.secondsRemainingFor(deadline);
+}
 
 // Opponents are everyone but me, in seat order.
 const opponents = computed(() =>
@@ -94,6 +110,12 @@ function selectAll(event: FocusEvent) {
     />
 
     <template v-else>
+      <Transition name="forfeit-fade">
+        <ForfeitBanner
+          v-if="store.forfeitNotice"
+          class="forfeit-notice"
+          :label="`Player ${store.forfeitNotice.seat + 1} forfeited`" />
+      </Transition>
       <div class="table-frame">
       <div class="opponents-ring">
         <div
@@ -104,7 +126,9 @@ function selectAll(event: FocusEvent) {
           <OpponentSeat
             :label="`Player ${Number(opp.id) + 1}`"
             :hand-count="opp.handCount"
-            :active="opp.isCurrentPlayer" />
+            :active="opp.isCurrentPlayer"
+            :disconnected="seatDisconnected(Number(opp.id))"
+            :seconds-remaining="seatSecondsRemaining(Number(opp.id))" />
         </div>
       </div>
 
@@ -188,6 +212,7 @@ function selectAll(event: FocusEvent) {
 
 <style scoped>
 .bullshit-screen {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -443,4 +468,16 @@ function selectAll(event: FocusEvent) {
   height: auto;
   aspect-ratio: 167.575 / 243.1375;
 }
+
+.forfeit-notice {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1800;
+}
+.forfeit-fade-enter-active,
+.forfeit-fade-leave-active { transition: opacity 0.25s ease, transform 0.25s ease; }
+.forfeit-fade-enter-from,
+.forfeit-fade-leave-to { opacity: 0; transform: translate(-50%, -8px); }
 </style>
