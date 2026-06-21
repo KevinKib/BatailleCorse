@@ -94,6 +94,7 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
     startGame: () => session.startGame(),
     discard: () => { session.discard(selectedCards.value); clearSelection(); },
     callBullshit: () => session.callBullshit(),
+    forfeit: () => session.forfeit(),
     playAgain,
   };
 });

@@ -6,6 +6,7 @@ export interface BullshitWebSocketPort {
   publish(destination: string, body?: string): void;
   subscribeToSeat(gameId: string, seat: number, token: string, onMessage: (response: any) => void): void;
   setLobbyListener(fn: ((response: any) => void) | null): void;
+  setPresence(body: string): void;
 }
 
 export type BullshitSessionEvent =
@@ -70,6 +71,10 @@ export default class BullshitSession {
     this.gameId = gameId;
     this.myToken = token;
     this.webSocket.subscribeToSeat(gameId, seat, token, r => this.onResponse(r));
+    // Tell the server which seat this connection occupies, so a socket drop is
+    // attributable to this seat (drives the disconnect grace timer + forfeit).
+    // The WebSocketService re-asserts presence on reconnect.
+    this.webSocket.setPresence(JSON.stringify({ gameId, token }));
     this.callbacks.onEvent({ type: 'game-id-change', gameId });
     this.callbacks.onEvent({ type: 'seat-change', seat });
   }
@@ -89,6 +94,11 @@ export default class BullshitSession {
 
   callBullshit(): void {
     this.webSocket.publish('/app/callBullshit', JSON.stringify({ gameId: this.gameId, token: this.myToken }));
+  }
+
+  /** Resign the in-progress game (RESIGNED forfeit). Mirrors BatailleCorse's /app/forfeit. */
+  forfeit(): void {
+    this.webSocket.publish('/app/forfeit', JSON.stringify({ gameId: this.gameId, token: this.myToken }));
   }
 
   startGame(): void {

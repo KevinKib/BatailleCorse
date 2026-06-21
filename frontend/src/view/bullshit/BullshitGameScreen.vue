@@ -4,6 +4,7 @@ import { Button } from 'primevue';
 import { useBullshitStore } from '../../state/Bullshit.store';
 import { useBullshitBootstrap } from '../../composables/useBullshitBootstrap';
 import { useSeatDisconnectCountdown } from '../../composables/useSeatDisconnectCountdown';
+import { useLeaveGuard } from '../../composables/useLeaveGuard';
 import PlayingCard from '../../components/PlayingCard.vue';
 import CardCounter from '../../components/CardCounter.vue';
 import EndGameOverlay from '../../components/EndGameOverlay.vue';
@@ -20,6 +21,16 @@ const countdown = useSeatDisconnectCountdown({
   isGameOver: () => store.phase === 'finished',
 });
 onBeforeUnmount(() => countdown.cancel());
+
+// Leaving an in-progress game forfeits (opponents win the seat), same as BatailleCorse.
+// Reuses the shared leave guard: navigating away (Back button / browser back) prompts,
+// and confirming publishes the resignation. A hard tab-close falls back to the server's
+// disconnect grace timer (now that presence is registered).
+useLeaveGuard({
+  isInProgress: () => store.phase === 'playing',
+  mode: () => 'multiplayer',
+  forfeit: () => store.forfeit(),
+});
 
 function seatDisconnected(seat: number): boolean {
   return seat in store.liveDisconnections;
@@ -110,6 +121,10 @@ function selectAll(event: FocusEvent) {
     />
 
     <template v-else>
+      <RouterLink :to="{ path: '/' }" class="leave-button" data-test="leave">
+        <Button severity="secondary" label="Back" icon="pi pi-undo" variant="text" rounded />
+      </RouterLink>
+
       <Transition name="forfeit-fade">
         <ForfeitBanner
           v-if="store.forfeitNotice"
@@ -480,4 +495,12 @@ function selectAll(event: FocusEvent) {
 .forfeit-fade-leave-active { transition: opacity 0.25s ease, transform 0.25s ease; }
 .forfeit-fade-enter-from,
 .forfeit-fade-leave-to { opacity: 0; transform: translate(-50%, -8px); }
+
+.leave-button {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 1700;
+  text-decoration: none;
+}
 </style>

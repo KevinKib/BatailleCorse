@@ -49,6 +49,7 @@ function lobbyView(overrides: Partial<LobbyView> = {}): LobbyView {
 const router = createRouter({
   history: createMemoryHistory(),
   routes: [
+    { path: '/', component: { template: '<div/>' } },
     { path: '/games/bullshit/create', component: { template: '<div/>' } },
     { path: '/games/bullshit/room/:id', component: { template: '<div/>' } },
   ],
@@ -245,5 +246,14 @@ describe('BullshitGameScreen', () => {
 
       expect(wrapper.get('[data-test="forfeit-banner"]').text()).toBe('Player 2 forfeited');
     });
+  });
+
+  it('renders a Back-to-home control during play (leave guard handles forfeit-on-leave)', () => {
+    const store = useBullshitStore();
+    store.applyEvent({ type: 'seat-change', seat: 0 });
+    store.applyEvent({ type: 'state-update', state: playingState() });
+    const wrapper = mount(BullshitGameScreen, { props: { gameId: 'g1' }, global: { plugins: [router, PrimeVue] } });
+
+    expect(wrapper.find('[data-test="leave"]').exists()).toBe(true);
   });
 });

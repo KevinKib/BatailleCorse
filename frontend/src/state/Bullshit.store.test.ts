@@ -116,6 +116,15 @@ describe('Bullshit store', () => {
     });
   });
 
+  it('forfeit() delegates to the session (publishes /app/forfeit)', () => {
+    const store = useBullshitStore();
+    store.restore('g1', 0, 'tok');
+    const publishSpy = vi.spyOn(webSocketService, 'publish').mockImplementation(() => {});
+    store.forfeit();
+    expect(publishSpy).toHaveBeenCalledWith('/app/forfeit', expect.stringContaining('"gameId":"g1"'));
+    publishSpy.mockRestore();
+  });
+
   it('toggleCard selects and deselects from the hand', () => {
     const store = useBullshitStore();
     const card = { rank: 'ACE', suit: 'HEART', name: 'HEART_ACE' };

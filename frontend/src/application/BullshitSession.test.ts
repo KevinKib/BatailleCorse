@@ -25,6 +25,7 @@ function makeSession() {
   const events: BullshitSessionEvent[] = [];
   const published: { dest: string; body?: string }[] = [];
   const seatSubs: { gameId: string; seat: number; token: string }[] = [];
+  const presences: string[] = [];
   let lobbyFn: ((r: any) => void) | null = null;
   let seatFn: ((r: any) => void) | null = null;
 
@@ -32,11 +33,12 @@ function makeSession() {
     publish: (dest, body) => published.push({ dest, body }),
     subscribeToSeat: (gameId, seat, token, onMessage) => { seatSubs.push({ gameId, seat, token }); seatFn = onMessage; },
     setLobbyListener: (fn) => { lobbyFn = fn; },
+    setPresence: (body) => presences.push(body),
   };
   const callbacks: BullshitSessionCallbacks = { onEvent: (e) => events.push(e) };
   const session = new BullshitSession(webSocket, callbacks);
   return {
-    session, events, published, seatSubs,
+    session, events, published, seatSubs, presences,
     fireLobby: (r: any) => lobbyFn?.(r),
     fireSeat: (r: any) => seatFn?.(r),
   };
@@ -116,6 +118,19 @@ describe('BullshitSession', () => {
     expect(seatSubs).toContainEqual({ gameId: 'g1', seat: 0, token: 'new-tok' });
     expect(JSON.parse(localStorage.getItem('bullshit:tokens:g1')!)).toEqual({ 0: 'new-tok' });
     expect(events.some(e => e.type === 'seat-change' && (e as any).seat === 0)).toBe(true);
+  });
+
+  it('registers presence (gameId + token) when binding a seat, so a drop is attributable', () => {
+    const { session, presences } = makeSession();
+    session.restore('g1', 2, 'tok-2');
+    expect(presences).toContainEqual(JSON.stringify({ gameId: 'g1', token: 'tok-2' }));
+  });
+
+  it('forfeit publishes to /app/forfeit with the gameId and token', () => {
+    const { session, published } = makeSession();
+    session.restore('g1', 1, 'tok-1');
+    session.forfeit();
+    expect(published).toContainEqual({ dest: '/app/forfeit', body: JSON.stringify({ gameId: 'g1', token: 'tok-1' }) });
   });
 
   it('on an incoming seat message, emits state-update and the event', () => {
