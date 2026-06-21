@@ -119,7 +119,9 @@ public class Bullshit implements Game {
             if (claimantId.equals(pendingWinner)) {
                 pendingWinner = null;
             }
-            currentTarget = claimMode.initial();
+            // The claim progression is position-independent and continues across a call: only the pile
+            // and the turn move to the picker. currentTarget already holds next(challengedClaim) from
+            // the discard, so it is intentionally left untouched here (issue #59).
             currentPlayerIndex = players.indexOf(playerById(pickerId));
         }
         lastDiscard = null;
