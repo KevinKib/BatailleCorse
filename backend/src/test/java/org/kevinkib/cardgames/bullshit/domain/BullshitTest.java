@@ -104,8 +104,9 @@ class BullshitTest {
     }
 
     @Test
-    void givenLie_whenCalled_thenLiarTakesPileAndRoundResets() throws Exception {
-        // p0 must claim ACE but actually holds a KING -> a lie.
+    void givenLie_whenCalled_thenLiarTakesPileAndClaimProgressionContinues() throws Exception {
+        // p0 must claim ACE but actually holds a KING -> a lie. Discarding advances the target to TWO;
+        // the call must NOT reset it back to ACE.
         Bullshit game = BullshitBuilder.aBullshit()
                 .withPlayers(playerWithRanks(0, FrenchRank.KING), playerWithRanks(1, FrenchRank.TWO))
                 .withCurrentTarget(FrenchRank.ACE)
@@ -117,7 +118,7 @@ class BullshitTest {
         assertThat(outcome.claimWasTruthful(), is(false));
         assertThat(outcome.pilePicker(), is(new PlayerId(0)));
         assertThat(game.getDiscardPileSize(), is(0));
-        assertThat(game.getCurrentTarget(), is(new RankTarget(FrenchRank.ACE)));
+        assertThat(game.getCurrentTarget(), is(new RankTarget(FrenchRank.TWO))); // progression continues, not reset
         assertThat(game.getCurrentPlayerIndex(), is(0));            // liar starts next round
         assertThat(game.getPlayers().get(0).handSize(), is(1));     // took the pile back
     }
@@ -272,7 +273,7 @@ class BullshitTest {
     }
 
     @Test
-    void givenThreePlayersTruthfulCall_thenCallerStartsNextRoundAtAce() throws Exception {
+    void givenThreePlayersTruthfulCall_thenCallerStartsNextRoundAtNextRank() throws Exception {
         Bullshit game = BullshitBuilder.aBullshit()
                 .withPlayers(playerWithRanks(0, FrenchRank.ACE, FrenchRank.KING),
                         playerWithRanks(1, FrenchRank.TWO),
@@ -284,7 +285,7 @@ class BullshitTest {
         game.callBullshit(new PlayerId(2)); // truthful -> p2 takes pile and starts
 
         assertThat(game.getCurrentPlayer().id(), is(new PlayerId(2)));
-        assertThat(game.getCurrentTarget(), is(new RankTarget(FrenchRank.ACE)));
+        assertThat(game.getCurrentTarget(), is(new RankTarget(FrenchRank.TWO))); // continues from ACE, not reset
     }
 
     @Test
@@ -305,5 +306,35 @@ class BullshitTest {
         assertThat(game.getCurrentPlayer().id(), is(new PlayerId(1))); // liar starts next round
         assertThat(game.getPendingWinner().isEmpty(), is(true));
         assertThat(game.isFinished(), is(false));
+        assertThat(game.getCurrentTarget(), is(new RankTarget(FrenchRank.TWO))); // progression continues across the call
+    }
+
+    @Test
+    void givenClaimClimbedBeyondAce_whenCalled_thenProgressionContinuesNotReset() throws Exception {
+        // Target starts at THREE; a truthful THREE discard advances it to FOUR. A call must leave it at FOUR.
+        Bullshit game = BullshitBuilder.aBullshit()
+                .withPlayers(playerWithRanks(0, FrenchRank.THREE, FrenchRank.KING), playerWithRanks(1, FrenchRank.TWO))
+                .withCurrentTarget(FrenchRank.THREE)
+                .build();
+        game.discard(new PlayerId(0), game.getPlayers().get(0).getCards().subList(0, 1)); // truthful THREE, keeps KING
+
+        game.callBullshit(new PlayerId(1));
+
+        assertThat(game.getCurrentTarget(), is(new RankTarget(FrenchRank.FOUR)));
+    }
+
+    @Test
+    void givenSuitClaimMode_whenCalled_thenSuitProgressionContinuesNotReset() throws Exception {
+        Bullshit game = BullshitBuilder.aBullshit()
+                .withClaimMode(new CyclingSuitClaimMode())
+                .withPlayers(playerWithRanks(0, FrenchRank.ACE, FrenchRank.KING), playerWithRanks(1, FrenchRank.TWO))
+                .build();
+        // currentTarget = HEART; discarding the HEART ACE advances it to DIAMOND.
+        game.discard(new PlayerId(0), game.getPlayers().get(0).getCards().subList(0, 1));
+        assertThat(game.getCurrentTarget(), is(new SuitTarget(FrenchSuit.DIAMOND)));
+
+        game.callBullshit(new PlayerId(1));
+
+        assertThat(game.getCurrentTarget(), is(new SuitTarget(FrenchSuit.DIAMOND))); // not reset to HEART
     }
 }

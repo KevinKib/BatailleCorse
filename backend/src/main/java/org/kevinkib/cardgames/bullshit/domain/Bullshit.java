@@ -119,7 +119,6 @@ public class Bullshit implements Game {
             if (claimantId.equals(pendingWinner)) {
                 pendingWinner = null;
             }
-            currentTarget = claimMode.initial();
             currentPlayerIndex = players.indexOf(playerById(pickerId));
         }
         lastDiscard = null;
