@@ -1,11 +1,15 @@
 <template>
-  <div class="opponent-seat">
+  <div class="opponent-seat" :class="{ 'opponent-seat--disconnected': disconnected }">
     <span :class="['seat-label', { 'seat-label--active': active }]" data-test="seat-label">{{ label }}</span>
     <div class="seat-card">
       <PlayingCard :hidden="true" rank="10" suit="spade" />
       <div class="seat-chip" data-test="seat-count">
         <CardCounter :count="handCount" />
       </div>
+      <SeatDisconnectBadge
+        v-if="disconnected"
+        class="seat-disconnect"
+        :seconds-remaining="secondsRemaining ?? null" />
     </div>
   </div>
 </template>
@@ -13,8 +17,15 @@
 <script setup lang="ts">
 import PlayingCard from '../PlayingCard.vue';
 import CardCounter from '../CardCounter.vue';
+import SeatDisconnectBadge from '../SeatDisconnectBadge.vue';
 
-defineProps<{ label: string; handCount: number; active: boolean }>();
+defineProps<{
+  label: string;
+  handCount: number;
+  active: boolean;
+  disconnected?: boolean;
+  secondsRemaining?: number | null;
+}>();
 </script>
 
 <style scoped>
@@ -40,6 +51,18 @@ defineProps<{ label: string; handCount: number; active: boolean }>();
   position: absolute;
   bottom: -6px;
   right: -10px;
+}
+
+/* Dim a dropped opponent's card; the badge sits centred over it. */
+.opponent-seat--disconnected .seat-card :deep(.playing_card) {
+  filter: grayscale(1) brightness(0.6);
+}
+.seat-disconnect {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
 }
 
 .seat-label {

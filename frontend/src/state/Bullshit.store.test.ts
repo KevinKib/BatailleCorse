@@ -116,6 +116,15 @@ describe('Bullshit store', () => {
     });
   });
 
+  it('forfeit() delegates to the session (publishes /app/forfeit)', () => {
+    const store = useBullshitStore();
+    store.restore('g1', 0, 'tok');
+    const publishSpy = vi.spyOn(webSocketService, 'publish').mockImplementation(() => {});
+    store.forfeit();
+    expect(publishSpy).toHaveBeenCalledWith('/app/forfeit', expect.stringContaining('"gameId":"g1"'));
+    publishSpy.mockRestore();
+  });
+
   it('toggleCard selects and deselects from the hand', () => {
     const store = useBullshitStore();
     const card = { rank: 'ACE', suit: 'HEART', name: 'HEART_ACE' };
@@ -137,5 +146,71 @@ describe('Bullshit store', () => {
       expect.stringContaining('/api/bullshit/game/g1/play-again'),
       expect.objectContaining({ method: 'POST' }));
     fetchSpy.mockRestore();
+  });
+
+  describe('opponent presence', () => {
+    it('records a disconnect, exposes it via liveDisconnections, and clears on reconnect', () => {
+      const store = useBullshitStore();
+      store.applyEvent({ type: 'seat-change', seat: 0 });
+      store.applyEvent({ type: 'state-update', state: state() });   // players 0 and 1
+
+      store.applyEvent({ type: 'event', eventType: 'OPPONENT_DISCONNECTED',
+        eventData: { disconnectedSeat: 1, deadlineEpochMs: 1_060_000 }, message: 'm' });
+      expect(store.liveDisconnections).toEqual({ 1: 1_060_000 });
+
+      store.applyEvent({ type: 'event', eventType: 'OPPONENT_RECONNECTED',
+        eventData: { reconnectedSeat: 1 }, message: 'm' });
+      expect(store.liveDisconnections).toEqual({});
+    });
+
+    it('drops a disconnect for a seat no longer present in the game', () => {
+      const store = useBullshitStore();
+      store.applyEvent({ type: 'seat-change', seat: 0 });
+      store.applyEvent({ type: 'state-update', state: state() });   // players 0 and 1
+      store.applyEvent({ type: 'event', eventType: 'OPPONENT_DISCONNECTED',
+        eventData: { disconnectedSeat: 1, deadlineEpochMs: 1_060_000 }, message: 'm' });
+
+      // seat 1 leaves the table (forfeited/removed by a later state-update)
+      store.applyEvent({ type: 'state-update', state: state({
+        players: [{ id: '0', handCount: 2, isCurrentPlayer: true }],
+      }) });
+      expect(store.liveDisconnections).toEqual({});
+    });
+
+    it('shows a forfeit notice and clears the disconnect for that seat', () => {
+      const store = useBullshitStore();
+      store.applyEvent({ type: 'seat-change', seat: 0 });
+      store.applyEvent({ type: 'state-update', state: state() });
+      store.applyEvent({ type: 'event', eventType: 'OPPONENT_DISCONNECTED',
+        eventData: { disconnectedSeat: 1, deadlineEpochMs: 1_060_000 }, message: 'm' });
+
+      store.applyEvent({ type: 'event', eventType: 'FORFEIT',
+        eventData: { loserSeat: 1 }, message: 'm' });
+      expect(store.forfeitNotice).toEqual({ seat: 1 });
+      expect(store.liveDisconnections).toEqual({});
+    });
+
+    it('CALL_BULLSHIT still records a reveal (unchanged)', () => {
+      const store = useBullshitStore();
+      const reveal = { callerSeat: 1, claimantSeat: 0, truthful: false, pickerSeat: 0, revealedCards: [] };
+      store.applyEvent({ type: 'event', eventType: 'CALL_BULLSHIT', eventData: reveal, message: 'm' });
+      expect(store.reveal).toEqual(reveal);
+    });
+
+    it('playAgain resets stale presence', async () => {
+      const store = useBullshitStore();
+      store.restore('g1', 0, 'tok');
+      store.applyEvent({ type: 'state-update', state: state() });
+      store.applyEvent({ type: 'event', eventType: 'OPPONENT_DISCONNECTED',
+        eventData: { disconnectedSeat: 1, deadlineEpochMs: 1_060_000 }, message: 'm' });
+      expect(store.liveDisconnections).toEqual({ 1: 1_060_000 });
+
+      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(() =>
+        Promise.resolve(new Response(JSON.stringify({ playerId: 0, token: 't' }), { status: 200 })));
+      await store.playAgain();
+      expect(store.disconnections).toEqual({});
+      expect(store.forfeitNotice).toBeNull();
+      fetchSpy.mockRestore();
+    });
   });
 });
