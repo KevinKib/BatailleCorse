@@ -225,18 +225,13 @@ public class BatailleCorse implements Game {
 
         Deck deck = cardsService.createDeck(DeckType.FRENCH, new DeckCreationOptions(Visibility.HIDDEN));
 
-        try {
-            List<Hand> hands = deck.distributeAll(nbPlayers, new DistributionOptions(false));
+        List<Hand> hands = deck.distributeAll(nbPlayers);
 
-            for (int playerIndex = 0; playerIndex < nbPlayers; ++playerIndex) {
-                Hand hand = hands.get(playerIndex);
-                Player player = new Player(playerIndex, hand);
-                players.add(player);
-            }
-        } catch (UnevenNumberOfCardsPerPlayerException e) {
-            throw new IllegalStateException("Unhandled case");
+        for (int playerIndex = 0; playerIndex < nbPlayers; ++playerIndex) {
+            Hand hand = hands.get(playerIndex);
+            Player player = new Player(playerIndex, hand);
+            players.add(player);
         }
-
     }
 
     private void initializeData() {
