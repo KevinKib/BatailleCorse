@@ -8,7 +8,7 @@
     @click="toggle"
   >
     <i class="pi pi-info-circle" />
-    <span>{{ messages.rules.toggleLabel }}</span>
+    <span>{{ rules.toggleLabel }}</span>
   </button>
 
   <div
@@ -16,15 +16,15 @@
     id="rules-panel"
     class="rules-panel"
     role="dialog"
-    :aria-label="messages.rules.panelTitle"
+    :aria-label="rules.panelTitle"
     data-cy="rules-panel"
   >
     <div class="rules-panel__header">
-      <h2 class="rules-panel__title">{{ messages.rules.panelTitle }}</h2>
+      <h2 class="rules-panel__title">{{ rules.panelTitle }}</h2>
       <button
         type="button"
         class="rules-panel__close"
-        :aria-label="messages.rules.closeLabel"
+        :aria-label="rules.closeLabel"
         data-cy="rules-close"
         @click="close"
       >
@@ -33,7 +33,7 @@
     </div>
 
     <div class="rules-panel__body">
-      <template v-for="section in messages.rules.sections" :key="section.title">
+      <template v-for="section in rules.sections" :key="section.title">
         <section v-if="section.kind === 'text'" class="rules-section">
           <h3 class="rules-section__title">{{ section.title }}</h3>
           <p
@@ -41,6 +41,51 @@
             :key="line"
             class="rules-section__line"
           >{{ line }}</p>
+        </section>
+
+        <section
+          v-else-if="section.kind === 'cycle'"
+          class="rules-section rules-cycle"
+          data-cy="rules-cycle"
+        >
+          <h3 class="rules-section__title">{{ section.title }}</h3>
+          <div class="cycle-row" :class="{ 'cycle-row--loops': section.loops }">
+            <template v-for="(step, i) in section.steps" :key="i">
+              <span v-if="i > 0" class="cycle-arrow">→</span>
+              <span class="value-token value-token--rank">
+                <span class="value-token__rank">{{ step }}</span>
+              </span>
+            </template>
+            <span v-if="section.loops" class="cycle-loop" aria-hidden="true">
+              <i class="pi pi-replay" />
+            </span>
+          </div>
+          <p class="rules-section__line">{{ section.caption }}</p>
+          <p v-if="section.note" class="rules-section__line rules-cycle__note">{{ section.note }}</p>
+        </section>
+
+        <section
+          v-else-if="section.kind === 'branch'"
+          class="rules-section rules-branch"
+          data-cy="rules-branch"
+        >
+          <h3 class="rules-section__title">{{ section.title }}</h3>
+          <p class="rules-section__line">{{ section.intro }}</p>
+          <div
+            v-for="(outcome, i) in section.outcomes"
+            :key="i"
+            class="branch-outcome"
+            :class="`branch-outcome--${outcome.tone}`"
+          >
+            <i
+              class="branch-outcome__icon"
+              :class="outcome.tone === 'positive' ? 'pi pi-check-circle' : 'pi pi-times-circle'"
+            />
+            <span class="branch-outcome__text">
+              <span class="branch-outcome__condition">{{ outcome.condition }}</span>
+              <span class="branch-outcome__result">{{ outcome.result }}</span>
+            </span>
+          </div>
         </section>
 
         <section v-else class="rules-section rules-slap" data-cy="rules-slap">
@@ -73,11 +118,13 @@
 
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount } from 'vue';
-import { useI18n } from '../composables/useI18n';
+import type { RulesMessages } from '../locales/Messages';
 import { useDisclosure } from '../composables/useDisclosure';
 import { SLAP_EXAMPLES } from './slapExamples';
 
-const messages = useI18n();
+// Rules content is passed in so the same panel serves every game (BatailleCorse,
+// Bullshit, ...) — single source of truth for the chrome, per-game content.
+const props = defineProps<{ rules: RulesMessages }>();
 const { isOpen, close, toggle } = useDisclosure();
 
 const SUIT_GLYPH: Record<string, string> = {
@@ -273,5 +320,100 @@ onBeforeUnmount(() => document.removeEventListener('keydown', handleKeydown));
   margin-top: 10px;
   font-style: italic;
   color: rgba(255, 255, 255, 0.72);
+}
+
+/* Cycle — the auto-advancing claim, shown as rank chips with arrows and a
+   wrap-around loop badge so the "you don't pick it" mechanic reads at a glance. */
+.rules-cycle {
+  padding: 10px 12px;
+  background: rgba(245, 200, 66, 0.07);
+  border: 1px solid rgba(245, 200, 66, 0.28);
+  border-radius: 12px;
+}
+
+.cycle-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: 4px 0 10px;
+}
+
+/* Rank-only chip: reuses the value-token look but drops the suit row. */
+.value-token--rank {
+  min-width: 24px;
+  padding: 4px 6px;
+}
+
+.cycle-arrow {
+  color: rgba(255, 255, 255, 0.55);
+  font-weight: 700;
+}
+
+.cycle-loop {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 4px;
+  color: #f5c842;
+  font-size: 0.95rem;
+}
+
+.rules-cycle__note {
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+/* Branch — the two Call-Bullshit outcomes, each a coloured row with a check or
+   cross so the consequence of a true vs. false claim is immediately legible. */
+.branch-outcome {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+}
+
+.branch-outcome--positive {
+  background: rgba(82, 196, 128, 0.1);
+  border-color: rgba(82, 196, 128, 0.3);
+}
+
+.branch-outcome--negative {
+  background: rgba(224, 90, 90, 0.1);
+  border-color: rgba(224, 90, 90, 0.3);
+}
+
+.branch-outcome__icon {
+  font-size: 1rem;
+  line-height: 1.3;
+  flex-shrink: 0;
+}
+
+.branch-outcome--positive .branch-outcome__icon {
+  color: #6fdba0;
+}
+
+.branch-outcome--negative .branch-outcome__icon {
+  color: #ec7a7a;
+}
+
+.branch-outcome__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.branch-outcome__condition {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.branch-outcome__result {
+  font-size: 0.86rem;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.78);
 }
 </style>

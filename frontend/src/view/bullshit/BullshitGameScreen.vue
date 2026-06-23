@@ -9,10 +9,13 @@ import PlayingCard from '../../components/PlayingCard.vue';
 import CardCounter from '../../components/CardCounter.vue';
 import EndGameOverlay from '../../components/EndGameOverlay.vue';
 import ForfeitBanner from '../../components/ForfeitBanner.vue';
+import RulesPanel from '../../components/RulesPanel.vue';
 import OpponentSeat from '../../components/bullshit/OpponentSeat.vue';
+import { useI18n } from '../../composables/useI18n';
 import type Card from '../../model/Card';
 
 const props = defineProps<{ gameId: string }>();
+const messages = useI18n();
 const store = useBullshitStore();
 useBullshitBootstrap(props.gameId);
 
@@ -121,6 +124,8 @@ function selectAll(event: FocusEvent) {
     />
 
     <template v-else>
+      <RulesPanel :rules="messages.bullshit" />
+
       <RouterLink :to="{ path: '/' }" class="leave-button" data-test="leave">
         <Button severity="secondary" label="Back" icon="pi pi-undo" variant="text" rounded />
       </RouterLink>
