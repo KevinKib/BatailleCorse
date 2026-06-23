@@ -90,6 +90,15 @@ deadline, local clock only renders remaining seconds (unchanged semantics).
    eventType comparison — single source of truth. The raw server `eventData` already
    matches the brick's payload shapes, so no reshaping is needed.
 
+   **Do NOT re-add the old `Number(...)` coercion** that the bespoke mapping applied
+   to `disconnectedSeat`/`deadlineEpochMs`. Forward `response.eventData` verbatim, the
+   same way Bullshit forwards its events on this shared session/presence layer. It is
+   safe because the brick is coercion-tolerant: `liveDisconnections` filters with
+   `present.has(Number(seat))` (string-or-number keys both match), and
+   `secondsRemainingFor` does numeric arithmetic on the deadline. Re-introducing
+   coercion here would mean reshaping the payload, which the brick's contract makes
+   unnecessary.
+
 3. **`state/BatailleCorse.store.ts`** —
    - Add `const presence = useSeatPresence({ presentSeats })` (the narrowing above).
    - Remove the `opponentConnection` ref and the `opponent-connection` event case.
