@@ -8,7 +8,7 @@ import org.kevinkib.cardgames.game.GameOptions;
  *  Bullshit edge. Future options extend this record and its {@link #from} parsing. */
 public record BullshitOptions(ClaimModeOption claimMode) {
 
-    static final String CLAIM_MODE_KEY = "claimMode";
+    public static final String CLAIM_MODE_KEY = "claimMode";
 
     public static BullshitOptions from(GameOptions options) {
         return new BullshitOptions(ClaimModeOption.fromKey(options.get(CLAIM_MODE_KEY).orElse(null)));

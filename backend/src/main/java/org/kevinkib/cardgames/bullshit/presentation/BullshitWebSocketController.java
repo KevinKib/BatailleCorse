@@ -5,6 +5,7 @@ import org.kevinkib.cardgames.bullshit.domain.BullshitFactory;
 import org.kevinkib.cardgames.bullshit.domain.CallBullshitOutcome;
 import org.kevinkib.cardgames.bullshit.domain.CannotCallBullshitException;
 import org.kevinkib.cardgames.bullshit.domain.claim.ClaimTarget;
+import org.kevinkib.cardgames.bullshit.domain.options.BullshitOptions;
 import org.kevinkib.cardgames.bullshit.domain.pile.Discard;
 import org.kevinkib.cardgames.bullshit.presentation.api.BullshitCreatePayload;
 import org.kevinkib.cardgames.bullshit.presentation.api.BullshitDiscardPayload;
@@ -57,7 +58,7 @@ public class BullshitWebSocketController {
         String name = (payload != null) ? payload.name() : null;
         String claimMode = (payload != null) ? payload.claimMode() : null;
         GameOptions options = (claimMode != null)
-                ? GameOptions.of(Map.of("claimMode", claimMode))
+                ? GameOptions.of(Map.of(BullshitOptions.CLAIM_MODE_KEY, claimMode))
                 : GameOptions.none();
         RoomCreated room = sessionService.createRoom(BullshitFactory.GAME_TYPE, name, options);
         Map<Integer, String> tokens = Map.of(0, room.hostToken());
