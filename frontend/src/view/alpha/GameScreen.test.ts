@@ -56,7 +56,8 @@ describe('GameScreen', () => {
       store.mode = 'multiplayer';
       store.myPlayerIndex = 0;
       store.state = buildGame();
-      store.opponentConnection = { status: 'disconnected', seat: 1, deadlineEpochMs: Date.now() + 60_000 };
+      store.applyEvent({ type: 'presence-event', eventType: 'OPPONENT_DISCONNECTED',
+        eventData: { disconnectedSeat: 1, deadlineEpochMs: Date.now() + 60_000 } });
       await nextTick();
 
       const overlay = wrapper.findComponent(DisconnectOverlay);
@@ -70,9 +71,14 @@ describe('GameScreen', () => {
       store.mode = 'multiplayer';
       store.myPlayerIndex = 0;
       store.state = buildGame();
-      store.opponentConnection = { status: 'connected', seat: 1 };
+      store.applyEvent({ type: 'presence-event', eventType: 'OPPONENT_DISCONNECTED',
+        eventData: { disconnectedSeat: 1, deadlineEpochMs: Date.now() + 60_000 } });
       await nextTick();
+      expect(wrapper.findComponent(DisconnectOverlay).exists()).toBe(true);
 
+      store.applyEvent({ type: 'presence-event', eventType: 'OPPONENT_RECONNECTED',
+        eventData: { reconnectedSeat: 1 } });
+      await nextTick();
       expect(wrapper.findComponent(DisconnectOverlay).exists()).toBe(false);
     });
   });
