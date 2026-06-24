@@ -81,6 +81,24 @@ describe('GameScreen', () => {
       await nextTick();
       expect(wrapper.findComponent(DisconnectOverlay).exists()).toBe(false);
     });
+
+    it('hides the banner once the game is over, even if the disconnect lingers', async () => {
+      const wrapper = await mountGameScreen();
+      const store = useBatailleCorseStore();
+      store.mode = 'multiplayer';
+      store.myPlayerIndex = 0;
+      store.state = buildGame();
+      store.applyEvent({ type: 'presence-event', eventType: 'OPPONENT_DISCONNECTED',
+        eventData: { disconnectedSeat: 1, deadlineEpochMs: Date.now() + 60_000 } });
+      await nextTick();
+      expect(wrapper.findComponent(DisconnectOverlay).exists()).toBe(true);
+
+      // The disconnect deadline expires server-side and a win is broadcast, with no
+      // reconnect event — the disconnect entry lingers but the overlay must hide.
+      store.state = buildGame({ winner: { id: '0' } });
+      await nextTick();
+      expect(wrapper.findComponent(DisconnectOverlay).exists()).toBe(false);
+    });
   });
 
   describe('leave confirmation guard', () => {
