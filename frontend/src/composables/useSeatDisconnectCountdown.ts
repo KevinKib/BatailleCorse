@@ -8,9 +8,8 @@ export interface UseSeatDisconnectCountdownOptions {
 /**
  * Multi-seat opponent-disconnect countdown. Deadlines are server-provided (absolute
  * epoch ms); the local clock only renders remaining seconds. One 250ms ticker runs
- * while >=1 seat is disconnected and the game isn't over. Generalizes BatailleCorse's
- * useDisconnectCountdown from a single connection to a map of seats. The caller wires
- * cancel() into onBeforeUnmount.
+ * while >=1 seat is disconnected and the game isn't over. Generalizes a single-opponent
+ * countdown to a map of seats. The caller wires cancel() into onBeforeUnmount.
  */
 export function useSeatDisconnectCountdown(options: UseSeatDisconnectCountdownOptions) {
   const { disconnections, isGameOver } = options;
