@@ -15,6 +15,7 @@ import org.kevinkib.cardgames.bullshit.presentation.dto.event.BullshitEventType;
 import org.kevinkib.cardgames.bullshit.presentation.dto.event.CallBullshitEventData;
 import org.kevinkib.cardgames.bullshit.presentation.dto.event.DiscardEventData;
 import org.kevinkib.cardgames.game.GameId;
+import org.kevinkib.cardgames.game.GameOptions;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.presentation.GameMessagingService;
 import org.kevinkib.cardgames.presentation.api.ErrorResponse;
@@ -54,7 +55,11 @@ public class BullshitWebSocketController {
     @SendTo("/topic/game")
     public Response createGame(@Payload(required = false) BullshitCreatePayload payload) {
         String name = (payload != null) ? payload.name() : null;
-        RoomCreated room = sessionService.createRoom(BullshitFactory.GAME_TYPE, name);
+        String claimMode = (payload != null) ? payload.claimMode() : null;
+        GameOptions options = (claimMode != null)
+                ? GameOptions.of(Map.of("claimMode", claimMode))
+                : GameOptions.none();
+        RoomCreated room = sessionService.createRoom(BullshitFactory.GAME_TYPE, name, options);
         Map<Integer, String> tokens = Map.of(0, room.hostToken());
 
         return new SuccessResponse(
