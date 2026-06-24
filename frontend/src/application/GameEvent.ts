@@ -1,5 +1,6 @@
 import type BatailleCorse from '../model/BatailleCorse';
 import type Card from '../model/Card';
+import type { SeatLifecycleEventType } from '../model/SeatLifecycleEvents';
 
 export type GameEvent =
   | { type: 'state-update'; state: BatailleCorse }
@@ -14,7 +15,6 @@ export type GameEvent =
   | { type: 'waiting-change'; waiting: boolean }
   | { type: 'my-name-change'; name: string | null }
   | { type: 'opponent-name-change'; name: string | null }
-  | { type: 'opponent-connection'; status: 'disconnected'; seat: number; deadlineEpochMs: number }
-  | { type: 'opponent-connection'; status: 'connected'; seat: number }
+  | { type: 'presence-event'; eventType: SeatLifecycleEventType; eventData: unknown }
   | { type: 'rematch'; status: 'pending'; requestedBy: number }
   | { type: 'rematch'; status: 'started' };

@@ -154,7 +154,7 @@ import { useGameAnimations } from '../../composables/useGameAnimations';
 import { useHotkeys } from '../../composables/useHotkeys';
 import { useEndScreen } from '../../composables/useEndScreen';
 import { useGameDuration } from '../../composables/useGameDuration';
-import { useDisconnectCountdown } from '../../composables/useDisconnectCountdown';
+import { useSeatDisconnectCountdown } from '../../composables/useSeatDisconnectCountdown';
 import { useLeaveGuard } from '../../composables/useLeaveGuard';
 import { useTurnIndicator } from '../../composables/useTurnIndicator';
 import { useGameBootstrap } from '../../composables/useGameBootstrap';
@@ -163,7 +163,7 @@ import { computed, onBeforeUnmount, useTemplateRef } from 'vue';
 import { endGameMessage } from '../../model/endGameMessage';
 
 const batailleCorseStore = useBatailleCorseStore();
-const { state: batailleCorse, mode, myPlayerIndex, waiting, myName, opponentName, opponentConnection,
+const { state: batailleCorse, mode, myPlayerIndex, waiting, myName, opponentName, liveDisconnections,
         rematchState } = storeToRefs(batailleCorseStore);
 
 const pile = useTemplateRef("pile");
@@ -238,12 +238,22 @@ const isInProgress = computed(() =>
 const { formattedDuration, cancel: cancelGameDuration } =
   useGameDuration(() => isInProgress.value, () => isGameOver.value);
 
-const { opponentDisconnected, secondsRemaining, cancel: cancelDisconnectCountdown } = useDisconnectCountdown({
-  mode: () => mode.value,
-  opponentConnection: () => opponentConnection.value,
-  myPlayerIndex: () => myPlayerIndex.value,
+// BC has a single opponent, so the disconnections map holds at most one entry.
+// liveDisconnections already excludes solo / self via the store's presentSeats narrowing.
+const { secondsRemainingFor, cancel: cancelDisconnectCountdown } = useSeatDisconnectCountdown({
+  disconnections: () => liveDisconnections.value,
   isGameOver: () => isGameOver.value,
 });
+
+const disconnectedSeat = computed(() => {
+  const seats = Object.keys(liveDisconnections.value);
+  return seats.length ? Number(seats[0]) : null;
+});
+const opponentDisconnected = computed(() => disconnectedSeat.value !== null && !isGameOver.value);
+const secondsRemaining = computed(() =>
+  disconnectedSeat.value === null
+    ? 0
+    : secondsRemainingFor(liveDisconnections.value[disconnectedSeat.value]));
 
 useLeaveGuard({
   isInProgress: () => isInProgress.value,
