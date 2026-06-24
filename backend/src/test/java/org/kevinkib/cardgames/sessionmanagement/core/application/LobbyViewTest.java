@@ -2,10 +2,12 @@ package org.kevinkib.cardgames.sessionmanagement.core.application;
 
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.game.GameId;
+import org.kevinkib.cardgames.game.GameOptions;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionGame;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -58,5 +60,15 @@ class LobbyViewTest {
         LobbyView dto = LobbyView.forViewer(lobby, 2, 6, new PlayerId(0));
 
         assertThat(dto.canStart(), is(false));
+    }
+
+    @Test
+    void givenLobbyWithSuitOption_whenForViewer_thenOptionsCarryClaimMode() {
+        SessionGame lobby = SessionGame.create(
+                GameId.generate(), 2, "bullshit", GameOptions.of(Map.of("claimMode", "suit")));
+
+        LobbyView view = LobbyView.forViewer(lobby, 2, 6, new PlayerId(0));
+
+        assertThat(view.options(), is(Map.of("claimMode", "suit")));
     }
 }
