@@ -47,4 +47,14 @@ class GameFactoriesTest {
         assertThat(factories.minPlayers("bataille-corse"), is(2));
         assertThat(factories.maxPlayers("bataille-corse"), is(2));
     }
+
+    @Test
+    void givenFactoryWithoutOptionsOverride_whenCreateWithOptions_thenDelegatesToTwoArg() {
+        GameFactories factories = new GameFactories(java.util.List.of(new BatailleCorseFactory()));
+
+        var game = factories.factoryFor("bataille-corse")
+                .create(GameId.generate(), 2, org.kevinkib.cardgames.game.GameOptions.none());
+
+        assertThat(game, instanceOf(org.kevinkib.cardgames.bataillecorse.domain.BatailleCorse.class));
+    }
 }

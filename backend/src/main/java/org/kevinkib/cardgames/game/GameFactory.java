@@ -12,4 +12,9 @@ public interface GameFactory {
     int maxPlayers();
 
     Game create(GameId id, int nbPlayers);
+
+    /** Creates the game with host-selected options. Games that ignore options inherit this default. */
+    default Game create(GameId id, int nbPlayers, GameOptions options) {
+        return create(id, nbPlayers);
+    }
 }

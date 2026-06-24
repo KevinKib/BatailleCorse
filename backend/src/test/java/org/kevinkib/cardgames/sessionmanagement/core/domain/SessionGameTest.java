@@ -3,9 +3,11 @@ package org.kevinkib.cardgames.sessionmanagement.core.domain;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.game.GameId;
+import org.kevinkib.cardgames.game.GameOptions;
 import org.kevinkib.cardgames.game.PlayerId;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.IntStream;
 
@@ -219,5 +221,21 @@ class SessionGameTest {
             assertThat(session.isRematchUnanimous(), is(false));
         }
 
+    }
+
+    @Test
+    void givenNoOptionsOverload_whenCreate_thenOptionsAreNone() {
+        var sessionGame = SessionGame.create(GameId.generate(), 2, "bullshit");
+
+        assertThat(sessionGame.options(), is(GameOptions.none()));
+    }
+
+    @Test
+    void givenOptions_whenCreate_thenOptionsRetained() {
+        GameOptions options = GameOptions.of(Map.of("claimMode", "suit"));
+
+        var sessionGame = SessionGame.create(GameId.generate(), 2, "bullshit", options);
+
+        assertThat(sessionGame.options(), is(options));
     }
 }

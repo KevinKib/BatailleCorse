@@ -4,10 +4,16 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseFactory;
+import org.kevinkib.cardgames.bullshit.domain.Bullshit;
 import org.kevinkib.cardgames.bullshit.domain.BullshitFactory;
+import org.kevinkib.cardgames.bullshit.domain.claim.RankTarget;
+import org.kevinkib.cardgames.bullshit.domain.claim.SuitTarget;
 import org.kevinkib.cardgames.game.Game;
 import org.kevinkib.cardgames.game.GameId;
+import org.kevinkib.cardgames.game.GameOptions;
 import org.kevinkib.cardgames.game.PlayerId;
+import org.kevinkib.cards.domain.deck.french.FrenchRank;
+import org.kevinkib.cards.domain.deck.french.FrenchSuit;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameMode;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SeatView;
 import org.kevinkib.cardgames.sessionmanagement.core.infrastructure.InMemorySessionRepository;
@@ -15,6 +21,7 @@ import org.kevinkib.cardgames.sessionmanagement.core.infrastructure.InMemorySess
 import java.time.Clock;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -306,6 +313,61 @@ class SessionServiceTest {
 
             assertThrows(IllegalStateException.class,
                     () -> service.getGame(game.getId(), org.kevinkib.cardgames.game.FakeGame.class));
+        }
+    }
+
+    @Nested
+    class ClaimModeOptionTest {
+
+        private SessionService bullshitService;
+
+        @BeforeEach
+        void setUpBullshit() {
+            bullshitService = new SessionService(
+                    new InMemorySessionRepository(Clock.systemUTC()),
+                    new GameFactories(List.of(new BullshitFactory())));
+        }
+
+        private GameId startWithTwoPlayers(GameOptions options) {
+            RoomCreated room = bullshitService.createRoom("bullshit", "Alice", options);
+            GameId id = new GameId(room.gameId());
+            bullshitService.joinRoom(id, "Bob");
+            bullshitService.startGame(id, room.hostToken());
+            return id;
+        }
+
+        @Test
+        void givenSuitOption_whenStart_thenInitialTargetIsHeart() {
+            GameId id = startWithTwoPlayers(GameOptions.of(Map.of("claimMode", "suit")));
+
+            Bullshit game = (Bullshit) bullshitService.getGame(id);
+            assertThat(game.getCurrentTarget(), is(new SuitTarget(FrenchSuit.HEART)));
+        }
+
+        @Test
+        void givenNoOption_whenStart_thenInitialTargetIsAce() {
+            GameId id = startWithTwoPlayers(GameOptions.none());
+
+            Bullshit game = (Bullshit) bullshitService.getGame(id);
+            assertThat(game.getCurrentTarget(), is(new RankTarget(FrenchRank.ACE)));
+        }
+
+        @Test
+        void givenSuitOption_whenReopenedAndRestarted_thenStillHeart() {
+            RoomCreated room = bullshitService.createRoom(
+                    "bullshit", "Alice", GameOptions.of(Map.of("claimMode", "suit")));
+            GameId id = new GameId(room.gameId());
+            bullshitService.joinRoom(id, "Bob");
+            bullshitService.startGame(id, room.hostToken());
+
+            // Reopen the room (drops the game, resets the lobby) then start again.
+            bullshitService.playAgain(id, "Alice");
+            bullshitService.joinRoom(id, "Bob");
+            String hostToken = bullshitService.tokenForSeat(id, new PlayerId(0));
+            bullshitService.startGame(id, hostToken);
+
+            Bullshit game = (Bullshit) bullshitService.getGame(id);
+            assertThat(game.getCurrentTarget(), is(new SuitTarget(FrenchSuit.HEART)));
         }
     }
 }
