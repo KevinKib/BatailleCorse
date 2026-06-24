@@ -496,7 +496,7 @@ describe('GameSession', () => {
       expect(presence.length).toBe(0);
     });
 
-    it('emits opponent-connection on OPPONENT_DISCONNECTED', async () => {
+    it('emits presence-event on OPPONENT_DISCONNECTED, forwarding eventData verbatim', async () => {
       const { session, events } = makeSession();
       session.create('multiplayer', 'Bob');
       await session.onResponse(buildCreateResponse('game-9', { 0: 'tok' }));
@@ -505,11 +505,13 @@ describe('GameSession', () => {
         eventData: { disconnectedSeat: 1, deadlineEpochMs: 1234 },
       }));
       expect(events).toContainEqual({
-        type: 'opponent-connection', status: 'disconnected', seat: 1, deadlineEpochMs: 1234,
+        type: 'presence-event',
+        eventType: 'OPPONENT_DISCONNECTED',
+        eventData: { disconnectedSeat: 1, deadlineEpochMs: 1234 },
       });
     });
 
-    it('emits opponent-connection on OPPONENT_RECONNECTED', async () => {
+    it('emits presence-event on OPPONENT_RECONNECTED, forwarding eventData verbatim', async () => {
       const { session, events } = makeSession();
       session.create('multiplayer', 'Bob');
       await session.onResponse(buildCreateResponse('game-10', { 0: 'tok' }));
@@ -518,7 +520,9 @@ describe('GameSession', () => {
         eventData: { reconnectedSeat: 1 },
       }));
       expect(events).toContainEqual({
-        type: 'opponent-connection', status: 'connected', seat: 1,
+        type: 'presence-event',
+        eventType: 'OPPONENT_RECONNECTED',
+        eventData: { reconnectedSeat: 1 },
       });
     });
   });

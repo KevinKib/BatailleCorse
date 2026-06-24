@@ -19,3 +19,5 @@ export const SEAT_LIFECYCLE_EVENT = {
   OPPONENT_RECONNECTED: 'OPPONENT_RECONNECTED',
   FORFEIT: 'FORFEIT',
 } as const;
+
+export type SeatLifecycleEventType = typeof SEAT_LIFECYCLE_EVENT[keyof typeof SEAT_LIFECYCLE_EVENT];
