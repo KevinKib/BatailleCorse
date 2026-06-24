@@ -13,4 +13,5 @@ export interface LobbyView {
   minPlayers: number;
   maxPlayers: number;
   canStart: boolean;
+  options?: Record<string, string>;
 }
