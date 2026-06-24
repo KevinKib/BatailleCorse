@@ -10,8 +10,6 @@ public record BullshitOptions(ClaimModeOption claimMode) {
 
     static final String CLAIM_MODE_KEY = "claimMode";
 
-    public static final BullshitOptions DEFAULT = new BullshitOptions(ClaimModeOption.RANK);
-
     public static BullshitOptions from(GameOptions options) {
         return new BullshitOptions(ClaimModeOption.fromKey(options.get(CLAIM_MODE_KEY).orElse(null)));
     }
