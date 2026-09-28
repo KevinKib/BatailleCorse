@@ -1,11 +1,16 @@
-version: "3.9"
-
+# Production stack. The shared gateway (github.com/KevinKib/gateway) owns ports 80/443 and reaches
+# the frontend and backend on the "web" network; nothing here publishes a port.
 services:
   frontend:
     build:
       context: ./frontend
       target: prod
     image: bataillecorse-frontend:0.1
+    restart: unless-stopped
+    networks:
+      default:
+      web:
+        aliases: [bataillecorse-frontend]
 
   backend:
     build:
@@ -13,8 +18,7 @@ services:
       secrets:
         - maven_settings
     image: bataillecorse-backend:0.1
-    # Not published to the host: all traffic goes through the nginx gateway,
-    # which reaches the backend internally as http://backend:8080.
+    restart: unless-stopped
     healthcheck:
       # Spring Boot's Tomcat only accepts TCP connections once the context is
       # fully started, so a successful connect means the app is ready to serve.
@@ -23,43 +27,15 @@ services:
       timeout: 3s
       retries: 20
       start_period: 30s
-
-  gateway:
-    build:
-      context: ./deploy/nginx
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - certbot-certs:/etc/letsencrypt:ro
-      - certbot-webroot:/var/www/certbot:ro
-    depends_on:
-      frontend:
-        condition: service_started
-      backend:
-        condition: service_healthy
-    # Reload nginx every 6h so renewed certificates are picked up without a
-    # restart, while keeping the master process in the foreground.
-    command: >
-      /bin/sh -c "while :; do sleep 6h & wait $${!}; nginx -s reload; done &
-      nginx -g 'daemon off;'"
-
-  # Renews certificates in the background. Initial issuance is done once via
-  # deploy/docker/init-letsencrypt.sh (see deploy/docker/HTTPS.md).
-  certbot:
-    image: certbot/certbot:latest
-    volumes:
-      - certbot-certs:/etc/letsencrypt
-      - certbot-webroot:/var/www/certbot
-    entrypoint: >
-      /bin/sh -c "trap exit TERM; while :; do
-      certbot renew --webroot -w /var/www/certbot --quiet;
-      sleep 12h & wait $${!}; done"
+    networks:
+      default:
+      web:
+        aliases: [bataillecorse-backend]
 
 secrets:
   maven_settings:
     file: deploy/docker/settings.xml
 
-volumes:
-  certbot-certs:
-  certbot-webroot:
+networks:
+  web:
+    external: true
