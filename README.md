@@ -69,7 +69,10 @@ Specs live in `frontend/cypress/specs/`. When done, stop the stack with
 
 ## Production
 
-Builds optimized images and serves everything behind an Nginx gateway.
+Runs at https://kevinkib.com behind the shared gateway
+([KevinKib/gateway](https://github.com/KevinKib/gateway)), which owns ports 80/443 and the HTTPS
+certificates. The frontend and backend join its `web` network as `bataillecorse-frontend` and
+`bataillecorse-backend`; nothing publishes a port. Start the gateway first, then:
 
 ```sh
 bash prod.sh
@@ -82,11 +85,13 @@ DOCKER_BUILDKIT=1 docker compose -f docker-compose.prod.yml up --build -d
 ```
 
 Services:
-- Gateway (Nginx): http://localhost — routes to the frontend and backend
 - Frontend: built static assets served by Nginx (`bataillecorse-frontend:0.1`)
-- Backend: packaged JAR (`bataillecorse-backend:0.1`), also exposed on port 8080
+- Backend: packaged JAR (`bataillecorse-backend:0.1`)
 
 The backend image consumes `deploy/docker/settings.xml` as a build secret (`maven_settings`).
+
+HTTPS certificates and the move from BatailleCorse's former built-in gateway are documented in the
+gateway's README.
 
 To stop:
 
