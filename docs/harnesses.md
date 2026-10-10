@@ -48,7 +48,7 @@ The sibling project ShodoCFI (PR #25 and #26) got a first harness iteration. Thi
 
 - Cypress targets port 5173 by default: one e2e stack at a time unless `--config baseUrl=...` points at an offset stack.
 - The offset-ports model was checked with `docker compose config` (ports and environment merge as expected) but the stack was not started.
-- Legacy docs live under `docs/superpowers/` (specs, plans, architecture); new ones go in `docs/specs/` and `docs/plans/`. Renaming the old folder is left to the user.
+- Docs folders flattened (chore/rename-docs-dir): specs, plans and architecture now sit directly under `docs/`; the old nested folder name and the matching skill-name prefixes in plan headers are gone.
 
 ## Reuse
 
