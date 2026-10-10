@@ -96,6 +96,48 @@ graph TB
 - **Bullshit domain**: the strategy only ever receives a `BotObservation`, built to carry exactly what `BullshitDto.forViewer` shows (a parity test and a structural test enforce it). `Bullshit.version()` lets asynchronous bot tasks detect that the table moved on.
 - **Dependencies**: `sessionmanagement` never learns a game; the coordinator reaches the session core only through the `BotSeats` port (`SessionService::botSeats`) and the eviction listener.
 
+
+## Kobo
+
+Spec: `docs/specs/2026-10-11-kobo-backend-design.md`. A third upstream game-rules context (`org.kevinkib.cardgames.kobo`), plugged into the session core through a `KoboFactory` in `GameFactories`; nothing changes in `sessionmanagement`.
+
+```mermaid
+graph TB
+    subgraph KP["🌐 kobo.presentation"]
+        KWS["KoboWebSocketController (/kobo/...)"]
+        KREST["KoboRestController (/api/kobo)"]
+        KACT["KoboGameActions<br/>(call + touch + broadcast under the game monitor)"]
+        KBC["KoboStateBroadcaster<br/>(one KoboDto per seat)"]
+        KLC["KoboLifecycleBroadcaster"]
+        KWS --> KACT --> KBC
+        KREST --> KBC
+        KLC --> KBC
+    end
+
+    subgraph KD["🂡 kobo.domain (pure rules)"]
+        KOBO["Kobo (aggregate, synchronized)<br/>phases · tableaux with slot revisions"]
+        SCORE["RoundScoring · CardPoints · Power"]
+        KOBO --> SCORE
+    end
+
+    subgraph SM["📦 sessionmanagement"]
+        SS3["SessionService · PresenceService"]
+    end
+
+    KACT --> KOBO
+    KACT --> SS3
+    KLC -. "GameLifecycleBroadcaster port" .-> SS3
+
+    style KP fill:#2a1a3a,stroke:#c084fc,color:#fff
+    style KD fill:#1a3a2a,stroke:#4ade80,color:#fff
+    style SM fill:#1a2a3a,stroke:#60a5fa,color:#fff
+```
+
+- **Slots and revisions**: every command addresses a card as `SlotRef(seat, slot)`; each slot has a `revision` bumped when its card changes. The server never learns what a player remembers; clients drop what they knew of a slot whose revision moved.
+- **The race**: any player may try to discard a card (own or another's) that matches the rank on top of the discard pile. Commands go through the `synchronized` aggregate, so the first message processed wins. A losing attempt (slot already emptied or refilled, or the pile moved) is rejected without penalty (`expectedTopRank`, `expectedRevision`); only a real rank error costs a penalty card.
+- **Privacy**: `KoboDto.forViewer` is the only projection. Face-down values appear only in the viewer own DTO (starting cards before the first draw, the drawn card while deciding, the last peek) and in everyone's DTO once the round is revealed.
+- **Not covered yet**: bots and the frontend.
+
 ## Relationship
 
 Session Management has a **Conformist** relationship to Core: it speaks Core's language (`BatailleCorseId`, `PlayerId`) without translation. Core has no dependency on Session Management.

@@ -1,6 +1,6 @@
 # BatailleCorse : consignes pour Claude
 
-Jeux de cartes temps réel (Bataille Corse et Bullshit) : backend Spring Boot (compilé en `-source/-target 17` selon le `pom.xml`, exécuté sur JDK 22 dans le Dockerfile et la CI ; WebSocket/STOMP, état en mémoire, pas de base de données) et frontend Vue 3 + Vite + Pinia + PrimeVue, orchestrés avec Docker Compose. Les commandes détaillées sont dans le `README.md`. Les règles communes à tous les projets (worktrees, conventions git, vérifications, workflow) sont dans le `CLAUDE.md` global de l'utilisateur.
+Jeux de cartes temps réel (Bataille Corse, Bullshit et Kobo) : backend Spring Boot (compilé en `-source/-target 17` selon le `pom.xml`, exécuté sur JDK 22 dans le Dockerfile et la CI ; WebSocket/STOMP, état en mémoire, pas de base de données) et frontend Vue 3 + Vite + Pinia + PrimeVue, orchestrés avec Docker Compose. Les commandes détaillées sont dans le `README.md`. Les règles communes à tous les projets (worktrees, conventions git, vérifications, workflow) sont dans le `CLAUDE.md` global de l'utilisateur.
 
 ## Langue
 
@@ -10,7 +10,7 @@ Jeux de cartes temps réel (Bataille Corse et Bullshit) : backend Spring Boot (c
 
 ## Architecture et règles du domaine
 
-- Backend en hexagonal, un contexte borné par jeu : `bataillecorse`, `bullshit` (règles pures, dans `domain/`), `sessionmanagement` (`core` : sièges, jetons, création/jonction/démarrage/revanche ; `presence` : connexion, délai de grâce, forfait) et un noyau partagé `game` (`Game`, `GameFactory`, `GameId`, `PlayerId`). Carte : `docs/architecture/context-map.md`.
+- Backend en hexagonal, un contexte borné par jeu : `bataillecorse`, `bullshit`, `kobo` (règles pures, dans `domain/`), `sessionmanagement` (`core` : sièges, jetons, création/jonction/démarrage/revanche ; `presence` : connexion, délai de grâce, forfait) et un noyau partagé `game` (`Game`, `GameFactory`, `GameId`, `PlayerId`). Carte : `docs/architecture/context-map.md`.
 - Les règles métier vivent dans le domaine (`<jeu>/domain`), jamais dans les contrôleurs (`presentation`) ni dans le frontend. `sessionmanagement` ne dépend que du noyau `game`, jamais d'un jeu concret ; un jeu ne connaît ni sessions, ni jetons, ni transport.
 - Une action est authentifiée par le jeton de siège (`SessionToken`) ; les DTO et les événements WebSocket sont dans `presentation/`.
 - Frontend : Composition API avec `<script setup>` et TypeScript (skill `vue-best-practices`). Tout nouveau texte visible passe par `frontend/src/locales/`.
