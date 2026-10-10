@@ -17,6 +17,7 @@ import { useI18n } from '../../composables/useI18n';
 import { flyCardsToPile, prefersReducedMotion } from '../../composables/usePileAnimation';
 import { cardSound } from '../../composables/useCardSound';
 import { useSoundPreference } from '../../composables/useSoundPreference';
+import { useConnectionStatus } from '../../composables/useConnectionStatus';
 import { format, plural } from '../../locales/format';
 import { seatDisplayName } from '../../model/bullshit/displayName';
 import { claimSuit } from '../../model/bullshit/claimSuit';
@@ -109,6 +110,44 @@ watch(() => store.game?.discardPileSize ?? 0, (size, previous) => {
   if (size > previous && soundEnabled.value) cardSound.play(size - previous);
 });
 
+// My own connection. While it is down the actions are disabled (a publish would throw); once it
+// is back, events may have been missed in between, so the state is fetched again.
+const { online } = useConnectionStatus();
+watch(online, (isOnline, wasOnline) => {
+  if (isOnline && !wasOnline) void store.hydrate();
+});
+
+// Discard invites a click only when it can be used: my turn, cards picked, connected.
+const canDiscardNow = computed(() => store.isMyTurn && store.selectedCards.length > 0 && online.value);
+
+// End screen. A win by forfeit says how the opponent left; a win with cards still in hand and no
+// known reason (the event was missed, e.g. after a reload) still must not claim an empty hand.
+const endSubtitle = computed(() => {
+  if (!store.iWon) return ui.end.youLost;
+  const left = store.lastForfeit;
+  if (left?.reason === 'RESIGNED') return format(ui.end.youWonResigned, { player: displayName(left.seat) });
+  if (left?.reason === 'DISCONNECTED') return format(ui.end.youWonDisconnected, { player: displayName(left.seat) });
+  return myCardCount.value > 0 ? ui.end.youWonOthersLeft : ui.end.youWon;
+});
+const rematchButton = computed(() => ({
+  label: store.rematch === 'pending' ? ui.end.rematchPending : ui.end.playAgain,
+  disabled: store.rematch === 'pending',
+}));
+
+// What a screen reader hears when a call is revealed: the verdict, then who calls whom.
+const verdictAnnouncement = computed(() => {
+  const r = store.reveal;
+  if (!r) return '';
+  return format(ui.table.verdictAnnouncement, {
+    verdict: r.truthful ? ui.table.truthful : ui.table.bluff,
+    caption: format(ui.table.revealCaption, {
+      caller: displayName(r.callerSeat),
+      claimant: displayName(r.claimantSeat),
+      picker: displayName(r.pickerSeat),
+    }),
+  });
+});
+
 const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.gameId}`);
 </script>
 
@@ -126,8 +165,9 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
       v-else-if="store.phase === 'finished'"
       data-test="end"
       :did-i-win="store.iWon"
-      :subtitle="store.iWon ? ui.end.youWon : ui.end.youLost"
-      :rematch-button="{ label: ui.end.playAgain, disabled: false }"
+      :subtitle="endSubtitle"
+      :rematch-button="rematchButton"
+      :error="store.rematch === 'failed' ? ui.end.rematchFailed : undefined"
       @play-again="store.playAgain()"
     />
 
@@ -165,6 +205,11 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
           :label="format(ui.table.forfeited, { player: displayName(store.forfeitNotice.seat) })" />
       </Transition>
 
+      <div v-if="!online" class="offline-notice" data-test="offline" role="alert">
+        <i class="pi pi-wifi" aria-hidden="true"></i>
+        {{ ui.table.offline }}
+      </div>
+
       <div class="table-frame">
         <div class="opponents-ring">
           <div
@@ -198,7 +243,7 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
             </div>
 
             <Transition name="reveal-fade">
-              <div v-if="store.reveal" data-test="reveal" class="reveal"
+              <div v-if="store.reveal" data-test="reveal" class="reveal" aria-hidden="true"
                    :style="{ '--n': store.reveal.revealedCards.length }">
                 <div class="revealed-cards">
                   <div v-for="(c, i) in store.reveal.revealedCards" :key="i" class="flip-card" :style="{ '--i': i }">
@@ -223,6 +268,9 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
             </Transition>
           </div>
 
+          <!-- Always present (a live region added together with its text is not announced). -->
+          <div class="sr-only" data-test="verdict-live" aria-live="polite">{{ verdictAnnouncement }}</div>
+
           <p v-if="store.game?.table.state === 'CLAIM'" class="last-play" data-test="last-play">
             {{ plural(ui.table.playedFaceDown, store.game.table.count, { player: displayName(Number(store.game.table.claimantId)) }) }}
           </p>
@@ -234,6 +282,7 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
           <span :class="['my-tag', { 'my-tag--active': store.isMyTurn }]">{{ ui.you }}</span>
           <span class="my-count" data-test="my-count" role="img"
                 :aria-label="plural(ui.table.myCards, myCardCount)">{{ myCardCount }}</span>
+          <span v-if="store.isMyTurn" class="turn-hint" data-test="turn-hint">{{ ui.table.yourTurn }}</span>
         </div>
         <BullshitHand
           :cards="store.game?.myHand ?? []"
@@ -246,7 +295,8 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
             icon="pi pi-arrow-up"
             severity="success"
             rounded
-            :disabled="!store.isMyTurn || store.selectedCards.length === 0"
+            :class="{ 'discard--pulse': canDiscardNow }"
+            :disabled="!canDiscardNow"
             @click="discard" />
           <Button
             data-test="call"
@@ -254,7 +304,7 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
             icon="pi pi-flag"
             severity="danger"
             rounded
-            :disabled="!store.canCallBullshit"
+            :disabled="!store.canCallBullshit || !online"
             @click="store.callBullshit()" />
         </div>
       </div>
@@ -618,6 +668,53 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
   padding: var(--space-1) 10px;
   min-width: 2ch;
   text-align: center;
+}
+/* Words for the turn: the glow on "You" is easy to miss and says nothing to a screen reader. */
+.turn-hint {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--gold);
+  white-space: nowrap;
+}
+/* Discard breathes while it is the thing to press (my turn, cards picked). */
+.discard--pulse { animation: discard-pulse 1.6s ease-in-out infinite; }
+@keyframes discard-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(var(--accent-positive-rgb), 0.55); }
+  50%      { box-shadow: 0 0 0 8px rgba(var(--accent-positive-rgb), 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .discard--pulse { animation: none; box-shadow: 0 0 0 3px rgba(var(--accent-positive-rgb), 0.55); }
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+/* Same pill as the forfeit notice, under the top bar; it only shows while the socket is down. */
+.offline-notice {
+  position: absolute;
+  top: 56px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1800;
+  width: max-content;
+  max-width: calc(100% - 24px);
+  box-sizing: border-box;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.82);
+  border: 1px solid rgba(var(--accent-negative-rgb), 0.7);
+  border-radius: 999px;
+  padding: 6px 18px;
+  text-align: center;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5);
 }
 .my-tag--active {
   padding-left: 22px;

@@ -43,7 +43,7 @@ public class BullshitLifecycleBroadcaster implements GameLifecycleBroadcaster {
     public void forfeited(Game game, PlayerId player, ForfeitReason reason) {
         broadcaster.broadcast((Bullshit) game,
                 LifecycleEventType.FORFEIT.toString(),
-                new ForfeitEventData(player.id()),
+                new ForfeitEventData(player.id(), reason.name()),
                 "Player " + player.id() + " forfeited.");
     }
 }

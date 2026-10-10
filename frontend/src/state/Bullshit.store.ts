@@ -10,6 +10,11 @@ import type Card from '../model/Card';
 import { useSeatPresence, FORFEIT_NOTICE_HOLD_MS } from '../composables/useSeatPresence';
 import { type ClaimMode } from '../model/bullshit/claimMode';
 import { type DeckSize } from '../model/bullshit/deckSize';
+import type { ForfeitReason } from '../model/ForfeitReason';
+import type { ForfeitEventData } from '../model/SeatLifecycleEvents';
+
+/** Where my own play-again request stands (the others may click at their own pace). */
+export type RematchState = 'idle' | 'pending' | 'failed';
 
 export const REVEAL_HOLD_MS = 3000;
 export { FORFEIT_NOTICE_HOLD_MS };
@@ -25,6 +30,10 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
   const roster = ref<Record<string, BullshitPlayer>>({});
   // Last refusal of an add/remove bot request (server message), cleared by the next lobby refresh.
   const botError = ref<string | null>(null);
+  // Rematch request of this client: pending while the HTTP call runs, failed when refused.
+  const rematch = ref<RematchState>('idle');
+  // Last seat that left (resigned or timed out), kept for the end screen after the notice is gone.
+  const lastForfeit = ref<{ seat: number; reason: ForfeitReason | null } | null>(null);
   let revealTimer: ReturnType<typeof setTimeout> | null = null;
 
   const game = computed<BullshitState | null>(() =>
@@ -49,6 +58,8 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
           for (const p of event.state.players) roster.value = { ...roster.value, [p.id]: p };
         } else {
           roster.value = {};
+          lastForfeit.value = null;
+          rematch.value = 'idle';
         }
         break;
       case 'game-id-change':
@@ -63,6 +74,10 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
           if (revealTimer !== null) clearTimeout(revealTimer);
           revealTimer = setTimeout(() => { reveal.value = null; revealTimer = null; }, REVEAL_HOLD_MS);
         } else {
+          if (event.eventType === 'FORFEIT') {
+            const { loserSeat, reason } = event.eventData as ForfeitEventData;
+            lastForfeit.value = { seat: loserSeat, reason: reason ?? null };
+          }
           presence.applyPresenceEvent(event.eventType, event.eventData);
         }
         break;
@@ -97,9 +112,14 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
     }
   }
 
-  function playAgain() {
+  async function playAgain() {
     presence.reset();
-    return session.playAgain();
+    rematch.value = 'pending';
+    try {
+      await session.playAgain();
+    } catch {
+      rematch.value = 'failed';
+    }
   }
 
   function toggleCard(card: Card) {
@@ -110,7 +130,7 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
   function clearSelection() { selectedCards.value = []; }
 
   return {
-    state, game, lobby, roster, botError, gameId, mySeat, reveal, selectedCards,
+    state, game, lobby, roster, botError, gameId, mySeat, reveal, selectedCards, rematch, lastForfeit,
     disconnections: presence.disconnections,
     liveDisconnections: presence.liveDisconnections,
     forfeitNotice: presence.forfeitNotice,

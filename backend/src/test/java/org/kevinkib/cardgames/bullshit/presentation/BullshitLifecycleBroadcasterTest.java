@@ -5,6 +5,8 @@ import org.kevinkib.cardgames.bullshit.domain.Bullshit;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.presentation.GameMessagingService;
+import org.kevinkib.cardgames.presentation.api.Response;
+import org.kevinkib.cardgames.presentation.dto.event.ForfeitEventData;
 import org.kevinkib.cardgames.sessionmanagement.presence.port.ForfeitReason;
 
 import java.util.ArrayList;
@@ -23,6 +25,7 @@ class BullshitLifecycleBroadcasterTest {
 
     static final class RecordingMessaging extends GameMessagingService {
         final List<PlayerId> seats = new ArrayList<>();
+        final List<Object> payloads = new ArrayList<>();
 
         RecordingMessaging() {
             super(null, null);
@@ -31,6 +34,7 @@ class BullshitLifecycleBroadcasterTest {
         @Override
         public void sendToSeat(GameId gameId, PlayerId seat, Object payload) {
             seats.add(seat);
+            payloads.add(payload);
         }
     }
 
@@ -41,6 +45,22 @@ class BullshitLifecycleBroadcasterTest {
                 new BullshitLifecycleBroadcaster(new BullshitStateBroadcaster(new RecordingMessaging()));
 
         assertThat(broadcaster.supports(game), is(true));
+    }
+
+    @Test
+    void givenForfeit_whenForfeited_thenTheEventSaysWhoLeftAndWhy() {
+        Bullshit game = aBullshit()
+                .withPlayers(playerWithRanks(0, ACE), playerWithRanks(1, KING), playerWithRanks(2, QUEEN))
+                .build();
+        game.forfeit(new PlayerId(1));
+        RecordingMessaging messaging = new RecordingMessaging();
+        BullshitLifecycleBroadcaster broadcaster =
+                new BullshitLifecycleBroadcaster(new BullshitStateBroadcaster(messaging));
+
+        broadcaster.forfeited(game, new PlayerId(1), ForfeitReason.DISCONNECTED);
+
+        Response first = (Response) messaging.payloads.get(0);
+        assertThat(first.getEventData(), is(new ForfeitEventData(1, "DISCONNECTED")));
     }
 
     @Test

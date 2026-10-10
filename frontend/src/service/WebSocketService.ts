@@ -1,6 +1,7 @@
 import SockJS from 'sockjs-client/dist/sockjs';
 import { Client } from '@stomp/stompjs';
 import { useBatailleCorseStore } from '../state/BatailleCorse.store';
+import { setConnectionOnline } from '../composables/useConnectionStatus';
 
 class WebSocketService {
 
@@ -28,6 +29,7 @@ class WebSocketService {
       debug: (str) => this.log("[STOMP DEBUG]", str),
       onConnect: (frame) => {
         this.log('[STOMP] Connected:', frame);
+        setConnectionOnline(true);
 
         // Generic channel: receives CREATE events so the client learns the game ID.
         stompClient.subscribe('/topic/game', message => {
@@ -50,6 +52,10 @@ class WebSocketService {
         if (this.currentPresence) {
           this.publish('/app/presence', this.currentPresence);
         }
+      },
+      onWebSocketClose: () => {
+        // Fires on every close, including a failed reconnect attempt: we are offline until onConnect.
+        setConnectionOnline(false);
       },
       onDisconnect: () => {
         this.log('[STOMP] Disconnected — will reconnect in 3s');

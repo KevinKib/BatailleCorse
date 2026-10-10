@@ -67,7 +67,7 @@ public class BatailleCorseLifecycleBroadcaster implements GameLifecycleBroadcast
         BatailleCorse bc = (BatailleCorse) game;
         messaging.sendToGame(game.getId().uuid().toString(), new SuccessResponse(
                 LifecycleEventType.FORFEIT.toString(),
-                new ForfeitEventData(player.id()),
+                new ForfeitEventData(player.id(), reason.name()),
                 "Player " + player + " forfeited.",
                 BatailleCorseDto.from(bc, forfeitLog.reasonsBySeat(game.getId()))));
     }
