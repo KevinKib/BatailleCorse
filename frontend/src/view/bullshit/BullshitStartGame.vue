@@ -56,7 +56,7 @@ async function onJoin() {
 .claim-mode { display: flex; flex-direction: column; gap: 0.4rem; border: 1px solid var(--p-primary-color); border-radius: 0.5rem; padding: 0.75rem 1rem; }
 .claim-mode legend { padding: 0 0.4rem; }
 .claim-mode label { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; }
-.btn { padding: 0.6rem 1.4rem; border-radius: 0.5rem; border: 1px solid var(--p-primary-color); font-size: 1rem; cursor: pointer; }
+.btn { padding: 0.6rem 1.4rem; border-radius: var(--button-radius); border: 1px solid var(--p-primary-color); font-size: 1rem; cursor: pointer; }
 .btn.primary { background: var(--p-primary-color); color: var(--p-primary-contrast-color, #fff); }
 .btn:disabled { opacity: 0.4; cursor: not-allowed; }
 </style>

@@ -548,7 +548,7 @@ onBeforeUnmount(() => {
 
 @keyframes pile-flash {
   0%   { box-shadow: inset 0 3px 22px rgba(0, 0, 0, 0.65), inset 0 0 0 1px rgba(0, 0, 0, 0.35); }
-  35%  { box-shadow: inset 0 3px 22px rgba(0, 0, 0, 0.65), inset 0 0 0 1px rgba(0, 0, 0, 0.35), 0 0 32px 10px rgba(var(--accent-active-rgb), 0.45); }
+  35%  { box-shadow: inset 0 3px 22px rgba(0, 0, 0, 0.65), var(--turn-ring); }
   100% { box-shadow: inset 0 3px 22px rgba(0, 0, 0, 0.65), inset 0 0 0 1px rgba(0, 0, 0, 0.35); }
 }
 
@@ -606,7 +606,7 @@ onBeforeUnmount(() => {
   font-size: 1.6rem;
   font-weight: 800;
   color: rgb(var(--accent-positive-rgb));
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85);
+  font-variant-numeric: tabular-nums;
   animation: card-delta-float 1.4s ease-out forwards;
 }
 
@@ -616,15 +616,23 @@ onBeforeUnmount(() => {
 
 /* --- Turn indicator --- */
 .player_tag--active {
+  position: relative;
+  padding-left: 20px;
   color: #ffffff;
-  border-color: rgba(var(--accent-active-rgb), 0.9);
-  box-shadow: 0 0 16px 3px rgba(var(--accent-active-rgb), 0.55);
-  animation: turn-glow-pulse 1.8s ease-in-out infinite;
+  border-color: var(--turn-ring-color);
+  box-shadow: var(--turn-ring);
 }
 
-@keyframes turn-glow-pulse {
-  0%, 100% { box-shadow: 0 0 12px 2px rgba(var(--accent-active-rgb), 0.40); }
-  50%      { box-shadow: 0 0 22px 6px rgba(var(--accent-active-rgb), 0.70); }
+.player_tag--active::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  width: var(--turn-dot-size);
+  height: var(--turn-dot-size);
+  margin-top: calc(var(--turn-dot-size) / -2);
+  border-radius: 50%;
+  background: var(--gold);
 }
 
 /* Wrapper lets the one-time hint float above the name tag without shifting layout. */
@@ -644,31 +652,23 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 8px;
   white-space: nowrap;
-  font-family: "Gabarito", sans-serif;
+  font-family: var(--font-title);
   font-size: 0.82rem;
   font-weight: 800;
   letter-spacing: 0.14em;
   color: rgb(var(--accent-active-rgb));
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.7);
 }
 
 .turn-hint__dot {
-  width: 9px;
-  height: 9px;
+  width: var(--turn-dot-size);
+  height: var(--turn-dot-size);
   border-radius: 50%;
-  background: rgb(var(--accent-active-rgb));
-  box-shadow: 0 0 8px 2px rgba(var(--accent-active-rgb), 0.8);
-  animation: turn-glow-pulse 1.8s ease-in-out infinite;
+  background: var(--gold);
 }
 
-/* Same 1.8s ease-in-out as the name-tag glow so the two pulses stay in sync. */
+/* Your turn: the Send button carries the same crisp 1px accent ring as the tag. */
 .action_button--my-turn {
-  animation: send-pulse 1.8s ease-in-out infinite;
-}
-
-@keyframes send-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(var(--accent-active-rgb), 0); }
-  50%      { box-shadow: 0 0 16px 3px rgba(var(--accent-active-rgb), 0.65); }
+  box-shadow: var(--turn-ring);
 }
 
 .turn-fade-enter-active,
@@ -682,9 +682,6 @@ onBeforeUnmount(() => {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .player_tag--active,
-  .turn-hint__dot,
-  .action_button--my-turn,
   .card.card-punch,
   .card.card-shake { animation: none; }
 }

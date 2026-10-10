@@ -82,7 +82,7 @@ const router = useRouter();
 }
 
 .game-title {
-  font-family: "Gabarito", sans-serif;
+  font-family: var(--font-title);
   font-size: 2.6rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -93,7 +93,6 @@ const router = useRouter();
   background-clip: text;
   margin: 0;
   line-height: 1.1;
-  filter: drop-shadow(0 2px 10px rgba(200, 134, 10, 0.5));
 }
 
 .panel-divider {

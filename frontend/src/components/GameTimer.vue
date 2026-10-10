@@ -24,6 +24,7 @@ defineProps<{ time: string }>();
   gap: 6px;
   font-size: 0.8rem;
   font-weight: 700;
+  font-family: var(--font-title);
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.06em;
   color: rgba(255, 255, 255, 0.8);

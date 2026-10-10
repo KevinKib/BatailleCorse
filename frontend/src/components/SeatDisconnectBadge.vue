@@ -26,7 +26,8 @@ defineProps<{ secondsRemaining: number | null }>();
   border: 1px solid rgba(var(--accent-negative-rgb), 0.75);
   border-radius: 999px;
   padding: 3px 9px;
-  box-shadow: 0 0 12px 1px rgba(var(--accent-negative-rgb), 0.45);
+  box-shadow: inset 0 0 0 1px rgba(var(--accent-negative-rgb), 0.75);
+  font-variant-numeric: tabular-nums;
 }
 .dot {
   width: 7px;

@@ -87,6 +87,21 @@ function onLeave(el: Element, done: () => void) {
 @import 'primeicons/primeicons.css';
 
 :root {
+  /* Typefaces (visual direction "C bis"), the single place they are named.
+     Loaded from Google Fonts in index.html. Title: headings, numerals and
+     labels (500-800); UI: body copy and controls (400-700). */
+  --font-title: "Schibsted Grotesk", system-ui, sans-serif;
+  --font-ui: "Instrument Sans", system-ui, sans-serif;
+
+  /* Active-turn cue: a crisp 1px ring (no blur, no pulse) plus a fixed 6px dot
+     in front of the label. Shared by every seat/player tag. */
+  --turn-ring-color: rgba(var(--accent-active-rgb), 0.95);
+  --turn-ring: inset 0 0 0 1px var(--turn-ring-color);
+  --turn-dot-size: 6px;
+
+  /* Buttons: flat, small radius. */
+  --button-radius: 0.4rem;
+
   /* Semantic accent roles (RGB channel triplets so alpha stays controllable).
      active = attention / "your move" (brand gold); positive = go / gain;
      negative = loss. Single source for the game-screen cue colours. */
@@ -124,21 +139,6 @@ function onLeave(el: Element, done: () => void) {
   --card-shadow: 0 2px 3px rgba(0, 0, 0, 0.55), 0 8px 22px rgba(0, 0, 0, 0.5);
 }
 
-.gabarito-font {
-  font-family: "Gabarito", sans-serif;
-  font-optical-sizing: auto;
-  font-weight: 500;
-  font-style: normal;
-}
-
-.bricolage-grotesque-font {
-  font-family: "Bricolage Grotesque", sans-serif;
-  font-optical-sizing: auto;
-  font-weight: 200;
-  font-style: normal;
-  font-variation-settings:
-    "wdth" 100;
-}
 
 /* Prevent double-tap zoom on iOS Safari on every element. !important is
    required because PrimeVue injects its component styles dynamically after
@@ -150,12 +150,16 @@ function onLeave(el: Element, done: () => void) {
 html, body, #app {
   width: 100%;
   height: 100%;
-  font-family: "Bricolage Grotesque", sans-serif;
-  font-optical-sizing: auto;
+  font-family: var(--font-ui);
   font-weight: 500;
   font-style: normal;
-  font-variation-settings: "wdth" 100;
 }
+
+/* PrimeVue controls and form fields inherit the interface font. */
+button, input, select, textarea, .p-component { font-family: var(--font-ui); }
+
+/* Titles, numerals and every heading use the title face. */
+h1, h2, h3, h4, h5, h6 { font-family: var(--font-title); }
 
 h1              { font-size: 2em; margin: .67em 0 }
 h2              { font-size: 1.5em; margin: .75em 0 }
@@ -230,26 +234,20 @@ h5, h6          { font-weight: bolder }
 .felt-watermark--bl { bottom: -10vmin; left: -4vmin; }
 .felt-watermark--br { bottom: -10vmin; right: -4vmin; }
 
-/* Tactile depth for PrimeVue buttons (solid severities only — text buttons like
-   "Back" stay flat). A subtle lift on hover ties them to the premium feel. */
-.p-button:not(.p-button-text):not(.p-button-link) {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.18);
-  transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+/* PrimeVue buttons (visual direction "C bis"): flat, no drop shadow, small
+   radius for solid and text buttons alike. Hover is a brightness change only. */
+.p-button {
+  border-radius: var(--button-radius);
+  box-shadow: none;
+  transition: filter 0.12s ease;
 }
 .p-button:not(.p-button-text):not(.p-button-link):not(:disabled):hover {
-  transform: translateY(-1px);
-  filter: brightness(1.06);
-  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.22);
-}
-.p-button:not(.p-button-text):not(.p-button-link):not(:disabled):active {
-  transform: translateY(0);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  filter: brightness(1.08);
 }
 
 @media (prefers-reduced-motion: reduce) {
   .app-background::after { animation: none; }
   .p-button { transition: none; }
-  .p-button:hover { transform: none; }
 }
 
 .titlescreen {

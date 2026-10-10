@@ -68,7 +68,7 @@ const emit = defineEmits<Emits>();
 }
 
 .end-title {
-  font-family: "Gabarito", sans-serif;
+  font-family: var(--font-title);
   font-size: 2.4rem;
   font-weight: 800;
   letter-spacing: 0.06em;
@@ -93,15 +93,14 @@ const emit = defineEmits<Emits>();
   margin-top: 8px;
 }
 
-/* Victory: gold accent + a brief trophy bounce / glow pulse. */
+/* Victory: gold accent (crisp 1px ring, no glow) + a brief trophy bounce. */
 .end-card--victory {
   border-color: rgba(var(--accent-active-rgb), 0.55);
-  box-shadow: var(--panel-shadow), 0 0 48px 6px rgba(var(--accent-active-rgb), 0.25);
+  box-shadow: var(--panel-shadow), var(--turn-ring);
 }
 
 .end-card--victory .end-title {
   color: var(--gold);
-  text-shadow: 0 2px 16px rgba(var(--accent-active-rgb), 0.45);
 }
 
 .end-trophy {
