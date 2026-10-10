@@ -2,8 +2,10 @@
 import { ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useBullshitStore } from '../../state/Bullshit.store';
-import { CLAIM_MODE_OPTIONS, DEFAULT_CLAIM_MODE, type ClaimMode } from '../../model/bullshit/claimMode';
+import { CLAIM_MODES, DEFAULT_CLAIM_MODE, type ClaimMode } from '../../model/bullshit/claimMode';
+import { useI18n } from '../../composables/useI18n';
 
+const ui = useI18n().bullshitUi.start;
 const route = useRoute();
 const router = useRouter();
 const store = useBullshitStore();
@@ -29,22 +31,22 @@ async function onJoin() {
 
 <template>
   <div class="start">
-    <h1>Bullshit</h1>
-    <label>Your name <input v-model="name" type="text" /></label>
+    <h1>{{ ui.title }}</h1>
+    <label>{{ ui.yourName }} <input v-model="name" type="text" /></label>
 
     <template v-if="!isJoin">
       <fieldset class="claim-mode">
-        <legend>Claim mode</legend>
-        <label v-for="option in CLAIM_MODE_OPTIONS" :key="option.key">
-          <input v-model="claimMode" type="radio" name="claimMode" :value="option.key" />
-          {{ option.label }}
+        <legend>{{ ui.claimModeLegend }}</legend>
+        <label v-for="mode in CLAIM_MODES" :key="mode">
+          <input v-model="claimMode" type="radio" name="claimMode" :value="mode" />
+          {{ ui.claimModes[mode] }}
         </label>
       </fieldset>
-      <button type="button" class="btn primary" @click="onCreate">Create game</button>
+      <button type="button" class="btn primary" @click="onCreate">{{ ui.createGame }}</button>
     </template>
     <template v-else>
-      <label>Game ID <input v-model="joinId" type="text" /></label>
-      <button type="button" class="btn primary" :disabled="!joinId" @click="onJoin">Join game</button>
+      <label>{{ ui.gameId }} <input v-model="joinId" type="text" /></label>
+      <button type="button" class="btn primary" :disabled="!joinId" @click="onJoin">{{ ui.joinGame }}</button>
     </template>
   </div>
 </template>

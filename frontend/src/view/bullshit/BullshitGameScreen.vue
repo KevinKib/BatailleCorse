@@ -12,10 +12,14 @@ import ForfeitBanner from '../../components/ForfeitBanner.vue';
 import RulesPanel from '../../components/RulesPanel.vue';
 import OpponentSeat from '../../components/bullshit/OpponentSeat.vue';
 import { useI18n } from '../../composables/useI18n';
+import { format, plural } from '../../locales/format';
 import type Card from '../../model/Card';
 
 const props = defineProps<{ gameId: string }>();
 const messages = useI18n();
+const ui = messages.bullshitUi;
+// Seats are 0-based internally; players see them numbered from 1.
+const playerLabel = (seat: number) => format(ui.playerLabel, { n: seat + 1 });
 const store = useBullshitStore();
 useBullshitBootstrap(props.gameId);
 
@@ -83,18 +87,18 @@ function selectAll(event: FocusEvent) {
 <template>
   <div class="bullshit-screen">
     <div v-if="store.phase === 'lobby'" data-test="lobby" class="panel lobby">
-      <h2>Lobby</h2>
+      <h2>{{ ui.lobby.title }}</h2>
       <p class="count" data-test="player-count">
-        {{ joinedPlayers.length }} / {{ store.lobby?.maxPlayers }} players
+        {{ format(ui.lobby.playerCount, { joined: joinedPlayers.length, max: store.lobby?.maxPlayers ?? '' }) }}
       </p>
       <ul class="players">
         <li v-for="p in joinedPlayers" :key="p.seat">
-          Player {{ p.seat + 1 }}: {{ p.name }}<span v-if="p.seat === store.mySeat"> (you)</span>
+          {{ format(ui.lobby.playerRow, { label: playerLabel(p.seat), name: p.name }) }}<span v-if="p.seat === store.mySeat">{{ ui.lobby.youSuffix }}</span>
         </li>
       </ul>
 
       <label class="share">
-        Invite players with this link:
+        {{ ui.lobby.inviteLabel }}
         <input :value="joinLink" readonly @focus="selectAll" />
       </label>
 
@@ -105,21 +109,21 @@ function selectAll(event: FocusEvent) {
           class="btn primary"
           :disabled="!store.canStart"
           @click="store.startGame()">
-          Start game
+          {{ ui.lobby.startGame }}
         </button>
         <p v-if="!store.canStart" class="hint" data-test="start-hint">
-          Waiting for {{ playersNeeded }} more player{{ playersNeeded === 1 ? '' : 's' }} to start…
+          {{ plural(ui.lobby.waitingForPlayers, playersNeeded) }}
         </p>
       </template>
-      <p v-else class="hint">Waiting for the host to start…</p>
+      <p v-else class="hint">{{ ui.lobby.waitingForHost }}</p>
     </div>
 
     <EndGameOverlay
       v-else-if="store.phase === 'finished'"
       data-test="end"
       :did-i-win="store.iWon"
-      :subtitle="store.iWon ? 'You emptied your hand first.' : 'Another player emptied their hand first.'"
-      :rematch-button="{ label: 'Play again', disabled: false }"
+      :subtitle="store.iWon ? ui.end.youWon : ui.end.youLost"
+      :rematch-button="{ label: ui.end.playAgain, disabled: false }"
       @play-again="store.playAgain()"
     />
 
@@ -127,14 +131,14 @@ function selectAll(event: FocusEvent) {
       <RulesPanel :rules="messages.bullshit" />
 
       <RouterLink :to="{ path: '/' }" class="leave-button" data-test="leave">
-        <Button severity="secondary" label="Back" icon="pi pi-undo" variant="text" rounded />
+        <Button severity="secondary" :label="ui.back" icon="pi pi-undo" variant="text" rounded />
       </RouterLink>
 
       <Transition name="forfeit-fade">
         <ForfeitBanner
           v-if="store.forfeitNotice"
           class="forfeit-notice"
-          :label="`Player ${store.forfeitNotice.seat + 1} forfeited`" />
+          :label="format(ui.table.forfeited, { player: playerLabel(store.forfeitNotice.seat) })" />
       </Transition>
       <div class="table-frame">
       <div class="opponents-ring">
@@ -144,7 +148,7 @@ function selectAll(event: FocusEvent) {
           class="seat-slot"
           :style="{ left: seatPositions[i].left + '%', top: seatPositions[i].top + '%' }">
           <OpponentSeat
-            :label="`Player ${Number(opp.id) + 1}`"
+            :label="playerLabel(Number(opp.id))"
             :hand-count="opp.handCount"
             :active="opp.isCurrentPlayer"
             :disconnected="seatDisconnected(Number(opp.id))"
@@ -154,7 +158,7 @@ function selectAll(event: FocusEvent) {
 
       <div class="table-center">
         <div class="claim-badge" data-test="claim-badge">
-          Claim: <strong>{{ store.game?.currentTarget.label }}</strong>
+          {{ ui.table.claim }} <strong>{{ store.game?.currentTarget.label }}</strong>
         </div>
 
         <div class="pile-well">
@@ -176,25 +180,28 @@ function selectAll(event: FocusEvent) {
               </div>
               <div class="verdict" data-test="verdict"
                    :class="store.reveal.truthful ? 'verdict--truthful' : 'verdict--bluff'">
-                {{ store.reveal.truthful ? 'TRUTHFUL' : 'BLUFF' }}
+                {{ store.reveal.truthful ? ui.table.truthful : ui.table.bluff }}
               </div>
               <p class="reveal-caption">
-                Player {{ store.reveal.callerSeat + 1 }} called bullshit on Player {{ store.reveal.claimantSeat + 1 }} —
-                Player {{ store.reveal.pickerSeat + 1 }} takes the pile
+                {{ format(ui.table.revealCaption, {
+                  caller: playerLabel(store.reveal.callerSeat),
+                  claimant: playerLabel(store.reveal.claimantSeat),
+                  picker: playerLabel(store.reveal.pickerSeat),
+                }) }}
               </p>
             </div>
           </Transition>
         </div>
 
         <p v-if="store.game?.table.state === 'CLAIM'" class="last-play" data-test="last-play">
-          Player {{ Number(store.game.table.claimantId) + 1 }} played {{ store.game.table.count }} card(s) face-down
+          {{ plural(ui.table.playedFaceDown, store.game.table.count, { player: playerLabel(Number(store.game.table.claimantId)) }) }}
         </p>
       </div>
 
       </div>
 
       <div class="my-zone">
-        <span :class="['my-tag', { 'my-tag--active': store.isMyTurn }]">You</span>
+        <span :class="['my-tag', { 'my-tag--active': store.isMyTurn }]">{{ ui.you }}</span>
         <div class="hand">
           <button
             v-for="(card, i) in store.game?.myHand ?? []"
@@ -210,7 +217,7 @@ function selectAll(event: FocusEvent) {
         <div class="actions">
           <Button
             data-test="discard"
-            :label="`Discard as ${store.game?.currentTarget.label ?? ''}`"
+            :label="format(ui.table.discardAs, { target: store.game?.currentTarget.label ?? '' })"
             icon="pi pi-arrow-up"
             severity="success"
             rounded
@@ -218,7 +225,7 @@ function selectAll(event: FocusEvent) {
             @click="store.discard()" />
           <Button
             data-test="call"
-            label="Call Bullshit"
+            :label="ui.table.callBullshit"
             icon="pi pi-flag"
             severity="danger"
             rounded

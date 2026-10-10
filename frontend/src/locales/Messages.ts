@@ -57,9 +57,58 @@ export interface RulesMessages {
   sections: RulesSection[]; // ordered rule sections
 }
 
+// Singular / other forms of a message; both contain `{n}` for the count.
+export interface PluralForms {
+  one: string;
+  other: string;
+}
+
+// Screen text of the Bullshit game. Placeholders use `{name}` and are filled by
+// `format()` / `plural()` in `./format`.
+export interface BullshitUiMessages {
+  playerLabel: string;                 // '{n}' = 1-based seat number
+  you: string;
+  back: string;
+  start: {
+    title: string;
+    yourName: string;
+    claimModeLegend: string;
+    claimModes: { rank: string; suit: string };
+    createGame: string;
+    gameId: string;
+    joinGame: string;
+  };
+  lobby: {
+    title: string;
+    playerCount: string;               // '{joined}', '{max}'
+    playerRow: string;                 // '{label}', '{name}'
+    youSuffix: string;
+    inviteLabel: string;
+    startGame: string;
+    waitingForPlayers: PluralForms;    // '{n}' = players still needed
+    waitingForHost: string;
+  };
+  table: {
+    claim: string;
+    discardAs: string;                 // '{target}'
+    callBullshit: string;
+    truthful: string;
+    bluff: string;
+    revealCaption: string;             // '{caller}', '{claimant}', '{picker}'
+    playedFaceDown: PluralForms;       // '{player}', '{n}' = number of cards
+    forfeited: string;                 // '{player}'
+  };
+  end: {
+    youWon: string;
+    youLost: string;
+    playAgain: string;
+  };
+}
+
 // Whole-app message tree. Each game owns a rules namespace; future namespaces
 // (game, lobby, ...) are added here additively.
 export interface Messages {
   rules: RulesMessages;     // BatailleCorse
   bullshit: RulesMessages;  // Bullshit
+  bullshitUi: BullshitUiMessages; // Bullshit screens
 }

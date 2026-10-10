@@ -66,4 +66,29 @@ describe('English messages', () => {
       expect(outcome.result).toBeTruthy();
     }
   });
+
+  it('givenBullshitUiMessages_thenEveryLeafStringIsNonEmpty', () => {
+    const empty: string[] = [];
+    const visit = (node: unknown, path: string) => {
+      if (typeof node === 'string') {
+        if (!node.trim()) empty.push(path);
+      } else if (node && typeof node === 'object') {
+        for (const [key, value] of Object.entries(node)) visit(value, `${path}.${key}`);
+      }
+    };
+    visit(messagesEn.bullshitUi, 'bullshitUi');
+    expect(empty).toEqual([]);
+  });
+
+  it('givenBullshitUiMessages_thenPluralFormsExistForPlayersAndCards', () => {
+    expect(messagesEn.bullshitUi.lobby.waitingForPlayers.one).toContain('{n}');
+    expect(messagesEn.bullshitUi.lobby.waitingForPlayers.other).toContain('{n}');
+    expect(messagesEn.bullshitUi.table.playedFaceDown.one).toContain('{n}');
+    expect(messagesEn.bullshitUi.table.playedFaceDown.other).toContain('{n}');
+  });
+
+  it('givenBullshitUiMessages_thenClaimModesCoverRankAndSuit', () => {
+    expect(messagesEn.bullshitUi.start.claimModes.rank).toBeTruthy();
+    expect(messagesEn.bullshitUi.start.claimModes.suit).toBeTruthy();
+  });
 });
