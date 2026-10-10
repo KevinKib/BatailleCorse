@@ -4,6 +4,7 @@
       <div v-if="didIWin" class="end-trophy" data-cy="victory-flourish">🏆</div>
       <h1 class="end-title">{{ didIWin ? 'VICTORY' : 'DEFEAT' }}</h1>
       <p class="end-sub">{{ subtitle }}</p>
+      <p v-if="error" class="end-error" data-test="rematch-error" role="alert">{{ error }}</p>
       <div class="end-actions">
         <Button
           class="end-replay-button"
@@ -31,6 +32,8 @@ interface Props {
   didIWin: boolean;
   subtitle: string;
   rematchButton: RematchButton;
+  /** Why the rematch could not start (shown above the buttons, announced). */
+  error?: string;
 }
 
 interface Emits {
@@ -78,6 +81,12 @@ const emit = defineEmits<Emits>();
 .end-sub {
   font-size: 0.95rem;
   color: rgba(255, 255, 255, 0.75);
+  margin: 0;
+}
+
+.end-error {
+  font-size: 0.85rem;
+  color: #ffb4b4;
   margin: 0;
 }
 

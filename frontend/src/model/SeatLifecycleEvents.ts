@@ -11,6 +11,8 @@ export interface OpponentReconnectedEventData {
 
 export interface ForfeitEventData {
   loserSeat: number;
+  /** Why the seat left; absent from older servers. */
+  reason?: 'RESIGNED' | 'DISCONNECTED';
 }
 
 /** The three game-agnostic per-seat lifecycle event types (single source of truth). */

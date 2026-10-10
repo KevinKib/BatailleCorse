@@ -177,6 +177,69 @@ describe('Bullshit store', () => {
     fetchSpy.mockRestore();
   });
 
+  describe('rematch state', () => {
+    afterEach(() => vi.restoreAllMocks());
+
+    it('is pending while the play-again request is in flight, then idle once the lobby arrives', async () => {
+      const store = useBullshitStore();
+      store.restore('g1', 0, 'tok');
+      let release!: (r: Response) => void;
+      const fetchSpy = vi.spyOn(globalThis, 'fetch')
+        .mockImplementationOnce(() => new Promise<Response>(res => { release = res; }))
+        .mockImplementation(() => Promise.resolve(new Response(JSON.stringify(lobbyView()), { status: 200 })));
+      const pending = store.playAgain();
+      expect(store.rematch).toBe('pending');
+
+      release(new Response(JSON.stringify({ playerId: 0, token: 't' }), { status: 200 }));
+      await pending;
+      expect(fetchSpy).toHaveBeenCalledTimes(2);
+      expect(store.rematch).toBe('idle');
+    });
+
+    it('is failed, without throwing, when the server refuses the rematch', async () => {
+      const store = useBullshitStore();
+      store.restore('g1', 0, 'tok');
+      vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('', { status: 409 }));
+      await expect(store.playAgain()).resolves.toBeUndefined();
+      expect(store.rematch).toBe('failed');
+    });
+
+    it('can be retried after a failure', async () => {
+      const store = useBullshitStore();
+      store.restore('g1', 0, 'tok');
+      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(new Response('', { status: 409 }));
+      await store.playAgain();
+      fetchSpy.mockImplementation(() => new Promise(() => {}));
+      void store.playAgain();
+      expect(store.rematch).toBe('pending');
+    });
+  });
+
+  describe('how the game ended', () => {
+    it('remembers the reason of the last forfeit after the notice has gone', () => {
+      vi.useFakeTimers();
+      const store = useBullshitStore();
+      store.applyEvent({ type: 'seat-change', seat: 0 });
+      store.applyEvent({ type: 'state-update', state: state() });
+      store.applyEvent({ type: 'event', eventType: 'FORFEIT',
+        eventData: { loserSeat: 1, reason: 'DISCONNECTED' }, message: '' });
+      vi.advanceTimersByTime(60_000);
+      expect(store.forfeitNotice).toBeNull();
+      expect(store.lastForfeit).toEqual({ seat: 1, reason: 'DISCONNECTED' });
+      vi.useRealTimers();
+    });
+
+    it('forgets it when the room goes back to a lobby', () => {
+      const store = useBullshitStore();
+      store.applyEvent({ type: 'seat-change', seat: 0 });
+      store.applyEvent({ type: 'state-update', state: state() });
+      store.applyEvent({ type: 'event', eventType: 'FORFEIT',
+        eventData: { loserSeat: 1, reason: 'RESIGNED' }, message: '' });
+      store.applyEvent({ type: 'state-update', state: lobbyView() });
+      expect(store.lastForfeit).toBeNull();
+    });
+  });
+
   describe('opponent presence', () => {
     it('records a disconnect, exposes it via liveDisconnections, and clears on reconnect', () => {
       const store = useBullshitStore();

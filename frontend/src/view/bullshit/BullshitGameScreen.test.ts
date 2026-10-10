@@ -9,6 +9,7 @@ import OpponentSeat from '../../components/bullshit/OpponentSeat.vue';
 import { useBullshitStore } from '../../state/Bullshit.store';
 import type { BullshitState } from '../../model/bullshit/BullshitState';
 import type { LobbyView } from '../../model/bullshit/LobbyView';
+import { setConnectionOnline } from '../../composables/useConnectionStatus';
 
 function playingState(overrides: Partial<BullshitState> = {}): BullshitState {
   return {
@@ -361,6 +362,167 @@ describe('BullshitGameScreen', () => {
       const wrapper = mount(BullshitGameScreen, { props: { gameId: 'g1' }, global: { plugins: [router, PrimeVue] } });
       expect(wrapper.get('[data-test="seat-label"]').text()).toBe('<img src=x onerror=alert(1)>');
       expect(wrapper.find('img[src="x"]').exists()).toBe(false);
+    });
+  });
+
+  describe('turn cue', () => {
+    function mountPlaying(isMine: boolean) {
+      const store = useBullshitStore();
+      store.applyEvent({ type: 'seat-change', seat: 0 });
+      store.applyEvent({ type: 'state-update', state: playingState({
+        players: [
+          { id: '0', handCount: 1, isCurrentPlayer: isMine },
+          { id: '1', handCount: 3, isCurrentPlayer: !isMine },
+        ],
+        availableActions: isMine ? ['DISCARD'] : [],
+      }) });
+      return mount(BullshitGameScreen, { props: { gameId: 'g1' }, global: { plugins: [router, PrimeVue] } });
+    }
+
+    it('says it is my turn, in words, only on my turn', () => {
+      expect(mountPlaying(true).get('[data-test="turn-hint"]').text()).toBe('Your turn');
+      expect(mountPlaying(false).find('[data-test="turn-hint"]').exists()).toBe(false);
+    });
+
+    it('pulses Discard only when it is my turn and a card is selected', async () => {
+      const wrapper = mountPlaying(true);
+      const discard = wrapper.get('[data-test="discard"]');
+      expect(discard.classes()).not.toContain('discard--pulse');
+      await wrapper.get('[data-test="hand-card-0"]').trigger('click');
+      expect(discard.classes()).toContain('discard--pulse');
+    });
+
+    it('does not pulse Discard when it is not my turn', async () => {
+      const wrapper = mountPlaying(false);
+      await wrapper.get('[data-test="hand-card-0"]').trigger('click');
+      expect(wrapper.get('[data-test="discard"]').classes()).not.toContain('discard--pulse');
+    });
+  });
+
+  describe('verdict announcement', () => {
+    function mountPlaying() {
+      const store = useBullshitStore();
+      store.applyEvent({ type: 'seat-change', seat: 0 });
+      store.applyEvent({ type: 'state-update', state: playingState() });
+      return { store, wrapper: mount(BullshitGameScreen, { props: { gameId: 'g1' }, global: { plugins: [router, PrimeVue] } }) };
+    }
+
+    it('keeps a polite live region on the table before any reveal, so the first one is announced', () => {
+      const live = mountPlaying().wrapper.get('[data-test="verdict-live"]');
+      expect(live.attributes('aria-live')).toBe('polite');
+      expect(live.text()).toBe('');
+    });
+
+    it('announces the verdict and who takes the pile, and hides the visual copy from screen readers', async () => {
+      const { store, wrapper } = mountPlaying();
+      store.applyEvent({ type: 'event', eventType: 'CALL_BULLSHIT', message: '',
+        eventData: { callerSeat: 1, claimantSeat: 0, truthful: false, pickerSeat: 0, revealedCards: [{ rank: 'KING', suit: 'SPADE', name: 'SPADE_KING' }] } });
+      await wrapper.vm.$nextTick();
+      expect(wrapper.get('[data-test="verdict-live"]').text())
+        .toBe('BLUFF. Player 2 called bullshit on Player 1 — Player 1 takes the pile');
+      expect(wrapper.get('[data-test="reveal"]').attributes('aria-hidden')).toBe('true');
+    });
+  });
+
+  describe('my own connection', () => {
+    afterEach(() => setConnectionOnline(true));
+
+    function mountPlaying() {
+      const store = useBullshitStore();
+      store.applyEvent({ type: 'seat-change', seat: 0 });
+      store.applyEvent({ type: 'state-update', state: playingState({ availableActions: ['DISCARD', 'CALL_BULLSHIT'] }) });
+      return mount(BullshitGameScreen, { props: { gameId: 'g1' }, global: { plugins: [router, PrimeVue] } });
+    }
+
+    it('shows nothing while connected', () => {
+      expect(mountPlaying().find('[data-test="offline"]').exists()).toBe(false);
+    });
+
+    it('announces the lost connection and disables the actions until it is back', async () => {
+      const wrapper = mountPlaying();
+      await wrapper.get('[data-test="hand-card-0"]').trigger('click');
+      expect((wrapper.get('[data-test="discard"]').element as HTMLButtonElement).disabled).toBe(false);
+
+      setConnectionOnline(false);
+      await wrapper.vm.$nextTick();
+      const banner = wrapper.get('[data-test="offline"]');
+      expect(banner.attributes('role')).toBe('alert');
+      expect(banner.text()).toBe('Connection lost. Reconnecting…');
+      expect((wrapper.get('[data-test="discard"]').element as HTMLButtonElement).disabled).toBe(true);
+      expect((wrapper.get('[data-test="call"]').element as HTMLButtonElement).disabled).toBe(true);
+
+      setConnectionOnline(true);
+      await wrapper.vm.$nextTick();
+      expect(wrapper.find('[data-test="offline"]').exists()).toBe(false);
+      expect((wrapper.get('[data-test="discard"]').element as HTMLButtonElement).disabled).toBe(false);
+    });
+
+    it('re-fetches the state once the connection is back, since events may have been missed', async () => {
+      const wrapper = mountPlaying();
+      const hydrate = vi.spyOn(useBullshitStore(), 'hydrate').mockResolvedValue(undefined);
+      setConnectionOnline(false);
+      await wrapper.vm.$nextTick();
+      expect(hydrate).not.toHaveBeenCalled();
+      setConnectionOnline(true);
+      await wrapper.vm.$nextTick();
+      expect(hydrate).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('end of game', () => {
+    function mountFinished(opts: { winner: string; hand?: number; forfeit?: { loserSeat: number; reason?: string } }) {
+      const store = useBullshitStore();
+      store.applyEvent({ type: 'seat-change', seat: 0 });
+      store.applyEvent({ type: 'state-update', state: playingState({
+        myHand: opts.hand === 0 ? [] : playingState().myHand,
+        players: opts.winner === '0'
+          ? [{ id: '0', handCount: opts.hand ?? 1, isCurrentPlayer: false }]
+          : [{ id: '1', handCount: 2, isCurrentPlayer: false }],
+        outcome: { status: 'FINISHED', winnerId: opts.winner },
+      }) });
+      if (opts.forfeit) {
+        store.applyEvent({ type: 'event', eventType: 'FORFEIT', eventData: opts.forfeit, message: '' });
+      }
+      return { store, wrapper: mount(BullshitGameScreen, { props: { gameId: 'g1' }, global: { plugins: [router, PrimeVue], stubs: { RouterLink: true } } }) };
+    }
+    const sub = (m: ReturnType<typeof mountFinished>) => m.wrapper.get('.end-sub').text();
+
+    it('says the opponent resigned when the win comes from a resignation', () => {
+      expect(sub(mountFinished({ winner: '0', forfeit: { loserSeat: 1, reason: 'RESIGNED' } }))).toBe('Player 2 resigned.');
+    });
+
+    it('says the opponent disconnected when the win comes from a timeout', () => {
+      expect(sub(mountFinished({ winner: '0', forfeit: { loserSeat: 1, reason: 'DISCONNECTED' } }))).toBe('Player 2 disconnected.');
+    });
+
+    it('falls back to a neutral line when I won with cards left but the reason is unknown (after a reload)', () => {
+      expect(sub(mountFinished({ winner: '0', hand: 1 }))).toBe('The other players left the game.');
+    });
+
+    it('keeps the normal line when I emptied my hand', () => {
+      expect(sub(mountFinished({ winner: '0', hand: 0 }))).toBe('You emptied your hand first.');
+    });
+
+    it('keeps the normal line for a loss', () => {
+      expect(sub(mountFinished({ winner: '1' }))).toBe('Another player emptied their hand first.');
+    });
+
+    it('shows the rematch as pending, then as refused with a retry', async () => {
+      const { store, wrapper } = mountFinished({ winner: '0', hand: 0 });
+      const button = () => wrapper.get('[data-cy="play-again"]');
+      expect(button().text()).toBe('Play again');
+      expect(wrapper.find('[data-test="rematch-error"]').exists()).toBe(false);
+
+      store.rematch = 'pending';
+      await wrapper.vm.$nextTick();
+      expect(button().text()).toBe('Joining the new table…');
+      expect((button().element as HTMLButtonElement).disabled).toBe(true);
+
+      store.rematch = 'failed';
+      await wrapper.vm.$nextTick();
+      expect(button().text()).toBe('Play again');
+      expect((button().element as HTMLButtonElement).disabled).toBe(false);
+      expect(wrapper.get('[data-test="rematch-error"]').attributes('role')).toBe('alert');
     });
   });
 

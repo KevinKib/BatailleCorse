@@ -123,11 +123,19 @@ export interface BullshitUiMessages {
     revealCaption: string;             // '{caller}', '{claimant}', '{picker}'
     playedFaceDown: PluralForms;       // '{player}', '{n}' = number of cards
     forfeited: string;                 // '{player}'
+    yourTurn: string;                  // visible cue next to my tag on my turn
+    verdictAnnouncement: string;       // '{verdict}', '{caption}': what a screen reader hears after a call
+    offline: string;                   // my own connection is down; the socket retries by itself
   };
   end: {
     youWon: string;
     youLost: string;
+    youWonResigned: string;            // '{player}': the last opponent resigned
+    youWonDisconnected: string;        // '{player}': the last opponent timed out
+    youWonOthersLeft: string;          // won with cards left but the reason is unknown (after a reload)
     playAgain: string;
+    rematchPending: string;            // my play-again request is in flight
+    rematchFailed: string;             // the server refused it
   };
 }
 
