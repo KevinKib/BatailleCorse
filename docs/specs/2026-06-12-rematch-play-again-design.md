@@ -145,3 +145,13 @@ Following project conventions (no Mockito on domain classes; builders/fixtures;
 - Re-watching a move-by-move recording of a finished game.
 - A timeout/expiry on a pending rematch proposal.
 - Swapping seats or who-deals-first on rematch (seats are kept as-is).
+
+## Addendum (2026-10): leaving the rematch
+
+Unanimity used to be evaluated only on each click, over every seat. A player leaving after all the others had asked left the rematch stuck. Behavior now:
+
+- **Expected players** are the claimed human seats that have not left. Bot seats never click and unclaimed seats have nobody to wait for, so neither blocks the rematch.
+- **Leaving for good** re-evaluates unanimity immediately. It happens when the 60 s grace delay of a dropped connection ends on a *finished* game (the same timer and reconnect cancellation as the live-game forfeit, but silent), or on an explicit quit (`/app/forfeit` on a finished game). If every remaining expected player had already asked, the rematch starts without a new click (`GameLifecycleBroadcaster.rematchStarted`).
+- **Only disconnected (inside the grace delay)** still blocks: a page refresh must not lose the rematch. The player can reconnect and click, or the timer ends and he is treated as gone.
+- **Playability**: the rematch is dealt to seats 0..k-1 (seat id = player index), so it starts only if at least `minPlayers` seats remain and the departed seats come after all the others. Otherwise it stays pending (e.g. a 2-player Bataille Corse whose opponent left: a lone player cannot rematch; no event is sent, the UI is unchanged).
+- A departed player who asks again is expected again.

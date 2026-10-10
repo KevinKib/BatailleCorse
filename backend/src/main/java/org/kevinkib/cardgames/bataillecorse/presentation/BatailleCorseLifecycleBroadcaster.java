@@ -9,7 +9,10 @@ import org.kevinkib.cardgames.game.Game;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.presentation.api.SuccessResponse;
 import org.kevinkib.cardgames.bataillecorse.presentation.dto.BatailleCorseDto;
+import org.kevinkib.cardgames.bataillecorse.presentation.dto.event.RematchEventData;
+import org.kevinkib.cardgames.bataillecorse.presentation.dto.PlayerIdDto;
 import org.kevinkib.cardgames.presentation.dto.event.LifecycleEventType;
+import org.kevinkib.cardgames.presentation.dto.event.RematchStatus;
 import org.kevinkib.cardgames.presentation.dto.event.ForfeitEventData;
 import org.kevinkib.cardgames.presentation.dto.event.OpponentDisconnectedEventData;
 import org.kevinkib.cardgames.presentation.dto.event.OpponentReconnectedEventData;
@@ -48,6 +51,15 @@ public class BatailleCorseLifecycleBroadcaster implements GameLifecycleBroadcast
                 new OpponentReconnectedEventData(player.id()),
                 "Player " + player + " reconnected.",
                 BatailleCorseDto.from(bc)));
+    }
+
+    @Override
+    public void rematchStarted(Game fresh, PlayerId triggeredBy) {
+        messaging.sendToGame(fresh.getId().uuid().toString(), new SuccessResponse(
+                LifecycleEventType.REMATCH.toString(),
+                new RematchEventData(RematchStatus.STARTED, new PlayerIdDto(String.valueOf(triggeredBy.id()))),
+                "Rematch started.",
+                BatailleCorseDto.from((BatailleCorse) fresh)));
     }
 
     @Override

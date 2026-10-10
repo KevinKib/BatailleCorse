@@ -13,4 +13,12 @@ public interface GameLifecycleBroadcaster {
     void reconnected(Game game, PlayerId player);
 
     void forfeited(Game game, PlayerId player, ForfeitReason reason);
+
+    /**
+     * A rematch started because {@code triggeredBy} left for good after every other expected player
+     * had already asked for it. {@code fresh} is the newly dealt game. Optional: games without a
+     * rematch flow ignore it.
+     */
+    default void rematchStarted(Game fresh, PlayerId triggeredBy) {
+    }
 }

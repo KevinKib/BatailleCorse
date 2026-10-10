@@ -181,7 +181,100 @@ class SessionGameTest {
     class RematchTest {
 
         private SessionGame newSession() {
-            return SessionGame.create(GameId.generate(), playerIds(2), "bataille-corse");
+            var session = SessionGame.create(GameId.generate(), playerIds(2), "bataille-corse");
+            session.claimAllSeats();
+            return session;
+        }
+
+        private SessionGame threeHumans() {
+            var session = SessionGame.create(GameId.generate(), playerIds(4), "fake");
+            session.claimHost("A");
+            session.claimNextFreeSeat("B");
+            session.claimNextFreeSeat("C");
+            return session;
+        }
+
+        @Test
+        void givenUnclaimedSeat_whenAllClaimedSeatsRequested_thenUnanimous() {
+            var session = threeHumans();
+            session.requestRematch(new PlayerId(0));
+            session.requestRematch(new PlayerId(1));
+            session.requestRematch(new PlayerId(2));
+
+            assertThat(session.isRematchUnanimous(), is(true));
+        }
+
+        @Test
+        void givenBotSeat_whenHumansRequested_thenBotDoesNotBlock() {
+            var session = threeHumans();
+            session.claimBot(null);
+            session.requestRematch(new PlayerId(0));
+            session.requestRematch(new PlayerId(1));
+            session.requestRematch(new PlayerId(2));
+
+            assertThat(session.isRematchUnanimous(), is(true));
+        }
+
+        @Test
+        void givenOthersRequested_whenLastPlayerLeaves_thenUnanimousWithoutNewRequest() {
+            var session = threeHumans();
+            session.requestRematch(new PlayerId(0));
+            session.requestRematch(new PlayerId(1));
+            assertThat(session.isRematchUnanimous(), is(false));
+
+            session.leaveRematch(new PlayerId(2));
+
+            assertThat(session.isRematchUnanimous(), is(true));
+        }
+
+        @Test
+        void givenEveryoneLeft_thenNeverUnanimous() {
+            var session = threeHumans();
+            session.leaveRematch(new PlayerId(0));
+            session.leaveRematch(new PlayerId(1));
+            session.leaveRematch(new PlayerId(2));
+
+            assertThat(session.isRematchUnanimous(), is(false));
+        }
+
+        @Test
+        void givenDepartedPlayer_whenHeRequestsAgain_thenExpectedAgain() {
+            var session = threeHumans();
+            session.requestRematch(new PlayerId(0));
+            session.requestRematch(new PlayerId(1));
+            session.leaveRematch(new PlayerId(2));
+
+            session.requestRematch(new PlayerId(2));
+
+            assertThat(session.isRematchUnanimous(), is(true));
+            assertThat(session.isRematchPlayable(3), is(true));
+        }
+
+        @Test
+        void givenTailDeparture_thenPlayableWhenEnoughRemain() {
+            var session = threeHumans();
+            session.leaveRematch(new PlayerId(2));
+
+            assertThat(session.isRematchPlayable(2), is(true));
+            assertThat(session.isRematchPlayable(3), is(false));
+        }
+
+        @Test
+        void givenMiddleDeparture_thenNotPlayableBecauseSeatsWouldHaveAGap() {
+            var session = threeHumans();
+            session.leaveRematch(new PlayerId(1));
+
+            assertThat(session.isRematchPlayable(2), is(false));
+        }
+
+        @Test
+        void givenDepartedSeat_whenReleased_thenNotCountedAsClaimed() {
+            var session = threeHumans();
+            session.leaveRematch(new PlayerId(2));
+
+            session.releaseDepartedSeats();
+
+            assertThat(session.claimedCount(), is(2));
         }
 
         @Test
