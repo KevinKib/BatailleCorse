@@ -93,6 +93,7 @@ export const messagesEn: Messages = {
     botLabel: 'Bot {n}',
     you: 'You',
     back: 'Back',
+    sound: { mute: 'Mute sound', unmute: 'Unmute sound' },
     connecting: 'Joining the table…',
     start: {
       title: 'Bullshit',
