@@ -90,6 +90,7 @@ export const messagesEn: Messages = {
   },
   bullshitUi: {
     playerLabel: 'Player {n}',
+    botLabel: 'Bot {n}',
     you: 'You',
     back: 'Back',
     start: {

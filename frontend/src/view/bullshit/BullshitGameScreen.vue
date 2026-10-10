@@ -15,13 +15,16 @@ import BullshitHand from '../../components/bullshit/BullshitHand.vue';
 import BullshitLobby from '../../components/bullshit/BullshitLobby.vue';
 import { useI18n } from '../../composables/useI18n';
 import { format, plural } from '../../locales/format';
+import { seatDisplayName } from '../../model/bullshit/displayName';
 
 const props = defineProps<{ gameId: string }>();
 const messages = useI18n();
 const ui = messages.bullshitUi;
-// Seats are 0-based internally; players see them numbered from 1.
-const playerLabel = (seat: number) => format(ui.playerLabel, { n: seat + 1 });
 const store = useBullshitStore();
+// Seats are 0-based internally; the typed name wins, else "Bot N" / "Player N" (numbered from 1).
+// Names are user input: only ever rendered as text.
+const displayName = (seat: number) =>
+  seatDisplayName(store.game?.players ?? [], seat, { player: ui.playerLabel, bot: ui.botLabel });
 useBullshitBootstrap(props.gameId);
 
 const countdown = useSeatDisconnectCountdown({
@@ -109,7 +112,7 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
         <ForfeitBanner
           v-if="store.forfeitNotice"
           class="forfeit-notice"
-          :label="format(ui.table.forfeited, { player: playerLabel(store.forfeitNotice.seat) })" />
+          :label="format(ui.table.forfeited, { player: displayName(store.forfeitNotice.seat) })" />
       </Transition>
 
       <div class="table-frame">
@@ -120,7 +123,7 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
             class="seat-slot"
             :style="{ left: seatPositions[i].left + '%', top: seatPositions[i].top + '%' }">
             <OpponentSeat
-              :label="playerLabel(Number(opp.id))"
+              :label="displayName(Number(opp.id))"
               :hand-count="opp.handCount"
               :active="opp.isCurrentPlayer"
               :disconnected="seatDisconnected(Number(opp.id))"
@@ -156,9 +159,9 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
                 </div>
                 <p class="reveal-caption">
                   {{ format(ui.table.revealCaption, {
-                    caller: playerLabel(store.reveal.callerSeat),
-                    claimant: playerLabel(store.reveal.claimantSeat),
-                    picker: playerLabel(store.reveal.pickerSeat),
+                    caller: displayName(store.reveal.callerSeat),
+                    claimant: displayName(store.reveal.claimantSeat),
+                    picker: displayName(store.reveal.pickerSeat),
                   }) }}
                 </p>
               </div>
@@ -166,7 +169,7 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
           </div>
 
           <p v-if="store.game?.table.state === 'CLAIM'" class="last-play" data-test="last-play">
-            {{ plural(ui.table.playedFaceDown, store.game.table.count, { player: playerLabel(Number(store.game.table.claimantId)) }) }}
+            {{ plural(ui.table.playedFaceDown, store.game.table.count, { player: displayName(Number(store.game.table.claimantId)) }) }}
           </p>
         </div>
       </div>
@@ -310,6 +313,7 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
   .seat-slot {
     position: static;
     transform: none;
+    --seat-label-max: 6.5rem;
   }
   .table-center {
     position: static;
@@ -453,12 +457,14 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
   background: rgba(0, 0, 0, 0.7);
   border-radius: 8px;
   padding: 4px 8px;
+  overflow-wrap: anywhere;
 }
 
 .last-play {
   margin: 0;
   font-size: 0.78rem;
   color: rgba(255, 255, 255, 0.7);
+  overflow-wrap: anywhere;
 }
 
 .my-zone {
@@ -528,6 +534,10 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
   left: 50%;
   transform: translateX(-50%);
   z-index: 1800;
+  width: max-content;
+  max-width: calc(100% - 24px);
+  overflow-wrap: anywhere;
+  text-align: center;
 }
 .forfeit-fade-enter-active,
 .forfeit-fade-leave-active { transition: opacity 0.25s ease, transform 0.25s ease; }

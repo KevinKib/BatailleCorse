@@ -118,7 +118,8 @@ public class AppConfig {
 
     @Bean
     public BullshitStateBroadcaster bullshitStateBroadcaster(GameMessagingService gameMessagingService) {
-        return new BullshitStateBroadcaster(gameMessagingService, sessionService()::botSeats);
+        return new BullshitStateBroadcaster(gameMessagingService, sessionService()::botSeats,
+                sessionService()::seatNames);
     }
 
     @Bean

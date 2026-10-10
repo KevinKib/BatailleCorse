@@ -228,6 +228,17 @@ public class SessionService implements GameDirectory {
                 .toList();
     }
 
+    /** Display name of every claimed seat; free seats and seats without a name are absent. */
+    public java.util.Map<PlayerId, String> seatNames(GameId gameId) {
+        java.util.Map<PlayerId, String> names = new java.util.HashMap<>();
+        for (SeatView seat : seats(gameId)) {
+            if (seat.joined() && seat.name() != null) {
+                names.put(new PlayerId(seat.seat()), seat.name());
+            }
+        }
+        return names;
+    }
+
     public boolean isSeatClaimed(GameId gameId, PlayerId playerId) {
         return repository.loadSessionGame(gameId).isClaimed(playerId);
     }

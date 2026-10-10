@@ -5,6 +5,10 @@ export interface BullshitPlayer {
   id: string;
   handCount: number;
   isCurrentPlayer: boolean;
+  /** Name the player typed; absent or empty when none (the UI then shows "Player N"). */
+  name?: string | null;
+  /** Computer player: the UI labels it "Bot N" whatever `name` says. */
+  bot?: boolean;
 }
 
 export type TableView =
