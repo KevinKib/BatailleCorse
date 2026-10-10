@@ -1,7 +1,6 @@
 // Non-regression for the Bullshit lobby bot controls and for the lobby / create screen spacing.
 function createBullshitGame(name: string) {
-  cy.visit('/games/bataillecorse');
-  cy.contains('button', 'Play Bullshit').click();
+  cy.visit('/games/bullshit/create');
   cy.url().should('include', '/games/bullshit/create');
   cy.get('[data-test="name"]').type(name);
   // Deliberate fixed wait: the app exposes no "connected" signal and a create sent before the

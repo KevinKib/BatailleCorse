@@ -1,12 +1,13 @@
 // Non-regression for the Bullshit table (never scrolls, one-row hand) and the lobby /
 // start screens (same menu look as BatailleCorse, errors visible, nothing lost).
-function createBullshitGame(name: string, claimLabel?: string) {
+function createBullshitGame(name: string, claimLabel?: string, deckLabel = '52 cards') {
   // Enter through the menu, as a player does, so the WebSocket is connected before we create.
   cy.visit('/games');
   cy.get('[data-test="play-bullshit"]').click();
   cy.url().should('include', '/games/bullshit/create');
   cy.get('[data-test="name"]').type(name);
   if (claimLabel) cy.contains('label', claimLabel).click();
+  cy.contains('label', deckLabel).click();
   // Deliberate fixed wait: the app exposes no "connected" signal and a create sent before the
   // WebSocket handshake finishes is reported to the player as an error (asserted elsewhere).
   cy.wait(1500);
@@ -46,7 +47,7 @@ describe('Bullshit start screens', () => {
 
 describe('Bullshit lobby', () => {
   it('shows the title, players, claim mode, invite link, Copy and Start', () => {
-    createBullshitGame('Alice', 'By suit');
+    createBullshitGame('Alice', 'By suit', '32 cards');
     cy.get('[data-test="lobby"]').should('be.visible');
     cy.get('[data-test="lobby"] h1').should('contain.text', 'Bullshit');
     cy.get('[data-test="player-count"]').should('contain.text', '1 / 6');
