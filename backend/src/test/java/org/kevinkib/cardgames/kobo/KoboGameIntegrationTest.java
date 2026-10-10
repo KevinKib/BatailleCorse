@@ -1,13 +1,13 @@
 package org.kevinkib.cardgames.kobo;
 
+import org.kevinkib.cardgames.kobo.domain.turn.Action;
+import org.kevinkib.cardgames.kobo.domain.turn.Phase;
+import org.kevinkib.cardgames.kobo.domain.tableau.Tableau;
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.game.Game;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
-import org.kevinkib.cardgames.kobo.domain.Action;
 import org.kevinkib.cardgames.kobo.domain.Kobo;
-import org.kevinkib.cardgames.kobo.domain.Phase;
-import org.kevinkib.cardgames.kobo.domain.Tableau;
 import org.kevinkib.cardgames.kobo.presentation.KoboGameActions;
 import org.kevinkib.cardgames.kobo.presentation.KoboStateBroadcaster;
 import org.kevinkib.cardgames.kobo.presentation.dto.CardDto;

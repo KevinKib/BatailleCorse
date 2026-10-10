@@ -1,5 +1,6 @@
 package org.kevinkib.cardgames.kobo.domain;
 
+import org.kevinkib.cardgames.kobo.domain.rules.KoboRules;
 import org.kevinkib.cardgames.game.Game;
 import org.kevinkib.cardgames.game.GameFactory;
 import org.kevinkib.cardgames.game.GameId;

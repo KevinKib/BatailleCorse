@@ -1,11 +1,12 @@
 package org.kevinkib.cardgames.kobo.presentation;
 
+import org.kevinkib.cardgames.kobo.domain.tableau.EmptySlotException;
+import org.kevinkib.cardgames.kobo.domain.turn.NotPlayersTurnException;
+import org.kevinkib.cardgames.kobo.domain.turn.Phase;
+import org.kevinkib.cardgames.kobo.domain.tableau.SlotRef;
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.game.PlayerId;
-import org.kevinkib.cardgames.kobo.domain.EmptySlotException;
 import org.kevinkib.cardgames.kobo.domain.Kobo;
-import org.kevinkib.cardgames.kobo.domain.NotPlayersTurnException;
-import org.kevinkib.cardgames.kobo.domain.Phase;
 import org.kevinkib.cardgames.kobo.presentation.dto.KoboDto;
 import org.kevinkib.cardgames.kobo.presentation.dto.event.KoboEventData;
 import org.kevinkib.cardgames.presentation.api.Response;
@@ -176,7 +177,7 @@ class KoboGameActionsTest {
         }
     }
 
-    private void attempt(Kobo game, int actor, org.kevinkib.cardgames.kobo.domain.SlotRef target) {
+    private void attempt(Kobo game, int actor, org.kevinkib.cardgames.kobo.domain.tableau.SlotRef target) {
         try {
             table.actions.match(game.getId(), new PlayerId(actor), target, actor == 0 ? 0 : null,
                     rank("7H"), null);

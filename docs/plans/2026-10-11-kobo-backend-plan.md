@@ -21,13 +21,16 @@
 
 ## File structure
 
-**Create, domain (`kobo/domain/`):**
-- `Kobo.java` aggregate; `KoboFactory.java`; `KoboRules.java` (constants); `Phase.java`; `Power.java`; `Action.java` (available-action enum); `CardPoints.java`
-- `SlotRef.java`; `Tableau.java` (+ `Slot` record); `PrivateReveal.java`
-- `RoundScoring.java`; `RoundResult.java`; `KoboResult.java`
-- `KoboEvent.java` (sealed outcomes)
-- Exceptions: `KoboException`, `FinishedGameException`, `NotPlayersTurnException`, `WrongPhaseException`, `InvalidSlotException`, `EmptySlotException`, `StaleSlotException`, `NothingToMatchException`, `InvalidGiveSlotException`, `InvalidGiftTargetException`, `AlreadyReadyException`
-- `package-info.java` for `kobo`
+**Create, domain (`kobo/domain/`, grouped in sub-packages by concept; each exception sits with the concept it protects):**
+- `domain/`: `Kobo.java` aggregate; `KoboFactory.java`; `FinishedGameException`, `NothingToMatchException`, `StaleDiscardException`, `InvalidGiftTargetException`
+- `domain/rules/`: `KoboRules.java` (constants); `KoboException`
+- `domain/card/`: `CardPoints.java`
+- `domain/power/`: `Power.java`
+- `domain/turn/`: `Phase.java`; `Action.java` (available-action enum); `NotPlayersTurnException`, `WrongPhaseException`, `AlreadyReadyException`
+- `domain/tableau/`: `Tableau.java` (+ `Slot` record); `SlotRef.java`; `InvalidSlotException`, `EmptySlotException`, `StaleSlotException`, `InvalidGiveSlotException`
+- `domain/scoring/`: `RoundScoring.java`; `RoundResult.java`
+- `domain/event/`: `KoboEvent.java` (sealed outcomes); `KoboResult.java`; `PrivateReveal.java`
+- `package-info.java` for `kobo` and for each domain sub-package
 
 **Create, presentation (`kobo/presentation/`):**
 - `KoboGameActions.java`, `KoboStateBroadcaster.java`, `KoboWebSocketController.java`, `KoboRestController.java`, `KoboLifecycleBroadcaster.java`
@@ -47,7 +50,7 @@
 
 ### Task 1: Point values and powers
 
-**Files:** Create `kobo/domain/{CardPoints,Power}.java`; Test `CardPointsTest.java`, `PowerTest.java`.
+**Files:** Create `kobo/domain/card/CardPoints.java`, `kobo/domain/power/Power.java`; Test `CardPointsTest.java`, `PowerTest.java`.
 
 - [ ] **Step 1: Failing tests.**
   - `CardPoints.of(card)`: Ace 1; 2 to 10 face value; Jack 11; Queen 12; King of spades and clubs 13; King of hearts and diamonds 0. A joker throws `IllegalArgumentException`.
@@ -58,7 +61,7 @@
 
 ### Task 2: `RoundScoring` (pure function) and `KoboRules`
 
-**Files:** Create `kobo/domain/{KoboRules,RoundScoring,RoundResult}.java`; Test `RoundScoringTest.java`.
+**Files:** Create `kobo/domain/rules/KoboRules.java`, `kobo/domain/scoring/{RoundScoring,RoundResult}.java`; Test `RoundScoringTest.java`.
 
 `KoboRules` holds the constants (4 cards, reset values 75 and 100 -> 50, end above 100, gift 10, announcer penalty 20, 2 to 6 players). `RoundScoring.score(handValues, announcer, giftTarget, totalsBefore)` returns a `RoundResult`.
 
@@ -75,7 +78,7 @@
 
 ### Task 3: `Tableau`, `SlotRef`, revisions
 
-**Files:** Create `kobo/domain/{Tableau,SlotRef}.java` (+ exceptions `KoboException`, `InvalidSlotException`, `EmptySlotException`); Test `TableauTest.java`.
+**Files:** Create `kobo/domain/tableau/{Tableau,SlotRef}.java` (+ exceptions `KoboException`, `InvalidSlotException`, `EmptySlotException`); Test `TableauTest.java`.
 
 - [ ] **Step 1: Failing tests.**
   - A tableau built from 4 cards has slots 0 to 3 occupied, all at revision 0.
@@ -87,7 +90,7 @@
 
 ### Task 4: Aggregate skeleton, deal, factory, `Game` contract
 
-**Files:** Create `kobo/domain/{Kobo,KoboFactory,Phase,KoboResult}.java`, `package-info.java`; Test `KoboFactoryTest.java`, `KoboGameConformanceTest.java`, `KoboDealTest.java`; test support `KoboBuilder.java`, `KoboFixtures.java`.
+**Files:** Create `kobo/domain/{Kobo,KoboFactory}.java`, `kobo/domain/turn/Phase.java`, `kobo/domain/event/KoboResult.java`, `package-info.java`; Test `KoboFactoryTest.java`, `KoboGameConformanceTest.java`, `KoboDealTest.java`; test support `KoboBuilder.java`, `KoboFixtures.java`.
 
 - [ ] **Step 1: Failing tests.**
   - `KoboFactory`: `gameType()` is `"kobo"`, min 2, max 6; `create(id, n)` and `create(id, n, options)` return a `Kobo` with `n` players.
