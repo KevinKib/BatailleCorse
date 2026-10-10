@@ -10,6 +10,15 @@ import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
 import org.kevinkib.cardgames.sessionmanagement.core.application.port.SessionRepository;
 import org.kevinkib.cardgames.sessionmanagement.core.infrastructure.InMemorySessionRepository;
 import org.kevinkib.cardgames.bataillecorse.presentation.BatailleCorseLifecycleBroadcaster;
+import org.kevinkib.cardgames.bullshit.domain.bot.BotTuning;
+import org.kevinkib.cardgames.bullshit.domain.bot.ProbabilisticBotStrategy;
+import org.kevinkib.cardgames.bullshit.presentation.BullshitGameActions;
+import org.kevinkib.cardgames.bullshit.presentation.bot.BotScheduler;
+import org.kevinkib.cardgames.bullshit.presentation.bot.BullshitBotCoordinator;
+import org.kevinkib.cardgames.bullshit.presentation.bot.TaskSchedulerBotScheduler;
+import org.kevinkib.cardgames.bullshit.presentation.bot.ThinkingDelay;
+import org.kevinkib.cardgames.bullshit.presentation.bot.ThreadLocalRandomGenerator;
+import org.kevinkib.cardgames.bullshit.presentation.bot.UniformThinkingDelay;
 import org.kevinkib.cardgames.bullshit.presentation.BullshitLifecycleBroadcaster;
 import org.kevinkib.cardgames.bullshit.presentation.BullshitStateBroadcaster;
 import org.kevinkib.cardgames.sessionmanagement.presence.application.PresenceEvictionCleanup;
@@ -28,6 +37,8 @@ import org.kevinkib.cardgames.sessionmanagement.presence.port.ForfeitScheduler;
 import org.kevinkib.cardgames.presentation.WebSocketDisconnectListener;
 
 import java.util.List;
+import java.util.random.RandomGenerator;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -79,7 +90,7 @@ public class AppConfig {
     @Bean
     public TaskScheduler taskScheduler() {
         ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
-        scheduler.setPoolSize(2);
+        scheduler.setPoolSize(4);
         scheduler.setThreadNamePrefix("game-sched-");
         scheduler.initialize();
         return scheduler;
@@ -107,7 +118,37 @@ public class AppConfig {
 
     @Bean
     public BullshitStateBroadcaster bullshitStateBroadcaster(GameMessagingService gameMessagingService) {
-        return new BullshitStateBroadcaster(gameMessagingService);
+        return new BullshitStateBroadcaster(gameMessagingService, sessionService()::botSeats);
+    }
+
+    @Bean
+    public BotScheduler botScheduler() {
+        return new TaskSchedulerBotScheduler(taskScheduler());
+    }
+
+    /** A bot "thinks" for a random 1000-2000 ms; the {@code test} profile pins it to 0 so e2e runs are not slowed. */
+    @Bean
+    public ThinkingDelay botThinkingDelay(@Value("${bullshit.bots.delay-min-ms:1000}") long minMillis,
+                                          @Value("${bullshit.bots.delay-max-ms:2000}") long maxMillis) {
+        return new UniformThinkingDelay(minMillis, maxMillis, new ThreadLocalRandomGenerator());
+    }
+
+    @Bean
+    public BullshitBotCoordinator bullshitBotCoordinator(BullshitGameActions actions,
+                                                         BullshitStateBroadcaster broadcaster,
+                                                         BotScheduler botScheduler,
+                                                         ThinkingDelay botThinkingDelay) {
+        RandomGenerator random = new ThreadLocalRandomGenerator();
+        BullshitBotCoordinator coordinator = new BullshitBotCoordinator(
+                sessionService()::botSeats, actions, botScheduler, botThinkingDelay,
+                game -> new ProbabilisticBotStrategy(game.getClaimMode(), random, BotTuning.DEFAULT));
+        broadcaster.addListener(coordinator);
+        return coordinator;
+    }
+
+    @Bean
+    public BullshitGameActions bullshitGameActions(BullshitStateBroadcaster bullshitStateBroadcaster) {
+        return new BullshitGameActions(sessionService(), bullshitStateBroadcaster);
     }
 
     @Bean

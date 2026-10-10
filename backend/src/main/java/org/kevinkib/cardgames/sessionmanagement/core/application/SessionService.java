@@ -14,6 +14,7 @@ import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionToken;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public class SessionService implements GameDirectory {
 
@@ -110,6 +111,40 @@ public class SessionService implements GameDirectory {
         return new RoomCreated(id.uuid().toString(), hostToken.uuid().toString());
     }
 
+    /** Host-only: fills the lowest free seat of a not-yet-started room with a computer player. */
+    public PlayerId addBot(GameId id, String hostToken) {
+        SessionGame lobby = openLobbyOwnedBy(id, hostToken);
+        try {
+            return lobby.claimBot(null).id();
+        } catch (NoFreeSeatException e) {
+            throw new RoomFullException(id);
+        }
+    }
+
+    /** Host-only: frees a bot seat of a not-yet-started room (see {@link SessionGame#removeBot}). */
+    public void removeBot(GameId id, String hostToken, int seat) {
+        SessionGame lobby = openLobbyOwnedBy(id, hostToken);
+        lobby.removeBot(new PlayerId(seat));
+    }
+
+    /** Seats held by computer players, for whoever must drive them once the game runs. */
+    public Set<PlayerId> botSeats(GameId id) {
+        return repository.loadSessionGame(id).botSeats();
+    }
+
+    private SessionGame openLobbyOwnedBy(GameId id, String hostToken) {
+        if (repository.findGame(id).isPresent()) {
+            throw new GameAlreadyStartedException(id);
+        }
+        SessionGame lobby = repository.loadSessionGame(id);
+        PlayerId actor = lobby.findPlayerByToken(new SessionToken(hostToken))
+                .orElseThrow(() -> new NotHostException(id));
+        if (!lobby.isHost(actor)) {
+            throw new NotHostException(id);
+        }
+        return lobby;
+    }
+
     public String gameType(GameId id) {
         return repository.loadSessionGame(id).gameType();
     }
@@ -165,7 +200,7 @@ public class SessionService implements GameDirectory {
 
     public List<SeatView> seats(GameId gameId) {
         return repository.loadSessionGame(gameId).seats().stream()
-                .map(s -> new SeatView(s.id().id(), s.name(), s.isClaimed()))
+                .map(s -> new SeatView(s.id().id(), s.name(), s.isClaimed(), s.isBot()))
                 .toList();
     }
 
@@ -215,7 +250,7 @@ public class SessionService implements GameDirectory {
         int min = minPlayers(lobby.gameType());
         int max = maxPlayers(lobby.gameType());
         return lobby.seats().stream()
-                .filter(SessionPlayer::isClaimed)
+                .filter(seat -> seat.isClaimed() && !seat.isBot())
                 .map(seat -> LobbyView.forViewer(lobby, min, max, seat.id()))
                 .toList();
     }

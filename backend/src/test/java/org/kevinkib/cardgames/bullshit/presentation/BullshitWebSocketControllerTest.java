@@ -4,6 +4,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.bullshit.domain.Bullshit;
 import org.kevinkib.cardgames.bullshit.domain.BullshitFactory;
+import org.kevinkib.cardgames.bullshit.domain.bot.BotDecision;
+import org.kevinkib.cardgames.bullshit.presentation.api.BullshitBotPayload;
+import org.kevinkib.cardgames.bullshit.presentation.bot.BullshitBotCoordinator;
+import org.kevinkib.cardgames.bullshit.presentation.bot.FixedThinkingDelay;
+import org.kevinkib.cardgames.bullshit.presentation.bot.ManualBotScheduler;
+import org.kevinkib.cardgames.presentation.LobbyBroadcaster;
+import org.kevinkib.cardgames.sessionmanagement.core.application.LobbyView;
+import java.time.Duration;
 import org.kevinkib.cardgames.bullshit.presentation.api.BullshitCreatePayload;
 import org.kevinkib.cardgames.bullshit.presentation.api.BullshitDiscardPayload;
 import org.kevinkib.cardgames.bullshit.presentation.dto.BullshitDto;
@@ -56,6 +64,7 @@ class BullshitWebSocketControllerTest {
     private SessionService sessionService;
     private RecordingMessaging messaging;
     private BullshitWebSocketController controller;
+    private ManualBotScheduler botScheduler;
 
     @BeforeEach
     void setUp() {
@@ -63,8 +72,136 @@ class BullshitWebSocketControllerTest {
                 new InMemorySessionRepository(Clock.systemUTC()),
                 new GameFactories(List.of(new BullshitFactory())));
         messaging = new RecordingMessaging();
-        controller = new BullshitWebSocketController(
-                sessionService, new BullshitStateBroadcaster(messaging), messaging);
+        BullshitStateBroadcaster broadcaster = new BullshitStateBroadcaster(messaging, sessionService::botSeats);
+        BullshitGameActions actions = new BullshitGameActions(sessionService, broadcaster);
+        botScheduler = new ManualBotScheduler();
+        broadcaster.addListener(new BullshitBotCoordinator(
+                sessionService::botSeats, actions, botScheduler, new FixedThinkingDelay(Duration.ZERO),
+                game -> (observation, memory) -> new BotDecision.Pass()));
+        controller = new BullshitWebSocketController(sessionService, broadcaster, messaging, actions,
+                new LobbyBroadcaster(messaging, sessionService));
+    }
+
+    private BullshitCreateEventData createRoom() {
+        Response create = controller.createGame(new BullshitCreatePayload("Alice", null));
+        return (BullshitCreateEventData) create.getEventData();
+    }
+
+    @Test
+    void givenHost_whenAddBot_thenEveryHumanSeatReceivesALobbyWithTheBot() {
+        BullshitCreateEventData room = createRoom();
+        sessionService.joinRoom(new GameId(room.gameId()), "Bob");
+        messaging.clear();
+
+        controller.addBot(new GameActionPayload(room.gameId(), room.tokens().get(0)));
+
+        assertThat(messaging.seats, is(List.of(new PlayerId(0), new PlayerId(1))));
+        Response response = messaging.payloads.get(0);
+        assertThat(response.isSuccess(), is(true));
+        assertThat(response.getEventType(), is("JOIN"));
+        LobbyView lobby = (LobbyView) response.getState();
+        assertThat(lobby.players().get(2).bot(), is(true));
+        assertThat(lobby.players().get(2).joined(), is(true));
+        assertThat(lobby.players().get(2).name(), is("Bot 1"));
+    }
+
+    @Test
+    void givenNonHost_whenAddBot_thenErrorToTheActingSeatOnly() {
+        BullshitCreateEventData room = createRoom();
+        String bobToken = sessionService.joinRoom(new GameId(room.gameId()), "Bob").token();
+        messaging.clear();
+
+        controller.addBot(new GameActionPayload(room.gameId(), bobToken));
+
+        assertThat(messaging.seats, is(List.of(new PlayerId(1))));
+        assertThat(messaging.payloads.get(0).isSuccess(), is(false));
+        assertThat(sessionService.botSeats(new GameId(room.gameId())).isEmpty(), is(true));
+    }
+
+    @Test
+    void givenStartedGame_whenAddBot_thenErrorToTheHost() {
+        BullshitCreateEventData room = createRoom();
+        sessionService.joinRoom(new GameId(room.gameId()), "Bob");
+        controller.start(new GameActionPayload(room.gameId(), room.tokens().get(0)));
+        messaging.clear();
+
+        controller.addBot(new GameActionPayload(room.gameId(), room.tokens().get(0)));
+
+        assertThat(messaging.seats, is(List.of(new PlayerId(0))));
+        assertThat(messaging.payloads.get(0).isSuccess(), is(false));
+    }
+
+    @Test
+    void givenUnknownToken_whenAddBot_thenIgnored() {
+        BullshitCreateEventData room = createRoom();
+        messaging.clear();
+
+        controller.addBot(new GameActionPayload(room.gameId(), java.util.UUID.randomUUID().toString()));
+
+        assertThat(messaging.seats.isEmpty(), is(true));
+    }
+
+    @Test
+    void givenBot_whenHostRemovesIt_thenLobbyRefreshWithoutTheBot() {
+        BullshitCreateEventData room = createRoom();
+        String hostToken = room.tokens().get(0);
+        controller.addBot(new GameActionPayload(room.gameId(), hostToken));
+        messaging.clear();
+
+        controller.removeBot(new BullshitBotPayload(room.gameId(), hostToken, 1));
+
+        assertThat(messaging.seats, is(List.of(new PlayerId(0))));
+        LobbyView lobby = (LobbyView) messaging.payloads.get(0).getState();
+        assertThat(lobby.players().get(1).joined(), is(false));
+        assertThat(lobby.players().get(1).bot(), is(false));
+    }
+
+    @Test
+    void givenHumanAfterTheBot_whenHostRemovesIt_thenRefusedWithAnError() {
+        BullshitCreateEventData room = createRoom();
+        String hostToken = room.tokens().get(0);
+        controller.addBot(new GameActionPayload(room.gameId(), hostToken));
+        sessionService.joinRoom(new GameId(room.gameId()), "Bob");
+        messaging.clear();
+
+        controller.removeBot(new BullshitBotPayload(room.gameId(), hostToken, 1));
+
+        assertThat(messaging.seats, is(List.of(new PlayerId(0))));
+        assertThat(messaging.payloads.get(0).isSuccess(), is(false));
+        assertThat(sessionService.botSeats(new GameId(room.gameId())).size(), is(1));
+    }
+
+    @Test
+    void givenNonHost_whenRemoveBot_thenErrorToTheActingSeat() {
+        BullshitCreateEventData room = createRoom();
+        controller.addBot(new GameActionPayload(room.gameId(), room.tokens().get(0)));
+        String bobToken = sessionService.joinRoom(new GameId(room.gameId()), "Bob").token();
+        messaging.clear();
+
+        controller.removeBot(new BullshitBotPayload(room.gameId(), bobToken, 1));
+
+        assertThat(messaging.seats, is(List.of(new PlayerId(2))));
+        assertThat(messaging.payloads.get(0).isSuccess(), is(false));
+    }
+
+    @Test
+    void givenHostAndOneBot_whenStartThenHostPlays_thenTheBotGetsATaskAndNoMessage() {
+        BullshitCreateEventData room = createRoom();
+        String hostToken = room.tokens().get(0);
+        controller.addBot(new GameActionPayload(room.gameId(), hostToken));
+        GameId id = new GameId(room.gameId());
+
+        controller.start(new GameActionPayload(room.gameId(), hostToken));
+
+        assertThat(botScheduler.pending().size(), is(0)); // the host is first to play
+        Bullshit game = sessionService.getGame(id, Bullshit.class);
+        messaging.clear();
+        Card card = game.getPlayers().get(0).getCards().get(0);
+
+        controller.discard(new BullshitDiscardPayload(room.gameId(), hostToken, List.of(CardDto.from(card))));
+
+        assertThat(botScheduler.pending().size(), is(1)); // now the bot has to answer
+        assertThat(messaging.seats, is(List.of(new PlayerId(0)))); // only the human is messaged
     }
 
     @Test

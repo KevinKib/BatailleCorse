@@ -2,23 +2,18 @@ package org.kevinkib.cardgames.bullshit.presentation;
 
 import org.kevinkib.cardgames.bullshit.domain.Bullshit;
 import org.kevinkib.cardgames.bullshit.domain.BullshitFactory;
-import org.kevinkib.cardgames.bullshit.domain.CallBullshitOutcome;
-import org.kevinkib.cardgames.bullshit.domain.CannotCallBullshitException;
-import org.kevinkib.cardgames.bullshit.domain.claim.ClaimTarget;
 import org.kevinkib.cardgames.bullshit.domain.options.BullshitOptions;
-import org.kevinkib.cardgames.bullshit.domain.pile.Discard;
+import org.kevinkib.cardgames.bullshit.presentation.api.BullshitBotPayload;
 import org.kevinkib.cardgames.bullshit.presentation.api.BullshitCreatePayload;
 import org.kevinkib.cardgames.bullshit.presentation.api.BullshitDiscardPayload;
 import org.kevinkib.cardgames.bullshit.presentation.dto.BullshitDto;
-import org.kevinkib.cardgames.bullshit.presentation.dto.CardDto;
 import org.kevinkib.cardgames.bullshit.presentation.dto.event.BullshitCreateEventData;
 import org.kevinkib.cardgames.bullshit.presentation.dto.event.BullshitEventType;
-import org.kevinkib.cardgames.bullshit.presentation.dto.event.CallBullshitEventData;
-import org.kevinkib.cardgames.bullshit.presentation.dto.event.DiscardEventData;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.GameOptions;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.presentation.GameMessagingService;
+import org.kevinkib.cardgames.presentation.LobbyBroadcaster;
 import org.kevinkib.cardgames.presentation.api.ErrorResponse;
 import org.kevinkib.cardgames.presentation.api.GameActionPayload;
 import org.kevinkib.cardgames.presentation.api.Response;
@@ -43,13 +38,19 @@ public class BullshitWebSocketController {
     private final SessionService sessionService;
     private final BullshitStateBroadcaster broadcaster;
     private final GameMessagingService messaging;
+    private final BullshitGameActions actions;
+    private final LobbyBroadcaster lobbyBroadcaster;
 
     public BullshitWebSocketController(SessionService sessionService,
                                        BullshitStateBroadcaster broadcaster,
-                                       GameMessagingService messaging) {
+                                       GameMessagingService messaging,
+                                       BullshitGameActions actions,
+                                       LobbyBroadcaster lobbyBroadcaster) {
         this.sessionService = sessionService;
         this.broadcaster = broadcaster;
         this.messaging = messaging;
+        this.actions = actions;
+        this.lobbyBroadcaster = lobbyBroadcaster;
     }
 
     @MessageMapping("/bullshit/create")
@@ -88,6 +89,42 @@ public class BullshitWebSocketController {
         }
     }
 
+    @MessageMapping("/bullshit/addBot")
+    public void addBot(@Payload GameActionPayload payload) {
+        GameId gameId = new GameId(payload.gameId());
+        PlayerId actor = sessionService.findPlayerIdByToken(gameId, payload.token()).orElse(null);
+        if (actor == null) {
+            return;
+        }
+        try {
+            PlayerId bot = sessionService.addBot(gameId, payload.token());
+            sessionService.touch(gameId);
+            lobbyBroadcaster.broadcast(gameId, LifecycleEventType.JOIN.toString(), new EmptyEventData(),
+                    "Bot joined at seat " + bot.id() + ".");
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+            messaging.sendToSeat(gameId, actor, new ErrorResponse(LifecycleEventType.JOIN.toString(), e.getMessage(), null));
+        }
+    }
+
+    @MessageMapping("/bullshit/removeBot")
+    public void removeBot(@Payload BullshitBotPayload payload) {
+        GameId gameId = new GameId(payload.gameId());
+        PlayerId actor = sessionService.findPlayerIdByToken(gameId, payload.token()).orElse(null);
+        if (actor == null) {
+            return;
+        }
+        try {
+            sessionService.removeBot(gameId, payload.token(), payload.seat());
+            sessionService.touch(gameId);
+            lobbyBroadcaster.broadcast(gameId, LifecycleEventType.JOIN.toString(), new EmptyEventData(),
+                    "Bot removed from seat " + payload.seat() + ".");
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+            messaging.sendToSeat(gameId, actor, new ErrorResponse(LifecycleEventType.JOIN.toString(), e.getMessage(), null));
+        }
+    }
+
     @MessageMapping("/discard")
     public void discard(@Payload BullshitDiscardPayload payload) {
         GameId gameId = new GameId(payload.gameId());
@@ -104,13 +141,7 @@ public class BullshitWebSocketController {
 
         try {
             List<Card> cards = BullshitCardMapper.toCards(payload.cards());
-            ClaimTarget claimed = game.getCurrentTarget();
-            game.discard(playerId, cards);
-            sessionService.touch(gameId);
-            broadcaster.broadcast(game,
-                    BullshitEventType.DISCARD.toString(),
-                    new DiscardEventData(playerId.id(), claimed.label(), cards.size()),
-                    "Player " + playerId.id() + " played " + cards.size() + " card(s) as " + claimed.label() + ".");
+            actions.discard(gameId, playerId, cards);
         } catch (Exception e) {
             System.err.println(e.getMessage());
             messaging.sendToSeat(gameId, playerId, new ErrorResponse(
@@ -133,19 +164,7 @@ public class BullshitWebSocketController {
         }
 
         try {
-            Discard challenged = game.getLastDiscard()
-                    .orElseThrow(() -> new CannotCallBullshitException(callerId));
-            List<CardDto> revealed = challenged.actualCards().stream().map(CardDto::from).toList();
-            int claimantSeat = challenged.claimant().id();
-
-            CallBullshitOutcome outcome = game.callBullshit(callerId);
-            sessionService.touch(gameId);
-
-            broadcaster.broadcast(game,
-                    BullshitEventType.CALL_BULLSHIT.toString(),
-                    new CallBullshitEventData(callerId.id(), claimantSeat,
-                            outcome.claimWasTruthful(), outcome.pilePicker().id(), revealed),
-                    "Player " + callerId.id() + " called bullshit on player " + claimantSeat + ".");
+            actions.callBullshit(gameId, callerId);
         } catch (Exception e) {
             System.err.println(e.getMessage());
             messaging.sendToSeat(gameId, callerId, new ErrorResponse(

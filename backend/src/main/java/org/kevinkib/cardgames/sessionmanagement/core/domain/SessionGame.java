@@ -9,6 +9,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public record SessionGame(GameId id, String gameType, GameOptions options, Map<PlayerId, SessionPlayer> players) {
@@ -69,6 +71,86 @@ public record SessionGame(GameId id, String gameType, GameOptions options, Map<P
         return free;
     }
 
+    /**
+     * Claims the lowest-numbered free seat for a computer player. Bots are numbered over bots only
+     * ("Bot 1", "Bot 2", ...) when no name is given.
+     */
+    public SessionPlayer claimBot(String name) {
+        SessionPlayer free = players.values().stream()
+                .filter(seat -> !seat.isClaimed())
+                .min(Comparator.comparingInt(seat -> seat.id().id()))
+                .orElseThrow(() -> new NoFreeSeatException(id));
+        free.claimAsBot(name, botName(botSeats().size() + 1));
+        return free;
+    }
+
+    /**
+     * Frees a bot seat. A game is dealt to the contiguous seats 0..claimed-1, so a gap must not
+     * appear below a human: removal is refused when a human sits after the bot. Bots after it shift
+     * down one seat (they carry no identity) and their default names are renumbered.
+     */
+    public void removeBot(PlayerId playerId) {
+        SessionPlayer target = seatOrThrow(playerId);
+        if (!target.isClaimed() || !target.isBot()) {
+            throw new NotABotSeatException(playerId);
+        }
+        if (!isRemovable(target)) {
+            throw new BotRemovalBlockedException(playerId);
+        }
+        List<SessionPlayer> ordered = seats();
+        for (int i = ordered.indexOf(target); i < ordered.size(); i++) {
+            SessionPlayer next = i + 1 < ordered.size() ? ordered.get(i + 1) : null;
+            if (next != null && next.isClaimed()) {
+                ordered.get(i).claimAsBot(next.name(), next.name());
+            } else {
+                ordered.get(i).release();
+                break;
+            }
+        }
+        renumberBots();
+    }
+
+    private void renumberBots() {
+        int number = 1;
+        for (SessionPlayer seat : seats()) {
+            if (seat.isClaimed() && seat.isBot()) {
+                if (seat.name() != null && seat.name().matches("Bot \\d+")) {
+                    seat.rename(botName(number));
+                }
+                number++;
+            }
+        }
+    }
+
+    private static String botName(int number) {
+        return "Bot " + number;
+    }
+
+    public boolean isBot(PlayerId playerId) {
+        SessionPlayer seat = players.get(playerId);
+        return seat != null && seat.isClaimed() && seat.isBot();
+    }
+
+    public Set<PlayerId> botSeats() {
+        return players.values().stream()
+                .filter(seat -> seat.isClaimed() && seat.isBot())
+                .map(SessionPlayer::id)
+                .collect(Collectors.toUnmodifiableSet());
+    }
+
+    /** Bot seats that {@link #removeBot} would accept: no human holds a seat after them. */
+    public List<PlayerId> removableBotSeats() {
+        return seats().stream()
+                .filter(seat -> seat.isClaimed() && seat.isBot() && isRemovable(seat))
+                .map(SessionPlayer::id)
+                .toList();
+    }
+
+    private boolean isRemovable(SessionPlayer bot) {
+        return players.values().stream()
+                .noneMatch(seat -> seat.isClaimed() && !seat.isBot() && seat.id().id() > bot.id().id());
+    }
+
     public boolean isHost(PlayerId playerId) {
         return HOST_SEAT.equals(playerId);
     }
@@ -103,12 +185,17 @@ public record SessionGame(GameId id, String gameType, GameOptions options, Map<P
         return seat;
     }
 
+    /** The token of a human seat; a bot seat's token never leaves the session, so it is not found. */
     public Optional<SessionToken> findTokenByPlayer(PlayerId playerId) {
-        return Optional.ofNullable(players.get(playerId)).map(SessionPlayer::token);
+        return Optional.ofNullable(players.get(playerId))
+                .filter(seat -> !seat.isBot())
+                .map(SessionPlayer::token);
     }
 
+    /** Resolves a human seat; a bot seat can never be impersonated, even with its internal token. */
     public Optional<PlayerId> findPlayerByToken(SessionToken token) {
         return players.values().stream()
+                .filter(seat -> !seat.isBot())
                 .filter(seat -> seat.token().equals(token))
                 .map(SessionPlayer::id)
                 .findFirst();
