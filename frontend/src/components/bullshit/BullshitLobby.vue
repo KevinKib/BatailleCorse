@@ -77,7 +77,7 @@ function selectAll(event: FocusEvent) {
 <template>
   <div class="titlescreen">
     <div data-test="lobby" class="title-panel">
-      <TitleCardFan />
+      <TitleCardFan class="lobby-fan" />
 
       <div class="title-block">
         <div class="suit-row" aria-hidden="true">
@@ -152,7 +152,12 @@ function selectAll(event: FocusEvent) {
       </div>
 
       <div class="field-group">
-        <label class="field-label" for="invite-link">{{ ui.lobby.inviteLabel }}</label>
+        <div class="invite-head">
+          <label class="field-label" for="invite-link">{{ ui.lobby.inviteLabel }}</label>
+          <p class="copied" data-test="copied" role="status" aria-live="polite">
+            <template v-if="copied">{{ ui.lobby.copied }}</template>
+          </p>
+        </div>
         <div class="share-row">
           <InputText
             id="invite-link"
@@ -169,9 +174,6 @@ function selectAll(event: FocusEvent) {
             rounded
             @click="copyLink" />
         </div>
-        <p class="copied" data-test="copied" role="status" aria-live="polite">
-          <template v-if="copied">{{ ui.lobby.copied }}</template>
-        </p>
       </div>
 
       <div class="actions">
@@ -207,11 +209,18 @@ function selectAll(event: FocusEvent) {
   display: flex;
   align-items: center;
   justify-content: center;
-  /* Tall lobbies (6 players on a short phone) scroll inside the panel area, never the page. */
+  /* A full lobby (6 players, bots included) fits a 375x667 phone without scrolling: the
+     decorative fan only appears when the viewport is tall enough to give it room. The
+     auto overflow stays as a safety net for very short landscape screens. */
   overflow-x: hidden;
   overflow-y: auto;
   box-sizing: border-box;
-  padding: 100px 16px 24px;
+  padding: 12px;
+}
+.lobby-fan { display: none; }
+@media (min-height: 800px) {
+  .titlescreen { padding: 100px 16px 24px; }
+  .lobby-fan { display: block; }
 }
 
 .title-panel {
@@ -220,11 +229,11 @@ function selectAll(event: FocusEvent) {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 24px;
+  gap: 8px;
   background: var(--panel-bg);
   border: 1px solid var(--panel-border);
   border-radius: 20px;
-  padding: 40px 40px 32px;
+  padding: 20px 32px 20px;
   box-shadow: var(--panel-shadow);
   width: 100%;
   max-width: 480px;
@@ -239,11 +248,11 @@ function selectAll(event: FocusEvent) {
   align-items: center;
   gap: 4px;
 }
-.suit-row { display: flex; gap: 12px; margin-bottom: 4px; }
+.suit-row { display: none; gap: 12px; margin-bottom: 4px; }
 .suit-accent { font-size: 1rem; color: var(--gold-soft); opacity: 0.7; }
 .game-title {
   font-family: var(--font-title);
-  font-size: 2.6rem;
+  font-size: 2rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -255,7 +264,7 @@ function selectAll(event: FocusEvent) {
   line-height: 1.1;
 }
 .lobby-subtitle {
-  margin: 4px 0 0;
+  margin: 0;
   font-family: var(--font-title);
   font-size: 0.875rem;
   font-weight: 600;
@@ -266,6 +275,7 @@ function selectAll(event: FocusEvent) {
 }
 
 .panel-divider {
+  display: none;
   width: 100%;
   height: 1px;
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
@@ -284,12 +294,12 @@ function selectAll(event: FocusEvent) {
 .players-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .player-count { font-weight: 600; font-size: 0.875rem; line-height: 1rem; color: var(--gold-soft); font-variant-numeric: tabular-nums; }
 
-.players { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.players { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 4px; }
 .player {
   display: flex;
   align-items: center;
   gap: 8px;
-  min-height: 48px;
+  min-height: 44px;
   padding: 0 0 0 12px;
   box-sizing: border-box;
   background: rgba(0, 0, 0, 0.4);
@@ -373,9 +383,9 @@ function selectAll(event: FocusEvent) {
   outline-offset: 1px;
 }
 .share-row :deep(.p-button) { flex: none; min-height: 44px; }
+.invite-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+/* "Copied!" shares the label's row so the status line never adds height to the panel. */
 .copied { min-height: 16px; margin: 0; font-size: 0.75rem; line-height: 16px; color: #4ade80; }
-/* The status line is empty most of the time: pull it into the group's 8 px rhythm. */
-.field-group .copied { margin-top: -8px; }
 
 .error {
   width: 100%;
@@ -391,12 +401,23 @@ function selectAll(event: FocusEvent) {
 }
 
 .actions { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 16px; }
-.start-button.p-button { width: 100%; min-height: 48px; letter-spacing: 0.08em; }
+.start-button.p-button { width: 100%; min-height: 44px; letter-spacing: 0.08em; }
 .hint { margin: 0; font-size: 0.875rem; line-height: 1.25rem; color: rgba(255, 255, 255, 0.6); text-align: center; }
 
+/* Roomy viewports get the full decoration and the 24 px section rhythm back. */
+@media (min-height: 900px) {
+  .title-panel { gap: 24px; padding: 40px 40px 32px; }
+  .suit-row { display: flex; }
+  .panel-divider { display: block; }
+  .game-title { font-size: 2.6rem; }
+}
+
 @media (max-width: 480px) {
+  .titlescreen { padding: 8px; }
+  .title-panel { padding: 12px 16px; }
+  .game-title { font-size: 1.75rem; }
+}
+@media (max-width: 480px) and (min-height: 800px) {
   .titlescreen { padding: 88px 12px 16px; }
-  .title-panel { padding: 32px 20px 24px; }
-  .game-title { font-size: 2.1rem; }
 }
 </style>
