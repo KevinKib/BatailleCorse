@@ -54,11 +54,11 @@ class BullshitFactoryTest {
     }
 
     @Test
-    void givenNoDeckSizeOption_whenCreate_thenFullDeck() {
+    void givenNoDeckSizeOption_whenCreate_thenShortDeck() {
         Bullshit game = (Bullshit) new BullshitFactory()
                 .create(GameId.generate(), 2, GameOptions.of(Map.of("claimMode", "rank")));
 
-        assertThat(game.getPlayers().stream().mapToInt(p -> p.handSize()).sum(), is(52));
+        assertThat(game.getPlayers().stream().mapToInt(p -> p.handSize()).sum(), is(32));
     }
 
     @Test

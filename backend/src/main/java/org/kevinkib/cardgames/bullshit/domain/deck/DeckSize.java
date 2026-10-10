@@ -25,6 +25,9 @@ public enum DeckSize {
     SHORT("32", List.of(FrenchRank.SEVEN, FrenchRank.EIGHT, FrenchRank.NINE, FrenchRank.TEN,
             FrenchRank.JACK, FrenchRank.QUEEN, FrenchRank.KING, FrenchRank.ACE));
 
+    /** The deck used when the host does not choose one. The only place this default lives. */
+    public static final DeckSize DEFAULT = SHORT;
+
     private final String key;
     private final List<FrenchRank> ranks;
 
@@ -69,13 +72,13 @@ public enum DeckSize {
         return deck.distributeAll(nbPlayers);
     }
 
-    /** Resolves a key to its size; unknown or {@code null} keys fall back to {@link #FULL}. */
+    /** Resolves a key to its size; unknown or {@code null} keys fall back to {@link #DEFAULT}. */
     public static DeckSize fromKey(String key) {
         for (DeckSize size : values()) {
             if (size.key.equals(key)) {
                 return size;
             }
         }
-        return FULL;
+        return DEFAULT;
     }
 }

@@ -13,11 +13,11 @@ import static org.hamcrest.Matchers.not;
 class DeckSizeTest {
 
     @Test
-    void givenKeys_whenFromKey_thenResolvedAndDefaultsTo52() {
+    void givenKeys_whenFromKey_thenResolvedAndDefaultsTo32() {
         assertThat(DeckSize.fromKey("32"), is(DeckSize.SHORT));
         assertThat(DeckSize.fromKey("52"), is(DeckSize.FULL));
-        assertThat(DeckSize.fromKey(null), is(DeckSize.FULL));
-        assertThat(DeckSize.fromKey("bogus"), is(DeckSize.FULL));
+        assertThat(DeckSize.fromKey(null), is(DeckSize.SHORT));
+        assertThat(DeckSize.fromKey("bogus"), is(DeckSize.SHORT));
     }
 
     @Test

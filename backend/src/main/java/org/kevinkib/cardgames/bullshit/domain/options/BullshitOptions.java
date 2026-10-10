@@ -15,7 +15,7 @@ public record BullshitOptions(ClaimModeOption claimMode, DeckSize deckSize) {
     public static final String DECK_SIZE_KEY = "deckSize";
 
     public BullshitOptions(ClaimModeOption claimMode) {
-        this(claimMode, DeckSize.FULL);
+        this(claimMode, DeckSize.DEFAULT);
     }
 
     public static BullshitOptions from(GameOptions options) {

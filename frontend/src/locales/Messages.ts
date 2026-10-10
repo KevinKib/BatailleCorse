@@ -77,6 +77,7 @@ export interface BullshitUiMessages {
     yourName: string;
     claimModeLegend: string;
     claimModes: { rank: string; suit: string };
+    rankRanges: { '32': string; '52': string };
     deckSizeLegend: string;
     deckSizes: { '32': string; '52': string };
     createGame: string;

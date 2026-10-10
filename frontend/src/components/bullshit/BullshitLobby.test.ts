@@ -61,6 +61,13 @@ describe('BullshitLobby', () => {
     expect(wrapper.get('[data-test="claim-mode"]').text()).toContain(messagesEn.bullshitUi.start.claimModes.suit);
   });
 
+  it('labels the rank mode with the range of the deck in play', () => {
+    const short = mountLobby({ lobby: lobby({ options: { claimMode: 'rank', deckSize: '32' } }) });
+    expect(short.get('[data-test="claim-mode"]').text()).toContain('7→A');
+    const full = mountLobby({ lobby: lobby({ options: { claimMode: 'rank', deckSize: '52' } }) });
+    expect(full.get('[data-test="claim-mode"]').text()).toContain('A→K');
+  });
+
   it('shows the chosen deck size and omits it when the lobby carries none', () => {
     const withDeck = mountLobby({ lobby: lobby({ options: { claimMode: 'rank', deckSize: '32' } }) });
     expect(withDeck.get('[data-test="deck-size"]').text()).toContain(messagesEn.bullshitUi.start.deckSizes['32']);

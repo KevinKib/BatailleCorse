@@ -61,6 +61,23 @@ describe('Bullshit lobby', () => {
     cy.get('[data-test="start-hint"]').should('contain.text', 'Waiting for 1 more player');
   });
 
+  it('shows the deck chosen at creation, read-only, with its rank range', () => {
+    createBullshitGame('Alice', undefined, '52 cards');
+    cy.get('[data-test="deck-size"]').should('contain.text', '52 cards');
+    cy.get('[data-test="claim-mode"]').should('contain.text', 'By rank (A→K)');
+    cy.get('[data-test="add-bot"]').click();
+    cy.get('[data-test="deck-size"]').should('contain.text', '52 cards');
+    cy.get('[data-test="deck-size"] input, [data-test="deck-size"] button').should('not.exist');
+  });
+
+  it('preselects 32 cards on the create screen and shows its rank range', () => {
+    cy.visit('/games/bullshit/create');
+    cy.contains('label', 'By rank (7→A)').should('be.visible');
+    cy.contains('label', 'By rank').click();
+    cy.contains('label', '52 cards').click();
+    cy.contains('label', 'By rank (A→K)').should('be.visible');
+  });
+
   it('fits a phone screen without horizontal overflow', () => {
     cy.viewport(375, 667);
     createBullshitGame('Alice');
@@ -288,8 +305,18 @@ describe('Bullshit claim badge shows the suit symbol', () => {
     createBullshitGame('Alice', 'By suit');
     gameIdFromUrl().then((id) => cy.request('POST', `/api/bullshit/game/${id}/join`, { name: 'Bob' }));
     cy.get('[data-test="start"]', { timeout: 10000 }).should('not.be.disabled').click();
-    cy.get('[data-test="claim-badge"]', { timeout: 10000 }).should('be.visible').and('contain.text', 'HEART');
-    cy.get('[data-test="claim-suit"]').should('be.visible').and('have.text', '♥').and('have.class', 'claim-suit--red');
+    // The claimed suit is drawn at random each round: check the pairing, not the suit.
+    const SUITS_BY_SYMBOL: Record<string, [string, string]> = {
+      '♥': ['HEART', 'claim-suit--red'], '♦': ['DIAMOND', 'claim-suit--red'],
+      '♣': ['CLUB', ''], '♠': ['SPADE', ''],
+    };
+    cy.get('[data-test="claim-badge"]', { timeout: 10000 }).should('be.visible');
+    cy.get('[data-test="claim-suit"]').should('be.visible').then(($symbol) => {
+      const [word, colour] = SUITS_BY_SYMBOL[$symbol.text()];
+      expect(word).to.be.a('string');
+      cy.get('[data-test="claim-badge"]').should('contain.text', word);
+      cy.wrap($symbol).should(colour ? 'have.class' : 'not.have.class', 'claim-suit--red');
+    });
     cy.get('[data-test="my-count"]').should('be.visible').and('have.text', '26')
       .and('have.attr', 'aria-label', '26 cards in your hand');
   });

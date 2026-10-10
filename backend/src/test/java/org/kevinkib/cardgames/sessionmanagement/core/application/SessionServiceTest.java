@@ -346,11 +346,11 @@ class SessionServiceTest {
         }
 
         @Test
-        void givenNoOption_whenStart_thenInitialTargetIsAce() {
+        void givenNoOption_whenStart_thenDefaultShortDeckSoInitialTargetIsSeven() {
             GameId id = startWithTwoPlayers(GameOptions.none());
 
             Bullshit game = (Bullshit) bullshitService.getGame(id);
-            assertThat(game.getCurrentTarget(), is(new RankTarget(FrenchRank.ACE)));
+            assertThat(game.getCurrentTarget(), is(new RankTarget(FrenchRank.SEVEN)));
         }
 
         @Test
@@ -369,6 +369,24 @@ class SessionServiceTest {
 
             Bullshit game = (Bullshit) bullshitService.getGame(id);
             assertThat(game.getCurrentTarget(), is(new SuitTarget(FrenchSuit.HEART)));
+        }
+
+        @Test
+        void given52CardsChosen_whenRematchOrReopened_thenSameDeckSizeKept() {
+            GameId id = startWithTwoPlayers(GameOptions.of(Map.of("deckSize", "52")));
+            assertThat(totalCards((Bullshit) bullshitService.getGame(id)), is(52));
+
+            Bullshit rematch = (Bullshit) bullshitService.rematch(id);
+            assertThat(totalCards(rematch), is(52));
+
+            bullshitService.playAgain(id, "Alice");
+            bullshitService.joinRoom(id, "Bob");
+            bullshitService.startGame(id, bullshitService.tokenForSeat(id, new PlayerId(0)));
+            assertThat(totalCards((Bullshit) bullshitService.getGame(id)), is(52));
+        }
+
+        private int totalCards(Bullshit game) {
+            return game.getPlayers().stream().mapToInt(p -> p.handSize()).sum();
         }
     }
 }

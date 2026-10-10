@@ -117,6 +117,8 @@ describe('English messages', () => {
     expect(messagesEn.bullshitUi.start.deckSizeLegend).toBeTruthy();
     expect(messagesEn.bullshitUi.start.deckSizes['32']).toBeTruthy();
     expect(messagesEn.bullshitUi.start.deckSizes['52']).toBeTruthy();
+    expect(messagesEn.bullshitUi.start.rankRanges['32']).toBeTruthy();
+    expect(messagesEn.bullshitUi.start.rankRanges['52']).toBeTruthy();
   });
 
   it('givenGamePickerMessages_thenEveryLeafStringIsNonEmpty', () => {

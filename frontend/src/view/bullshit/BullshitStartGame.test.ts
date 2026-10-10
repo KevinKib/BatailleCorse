@@ -49,6 +49,14 @@ describe('BullshitStartGame claim mode', () => {
     expect(create).toHaveBeenCalledWith(undefined, 'rank', '52');
   });
 
+  it('shows the rank range of the chosen deck', async () => {
+    const wrapper = await mountCreate();
+    const rank = () => wrapper.get('[data-test="claim-mode-field"] .mode-option').text();
+    expect(rank()).toBe('By rank (7→A)');
+    await wrapper.find('input[type="radio"][value="52"]').setValue();
+    expect(rank()).toBe('By rank (A→K)');
+  });
+
   it('preselects 32 cards and shows localised deck size labels', async () => {
     const wrapper = await mountCreate();
     const active = wrapper.findAll('[data-test="deck-size"] .mode-option--active');

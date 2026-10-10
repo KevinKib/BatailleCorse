@@ -5,6 +5,7 @@ import { Button, InputText } from 'primevue';
 import { useBullshitStore } from '../../state/Bullshit.store';
 import { CLAIM_MODES, DEFAULT_CLAIM_MODE, type ClaimMode } from '../../model/bullshit/claimMode';
 import { DECK_SIZES, DEFAULT_DECK_SIZE, type DeckSize } from '../../model/bullshit/deckSize';
+import { claimModeLabel } from '../../model/bullshit/claimModeLabel';
 import { extractGameId } from '../../model/bullshit/gameId';
 import { useI18n } from '../../composables/useI18n';
 import TitleCardFan from '../../components/TitleCardFan.vue';
@@ -126,7 +127,7 @@ async function onJoin() {
             class="mode-option"
             :class="{ 'mode-option--active': claimMode === mode }">
             <input v-model="claimMode" type="radio" name="claimMode" :value="mode" class="mode-radio" />
-            <span>{{ ui.claimModes[mode] }}</span>
+            <span>{{ claimModeLabel(ui, mode, deckSize) }}</span>
           </label>
         </div>
       </fieldset>
