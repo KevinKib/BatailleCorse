@@ -141,3 +141,114 @@ describe('Bullshit table (desktop, 1280x720)', () => {
     cy.get('[data-test="call"]').should('be.visible');
   });
 });
+
+describe('Bullshit arrival by invite link (no flash of the table)', () => {
+  it('shows the lobby without ever rendering the game table, even on a slow network', () => {
+    createBullshitGame('Alice');
+    gameIdFromUrl().then((id) => {
+      cy.clearLocalStorage();
+      // Slow every read so the "connecting" phase lasts long enough to be seen.
+      cy.intercept('GET', '/api/**', (req) => req.continue((res) => { res.delay = 1500; }));
+      cy.visit(`/games/bullshit/join/${id}`, {
+        onBeforeLoad(win) {
+          // Records any moment the table or the in-game actions exist in the DOM.
+          (win as any).__sawTable = false;
+          new win.MutationObserver(() => {
+            if (win.document.querySelector('.table-frame, [data-test="discard"], [data-test="call"]')) {
+              (win as any).__sawTable = true;
+            }
+          }).observe(win.document, { childList: true, subtree: true });
+        },
+      });
+      cy.get('[data-test="name"]').type('Bob');
+      cy.get('[data-test="submit"]').click();
+      cy.get('[data-test="lobby"]', { timeout: 15000 }).should('be.visible');
+      cy.window().its('__sawTable').should('eq', false);
+    });
+  });
+});
+
+// Layout matrix. The game state is rewritten in the store (players, hand size) so every
+// combination can be measured on the real screen without playing the game down.
+const RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'JACK', 'QUEEN', 'KING', 'ACE'];
+const SUITS = ['HEART', 'DIAMOND', 'CLUB', 'SPADE'];
+
+function setTable(players: number, handSize: number) {
+  cy.window().then((win) => {
+    const app = (win.document.querySelector('#app') as any).__vue_app__;
+    const state = app.config.globalProperties.$pinia.state.value['bullshit-store'].state;
+    state.players = Array.from({ length: players }, (_, i) => ({
+      id: String(i), handCount: i === 0 ? handSize : 5, isCurrentPlayer: i === 0,
+    }));
+    state.myHand = Array.from({ length: handSize }, (_, i) => {
+      const rank = RANKS[i % 13];
+      const suit = SUITS[Math.floor(i / 13) % 4];
+      return { rank, suit, name: `${suit}_${rank}` };
+    });
+    state.availableActions = ['DISCARD', 'CALL_BULLSHIT'];
+  });
+}
+
+function startTwoPlayerGame() {
+  createBullshitGame('Alice');
+  gameIdFromUrl().then((id) => cy.request('POST', `/api/bullshit/game/${id}/join`, { name: 'Bob' }));
+  cy.get('[data-test="start"]', { timeout: 10000 }).should('not.be.disabled').click();
+  cy.get('[data-test="hand-card-0"]', { timeout: 10000 }).should('exist');
+  // Deliberate fixed wait: let the last server pushes land so they cannot overwrite the
+  // state the matrix rewrites afterwards.
+  cy.wait(1000);
+}
+
+describe('Bullshit hand / actions spacing matrix', () => {
+  const viewports: Array<[number, number]> = [[375, 667], [390, 844], [1280, 720], [1280, 800]];
+  const players = [2, 3, 4, 5, 6];
+  const hands = [5, 13, 26];
+
+  function measure(vw: number, vh: number, handSize: number, label: string) {
+    cy.document().then((doc) => {
+      const el = doc.scrollingElement as Element;
+      expect(el.scrollHeight, `${label}: no vertical scroll`).to.be.at.most(el.clientHeight + 1);
+      expect(el.scrollWidth, `${label}: no horizontal scroll`).to.be.at.most(el.clientWidth + 1);
+      const cards = [...doc.querySelectorAll('[data-test^="hand-card-"]')] as HTMLElement[];
+      expect(cards, `${label}: cards`).to.have.length(handSize);
+      const rects = cards.map((c) => c.getBoundingClientRect());
+      expect(new Set(rects.map((r) => Math.round(r.top))).size, `${label}: one row`).to.eq(1);
+      rects.forEach((r) => {
+        expect(r.left, label).to.be.at.least(-1);
+        expect(r.right, label).to.be.at.most(vw + 1);
+      });
+      const cardsBottom = Math.max(...rects.map((r) => r.bottom));
+      const buttons = ['discard', 'call'].map((t) =>
+        (doc.querySelector(`[data-test="${t}"]`) as HTMLElement).getBoundingClientRect());
+      buttons.forEach((b) => {
+        expect(b.bottom, `${label}: button above the bottom edge`).to.be.at.most(vh);
+        expect(b.height, `${label}: touch target`).to.be.at.least(44);
+      });
+      expect(Math.min(...buttons.map((b) => b.top)) - cardsBottom, `${label}: cards to buttons`).to.be.at.least(15.5);
+      expect(buttons[1].left - buttons[0].right, `${label}: between buttons`).to.be.within(7.5, 12.5);
+    });
+  }
+
+  viewports.forEach(([vw, vh]) => {
+    it(`holds at ${vw}x${vh} for every player count and hand size`, () => {
+      cy.viewport(vw, vh);
+      startTwoPlayerGame();
+      players.forEach((p) => hands.forEach((h) => {
+        setTable(p, h);
+        cy.get('[data-test^="hand-card-"]').should('have.length', h);
+        measure(vw, vh, h, `${vw}x${vh} ${p}p ${h}c`);
+      }));
+    });
+  });
+
+  it('keeps a selected (raised) card clear of the buttons', () => {
+    cy.viewport(375, 667);
+    startTwoPlayerGame();
+    cy.get('[data-test="hand-card-3"]').click(4, 40);
+    cy.get('[data-test="hand-card-3"]').should('have.class', 'selected').then(($c) => {
+      const card = $c[0].getBoundingClientRect();
+      const discard = Cypress.$('[data-test="discard"]')[0].getBoundingClientRect();
+      expect(discard.top - card.bottom, 'raised card stays above the buttons').to.be.at.least(15.5);
+    });
+  });
+});

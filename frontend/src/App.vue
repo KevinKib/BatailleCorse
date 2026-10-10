@@ -87,6 +87,17 @@ function onLeave(el: Element, done: () => void) {
 @import 'primeicons/primeicons.css';
 
 :root {
+  /* Spacing scale on a 4/8 grid. Use these instead of hard-coded px for gaps,
+     paddings and margins (the Bullshit game screen is the first adopter). */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+
   /* Typefaces (visual direction "C bis"), the single place they are named.
      Loaded from Google Fonts in index.html. Title: headings, numerals and
      labels (500-800); UI: body copy and controls (400-700). */

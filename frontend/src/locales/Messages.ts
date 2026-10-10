@@ -70,6 +70,7 @@ export interface BullshitUiMessages {
   botLabel: string;                    // '{n}' = 1-based position among the bots
   you: string;
   back: string;
+  connecting: string;                  // shown while the first server state is on its way
   start: {
     title: string;
     yourName: string;
