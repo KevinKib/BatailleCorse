@@ -32,6 +32,7 @@ Jeux de cartes temps réel (Bataille Corse et Bullshit) : backend Spring Boot (c
 
 - Pas de base de données, donc pas de jeu de données à charger : l'état vit en mémoire, une partie se crée depuis l'interface (deux onglets ou deux navigateurs pour deux joueurs).
 - Seul : `sh dev.sh` (équivalent de `docker compose -f docker-compose.dev.yml up --build`). Frontend http://localhost:5173, backend http://localhost:8080, débogage distant 5005. Le backend a un healthcheck : ajouter `-d --wait` pour l'attendre en arrière-plan.
+- Cycle de vie : on ne crée un environnement que pour une story avec une fonctionnalité testable à la main (UI, parcours utilisateur), jamais pour du travail technique ; une fois la PR mergée, la session le ferme (`docker compose -p <projet> down`, sans `-v`) sans demander, après avoir vérifié avec `gh` que la PR est mergée et avec `docker ps` que le projet est bien le sien, et ne ferme jamais celui d'une PR ouverte ou d'une autre session sans accord.
 - Le Vite du conteneur proxifie `/api` et `/connect` vers `backend:8080` sur le réseau Compose : on ne lance donc pas Vite hors de Docker.
 - Ports pris par une autre session : la laisser tourner et lancer celle-ci sous son propre nom de projet avec un fichier de ports décalés (dans le scratchpad, pas dans le dépôt). `VITE_HMR_CLIENT_PORT` garde le rechargement à chaud sur le port publié.
 
