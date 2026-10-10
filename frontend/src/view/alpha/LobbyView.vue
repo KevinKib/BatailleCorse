@@ -89,9 +89,16 @@ onMounted(() => preloadAllCards());
   border-radius: 20px;
   padding: 48px 52px 36px;
   box-shadow: var(--panel-shadow);
-  min-width: 380px;
-  max-width: 480px;
+  /* Fluid: 380px on wide screens, never wider than the viewport minus a 12px gutter. */
+  min-width: min(380px, calc(100% - 24px));
+  max-width: min(480px, calc(100% - 24px));
   margin-top: 60px;
+}
+
+@media (max-width: 480px) {
+  .title-panel {
+    padding: 40px 28px 32px;
+  }
 }
 
 .title-block {
