@@ -9,6 +9,7 @@ import type RematchEventData from '../model/event/RematchEventData';
 import type { GameEvent } from './GameEvent';
 import AI from '../model/ai/AI';
 import type SessionSeat from '../model/SessionSeat';
+import { SEAT_LIFECYCLE_EVENT } from '../model/SeatLifecycleEvents';
 
 export interface WebSocketPort {
   publish(destination: string, body?: string): void;
@@ -347,20 +348,16 @@ export default class GameSession {
       }
     }
 
-    if (response.eventType === 'OPPONENT_DISCONNECTED') {
-      const data = response.eventData as unknown as { disconnectedSeat: number; deadlineEpochMs: number };
+    // Forward the game-agnostic seat-lifecycle events verbatim; the store reduces
+    // them via useSeatPresence. Do not reshape or coerce — useSeatPresence owns that.
+    if (
+      response.eventType === SEAT_LIFECYCLE_EVENT.OPPONENT_DISCONNECTED ||
+      response.eventType === SEAT_LIFECYCLE_EVENT.OPPONENT_RECONNECTED
+    ) {
       this.callbacks.onEvent({
-        type: 'opponent-connection',
-        status: 'disconnected',
-        seat: Number(data.disconnectedSeat),
-        deadlineEpochMs: Number(data.deadlineEpochMs),
-      });
-    } else if (response.eventType === 'OPPONENT_RECONNECTED') {
-      const data = response.eventData as unknown as { reconnectedSeat: number };
-      this.callbacks.onEvent({
-        type: 'opponent-connection',
-        status: 'connected',
-        seat: Number(data.reconnectedSeat),
+        type: 'presence-event',
+        eventType: response.eventType,
+        eventData: response.eventData,
       });
     }
 

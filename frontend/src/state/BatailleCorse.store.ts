@@ -10,6 +10,7 @@ import { useSettingsStore } from './Settings.store';
 import { DIFFICULTY } from '../model/Difficulty';
 import GameSession from '../application/GameSession';
 import type { GameEvent } from '../application/GameEvent';
+import { useSeatPresence } from '../composables/useSeatPresence';
 
 export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
 
@@ -27,11 +28,6 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
   const waiting = ref<boolean>(false);
   const myName = ref<string | null>(null);
   const opponentName = ref<string | null>(null);
-  const opponentConnection = ref<
-    | { status: 'disconnected'; seat: number; deadlineEpochMs: number }
-    | { status: 'connected'; seat: number }
-    | null
-  >(null);
   const rematchState = ref<'idle' | 'requested-by-me' | 'requested-by-opponent'>('idle');
 
   let animationResolve: (() => void) | null = null;
@@ -41,35 +37,46 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
 
   const settingsStore = useSettingsStore();
 
+  // BC has exactly one opponent. Express that as the brick's seat map: in multiplayer
+  // the only "present" seat that can disconnect is the opponent (1 - myPlayerIndex);
+  // in solo there is none. This single narrowing folds the old is-me and
+  // is-multiplayer guards into useSeatPresence's liveDisconnections filter.
+  const presence = useSeatPresence({
+    presentSeats: () => (mode.value === 'multiplayer' ? [1 - myPlayerIndex.value] : []),
+  });
+
+  function applyEvent(event: GameEvent) {
+    switch (event.type) {
+      case 'state-update':    state.value = event.state; break;
+      case 'game-id-change':  gameId.value = event.gameId; break;
+      case 'send':            lastSend.value = event; break;
+      case 'grab':            lastGrab.value = event; break;
+      case 'slap':            lastSlap.value = { seq: ++slapSeq }; break;
+      case 'successful-slap': lastSuccessfulSlap.value = event; break;
+      case 'erroneous-slap':  lastErroneousSlap.value = event; break;
+      case 'mode-change':          mode.value = event.mode; break;
+      case 'my-index-change':      myPlayerIndex.value = event.playerIndex; break;
+      case 'waiting-change':       waiting.value = event.waiting; break;
+      case 'my-name-change':       myName.value = event.name; break;
+      case 'opponent-name-change': opponentName.value = event.name; break;
+      case 'presence-event':       presence.applyPresenceEvent(event.eventType, event.eventData); break;
+      case 'rematch':
+        if (event.status === 'started') {
+          rematchState.value = 'idle';
+          presence.reset();
+        } else {
+          rematchState.value = event.requestedBy === myPlayerIndex.value
+            ? 'requested-by-me'
+            : 'requested-by-opponent';
+        }
+        break;
+    }
+  }
+
   const session = new GameSession(
     webSocketService,
     {
-      onEvent(event: GameEvent) {
-        switch (event.type) {
-          case 'state-update':    state.value = event.state; break;
-          case 'game-id-change':  gameId.value = event.gameId; break;
-          case 'send':            lastSend.value = event; break;
-          case 'grab':            lastGrab.value = event; break;
-          case 'slap':            lastSlap.value = { seq: ++slapSeq }; break;
-          case 'successful-slap': lastSuccessfulSlap.value = event; break;
-          case 'erroneous-slap':  lastErroneousSlap.value = event; break;
-          case 'mode-change':          mode.value = event.mode; break;
-          case 'my-index-change':      myPlayerIndex.value = event.playerIndex; break;
-          case 'waiting-change':       waiting.value = event.waiting; break;
-          case 'my-name-change':       myName.value = event.name; break;
-          case 'opponent-name-change': opponentName.value = event.name; break;
-          case 'opponent-connection':  opponentConnection.value = event; break;
-          case 'rematch':
-            if (event.status === 'started') {
-              rematchState.value = 'idle';
-            } else {
-              rematchState.value = event.requestedBy === myPlayerIndex.value
-                ? 'requested-by-me'
-                : 'requested-by-opponent';
-            }
-            break;
-        }
-      },
+      onEvent: applyEvent,
       awaitAnimation: () => new Promise<void>(resolve => { animationResolve = resolve; }),
     },
     () => new AI(1, DIFFICULTY[settingsStore.difficulty].reactionTime),
@@ -88,15 +95,16 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
     waiting,
     myName,
     opponentName,
-    opponentConnection,
     lastSend,
     lastGrab,
     lastSlap,
     lastSuccessfulSlap,
     lastErroneousSlap,
     rematchState,
-    create:               (gameMode: 'solo' | 'multiplayer', name?: string) => { rematchState.value = 'idle'; session.create(gameMode, name); },
-    join:                 (id: string, name?: string) => session.join(id, name),
+    liveDisconnections: presence.liveDisconnections,
+    applyEvent,
+    create:               (gameMode: 'solo' | 'multiplayer', name?: string) => { rematchState.value = 'idle'; presence.reset(); session.create(gameMode, name); },
+    join:                 (id: string, name?: string) => { presence.reset(); return session.join(id, name); },
     loadSessionView:      (id: string) => session.loadSessionView(id),
     hydrate:              (id: string, s: BatailleCorse) => session.hydrate(id, s),
     restoreTokens:        (tokens: Record<number, string>) => session.restoreTokens(tokens),

@@ -5,13 +5,11 @@ import type {
   OpponentReconnectedEventData,
   ForfeitEventData,
 } from '../model/SeatLifecycleEvents';
+import { SEAT_LIFECYCLE_EVENT } from '../model/SeatLifecycleEvents';
 
-/** The three game-agnostic per-seat lifecycle event types (single source of truth). */
-export const SEAT_LIFECYCLE_EVENT = {
-  OPPONENT_DISCONNECTED: 'OPPONENT_DISCONNECTED',
-  OPPONENT_RECONNECTED: 'OPPONENT_RECONNECTED',
-  FORFEIT: 'FORFEIT',
-} as const;
+// Re-exported for existing importers; the canonical definition lives in the model
+// so the framework-free application layer can import it without pulling in Vue.
+export { SEAT_LIFECYCLE_EVENT };
 
 /** How long the "Player N forfeited" notice stays up before auto-dismissing. */
 export const FORFEIT_NOTICE_HOLD_MS = 4000;
