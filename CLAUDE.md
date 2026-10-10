@@ -25,6 +25,7 @@ Jeux de cartes temps réel (Bataille Corse et Bullshit) : backend Spring Boot (J
 
 - Backend : `cd backend && mvn -s ../deploy/docker/settings.xml test` (si Maven est installé en local ; sinon via le conteneur de dev, voir le README). Les tests `*IT` / `ApplicationContextTest` démarrent le contexte Spring, sans Docker.
 - Frontend : `cd frontend && npm test` (Vitest + happy-dom), puis `npx vite build`.
+- CI (`.github/workflows/ci.yml`, push sur `main` et pull requests, ubuntu-latest) : rejoue ces deux suites (backend `mvn -B test` avec JDK 22, frontend `npm ci`, `npm test`, `npx vite build` avec Node 20). Dans la CI, `frenchcards` se résout via le `GITHUB_TOKEN` (pas de `settings.xml` du dépôt). Pas d'e2e en CI pour l'instant.
 - E2E (Cypress) : pile `docker-compose.e2e.yml` (profil Spring `test`), puis `cd frontend && npm run cy:run`. Cypress vise le port fixe 5173 : une seule pile e2e à la fois. Si une autre pile tient ce port, l'arrêter (`docker stop`, jamais de suppression), jouer l'e2e, démonter la pile e2e (`docker compose -f docker-compose.e2e.yml down`), puis redémarrer la pile arrêtée, même si Cypress échoue.
 
 ## Environnement de dev

@@ -43,6 +43,7 @@ The sibling project ShodoCFI (PR #25 and #26) got a first harness iteration. Thi
 | `CLAUDE.md` | Language, domain architecture rules, tracking, test suites, e2e rule, dev environment and offset-ports model |
 | `frontend/vite.config.mjs` | `VITE_HMR_CLIENT_PORT`: hot reload follows the published port |
 | `docs/harnesses.md` | This document |
+| `.github/workflows/ci.yml` | GitHub Actions: backend tests and frontend tests + build on push to `main` and on pull requests (no e2e yet) |
 
 ## Known limits
 
