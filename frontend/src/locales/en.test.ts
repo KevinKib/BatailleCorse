@@ -87,6 +87,28 @@ describe('English messages', () => {
     expect(messagesEn.bullshitUi.table.playedFaceDown.other).toContain('{n}');
   });
 
+  it('givenBullshitUiMessages_thenLobbyHasBadgesCopyFeedbackAndClaimModeLabel', () => {
+    const lobby = messagesEn.bullshitUi.lobby;
+    for (const key of ['playersLabel', 'youBadge', 'botBadge', 'hostBadge', 'claimModeLabel', 'copy', 'copied'] as const) {
+      expect(lobby[key]).toBeTruthy();
+    }
+    expect(lobby.copied).toBe('Copied!');
+  });
+
+  it('givenBullshitUiMessages_thenStartScreensHaveJoinAndCreateErrors', () => {
+    const start = messagesEn.bullshitUi.start;
+    expect(start.errors.joinFailed).toBeTruthy();
+    expect(start.errors.createFailed).toBeTruthy();
+    expect(start.joinTitle).toBeTruthy();
+    expect(start.namePlaceholder).toBeTruthy();
+    expect(start.gameIdPlaceholder).toBeTruthy();
+  });
+
+  it('givenBullshitUiMessages_thenHandCardsHaveAnAccessibleLabelTemplate', () => {
+    expect(messagesEn.bullshitUi.table.cardLabel).toContain('{rank}');
+    expect(messagesEn.bullshitUi.table.cardLabel).toContain('{suit}');
+  });
+
   it('givenBullshitUiMessages_thenClaimModesCoverRankAndSuit', () => {
     expect(messagesEn.bullshitUi.start.claimModes.rank).toBeTruthy();
     expect(messagesEn.bullshitUi.start.claimModes.suit).toBeTruthy();

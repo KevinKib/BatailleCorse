@@ -2,6 +2,8 @@ export interface LobbyPlayer {
   seat: number;
   name: string | null;
   joined: boolean;
+  // True for a computer-controlled seat (the backend always sends it).
+  bot?: boolean;
 }
 
 export interface LobbyView {
@@ -13,7 +15,8 @@ export interface LobbyView {
   minPlayers: number;
   maxPlayers: number;
   canStart: boolean;
-  // Opaque host-selected game options (e.g. claimMode). Carried now; rendering the chosen
-  // mode in the lobby is a deferred follow-up that owns BullshitGameScreen.vue.
+  // Host-selected game options; `claimMode` is shown in the lobby.
   options?: Record<string, string>;
+  // Bot seats the host may remove right now (host only).
+  removableBotSeats?: number[];
 }

@@ -76,6 +76,7 @@ defineProps<{
   border-radius: 999px;
   padding: 3px 10px;
   white-space: nowrap;
+  max-width: 100%;
 }
 
 /* Active turn: crisp 1px ring + fixed dot, same as BatailleCorse's name tag. */
@@ -97,5 +98,11 @@ defineProps<{
   margin-top: calc(var(--turn-dot-size) / -2);
   border-radius: 50%;
   background: var(--gold);
+}
+/* Narrow tables fit up to five seats in one row, so the tags shrink. */
+@media (max-width: 700px) {
+  .seat-label { font-size: 0.6rem; letter-spacing: 0.02em; padding: 3px 5px; }
+  .seat-label--active { padding-left: 13px; }
+  .seat-label--active::before { left: 5px; }
 }
 </style>
