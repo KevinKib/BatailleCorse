@@ -321,4 +321,29 @@ describe('BullshitGameScreen', () => {
       expect(wrapper.find('img[src="x"]').exists()).toBe(false);
     });
   });
+
+  it('shows a neutral loading status, and neither the table nor the actions, while connecting', () => {
+    const store = useBullshitStore();
+    expect(store.phase).toBe('connecting');
+    const wrapper = mount(BullshitGameScreen, { props: { gameId: 'g1' }, global: { plugins: [router, PrimeVue] } });
+
+    const status = wrapper.get('[data-test="connecting"]');
+    expect(status.attributes('role')).toBe('status');
+    expect(status.text()).toContain('Joining the table');
+    for (const sel of ['.table-frame', '.my-zone', '[data-test="discard"]', '[data-test="call"]',
+      '[data-test="claim-badge"]', '[data-test="lobby"]', '[data-test="end"]']) {
+      expect(wrapper.find(sel).exists(), sel).toBe(false);
+    }
+  });
+
+  it('leaves the loading status once the lobby state arrives', async () => {
+    const store = useBullshitStore();
+    const wrapper = mount(BullshitGameScreen, { props: { gameId: 'g1' }, global: { plugins: [router, PrimeVue] } });
+    expect(wrapper.find('[data-test="connecting"]').exists()).toBe(true);
+
+    store.applyEvent({ type: 'seat-change', seat: 0 });
+    store.applyEvent({ type: 'state-update', state: lobbyView() });
+    await wrapper.vm.$nextTick();
+    expect(wrapper.find('[data-test="connecting"]').exists()).toBe(false);
+  });
 });

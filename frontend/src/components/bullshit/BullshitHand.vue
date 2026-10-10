@@ -51,7 +51,7 @@ const cardLabel = (card: Card) =>
   justify-content: center;
   width: 100%;
   /* Room above the row for the raised (selected) card. */
-  padding-top: 14px;
+  padding-top: var(--space-3);
   box-sizing: border-box;
 }
 .hand-card {
@@ -72,7 +72,7 @@ const cardLabel = (card: Card) =>
 .hand-card:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 /* Raised, but kept in DOM order: bringing it to the front would hide the index of the cards
    it overlaps and make them untappable in a crowded hand. */
-.hand-card.selected { transform: translateY(-12px); }
+.hand-card.selected { transform: translateY(calc(-1 * var(--space-3))); }
 .hand-card :deep(.playing_card) {
   display: block;
   width: 100%;

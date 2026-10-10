@@ -100,6 +100,14 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
       @play-again="store.playAgain()"
     />
 
+    <!-- First server state not here yet (e.g. arriving through an invite link): a neutral
+         felt screen, not the table, so the game UI never flashes before the lobby. -->
+    <div v-else-if="store.phase === 'connecting'" class="connecting" data-test="connecting"
+         role="status" aria-live="polite">
+      <i class="pi pi-spin pi-spinner connecting-spinner" aria-hidden="true"></i>
+      <span>{{ ui.connecting }}</span>
+    </div>
+
     <template v-else>
       <RulesPanel :rules="messages.bullshit" />
 
@@ -212,18 +220,36 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 0px));
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-2) calc(var(--space-2) + env(safe-area-inset-bottom, 0px));
   box-sizing: border-box;
   height: 100vh;
   height: 100dvh;
   overflow: hidden;
+  /* Vertical rhythm of the bottom zone, each tunable from one token. "You" and the hand are
+     one group (small gap, measured to the raised selected card); the hand and the actions
+     are two groups (larger gap). */
+  --you-hand-gap: var(--space-3);
+  --hand-actions-gap: var(--space-4);
   /* Paint our own felt: the shared app-background is only a backdrop for title screens.
      Mirrors the BatailleCorse game screen, which also paints its own opaque felt. */
   background:
     radial-gradient(ellipse at 50% 42%, transparent 15%, rgba(0, 0, 0, 0.62) 100%),
     radial-gradient(ellipse at 50% 38%, var(--felt-center) 0%, var(--felt-mid) 48%, var(--felt-edge) 100%);
 }
+/* Neutral waiting screen: the felt of the screen shows through, centred spinner and text. */
+.connecting {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  color: rgba(255, 255, 255, 0.85);
+  font-family: var(--font-title);
+  letter-spacing: 0.04em;
+}
+.connecting-spinner { font-size: 1.5rem; color: var(--gold); }
 /* The lobby is a title-style screen: it sits on the shared felt background instead. */
 .bullshit-screen--lobby {
   display: block;
@@ -307,8 +333,8 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 8px 4px;
-    padding: 12px 4px 0;
+    gap: var(--space-2) var(--space-1);
+    padding: var(--space-3) var(--space-1) 0;
     pointer-events: auto;
   }
   .seat-slot {
@@ -322,8 +348,8 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
     flex: 1 1 0;
     min-height: 0;
     justify-content: center;
-    padding: 4px 8px 8px;
-    gap: 8px;
+    padding: var(--space-1) var(--space-2) var(--space-2);
+    gap: var(--space-2);
   }
 }
 
@@ -335,7 +361,7 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
   background: rgba(0, 0, 0, 0.45);
   border: 1px solid rgba(var(--accent-active-rgb), 0.4);
   border-radius: 999px;
-  padding: 4px 14px;
+  padding: var(--space-1) 14px;
 }
 .claim-badge strong { color: var(--gold); }
 
@@ -375,7 +401,7 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: var(--space-2);
   pointer-events: none;
 }
 
@@ -420,7 +446,7 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
   letter-spacing: 0.12em;
   font-size: 0.95rem;
   color: #fff;
-  padding: 4px 16px;
+  padding: var(--space-1) var(--space-4);
   border-radius: 999px;
   opacity: 0;
   animation: verdict-in 360ms ease-out forwards;
@@ -457,7 +483,7 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
   color: rgba(255, 255, 255, 0.9);
   background: rgba(0, 0, 0, 0.7);
   border-radius: 8px;
-  padding: 4px 8px;
+  padding: var(--space-1) var(--space-2);
   overflow-wrap: anywhere;
 }
 
@@ -473,11 +499,11 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 0;
   width: 100%;
   max-width: 1000px;
   margin: 0 auto;
-  padding: 8px 8px 0;
+  padding: var(--space-2) var(--space-2) 0;
   box-sizing: border-box;
   background: linear-gradient(to top, rgba(0, 0, 0, 0.30) 0%, rgba(0, 0, 0, 0.04) 100%);
   border-top: 1px solid rgba(255, 255, 255, 0.05);
@@ -486,17 +512,25 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
 
 .actions {
   display: flex;
-  gap: 8px;
+  /* Between the two buttons: 8px, much less than the gap to the hand above. */
+  gap: var(--space-2);
   width: 100%;
   justify-content: center;
-  padding-bottom: 4px;
+  /* The room comes out of the table (flex: 1), never out of the page. */
+  margin-top: var(--hand-actions-gap);
+  padding-bottom: var(--space-1);
 }
 .actions :deep(.p-button) {
   flex: 1 1 0;
+  /* Comfortable touch target. */
+  min-height: 44px;
   max-width: 240px;
   min-width: 0;
   white-space: nowrap;
-  padding-inline: 0.6rem;
+  padding-inline: var(--space-3);
+}
+@media (min-width: 400px) {
+  .actions :deep(.p-button) { padding-inline: var(--space-4); }
 }
 
 .my-tag {
@@ -508,9 +542,9 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
   background: rgba(0, 0, 0, 0.45);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 999px;
-  padding: 4px 14px;
+  padding: var(--space-1) 14px;
 }
-.my-tag { position: relative; }
+.my-tag { position: relative; margin-bottom: var(--you-hand-gap); }
 .my-tag--active {
   padding-left: 22px;
   color: #ffffff;
