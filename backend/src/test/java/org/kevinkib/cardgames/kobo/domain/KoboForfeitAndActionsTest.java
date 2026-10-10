@@ -85,6 +85,37 @@ class KoboForfeitAndActionsTest {
     }
 
     @Test
+    void startSeatForfeitsWhileMemorising_theNextRemainingSeatOpensTheRound() throws Exception {
+        Kobo kobo = new Kobo(GameId.generate(), 3, 1L);
+
+        kobo.forfeit(seat(0));
+        kobo.ready(seat(1));
+        kobo.ready(seat(2));
+
+        assertThat(kobo.phase(), is(Phase.DRAW));
+        assertThat(kobo.getPlayerIds(), contains(seat(1), seat(2)));
+        assertThat(kobo.currentSeat(), is(seat(1)));
+        kobo.draw(seat(1));
+    }
+
+    @Test
+    void startSeatForfeitsWhileMemorisingTheNextRound_theNextRemainingSeatOpensTheRound() throws Exception {
+        Kobo kobo = threePlayers().inPhase(Phase.ROUND_OVER).build();
+        kobo.ready(seat(0));
+        kobo.ready(seat(1));
+        kobo.ready(seat(2));
+        assertThat(kobo.phase(), is(Phase.MEMORISING));
+
+        kobo.forfeit(seat(1));
+        kobo.ready(seat(0));
+        kobo.ready(seat(2));
+
+        assertThat(kobo.phase(), is(Phase.DRAW));
+        assertThat(kobo.currentSeat(), is(seat(2)));
+        kobo.draw(seat(2));
+    }
+
+    @Test
     void forfeitDuringFinalTurns_leavesTheQueue_andScoresWhenItEmpties() throws Exception {
         Kobo kobo = threePlayers().inPhase(Phase.TURN_END).build();
         kobo.announceKobo(seat(0));

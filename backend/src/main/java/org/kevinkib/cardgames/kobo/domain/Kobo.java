@@ -177,6 +177,9 @@ public class Kobo implements Game {
         ready.clear();
         if (phase == Phase.MEMORISING) {
             phase = Phase.DRAW;
+            if (findPlayer(startSeat) == null) {
+                startSeat = nextSeatAfter(startSeat);
+            }
             currentSeat = startSeat;
         } else {
             round++;
