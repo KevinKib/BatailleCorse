@@ -20,6 +20,7 @@ public final class KoboBuilder {
     private int current = 0;
     private Card drawn;
     private Power power;
+    private int[] totals;
 
     public static KoboBuilder aKobo() {
         return new KoboBuilder();
@@ -68,10 +69,20 @@ public final class KoboBuilder {
         return this;
     }
 
+    public KoboBuilder withTotals(int... totals) {
+        this.totals = totals;
+        return this;
+    }
+
     public Kobo build() {
         Kobo kobo = new Kobo(GameId.generate(), 42L, tableaux, drawPile, discard, phase, new PlayerId(current));
         if (drawn != null) {
             kobo.setDrawn(drawn);
+        }
+        if (totals != null) {
+            for (int i = 0; i < totals.length; i++) {
+                kobo.setTotal(new PlayerId(i), totals[i]);
+            }
         }
         if (power != null) {
             kobo.setPendingPower(power);
