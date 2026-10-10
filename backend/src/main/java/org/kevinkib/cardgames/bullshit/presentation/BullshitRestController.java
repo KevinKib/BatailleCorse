@@ -67,7 +67,7 @@ public class BullshitRestController {
 
         Optional<Game> game = sessionService.findGame(gameId);
         if (game.isPresent()) {
-            return ResponseEntity.ok(BullshitDto.forViewer((Bullshit) game.get(), seat));
+            return ResponseEntity.ok(broadcaster.stateFor((Bullshit) game.get(), seat));
         }
         return ResponseEntity.ok(sessionService.lobbyView(gameId, token));
     }

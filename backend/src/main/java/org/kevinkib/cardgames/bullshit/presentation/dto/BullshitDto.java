@@ -7,6 +7,8 @@ import org.kevinkib.cardgames.bullshit.domain.player.Player;
 import org.kevinkib.cardgames.game.PlayerId;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.Optional;
 
 public record BullshitDto(
@@ -23,6 +25,10 @@ public record BullshitDto(
         OutcomeDto outcome) {
 
     public static BullshitDto forViewer(Bullshit game, PlayerId viewer) {
+        return forViewer(game, viewer, Map.of(), Set.of());
+    }
+
+    public static BullshitDto forViewer(Bullshit game, PlayerId viewer, Map<PlayerId, String> names, Set<PlayerId> bots) {
         Optional<Player> viewerPlayer = game.getPlayers().stream()
                 .filter(p -> p.id().equals(viewer))
                 .findFirst();
@@ -38,7 +44,7 @@ public record BullshitDto(
 
         PlayerId currentPlayerId = game.getCurrentPlayer().id();
         List<BullshitPlayerDto> players = game.getPlayers().stream()
-                .map(p -> BullshitPlayerDto.from(p, p.id().equals(currentPlayerId)))
+                .map(p -> BullshitPlayerDto.from(p, p.id().equals(currentPlayerId), names.get(p.id()), bots.contains(p.id())))
                 .toList();
 
         return new BullshitDto(

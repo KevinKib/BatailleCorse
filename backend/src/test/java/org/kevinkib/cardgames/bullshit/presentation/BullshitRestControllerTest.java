@@ -55,7 +55,7 @@ class BullshitRestControllerTest {
         messaging = new RecordingMessaging();
         controller = new BullshitRestController(
                 sessionService,
-                new BullshitStateBroadcaster(messaging),
+                new BullshitStateBroadcaster(messaging, sessionService::botSeats, sessionService::seatNames),
                 new LobbyBroadcaster(messaging, sessionService));
     }
 
@@ -124,6 +124,25 @@ class BullshitRestControllerTest {
                 controller.joinGame(room.gameId(), new JoinGamePayload("Late"));
 
         assertThat(response.getStatusCode().value(), is(409));
+    }
+
+    @Test
+    void givenNamedPlayersBotAndBlankName_whenGetGame_thenPlayersCarryNamesAndBotFlag() {
+        RoomCreated room = sessionService.createRoom("bullshit", "  Alice  ");
+        GameId id = new GameId(room.gameId());
+        sessionService.joinRoom(id, "Bob");
+        sessionService.joinRoom(id, "   ");
+        sessionService.addBot(id, room.hostToken());
+        sessionService.startGame(id, room.hostToken());
+
+        BullshitDto dto = (BullshitDto) controller.getGame(room.gameId(), room.hostToken()).getBody();
+
+        assertThat(dto.players().get(0).name(), is("Alice"));
+        assertThat(dto.players().get(1).name(), is("Bob"));
+        assertThat(dto.players().get(2).name(), is("Player 3"));
+        assertThat(dto.players().get(3).bot(), is(true));
+        assertThat(dto.players().get(3).name(), is((String) null));
+        assertThat(dto.players().get(0).bot(), is(false));
     }
 
     @Test

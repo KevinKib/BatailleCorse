@@ -6,7 +6,6 @@ import org.kevinkib.cardgames.bullshit.domain.options.BullshitOptions;
 import org.kevinkib.cardgames.bullshit.presentation.api.BullshitBotPayload;
 import org.kevinkib.cardgames.bullshit.presentation.api.BullshitCreatePayload;
 import org.kevinkib.cardgames.bullshit.presentation.api.BullshitDiscardPayload;
-import org.kevinkib.cardgames.bullshit.presentation.dto.BullshitDto;
 import org.kevinkib.cardgames.bullshit.presentation.dto.event.BullshitCreateEventData;
 import org.kevinkib.cardgames.bullshit.presentation.dto.event.BullshitEventType;
 import org.kevinkib.cardgames.game.GameId;
@@ -145,7 +144,7 @@ public class BullshitWebSocketController {
         } catch (Exception e) {
             System.err.println(e.getMessage());
             messaging.sendToSeat(gameId, playerId, new ErrorResponse(
-                    BullshitEventType.DISCARD.toString(), e.getMessage(), BullshitDto.forViewer(game, playerId)));
+                    BullshitEventType.DISCARD.toString(), e.getMessage(), broadcaster.stateFor(game, playerId)));
         }
     }
 
@@ -168,7 +167,7 @@ public class BullshitWebSocketController {
         } catch (Exception e) {
             System.err.println(e.getMessage());
             messaging.sendToSeat(gameId, callerId, new ErrorResponse(
-                    BullshitEventType.CALL_BULLSHIT.toString(), e.getMessage(), BullshitDto.forViewer(game, callerId)));
+                    BullshitEventType.CALL_BULLSHIT.toString(), e.getMessage(), broadcaster.stateFor(game, callerId)));
         }
     }
 }

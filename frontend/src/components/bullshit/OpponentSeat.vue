@@ -1,6 +1,6 @@
 <template>
   <div class="opponent-seat" :class="{ 'opponent-seat--disconnected': disconnected }">
-    <span :class="['seat-label', { 'seat-label--active': active }]" data-test="seat-label">{{ label }}</span>
+    <span :class="['seat-label', { 'seat-label--active': active }]" data-test="seat-label" :title="label">{{ label }}</span>
     <div class="seat-card">
       <PlayingCard :hidden="true" rank="10" suit="spade" />
       <div class="seat-chip" data-test="seat-count">
@@ -76,7 +76,11 @@ defineProps<{
   border-radius: 999px;
   padding: 3px 10px;
   white-space: nowrap;
-  max-width: 100%;
+  /* A long typed name is cut with an ellipsis instead of widening the seat. */
+  max-width: var(--seat-label-max, 9rem);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-sizing: border-box;
 }
 
 /* Active turn: crisp 1px ring + fixed dot, same as BatailleCorse's name tag. */

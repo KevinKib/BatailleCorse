@@ -110,7 +110,7 @@ describe('Bullshit table (phone, 375x667)', () => {
 
   it('keeps every piece of game information and both actions on screen', () => {
     cy.get('[data-test="claim-badge"]').should('be.visible').and('contain.text', 'Claim');
-    cy.get('[data-test="seat-label"]').should('be.visible').and('contain.text', 'Player 2');
+    cy.get('[data-test="seat-label"]').should('be.visible').and('contain.text', 'Bob');
     cy.get('[data-test="seat-count"]').should('be.visible');
     cy.contains('.my-tag', 'You').should('be.visible');
     cy.get('[data-cy="rules-toggle"]').should('be.visible');

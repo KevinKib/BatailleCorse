@@ -256,4 +256,69 @@ describe('BullshitGameScreen', () => {
 
     expect(wrapper.find('[data-test="leave"]').exists()).toBe(true);
   });
+  describe('player names', () => {
+    const named = () => playingState({
+      players: [
+        { id: '0', handCount: 5, isCurrentPlayer: false, name: 'Alice' },
+        { id: '1', handCount: 4, isCurrentPlayer: true, name: 'Bobby' },
+        { id: '2', handCount: 3, isCurrentPlayer: false, name: null },
+        { id: '3', handCount: 2, isCurrentPlayer: false, bot: true },
+      ],
+      table: { state: 'CLAIM', claimantId: '1', count: 2 },
+    });
+    const mountNamed = () => {
+      const store = useBullshitStore();
+      store.applyEvent({ type: 'seat-change', seat: 0 });
+      store.applyEvent({ type: 'state-update', state: named() });
+      return { store, wrapper: mount(BullshitGameScreen, { props: { gameId: 'g1' }, global: { plugins: [router, PrimeVue] } }) };
+    };
+
+    it('labels opponent seats with names, then Player N, then Bot N', () => {
+      const { wrapper } = mountNamed();
+      const labels = wrapper.findAll('[data-test="seat-label"]').map(l => l.text());
+      expect(labels).toEqual(['Bobby', 'Player 3', 'Bot 1']);
+      expect(wrapper.get('.my-tag').text()).toBe('You');
+    });
+
+    it('uses names in the last-play line, the reveal caption and the forfeit banner', () => {
+      const { store, wrapper } = mountNamed();
+      expect(wrapper.get('[data-test="last-play"]').text()).toContain('Bobby');
+      store.applyEvent({ type: 'event', eventType: 'FORFEIT', eventData: { loserSeat: 1 }, message: '' });
+      store.applyEvent({ type: 'event', eventType: 'CALL_BULLSHIT', message: '',
+        eventData: { callerSeat: 0, claimantSeat: 1, truthful: false, pickerSeat: 1, revealedCards: [] } });
+      return wrapper.vm.$nextTick().then(() => {
+        expect(wrapper.get('[data-test="forfeit-banner"]').text()).toBe('Bobby forfeited');
+        const caption = wrapper.get('.reveal-caption').text();
+        expect(caption).toContain('Alice');
+        expect(caption).toContain('Bobby');
+      });
+    });
+
+    it('still names a forfeiting player who has already left the table', async () => {
+      const { store, wrapper } = mountNamed();
+      store.applyEvent({ type: 'state-update', state: playingState({
+        players: [
+          { id: '0', handCount: 5, isCurrentPlayer: false, name: 'Alice' },
+          { id: '2', handCount: 3, isCurrentPlayer: true, name: null },
+        ],
+      }) });
+      store.applyEvent({ type: 'event', eventType: 'FORFEIT', eventData: { loserSeat: 1 }, message: '' });
+      await wrapper.vm.$nextTick();
+      expect(wrapper.get('[data-test="forfeit-banner"]').text()).toBe('Bobby forfeited');
+    });
+
+    it('renders a markup-looking name as plain text', () => {
+      const store = useBullshitStore();
+      store.applyEvent({ type: 'seat-change', seat: 0 });
+      store.applyEvent({ type: 'state-update', state: playingState({
+        players: [
+          { id: '0', handCount: 5, isCurrentPlayer: false },
+          { id: '1', handCount: 4, isCurrentPlayer: true, name: '<img src=x onerror=alert(1)>' },
+        ],
+      }) });
+      const wrapper = mount(BullshitGameScreen, { props: { gameId: 'g1' }, global: { plugins: [router, PrimeVue] } });
+      expect(wrapper.get('[data-test="seat-label"]').text()).toBe('<img src=x onerror=alert(1)>');
+      expect(wrapper.find('img[src="x"]').exists()).toBe(false);
+    });
+  });
 });

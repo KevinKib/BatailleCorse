@@ -3,7 +3,7 @@ import { ref, computed, watch } from 'vue';
 
 import webSocketService from '../service/WebSocketService';
 import BullshitSession, { type BullshitSessionEvent } from '../application/BullshitSession';
-import type { BullshitState, BullshitView } from '../model/bullshit/BullshitState';
+import type { BullshitPlayer, BullshitState, BullshitView } from '../model/bullshit/BullshitState';
 import type { LobbyView } from '../model/bullshit/LobbyView';
 import type { CallBullshitEventData } from '../model/bullshit/BullshitEvents';
 import type Card from '../model/Card';
@@ -19,6 +19,9 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
   const mySeat = ref<number>(0);
   const reveal = ref<CallBullshitEventData | null>(null);
   const selectedCards = ref<Card[]>([]);
+  // Every seat seen in this game, kept after it leaves the table (a forfeited player drops out of
+  // `players`, yet "Bob forfeited" must still name him). Cleared when the room goes back to a lobby.
+  const roster = ref<Record<string, BullshitPlayer>>({});
   let revealTimer: ReturnType<typeof setTimeout> | null = null;
 
   const game = computed<BullshitState | null>(() =>
@@ -36,8 +39,18 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
 
   function applyEvent(event: BullshitSessionEvent) {
     switch (event.type) {
-      case 'state-update': state.value = event.state; break;
-      case 'game-id-change': gameId.value = event.gameId; break;
+      case 'state-update':
+        state.value = event.state;
+        if (event.state.started) {
+          for (const p of event.state.players) roster.value = { ...roster.value, [p.id]: p };
+        } else {
+          roster.value = {};
+        }
+        break;
+      case 'game-id-change':
+        if (gameId.value !== event.gameId) roster.value = {};
+        gameId.value = event.gameId;
+        break;
       case 'seat-change': mySeat.value = event.seat; break;
       case 'event':
         if (event.eventType === 'CALL_BULLSHIT') {
@@ -82,7 +95,7 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
   function clearSelection() { selectedCards.value = []; }
 
   return {
-    state, game, lobby, gameId, mySeat, reveal, selectedCards,
+    state, game, lobby, roster, gameId, mySeat, reveal, selectedCards,
     disconnections: presence.disconnections,
     liveDisconnections: presence.liveDisconnections,
     forfeitNotice: presence.forfeitNotice,

@@ -67,6 +67,7 @@ export interface PluralForms {
 // `format()` / `plural()` in `./format`.
 export interface BullshitUiMessages {
   playerLabel: string;                 // '{n}' = 1-based seat number
+  botLabel: string;                    // '{n}' = 1-based position among the bots
   you: string;
   back: string;
   start: {

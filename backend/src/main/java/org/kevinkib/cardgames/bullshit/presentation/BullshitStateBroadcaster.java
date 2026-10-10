@@ -2,6 +2,7 @@ package org.kevinkib.cardgames.bullshit.presentation;
 
 import org.kevinkib.cardgames.bullshit.domain.Bullshit;
 import org.kevinkib.cardgames.bullshit.presentation.bot.BotSeats;
+import org.kevinkib.cardgames.bullshit.presentation.bot.SeatNames;
 import org.kevinkib.cardgames.bullshit.presentation.dto.BullshitDto;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.presentation.GameMessagingService;
@@ -24,6 +25,7 @@ public class BullshitStateBroadcaster {
 
     private final GameMessagingService messaging;
     private final BotSeats botSeats;
+    private final SeatNames seatNames;
     private final List<BullshitStateListener> listeners = new CopyOnWriteArrayList<>();
 
     public BullshitStateBroadcaster(GameMessagingService messaging) {
@@ -31,8 +33,18 @@ public class BullshitStateBroadcaster {
     }
 
     public BullshitStateBroadcaster(GameMessagingService messaging, BotSeats botSeats) {
+        this(messaging, botSeats, SeatNames.none());
+    }
+
+    public BullshitStateBroadcaster(GameMessagingService messaging, BotSeats botSeats, SeatNames seatNames) {
         this.messaging = messaging;
         this.botSeats = botSeats;
+        this.seatNames = seatNames;
+    }
+
+    /** The viewer's state with every seat's display name; used by broadcasts, REST rehydration and error replies. */
+    public BullshitDto stateFor(Bullshit game, PlayerId viewer) {
+        return BullshitDto.forViewer(game, viewer, seatNames.seatNames(game.getId()), botSeats.botSeats(game.getId()));
     }
 
     public void addListener(BullshitStateListener listener) {
@@ -45,7 +57,7 @@ public class BullshitStateBroadcaster {
             if (bots.contains(seat)) {
                 continue;
             }
-            BullshitDto state = BullshitDto.forViewer(game, seat);
+            BullshitDto state = stateFor(game, seat);
             messaging.sendToSeat(game.getId(), seat, new SuccessResponse(eventType, eventData, message, state));
         }
         for (BullshitStateListener listener : listeners) {

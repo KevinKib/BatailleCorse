@@ -213,4 +213,25 @@ describe('Bullshit store', () => {
       fetchSpy.mockRestore();
     });
   });
+  describe('roster', () => {
+    const named = (players: { id: string; name?: string }[]) => ({
+      ...state(),
+      players: players.map(p => ({ handCount: 3, isCurrentPlayer: false, ...p })),
+    });
+
+    it('keeps a seat that left the table (forfeit) so it can still be named', () => {
+      const store = useBullshitStore();
+      store.applyEvent({ type: 'state-update', state: named([{ id: '0', name: 'Alice' }, { id: '1', name: 'Bob' }, { id: '2', name: 'Cy' }]) });
+      store.applyEvent({ type: 'state-update', state: named([{ id: '0', name: 'Alice' }, { id: '2', name: 'Cy' }]) });
+      expect(store.roster['1']?.name).toBe('Bob');
+      expect(store.game?.players).toHaveLength(2);
+    });
+
+    it('forgets everyone when the room goes back to a lobby', () => {
+      const store = useBullshitStore();
+      store.applyEvent({ type: 'state-update', state: named([{ id: '0', name: 'Alice' }]) });
+      store.applyEvent({ type: 'state-update', state: { started: false, gameId: 'g1', players: [], hostSeat: 0, mySeat: 0, minPlayers: 2, maxPlayers: 6, canStart: false } });
+      expect(store.roster).toEqual({});
+    });
+  });
 });
