@@ -59,7 +59,7 @@ async function copyShareLink() {
 }
 
 .waiting-title {
-  font-family: "Gabarito", sans-serif;
+  font-family: var(--font-title);
   font-size: 1.6rem;
   font-weight: 700;
   color: var(--gold);

@@ -263,7 +263,7 @@ function selectAll(event: FocusEvent) {
 .share { display: flex; flex-direction: column; gap: 0.25rem; width: 100%; font-size: 0.85rem; }
 .share input { width: 100%; font-family: monospace; padding: 0.4rem; box-sizing: border-box; }
 .hint { opacity: 0.7; margin: 0; }
-.btn { padding: 0.6rem 1.4rem; border-radius: 0.5rem; border: 1px solid var(--p-primary-color); font-size: 1rem; cursor: pointer; }
+.btn { padding: 0.6rem 1.4rem; border-radius: var(--button-radius); border: 1px solid var(--p-primary-color); font-size: 1rem; cursor: pointer; }
 .btn.primary { background: var(--p-primary-color); color: var(--p-primary-contrast-color, #fff); }
 .btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .table-frame {
@@ -476,18 +476,23 @@ function selectAll(event: FocusEvent) {
   border-radius: 999px;
   padding: 4px 14px;
 }
+.my-tag { position: relative; }
 .my-tag--active {
+  padding-left: 22px;
   color: #ffffff;
-  border-color: rgba(var(--accent-active-rgb), 0.9);
-  box-shadow: 0 0 16px 3px rgba(var(--accent-active-rgb), 0.55);
-  animation: seat-glow-pulse 1.8s ease-in-out infinite;
+  border-color: var(--turn-ring-color);
+  box-shadow: var(--turn-ring);
 }
-@keyframes seat-glow-pulse {
-  0%, 100% { box-shadow: 0 0 12px 2px rgba(var(--accent-active-rgb), 0.40); }
-  50%      { box-shadow: 0 0 22px 6px rgba(var(--accent-active-rgb), 0.70); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .my-tag--active { animation: none; }
+.my-tag--active::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  width: var(--turn-dot-size);
+  height: var(--turn-dot-size);
+  margin-top: calc(var(--turn-dot-size) / -2);
+  border-radius: 50%;
+  background: var(--gold);
 }
 
 .hand :deep(.playing_card) {

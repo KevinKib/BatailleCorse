@@ -289,7 +289,7 @@ async function joinGame() {
 }
 
 .game-title {
-  font-family: "Gabarito", sans-serif;
+  font-family: var(--font-title);
   font-size: 2.6rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -300,7 +300,6 @@ async function joinGame() {
   background-clip: text;
   margin: 0;
   line-height: 1.1;
-  filter: drop-shadow(0 2px 10px rgba(200, 134, 10, 0.5));
 }
 
 .game-subtitle {
@@ -386,7 +385,7 @@ async function joinGame() {
   border: 1.5px solid rgba(255, 255, 255, 0.18);
   border-radius: 8px;
   color: rgba(255, 255, 255, 0.85);
-  font-family: "Gabarito", monospace;
+  font-family: var(--font-title);
   font-size: 1.1rem;
   font-weight: 600;
   cursor: pointer;
@@ -441,12 +440,11 @@ async function joinGame() {
 /* Difficulty slider */
 .difficulty-badge {
   text-align: center;
-  font-family: "Gabarito", sans-serif;
+  font-family: var(--font-title);
   font-size: 1.1rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  text-shadow: 0 0 12px currentColor;
   transition: color 0.2s;
 }
 
@@ -469,7 +467,7 @@ async function joinGame() {
   height: 20px;
   border-radius: 50%;
   background: var(--tier-color, #fff);
-  box-shadow: 0 0 8px var(--tier-color, #fff), 0 2px 6px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
   cursor: pointer;
   transition: background 0.2s, box-shadow 0.2s;
 }
@@ -480,7 +478,7 @@ async function joinGame() {
   border-radius: 50%;
   border: none;
   background: var(--tier-color, #fff);
-  box-shadow: 0 0 8px var(--tier-color, #fff), 0 2px 6px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
   cursor: pointer;
   transition: background 0.2s, box-shadow 0.2s;
 }

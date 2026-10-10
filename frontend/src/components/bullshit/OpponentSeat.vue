@@ -78,20 +78,24 @@ defineProps<{
   white-space: nowrap;
 }
 
-/* Active-turn glow — same treatment as BatailleCorse's name tag. */
+/* Active turn: crisp 1px ring + fixed dot, same as BatailleCorse's name tag. */
 .seat-label--active {
+  position: relative;
+  padding-left: 20px;
   color: #ffffff;
-  border-color: rgba(var(--accent-active-rgb), 0.9);
-  box-shadow: 0 0 16px 3px rgba(var(--accent-active-rgb), 0.55);
-  animation: seat-glow-pulse 1.8s ease-in-out infinite;
+  border-color: var(--turn-ring-color);
+  box-shadow: var(--turn-ring);
 }
 
-@keyframes seat-glow-pulse {
-  0%, 100% { box-shadow: 0 0 12px 2px rgba(var(--accent-active-rgb), 0.40); }
-  50%      { box-shadow: 0 0 22px 6px rgba(var(--accent-active-rgb), 0.70); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .seat-label--active { animation: none; }
+.seat-label--active::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  width: var(--turn-dot-size);
+  height: var(--turn-dot-size);
+  margin-top: calc(var(--turn-dot-size) / -2);
+  border-radius: 50%;
+  background: var(--gold);
 }
 </style>

@@ -45,7 +45,7 @@ defineProps<Props>();
 }
 
 .disconnect-title {
-  font-family: "Gabarito", sans-serif;
+  font-family: var(--font-title);
   font-size: 1.2rem;
   font-weight: 700;
   color: #f87171;
@@ -61,6 +61,7 @@ defineProps<Props>();
 .disconnect-countdown {
   font-size: 1rem;
   font-weight: 800;
+  font-variant-numeric: tabular-nums;
   color: var(--gold);
   margin: 4px 0 0;
 }

@@ -203,7 +203,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', handleKeydown));
 }
 
 .rules-panel__title {
-  font-family: "Gabarito", sans-serif;
+  font-family: var(--font-title);
   font-size: 1.1rem;
   font-weight: 700;
   color: #f5c842;
