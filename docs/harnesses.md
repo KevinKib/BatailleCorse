@@ -38,7 +38,7 @@ The sibling project ShodoCFI (PR #25 and #26) got a first harness iteration. Thi
 
 ## 2026-10-10: environment lifecycle (global rule)
 
-Evolution of the user's global harness (`~/.claude/CLAUDE.md`, outside this repo, not modified here). Recorded here because it governs how sessions use the dev environment described in `CLAUDE.md`.
+Evolution of the user's global harness. The rule was added to the user's global `~/.claude/CLAUDE.md` (outside this repo, not versioned); this entry only records it. Recorded here because it governs how sessions use the dev environment described in `CLAUDE.md`.
 
 | Friction | Fix | Where |
 |---|---|---|
