@@ -35,7 +35,7 @@ public class Tableau {
         return slot >= 0 && slot < cards.size() && cards.get(slot) != null;
     }
 
-    public int revision(int slot) {
+    public int revision(int slot) throws InvalidSlotException {
         checkIndex(slot);
         return revisions.get(slot);
     }
