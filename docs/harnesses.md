@@ -36,6 +36,14 @@ The sibling project ShodoCFI (PR #25 and #26) got a first harness iteration. Thi
 | `docs/harnesses.md` | Ported, shortened | Traces BatailleCorse only; global parts stay in the ShodoCFI document. |
 | Global harness (`~/.claude`: hooks `require-worktree`, `branch-naming`, `session-context`, skills `feature`, `handoff`, `roadmap-orchestrator`, `ui-change`, rtk) | Nothing to do in this repo | Already global: they apply to BatailleCorse as is. Tracked in `docs/harnesses.md` of ShodoCFI. |
 
+## 2026-10-10: environment lifecycle (global rule)
+
+Evolution of the user's global harness. The rule was added to the user's global `~/.claude/CLAUDE.md` (outside this repo, not versioned); this entry only records it. Recorded here because it governs how sessions use the dev environment described in `CLAUDE.md`.
+
+| Friction | Fix | Where |
+|---|---|---|
+| Dev environments created for work with nothing to test by hand, and left running after the PR is merged | Environment lifecycle: dev environments are created only for stories with a feature testable by hand (UI, user journeys), never for technical work (refactors, CI, tests, docs, backend with no visible effect); once the matching PR is merged, the session closes its environment (`docker compose -p <project> down`, without `-v`) without asking, after checking with `gh` that the PR is merged and with `docker ps` that the project is its own; never closes the environment of an open PR or of another session without agreement | Global `~/.claude/CLAUDE.md`; summarised in the dev environment section of `CLAUDE.md` |
+
 ## Inventory (versioned in this project)
 
 | Item | Role |
