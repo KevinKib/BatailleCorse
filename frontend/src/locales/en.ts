@@ -135,6 +135,7 @@ export const messagesEn: Messages = {
     },
     table: {
       claim: 'Claim:',
+      myCards: { one: '{n} card in your hand', other: '{n} cards in your hand' },
       cardLabel: '{rank} of {suit}',
       discardAs: 'Discard as {target}',
       callBullshit: 'Call Bullshit',
