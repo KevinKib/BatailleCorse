@@ -21,10 +21,11 @@ const props = defineProps<{ gameId: string }>();
 const messages = useI18n();
 const ui = messages.bullshitUi;
 const store = useBullshitStore();
+// The roster outlives a forfeit (the player leaves `players`, the banner still names him).
 // Seats are 0-based internally; the typed name wins, else "Bot N" / "Player N" (numbered from 1).
 // Names are user input: only ever rendered as text.
 const displayName = (seat: number) =>
-  seatDisplayName(store.game?.players ?? [], seat, { player: ui.playerLabel, bot: ui.botLabel });
+  seatDisplayName(Object.values(store.roster), seat, { player: ui.playerLabel, bot: ui.botLabel });
 useBullshitBootstrap(props.gameId);
 
 const countdown = useSeatDisconnectCountdown({

@@ -294,6 +294,19 @@ describe('BullshitGameScreen', () => {
       });
     });
 
+    it('still names a forfeiting player who has already left the table', async () => {
+      const { store, wrapper } = mountNamed();
+      store.applyEvent({ type: 'state-update', state: playingState({
+        players: [
+          { id: '0', handCount: 5, isCurrentPlayer: false, name: 'Alice' },
+          { id: '2', handCount: 3, isCurrentPlayer: true, name: null },
+        ],
+      }) });
+      store.applyEvent({ type: 'event', eventType: 'FORFEIT', eventData: { loserSeat: 1 }, message: '' });
+      await wrapper.vm.$nextTick();
+      expect(wrapper.get('[data-test="forfeit-banner"]').text()).toBe('Bobby forfeited');
+    });
+
     it('renders a markup-looking name as plain text', () => {
       const store = useBullshitStore();
       store.applyEvent({ type: 'seat-change', seat: 0 });
