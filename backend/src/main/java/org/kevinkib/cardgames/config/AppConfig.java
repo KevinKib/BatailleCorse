@@ -10,6 +10,7 @@ import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
 import org.kevinkib.cardgames.sessionmanagement.core.application.port.SessionRepository;
 import org.kevinkib.cardgames.sessionmanagement.core.infrastructure.InMemorySessionRepository;
 import org.kevinkib.cardgames.bataillecorse.presentation.BatailleCorseLifecycleBroadcaster;
+import org.kevinkib.cardgames.bullshit.presentation.BullshitGameActions;
 import org.kevinkib.cardgames.bullshit.presentation.BullshitLifecycleBroadcaster;
 import org.kevinkib.cardgames.bullshit.presentation.BullshitStateBroadcaster;
 import org.kevinkib.cardgames.sessionmanagement.presence.application.PresenceEvictionCleanup;
@@ -108,6 +109,11 @@ public class AppConfig {
     @Bean
     public BullshitStateBroadcaster bullshitStateBroadcaster(GameMessagingService gameMessagingService) {
         return new BullshitStateBroadcaster(gameMessagingService);
+    }
+
+    @Bean
+    public BullshitGameActions bullshitGameActions(BullshitStateBroadcaster bullshitStateBroadcaster) {
+        return new BullshitGameActions(sessionService(), bullshitStateBroadcaster);
     }
 
     @Bean

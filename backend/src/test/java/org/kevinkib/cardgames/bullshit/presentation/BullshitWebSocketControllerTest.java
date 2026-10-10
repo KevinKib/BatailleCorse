@@ -63,8 +63,9 @@ class BullshitWebSocketControllerTest {
                 new InMemorySessionRepository(Clock.systemUTC()),
                 new GameFactories(List.of(new BullshitFactory())));
         messaging = new RecordingMessaging();
+        BullshitStateBroadcaster broadcaster = new BullshitStateBroadcaster(messaging);
         controller = new BullshitWebSocketController(
-                sessionService, new BullshitStateBroadcaster(messaging), messaging);
+                sessionService, broadcaster, messaging, new BullshitGameActions(sessionService, broadcaster));
     }
 
     @Test
