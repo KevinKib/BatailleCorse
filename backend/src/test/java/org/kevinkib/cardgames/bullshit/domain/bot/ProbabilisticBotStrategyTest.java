@@ -49,15 +49,15 @@ class ProbabilisticBotStrategyTest {
                 .build();
     }
 
-    /** The claimant held 31 cards before playing one: an ace is almost certainly among them. */
+    /** The claimant held 31 cards before playing two: two aces is the likeliest holding. */
     private static BotObservation almostCertainTruth() {
         return anObservation()
                 .hand(card(FrenchRank.TWO, FrenchSuit.HEART), card(FrenchRank.THREE, FrenchSuit.HEART),
                         card(FrenchRank.FOUR, FrenchSuit.HEART), card(FrenchRank.FIVE, FrenchSuit.HEART),
                         card(FrenchRank.SIX, FrenchSuit.HEART))
                 .target(new RankTarget(FrenchRank.TWO))
-                .handCount(1, 30)
-                .claim(1, ACE, 1)
+                .handCount(1, 29)
+                .claim(1, ACE, 2)
                 .currentPlayer(2)
                 .build();
     }
@@ -80,20 +80,20 @@ class ProbabilisticBotStrategyTest {
 
     @Test
     void givenImpossibleClaim_thenCallsBelowTheCapAndDoesNotAbove() {
-        assertThat(rankStrategy(0.94).decide(impossibleClaim(2), memory()), instanceOf(BotDecision.CallBullshit.class));
-        assertThat(rankStrategy(0.96).decide(impossibleClaim(2), memory()), instanceOf(BotDecision.Pass.class));
+        assertThat(rankStrategy(0.29).decide(impossibleClaim(2), memory()), instanceOf(BotDecision.CallBullshit.class));
+        assertThat(rankStrategy(0.31).decide(impossibleClaim(2), memory()), instanceOf(BotDecision.Pass.class));
     }
 
     @Test
     void givenImpossibleClaimNotCalledAndItIsMyTurn_thenPlaysInstead() {
-        BotDecision decision = rankStrategy(0.96, 0.5, 0.5).decide(impossibleClaim(0), memory());
+        BotDecision decision = rankStrategy(0.5, 0.5, 0.5).decide(impossibleClaim(0), memory());
 
         assertThat(decision, instanceOf(BotDecision.Discard.class));
     }
 
     @Test
     void givenVeryPlausibleClaim_thenDoesNotCallAboveTheFloor() {
-        assertThat(rankStrategy(0.06).decide(almostCertainTruth(), memory()), instanceOf(BotDecision.Pass.class));
+        assertThat(rankStrategy(0.5).decide(almostCertainTruth(), memory()), instanceOf(BotDecision.Pass.class));
         assertThat(rankStrategy(0.04).decide(almostCertainTruth(), memory()), instanceOf(BotDecision.CallBullshit.class));
     }
 
@@ -173,27 +173,80 @@ class ProbabilisticBotStrategyTest {
 
     @Test
     void givenNoMatchingCard_thenLiesWithTheScriptedNumberOfCardsKeepingSoonNeededOnes() {
-        // target ACE; next targets TWO (0 steps), then ... FIVE (3 steps), KING (10 steps).
+        // Three seats, target ACE: the bot's own turns meet targets 3, 6, 9... steps ahead, so with a
+        // big hand the card whose rank lands on one of its turns last (EIGHT, then FIVE, TWO) goes first.
+        BotObservation obs = anObservation()
+                .hand(card(FrenchRank.TWO, FrenchSuit.HEART), card(FrenchRank.THREE, FrenchSuit.HEART),
+                        card(FrenchRank.FOUR, FrenchSuit.HEART), card(FrenchRank.FIVE, FrenchSuit.HEART),
+                        card(FrenchRank.SIX, FrenchSuit.HEART), card(FrenchRank.SEVEN, FrenchSuit.HEART),
+                        card(FrenchRank.EIGHT, FrenchSuit.HEART), card(FrenchRank.NINE, FrenchSuit.HEART),
+                        card(FrenchRank.TEN, FrenchSuit.HEART))
+                .build();
+
+        assertThat(rankStrategy(0.5).decide(obs, memory()), is(new BotDecision.Discard(List.of(
+                card(FrenchRank.EIGHT, FrenchSuit.HEART)))));
+        assertThat(rankStrategy(0.8).decide(obs, memory()), is(new BotDecision.Discard(List.of(
+                card(FrenchRank.EIGHT, FrenchSuit.HEART), card(FrenchRank.FIVE, FrenchSuit.HEART)))));
+        assertThat(rankStrategy(0.97).decide(obs, memory()), is(new BotDecision.Discard(List.of(
+                card(FrenchRank.EIGHT, FrenchSuit.HEART), card(FrenchRank.FIVE, FrenchSuit.HEART),
+                card(FrenchRank.TWO, FrenchSuit.HEART)))));
+    }
+
+    @Test
+    void givenLieLargerThanTheHand_thenItNeverEmptiesTheHand() {
+        BotObservation obs = anObservation()
+                .hand(card(FrenchRank.KING, FrenchSuit.HEART), card(FrenchRank.QUEEN, FrenchSuit.HEART))
+                .build();
+
+        assertThat(((BotDecision.Discard) rankStrategy(0.97).decide(obs, memory())).cards().size(), is(1));
+    }
+
+    @Test
+    void givenAHandThatMatchesTheTargetEntirely_thenItWinsByPlayingItWholeEvenIfAClaimCouldBeChallenged() {
+        BotObservation obs = anObservation()
+                .hand(card(FrenchRank.TWO, FrenchSuit.HEART), card(FrenchRank.TWO, FrenchSuit.SPADE))
+                .target(new RankTarget(FrenchRank.TWO))
+                .claim(1, ACE, 1)
+                .build();
+
+        // 0.0 would make the bot challenge if it considered it
+        assertThat(rankStrategy(0.0).decide(obs, memory()), is(new BotDecision.Discard(obs.hand())));
+    }
+
+    @Test
+    void givenDecliningWouldHandTheWinToTheClaimant_thenItDoesNotPlayItsMatchingHandInstead() {
+        BotObservation obs = anObservation()
+                .hand(card(FrenchRank.TWO, FrenchSuit.HEART))
+                .target(new RankTarget(FrenchRank.TWO))
+                .handCount(1, 0)
+                .claim(1, ACE, 1)
+                .pendingWinner(1)
+                .build();
+
+        assertThat(rankStrategy(0.99).decide(obs, memory()), instanceOf(BotDecision.CallBullshit.class));
+    }
+
+    @Test
+    void givenOneUnplayableCardAndAClaimToChallenge_thenItChallengesRatherThanLieAwayItsLastCard() {
+        BotObservation obs = anObservation()
+                .hand(card(FrenchRank.KING, FrenchSuit.HEART))
+                .claim(1, ACE, 1)
+                .build();
+
+        assertThat(rankStrategy(0.99).decide(obs, memory()), instanceOf(BotDecision.CallBullshit.class));
+    }
+
+    @Test
+    void givenASmallHandWithoutAMatch_thenItLiesAwayTheCardsOutsideTheOneThatWillFitItsLastTurn() {
+        // Three seats, target ACE: the KING lands on the bot's own turn 4 turns on, the TWO and FIVE much
+        // later. Two cards to get rid of before the KING is due, so the lie sheds the latest one.
         BotObservation obs = anObservation()
                 .hand(card(FrenchRank.TWO, FrenchSuit.HEART), card(FrenchRank.FIVE, FrenchSuit.HEART),
                         card(FrenchRank.KING, FrenchSuit.HEART))
                 .build();
 
         assertThat(rankStrategy(0.5).decide(obs, memory()), is(new BotDecision.Discard(List.of(
-                card(FrenchRank.KING, FrenchSuit.HEART)))));
-        assertThat(rankStrategy(0.8).decide(obs, memory()), is(new BotDecision.Discard(List.of(
-                card(FrenchRank.KING, FrenchSuit.HEART), card(FrenchRank.FIVE, FrenchSuit.HEART)))));
-        assertThat(rankStrategy(0.97).decide(obs, memory()), is(new BotDecision.Discard(List.of(
-                card(FrenchRank.KING, FrenchSuit.HEART), card(FrenchRank.FIVE, FrenchSuit.HEART),
-                card(FrenchRank.TWO, FrenchSuit.HEART)))));
-    }
-
-    @Test
-    void givenLieLargerThanTheHand_thenCappedByHandSize() {
-        BotObservation obs = anObservation().hand(card(FrenchRank.KING, FrenchSuit.HEART)).build();
-
-        assertThat(rankStrategy(0.97).decide(obs, memory()), is(new BotDecision.Discard(List.of(
-                card(FrenchRank.KING, FrenchSuit.HEART)))));
+                card(FrenchRank.FIVE, FrenchSuit.HEART)))));
     }
 
     @Test
@@ -210,9 +263,10 @@ class ProbabilisticBotStrategyTest {
                         card(FrenchRank.KING, FrenchSuit.SPADE))
                 .build();
 
-        // next suit is DIAMOND (0), then CLUB (1), SPADE (2): the spade is needed last
+        // three seats: the diamond is due on the bot's third turn, the club on its second, the spade on its first;
+        // two cards must go before the diamond comes round, so the lie sheds the latest of the other two
         assertThat(new ProbabilisticBotStrategy(suitMode, new ScriptedRandom(0.5), BotTuning.DEFAULT).decide(lie, memory()),
-                is(new BotDecision.Discard(List.of(card(FrenchRank.KING, FrenchSuit.SPADE)))));
+                is(new BotDecision.Discard(List.of(card(FrenchRank.NINE, FrenchSuit.CLUB)))));
         assertThat(new ProbabilisticBotStrategy(suitMode, new ScriptedRandom(0.5), BotTuning.DEFAULT).decide(honest, memory()),
                 is(new BotDecision.Discard(List.of(
                         card(FrenchRank.TWO, FrenchSuit.HEART), card(FrenchRank.NINE, FrenchSuit.HEART)))));
@@ -250,8 +304,8 @@ class ProbabilisticBotStrategyTest {
     void givenCertainLie_thenChallengeRateMatchesTheCap() {
         double rate = challengeRate(impossibleClaim(2));
 
-        assertThat(rate, greaterThanOrEqualTo(0.90));
-        assertThat(rate, lessThanOrEqualTo(0.97));
+        assertThat(rate, greaterThanOrEqualTo(0.27));
+        assertThat(rate, lessThanOrEqualTo(0.33));
     }
 
     @Test
@@ -259,7 +313,7 @@ class ProbabilisticBotStrategyTest {
         double rate = challengeRate(almostCertainTruth());
 
         assertThat(rate, greaterThanOrEqualTo(0.03));
-        assertThat(rate, lessThanOrEqualTo(0.15));
+        assertThat(rate, lessThanOrEqualTo(0.20));
     }
 
     private static double challengeRate(BotObservation obs) {
