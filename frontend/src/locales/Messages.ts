@@ -77,19 +77,33 @@ export interface BullshitUiMessages {
     createGame: string;
     gameId: string;
     joinGame: string;
+    joinTitle: string;
+    namePlaceholder: string;
+    gameIdPlaceholder: string;
+    joining: string;
+    errors: {
+      joinFailed: string;
+      createFailed: string;
+    };
   };
   lobby: {
     title: string;
     playerCount: string;               // '{joined}', '{max}'
-    playerRow: string;                 // '{label}', '{name}'
-    youSuffix: string;
+    playersLabel: string;
+    youBadge: string;
+    botBadge: string;
+    hostBadge: string;
+    claimModeLabel: string;
     inviteLabel: string;
+    copy: string;
+    copied: string;
     startGame: string;
     waitingForPlayers: PluralForms;    // '{n}' = players still needed
     waitingForHost: string;
   };
   table: {
     claim: string;
+    cardLabel: string;                 // '{rank}', '{suit}': accessible name of a hand card
     discardAs: string;                 // '{target}'
     callBullshit: string;
     truthful: string;

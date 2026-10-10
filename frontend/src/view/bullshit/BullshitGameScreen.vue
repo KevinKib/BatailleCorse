@@ -11,9 +11,10 @@ import EndGameOverlay from '../../components/EndGameOverlay.vue';
 import ForfeitBanner from '../../components/ForfeitBanner.vue';
 import RulesPanel from '../../components/RulesPanel.vue';
 import OpponentSeat from '../../components/bullshit/OpponentSeat.vue';
+import BullshitHand from '../../components/bullshit/BullshitHand.vue';
+import BullshitLobby from '../../components/bullshit/BullshitLobby.vue';
 import { useI18n } from '../../composables/useI18n';
 import { format, plural } from '../../locales/format';
-import type Card from '../../model/Card';
 
 const props = defineProps<{ gameId: string }>();
 const messages = useI18n();
@@ -54,6 +55,7 @@ const opponents = computed(() =>
 // Angles (degrees) around the table for K opponents, skipping the bottom (my zone).
 // 0 = right, 90 = top, 180 = left. Single opp sits at top; pairs sit up on the
 // top corners; 3+ spread evenly from left, over the top, to the right.
+// (Wide screens only: on narrow screens the seats flow in a row above the pile.)
 function seatAngles(count: number): number[] {
   if (count <= 0) return [];
   if (count === 1) return [90];
@@ -63,7 +65,7 @@ function seatAngles(count: number): number[] {
 
 // Map each opponent to a point on the table ellipse (percent of the frame).
 const RX = 44; // horizontal radius (%)
-const RY = 40; // vertical radius (%)
+const RY = 36; // vertical radius (%): keeps the top seat inside the oval
 const seatPositions = computed(() => {
   const angles = seatAngles(opponents.value.length);
   return angles.map(deg => {
@@ -72,51 +74,18 @@ const seatPositions = computed(() => {
   });
 });
 
-const isSelected = (card: Card) => store.selectedCards.some(c => c.name === card.name);
 const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.gameId}`);
-
-const joinedPlayers = computed(() => (store.lobby?.players ?? []).filter(p => p.joined));
-const playersNeeded = computed(() =>
-  Math.max(0, (store.lobby?.minPlayers ?? 0) - joinedPlayers.value.length));
-
-function selectAll(event: FocusEvent) {
-  (event.target as HTMLInputElement).select();
-}
 </script>
 
 <template>
-  <div class="bullshit-screen">
-    <div v-if="store.phase === 'lobby'" data-test="lobby" class="panel lobby">
-      <h2>{{ ui.lobby.title }}</h2>
-      <p class="count" data-test="player-count">
-        {{ format(ui.lobby.playerCount, { joined: joinedPlayers.length, max: store.lobby?.maxPlayers ?? '' }) }}
-      </p>
-      <ul class="players">
-        <li v-for="p in joinedPlayers" :key="p.seat">
-          {{ format(ui.lobby.playerRow, { label: playerLabel(p.seat), name: p.name }) }}<span v-if="p.seat === store.mySeat">{{ ui.lobby.youSuffix }}</span>
-        </li>
-      </ul>
-
-      <label class="share">
-        {{ ui.lobby.inviteLabel }}
-        <input :value="joinLink" readonly @focus="selectAll" />
-      </label>
-
-      <template v-if="store.isHost">
-        <button
-          data-test="start"
-          type="button"
-          class="btn primary"
-          :disabled="!store.canStart"
-          @click="store.startGame()">
-          {{ ui.lobby.startGame }}
-        </button>
-        <p v-if="!store.canStart" class="hint" data-test="start-hint">
-          {{ plural(ui.lobby.waitingForPlayers, playersNeeded) }}
-        </p>
-      </template>
-      <p v-else class="hint">{{ ui.lobby.waitingForHost }}</p>
-    </div>
+  <div class="bullshit-screen" :class="{ 'bullshit-screen--lobby': store.phase === 'lobby' }">
+    <BullshitLobby
+      v-if="store.phase === 'lobby' && store.lobby"
+      :lobby="store.lobby"
+      :join-link="joinLink"
+      :is-host="store.isHost"
+      :can-start="store.canStart"
+      @start="store.startGame()" />
 
     <EndGameOverlay
       v-else-if="store.phase === 'finished'"
@@ -130,9 +99,11 @@ function selectAll(event: FocusEvent) {
     <template v-else>
       <RulesPanel :rules="messages.bullshit" />
 
-      <RouterLink :to="{ path: '/' }" class="leave-button" data-test="leave">
-        <Button severity="secondary" :label="ui.back" icon="pi pi-undo" variant="text" rounded />
-      </RouterLink>
+      <div class="top-bar">
+        <RouterLink :to="{ path: '/' }" class="leave-button" data-test="leave">
+          <Button severity="secondary" :label="ui.back" icon="pi pi-undo" variant="text" rounded />
+        </RouterLink>
+      </div>
 
       <Transition name="forfeit-fade">
         <ForfeitBanner
@@ -140,80 +111,72 @@ function selectAll(event: FocusEvent) {
           class="forfeit-notice"
           :label="format(ui.table.forfeited, { player: playerLabel(store.forfeitNotice.seat) })" />
       </Transition>
+
       <div class="table-frame">
-      <div class="opponents-ring">
-        <div
-          v-for="(opp, i) in opponents"
-          :key="opp.id"
-          class="seat-slot"
-          :style="{ left: seatPositions[i].left + '%', top: seatPositions[i].top + '%' }">
-          <OpponentSeat
-            :label="playerLabel(Number(opp.id))"
-            :hand-count="opp.handCount"
-            :active="opp.isCurrentPlayer"
-            :disconnected="seatDisconnected(Number(opp.id))"
-            :seconds-remaining="seatSecondsRemaining(Number(opp.id))" />
-        </div>
-      </div>
-
-      <div class="table-center">
-        <div class="claim-badge" data-test="claim-badge">
-          {{ ui.table.claim }} <strong>{{ store.game?.currentTarget.label }}</strong>
+        <div class="opponents-ring">
+          <div
+            v-for="(opp, i) in opponents"
+            :key="opp.id"
+            class="seat-slot"
+            :style="{ left: seatPositions[i].left + '%', top: seatPositions[i].top + '%' }">
+            <OpponentSeat
+              :label="playerLabel(Number(opp.id))"
+              :hand-count="opp.handCount"
+              :active="opp.isCurrentPlayer"
+              :disconnected="seatDisconnected(Number(opp.id))"
+              :seconds-remaining="seatSecondsRemaining(Number(opp.id))" />
+          </div>
         </div>
 
-        <div class="pile-well">
-          <PlayingCard :hidden="true" rank="10" suit="spade" />
-          <div class="pile-chip">
-            <CardCounter :count="store.game?.discardPileSize ?? 0" />
+        <div class="table-center">
+          <div class="claim-badge" data-test="claim-badge">
+            {{ ui.table.claim }} <strong>{{ store.game?.currentTarget.label }}</strong>
           </div>
 
-          <Transition name="reveal-fade">
-            <div v-if="store.reveal" data-test="reveal" class="reveal"
-                 :style="{ '--n': store.reveal.revealedCards.length }">
-              <div class="revealed-cards">
-                <div v-for="(c, i) in store.reveal.revealedCards" :key="i" class="flip-card" :style="{ '--i': i }">
-                  <div class="flip-inner">
-                    <div class="flip-face flip-back"><PlayingCard :hidden="true" rank="10" suit="spade" /></div>
-                    <div class="flip-face flip-front"><PlayingCard :rank="c.rank" :suit="c.suit" /></div>
+          <div class="pile-well">
+            <PlayingCard :hidden="true" rank="10" suit="spade" />
+            <div class="pile-chip">
+              <CardCounter :count="store.game?.discardPileSize ?? 0" />
+            </div>
+
+            <Transition name="reveal-fade">
+              <div v-if="store.reveal" data-test="reveal" class="reveal"
+                   :style="{ '--n': store.reveal.revealedCards.length }">
+                <div class="revealed-cards">
+                  <div v-for="(c, i) in store.reveal.revealedCards" :key="i" class="flip-card" :style="{ '--i': i }">
+                    <div class="flip-inner">
+                      <div class="flip-face flip-back"><PlayingCard :hidden="true" rank="10" suit="spade" /></div>
+                      <div class="flip-face flip-front"><PlayingCard :rank="c.rank" :suit="c.suit" /></div>
+                    </div>
                   </div>
                 </div>
+                <div class="verdict" data-test="verdict"
+                     :class="store.reveal.truthful ? 'verdict--truthful' : 'verdict--bluff'">
+                  {{ store.reveal.truthful ? ui.table.truthful : ui.table.bluff }}
+                </div>
+                <p class="reveal-caption">
+                  {{ format(ui.table.revealCaption, {
+                    caller: playerLabel(store.reveal.callerSeat),
+                    claimant: playerLabel(store.reveal.claimantSeat),
+                    picker: playerLabel(store.reveal.pickerSeat),
+                  }) }}
+                </p>
               </div>
-              <div class="verdict" data-test="verdict"
-                   :class="store.reveal.truthful ? 'verdict--truthful' : 'verdict--bluff'">
-                {{ store.reveal.truthful ? ui.table.truthful : ui.table.bluff }}
-              </div>
-              <p class="reveal-caption">
-                {{ format(ui.table.revealCaption, {
-                  caller: playerLabel(store.reveal.callerSeat),
-                  claimant: playerLabel(store.reveal.claimantSeat),
-                  picker: playerLabel(store.reveal.pickerSeat),
-                }) }}
-              </p>
-            </div>
-          </Transition>
+            </Transition>
+          </div>
+
+          <p v-if="store.game?.table.state === 'CLAIM'" class="last-play" data-test="last-play">
+            {{ plural(ui.table.playedFaceDown, store.game.table.count, { player: playerLabel(Number(store.game.table.claimantId)) }) }}
+          </p>
         </div>
-
-        <p v-if="store.game?.table.state === 'CLAIM'" class="last-play" data-test="last-play">
-          {{ plural(ui.table.playedFaceDown, store.game.table.count, { player: playerLabel(Number(store.game.table.claimantId)) }) }}
-        </p>
-      </div>
-
       </div>
 
       <div class="my-zone">
         <span :class="['my-tag', { 'my-tag--active': store.isMyTurn }]">{{ ui.you }}</span>
-        <div class="hand">
-          <button
-            v-for="(card, i) in store.game?.myHand ?? []"
-            :key="card.name"
-            :data-test="`hand-card-${i}`"
-            class="hand-card"
-            :class="{ selected: isSelected(card) }"
-            type="button"
-            @click="store.toggleCard(card)">
-            <PlayingCard :rank="card.rank" :suit="card.suit" />
-          </button>
-        </div>
+        <BullshitHand
+          :cards="store.game?.myHand ?? []"
+          :selected="store.selectedCards"
+          @toggle="store.toggleCard" />
         <div class="actions">
           <Button
             data-test="discard"
@@ -238,52 +201,62 @@ function selectAll(event: FocusEvent) {
 </template>
 
 <style scoped>
+/* The game screen is exactly one viewport tall and never scrolls: a top bar, a table that
+   takes whatever height is left (flex:1, min-height:0) and a bottom zone with the hand and
+   the actions, always on screen. */
 .bullshit-screen {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  padding: 1rem;
-  align-items: center;
+  gap: 8px;
+  padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 0px));
   box-sizing: border-box;
-  /* Paint our own felt so it covers the full scrollable content, not just the
-     first viewport — the shared app-background is only viewport-tall, which left
-     a bare strip when the screen scrolled on small displays. Mirrors the
-     BatailleCorse game screen, which also paints its own opaque felt. */
-  min-height: 100vh;
-  min-height: 100dvh;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  /* Paint our own felt: the shared app-background is only a backdrop for title screens.
+     Mirrors the BatailleCorse game screen, which also paints its own opaque felt. */
   background:
     radial-gradient(ellipse at 50% 42%, transparent 15%, rgba(0, 0, 0, 0.62) 100%),
     radial-gradient(ellipse at 50% 38%, var(--felt-center) 0%, var(--felt-mid) 48%, var(--felt-edge) 100%);
 }
-.panel { text-align: center; }
-.lobby { display: flex; flex-direction: column; gap: 0.75rem; align-items: center; min-width: 22rem; }
-.count { font-weight: 600; margin: 0; }
-.players { list-style: none; padding: 0; margin: 0; }
-.share { display: flex; flex-direction: column; gap: 0.25rem; width: 100%; font-size: 0.85rem; }
-.share input { width: 100%; font-family: monospace; padding: 0.4rem; box-sizing: border-box; }
-.hint { opacity: 0.7; margin: 0; }
-.btn { padding: 0.6rem 1.4rem; border-radius: var(--button-radius); border: 1px solid var(--p-primary-color); font-size: 1rem; cursor: pointer; }
-.btn.primary { background: var(--p-primary-color); color: var(--p-primary-contrast-color, #fff); }
-.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+/* The lobby is a title-style screen: it sits on the shared felt background instead. */
+.bullshit-screen--lobby {
+  display: block;
+  padding: 0;
+  background: none;
+}
+
+.top-bar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  /* Leaves the corner free for the rules toggle. */
+  padding-right: 120px;
+}
+.leave-button { text-decoration: none; }
+
 .table-frame {
   position: relative;
+  flex: 1 1 0;
+  min-height: 0;
   width: 100%;
-  max-width: 900px;
-  /* Oval play area; height tracks width so the ellipse math stays proportional. */
-  aspect-ratio: 16 / 11;
+  max-width: 1100px;
   margin: 0 auto;
+  /* Oval play area filling the room left between the top bar and the hand; it may stretch. */
   border-radius: 50% / 42%;
-  /* Felt: radial gradient + vignette, reusing the shared felt tokens. */
   background:
     radial-gradient(ellipse at 50% 46%, transparent 18%, rgba(0, 0, 0, 0.55) 100%),
     radial-gradient(ellipse at 50% 42%, var(--felt-center) 0%, var(--felt-mid) 52%, var(--felt-edge) 100%);
   border: 1px solid rgba(255, 255, 255, 0.06);
   box-shadow: inset 0 2px 30px rgba(0, 0, 0, 0.55), 0 10px 40px rgba(0, 0, 0, 0.45);
   isolation: isolate;
+  container-type: size;
   /* Fluid card sizes consumed by seats and the center. */
   --seat-card-w: clamp(40px, 7vmin, 60px);
   --pile-card-w: clamp(60px, 13vmin, 104px);
+  --pile-card-w: clamp(44px, 17cqh, 104px);
 }
 
 .opponents-ring {
@@ -302,14 +275,10 @@ function selectAll(event: FocusEvent) {
   --seat-card-w: clamp(40px, 7vmin, 60px);
 }
 
-.hand { display: flex; gap: 0.25rem; flex-wrap: wrap; justify-content: center; }
-.hand-card { background: none; border: none; padding: 0; cursor: pointer; }
-.hand-card.selected { transform: translateY(-12px); }
-.actions { display: flex; gap: 1rem; }
-
 .table-center {
   position: absolute;
-  top: 50%;
+  /* Below the middle so it never runs into the seat at the top of the oval. */
+  top: 64%;
   left: 50%;
   transform: translate(-50%, -50%);
   display: flex;
@@ -317,6 +286,40 @@ function selectAll(event: FocusEvent) {
   align-items: center;
   gap: 10px;
   text-align: center;
+}
+
+/* Narrow screens: no room to spread seats around an oval, so they line up in a row at the top
+   of the table (wrapping if they must) with the pile centered in the space below. */
+@media (max-width: 700px) {
+  .table-frame {
+    display: flex;
+    flex-direction: column;
+    border-radius: 28px;
+    --pile-card-w: clamp(44px, 22cqh, 104px);
+  }
+  .opponents-ring {
+    position: static;
+    flex: none;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px 4px;
+    padding: 12px 4px 0;
+    pointer-events: auto;
+  }
+  .seat-slot {
+    position: static;
+    transform: none;
+  }
+  .table-center {
+    position: static;
+    transform: none;
+    flex: 1 1 0;
+    min-height: 0;
+    justify-content: center;
+    padding: 4px 8px 8px;
+    gap: 8px;
+  }
 }
 
 .claim-badge {
@@ -353,9 +356,16 @@ function selectAll(event: FocusEvent) {
   right: -10px;
 }
 
+/* The reveal is wider than the pile well so its caption stays readable; it is centered on
+   the well with a negative margin (not a transform, which the fade transition animates). */
 .reveal {
+  --reveal-w: min(320px, 88vw);
   position: absolute;
-  inset: 0;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: var(--reveal-w);
+  margin-left: calc(var(--reveal-w) / -2);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -452,17 +462,34 @@ function selectAll(event: FocusEvent) {
 }
 
 .my-zone {
+  flex: none;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  margin-top: 14px;
+  gap: 6px;
   width: 100%;
-  max-width: 900px;
-  padding: 12px 0 calc(8px + env(safe-area-inset-bottom, 0px));
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 8px 8px 0;
+  box-sizing: border-box;
   background: linear-gradient(to top, rgba(0, 0, 0, 0.30) 0%, rgba(0, 0, 0, 0.04) 100%);
   border-top: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 14px 14px 0 0;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  justify-content: center;
+  padding-bottom: 4px;
+}
+.actions :deep(.p-button) {
+  flex: 1 1 0;
+  max-width: 240px;
+  min-width: 0;
+  white-space: nowrap;
+  padding-inline: 0.6rem;
 }
 
 .my-tag {
@@ -495,12 +522,6 @@ function selectAll(event: FocusEvent) {
   background: var(--gold);
 }
 
-.hand :deep(.playing_card) {
-  width: clamp(48px, 9vmin, 76px);
-  height: auto;
-  aspect-ratio: 167.575 / 243.1375;
-}
-
 .forfeit-notice {
   position: absolute;
   top: 12px;
@@ -512,12 +533,4 @@ function selectAll(event: FocusEvent) {
 .forfeit-fade-leave-active { transition: opacity 0.25s ease, transform 0.25s ease; }
 .forfeit-fade-enter-from,
 .forfeit-fade-leave-to { opacity: 0; transform: translate(-50%, -8px); }
-
-.leave-button {
-  position: absolute;
-  left: 10px;
-  bottom: calc(10px + env(safe-area-inset-bottom, 0px));
-  z-index: 1700;
-  text-decoration: none;
-}
 </style>
