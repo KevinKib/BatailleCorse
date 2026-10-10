@@ -88,10 +88,10 @@ describe('Bullshit table (phone, 375x667)', () => {
     });
   });
 
-  it('keeps the whole hand on one row, inside the screen, and tappable', () => {
+  it('puts a 26-card hand on two rows, inside the screen, and tappable', () => {
     cy.get('[data-test^="hand-card-"]').then(($cards) => {
       const rects = [...$cards].map((c) => c.getBoundingClientRect());
-      expect(new Set(rects.map((r) => Math.round(r.top))).size, 'one row').to.eq(1);
+      expect(new Set(rects.map((r) => Math.round(r.top))).size, 'two rows').to.eq(2);
       rects.forEach((r) => {
         expect(r.left).to.be.at.least(-1);
         expect(r.right).to.be.at.most(376);
@@ -104,7 +104,7 @@ describe('Bullshit table (phone, 375x667)', () => {
   });
 
   it('caps the selection at 4 cards', () => {
-    [0, 1, 2, 3, 4].forEach((i) => cy.get(`[data-test="hand-card-${i}"]`).click(4, 40));
+    [0, 1, 2, 3, 4].forEach((i) => cy.get(`[data-test="hand-card-${i}"]`).click(4, 10));
     cy.get('[data-test^="hand-card-"].selected').should('have.length', 4);
   });
 
@@ -227,7 +227,7 @@ describe('Bullshit hand / actions spacing matrix', () => {
       const rects = cards.map((c) => c.getBoundingClientRect());
       const resting = cards.filter((c) => !c.classList.contains('selected'));
       expect(resting.length, `${label}: a card is raised`).to.eq(cards.length - 1);
-      expect(new Set(resting.map((c) => Math.round(c.getBoundingClientRect().top))).size, `${label}: one row`).to.eq(1);
+      expect(new Set(resting.map((c) => Math.round(c.getBoundingClientRect().top))).size, `${label}: at most two rows`).to.be.at.most(2);
       rects.forEach((r) => {
         expect(r.left, label).to.be.at.least(-1);
         expect(r.right, label).to.be.at.most(vw + 1);
