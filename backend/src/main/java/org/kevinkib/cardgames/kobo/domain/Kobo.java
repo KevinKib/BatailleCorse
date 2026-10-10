@@ -338,8 +338,17 @@ public class Kobo implements Game {
      * rank the caller saw on top of the pile: if the top moved meanwhile the attempt is rejected
      * without penalty. A wrong rank costs the caller a penalty card.
      */
-    public synchronized KoboEvent matchDiscard(PlayerId seat, SlotRef target, Integer giveSlot, Rank expectedTopRank)
+    public KoboEvent matchDiscard(PlayerId seat, SlotRef target, Integer giveSlot, Rank expectedTopRank)
             throws KoboException {
+        return matchDiscard(seat, target, giveSlot, expectedTopRank, null);
+    }
+
+    /**
+     * Same, and when {@code expectedRevision} is not null the attempt is also rejected without penalty
+     * if the targeted slot changed since the caller saw it (a card was given into it after a match).
+     */
+    public synchronized KoboEvent matchDiscard(PlayerId seat, SlotRef target, Integer giveSlot, Rank expectedTopRank,
+                                               Integer expectedRevision) throws KoboException {
         requireNotFinished();
         if (!LIVE_PHASES.contains(phase)) {
             throw new WrongPhaseException(phase, "a live round phase");
@@ -347,6 +356,9 @@ public class Kobo implements Game {
         KoboPlayer actor = player(seat);
         Tableau targetTableau = targetTableau(target);
         Card targetCard = targetTableau.card(target.slot());
+        if (expectedRevision != null && targetTableau.revision(target.slot()) != expectedRevision) {
+            throw new StaleSlotException("That card changed since you saw it");
+        }
         Card top = discard.peekFirst();
         if (top == null) {
             throw new NothingToMatchException();
@@ -758,6 +770,10 @@ public class Kobo implements Game {
 
     synchronized void setDrawn(Card card) {
         this.drawn = card;
+    }
+
+    synchronized void setTotal(PlayerId seat, int total) {
+        player(seat).total = total;
     }
 
     synchronized void setPendingPower(Power power) {
