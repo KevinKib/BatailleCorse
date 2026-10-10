@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import PlayingCard from '../PlayingCard.vue';
 import { useHandLayout } from '../../composables/useHandLayout';
 import { useI18n } from '../../composables/useI18n';
 import { format } from '../../locales/format';
 import type Card from '../../model/Card';
+import { sortHand } from '../../model/bullshit/sortHand';
 
-// The player's hand, always on ONE row: cards overlap (and shrink a little for very big
-// hands) so any number of them fits the available width. A selected card is raised above
-// its neighbours.
+// The player's hand, sorted by rank (suits grouped) for display only. Cards overlap on one
+// row; when that would hide too much of each card they go on two overlapping rows instead,
+// so any hand fits without scrolling. A selected card is raised above its neighbours.
 const props = defineProps<{
   cards: Card[];
   selected: Card[];
@@ -18,6 +19,15 @@ const emit = defineEmits<{ toggle: [card: Card] }>();
 const ui = useI18n().bullshitUi;
 const root = ref<HTMLElement | null>(null);
 const { layout } = useHandLayout(root, () => props.cards.length);
+
+const sorted = computed(() => sortHand(props.cards));
+// The cards of each row with their displayed index (also the test id), the first row taking the extra card.
+const rows = computed(() => {
+  const indexed = sorted.value.map((card, index) => ({ card, index }));
+  return layout.value.rows === 1
+    ? [indexed]
+    : [indexed.slice(0, layout.value.perRow), indexed.slice(layout.value.perRow)];
+});
 
 const isSelected = (card: Card) => props.selected.some(c => c.name === card.name);
 const cardLabel = (card: Card) =>
@@ -29,30 +39,42 @@ const cardLabel = (card: Card) =>
     ref="root"
     class="hand"
     :style="{ '--card-w': layout.cardWidth + 'px', '--step': layout.step + 'px' }">
-    <button
-      v-for="(card, i) in cards"
-      :key="card.name"
-      :data-test="`hand-card-${i}`"
-      class="hand-card"
-      :class="{ selected: isSelected(card) }"
-      type="button"
-      :aria-label="cardLabel(card)"
-      :aria-pressed="isSelected(card)"
-      @click="emit('toggle', card)">
-      <PlayingCard :rank="card.rank" :suit="card.suit" />
-    </button>
+    <div v-for="(row, r) in rows" :key="r" class="hand-row">
+      <button
+        v-for="{ card, index } in row"
+        :key="card.name"
+        :data-test="`hand-card-${index}`"
+        class="hand-card"
+        :class="{ selected: isSelected(card) }"
+        type="button"
+        :aria-label="cardLabel(card)"
+        :aria-pressed="isSelected(card)"
+        @click="emit('toggle', card)">
+        <PlayingCard :rank="card.rank" :suit="card.suit" />
+      </button>
+    </div>
   </div>
 </template>
 
 <style scoped>
 .hand {
   display: flex;
-  flex-wrap: nowrap;
-  justify-content: center;
+  flex-direction: column;
   width: 100%;
   /* Room above the row for the raised (selected) card. */
   padding-top: var(--space-3);
   box-sizing: border-box;
+}
+.hand-row {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+}
+/* Second row: tucked under the first, which keeps the top part of its cards (rank and suit)
+   visible. Later in the DOM, so it paints over the first row. */
+.hand-row + .hand-row {
+  position: relative;
+  margin-top: calc(var(--card-w) * -0.7);
 }
 .hand-card {
   flex: none;
