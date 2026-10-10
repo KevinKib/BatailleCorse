@@ -27,7 +27,9 @@ import org.junit.jupiter.api.Disabled;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
-@Disabled("WebSocket layer — STOMP/SockJS transport test, excluded from regular CI runs")
+@Disabled("Stale: subscribes to the legacy /topic/game and sends an unauthenticated /app/create, but game "
+        + "events are now per-game/per-seat and authenticated by seat token (times out waiting for a frame). "
+        + "Needs rewriting against the session flow (create game via REST, subscribe with token), not a quick fix.")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class BatailleCorseWebSocketControllerIT {
 
