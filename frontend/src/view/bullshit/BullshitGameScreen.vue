@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount } from 'vue';
+import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { Button } from 'primevue';
 import { useBullshitStore } from '../../state/Bullshit.store';
 import { useBullshitBootstrap } from '../../composables/useBullshitBootstrap';
@@ -14,6 +14,9 @@ import OpponentSeat from '../../components/bullshit/OpponentSeat.vue';
 import BullshitHand from '../../components/bullshit/BullshitHand.vue';
 import BullshitLobby from '../../components/bullshit/BullshitLobby.vue';
 import { useI18n } from '../../composables/useI18n';
+import { flyCardsToPile, prefersReducedMotion } from '../../composables/usePileAnimation';
+import { cardSound } from '../../composables/useCardSound';
+import { useSoundPreference } from '../../composables/useSoundPreference';
 import { format, plural } from '../../locales/format';
 import { seatDisplayName } from '../../model/bullshit/displayName';
 import { claimSuit } from '../../model/bullshit/claimSuit';
@@ -83,6 +86,29 @@ const seatPositions = computed(() => {
 const targetSuit = computed(() => claimSuit(store.game?.currentTarget.label));
 const myCardCount = computed(() => store.game?.myHand.length ?? 0);
 
+// Card-to-pile animation and sound. The flight is a visual copy of the played hand cards
+// (the pile is drawn from the server state, so a missed animation never hides a card). It is
+// skipped under prefers-reduced-motion; the sound only depends on its own toggle.
+const pileWell = ref<HTMLElement | null>(null);
+const { enabled: soundEnabled, toggle: toggleSound } = useSoundPreference();
+
+function discard() {
+  const hand = store.game?.myHand ?? [];
+  const sources = store.selectedCards
+    .map(c => hand.findIndex(h => h.name === c.name))
+    .filter(i => i >= 0)
+    .map(i => document.querySelector<HTMLElement>(`[data-test="hand-card-${i}"]`))
+    .filter((el): el is HTMLElement => el !== null);
+  const pileCard = pileWell.value?.querySelector('.playing_card') ?? pileWell.value;
+  flyCardsToPile(sources, pileCard?.getBoundingClientRect() ?? null, { reduceMotion: prefersReducedMotion() });
+  store.discard();
+}
+
+// Any play (mine or an opponent's) makes the pile grow; taking the pile makes it shrink.
+watch(() => store.game?.discardPileSize ?? 0, (size, previous) => {
+  if (size > previous && soundEnabled.value) cardSound.play(size - previous);
+});
+
 const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.gameId}`);
 </script>
 
@@ -120,6 +146,16 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
         <RouterLink :to="{ path: '/' }" class="leave-button" data-test="leave">
           <Button severity="secondary" :label="ui.back" icon="pi pi-undo" variant="text" rounded />
         </RouterLink>
+        <Button
+          data-test="sound-toggle"
+          class="sound-toggle"
+          severity="secondary"
+          variant="text"
+          rounded
+          :icon="soundEnabled ? 'pi pi-volume-up' : 'pi pi-volume-off'"
+          :aria-label="soundEnabled ? ui.sound.mute : ui.sound.unmute"
+          :aria-pressed="soundEnabled"
+          @click="toggleSound" />
       </div>
 
       <Transition name="forfeit-fade">
@@ -155,7 +191,7 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
             </strong>
           </div>
 
-          <div class="pile-well">
+          <div ref="pileWell" class="pile-well">
             <PlayingCard :hidden="true" rank="10" suit="spade" />
             <div class="pile-chip">
               <CardCounter :count="store.game?.discardPileSize ?? 0" />
@@ -211,7 +247,7 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
             severity="success"
             rounded
             :disabled="!store.isMyTurn || store.selectedCards.length === 0"
-            @click="store.discard()" />
+            @click="discard" />
           <Button
             data-test="call"
             :label="ui.table.callBullshit"
@@ -280,6 +316,7 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
   padding-right: 120px;
 }
 .leave-button { text-decoration: none; }
+.sound-toggle { margin-left: var(--space-1); }
 
 .table-frame {
   position: relative;
