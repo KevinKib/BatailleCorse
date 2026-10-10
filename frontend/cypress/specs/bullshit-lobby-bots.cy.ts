@@ -99,3 +99,39 @@ describe('Bullshit lobby layout', () => {
     });
   });
 });
+
+describe('Bullshit full lobby fits the viewport (6 players, bots included)', () => {
+  const viewports: Array<[number, number]> = [[375, 667], [390, 844], [1280, 720], [1280, 800]];
+  viewports.forEach(([vw, vh]) => {
+    it(`keeps Start visible without scrolling at ${vw}x${vh}`, () => {
+      cy.viewport(vw, vh);
+      createBullshitGame('Alice');
+      for (let i = 1; i <= 5; i++) {
+        addBot();
+        cy.get('[data-test="badge-bot"]').should('have.length', i);
+      }
+      cy.get('[data-test="player-count"]').should('contain.text', '6 / 6');
+      cy.document().then((doc) => {
+        const label = `${vw}x${vh}`;
+        const scroller = (doc.querySelector('[data-test="lobby"]') as HTMLElement).parentElement as HTMLElement;
+        expect(scroller.scrollHeight, `${label}: the lobby does not scroll`).to.be.at.most(scroller.clientHeight + 1);
+        const root = doc.scrollingElement as Element;
+        expect(root.scrollHeight, `${label}: the page does not scroll`).to.be.at.most(root.clientHeight + 1);
+        expect(root.scrollWidth, `${label}: no horizontal scroll`).to.be.at.most(root.clientWidth + 1);
+        const start = (doc.querySelector('[data-test="start"]') as HTMLElement).getBoundingClientRect();
+        expect(start.bottom, `${label}: Start above the bottom edge`).to.be.at.most(vh);
+        expect(start.height, `${label}: Start touch target`).to.be.at.least(44);
+        // Nothing the lobby shows is lost: each block is still on screen.
+        ['lobby-title', 'player-count', 'add-bot', 'claim-mode', 'deck-size', 'invite-link', 'copy-link'].forEach((t) => {
+          const r = (doc.querySelector(`[data-test="${t}"]`) as HTMLElement).getBoundingClientRect();
+          expect(r.height, `${label}: ${t} is shown`).to.be.greaterThan(0);
+          expect(r.top, `${label}: ${t} inside the screen`).to.be.at.least(0);
+          expect(r.bottom, `${label}: ${t} inside the screen`).to.be.at.most(vh);
+        });
+        const panel = (doc.querySelector('[data-test="lobby"]') as HTMLElement).getBoundingClientRect();
+        expect(panel.top, `${label}: panel inside the screen`).to.be.at.least(0);
+        expect(panel.bottom, `${label}: panel inside the screen`).to.be.at.most(vh);
+      });
+    });
+  });
+});
