@@ -8,7 +8,7 @@ public record SessionViewDto(List<SeatDto> players) {
 
     public static SessionViewDto from(List<SeatView> seats) {
         List<SeatDto> dtos = seats.stream()
-                .map(seat -> new SeatDto(seat.seat(), seat.name(), seat.joined()))
+                .map(seat -> new SeatDto(seat.seat(), seat.name(), seat.joined(), seat.bot()))
                 .toList();
         return new SessionViewDto(dtos);
     }
