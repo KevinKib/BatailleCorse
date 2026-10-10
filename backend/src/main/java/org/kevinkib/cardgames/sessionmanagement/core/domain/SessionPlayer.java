@@ -10,6 +10,7 @@ public class SessionPlayer {
     private boolean bot;
     private String name;
     private boolean rematchRequested;
+    private boolean rematchDeparted;
 
     public SessionPlayer(PlayerId id, SessionToken token) {
         this.id = id;
@@ -39,6 +40,7 @@ public class SessionPlayer {
         this.bot = false;
         this.name = null;
         this.rematchRequested = false;
+        this.rematchDeparted = false;
     }
 
     void rename(String name) {
@@ -49,12 +51,25 @@ public class SessionPlayer {
         return "Player " + (id.id() + 1);
     }
 
+    /** Asking for a rematch also cancels an earlier departure: the player is back and wants to play. */
     public void requestRematch() {
         this.rematchRequested = true;
+        this.rematchDeparted = false;
     }
 
     public void clearRematch() {
         this.rematchRequested = false;
+        this.rematchDeparted = false;
+    }
+
+    /** The player left for good (grace delay over, or quit): the others stop waiting for them. */
+    void leaveRematch() {
+        this.rematchDeparted = true;
+        this.rematchRequested = false;
+    }
+
+    public boolean hasLeftRematch() {
+        return rematchDeparted;
     }
 
     public boolean hasRequestedRematch() {

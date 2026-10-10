@@ -61,13 +61,18 @@ public class PresenceService {
         if (pending != null) {
             pending.cancel();
             Game game = findGame(seat.gameId());
-            if (game != null) {
+            // On a finished game the pending task was a rematch departure: nothing to announce.
+            if (game != null && !game.isFinished()) {
                 broadcasters.broadcasterFor(game).reconnected(game, seat.playerId());
             }
         }
     }
 
-    /** Attributes a dropped connection to a seat and, if the game is live, starts the auto-loss timer. */
+    /**
+     * Attributes a dropped connection to a seat and starts the grace timer. On a live game the
+     * timer is the auto-loss; on a finished game it is the departure from the rematch (same delay,
+     * same cancel-on-reconnect, but silent: nothing is broadcast until the delay is over).
+     */
     public void onDisconnect(String connectionId) {
         Optional<Seat> maybeSeat = registry.unbind(connectionId);
         if (maybeSeat.isEmpty()) {
@@ -76,7 +81,7 @@ public class PresenceService {
         Seat seat = maybeSeat.get();
 
         Game game = findGame(seat.gameId());
-        if (game == null || game.isFinished()) {
+        if (game == null) {
             return;
         }
 
@@ -84,16 +89,29 @@ public class PresenceService {
         ScheduledForfeit task = scheduler.schedule(deadline,
                 () -> forfeit(seat.gameId(), seat.playerId(), ForfeitReason.DISCONNECTED));
         pendingForfeits.put(seat, task);
-        broadcasters.broadcasterFor(game).disconnected(game, seat.playerId(), deadline.toEpochMilli());
+        if (!game.isFinished()) {
+            broadcasters.broadcasterFor(game).disconnected(game, seat.playerId(), deadline.toEpochMilli());
+        }
     }
 
-    /** Terminal path shared by the timer (DISCONNECTED) and explicit /app/forfeit (RESIGNED). Idempotent on a finished game. */
+    /**
+     * Terminal path shared by the timer (DISCONNECTED) and explicit /app/forfeit (RESIGNED). On a
+     * finished game there is nothing to concede: the player leaves the rematch instead, which may
+     * complete it for the others.
+     */
     public void forfeit(GameId gameId, PlayerId playerId, ForfeitReason reason) {
         Seat seat = new Seat(gameId, playerId);
         pendingForfeits.remove(seat);
 
         Game game = findGame(gameId);
-        if (game == null || game.isFinished()) {
+        if (game == null) {
+            return;
+        }
+        if (game.isFinished()) {
+            games.leaveRematch(gameId, playerId).ifPresent(fresh -> {
+                games.touch(gameId);
+                broadcasters.broadcasterFor(fresh).rematchStarted(fresh, playerId);
+            });
             return;
         }
         game.forfeit(playerId);

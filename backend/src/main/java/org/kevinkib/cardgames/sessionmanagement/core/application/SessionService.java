@@ -182,15 +182,39 @@ public class SessionService implements GameDirectory {
         return gameFactories.maxPlayers(gameType);
     }
 
-    /** Records this seat's rematch request; returns true when all seats have requested. */
-    public boolean requestRematch(GameId id, PlayerId playerId) {
+    /**
+     * Records this seat's rematch request; returns true when every expected player has requested
+     * and enough of them remain to play (see {@link SessionGame#isRematchUnanimous}).
+     */
+    public synchronized boolean requestRematch(GameId id, PlayerId playerId) {
         SessionGame session = repository.loadSessionGame(id);
         session.requestRematch(playerId);
-        return session.isRematchUnanimous();
+        return isRematchReady(session);
+    }
+
+    /**
+     * A player leaves the rematch for good (grace delay over, or explicit quit). Nobody waits for
+     * them any more: if every other expected player had already asked, the rematch starts now and
+     * the fresh game is returned. Empty when the game is not over, or when the rematch is still
+     * waiting for someone, or cannot be played any more (too few players left).
+     */
+    public synchronized Optional<Game> leaveRematch(GameId id, PlayerId playerId) {
+        if (repository.findGame(id).filter(Game::isFinished).isEmpty()) {
+            return Optional.empty();
+        }
+        SessionGame session = repository.loadSessionGame(id);
+        session.leaveRematch(playerId);
+        return isRematchReady(session) ? Optional.of(rematch(id)) : Optional.empty();
+    }
+
+    private boolean isRematchReady(SessionGame session) {
+        return session.isRematchUnanimous()
+                && session.isRematchPlayable(gameFactories.minPlayers(session.gameType()));
     }
 
     public Game rematch(GameId id) {
         SessionGame session = repository.loadSessionGame(id);
+        session.releaseDepartedSeats();
         // Deal the rematch to the players who actually joined, not every room seat (matches startGame).
         Game fresh = gameFactories.factoryFor(session.gameType()).create(id, session.claimedCount(), session.options());
         session.clearRematch();
