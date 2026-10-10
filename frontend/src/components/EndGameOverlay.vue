@@ -70,7 +70,7 @@ const emit = defineEmits<Emits>();
 .end-title {
   font-family: var(--font-title);
   font-size: 2.4rem;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: 0.06em;
   margin: 0;
 }

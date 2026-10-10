@@ -20,10 +20,12 @@ describe('Visual direction (C bis)', () => {
     cy.get('[data-cy="turn-hint"]').should('be.visible').and('contain.text', 'YOUR TURN');
   });
 
-  it('uses Schibsted Grotesk for titles and Instrument Sans for the interface', () => {
-    cy.get('body').should('have.css', 'font-family').and('include', 'Instrument Sans');
-    cy.get('.player_tag').first().should('have.css', 'font-family').and('include', 'Schibsted Grotesk');
-    cy.contains('button', 'Send').should('have.css', 'font-family').and('include', 'Instrument Sans');
+  it('uses Atkinson Hyperlegible for titles and the interface, in 400 and 700 only', () => {
+    cy.get('body').should('have.css', 'font-family').and('include', 'Atkinson Hyperlegible');
+    cy.get('body').should('have.css', 'font-weight', '400');
+    cy.get('.player_tag').first().should('have.css', 'font-family').and('include', 'Atkinson Hyperlegible');
+    cy.get('.player_tag').first().should('have.css', 'font-weight').and('match', /^(400|700)$/);
+    cy.contains('button', 'Send').should('have.css', 'font-family').and('include', 'Atkinson Hyperlegible');
     cy.get('[data-cy="player-card-count"] .count').should('have.css', 'font-variant-numeric', 'tabular-nums');
     cy.get('.game-timer').should('have.css', 'font-variant-numeric', 'tabular-nums');
   });

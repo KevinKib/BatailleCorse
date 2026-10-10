@@ -387,7 +387,7 @@ async function joinGame() {
   color: rgba(255, 255, 255, 0.85);
   font-family: var(--font-title);
   font-size: 1.1rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s, color 0.15s;
   display: flex;

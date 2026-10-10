@@ -88,10 +88,11 @@ function onLeave(el: Element, done: () => void) {
 
 :root {
   /* Typefaces (visual direction "C bis"), the single place they are named.
-     Loaded from Google Fonts in index.html. Title: headings, numerals and
-     labels (500-800); UI: body copy and controls (400-700). */
-  --font-title: "Schibsted Grotesk", system-ui, sans-serif;
-  --font-ui: "Instrument Sans", system-ui, sans-serif;
+     Loaded from Google Fonts in index.html. Atkinson Hyperlegible ships only
+     the 400 and 700 weights (plus italics): use those two everywhere. Title
+     and UI share the family but keep two tokens. */
+  --font-title: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+  --font-ui: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
 
   /* Active-turn cue: a crisp 1px ring (no blur, no pulse) plus a fixed 6px dot
      in front of the label. Shared by every seat/player tag. */
@@ -151,7 +152,7 @@ html, body, #app {
   width: 100%;
   height: 100%;
   font-family: var(--font-ui);
-  font-weight: 500;
+  font-weight: 400;
   font-style: normal;
 }
 
@@ -167,7 +168,7 @@ h3              { font-size: 1.17em; margin: .83em 0 }
 h5              { font-size: .83em; margin: 1.5em 0 }
 h6              { font-size: .75em; margin: 1.67em 0 }
 h1, h2, h3, h4,
-h5, h6          { font-weight: bolder }
+h5, h6          { font-weight: 700 }
 
 .app-root {
   position: relative;

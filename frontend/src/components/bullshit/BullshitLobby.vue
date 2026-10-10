@@ -281,7 +281,7 @@ function selectAll(event: FocusEvent) {
   border-color: rgba(255, 255, 255, 0.15);
   color: rgba(255, 255, 255, 0.9);
   border-radius: 8px;
-  font-family: monospace;
+  font-family: var(--font-ui);
   font-size: 0.8rem;
 }
 :deep(.share-input.p-inputtext:focus-visible) {
