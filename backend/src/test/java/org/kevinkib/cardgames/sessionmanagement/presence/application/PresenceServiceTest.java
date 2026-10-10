@@ -132,14 +132,15 @@ class PresenceServiceTest {
     }
 
     @Test
-    void givenFinishedGame_whenDisconnect_thenNoScheduleNoBroadcast() {
+    void givenFinishedGame_whenDisconnect_thenNoBroadcastAndTimerOnlyLeavesTheRematch() {
         sessionService.getGame(gameId).forfeit(new PlayerId(1)); // already over
         service.onPresence("sess-0", gameId, new PlayerId(0));
 
         service.onDisconnect("sess-0");
+        scheduler.lastTask.run(); // grace over: a departure from the rematch, never a forfeit
 
-        assertThat(scheduler.lastTask == null, is(true));
         assertThat(eventTypes().isEmpty(), is(true));
+        assertThat(forfeitLog.reasonsBySeat(gameId).isEmpty(), is(true));
     }
 
     @Test

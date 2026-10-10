@@ -80,3 +80,7 @@ BatailleCorse keeps its instant 2-player rematch: `SessionService.requestRematch
 - BatailleCorse rematch (unchanged).
 - The broader "never pre-allocate seats / persistent Room aggregate" refactor — reopening rebuilds the lobby cleanly, so the pre-allocation no longer causes bugs here; a deeper Room model remains a possible future change, not required now.
 - Detecting a player who hard-closes the tab without clicking either button (they just don't re-join — same as not clicking Play Again).
+
+## Note (2026-10)
+
+Bullshit never uses the unanimity mechanism: the first Play Again reopens the room and nobody is waited for, so a player who disconnects cannot block it, and bots (no presence, no click) are not reseated in the reopened lobby. The unanimity rules, including departures during the rematch, are only for the generic path and are described in `2026-06-12-rematch-play-again-design.md` (addendum).
