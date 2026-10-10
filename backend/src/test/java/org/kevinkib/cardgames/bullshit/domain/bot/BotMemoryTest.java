@@ -35,6 +35,14 @@ class BotMemoryTest {
     }
 
     @Test
+    void givenShortDeck_thenOnlyThirtyTwoCardsExistAndAbsentRanksAreNeverUnseen() {
+        BotMemory memory = new BotMemory(ME, org.kevinkib.cardgames.bullshit.domain.deck.DeckSize.SHORT);
+
+        assertThat(memory.unseenPopulation(List.of()), is(32));
+        assertThat(memory.unseenPopulation(List.of(card(FrenchRank.ACE, FrenchSuit.HEART))), is(31));
+    }
+
+    @Test
     void givenOwnDiscard_thenThoseCardsAreKnownUntilThePileIsTaken() {
         BotMemory memory = new BotMemory(ME);
         memory.onOwnDiscard(List.of(card(FrenchRank.ACE, FrenchSuit.HEART), card(FrenchRank.ACE, FrenchSuit.SPADE)));

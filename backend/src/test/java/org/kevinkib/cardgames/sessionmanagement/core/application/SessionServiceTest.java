@@ -3,6 +3,7 @@ package org.kevinkib.cardgames.sessionmanagement.core.application;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.kevinkib.cardgames.bullshit.domain.bot.ScriptedRandom;
 import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseFactory;
 import org.kevinkib.cardgames.bullshit.domain.Bullshit;
 import org.kevinkib.cardgames.bullshit.domain.BullshitFactory;
@@ -325,7 +326,7 @@ class SessionServiceTest {
         void setUpBullshit() {
             bullshitService = new SessionService(
                     new InMemorySessionRepository(Clock.systemUTC()),
-                    new GameFactories(List.of(new BullshitFactory())));
+                    new GameFactories(List.of(new BullshitFactory(new ScriptedRandom(0.0, 0.0, 0.0, 0.0)))));
         }
 
         private GameId startWithTwoPlayers(GameOptions options) {

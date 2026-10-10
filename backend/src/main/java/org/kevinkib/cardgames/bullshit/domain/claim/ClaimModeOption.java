@@ -1,28 +1,36 @@
 package org.kevinkib.cardgames.bullshit.domain.claim;
 
-import java.util.function.Supplier;
+import org.kevinkib.cardgames.bullshit.domain.deck.DeckSize;
+
+import java.util.random.RandomGenerator;
 
 /** The single source of truth mapping a stable claim-mode key to its {@link ClaimMode} strategy. */
 public enum ClaimModeOption {
 
-    RANK("rank", AscendingRankClaimMode::new),
-    SUIT("suit", CyclingSuitClaimMode::new);
+    RANK("rank") {
+        @Override
+        public ClaimMode create(DeckSize deckSize, RandomGenerator random) {
+            return new AscendingRankClaimMode(deckSize);
+        }
+    },
+    SUIT("suit") {
+        @Override
+        public ClaimMode create(DeckSize deckSize, RandomGenerator random) {
+            return new CyclingSuitClaimMode(random);
+        }
+    };
 
     private final String key;
-    private final Supplier<ClaimMode> factory;
 
-    ClaimModeOption(String key, Supplier<ClaimMode> factory) {
+    ClaimModeOption(String key) {
         this.key = key;
-        this.factory = factory;
     }
 
     public String key() {
         return key;
     }
 
-    public ClaimMode create() {
-        return factory.get();
-    }
+    public abstract ClaimMode create(DeckSize deckSize, RandomGenerator random);
 
     /** Resolves a key to its option; unknown or {@code null} keys fall back to {@link #RANK}. */
     public static ClaimModeOption fromKey(String key) {

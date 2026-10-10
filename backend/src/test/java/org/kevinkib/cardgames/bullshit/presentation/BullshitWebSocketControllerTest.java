@@ -83,7 +83,7 @@ class BullshitWebSocketControllerTest {
     }
 
     private BullshitCreateEventData createRoom() {
-        Response create = controller.createGame(new BullshitCreatePayload("Alice", null));
+        Response create = controller.createGame(new BullshitCreatePayload("Alice", null, null));
         return (BullshitCreateEventData) create.getEventData();
     }
 
@@ -206,7 +206,7 @@ class BullshitWebSocketControllerTest {
 
     @Test
     void givenCreate_whenCreate_thenRoomAckWithHostTokenNoState() {
-        Response response = controller.createGame(new BullshitCreatePayload("Alice", null));
+        Response response = controller.createGame(new BullshitCreatePayload("Alice", null, null));
 
         assertThat(response.isSuccess(), is(true));
         assertThat(response.getEventType(), is("CREATE"));
@@ -219,7 +219,7 @@ class BullshitWebSocketControllerTest {
 
     @Test
     void givenHostStartsWithEnoughPlayers_whenStart_thenBroadcastsGameToAllSeats() {
-        Response create = controller.createGame(new BullshitCreatePayload("Alice", null));
+        Response create = controller.createGame(new BullshitCreatePayload("Alice", null, null));
         BullshitCreateEventData data = (BullshitCreateEventData) create.getEventData();
         GameId id = new GameId(data.gameId());
         sessionService.joinRoom(id, "Bob");
@@ -235,7 +235,7 @@ class BullshitWebSocketControllerTest {
 
     @Test
     void givenNonHostStart_whenStart_thenErrorToActingSeatOnly() {
-        Response create = controller.createGame(new BullshitCreatePayload("Alice", null));
+        Response create = controller.createGame(new BullshitCreatePayload("Alice", null, null));
         BullshitCreateEventData data = (BullshitCreateEventData) create.getEventData();
         GameId id = new GameId(data.gameId());
         var bob = sessionService.joinRoom(id, "Bob");

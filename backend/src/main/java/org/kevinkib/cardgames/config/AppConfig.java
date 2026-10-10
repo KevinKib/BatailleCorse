@@ -64,7 +64,7 @@ public class AppConfig {
 
     @Bean
     public BullshitFactory bullshitFactory() {
-        return new BullshitFactory();
+        return new BullshitFactory(new ThreadLocalRandomGenerator());
     }
 
     @Bean

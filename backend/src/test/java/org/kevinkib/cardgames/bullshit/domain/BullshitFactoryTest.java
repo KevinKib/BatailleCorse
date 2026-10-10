@@ -1,6 +1,7 @@
 package org.kevinkib.cardgames.bullshit.domain;
 
 import org.junit.jupiter.api.Test;
+import org.kevinkib.cardgames.bullshit.domain.bot.ScriptedRandom;
 import org.kevinkib.cardgames.bullshit.domain.claim.RankTarget;
 import org.kevinkib.cardgames.bullshit.domain.claim.SuitTarget;
 import org.kevinkib.cardgames.game.Game;
@@ -37,10 +38,27 @@ class BullshitFactoryTest {
 
     @Test
     void givenSuitOption_whenCreate_thenInitialTargetIsHeart() {
-        Bullshit game = (Bullshit) new BullshitFactory()
+        Bullshit game = (Bullshit) new BullshitFactory(new ScriptedRandom(0.0))
                 .create(GameId.generate(), 3, GameOptions.of(Map.of("claimMode", "suit")));
 
         assertThat(game.getCurrentTarget(), is(new SuitTarget(FrenchSuit.HEART)));
+    }
+
+    @Test
+    void givenDeckSize32_whenCreate_thenShortDeckDealtAndRankCycleStartsAtSeven() {
+        Bullshit game = (Bullshit) new BullshitFactory()
+                .create(GameId.generate(), 2, GameOptions.of(Map.of("deckSize", "32")));
+
+        assertThat(game.getPlayers().stream().mapToInt(p -> p.handSize()).sum(), is(32));
+        assertThat(game.getCurrentTarget(), is(new RankTarget(FrenchRank.SEVEN)));
+    }
+
+    @Test
+    void givenNoDeckSizeOption_whenCreate_thenFullDeck() {
+        Bullshit game = (Bullshit) new BullshitFactory()
+                .create(GameId.generate(), 2, GameOptions.of(Map.of("claimMode", "rank")));
+
+        assertThat(game.getPlayers().stream().mapToInt(p -> p.handSize()).sum(), is(52));
     }
 
     @Test

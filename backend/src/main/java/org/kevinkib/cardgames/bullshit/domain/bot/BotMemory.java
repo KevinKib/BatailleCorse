@@ -2,10 +2,9 @@ package org.kevinkib.cardgames.bullshit.domain.bot;
 
 import org.kevinkib.cardgames.bullshit.domain.claim.ClaimMode;
 import org.kevinkib.cardgames.bullshit.domain.claim.ClaimTarget;
+import org.kevinkib.cardgames.bullshit.domain.deck.DeckSize;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cards.domain.Card;
-import org.kevinkib.cards.domain.deck.french.FrenchRank;
-import org.kevinkib.cards.domain.deck.french.FrenchSuit;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,24 +17,20 @@ import java.util.Map;
  */
 public final class BotMemory {
 
-    private static final List<Card> FULL_DECK = fullDeck();
+    private final List<Card> deck;
 
     private final PlayerId me;
     private final List<Card> ownPileCards = new ArrayList<>();
     private final Map<PlayerId, List<Card>> revealedBySeat = new HashMap<>();
 
     public BotMemory(PlayerId me) {
-        this.me = me;
+        this(me, DeckSize.FULL);
     }
 
-    private static List<Card> fullDeck() {
-        List<Card> cards = new ArrayList<>();
-        for (FrenchRank rank : FrenchRank.getRanks()) {
-            for (FrenchSuit suit : FrenchSuit.getSuits()) {
-                cards.add(new Card(rank, suit));
-            }
-        }
-        return List.copyOf(cards);
+    /** @param deckSize the deck in play: the bot reasons about the cards it cannot see within it */
+    public BotMemory(PlayerId me, DeckSize deckSize) {
+        this.deck = deckSize.cards();
+        this.me = me;
     }
 
     /** The bot played these cards: it knows they now sit in the pile. */
@@ -81,7 +76,7 @@ public final class BotMemory {
     }
 
     private List<Card> unseen(List<Card> ownHand) {
-        List<Card> unseen = new ArrayList<>(FULL_DECK);
+        List<Card> unseen = new ArrayList<>(deck);
         ownHand.forEach(unseen::remove);
         ownPileCards.forEach(unseen::remove);
         return unseen;

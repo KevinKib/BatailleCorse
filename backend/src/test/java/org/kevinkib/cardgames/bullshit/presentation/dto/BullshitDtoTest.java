@@ -2,6 +2,9 @@ package org.kevinkib.cardgames.bullshit.presentation.dto;
 
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.bullshit.domain.Bullshit;
+import org.kevinkib.cardgames.bullshit.domain.claim.AscendingRankClaimMode;
+import org.kevinkib.cardgames.bullshit.domain.deck.DeckSize;
+import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -25,6 +28,15 @@ class BullshitDtoTest {
 
         assertThat(dto.myHand().size(), is(2));
         assertThat(dto.gameType(), is("bullshit"));
+    }
+
+    @Test
+    void givenGame_whenForViewer_thenDeckSizeIsExposed() {
+        Bullshit full = aBullshit().withPlayers(playerWithRanks(0, ACE), playerWithRanks(1, TWO)).build();
+        Bullshit shortDeck = new Bullshit(GameId.generate(), 2, new AscendingRankClaimMode(DeckSize.SHORT), DeckSize.SHORT);
+
+        assertThat(BullshitDto.forViewer(full, new PlayerId(0)).deckSize(), is(52));
+        assertThat(BullshitDto.forViewer(shortDeck, new PlayerId(0)).deckSize(), is(32));
     }
 
     @Test

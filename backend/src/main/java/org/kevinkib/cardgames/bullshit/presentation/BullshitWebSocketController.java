@@ -28,6 +28,7 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -57,9 +58,15 @@ public class BullshitWebSocketController {
     public Response createGame(@Payload(required = false) BullshitCreatePayload payload) {
         String name = (payload != null) ? payload.name() : null;
         String claimMode = (payload != null) ? payload.claimMode() : null;
-        GameOptions options = (claimMode != null)
-                ? GameOptions.of(Map.of(BullshitOptions.CLAIM_MODE_KEY, claimMode))
-                : GameOptions.none();
+        String deckSize = (payload != null) ? payload.deckSize() : null;
+        Map<String, String> values = new HashMap<>();
+        if (claimMode != null) {
+            values.put(BullshitOptions.CLAIM_MODE_KEY, claimMode);
+        }
+        if (deckSize != null) {
+            values.put(BullshitOptions.DECK_SIZE_KEY, deckSize);
+        }
+        GameOptions options = GameOptions.of(values);
         RoomCreated room = sessionService.createRoom(BullshitFactory.GAME_TYPE, name, options);
         Map<Integer, String> tokens = Map.of(0, room.hostToken());
 
