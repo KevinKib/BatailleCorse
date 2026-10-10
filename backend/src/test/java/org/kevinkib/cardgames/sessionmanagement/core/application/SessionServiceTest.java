@@ -346,11 +346,11 @@ class SessionServiceTest {
         }
 
         @Test
-        void givenNoOption_whenStart_thenInitialTargetIsAce() {
+        void givenNoOptionAndTwoPlayers_whenStart_thenShortDeckSoInitialTargetIsSeven() {
             GameId id = startWithTwoPlayers(GameOptions.none());
 
             Bullshit game = (Bullshit) bullshitService.getGame(id);
-            assertThat(game.getCurrentTarget(), is(new RankTarget(FrenchRank.ACE)));
+            assertThat(game.getCurrentTarget(), is(new RankTarget(FrenchRank.SEVEN)));
         }
 
         @Test

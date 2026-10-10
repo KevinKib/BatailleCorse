@@ -35,7 +35,7 @@ describe('BullshitStartGame claim mode', () => {
     await wrapper.find('input[type="text"]').setValue('Alice');
     await wrapper.get('form').trigger('submit');
 
-    expect(create).toHaveBeenCalledWith('Alice', 'rank', '32');
+    expect(create).toHaveBeenCalledWith('Alice', 'rank', undefined);
   });
 
   it('creates with 52 cards when the 52 radio is selected', async () => {
@@ -49,11 +49,31 @@ describe('BullshitStartGame claim mode', () => {
     expect(create).toHaveBeenCalledWith(undefined, 'rank', '52');
   });
 
-  it('preselects 32 cards and shows localised deck size labels', async () => {
+  it('creates with 32 cards when the 32 radio is selected', async () => {
+    const wrapper = await mountCreate();
+    const create = vi.spyOn(useBullshitStore(), 'create').mockImplementation(() => {});
+
+    await wrapper.find('input[type="radio"][value="32"]').setValue();
+    await wrapper.get('form').trigger('submit');
+
+    expect(create).toHaveBeenCalledWith(undefined, 'rank', '32');
+  });
+
+  it('shows the rank range of the chosen deck', async () => {
+    const wrapper = await mountCreate();
+    const rank = () => wrapper.get('[data-test="claim-mode-field"] .mode-option').text();
+    expect(rank()).toBe('By rank (7→A or A→K)');
+    await wrapper.find('input[type="radio"][value="52"]').setValue();
+    expect(rank()).toBe('By rank (A→K)');
+    await wrapper.find('input[type="radio"][value="32"]').setValue();
+    expect(rank()).toBe('By rank (7→A)');
+  });
+
+  it('preselects automatic and shows localised deck size labels', async () => {
     const wrapper = await mountCreate();
     const active = wrapper.findAll('[data-test="deck-size"] .mode-option--active');
     expect(active).toHaveLength(1);
-    expect(active[0].text()).toBe(messagesEn.bullshitUi.start.deckSizes['32']);
+    expect(active[0].text()).toBe(messagesEn.bullshitUi.start.deckSizes.auto);
     expect(wrapper.get('[data-test="deck-size"]').text()).toContain(messagesEn.bullshitUi.start.deckSizes['52']);
   });
 
@@ -71,7 +91,7 @@ describe('BullshitStartGame claim mode', () => {
     await wrapper.find('input[type="radio"][value="suit"]').setValue();
     await wrapper.get('form').trigger('submit');
 
-    expect(create).toHaveBeenCalledWith('Alice', 'suit', '32');
+    expect(create).toHaveBeenCalledWith('Alice', 'suit', undefined);
   });
 
   it('marks the chosen claim mode as active', async () => {

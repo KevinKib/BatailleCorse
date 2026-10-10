@@ -28,6 +28,7 @@ describe('Bullshit start screens', () => {
     cy.contains('label', 'By rank').should('be.visible');
     cy.contains('label', 'By suit').should('be.visible');
     cy.contains('legend', 'Deck').should('be.visible');
+    cy.contains('label', 'Auto').should('be.visible');
     cy.contains('label', '32 cards').should('be.visible');
     cy.contains('label', '52 cards').should('be.visible');
     cy.get('[data-test="submit"]').should('be.visible').and('contain.text', 'Create game');
@@ -59,6 +60,25 @@ describe('Bullshit lobby', () => {
     cy.get('[data-test="copy-link"]').should('be.visible').and('contain.text', 'Copy');
     cy.get('[data-test="start"]').should('be.visible').and('be.disabled');
     cy.get('[data-test="start-hint"]').should('contain.text', 'Waiting for 1 more player');
+  });
+
+  it('follows the seat count for the deck while the host leaves it on automatic', () => {
+    createBullshitGame('Alice', undefined, 'Auto');
+    cy.get('[data-test="deck-size"]').should('contain.text', '32 cards');
+    cy.get('[data-test="claim-mode"]').should('contain.text', 'By rank (7→A)');
+    cy.get('[data-test="add-bot"]').click();
+    cy.get('[data-test="add-bot"]').click();
+    cy.get('[data-test="deck-size"]').should('contain.text', '32 cards');
+    cy.get('[data-test="add-bot"]').click();
+    cy.get('[data-test="deck-size"]').should('contain.text', '52 cards');
+    cy.get('[data-test="claim-mode"]').should('contain.text', 'By rank (A→K)');
+  });
+
+  it('keeps an explicit deck size whatever the seat count', () => {
+    createBullshitGame('Alice', undefined, '32 cards');
+    for (let i = 0; i < 3; i++) cy.get('[data-test="add-bot"]').click();
+    cy.get('[data-test="player-count"]').should('contain.text', '4 / 6');
+    cy.get('[data-test="deck-size"]').should('contain.text', '32 cards');
   });
 
   it('fits a phone screen without horizontal overflow', () => {

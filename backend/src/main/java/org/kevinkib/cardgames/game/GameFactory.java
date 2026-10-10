@@ -17,4 +17,10 @@ public interface GameFactory {
     default Game create(GameId id, int nbPlayers, GameOptions options) {
         return create(id, nbPlayers);
     }
+
+    /** The options as they will apply if the game starts now with {@code nbPlayers} players
+     *  (defaults that depend on the player count resolved). Games without such defaults keep this. */
+    default GameOptions effectiveOptions(GameOptions options, int nbPlayers) {
+        return options;
+    }
 }

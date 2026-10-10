@@ -115,7 +115,9 @@ describe('English messages', () => {
     expect(messagesEn.bullshitUi.start.claimModes.rank).toBeTruthy();
     expect(messagesEn.bullshitUi.start.claimModes.suit).toBeTruthy();
     expect(messagesEn.bullshitUi.start.deckSizeLegend).toBeTruthy();
+    expect(messagesEn.bullshitUi.start.deckSizes.auto).toBeTruthy();
     expect(messagesEn.bullshitUi.start.deckSizes['32']).toBeTruthy();
+    expect(messagesEn.bullshitUi.start.rankRanges.auto).toBeTruthy();
     expect(messagesEn.bullshitUi.start.deckSizes['52']).toBeTruthy();
   });
 

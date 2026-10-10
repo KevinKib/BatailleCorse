@@ -7,6 +7,8 @@ import org.kevinkib.cardgames.game.GameFactory;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.GameOptions;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.random.RandomGenerator;
 
 public class BullshitFactory implements GameFactory {
@@ -46,7 +48,14 @@ public class BullshitFactory implements GameFactory {
 
     @Override
     public Game create(GameId id, int nbPlayers, GameOptions options) {
-        BullshitOptions parsed = BullshitOptions.from(options);
+        BullshitOptions parsed = BullshitOptions.from(options, nbPlayers);
         return new Bullshit(id, nbPlayers, parsed.toClaimMode(random), parsed.deckSize());
+    }
+
+    @Override
+    public GameOptions effectiveOptions(GameOptions options, int nbPlayers) {
+        Map<String, String> values = new HashMap<>(options.values());
+        values.put(BullshitOptions.DECK_SIZE_KEY, BullshitOptions.from(options, nbPlayers).deckSize().key());
+        return GameOptions.of(values);
     }
 }

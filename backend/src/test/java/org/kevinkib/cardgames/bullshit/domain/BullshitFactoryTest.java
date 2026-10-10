@@ -54,9 +54,19 @@ class BullshitFactoryTest {
     }
 
     @Test
-    void givenNoDeckSizeOption_whenCreate_thenFullDeck() {
+    void givenNoDeckSizeOption_whenCreate_thenDeckFollowsPlayerCount() {
+        GameOptions rank = GameOptions.of(Map.of("claimMode", "rank"));
+        Bullshit three = (Bullshit) new BullshitFactory().create(GameId.generate(), 3, rank);
+        Bullshit four = (Bullshit) new BullshitFactory().create(GameId.generate(), 4, rank);
+
+        assertThat(three.getPlayers().stream().mapToInt(p -> p.handSize()).sum(), is(32));
+        assertThat(four.getPlayers().stream().mapToInt(p -> p.handSize()).sum(), is(52));
+    }
+
+    @Test
+    void givenExplicit52_whenCreateWithTwoPlayers_thenFullDeck() {
         Bullshit game = (Bullshit) new BullshitFactory()
-                .create(GameId.generate(), 2, GameOptions.of(Map.of("claimMode", "rank")));
+                .create(GameId.generate(), 2, GameOptions.of(Map.of("deckSize", "52")));
 
         assertThat(game.getPlayers().stream().mapToInt(p -> p.handSize()).sum(), is(52));
     }
