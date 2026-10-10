@@ -226,6 +226,10 @@ public class Bullshit implements Game {
         return currentPlayerIndex;
     }
 
+    public ClaimMode getClaimMode() {
+        return claimMode;
+    }
+
     public ClaimTarget getCurrentTarget() {
         return currentTarget;
     }

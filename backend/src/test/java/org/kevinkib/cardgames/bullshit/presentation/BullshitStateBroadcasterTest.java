@@ -38,6 +38,58 @@ class BullshitStateBroadcasterTest {
     }
 
     @Test
+    void givenListener_whenBroadcast_thenNotifiedAfterTheMessagesWithTheEvent() {
+        Bullshit game = aBullshit()
+                .withPlayers(playerWithRanks(0, ACE), playerWithRanks(1, KING))
+                .build();
+        RecordingMessaging messaging = new RecordingMessaging();
+        BullshitStateBroadcaster broadcaster = new BullshitStateBroadcaster(messaging);
+        List<String> notifications = new ArrayList<>();
+        List<Integer> messagesAtNotification = new ArrayList<>();
+        broadcaster.addListener((g, eventType, data) -> {
+            notifications.add(eventType);
+            messagesAtNotification.add(messaging.seats.size());
+        });
+
+        broadcaster.broadcast(game, "DISCARD", new EmptyEventData(), "msg");
+        broadcaster.broadcast(game, "CALL_BULLSHIT", new EmptyEventData(), "msg");
+
+        assertThat(notifications, is(List.of("DISCARD", "CALL_BULLSHIT")));
+        assertThat(messagesAtNotification, is(List.of(2, 4)));
+    }
+
+    @Test
+    void givenFailingListener_whenBroadcast_thenOthersAreStillNotified() {
+        Bullshit game = aBullshit()
+                .withPlayers(playerWithRanks(0, ACE), playerWithRanks(1, KING))
+                .build();
+        BullshitStateBroadcaster broadcaster = new BullshitStateBroadcaster(new RecordingMessaging());
+        List<String> notifications = new ArrayList<>();
+        broadcaster.addListener((g, eventType, data) -> {
+            throw new IllegalStateException("listener bug");
+        });
+        broadcaster.addListener((g, eventType, data) -> notifications.add(eventType));
+
+        broadcaster.broadcast(game, "DISCARD", new EmptyEventData(), "msg");
+
+        assertThat(notifications, is(List.of("DISCARD")));
+    }
+
+    @Test
+    void givenBotSeat_whenBroadcast_thenOnlyHumanSeatsReceiveAMessage() {
+        Bullshit game = aBullshit()
+                .withPlayers(playerWithRanks(0, ACE), playerWithRanks(1, KING), playerWithRanks(2, QUEEN))
+                .build();
+        RecordingMessaging messaging = new RecordingMessaging();
+        BullshitStateBroadcaster broadcaster = new BullshitStateBroadcaster(
+                messaging, gameId -> java.util.Set.of(new PlayerId(1)));
+
+        broadcaster.broadcast(game, "DISCARD", new EmptyEventData(), "msg");
+
+        assertThat(messaging.seats, is(List.of(new PlayerId(0), new PlayerId(2))));
+    }
+
+    @Test
     void givenTwoPlayers_whenBroadcast_thenEachSeatReceivesItsOwnHand() {
         Bullshit game = aBullshit()
                 .withPlayers(playerWithRanks(0, ACE), playerWithRanks(1, KING, QUEEN))
