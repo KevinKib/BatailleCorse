@@ -163,7 +163,7 @@ async function onJoin() {
         severity="secondary"
         size="small"
         text
-        @click="router.push('/')" />
+        @click="router.push('/games')" />
     </form>
   </div>
 </template>

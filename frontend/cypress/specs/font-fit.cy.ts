@@ -5,8 +5,8 @@ const VIEWPORTS: Array<[number, number]> = [[375, 667], [390, 844], [1280, 720]]
 const LONG_NAME = 'Maximilienne-Alexandrine'; // 24 characters
 
 function createBullshitGame(name: string) {
-  cy.visit('/games/bataillecorse');
-  cy.contains('button', 'Play Bullshit').click();
+  cy.visit('/games');
+  cy.get('[data-test="play-bullshit"]').click();
   cy.url().should('include', '/games/bullshit/create');
   cy.get('[data-test="name"]').type(name);
   // Deliberate fixed wait: no "connected" signal is exposed and a create sent before the

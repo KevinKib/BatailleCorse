@@ -2,8 +2,8 @@
 // start screens (same menu look as BatailleCorse, errors visible, nothing lost).
 function createBullshitGame(name: string, claimLabel?: string) {
   // Enter through the menu, as a player does, so the WebSocket is connected before we create.
-  cy.visit('/games/bataillecorse');
-  cy.contains('button', 'Play Bullshit').click();
+  cy.visit('/games');
+  cy.get('[data-test="play-bullshit"]').click();
   cy.url().should('include', '/games/bullshit/create');
   cy.get('[data-test="name"]').type(name);
   if (claimLabel) cy.contains('label', claimLabel).click();

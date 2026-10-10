@@ -37,15 +37,15 @@
       />
 
       <Button
-        class="menu-button"
-        label="Play Bullshit"
-        icon="pi pi-bolt"
-        severity="warn"
-        size="large"
-        rounded
-        @click="router.push({ name: 'bullshit-create' })"
+        class="back-button"
+        data-test="back"
+        :label="gamePicker.back"
+        icon="pi pi-arrow-left"
+        severity="secondary"
+        size="small"
+        text
+        @click="router.push({ name: 'games' })"
       />
-
 
     </div>
   </div>
@@ -58,7 +58,10 @@ import { Button } from 'primevue';
 import TitleCardFan from '../../components/TitleCardFan.vue';
 import { preloadAllCards } from '../../composables/useCardAnimation';
 
+import { useI18n } from '../../composables/useI18n';
+
 const router = useRouter();
+const { gamePicker } = useI18n();
 
 onMounted(() => preloadAllCards());
 </script>

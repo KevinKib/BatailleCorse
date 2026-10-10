@@ -125,10 +125,27 @@ export interface BullshitUiMessages {
   };
 }
 
+// Game picker page (`/games`) and the back link of the game menus.
+export interface GameChoiceMessages {
+  name: string;
+  description: string;
+  players: string;
+  play: string;
+}
+
+export interface GamePickerMessages {
+  title: string;
+  choose: string;          // accessible name of the list of games
+  back: string;            // back link of a game menu, towards the picker
+  bataillecorse: GameChoiceMessages;
+  bullshit: GameChoiceMessages;
+}
+
 // Whole-app message tree. Each game owns a rules namespace; future namespaces
 // (game, lobby, ...) are added here additively.
 export interface Messages {
   rules: RulesMessages;     // BatailleCorse
   bullshit: RulesMessages;  // Bullshit
   bullshitUi: BullshitUiMessages; // Bullshit screens
+  gamePicker: GamePickerMessages; // Game choice page
 }
