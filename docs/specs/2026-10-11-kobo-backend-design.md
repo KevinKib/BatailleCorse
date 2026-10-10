@@ -185,7 +185,7 @@ card, given)`, `MatchPenalised(actor, drawnPenalty)`, `RoundScored(RoundResult)`
 All extend a `KoboException` (checked, like Bullshit's): `FinishedGameException`,
 `NotPlayersTurnException`, `WrongPhaseException(expected, actual)`, `InvalidSlotException`
 (unknown seat/slot, or own vs other violated), `EmptySlotException`, `NothingToMatchException`
-(empty discard pile), `InvalidGiveSlotException`, `StaleSlotException`, `InvalidGiftTargetException`,
+(empty discard pile), `InvalidGiveSlotException`, `StaleSlotException`, `StaleDiscardException`, `InvalidGiftTargetException`,
 `AlreadyReadyException`. A rejected command never mutates the game and never bumps `version`.
 
 ## Turn flow in detail
@@ -239,13 +239,16 @@ before any mutation unless stated:
 3. the target slot is occupied, otherwise `EmptySlotException` and **no penalty** **[H3]**: the
    usual cause is a lost race (someone matched that card a moment earlier), not a mistake;
 4. the discard pile has a top card, otherwise `NothingToMatchException`, no penalty **[H1]**;
-5. rank of the target card vs rank of the top card, at processing time **[H4]**;
-6. rank differs: the actor draws one card from the draw pile (reshuffle rule applies) and appends it
+5. the command carries `expectedTopRank` (the rank the client saw on top of the discard pile). If the
+   rank on top at processing time differs, the attempt is rejected with `StaleDiscardException` and
+   **no penalty** (the client acted on an outdated pile) **[H4, decided]**;
+6. rank of the target card vs rank of the top card;
+7. rank differs: the actor draws one card from the draw pile (reshuffle rule applies) and appends it
    to their own tableau face down (new slot, never reusing an empty one **[H12]**). Outcome `MatchPenalised`. The targeted card is not
    revealed to anyone (only "the attempt failed" is public);
-7. rank equal, own card: the card is removed from the slot (revision++), put on the discard pile
+8. rank equal, own card: the card is removed from the slot (revision++), put on the discard pile
    (it becomes the new, public top). `MatchSucceeded`;
-8. rank equal, another player's card: `giveSlot` must be an occupied slot of the actor, otherwise
+9. rank equal, another player's card: `giveSlot` must be an occupied slot of the actor, otherwise
    `InvalidGiveSlotException` before mutation (and no penalty: the rank was right). If the actor has
    no card at all, `giveSlot` is ignored and the slot stays empty. The target card goes on the
    discard pile; the given card moves into the target slot of the targeted player (revision++ on both
@@ -295,8 +298,8 @@ discarded or swapped out (it then is the top of the discard pile).
   at a time. The first message processed wins; STOMP's inbound thread pool decides arrival order, as
   for Bataille Corse's `slap`. No timestamp or client ordering is trusted.
 - Losing a race is not an error for the loser: matching an already-removed card is rejected without
-  penalty (step 3), and a stale pending power fails cleanly. Matching with a different rank, judged
-  at processing time, is penalised even if the client saw a matching top when it clicked **[H4]**.
+  penalty (step 3), and a stale pending power fails cleanly. A match is only judged against the top the client says it saw (`expectedTopRank`): if the top moved
+  in the meantime the attempt is rejected without penalty; a real rank error is penalised **[H4]**.
 - Broadcasts must keep the order of state changes. `KoboGameActions` does the domain call, `touch`
   and the broadcast inside `synchronized (game)` (the monitor is reentrant), so two seats' events are
   never interleaved out of order, and each DTO carries `version` so a client can drop a stale one.
@@ -326,7 +329,7 @@ Kobo uses its own prefix for every game command, since Bullshit already owns `/d
 | `/kobo/peek` | `KoboTargetPayload(gameId, token, seat, slot)` | power peek |
 | `/kobo/blindSwap` | `KoboSwapPayload(gameId, token, ownSlot, seat, slot)` | jack / queen |
 | `/kobo/kingSwap` | `KoboSlotPayload` | king swap with own slot |
-| `/kobo/match` | `KoboMatchPayload(gameId, token, seat, slot, giveSlot?)` | matching discard (the race) |
+| `/kobo/match` | `KoboMatchPayload(gameId, token, seat, slot, giveSlot?, expectedTopRank)` | matching discard (the race) |
 | `/kobo/giveTen` | `KoboGiftPayload(gameId, token, seat)` | announcer's gift |
 | `/presence`, `/forfeit` | existing | unchanged |
 
@@ -390,7 +393,7 @@ the style of `BullshitOptions`.
 6. Two simultaneous matches on the same card: the first processed wins, the second gets case 5.
    Two simultaneous matches on different cards of the same rank: both succeed in processing order.
 7. A match between a current player's `draw` and `discardDrawn` that changes the top rank: later
-   attempts are judged against the new top.
+   attempts that still carry the old `expectedTopRank` are rejected without penalty.
 8. Power target changed by a match while pending: the power command is rejected; the player picks
    another target or skips.
 9. Match with no top card (start of a round): `NothingToMatchException`, no penalty.
@@ -441,9 +444,9 @@ plan assume).
 - **H2** Empty draw pile: reshuffle the discard pile except its top card (proposed, not contradicted).
 - **H3** Matching a slot that has just been emptied by another player is rejected with no penalty.
   Alternative: treat it as an error and penalise.
-- **H4** The rank is compared with the top at processing time; a player whose click was based on a
-  stale top is penalised. Alternative: the client sends the expected top rank and the server rejects
-  without penalty when it moved.
+- **H4** (decided by the product owner) The client sends the rank it saw on top of the discard pile;
+  the server rejects the attempt without penalty when the top moved. Only a rank error against the
+  current top is penalised.
 - **H6** Announcing Kobo needs an explicit `END_TURN`/`ANNOUNCE_KOBO` choice after the turn is played
   and is refused while a power is pending. Alternative: no explicit end step; the last action of the
   turn carries an optional `announceKobo` flag.

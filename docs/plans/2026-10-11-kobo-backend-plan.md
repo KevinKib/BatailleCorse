@@ -172,6 +172,7 @@
 - [ ] **Step 1: Failing tests.**
   - Own card of the same rank as the discard top: card leaves the slot (revision bump), becomes the new top, hand size -1, event `MatchSucceeded`; works for a non-current player and in every phase `DRAW`, `DECISION`, `POWER`, `KING_DECISION`, `TURN_END`; turn and phase unchanged.
   - Colour is irrelevant: red king on black king, 7 of hearts on 7 of spades.
+  - `expectedTopRank` differing from the real top rank: `StaleDiscardException`, no penalty, no version bump (H4, decided). Every other test passes the correct expected rank.
   - Different rank: the actor gets one more slot, appended (index = previous size, never an empty slot), draw pile -1, event `MatchPenalised`, the discard top unchanged, the targeted card stays in its slot and hidden (no revealed value in the event).
   - Penalty with empty draw pile: reshuffle applies; with nothing left, no penalty card and no exception.
   - Empty target slot: `EmptySlotException`, no penalty, no version bump. Empty discard pile: `NothingToMatchException`, no penalty. Unknown slot: `InvalidSlotException`.
@@ -302,7 +303,7 @@
   - `/kobo/create`: creates a `"kobo"` room, response `CREATE` with `{gameId, gameType: "kobo", tokens: {0: hostToken}}` (no options).
   - `/kobo/start`: host only; broadcasts `START`; a non-host or too-few-players gets an `ErrorResponse` on its own seat.
   - Each command endpoint resolves the seat from the token (invalid token: silently ignored, as Bullshit), calls the matching `KoboGameActions` method, and on a domain exception replies only to that seat with `ErrorResponse(eventType, message, state)`.
-  - Payload mapping: `/kobo/match` passes `giveSlot` (nullable); `/kobo/blindSwap` passes own slot and target ref; no endpoint accepts a card value.
+  - Payload mapping: `/kobo/match` passes `giveSlot` (nullable) and `expectedTopRank`; `/kobo/blindSwap` passes own slot and target ref; no endpoint accepts a card value.
 - [ ] **Step 2:** Run (red). **Step 3:** Implement with the `/kobo/...` destinations of the spec. **Step 4:** Green. Commit `feat: add Kobo WebSocket controller`.
 
 ### Task 23: REST controller
@@ -372,7 +373,7 @@
 
 ## Hypothesis impact (which task changes if the product owner answers differently)
 
-- H1 (initial discard empty): tasks 4, 11. H2/H14 (reshuffle, exhaustion): task 6. H3 (empty-slot no penalty): tasks 11, 13. H4 (stale top): task 11 plus payload `KoboMatchPayload` (expected top rank) in task 22.
+- H1 (initial discard empty): tasks 4, 11. H2/H14 (reshuffle, exhaustion): task 6. H3 (empty-slot no penalty): tasks 11, 13. H4 (decided: expected top rank, stale attempt rejected without penalty): tasks 11, 22.
 - H6 (explicit end-of-turn step): tasks 7, 14, 22 (a flag on the last action instead). H7 (gift rules): tasks 2, 15. H8 (tied winners): task 15.
 - H9 (occupied slots required): tasks 7, 9. H10 (ready barrier, no timeout): tasks 5, 15, 16. H11 (starting cards resent): tasks 5, 20.
 - H12 (penalty slot appended): tasks 3, 11. H13 (forfeit cards, void Kobo): task 16. H16 (rotation): task 15. H17 (no card to give): task 12.
