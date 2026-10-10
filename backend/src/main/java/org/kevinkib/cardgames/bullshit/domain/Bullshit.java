@@ -33,6 +33,7 @@ public class Bullshit implements Game {
     private Discard lastDiscard;
     private PlayerId pendingWinner;
     private Result result;
+    private int version;
 
     public Bullshit(GameId id, int nbPlayers) {
         this(id, nbPlayers, new AscendingRankClaimMode());
@@ -77,6 +78,7 @@ public class Bullshit implements Game {
             // rather than call BS is a decline: the unchallenged claim stands and the pending
             // winner wins. The submitted cards are intentionally not applied.
             result = new Result(playerById(pendingWinner));
+            version++;
             return;
         }
         if (cards.isEmpty() || cards.size() > 4) {
@@ -96,6 +98,7 @@ public class Bullshit implements Game {
         if (!player.hasAnyCards()) {
             pendingWinner = playerId;
         }
+        version++;
     }
 
     public synchronized CallBullshitOutcome callBullshit(PlayerId callerId)
@@ -122,6 +125,7 @@ public class Bullshit implements Game {
             currentPlayerIndex = players.indexOf(playerById(pickerId));
         }
         lastDiscard = null;
+        version++;
 
         return new CallBullshitOutcome(truthful, pickerId);
     }
@@ -154,6 +158,12 @@ public class Bullshit implements Game {
         if (players.size() == 1) {
             result = new Result(players.get(0));
         }
+        version++;
+    }
+
+    /** Counter bumped by every successful state change; lets asynchronous actors detect a stale view. */
+    public synchronized int version() {
+        return version;
     }
 
     public List<Action> getAvailableActions(PlayerId playerId) {

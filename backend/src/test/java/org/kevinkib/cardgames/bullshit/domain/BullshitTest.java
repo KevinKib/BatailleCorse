@@ -324,6 +324,40 @@ class BullshitTest {
     }
 
     @Test
+    void givenFreshGame_thenVersionIsZero() {
+        assertThat(aThreePlayerGame().version(), is(0));
+    }
+
+    @Test
+    void givenSuccessfulDiscardCallAndForfeit_thenVersionGrowsByOneEach() throws Exception {
+        Bullshit game = BullshitBuilder.aBullshit()
+                .withPlayers(
+                        playerWithRanks(0, FrenchRank.ACE, FrenchRank.KING),
+                        playerWithRanks(1, FrenchRank.TWO),
+                        playerWithRanks(2, FrenchRank.THREE))
+                .build();
+
+        game.discard(new PlayerId(0), game.getPlayers().get(0).getCards().subList(0, 1));
+        assertThat(game.version(), is(1));
+        game.callBullshit(new PlayerId(1));
+        assertThat(game.version(), is(2));
+        game.forfeit(new PlayerId(2));
+        assertThat(game.version(), is(3));
+    }
+
+    @Test
+    void givenFailedActions_thenVersionDoesNotChange() {
+        Bullshit game = aThreePlayerGame();
+
+        assertThrows(NotPlayersTurnException.class,
+                () -> game.discard(new PlayerId(1), game.getPlayers().get(1).getCards()));
+        assertThrows(CannotCallBullshitException.class, () -> game.callBullshit(new PlayerId(1)));
+        game.forfeit(new PlayerId(9)); // unknown seat: ignored
+
+        assertThat(game.version(), is(0));
+    }
+
+    @Test
     void givenSuitClaimMode_whenCalled_thenSuitProgressionContinuesNotReset() throws Exception {
         Bullshit game = BullshitBuilder.aBullshit()
                 .withClaimMode(new CyclingSuitClaimMode())
