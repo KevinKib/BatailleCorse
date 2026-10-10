@@ -3,8 +3,8 @@ const LONG_NAME = 'Bartholomew-Maximilian-Longname';
 
 function createRoom(name: string) {
   // Enter through the menu so the WebSocket is connected before we create (see bullshit-table-and-lobby).
-  cy.visit('/games/bataillecorse');
-  cy.contains('button', 'Play Bullshit').click();
+  cy.visit('/games');
+  cy.get('[data-test="play-bullshit"]').click();
   cy.url().should('include', '/games/bullshit/create');
   cy.get('[data-test="name"]').type(name);
   // Deliberate fixed wait: a create sent before the WebSocket handshake finishes is reported as an error.

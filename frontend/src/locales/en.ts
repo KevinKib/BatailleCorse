@@ -149,4 +149,21 @@ export const messagesEn: Messages = {
       playAgain: 'Play again',
     },
   },
+  gamePicker: {
+    title: 'Card Games',
+    choose: 'Choose a game',
+    back: 'Back',
+    bataillecorse: {
+      name: 'Bataille Corse',
+      description: 'Fast two-player duel. Slap the pile when you spot a pattern.',
+      players: '2 players',
+      play: 'Play',
+    },
+    bullshit: {
+      name: 'Bullshit',
+      description: 'Bluff your way to an empty hand. Call out the liars.',
+      players: '2–6 players',
+      play: 'Play',
+    },
+  },
 };

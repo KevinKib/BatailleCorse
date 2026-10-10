@@ -113,4 +113,23 @@ describe('English messages', () => {
     expect(messagesEn.bullshitUi.start.claimModes.rank).toBeTruthy();
     expect(messagesEn.bullshitUi.start.claimModes.suit).toBeTruthy();
   });
+
+  it('givenGamePickerMessages_thenEveryLeafStringIsNonEmpty', () => {
+    const empty: string[] = [];
+    const visit = (node: unknown, path: string) => {
+      if (typeof node === 'string') {
+        if (!node.trim()) empty.push(path);
+      } else if (node && typeof node === 'object') {
+        for (const [key, value] of Object.entries(node)) visit(value, `${path}.${key}`);
+      }
+    };
+    visit(messagesEn.gamePicker, 'gamePicker');
+    expect(empty).toEqual([]);
+  });
+
+  it('givenGamePickerMessages_thenBothGamesAreDescribedWithTheirPlayerCount', () => {
+    expect(messagesEn.gamePicker.bataillecorse.players).toBe('2 players');
+    expect(messagesEn.gamePicker.bullshit.players).toBe('2–6 players');
+    expect(messagesEn.gamePicker.bullshit.description).not.toMatch(/bot/i);
+  });
 });
