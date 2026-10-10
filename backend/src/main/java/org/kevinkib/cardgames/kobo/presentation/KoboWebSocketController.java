@@ -1,10 +1,10 @@
 package org.kevinkib.cardgames.kobo.presentation;
 
+import org.kevinkib.cardgames.kobo.domain.tableau.SlotRef;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.kobo.domain.Kobo;
 import org.kevinkib.cardgames.kobo.domain.KoboFactory;
-import org.kevinkib.cardgames.kobo.domain.SlotRef;
 import org.kevinkib.cardgames.kobo.presentation.api.KoboCreatePayload;
 import org.kevinkib.cardgames.kobo.presentation.api.KoboGiftPayload;
 import org.kevinkib.cardgames.kobo.presentation.api.KoboMatchPayload;

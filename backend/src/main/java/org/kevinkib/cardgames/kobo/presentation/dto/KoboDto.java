@@ -1,12 +1,12 @@
 package org.kevinkib.cardgames.kobo.presentation.dto;
 
+import org.kevinkib.cardgames.kobo.domain.turn.Action;
+import org.kevinkib.cardgames.kobo.domain.turn.Phase;
+import org.kevinkib.cardgames.kobo.domain.scoring.RoundResult;
+import org.kevinkib.cardgames.kobo.domain.tableau.Tableau;
 import org.kevinkib.cardgames.game.PlayerId;
-import org.kevinkib.cardgames.kobo.domain.Action;
 import org.kevinkib.cardgames.kobo.domain.Kobo;
 import org.kevinkib.cardgames.kobo.domain.KoboFactory;
-import org.kevinkib.cardgames.kobo.domain.Phase;
-import org.kevinkib.cardgames.kobo.domain.RoundResult;
-import org.kevinkib.cardgames.kobo.domain.Tableau;
 import org.kevinkib.cards.domain.Card;
 
 import java.util.Comparator;

@@ -1,10 +1,10 @@
 package org.kevinkib.cardgames.kobo.presentation;
 
+import org.kevinkib.cardgames.kobo.domain.turn.Phase;
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.kobo.domain.Kobo;
-import org.kevinkib.cardgames.kobo.domain.Phase;
 import org.kevinkib.cardgames.kobo.presentation.api.KoboCreatePayload;
 import org.kevinkib.cardgames.kobo.presentation.api.KoboGiftPayload;
 import org.kevinkib.cardgames.kobo.presentation.api.KoboMatchPayload;

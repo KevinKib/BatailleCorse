@@ -1,5 +1,8 @@
 package org.kevinkib.cardgames.kobo.domain;
 
+import org.kevinkib.cardgames.kobo.domain.turn.Phase;
+import org.kevinkib.cardgames.kobo.domain.power.Power;
+import org.kevinkib.cardgames.kobo.domain.tableau.SlotRef;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cards.domain.Card;

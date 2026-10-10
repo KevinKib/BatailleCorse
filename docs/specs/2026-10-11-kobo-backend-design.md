@@ -108,6 +108,8 @@ neither sessions nor tokens nor transport.
 
 ## Domain model (`kobo/domain`)
 
+Sub-packages group the concepts (`card`, `power`, `rules`, `scoring`, `tableau`, `turn`, `event`), each with the exceptions it protects.
+
 One aggregate root, `Kobo implements Game`, in the style of `Bullshit`: every mutating method is
 `synchronized`, validates, mutates, bumps `version`, and returns a small outcome record. The
 aggregate owns the whole match (rounds and totals), not a single round, because rematch, forfeit and
