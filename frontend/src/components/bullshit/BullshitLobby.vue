@@ -6,6 +6,7 @@ import TitleCardFan from '../TitleCardFan.vue';
 import { useI18n } from '../../composables/useI18n';
 import { format, plural } from '../../locales/format';
 import { CLAIM_MODES, type ClaimMode } from '../../model/bullshit/claimMode';
+import { DECK_SIZES, type DeckSize } from '../../model/bullshit/deckSize';
 import type { LobbyPlayer, LobbyView } from '../../model/bullshit/LobbyView';
 
 // Waiting room of a Bullshit game: who is here, how to invite, how the game will be
@@ -27,6 +28,10 @@ const playersNeeded = computed(() => Math.max(0, props.lobby.minPlayers - joined
 const claimMode = computed<ClaimMode | null>(() => {
   const mode = props.lobby.options?.claimMode;
   return CLAIM_MODES.find(m => m === mode) ?? null;
+});
+const deckSize = computed<DeckSize | null>(() => {
+  const size = props.lobby.options?.deckSize;
+  return DECK_SIZES.find(s => s === size) ?? null;
 });
 // Seats are 0-based internally; players see them numbered from 1.
 const playerLabel = (seat: number) => format(ui.playerLabel, { n: seat + 1 });
@@ -137,6 +142,11 @@ function selectAll(event: FocusEvent) {
       <div v-if="claimMode" class="field-group claim-row" data-test="claim-mode">
         <span class="field-label">{{ ui.lobby.claimModeLabel }}</span>
         <span class="claim-value">{{ ui.start.claimModes[claimMode] }}</span>
+      </div>
+
+      <div v-if="deckSize" class="field-group claim-row" data-test="deck-size">
+        <span class="field-label">{{ ui.lobby.deckSizeLabel }}</span>
+        <span class="claim-value">{{ ui.start.deckSizes[deckSize] }}</span>
       </div>
 
       <div class="field-group">

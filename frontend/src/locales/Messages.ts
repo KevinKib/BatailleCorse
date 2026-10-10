@@ -77,6 +77,8 @@ export interface BullshitUiMessages {
     yourName: string;
     claimModeLegend: string;
     claimModes: { rank: string; suit: string };
+    deckSizeLegend: string;
+    deckSizes: { '32': string; '52': string };
     createGame: string;
     gameId: string;
     joinGame: string;
@@ -101,6 +103,7 @@ export interface BullshitUiMessages {
     botActionFailed: string;
     hostBadge: string;
     claimModeLabel: string;
+    deckSizeLabel: string;
     inviteLabel: string;
     copy: string;
     copied: string;

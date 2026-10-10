@@ -61,6 +61,14 @@ describe('BullshitLobby', () => {
     expect(wrapper.get('[data-test="claim-mode"]').text()).toContain(messagesEn.bullshitUi.start.claimModes.suit);
   });
 
+  it('shows the chosen deck size and omits it when the lobby carries none', () => {
+    const withDeck = mountLobby({ lobby: lobby({ options: { claimMode: 'rank', deckSize: '32' } }) });
+    expect(withDeck.get('[data-test="deck-size"]').text()).toContain(messagesEn.bullshitUi.start.deckSizes['32']);
+
+    const without = mountLobby({ lobby: lobby({ options: { claimMode: 'rank' } }) });
+    expect(without.find('[data-test="deck-size"]').exists()).toBe(false);
+  });
+
   it('omits the claim mode row when the lobby carries none', () => {
     const wrapper = mountLobby({ lobby: lobby({ options: undefined }) });
     expect(wrapper.find('[data-test="claim-mode"]').exists()).toBe(false);

@@ -35,7 +35,31 @@ describe('BullshitStartGame claim mode', () => {
     await wrapper.find('input[type="text"]').setValue('Alice');
     await wrapper.get('form').trigger('submit');
 
-    expect(create).toHaveBeenCalledWith('Alice', 'rank');
+    expect(create).toHaveBeenCalledWith('Alice', 'rank', '32');
+  });
+
+  it('creates with 52 cards when the 52 radio is selected', async () => {
+    const wrapper = await mountCreate();
+    const store = useBullshitStore();
+    const create = vi.spyOn(store, 'create').mockImplementation(() => {});
+
+    await wrapper.find('input[type="radio"][value="52"]').setValue();
+    await wrapper.get('form').trigger('submit');
+
+    expect(create).toHaveBeenCalledWith(undefined, 'rank', '52');
+  });
+
+  it('preselects 32 cards and shows localised deck size labels', async () => {
+    const wrapper = await mountCreate();
+    const active = wrapper.findAll('[data-test="deck-size"] .mode-option--active');
+    expect(active).toHaveLength(1);
+    expect(active[0].text()).toBe(messagesEn.bullshitUi.start.deckSizes['32']);
+    expect(wrapper.get('[data-test="deck-size"]').text()).toContain(messagesEn.bullshitUi.start.deckSizes['52']);
+  });
+
+  it('does not offer the deck size when joining', async () => {
+    const wrapper = await mountJoin('abc');
+    expect(wrapper.find('[data-test="deck-size"]').exists()).toBe(false);
   });
 
   it('creates with suit when the suit radio is selected', async () => {
@@ -47,13 +71,13 @@ describe('BullshitStartGame claim mode', () => {
     await wrapper.find('input[type="radio"][value="suit"]').setValue();
     await wrapper.get('form').trigger('submit');
 
-    expect(create).toHaveBeenCalledWith('Alice', 'suit');
+    expect(create).toHaveBeenCalledWith('Alice', 'suit', '32');
   });
 
   it('marks the chosen claim mode as active', async () => {
     const wrapper = await mountCreate();
     await wrapper.find('input[type="radio"][value="suit"]').setValue();
-    const active = wrapper.findAll('.mode-option--active');
+    const active = wrapper.findAll('[data-test="claim-mode-field"] .mode-option--active');
     expect(active).toHaveLength(1);
     expect(active[0].text()).toBe(messagesEn.bullshitUi.start.claimModes.suit);
   });

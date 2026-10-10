@@ -26,6 +26,9 @@ describe('Bullshit start screens', () => {
     cy.contains('legend', 'Claim mode').should('be.visible');
     cy.contains('label', 'By rank').should('be.visible');
     cy.contains('label', 'By suit').should('be.visible');
+    cy.contains('legend', 'Deck').should('be.visible');
+    cy.contains('label', '32 cards').should('be.visible');
+    cy.contains('label', '52 cards').should('be.visible');
     cy.get('[data-test="submit"]').should('be.visible').and('contain.text', 'Create game');
     cy.get('[data-test="back"]').should('be.visible');
   });
@@ -50,6 +53,7 @@ describe('Bullshit lobby', () => {
     cy.get('.players li').should('have.length', 1).first().should('contain.text', 'Alice');
     cy.get('[data-test="badge-you"]').should('be.visible');
     cy.get('[data-test="claim-mode"]').should('contain.text', 'By suit');
+    cy.get('[data-test="deck-size"]').should('contain.text', '32 cards');
     cy.get('[data-test="invite-link"]').invoke('val').should('match', /\/games\/bullshit\/join\/.+/);
     cy.get('[data-test="copy-link"]').should('be.visible').and('contain.text', 'Copy');
     cy.get('[data-test="start"]').should('be.visible').and('be.disabled');
