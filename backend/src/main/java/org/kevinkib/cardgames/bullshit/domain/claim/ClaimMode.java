@@ -10,5 +10,13 @@ public interface ClaimMode {
 
     ClaimTarget next(ClaimTarget current);
 
+    /**
+     * The target for the first turn of a new round, a round ending whenever a Bullshit call is resolved.
+     * By default the target just carries on; a mode may restart from a fresh target.
+     */
+    default ClaimTarget nextRound(ClaimTarget current) {
+        return current;
+    }
+
     boolean matches(List<Card> cards, ClaimTarget target);
 }

@@ -1,6 +1,8 @@
 package org.kevinkib.cardgames.bullshit.domain.claim;
 
 import org.junit.jupiter.api.Test;
+import org.kevinkib.cardgames.bullshit.domain.bot.ScriptedRandom;
+import org.kevinkib.cardgames.bullshit.domain.deck.DeckSize;
 import org.kevinkib.cards.domain.deck.french.FrenchRank;
 import org.kevinkib.cards.domain.deck.french.FrenchSuit;
 
@@ -30,12 +32,12 @@ class ClaimModeOptionTest {
     }
 
     @Test
-    void givenSuit_whenCreate_thenInitialTargetIsHeart() {
-        assertThat(ClaimModeOption.SUIT.create().initial(), is(new SuitTarget(FrenchSuit.HEART)));
+    void givenSuit_whenCreate_thenInitialTargetIsDrawn() {
+        assertThat(ClaimModeOption.SUIT.create(DeckSize.FULL, new ScriptedRandom(0.0)).initial(), is(new SuitTarget(FrenchSuit.HEART)));
     }
 
     @Test
     void givenRank_whenCreate_thenInitialTargetIsAce() {
-        assertThat(ClaimModeOption.RANK.create().initial(), is(new RankTarget(FrenchRank.ACE)));
+        assertThat(ClaimModeOption.RANK.create(DeckSize.FULL, new ScriptedRandom()).initial(), is(new RankTarget(FrenchRank.ACE)));
     }
 }

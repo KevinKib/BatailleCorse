@@ -91,7 +91,7 @@ describe('English messages', () => {
 
   it('givenBullshitUiMessages_thenLobbyHasBadgesCopyFeedbackAndClaimModeLabel', () => {
     const lobby = messagesEn.bullshitUi.lobby;
-    for (const key of ['playersLabel', 'youBadge', 'botBadge', 'hostBadge', 'claimModeLabel', 'copy', 'copied'] as const) {
+    for (const key of ['playersLabel', 'youBadge', 'botBadge', 'hostBadge', 'claimModeLabel', 'deckSizeLabel', 'copy', 'copied'] as const) {
       expect(lobby[key]).toBeTruthy();
     }
     expect(lobby.copied).toBe('Copied!');
@@ -114,6 +114,11 @@ describe('English messages', () => {
   it('givenBullshitUiMessages_thenClaimModesCoverRankAndSuit', () => {
     expect(messagesEn.bullshitUi.start.claimModes.rank).toBeTruthy();
     expect(messagesEn.bullshitUi.start.claimModes.suit).toBeTruthy();
+    expect(messagesEn.bullshitUi.start.deckSizeLegend).toBeTruthy();
+    expect(messagesEn.bullshitUi.start.deckSizes['32']).toBeTruthy();
+    expect(messagesEn.bullshitUi.start.deckSizes['52']).toBeTruthy();
+    expect(messagesEn.bullshitUi.start.rankRanges['32']).toBeTruthy();
+    expect(messagesEn.bullshitUi.start.rankRanges['52']).toBeTruthy();
   });
 
   it('givenGamePickerMessages_thenEveryLeafStringIsNonEmpty', () => {

@@ -5,16 +5,12 @@ import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.bullshit.domain.claim.AscendingRankClaimMode;
 import org.kevinkib.cardgames.bullshit.domain.claim.ClaimMode;
 import org.kevinkib.cardgames.bullshit.domain.claim.ClaimTarget;
+import org.kevinkib.cardgames.bullshit.domain.deck.DeckSize;
 import org.kevinkib.cardgames.bullshit.domain.pile.Discard;
 import org.kevinkib.cardgames.bullshit.domain.pile.DiscardPile;
 import org.kevinkib.cardgames.bullshit.domain.player.Player;
 import org.kevinkib.cardgames.game.PlayerId;
-import org.kevinkib.cards.CardsService;
 import org.kevinkib.cards.domain.Card;
-import org.kevinkib.cards.domain.Visibility;
-import org.kevinkib.cards.domain.deck.Deck;
-import org.kevinkib.cards.domain.deck.DeckCreationOptions;
-import org.kevinkib.cards.domain.deck.DeckType;
 import org.kevinkib.cards.domain.hand.Hand;
 
 import java.util.ArrayList;
@@ -27,6 +23,7 @@ public class Bullshit implements Game {
     private final GameId id;
     private final List<Player> players;
     private final ClaimMode claimMode;
+    private final DeckSize deckSize;
     private final DiscardPile discardPile;
     private ClaimTarget currentTarget;
     private int currentPlayerIndex;
@@ -40,10 +37,20 @@ public class Bullshit implements Game {
     }
 
     public Bullshit(GameId id, int nbPlayers, ClaimMode claimMode) {
-        this(id, deal(nbPlayers), claimMode, claimMode.initial(), 0);
+        this(id, nbPlayers, claimMode, DeckSize.FULL);
+    }
+
+    public Bullshit(GameId id, int nbPlayers, ClaimMode claimMode, DeckSize deckSize) {
+        this(id, deal(nbPlayers, deckSize), claimMode, claimMode.initial(), 0, deckSize);
     }
 
     Bullshit(GameId id, List<Player> players, ClaimMode claimMode, ClaimTarget currentTarget, int currentPlayerIndex) {
+        this(id, players, claimMode, currentTarget, currentPlayerIndex, DeckSize.FULL);
+    }
+
+    Bullshit(GameId id, List<Player> players, ClaimMode claimMode, ClaimTarget currentTarget, int currentPlayerIndex,
+             DeckSize deckSize) {
+        this.deckSize = deckSize;
         this.id = id;
         this.players = new ArrayList<>(players);
         this.claimMode = claimMode;
@@ -55,9 +62,8 @@ public class Bullshit implements Game {
         this.result = Result.ONGOING;
     }
 
-    private static List<Player> deal(int nbPlayers) {
-        Deck deck = new CardsService().createDeck(DeckType.FRENCH, new DeckCreationOptions(Visibility.HIDDEN));
-        List<Hand> hands = deck.distributeAll(nbPlayers);
+    private static List<Player> deal(int nbPlayers, DeckSize deckSize) {
+        List<Hand> hands = deckSize.deal(nbPlayers);
         List<Player> dealt = new ArrayList<>();
         for (int i = 0; i < nbPlayers; i++) {
             dealt.add(new Player(i, hands.get(i)));
@@ -123,6 +129,8 @@ public class Bullshit implements Game {
                 pendingWinner = null;
             }
             currentPlayerIndex = players.indexOf(playerById(pickerId));
+            // The call resolved the round: the claim mode may start the next one on a fresh target.
+            currentTarget = claimMode.nextRound(currentTarget);
         }
         lastDiscard = null;
         version++;
@@ -228,6 +236,10 @@ public class Bullshit implements Game {
 
     public ClaimMode getClaimMode() {
         return claimMode;
+    }
+
+    public DeckSize getDeckSize() {
+        return deckSize;
     }
 
     public ClaimTarget getCurrentTarget() {

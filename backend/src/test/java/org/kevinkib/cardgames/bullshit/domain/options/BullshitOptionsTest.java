@@ -1,6 +1,7 @@
 package org.kevinkib.cardgames.bullshit.domain.options;
 
 import org.junit.jupiter.api.Test;
+import org.kevinkib.cardgames.bullshit.domain.bot.ScriptedRandom;
 import org.kevinkib.cardgames.bullshit.domain.claim.ClaimModeOption;
 import org.kevinkib.cardgames.game.GameOptions;
 
@@ -32,6 +33,6 @@ class BullshitOptionsTest {
     @Test
     void givenSuit_whenToClaimMode_thenInitialTargetIsHeart() {
         BullshitOptions options = new BullshitOptions(ClaimModeOption.SUIT);
-        assertThat(options.toClaimMode().initial().label(), is("HEART"));
+        assertThat(options.toClaimMode(new ScriptedRandom(0.0)).initial().label(), is("HEART"));
     }
 }

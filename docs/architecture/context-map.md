@@ -43,7 +43,7 @@ graph TB
 
 **BatailleCorse (Core)** — upstream, pure game rules. `BatailleCorse` is the aggregate root. No knowledge of sessions, tokens, or transport.
 
-**Bullshit** — a second upstream game-rules context (`org.kevinkib.cardgames.bullshit.domain`), sibling to BatailleCorse, depending only on `frenchcards`. `Bullshit` is the aggregate root; the claim/match mechanic sits behind a pluggable `ClaimMode` strategy (ascending-rank today; a suit variant later). As of Slice 1 it has **no** session, presentation, or transport wiring — that is Slice 2 (generalizing Session Management over a `Game` abstraction).
+**Bullshit** — a second upstream game-rules context (`org.kevinkib.cardgames.bullshit.domain`), sibling to BatailleCorse, depending only on `frenchcards`. `Bullshit` is the aggregate root; the claim/match mechanic sits behind a pluggable `ClaimMode` strategy (ascending-rank over the deck in play, or a suit variant that draws a random starting suit each round through an injected `RandomGenerator`); the deck (`DeckSize`: 32 cards from 7 to Ace, or 52) is a creation option. As of Slice 1 it has **no** session, presentation, or transport wiring — that is Slice 2 (generalizing Session Management over a `Game` abstraction).
 
 **Session Management** — downstream, conforms to Core's model. Two responsibilities:
 - *Room lifecycle* — `SessionGame` ties a game ID to a set of player seats

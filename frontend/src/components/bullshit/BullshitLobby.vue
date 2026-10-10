@@ -6,6 +6,8 @@ import TitleCardFan from '../TitleCardFan.vue';
 import { useI18n } from '../../composables/useI18n';
 import { format, plural } from '../../locales/format';
 import { CLAIM_MODES, type ClaimMode } from '../../model/bullshit/claimMode';
+import { claimModeLabel } from '../../model/bullshit/claimModeLabel';
+import { DECK_SIZES, DEFAULT_DECK_SIZE, type DeckSize } from '../../model/bullshit/deckSize';
 import type { LobbyPlayer, LobbyView } from '../../model/bullshit/LobbyView';
 
 // Waiting room of a Bullshit game: who is here, how to invite, how the game will be
@@ -27,6 +29,10 @@ const playersNeeded = computed(() => Math.max(0, props.lobby.minPlayers - joined
 const claimMode = computed<ClaimMode | null>(() => {
   const mode = props.lobby.options?.claimMode;
   return CLAIM_MODES.find(m => m === mode) ?? null;
+});
+const deckSize = computed<DeckSize | null>(() => {
+  const size = props.lobby.options?.deckSize;
+  return DECK_SIZES.find(s => s === size) ?? null;
 });
 // Seats are 0-based internally; players see them numbered from 1.
 const playerLabel = (seat: number) => format(ui.playerLabel, { n: seat + 1 });
@@ -134,9 +140,15 @@ function selectAll(event: FocusEvent) {
         <p v-if="isHost && store.botError" class="error" role="alert" data-test="bot-error">{{ ui.lobby.botActionFailed }}</p>
       </div>
 
-      <div v-if="claimMode" class="field-group claim-row" data-test="claim-mode">
-        <span class="field-label">{{ ui.lobby.claimModeLabel }}</span>
-        <span class="claim-value">{{ ui.start.claimModes[claimMode] }}</span>
+      <div v-if="claimMode || deckSize" class="field-group claim-box">
+        <div v-if="claimMode" class="claim-row" data-test="claim-mode">
+          <span class="field-label">{{ ui.lobby.claimModeLabel }}</span>
+          <span class="claim-value">{{ claimModeLabel(ui.start, claimMode, deckSize ?? DEFAULT_DECK_SIZE) }}</span>
+        </div>
+        <div v-if="deckSize" class="claim-row" data-test="deck-size">
+          <span class="field-label">{{ ui.lobby.deckSizeLabel }}</span>
+          <span class="claim-value">{{ ui.start.deckSizes[deckSize] }}</span>
+        </div>
       </div>
 
       <div class="field-group">
@@ -327,19 +339,22 @@ function selectAll(event: FocusEvent) {
 .remove-bot.p-button { flex: none; width: 44px; height: 44px; padding: 0; }
 .add-bot.p-button { width: 100%; min-height: 44px; }
 
-/* Claim mode: a label on the left and its value on the right, in a row as tall and padded as a player row. */
+/* Game options (claim mode, deck): two side-by-side cells, each as tall as a player row, label above value. */
+.claim-box { flex-direction: row; gap: 8px; }
 .claim-row {
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: center;
   min-height: 44px;
-  padding: 0 12px;
+  padding: 2px 12px;
   box-sizing: border-box;
   background: rgba(0, 0, 0, 0.25);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 8px;
 }
-.claim-value { color: var(--gold); font-weight: 600; font-size: 0.875rem; line-height: 1.25rem; text-align: right; }
+.claim-value { color: var(--gold); font-weight: 600; font-size: 0.875rem; line-height: 1.25rem;  }
 
 .share-row { display: flex; gap: 8px; width: 100%; }
 .share-input { flex: 1; min-width: 0; }

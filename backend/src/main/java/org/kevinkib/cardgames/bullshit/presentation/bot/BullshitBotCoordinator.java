@@ -89,7 +89,7 @@ public class BullshitBotCoordinator implements BullshitStateListener, GameEvicti
         }
 
         BotMemory memoryOf(PlayerId seat) {
-            return memories.computeIfAbsent(seat, BotMemory::new);
+            return memories.computeIfAbsent(seat, id -> new BotMemory(id, game.getDeckSize()));
         }
     }
 

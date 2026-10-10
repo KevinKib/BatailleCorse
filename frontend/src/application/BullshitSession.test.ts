@@ -54,6 +54,12 @@ describe('BullshitSession', () => {
     expect(published).toContainEqual({ dest: '/app/bullshit/create', body: JSON.stringify({ name: 'Alice', claimMode: 'suit' }) });
   });
 
+  it('create sends the chosen deck size', () => {
+    const { session, published } = makeSession();
+    session.create('Alice', 'rank', '52');
+    expect(published).toContainEqual({ dest: '/app/bullshit/create', body: JSON.stringify({ name: 'Alice', claimMode: 'rank', deckSize: '52' }) });
+  });
+
   it('create defaults the claim mode to rank when omitted', () => {
     const { session, published } = makeSession();
     session.create();

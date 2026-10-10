@@ -2,7 +2,10 @@ package org.kevinkib.cardgames.bullshit.domain;
 import org.kevinkib.cardgames.game.GameId;
 
 import org.junit.jupiter.api.Test;
+import org.kevinkib.cardgames.bullshit.domain.bot.ScriptedRandom;
+import org.kevinkib.cardgames.bullshit.domain.claim.AscendingRankClaimMode;
 import org.kevinkib.cardgames.bullshit.domain.claim.CyclingSuitClaimMode;
+import org.kevinkib.cardgames.bullshit.domain.deck.DeckSize;
 import org.kevinkib.cardgames.bullshit.domain.claim.RankTarget;
 import org.kevinkib.cardgames.bullshit.domain.claim.SuitTarget;
 import org.kevinkib.cardgames.bullshit.domain.player.Player;
@@ -234,7 +237,7 @@ class BullshitTest {
     @Test
     void givenSuitClaimMode_thenForcedClaimsCycleBySuit() throws Exception {
         Bullshit game = BullshitBuilder.aBullshit()
-                .withClaimMode(new CyclingSuitClaimMode())
+                .withClaimMode(new CyclingSuitClaimMode(new ScriptedRandom(0.0, 0.0, 0.0, 0.0, 0.0)))
                 .withPlayers(playerWithRanks(0, FrenchRank.ACE, FrenchRank.KING), playerWithRanks(1, FrenchRank.TWO))
                 .build();
         assertThat(game.getCurrentTarget(), is(new SuitTarget(FrenchSuit.HEART)));
@@ -286,6 +289,35 @@ class BullshitTest {
 
         assertThat(game.getCurrentPlayer().id(), is(new PlayerId(2)));
         assertThat(game.getCurrentTarget(), is(new RankTarget(FrenchRank.TWO))); // continues from ACE, not reset
+    }
+
+    @Test
+    void givenSuitMode_whenBullshitResolved_thenNextRoundStartsOnRandomSuit() throws Exception {
+        // draws: initial HEART, then the new round draws SPADE (0.99), then CLUB (0.6)
+        Bullshit game = BullshitBuilder.aBullshit()
+                .withClaimMode(new CyclingSuitClaimMode(new ScriptedRandom(0.0, 0.99, 0.6)))
+                .withPlayers(playerWithRanks(0, FrenchRank.ACE, FrenchRank.KING),
+                        playerWithRanks(1, FrenchRank.TWO),
+                        playerWithRanks(2, FrenchRank.THREE))
+                .build();
+        game.discard(new PlayerId(0), game.getPlayers().get(0).getCards().subList(0, 1));
+        assertThat(game.getCurrentTarget(), is(new SuitTarget(FrenchSuit.DIAMOND))); // fixed cycle within a round
+
+        game.callBullshit(new PlayerId(2));
+
+        assertThat(game.getCurrentTarget(), is(new SuitTarget(FrenchSuit.SPADE)));
+        game.discard(game.getCurrentPlayer().id(), game.getCurrentPlayer().getCards().subList(0, 1));
+        assertThat(game.getCurrentTarget(), is(new SuitTarget(FrenchSuit.HEART))); // SPADE wraps to HEART
+    }
+
+    @Test
+    void givenShortDeck_thenAllThirtyTwoCardsAreDealtAndExposed() {
+        Bullshit game = new Bullshit(GameId.generate(), 3, new AscendingRankClaimMode(DeckSize.SHORT), DeckSize.SHORT);
+
+        int total = game.getPlayers().stream().mapToInt(Player::handSize).sum();
+        assertThat(total, is(32));
+        assertThat(game.getDeckSize(), is(DeckSize.SHORT));
+        assertThat(game.getCurrentTarget(), is(new RankTarget(FrenchRank.SEVEN)));
     }
 
     @Test
@@ -358,9 +390,9 @@ class BullshitTest {
     }
 
     @Test
-    void givenSuitClaimMode_whenCalled_thenSuitProgressionContinuesNotReset() throws Exception {
+    void givenSuitClaimMode_whenCalled_thenNewRoundStartsOnDrawnSuitNotReset() throws Exception {
         Bullshit game = BullshitBuilder.aBullshit()
-                .withClaimMode(new CyclingSuitClaimMode())
+                .withClaimMode(new CyclingSuitClaimMode(new ScriptedRandom(0.0, 0.6)))
                 .withPlayers(playerWithRanks(0, FrenchRank.ACE, FrenchRank.KING), playerWithRanks(1, FrenchRank.TWO))
                 .build();
         // currentTarget = HEART; discarding the HEART ACE advances it to DIAMOND.
@@ -369,6 +401,6 @@ class BullshitTest {
 
         game.callBullshit(new PlayerId(1));
 
-        assertThat(game.getCurrentTarget(), is(new SuitTarget(FrenchSuit.DIAMOND))); // not reset to HEART
+        assertThat(game.getCurrentTarget(), is(new SuitTarget(FrenchSuit.CLUB))); // drawn, not the cycle successor
     }
 }
