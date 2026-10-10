@@ -226,6 +226,11 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
   height: 100vh;
   height: 100dvh;
   overflow: hidden;
+  /* Vertical rhythm of the bottom zone, each tunable from one token. "You" and the hand are
+     one group (small gap, measured to the raised selected card); the hand and the actions
+     are two groups (larger gap). */
+  --you-hand-gap: var(--space-3);
+  --hand-actions-gap: var(--space-4);
   /* Paint our own felt: the shared app-background is only a backdrop for title screens.
      Mirrors the BatailleCorse game screen, which also paints its own opaque felt. */
   background:
@@ -494,7 +499,7 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-2);
+  gap: 0;
   width: 100%;
   max-width: 1000px;
   margin: 0 auto;
@@ -511,10 +516,8 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
   gap: var(--space-2);
   width: 100%;
   justify-content: center;
-  /* The hand is followed by a flex gap of --space-2; this adds the rest so the cards and
-     the buttons are at least --space-4 apart. The room comes out of the table (flex: 1),
-     never out of the page. */
-  margin-top: var(--space-2);
+  /* The room comes out of the table (flex: 1), never out of the page. */
+  margin-top: var(--hand-actions-gap);
   padding-bottom: var(--space-1);
 }
 .actions :deep(.p-button) {
@@ -524,7 +527,10 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
   max-width: 240px;
   min-width: 0;
   white-space: nowrap;
-  padding-inline: 0.6rem;
+  padding-inline: var(--space-3);
+}
+@media (min-width: 400px) {
+  .actions :deep(.p-button) { padding-inline: var(--space-4); }
 }
 
 .my-tag {
@@ -538,7 +544,7 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
   border-radius: 999px;
   padding: var(--space-1) 14px;
 }
-.my-tag { position: relative; }
+.my-tag { position: relative; margin-bottom: var(--you-hand-gap); }
 .my-tag--active {
   padding-left: 22px;
   color: #ffffff;

@@ -174,7 +174,17 @@ const RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'JACK', 'QUEEN', 'K
 const SUITS = ['HEART', 'DIAMOND', 'CLUB', 'SPADE'];
 
 function setTable(players: number, handSize: number) {
-  cy.window().then((win) => {
+  // Retried until it sticks: a late server push may overwrite the rewritten state once.
+  let applied = false;
+  cy.window().should((win) => {
+    const shown = win.document.querySelectorAll('[data-test^="hand-card-"]').length;
+    if (!applied || shown !== handSize) { applyTable(win, players, handSize); applied = true; }
+    expect(win.document.querySelectorAll('[data-test^="hand-card-"]')).to.have.length(handSize);
+  });
+}
+
+function applyTable(win: Cypress.AUTWindow, players: number, handSize: number) {
+  {
     const app = (win.document.querySelector('#app') as any).__vue_app__;
     const state = app.config.globalProperties.$pinia.state.value['bullshit-store'].state;
     state.players = Array.from({ length: players }, (_, i) => ({
@@ -186,7 +196,10 @@ function setTable(players: number, handSize: number) {
       return { rank, suit, name: `${suit}_${rank}` };
     });
     state.availableActions = ['DISCARD', 'CALL_BULLSHIT'];
-  });
+    // One raised (selected) card: the spacing must hold with it too.
+    const store = app.config.globalProperties.$pinia.state.value['bullshit-store'];
+    store.selectedCards = [state.myHand[1]];
+  }
 }
 
 function startTwoPlayerGame() {
@@ -212,12 +225,18 @@ describe('Bullshit hand / actions spacing matrix', () => {
       const cards = [...doc.querySelectorAll('[data-test^="hand-card-"]')] as HTMLElement[];
       expect(cards, `${label}: cards`).to.have.length(handSize);
       const rects = cards.map((c) => c.getBoundingClientRect());
-      expect(new Set(rects.map((r) => Math.round(r.top))).size, `${label}: one row`).to.eq(1);
+      const resting = cards.filter((c) => !c.classList.contains('selected'));
+      expect(resting.length, `${label}: a card is raised`).to.eq(cards.length - 1);
+      expect(new Set(resting.map((c) => Math.round(c.getBoundingClientRect().top))).size, `${label}: one row`).to.eq(1);
       rects.forEach((r) => {
         expect(r.left, label).to.be.at.least(-1);
         expect(r.right, label).to.be.at.most(vw + 1);
       });
+      // Visible boxes: the "You" tag, the cards (raised one included) and the buttons.
+      const you = (doc.querySelector('.my-tag') as HTMLElement).getBoundingClientRect();
+      const cardsTop = Math.min(...rects.map((r) => r.top));
       const cardsBottom = Math.max(...rects.map((r) => r.bottom));
+      expect(cardsTop - you.bottom, `${label}: You to the raised card`).to.be.at.least(11.5);
       const buttons = ['discard', 'call'].map((t) =>
         (doc.querySelector(`[data-test="${t}"]`) as HTMLElement).getBoundingClientRect());
       buttons.forEach((b) => {
@@ -236,19 +255,11 @@ describe('Bullshit hand / actions spacing matrix', () => {
       players.forEach((p) => hands.forEach((h) => {
         setTable(p, h);
         cy.get('[data-test^="hand-card-"]').should('have.length', h);
-        measure(vw, vh, h, `${vw}x${vh} ${p}p ${h}c`);
+        cy.get('.hand-card.selected').should('have.length', 1);
+        // Deliberate fixed wait: the raised card finishes its 0.12s transform transition.
+        cy.wait(250);
+        measure(vw, vh, h,`${vw}x${vh} ${p}p ${h}c`);
       }));
-    });
-  });
-
-  it('keeps a selected (raised) card clear of the buttons', () => {
-    cy.viewport(375, 667);
-    startTwoPlayerGame();
-    cy.get('[data-test="hand-card-3"]').click(4, 40);
-    cy.get('[data-test="hand-card-3"]').should('have.class', 'selected').then(($c) => {
-      const card = $c[0].getBoundingClientRect();
-      const discard = Cypress.$('[data-test="discard"]')[0].getBoundingClientRect();
-      expect(discard.top - card.bottom, 'raised card stays above the buttons').to.be.at.least(15.5);
     });
   });
 });
