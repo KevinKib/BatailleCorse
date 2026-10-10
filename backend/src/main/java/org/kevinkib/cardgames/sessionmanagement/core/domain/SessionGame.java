@@ -1,6 +1,7 @@
 package org.kevinkib.cardgames.sessionmanagement.core.domain;
 
 import org.kevinkib.cardgames.game.GameId;
+import org.kevinkib.cardgames.game.GameOptions;
 import org.kevinkib.cardgames.game.PlayerId;
 
 import java.util.Comparator;
@@ -10,21 +11,29 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.IntStream;
 
-public record SessionGame(GameId id, String gameType, Map<PlayerId, SessionPlayer> players) {
+public record SessionGame(GameId id, String gameType, GameOptions options, Map<PlayerId, SessionPlayer> players) {
 
     public static final PlayerId HOST_SEAT = new PlayerId(0);
 
     public static SessionGame create(GameId id, List<PlayerId> playerIds, String gameType) {
+        return create(id, playerIds, gameType, GameOptions.none());
+    }
+
+    public static SessionGame create(GameId id, List<PlayerId> playerIds, String gameType, GameOptions options) {
         Map<PlayerId, SessionPlayer> seats = new LinkedHashMap<>();
         for (PlayerId playerId : playerIds) {
             seats.put(playerId, new SessionPlayer(playerId, SessionToken.generate()));
         }
-        return new SessionGame(id, gameType, seats);
+        return new SessionGame(id, gameType, options, seats);
     }
 
     /** Creates a session with {@code seatCount} seats numbered 0..seatCount-1. */
     public static SessionGame create(GameId id, int seatCount, String gameType) {
-        return create(id, IntStream.range(0, seatCount).mapToObj(PlayerId::new).toList(), gameType);
+        return create(id, seatCount, gameType, GameOptions.none());
+    }
+
+    public static SessionGame create(GameId id, int seatCount, String gameType, GameOptions options) {
+        return create(id, IntStream.range(0, seatCount).mapToObj(PlayerId::new).toList(), gameType, options);
     }
 
     /** Claims a specific seat and returns it; fails if the seat is unknown or already taken. */

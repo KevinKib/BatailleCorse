@@ -8,6 +8,7 @@ import type { LobbyView } from '../model/bullshit/LobbyView';
 import type { CallBullshitEventData } from '../model/bullshit/BullshitEvents';
 import type Card from '../model/Card';
 import { useSeatPresence, FORFEIT_NOTICE_HOLD_MS } from '../composables/useSeatPresence';
+import { type ClaimMode } from '../model/bullshit/claimMode';
 
 export const REVEAL_HOLD_MS = 3000;
 export { FORFEIT_NOTICE_HOLD_MS };
@@ -87,7 +88,7 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
     forfeitNotice: presence.forfeitNotice,
     isMyTurn, canDiscard, canCallBullshit, iWon, isHost, canStart, phase,
     applyEvent, toggleCard, clearSelection,
-    create: (name?: string) => session.create(name),
+    create: (name?: string, claimMode?: ClaimMode) => session.create(name, claimMode),
     join: (id: string, name?: string) => session.join(id, name),
     restore: (id: string, seat: number, token: string) => session.restore(id, seat, token),
     hydrate: () => session.hydrate(),

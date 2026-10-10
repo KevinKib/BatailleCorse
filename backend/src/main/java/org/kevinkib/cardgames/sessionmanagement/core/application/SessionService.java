@@ -2,6 +2,7 @@ package org.kevinkib.cardgames.sessionmanagement.core.application;
 
 import org.kevinkib.cardgames.game.Game;
 import org.kevinkib.cardgames.game.GameId;
+import org.kevinkib.cardgames.game.GameOptions;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.core.application.port.SessionRepository;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameMode;
@@ -85,17 +86,23 @@ public class SessionService implements GameDirectory {
      * Play-Again calls reopen exactly once before any of them claims a seat.
      */
     public synchronized JoinResult playAgain(GameId id, String name) {
-        String type = repository.loadSessionGame(id).gameType();
+        SessionGame existing = repository.loadSessionGame(id);
+        String type = existing.gameType();
+        GameOptions options = existing.options();
         if (repository.findGame(id).isPresent()) {
             repository.remove(id);
-            repository.saveLobby(SessionGame.create(id, gameFactories.maxPlayers(type), type));
+            repository.saveLobby(SessionGame.create(id, gameFactories.maxPlayers(type), type, options));
         }
         return joinRoom(id, name);
     }
 
     public RoomCreated createRoom(String gameType, String hostName) {
+        return createRoom(gameType, hostName, GameOptions.none());
+    }
+
+    public RoomCreated createRoom(String gameType, String hostName, GameOptions options) {
         GameId id = GameId.generate();
-        SessionGame lobby = SessionGame.create(id, gameFactories.maxPlayers(gameType), gameType);
+        SessionGame lobby = SessionGame.create(id, gameFactories.maxPlayers(gameType), gameType, options);
         lobby.claimHost(hostName);
         repository.saveLobby(lobby);
         SessionToken hostToken = lobby.findTokenByPlayer(new PlayerId(0))
@@ -122,7 +129,7 @@ public class SessionService implements GameDirectory {
         if (claimed < min) {
             throw new NotEnoughPlayersException(id, claimed, min);
         }
-        Game game = gameFactories.factoryFor(lobby.gameType()).create(id, claimed);
+        Game game = gameFactories.factoryFor(lobby.gameType()).create(id, claimed, lobby.options());
         repository.save(game, lobby);
         return game;
     }
@@ -150,7 +157,7 @@ public class SessionService implements GameDirectory {
     public Game rematch(GameId id) {
         SessionGame session = repository.loadSessionGame(id);
         // Deal the rematch to the players who actually joined, not every room seat (matches startGame).
-        Game fresh = gameFactories.factoryFor(session.gameType()).create(id, session.claimedCount());
+        Game fresh = gameFactories.factoryFor(session.gameType()).create(id, session.claimedCount(), session.options());
         session.clearRematch();
         repository.save(fresh, session);
         return fresh;

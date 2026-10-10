@@ -4,6 +4,7 @@ import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionGame;
 
 import java.util.List;
+import java.util.Map;
 
 /** Generic per-viewer projection of a not-yet-started session (a lobby). Published; no secrets. */
 public record LobbyView(
@@ -14,7 +15,8 @@ public record LobbyView(
         int mySeat,
         int minPlayers,
         int maxPlayers,
-        boolean canStart) {
+        boolean canStart,
+        Map<String, String> options) {
 
     public record LobbyPlayer(int seat, String name, boolean joined) {
     }
@@ -34,6 +36,7 @@ public record LobbyView(
                 viewer.id(),
                 minPlayers,
                 maxPlayers,
-                canStart);
+                canStart,
+                lobby.options().values());
     }
 }
