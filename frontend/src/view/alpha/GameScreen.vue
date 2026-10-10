@@ -3,7 +3,7 @@
 
     <GameTimer :time="formattedDuration" />
 
-    <RulesPanel />
+    <RulesPanel :rules="messages.rules" />
 
     <div class="gamescreen_top flex">
       <div class="left_side"></div>
@@ -158,10 +158,12 @@ import { useDisconnectCountdown } from '../../composables/useDisconnectCountdown
 import { useLeaveGuard } from '../../composables/useLeaveGuard';
 import { useTurnIndicator } from '../../composables/useTurnIndicator';
 import { useGameBootstrap } from '../../composables/useGameBootstrap';
+import { useI18n } from '../../composables/useI18n';
 import { Action } from '../../model/Action';
 import { computed, onBeforeUnmount, useTemplateRef } from 'vue';
 import { endGameMessage } from '../../model/endGameMessage';
 
+const messages = useI18n();
 const batailleCorseStore = useBatailleCorseStore();
 const { state: batailleCorse, mode, myPlayerIndex, waiting, myName, opponentName, opponentConnection,
         rematchState } = storeToRefs(batailleCorseStore);
