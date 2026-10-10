@@ -139,6 +139,28 @@ describe('BullshitSession', () => {
     expect(published).toContainEqual({ dest: '/app/forfeit', body: JSON.stringify({ gameId: 'g1', token: 'tok-1' }) });
   });
 
+  it('addBot publishes to /app/bullshit/addBot with the gameId and token', () => {
+    const { session, published } = makeSession();
+    session.restore('g1', 0, 'tok-0');
+    session.addBot();
+    expect(published).toContainEqual({ dest: '/app/bullshit/addBot', body: JSON.stringify({ gameId: 'g1', token: 'tok-0' }) });
+  });
+
+  it('removeBot publishes to /app/bullshit/removeBot with the gameId, token and seat', () => {
+    const { session, published } = makeSession();
+    session.restore('g1', 0, 'tok-0');
+    session.removeBot(2);
+    expect(published).toContainEqual({ dest: '/app/bullshit/removeBot', body: JSON.stringify({ gameId: 'g1', token: 'tok-0', seat: 2 }) });
+  });
+
+  it('surfaces an ErrorResponse as an error event, without a regular event', () => {
+    const { session, events, fireSeat } = makeSession();
+    session.restore('g1', 0, 'tok-0');
+    fireSeat({ success: false, eventType: 'JOIN', eventData: {}, message: 'Room is full', state: null });
+    expect(events).toContainEqual({ type: 'error', eventType: 'JOIN', message: 'Room is full' });
+    expect(events.some(e => e.type === 'event')).toBe(false);
+  });
+
   it('on an incoming seat message, emits state-update and the event', () => {
     const { session, events, fireSeat } = makeSession();
     session.restore('g1', 0, 'tok-0');

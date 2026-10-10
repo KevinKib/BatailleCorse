@@ -1,7 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
 import PrimeVue from 'primevue/config';
+import { createPinia, setActivePinia } from 'pinia';
 import BullshitLobby from './BullshitLobby.vue';
+import { useBullshitStore } from '../../state/Bullshit.store';
 import { messagesEn } from '../../locales/en';
 import type { LobbyView } from '../../model/bullshit/LobbyView';
 
@@ -29,12 +31,12 @@ function lobby(overrides: Partial<LobbyView> = {}): LobbyView {
 function mountLobby(props: Partial<{ lobby: LobbyView; isHost: boolean; canStart: boolean }> = {}) {
   return mount(BullshitLobby, {
     props: { lobby: lobby(), joinLink: 'http://x/games/bullshit/join/g1', isHost: true, canStart: true, ...props },
-    global: { plugins: [PrimeVue] },
+    global: { plugins: [PrimeVue, createPinia()] },
   });
 }
 
 describe('BullshitLobby', () => {
-  beforeEach(() => { vi.useFakeTimers(); });
+  beforeEach(() => { setActivePinia(createPinia()); vi.useFakeTimers(); });
   afterEach(() => { vi.useRealTimers(); });
 
   it('lists joined players only, marking me, the host and bots', () => {
@@ -99,5 +101,78 @@ describe('BullshitLobby', () => {
     const wrapper = mountLobby({ isHost: false, canStart: false });
     expect(wrapper.find('[data-test="start"]').exists()).toBe(false);
     expect(wrapper.get('[data-test="waiting-host"]').text()).toBe(ui.waitingForHost);
+  });
+
+  describe('bots', () => {
+    const humanAboveBot = lobby({
+      players: [
+        { seat: 0, name: 'Alice', joined: true, bot: false },
+        { seat: 1, name: 'Bot 1', joined: true, bot: true },
+        { seat: 2, name: 'Carol', joined: true, bot: false },
+        { seat: 3, name: 'Bot 2', joined: true, bot: true },
+      ],
+      removableBotSeats: [3],
+    });
+
+    it('labels bots "Bot N" from the flag, whatever name the server stored', () => {
+      const wrapper = mountLobby({ lobby: lobby({ players: [
+        { seat: 0, name: 'Alice', joined: true, bot: false },
+        { seat: 1, name: 'Roboto', joined: true, bot: true },
+        { seat: 2, name: 'Roboto', joined: true, bot: true },
+      ] }) });
+      const rows = wrapper.findAll('.players li');
+      expect(rows[1].text()).toContain('Bot 1');
+      expect(rows[2].text()).toContain('Bot 2');
+      expect(rows[1].text()).not.toContain('Roboto');
+    });
+
+    it('counts bots in the player count and the waiting hint', () => {
+      const wrapper = mountLobby({ canStart: false, lobby: lobby({ canStart: false, minPlayers: 3 }) });
+      expect(wrapper.get('[data-test="player-count"]').text()).toBe('2 / 6 players');
+      expect(wrapper.get('[data-test="start-hint"]').text()).toBe('Waiting for 1 more player to start…');
+    });
+
+    it('lets the host add a bot, and disables the button when the lobby is full', async () => {
+      const wrapper = mountLobby();
+      const store = useBullshitStore();
+      const spy = vi.spyOn(store, 'addBot').mockImplementation(() => {});
+      const button = wrapper.get('[data-test="add-bot"]');
+      expect(button.text()).toContain(ui.addBot);
+      expect((button.element as HTMLButtonElement).disabled).toBe(false);
+      await button.trigger('click');
+      expect(spy).toHaveBeenCalledTimes(1);
+
+      const full = mountLobby({ lobby: lobby({ maxPlayers: 2 }) });
+      expect((full.get('[data-test="add-bot"]').element as HTMLButtonElement).disabled).toBe(true);
+    });
+
+    it('enables the remove button only on removable bot seats and removes that seat', async () => {
+      const wrapper = mountLobby({ lobby: humanAboveBot });
+      const store = useBullshitStore();
+      const spy = vi.spyOn(store, 'removeBot').mockImplementation(() => {});
+      expect((wrapper.get('[data-test="remove-bot-1"]').element as HTMLButtonElement).disabled).toBe(true);
+      const enabled = wrapper.get('[data-test="remove-bot-3"]');
+      expect((enabled.element as HTMLButtonElement).disabled).toBe(false);
+      expect(enabled.attributes('aria-label')).toBe('Remove Bot 2');
+      await enabled.trigger('click');
+      expect(spy).toHaveBeenCalledWith(3);
+      expect(wrapper.find('[data-test="remove-bot-0"]').exists()).toBe(false);
+      expect(wrapper.find('[data-test="remove-bot-2"]').exists()).toBe(false);
+    });
+
+    it('shows guests the bots without any control', () => {
+      const wrapper = mountLobby({ isHost: false, canStart: false, lobby: { ...humanAboveBot, mySeat: 2, removableBotSeats: undefined } });
+      expect(wrapper.findAll('[data-test="badge-bot"]')).toHaveLength(2);
+      expect(wrapper.find('[data-test="add-bot"]').exists()).toBe(false);
+      expect(wrapper.find('[data-test^="remove-bot-"]').exists()).toBe(false);
+    });
+
+    it('shows a visible error to the host when the server refused the bot change', () => {
+      const wrapper = mountLobby();
+      useBullshitStore().applyEvent({ type: 'error', eventType: 'JOIN', message: 'Room is full' });
+      return wrapper.vm.$nextTick().then(() => {
+        expect(wrapper.get('[data-test="bot-error"]').text()).toBe(ui.botActionFailed);
+      });
+    });
   });
 });

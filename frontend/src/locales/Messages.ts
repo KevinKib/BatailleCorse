@@ -94,6 +94,10 @@ export interface BullshitUiMessages {
     playersLabel: string;
     youBadge: string;
     botBadge: string;
+    botName: string;                   // '{n}' = 1-based bot number
+    addBot: string;
+    removeBot: string;                 // '{name}': accessible name of the remove button
+    botActionFailed: string;
     hostBadge: string;
     claimModeLabel: string;
     inviteLabel: string;
