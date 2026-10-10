@@ -125,6 +125,8 @@ export interface BullshitUiMessages {
     forfeited: string;                 // '{player}'
     yourTurn: string;                  // visible cue next to my tag on my turn
     verdictAnnouncement: string;       // '{verdict}', '{caption}': what a screen reader hears after a call
+    shortcut: string;                  // '{key}': tooltip of a button that has a keyboard shortcut
+    keysHint: string;                  // '{discard}', '{call}': discreet reminder of the shortcuts (digits pick cards)
     offline: string;                   // my own connection is down; the socket retries by itself
   };
   end: {

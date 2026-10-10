@@ -154,6 +154,8 @@ export const messagesEn: Messages = {
       forfeited: '{player} forfeited',
       yourTurn: 'Your turn',
       verdictAnnouncement: '{verdict}. {caption}',
+      shortcut: 'Shortcut: {key}',
+      keysHint: 'Keys: 1–9 pick a card · {discard} discard · {call} call Bullshit',
       offline: 'Connection lost. Reconnecting…',
     },
     end: {
