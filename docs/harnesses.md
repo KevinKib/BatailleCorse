@@ -43,6 +43,7 @@ Evolution of the user's global harness. The rule was added to the user's global 
 | Friction | Fix | Where |
 |---|---|---|
 | Dev environments created for work with nothing to test by hand, and left running after the PR is merged | Environment lifecycle: dev environments are created only for stories with a feature testable by hand (UI, user journeys), never for technical work (refactors, CI, tests, docs, backend with no visible effect); once the matching PR is merged, the session closes its environment (`docker compose -p <project> down`, without `-v`) without asking, after checking with `gh` that the PR is merged and with `docker ps` that the project is its own; never closes the environment of an open PR or of another session without agreement | Global `~/.claude/CLAUDE.md`; summarised in the dev environment section of `CLAUDE.md` |
+| Worktrees and Docker stacks of merged PRs piled up (25 worktrees, many stopped containers) | Cleanup on merge: when the user says a PR is merged, the session checks with `gh`, then removes its worktree (after checking it has no uncommitted change or unpushed commit) and its local branch (`git branch -d`), and closes its Docker project (`docker compose -p <project> down --remove-orphans`, without `-v`, project found through the `working_dir` label); never touches worktrees or containers of other sessions or open PRs, nor the remote branch | Global `~/.claude/CLAUDE.md` |
 
 ## Inventory (versioned in this project)
 
