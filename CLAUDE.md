@@ -6,11 +6,11 @@ Jeux de cartes temps réel (Bataille Corse et Bullshit) : backend Spring Boot (J
 
 - Code, commentaires, messages de commit, titres de PR, docs existantes, specs et plans (`docs/specs/`, `docs/plans/`) : en anglais.
 - Réponses à l'utilisateur et descriptions de PR : en français.
-- Les anciens specs et plans sont sous `docs/superpowers/` (historique, ne pas y ajouter de fichier). Les nouveaux vont dans `docs/specs/` et `docs/plans/`.
+- Specs dans `docs/specs/`, plans dans `docs/plans/`, architecture dans `docs/architecture/`.
 
 ## Architecture et règles du domaine
 
-- Backend en hexagonal, un contexte borné par jeu : `bataillecorse`, `bullshit` (règles pures, dans `domain/`), `sessionmanagement` (`core` : sièges, jetons, création/jonction/démarrage/revanche ; `presence` : connexion, délai de grâce, forfait) et un noyau partagé `game` (`Game`, `GameFactory`, `GameId`, `PlayerId`). Carte : `docs/superpowers/architecture/context-map.md`.
+- Backend en hexagonal, un contexte borné par jeu : `bataillecorse`, `bullshit` (règles pures, dans `domain/`), `sessionmanagement` (`core` : sièges, jetons, création/jonction/démarrage/revanche ; `presence` : connexion, délai de grâce, forfait) et un noyau partagé `game` (`Game`, `GameFactory`, `GameId`, `PlayerId`). Carte : `docs/architecture/context-map.md`.
 - Les règles métier vivent dans le domaine (`<jeu>/domain`), jamais dans les contrôleurs (`presentation`) ni dans le frontend. `sessionmanagement` ne dépend que du noyau `game`, jamais d'un jeu concret ; un jeu ne connaît ni sessions, ni jetons, ni transport.
 - Une action est authentifiée par le jeton de siège (`SessionToken`) ; les DTO et les événements WebSocket sont dans `presentation/`.
 - Frontend : Composition API avec `<script setup>` et TypeScript (skill `vue-best-practices`). Tout nouveau texte visible passe par `frontend/src/locales/`.
