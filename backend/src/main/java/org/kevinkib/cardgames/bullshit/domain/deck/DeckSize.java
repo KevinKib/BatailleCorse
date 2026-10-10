@@ -69,11 +69,6 @@ public enum DeckSize {
         return deck.distributeAll(nbPlayers);
     }
 
-    /** The deck used when the host did not choose one: short for 2 or 3 players, full from 4. */
-    public static DeckSize defaultFor(int nbPlayers) {
-        return nbPlayers <= 3 ? SHORT : FULL;
-    }
-
     /** Resolves a key to its size; unknown or {@code null} keys fall back to {@link #FULL}. */
     public static DeckSize fromKey(String key) {
         for (DeckSize size : values()) {

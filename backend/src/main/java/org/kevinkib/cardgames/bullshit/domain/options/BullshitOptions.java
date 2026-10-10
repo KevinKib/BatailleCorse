@@ -18,10 +18,10 @@ public record BullshitOptions(ClaimModeOption claimMode, DeckSize deckSize) {
         this(claimMode, DeckSize.FULL);
     }
 
-    /** An absent deck size follows {@code nbPlayers} (see {@link DeckSize#defaultFor}); an explicit one wins. */
-    public static BullshitOptions from(GameOptions options, int nbPlayers) {
-        DeckSize deckSize = options.get(DECK_SIZE_KEY).map(DeckSize::fromKey).orElseGet(() -> DeckSize.defaultFor(nbPlayers));
-        return new BullshitOptions(ClaimModeOption.fromKey(options.get(CLAIM_MODE_KEY).orElse(null)), deckSize);
+    public static BullshitOptions from(GameOptions options) {
+        return new BullshitOptions(
+                ClaimModeOption.fromKey(options.get(CLAIM_MODE_KEY).orElse(null)),
+                DeckSize.fromKey(options.get(DECK_SIZE_KEY).orElse(null)));
     }
 
     public ClaimMode toClaimMode(RandomGenerator random) {

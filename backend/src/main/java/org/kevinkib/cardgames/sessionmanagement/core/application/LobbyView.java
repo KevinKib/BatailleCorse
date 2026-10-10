@@ -1,6 +1,5 @@
 package org.kevinkib.cardgames.sessionmanagement.core.application;
 
-import org.kevinkib.cardgames.game.GameOptions;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionGame;
 
@@ -29,11 +28,6 @@ public record LobbyView(
     }
 
     static LobbyView forViewer(SessionGame lobby, int minPlayers, int maxPlayers, PlayerId viewer) {
-        return forViewer(lobby, minPlayers, maxPlayers, viewer, lobby.options());
-    }
-
-    static LobbyView forViewer(SessionGame lobby, int minPlayers, int maxPlayers, PlayerId viewer,
-                               GameOptions options) {
         List<LobbyPlayer> players = lobby.seats().stream()
                 .map(seat -> new LobbyPlayer(seat.id().id(), seat.name(), seat.isClaimed(), seat.isBot()))
                 .toList();
@@ -53,7 +47,7 @@ public record LobbyView(
                 minPlayers,
                 maxPlayers,
                 canStart,
-                options.values(),
+                lobby.options().values(),
                 removableBotSeats);
     }
 }

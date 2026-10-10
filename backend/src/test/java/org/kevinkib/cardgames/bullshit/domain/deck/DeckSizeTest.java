@@ -21,14 +21,6 @@ class DeckSizeTest {
     }
 
     @Test
-    void givenPlayerCount_whenDefaultFor_thenShortForTwoOrThreeAndFullFromFour() {
-        assertThat(DeckSize.defaultFor(2), is(DeckSize.SHORT));
-        assertThat(DeckSize.defaultFor(3), is(DeckSize.SHORT));
-        assertThat(DeckSize.defaultFor(4), is(DeckSize.FULL));
-        assertThat(DeckSize.defaultFor(6), is(DeckSize.FULL));
-    }
-
-    @Test
     void givenShortDeck_whenCards_thenSevenToAceOnly() {
         assertThat(DeckSize.SHORT.cards(), hasSize(32));
         assertThat(DeckSize.SHORT.cards().stream().map(c -> c.getRank()).toList(), not(hasItem(FrenchRank.SIX)));

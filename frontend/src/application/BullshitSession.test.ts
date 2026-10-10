@@ -51,19 +51,13 @@ describe('BullshitSession', () => {
   it('create publishes the name with the chosen claim mode and registers a lobby listener', () => {
     const { session, published } = makeSession();
     session.create('Alice', 'suit');
-    expect(published).toContainEqual({ dest: '/app/bullshit/create', body: JSON.stringify({ name: 'Alice', claimMode: 'suit' }) });
-  });
-
-  it('create sends the deck size only when the host chose one', () => {
-    const { session, published } = makeSession();
-    session.create('Alice', 'rank', '32');
-    expect(published).toContainEqual({ dest: '/app/bullshit/create', body: JSON.stringify({ name: 'Alice', claimMode: 'rank', deckSize: '32' }) });
+    expect(published).toContainEqual({ dest: '/app/bullshit/create', body: JSON.stringify({ name: 'Alice', claimMode: 'suit', deckSize: '52' }) });
   });
 
   it('create defaults the claim mode to rank when omitted', () => {
     const { session, published } = makeSession();
     session.create();
-    expect(published).toContainEqual({ dest: '/app/bullshit/create', body: JSON.stringify({ name: null, claimMode: 'rank' }) });
+    expect(published).toContainEqual({ dest: '/app/bullshit/create', body: JSON.stringify({ name: null, claimMode: 'rank', deckSize: '52' }) });
   });
 
   it('on its own CREATE ack, subscribes seat 0 with the token and persists it', async () => {

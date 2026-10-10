@@ -2,7 +2,7 @@ import type Card from '../model/Card';
 import type { BullshitView } from '../model/bullshit/BullshitState';
 import type { BullshitResponse } from '../model/bullshit/BullshitEvents';
 import { DEFAULT_CLAIM_MODE, type ClaimMode } from '../model/bullshit/claimMode';
-import { type DeckSize } from '../model/bullshit/deckSize';
+import { PAYLOAD_DEFAULT_DECK_SIZE, type DeckSize } from '../model/bullshit/deckSize';
 
 export interface BullshitWebSocketPort {
   publish(destination: string, body?: string): void;
@@ -32,10 +32,10 @@ export default class BullshitSession {
     private readonly callbacks: BullshitSessionCallbacks,
   ) {}
 
-  create(name?: string, claimMode: ClaimMode = DEFAULT_CLAIM_MODE, deckSize?: DeckSize): void {
+  create(name?: string, claimMode: ClaimMode = DEFAULT_CLAIM_MODE, deckSize: DeckSize = PAYLOAD_DEFAULT_DECK_SIZE): void {
     this.pendingCreate = true;
     this.webSocket.setLobbyListener(r => this.onLobby(r));
-    this.webSocket.publish('/app/bullshit/create', JSON.stringify({ name: name ?? null, claimMode, ...(deckSize ? { deckSize } : {}) }));
+    this.webSocket.publish('/app/bullshit/create', JSON.stringify({ name: name ?? null, claimMode, deckSize }));
   }
 
   private onLobby(response: any): void {

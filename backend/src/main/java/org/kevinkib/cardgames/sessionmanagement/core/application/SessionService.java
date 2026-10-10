@@ -277,22 +277,16 @@ public class SessionService implements GameDirectory {
         SessionGame lobby = repository.loadSessionGame(id);
         PlayerId viewer = lobby.findPlayerByToken(new SessionToken(token))
                 .orElseThrow(InvalidTokenException::new);
-        return LobbyView.forViewer(lobby, minPlayers(lobby.gameType()), maxPlayers(lobby.gameType()), viewer,
-                effectiveOptions(lobby));
+        return LobbyView.forViewer(lobby, minPlayers(lobby.gameType()), maxPlayers(lobby.gameType()), viewer);
     }
 
     public List<LobbyView> lobbyViews(GameId id) {
         SessionGame lobby = repository.loadSessionGame(id);
         int min = minPlayers(lobby.gameType());
         int max = maxPlayers(lobby.gameType());
-        GameOptions options = effectiveOptions(lobby);
         return lobby.seats().stream()
                 .filter(seat -> seat.isClaimed() && !seat.isBot())
-                .map(seat -> LobbyView.forViewer(lobby, min, max, seat.id(), options))
+                .map(seat -> LobbyView.forViewer(lobby, min, max, seat.id()))
                 .toList();
-    }
-
-    private GameOptions effectiveOptions(SessionGame lobby) {
-        return gameFactories.factoryFor(lobby.gameType()).effectiveOptions(lobby.options(), lobby.claimedCount());
     }
 }

@@ -4,8 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { Button, InputText } from 'primevue';
 import { useBullshitStore } from '../../state/Bullshit.store';
 import { CLAIM_MODES, DEFAULT_CLAIM_MODE, type ClaimMode } from '../../model/bullshit/claimMode';
-import { DECK_CHOICES, DECK_CHOICE_AUTO, DEFAULT_DECK_CHOICE, type DeckChoice } from '../../model/bullshit/deckSize';
-import { claimModeLabel } from '../../model/bullshit/claimModeLabel';
+import { DECK_SIZES, DEFAULT_DECK_SIZE, type DeckSize } from '../../model/bullshit/deckSize';
 import { extractGameId } from '../../model/bullshit/gameId';
 import { useI18n } from '../../composables/useI18n';
 import TitleCardFan from '../../components/TitleCardFan.vue';
@@ -21,7 +20,7 @@ const CREATE_TIMEOUT_MS = 8000;
 
 const name = ref('');
 const claimMode = ref<ClaimMode>(DEFAULT_CLAIM_MODE);
-const deckChoice = ref<DeckChoice>(DEFAULT_DECK_CHOICE);
+const deckSize = ref<DeckSize>(DEFAULT_DECK_SIZE);
 const joinId = ref((route.params.id as string) ?? '');
 const isJoin = ref(route.name === 'bullshit-join');
 const error = ref('');
@@ -51,8 +50,7 @@ function onCreate() {
   error.value = '';
   busy.value = true;
   try {
-    // Automatic sends no size: the backend picks it from the seated players.
-    store.create(name.value || undefined, claimMode.value, deckChoice.value === DECK_CHOICE_AUTO ? undefined : deckChoice.value);
+    store.create(name.value || undefined, claimMode.value, deckSize.value);
   } catch {
     fail(ui.errors.createFailed);
     return;
@@ -128,7 +126,7 @@ async function onJoin() {
             class="mode-option"
             :class="{ 'mode-option--active': claimMode === mode }">
             <input v-model="claimMode" type="radio" name="claimMode" :value="mode" class="mode-radio" />
-            <span>{{ claimModeLabel(ui, mode, deckChoice) }}</span>
+            <span>{{ ui.claimModes[mode] }}</span>
           </label>
         </div>
       </fieldset>
@@ -137,11 +135,11 @@ async function onJoin() {
         <legend class="field-label">{{ ui.deckSizeLegend }}</legend>
         <div class="mode-toggle">
           <label
-            v-for="size in DECK_CHOICES"
+            v-for="size in DECK_SIZES"
             :key="size"
             class="mode-option"
-            :class="{ 'mode-option--active': deckChoice === size }">
-            <input v-model="deckChoice" type="radio" name="deckSize" :value="size" class="mode-radio" />
+            :class="{ 'mode-option--active': deckSize === size }">
+            <input v-model="deckSize" type="radio" name="deckSize" :value="size" class="mode-radio" />
             <span>{{ ui.deckSizes[size] }}</span>
           </label>
         </div>

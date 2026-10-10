@@ -159,16 +159,6 @@ class SessionServiceBotsTest {
     }
 
     @Test
-    void givenNoDeckSizeChosen_whenPlayersJoin_thenLobbyDeckSizeFollowsTheSeatCount() {
-        assertThat(service.lobbyViews(id).get(0).options().get("deckSize"), is("32"));
-        service.joinRoom(id, "Bob");
-        service.joinRoom(id, "Cleo");
-        assertThat(service.lobbyViews(id).get(0).options().get("deckSize"), is("32"));
-        service.joinRoom(id, "Dan");
-        assertThat(service.lobbyViews(id).get(0).options().get("deckSize"), is("52"));
-    }
-
-    @Test
     void givenNonHostViewer_thenRemovableBotSeatsIsEmpty() {
         service.addBot(id, hostToken);
         String bobToken = service.joinRoom(id, "Bob").token();

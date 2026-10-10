@@ -6,7 +6,6 @@ import TitleCardFan from '../TitleCardFan.vue';
 import { useI18n } from '../../composables/useI18n';
 import { format, plural } from '../../locales/format';
 import { CLAIM_MODES, type ClaimMode } from '../../model/bullshit/claimMode';
-import { claimModeLabel } from '../../model/bullshit/claimModeLabel';
 import { DECK_SIZES, type DeckSize } from '../../model/bullshit/deckSize';
 import type { LobbyPlayer, LobbyView } from '../../model/bullshit/LobbyView';
 
@@ -143,7 +142,7 @@ function selectAll(event: FocusEvent) {
       <div v-if="claimMode || deckSize" class="field-group claim-box">
         <div v-if="claimMode" class="claim-row" data-test="claim-mode">
           <span class="field-label">{{ ui.lobby.claimModeLabel }}</span>
-          <span class="claim-value">{{ claimModeLabel(ui.start, claimMode, deckSize ?? undefined) }}</span>
+          <span class="claim-value">{{ ui.start.claimModes[claimMode] }}</span>
         </div>
         <div v-if="deckSize" class="claim-row" data-test="deck-size">
           <span class="field-label">{{ ui.lobby.deckSizeLabel }}</span>
