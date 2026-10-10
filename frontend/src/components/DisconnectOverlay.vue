@@ -60,7 +60,7 @@ defineProps<Props>();
 
 .disconnect-countdown {
   font-size: 1rem;
-  font-weight: 800;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: var(--gold);
   margin: 4px 0 0;

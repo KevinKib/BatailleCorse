@@ -604,7 +604,7 @@ onBeforeUnmount(() => {
   pointer-events: none;
   z-index: 1001;
   font-size: 1.6rem;
-  font-weight: 800;
+  font-weight: 700;
   color: rgb(var(--accent-positive-rgb));
   font-variant-numeric: tabular-nums;
   animation: card-delta-float 1.4s ease-out forwards;
@@ -654,7 +654,7 @@ onBeforeUnmount(() => {
   white-space: nowrap;
   font-family: var(--font-title);
   font-size: 0.82rem;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: 0.14em;
   color: rgb(var(--accent-active-rgb));
 }

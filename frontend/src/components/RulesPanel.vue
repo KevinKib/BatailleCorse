@@ -302,7 +302,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', handleKeydown));
 
 .value-token__rank {
   font-size: 1.05rem;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .value-token__suit {

@@ -1,6 +1,6 @@
 describe('2-player waiting and names', () => {
   it('keeps the waiting overlay visible after creating a Human game', () => {
-    cy.visit('/');
+    cy.visit('/games/bataillecorse');
     cy.contains('button', 'New Game').click();
     cy.url().should('include', '/create');
 
@@ -18,7 +18,7 @@ describe('2-player waiting and names', () => {
   });
 
   it('shows the opponent name once a second player joins', () => {
-    cy.visit('/');
+    cy.visit('/games/bataillecorse');
     cy.contains('button', 'New Game').click();
     cy.contains('button', 'Human').click();
     cy.get('#playerName').type('Alice');

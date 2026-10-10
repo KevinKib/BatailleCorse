@@ -36,7 +36,7 @@ const props = toRefs(nonReactiveProps);
 
 .count {
   width: fit-content;
-  font-weight: bold;
+  font-weight: 700;
   font-family: var(--font-title);
   font-variant-numeric: tabular-nums;
   position: relative;
