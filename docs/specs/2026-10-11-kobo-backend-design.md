@@ -329,7 +329,7 @@ Kobo uses its own prefix for every game command, since Bullshit already owns `/d
 | `/kobo/peek` | `KoboTargetPayload(gameId, token, seat, slot)` | power peek |
 | `/kobo/blindSwap` | `KoboSwapPayload(gameId, token, ownSlot, seat, slot)` | jack / queen |
 | `/kobo/kingSwap` | `KoboSlotPayload` | king swap with own slot |
-| `/kobo/match` | `KoboMatchPayload(gameId, token, seat, slot, giveSlot?, expectedTopRank)` | matching discard (the race) |
+| `/kobo/match` | `KoboMatchPayload(gameId, token, seat, slot, giveSlot?, expectedTopRank, expectedRevision?)` | matching discard (the race) |
 | `/kobo/giveTen` | `KoboGiftPayload(gameId, token, seat)` | announcer's gift |
 | `/presence`, `/forfeit` | existing | unchanged |
 

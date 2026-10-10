@@ -377,3 +377,14 @@
 - H6 (explicit end-of-turn step): tasks 7, 14, 22 (a flag on the last action instead). H7 (gift rules): tasks 2, 15. H8 (tied winners): task 15.
 - H9 (occupied slots required): tasks 7, 9. H10 (ready barrier, no timeout): tasks 5, 15, 16. H11 (starting cards resent): tasks 5, 20.
 - H12 (penalty slot appended): tasks 3, 11. H13 (forfeit cards, void Kobo): task 16. H16 (rotation): task 15. H17 (no card to give): task 12.
+
+---
+
+## Implementation notes (deviations from the plan above)
+
+- **H4 decided**: `matchDiscard` takes the rank the client saw on top of the discard pile (`expectedTopRank`, required); a moved pile throws `StaleDiscardException` with no penalty.
+- **Added `expectedRevision`** (optional) on the match: a card given into a slot after a match refills it, so a second attempt on the same position would otherwise find a card of another rank and be penalised for a lost race. A changed slot revision throws `StaleSlotException`, no penalty. The WebSocket payload carries it; the spec row for `/kobo/match` is updated.
+- **Event types**: no `ROUND_START` event (the phase in the state tells it); a command that closes a round is broadcast as `ROUND_END`, one that ends the game as `GAME_OVER`, with the command named in the event data (`KoboEventData.action`).
+- **DTO layout**: the sub-records (`SlotDto`, `PlayerDto`, `RevealDto`, `RoundDto`...) are nested in `KoboDto`; `CardDto` and `OutcomeDto` are separate files. Java source level is 17, so events are mapped with `instanceof` patterns, not pattern `switch`.
+- **Tests grouped by theme** instead of one class per task (`KoboTurnAndPowersTest`, `KoboMatchTest`, `KoboRoundTest`, ...); every listed case is covered.
+- **Task 24 wiring** is covered by `KoboGameIntegrationTest` (real Spring context: lifecycle broadcaster lookup, presence forfeit, play-again) and `KoboWebSocketControllerIT` instead of a dedicated `KoboWiringTest`.
