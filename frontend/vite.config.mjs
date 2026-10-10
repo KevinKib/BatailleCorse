@@ -13,7 +13,9 @@ export default defineConfig({
     port: 5173,
     hmr: {
       host: 'localhost',
-      port: 5173,
+      // Port the browser uses for the hot-reload socket. Override it when the stack
+      // is published on another host port (parallel dev stacks, see CLAUDE.md).
+      clientPort: Number(process.env.VITE_HMR_CLIENT_PORT) || 5173,
     },
     proxy: {
       "/connect": {
