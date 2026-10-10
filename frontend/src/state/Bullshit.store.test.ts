@@ -64,6 +64,35 @@ describe('Bullshit store', () => {
     expect(store.canStart).toBe(true);
   });
 
+  it('keeps the bot refusal until the next lobby refresh, and clears it on a new request', () => {
+    const store = useBullshitStore();
+    store.applyEvent({ type: 'seat-change', seat: 0 });
+    store.applyEvent({ type: 'error', eventType: 'JOIN', message: 'Room is full' });
+    expect(store.botError).toBe('Room is full');
+    store.applyEvent({ type: 'state-update', state: lobbyView() });
+    expect(store.botError).toBeNull();
+    store.applyEvent({ type: 'error', eventType: 'JOIN', message: 'x' });
+    vi.spyOn(webSocketService, 'publish').mockImplementation(() => {});
+    store.addBot();
+    expect(store.botError).toBeNull();
+  });
+
+  it('reports a bot request as failed when the socket is down, without throwing', () => {
+    const store = useBullshitStore();
+    vi.spyOn(webSocketService, 'publish').mockImplementation(() => { throw new TypeError('There is no underlying STOMP connection'); });
+    expect(() => store.addBot()).not.toThrow();
+    expect(store.botError).not.toBeNull();
+    store.applyEvent({ type: 'state-update', state: lobbyView() });
+    expect(() => store.removeBot(1)).not.toThrow();
+    expect(store.botError).not.toBeNull();
+  });
+
+  it('ignores errors of other events for the bot message', () => {
+    const store = useBullshitStore();
+    store.applyEvent({ type: 'error', eventType: 'DISCARD', message: 'nope' });
+    expect(store.botError).toBeNull();
+  });
+
   it('a started view yields phase playing and exposes game', () => {
     const store = useBullshitStore();
     store.applyEvent({ type: 'seat-change', seat: 0 });

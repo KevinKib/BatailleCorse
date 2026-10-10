@@ -22,6 +22,8 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
   // Every seat seen in this game, kept after it leaves the table (a forfeited player drops out of
   // `players`, yet "Bob forfeited" must still name him). Cleared when the room goes back to a lobby.
   const roster = ref<Record<string, BullshitPlayer>>({});
+  // Last refusal of an add/remove bot request (server message), cleared by the next lobby refresh.
+  const botError = ref<string | null>(null);
   let revealTimer: ReturnType<typeof setTimeout> | null = null;
 
   const game = computed<BullshitState | null>(() =>
@@ -41,6 +43,7 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
     switch (event.type) {
       case 'state-update':
         state.value = event.state;
+        botError.value = null;
         if (event.state.started) {
           for (const p of event.state.players) roster.value = { ...roster.value, [p.id]: p };
         } else {
@@ -51,6 +54,7 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
         if (gameId.value !== event.gameId) roster.value = {};
         gameId.value = event.gameId;
         break;
+      case 'error': botError.value = event.eventType === 'JOIN' ? event.message : null; break;
       case 'seat-change': mySeat.value = event.seat; break;
       case 'event':
         if (event.eventType === 'CALL_BULLSHIT') {
@@ -82,6 +86,16 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
   // A reopened room lands back in the lobby; drop any presence from the finished game.
   watch(phase, (p) => { if (p === 'lobby') presence.reset(); });
 
+  // Publishing throws while the socket is down (reconnecting): report it like a server refusal.
+  function requestBotChange(send: () => void) {
+    botError.value = null;
+    try {
+      send();
+    } catch {
+      botError.value = 'connection';
+    }
+  }
+
   function playAgain() {
     presence.reset();
     return session.playAgain();
@@ -95,7 +109,7 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
   function clearSelection() { selectedCards.value = []; }
 
   return {
-    state, game, lobby, roster, gameId, mySeat, reveal, selectedCards,
+    state, game, lobby, roster, botError, gameId, mySeat, reveal, selectedCards,
     disconnections: presence.disconnections,
     liveDisconnections: presence.liveDisconnections,
     forfeitNotice: presence.forfeitNotice,
@@ -106,6 +120,8 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
     restore: (id: string, seat: number, token: string) => session.restore(id, seat, token),
     hydrate: () => session.hydrate(),
     startGame: () => session.startGame(),
+    addBot: () => requestBotChange(() => session.addBot()),
+    removeBot: (seat: number) => requestBotChange(() => session.removeBot(seat)),
     discard: () => { session.discard(selectedCards.value); clearSelection(); },
     callBullshit: () => session.callBullshit(),
     forfeit: () => session.forfeit(),

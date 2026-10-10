@@ -188,7 +188,7 @@ async function onJoin() {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: 24px;
   background: var(--panel-bg);
   border: 1px solid var(--panel-border);
   border-radius: 20px;
@@ -224,11 +224,12 @@ async function onJoin() {
 }
 .subtitle {
   margin: 4px 0 0;
-  font-size: 0.72rem;
+  font-family: var(--font-title);
+  font-size: 0.875rem;
   font-weight: 600;
-  letter-spacing: 0.25em;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .panel-divider {
@@ -237,18 +238,19 @@ async function onJoin() {
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
 }
 
-.field-group { width: 100%; display: flex; flex-direction: column; gap: 6px; }
+.field-group { width: 100%; display: flex; flex-direction: column; gap: 8px; }
 .field-label {
-  font-size: 0.62rem;
-  letter-spacing: 0.15em;
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.6);
   margin: 0;
   padding: 0;
 }
 
 .text-input { width: 100%; }
 :deep(.text-input.p-inputtext) {
+  min-height: 44px;
   background: rgba(0, 0, 0, 0.4);
   border-color: rgba(255, 255, 255, 0.15);
   color: rgba(255, 255, 255, 0.9);
@@ -265,6 +267,7 @@ async function onJoin() {
 /* Claim mode: two big selectable options, same look as BatailleCorse's opponent toggle.
    The native radio stays in the tab order (visually hidden) so the keyboard still works. */
 .claim-mode { border: none; padding: 0; margin: 0; min-width: 0; }
+.claim-mode .field-label { display: block; margin-bottom: 8px; line-height: 1rem; }
 .mode-toggle { display: flex; gap: 8px; }
 .mode-option {
   position: relative;
@@ -273,7 +276,7 @@ async function onJoin() {
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 10px 8px;
+  padding: 8px;
   min-height: 44px;
   box-sizing: border-box;
   border-radius: 8px;
@@ -307,18 +310,20 @@ async function onJoin() {
   margin: 0;
   padding: 8px 12px;
   box-sizing: border-box;
-  font-size: 0.8rem;
+  font-size: 0.875rem;
   color: rgb(var(--accent-negative-rgb));
   background: rgba(var(--accent-negative-rgb), 0.1);
   border: 1px solid rgba(var(--accent-negative-rgb), 0.4);
   border-radius: 8px;
 }
 
-.start-button { width: 100%; letter-spacing: 0.08em; }
+.start-button.p-button { width: 100%; min-height: 48px; letter-spacing: 0.08em; }
+/* 24 px panel gap minus 8 px = 16 px between Create/Join and Back. */
+.back-button.p-button { min-height: 44px; margin-top: -8px; }
 
 @media (max-width: 480px) {
   .titlescreen { padding: 88px 12px 16px; }
-  .title-panel { padding: 32px 20px 22px; gap: 16px; }
+  .title-panel { padding: 32px 20px 24px; }
   .game-title { font-size: 2.1rem; }
 }
 

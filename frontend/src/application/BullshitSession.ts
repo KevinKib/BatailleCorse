@@ -14,6 +14,7 @@ export type BullshitSessionEvent =
   | { type: 'state-update'; state: BullshitView }
   | { type: 'game-id-change'; gameId: string }
   | { type: 'seat-change'; seat: number }
+  | { type: 'error'; eventType: string; message: string }
   | { type: 'event'; eventType: string; eventData: unknown; message: string };
 
 export interface BullshitSessionCallbacks {
@@ -106,6 +107,16 @@ export default class BullshitSession {
     this.webSocket.publish('/app/bullshit/start', JSON.stringify({ gameId: this.gameId, token: this.myToken }));
   }
 
+  /** Host only: seat a computer-controlled player. The server answers with a lobby refresh. */
+  addBot(): void {
+    this.webSocket.publish('/app/bullshit/addBot', JSON.stringify({ gameId: this.gameId, token: this.myToken }));
+  }
+
+  /** Host only: free the bot seat (the server refuses when a human sits above it). */
+  removeBot(seat: number): void {
+    this.webSocket.publish('/app/bullshit/removeBot', JSON.stringify({ gameId: this.gameId, token: this.myToken, seat }));
+  }
+
   async playAgain(name?: string): Promise<void> {
     if (!this.gameId) return;
     const res = await fetch(`/api/bullshit/game/${this.gameId}/play-again`, {
@@ -121,6 +132,12 @@ export default class BullshitSession {
   }
 
   onResponse(response: BullshitResponse): void {
+    if (response.success === false) {
+      // Refused action (e.g. a bot change the server rejected): keep the state it carries, if any, and surface the error.
+      if (response.state) this.callbacks.onEvent({ type: 'state-update', state: response.state });
+      this.callbacks.onEvent({ type: 'error', eventType: response.eventType, message: response.message });
+      return;
+    }
     if (response.state) {
       this.callbacks.onEvent({ type: 'state-update', state: response.state });
     }
