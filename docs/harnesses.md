@@ -51,6 +51,8 @@ The sibling project ShodoCFI (PR #25 and #26) got a first harness iteration. Thi
 - The offset-ports model was checked with `docker compose config` (ports and environment merge as expected) but the stack was not started.
 - Docs folders flattened (chore/rename-docs-dir): specs, plans and architecture now sit directly under `docs/`; the old nested folder name and the matching skill-name prefixes in plan headers are gone.
 
+- Backend `*IT` classes now run in `mvn test` (chore: surefire `includes` in `backend/pom.xml`; they were silently skipped by surefire's default patterns, locally and in CI). `CLAUDE.md` Tests section and Java version note updated. `BatailleCorseWebSocketControllerIT` stays `@Disabled` (stale, with reason).
+
 ## Reuse
 
 Add a dated section here per iteration; keep project facts in `CLAUDE.md` and cross-project rules in the global `~/.claude/CLAUDE.md`.

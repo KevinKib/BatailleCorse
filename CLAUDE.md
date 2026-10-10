@@ -1,6 +1,6 @@
 # BatailleCorse : consignes pour Claude
 
-Jeux de cartes temps réel (Bataille Corse et Bullshit) : backend Spring Boot (Java 22, WebSocket/STOMP, état en mémoire, pas de base de données) et frontend Vue 3 + Vite + Pinia + PrimeVue, orchestrés avec Docker Compose. Les commandes détaillées sont dans le `README.md`. Les règles communes à tous les projets (worktrees, conventions git, vérifications, workflow) sont dans le `CLAUDE.md` global de l'utilisateur.
+Jeux de cartes temps réel (Bataille Corse et Bullshit) : backend Spring Boot (compilé en `-source/-target 17` selon le `pom.xml`, exécuté sur JDK 22 dans le Dockerfile et la CI ; WebSocket/STOMP, état en mémoire, pas de base de données) et frontend Vue 3 + Vite + Pinia + PrimeVue, orchestrés avec Docker Compose. Les commandes détaillées sont dans le `README.md`. Les règles communes à tous les projets (worktrees, conventions git, vérifications, workflow) sont dans le `CLAUDE.md` global de l'utilisateur.
 
 ## Langue
 
@@ -23,7 +23,7 @@ Jeux de cartes temps réel (Bataille Corse et Bullshit) : backend Spring Boot (J
 
 ## Tests (toutes les suites avant une PR)
 
-- Backend : `cd backend && mvn -s ../deploy/docker/settings.xml test` (si Maven est installé en local ; sinon via le conteneur de dev, voir le README). Les tests `*IT` / `ApplicationContextTest` démarrent le contexte Spring, sans Docker.
+- Backend : `cd backend && mvn -s ../deploy/docker/settings.xml test` (si Maven est installé en local ; sinon via le conteneur de dev, voir le README). Surefire est configuré dans `backend/pom.xml` pour ramasser aussi `**/*IT.java` (par défaut il les ignore) : `mvn test` joue donc les tests unitaires et les `*IT` / `ApplicationContextTest`, qui démarrent le contexte Spring sans Docker (pas de failsafe : aucune phase `verify` nécessaire). `BatailleCorseWebSocketControllerIT` est `@Disabled` (périmé, à réécrire). Un nouveau test d'intégration doit se nommer `*IT` ou `*Test`, sinon il ne tourne pas.
 - Frontend : `cd frontend && npm test` (Vitest + happy-dom), puis `npx vite build`.
 - CI (`.github/workflows/ci.yml`, push sur `main` et pull requests, ubuntu-latest) : rejoue ces deux suites (backend `mvn -B test` avec JDK 22, frontend `npm ci`, `npm test`, `npx vite build` avec Node 20). Dans la CI, `frenchcards` se résout via le `GITHUB_TOKEN` (pas de `settings.xml` du dépôt). Pas d'e2e en CI pour l'instant.
 - E2E (Cypress) : pile `docker-compose.e2e.yml` (profil Spring `test`), puis `cd frontend && npm run cy:run`. Cypress vise le port fixe 5173 : une seule pile e2e à la fois. Si une autre pile tient ce port, l'arrêter (`docker stop`, jamais de suppression), jouer l'e2e, démonter la pile e2e (`docker compose -f docker-compose.e2e.yml down`), puis redémarrer la pile arrêtée, même si Cypress échoue.
