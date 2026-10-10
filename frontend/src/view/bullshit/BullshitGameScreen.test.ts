@@ -123,6 +123,48 @@ describe('BullshitGameScreen', () => {
     expect(wrapper.get('[data-test="last-play"]').text()).toContain('3');
   });
 
+  it('shows the suit symbol next to a suit claim, keeping the word', () => {
+    const store = useBullshitStore();
+    store.applyEvent({ type: 'seat-change', seat: 0 });
+    store.applyEvent({ type: 'state-update', state: playingState({ currentTarget: { label: 'HEART' } }) });
+    const wrapper = mount(BullshitGameScreen, { props: { gameId: 'g1' }, global: { plugins: [router, PrimeVue] } });
+
+    const suit = wrapper.get('[data-test="claim-suit"]');
+    expect(suit.text()).toBe('♥');
+    expect(suit.classes()).toContain('claim-suit--red');
+    expect(wrapper.get('[data-test="claim-badge"]').text()).toContain('HEART');
+  });
+
+  it('shows a black suit symbol for spades and none for a rank claim', async () => {
+    const store = useBullshitStore();
+    store.applyEvent({ type: 'seat-change', seat: 0 });
+    store.applyEvent({ type: 'state-update', state: playingState({ currentTarget: { label: 'SPADE' } }) });
+    const wrapper = mount(BullshitGameScreen, { props: { gameId: 'g1' }, global: { plugins: [router, PrimeVue] } });
+    expect(wrapper.get('[data-test="claim-suit"]').text()).toBe('♠');
+    expect(wrapper.get('[data-test="claim-suit"]').classes()).not.toContain('claim-suit--red');
+
+    store.applyEvent({ type: 'state-update', state: playingState({ currentTarget: { label: 'ACE' } }) });
+    await wrapper.vm.$nextTick();
+    expect(wrapper.find('[data-test="claim-suit"]').exists()).toBe(false);
+  });
+
+  it('shows my own card count next to the You tag, with an accessible name', async () => {
+    const store = useBullshitStore();
+    store.applyEvent({ type: 'seat-change', seat: 0 });
+    store.applyEvent({ type: 'state-update', state: playingState({
+      myHand: [
+        { rank: 'ACE', suit: 'HEART', name: 'HEART_ACE' },
+        { rank: '2', suit: 'CLUB', name: 'CLUB_2' },
+      ],
+    }) });
+    const wrapper = mount(BullshitGameScreen, { props: { gameId: 'g1' }, global: { plugins: [router, PrimeVue] } });
+
+    const count = wrapper.get('[data-test="my-count"]');
+    expect(count.text()).toBe('2');
+    expect(count.attributes('aria-label')).toBe('2 cards in your hand');
+    expect(wrapper.get('.my-tag').text()).toBe('You');
+  });
+
   it('hides the last-play caption when there is no claim', () => {
     const store = useBullshitStore();
     store.applyEvent({ type: 'seat-change', seat: 0 });

@@ -16,6 +16,7 @@ import BullshitLobby from '../../components/bullshit/BullshitLobby.vue';
 import { useI18n } from '../../composables/useI18n';
 import { format, plural } from '../../locales/format';
 import { seatDisplayName } from '../../model/bullshit/displayName';
+import { claimSuit } from '../../model/bullshit/claimSuit';
 
 const props = defineProps<{ gameId: string }>();
 const messages = useI18n();
@@ -77,6 +78,10 @@ const seatPositions = computed(() => {
     return { left: 50 + RX * Math.cos(r), top: 50 - RY * Math.sin(r) };
   });
 });
+
+// Suit claims get their symbol next to the word (rank claims: null).
+const targetSuit = computed(() => claimSuit(store.game?.currentTarget.label));
+const myCardCount = computed(() => store.game?.myHand.length ?? 0);
 
 const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.gameId}`);
 </script>
@@ -142,7 +147,12 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
 
         <div class="table-center">
           <div class="claim-badge" data-test="claim-badge">
-            {{ ui.table.claim }} <strong>{{ store.game?.currentTarget.label }}</strong>
+            {{ ui.table.claim }}
+            <strong>
+              <span v-if="targetSuit" data-test="claim-suit" aria-hidden="true"
+                    :class="['claim-suit', { 'claim-suit--red': targetSuit.red }]">{{ targetSuit.glyph }}</span>
+              {{ store.game?.currentTarget.label }}
+            </strong>
           </div>
 
           <div class="pile-well">
@@ -184,7 +194,11 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
       </div>
 
       <div class="my-zone">
-        <span :class="['my-tag', { 'my-tag--active': store.isMyTurn }]">{{ ui.you }}</span>
+        <div class="my-id">
+          <span :class="['my-tag', { 'my-tag--active': store.isMyTurn }]">{{ ui.you }}</span>
+          <span class="my-count" data-test="my-count" role="img"
+                :aria-label="plural(ui.table.myCards, myCardCount)">{{ myCardCount }}</span>
+        </div>
         <BullshitHand
           :cards="store.game?.myHand ?? []"
           :selected="store.selectedCards"
@@ -285,8 +299,9 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
   container-type: size;
   /* Fluid card sizes consumed by seats and the center. */
   --seat-card-w: clamp(40px, 7vmin, 60px);
-  --pile-card-w: clamp(60px, 13vmin, 104px);
-  --pile-card-w: clamp(44px, 17cqh, 104px);
+  /* The pile is the seat card token scaled up (1.5x): it stays the biggest card on the table
+     without dwarfing the seats or the hand, at every viewport. */
+  --pile-card-w: calc(var(--seat-card-w) * 1.5);
 }
 
 .opponents-ring {
@@ -325,7 +340,6 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
     display: flex;
     flex-direction: column;
     border-radius: 28px;
-    --pile-card-w: clamp(44px, 22cqh, 104px);
   }
   .opponents-ring {
     position: static;
@@ -364,6 +378,9 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
   padding: var(--space-1) 14px;
 }
 .claim-badge strong { color: var(--gold); }
+/* Suit glyph on the dark badge: light for spade/club, a lifted red for heart/diamond. */
+.claim-suit { margin-right: 0.15em; color: rgba(255, 255, 255, 0.95); }
+.claim-suit--red { color: #ff6b6b; }
 
 .pile-well {
   position: relative;
@@ -544,7 +561,27 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
   border-radius: 999px;
   padding: var(--space-1) 14px;
 }
-.my-tag { position: relative; margin-bottom: var(--you-hand-gap); }
+.my-tag { position: relative; }
+/* "You" and my card count form one row; the gap to the hand is carried by the row. */
+.my-id {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--you-hand-gap);
+}
+.my-count {
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-family: var(--font-title);
+  font-variant-numeric: tabular-nums;
+  color: rgba(255, 255, 255, 0.92);
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(var(--accent-active-rgb), 0.55);
+  border-radius: 999px;
+  padding: var(--space-1) 10px;
+  min-width: 2ch;
+  text-align: center;
+}
 .my-tag--active {
   padding-left: 22px;
   color: #ffffff;

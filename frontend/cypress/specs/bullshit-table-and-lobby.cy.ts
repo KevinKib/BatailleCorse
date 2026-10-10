@@ -237,6 +237,19 @@ describe('Bullshit hand / actions spacing matrix', () => {
       const cardsTop = Math.min(...rects.map((r) => r.top));
       const cardsBottom = Math.max(...rects.map((r) => r.bottom));
       expect(cardsTop - you.bottom, `${label}: You to the raised card`).to.be.at.least(11.5);
+      // My card count sits on the same row as "You", inside the screen.
+      const count = doc.querySelector('[data-test="my-count"]') as HTMLElement;
+      expect(count.textContent!.trim(), `${label}: my card count`).to.eq(String(handSize));
+      const cr = count.getBoundingClientRect();
+      expect(Math.abs((cr.top + cr.bottom) / 2 - (you.top + you.bottom) / 2), `${label}: count centred on You`).to.be.at.most(1.5);
+      expect(cr.left - you.right, `${label}: count beside You`).to.be.within(4, 16);
+      expect(cr.right, `${label}: count inside the screen`).to.be.at.most(vw);
+      // The pile card is the seat card scaled up, not the biggest thing on the table.
+      const pile = (doc.querySelector('.pile-well .playing_card') as HTMLElement).getBoundingClientRect();
+      const frame = (doc.querySelector('.table-frame') as HTMLElement).getBoundingClientRect();
+      expect(pile.width, `${label}: pile card width`).to.be.within(55, 91);
+      expect(pile.bottom, `${label}: pile inside the table`).to.be.at.most(frame.bottom);
+      expect(pile.top, `${label}: pile inside the table`).to.be.at.least(frame.top);
       const buttons = ['discard', 'call'].map((t) =>
         (doc.querySelector(`[data-test="${t}"]`) as HTMLElement).getBoundingClientRect());
       buttons.forEach((b) => {
@@ -261,5 +274,18 @@ describe('Bullshit hand / actions spacing matrix', () => {
         measure(vw, vh, h,`${vw}x${vh} ${p}p ${h}c`);
       }));
     });
+  });
+});
+
+describe('Bullshit claim badge shows the suit symbol', () => {
+  it('pairs a suit claim with its symbol and keeps the word', () => {
+    cy.viewport(375, 667);
+    createBullshitGame('Alice', 'By suit');
+    gameIdFromUrl().then((id) => cy.request('POST', `/api/bullshit/game/${id}/join`, { name: 'Bob' }));
+    cy.get('[data-test="start"]', { timeout: 10000 }).should('not.be.disabled').click();
+    cy.get('[data-test="claim-badge"]', { timeout: 10000 }).should('be.visible').and('contain.text', 'HEART');
+    cy.get('[data-test="claim-suit"]').should('be.visible').and('have.text', '♥').and('have.class', 'claim-suit--red');
+    cy.get('[data-test="my-count"]').should('be.visible').and('have.text', '26')
+      .and('have.attr', 'aria-label', '26 cards in your hand');
   });
 });

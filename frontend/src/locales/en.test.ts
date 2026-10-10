@@ -83,6 +83,8 @@ describe('English messages', () => {
   it('givenBullshitUiMessages_thenPluralFormsExistForPlayersAndCards', () => {
     expect(messagesEn.bullshitUi.lobby.waitingForPlayers.one).toContain('{n}');
     expect(messagesEn.bullshitUi.lobby.waitingForPlayers.other).toContain('{n}');
+    expect(messagesEn.bullshitUi.table.myCards.one).toContain('{n}');
+    expect(messagesEn.bullshitUi.table.myCards.other).toContain('{n}');
     expect(messagesEn.bullshitUi.table.playedFaceDown.one).toContain('{n}');
     expect(messagesEn.bullshitUi.table.playedFaceDown.other).toContain('{n}');
   });

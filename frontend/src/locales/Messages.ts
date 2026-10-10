@@ -109,6 +109,7 @@ export interface BullshitUiMessages {
   };
   table: {
     claim: string;
+    myCards: PluralForms;               // '{n}' = cards in my hand (accessible name of my counter)
     cardLabel: string;                 // '{rank}', '{suit}': accessible name of a hand card
     discardAs: string;                 // '{target}'
     callBullshit: string;
