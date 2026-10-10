@@ -7,7 +7,9 @@ import org.kevinkib.cards.domain.Card;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.random.RandomGenerator;
 
 /**
@@ -19,6 +21,7 @@ public final class ProbabilisticBotStrategy implements BotStrategy {
 
     private static final BotDecision PASS = new BotDecision.Pass();
     private static final int HORIZON = 64;
+    private static final int PLANNING_HAND = 8;
 
     private final ClaimMode claimMode;
     private final RandomGenerator random;
@@ -32,13 +35,35 @@ public final class ProbabilisticBotStrategy implements BotStrategy {
 
     @Override
     public BotDecision decide(BotObservation observation, BotMemory memory) {
-        if (observation.can(Action.CALL_BULLSHIT) && shouldCall(observation, memory)) {
+        if (canWinNow(observation)) {
+            return new BotDecision.Discard(observation.hand());
+        }
+        if (observation.can(Action.CALL_BULLSHIT)
+                && (mustCallInsteadOfLosingLastCard(observation) || shouldCall(observation, memory))) {
             return new BotDecision.CallBullshit();
         }
         if (observation.can(Action.DISCARD) && !observation.hand().isEmpty()) {
             return new BotDecision.Discard(chooseCards(observation));
         }
         return PASS;
+    }
+
+    /**
+     * Playing the whole hand honestly wins on the spot: the next seat can only challenge a true claim
+     * (which ends the game in the bot's favour) or decline it (which does the same).
+     */
+    private boolean canWinNow(BotObservation obs) {
+        return obs.can(Action.DISCARD) && obs.pendingWinner().isEmpty() && !obs.hand().isEmpty() && obs.hand().size() <= tuning.maxCardsPerPlay()
+                && claimMode.matches(obs.hand(), obs.currentTarget());
+    }
+
+    /**
+     * Lying with the last card hands the next seat a certain challenge, so a bot holding one card
+     * that cannot be played honestly challenges the claim instead of playing it.
+     */
+    private boolean mustCallInsteadOfLosingLastCard(BotObservation obs) {
+        return obs.can(Action.DISCARD) && obs.hand().size() == 1
+                && !matches(obs.hand().get(0), obs.currentTarget());
     }
 
     // ---- challenge ---------------------------------------------------------------------------
@@ -60,7 +85,17 @@ public final class ProbabilisticBotStrategy implements BotStrategy {
         int handBefore = Math.min(obs.handCounts().getOrDefault(claim.claimant(), 0) + claim.count(), unseen);
         int known = memory.knownMatches(claim.claimant(), claim.target(), claimMode);
         known = Math.min(known, Math.min(matching, handBefore));
-        return PlausibilityEstimator.probabilityTrue(claim.count(), matching, known, unseen, handBefore);
+        return PlausibilityEstimator.probabilityGenuine(claim.count(), matching, known, unseen, handBefore, priorFor(claim.count()));
+    }
+
+    private PlausibilityEstimator.ClaimPrior priorFor(int claimedCount) {
+        double liar = switch (claimedCount) {
+            case 1 -> tuning.lieOneCardProbability();
+            case 2 -> tuning.lieTwoCardsProbability();
+            case 3 -> 1.0 - tuning.lieOneCardProbability() - tuning.lieTwoCardsProbability();
+            default -> 0.0;
+        };
+        return new PlausibilityEstimator.ClaimPrior(tuning.honestBluffProbability(), liar, tuning.maxCardsPerPlay());
     }
 
     // ---- play --------------------------------------------------------------------------------
@@ -75,7 +110,7 @@ public final class ProbabilisticBotStrategy implements BotStrategy {
         }
 
         if (matching.isEmpty()) {
-            return lie(hand, target);
+            return lie(hand, target, obs.handCounts().size());
         }
         if (others.isEmpty() && hand.size() <= tuning.maxCardsPerPlay()) {
             return new ArrayList<>(hand);
@@ -87,12 +122,12 @@ public final class ProbabilisticBotStrategy implements BotStrategy {
         boolean bluff = random.nextDouble() < tuning.honestBluffProbability();
         List<Card> play = new ArrayList<>(matching);
         if (bluff && !others.isEmpty()) {
-            play.add(latestNeeded(others, target).get(0));
+            play.add(latestNeeded(others, target, obs.handCounts().size()).get(0));
         }
         return play;
     }
 
-    private List<Card> lie(List<Card> hand, ClaimTarget target) {
+    private List<Card> lie(List<Card> hand, ClaimTarget target, int seats) {
         double draw = random.nextDouble();
         int count;
         if (draw < tuning.lieOneCardProbability()) {
@@ -102,26 +137,78 @@ public final class ProbabilisticBotStrategy implements BotStrategy {
         } else {
             count = 3;
         }
-        count = Math.min(count, Math.min(hand.size(), tuning.maxCardsPerPlay()));
-        return new ArrayList<>(latestNeeded(hand, target).subList(0, count));
+        int ceiling = hand.size() > 1 ? hand.size() - 1 : 1; // a lie never empties the hand: it would be challenged for sure
+        count = Math.min(count, Math.min(ceiling, tuning.maxCardsPerPlay()));
+        if (hand.size() <= PLANNING_HAND) {
+            return planEndgameLie(hand, target, seats, count);
+        }
+        return new ArrayList<>(latestNeeded(hand, target, seats).subList(0, count));
+    }
+
+    /**
+     * A small hand can only be emptied by an honest last play, so it picks the card group to finish
+     * with: the one whose target lands on the bot's own turn right after the other cards have been
+     * lied away, one or a few per turn. The cards outside that group are what the lie gets rid of.
+     */
+    private List<Card> planEndgameLie(List<Card> hand, ClaimTarget target, int seats, int drawnCount) {
+        Map<Integer, List<Card>> groups = new HashMap<>();
+        for (Card card : hand) {
+            groups.computeIfAbsent(turnsUntilNeeded(card, target, seats), k -> new ArrayList<>()).add(card);
+        }
+        int bestTurns = -1;
+        int bestCost = Integer.MAX_VALUE;
+        for (Map.Entry<Integer, List<Card>> group : groups.entrySet()) {
+            int turns = group.getKey();
+            int size = group.getValue().size();
+            if (turns > HORIZON || size > tuning.maxCardsPerPlay()) {
+                continue;
+            }
+            int burn = hand.size() - size;
+            int cost = Math.abs(turns - 1 - burn);
+            if (cost < bestCost || (cost == bestCost && turns < bestTurns)) {
+                bestCost = cost;
+                bestTurns = turns;
+            }
+        }
+        if (bestTurns < 0) {
+            return new ArrayList<>(latestNeeded(hand, target, seats).subList(0, drawnCount));
+        }
+
+        List<Card> keep = groups.get(bestTurns);
+        List<Card> burnable = new ArrayList<>(hand);
+        burnable.removeAll(keep);
+        if (burnable.isEmpty()) {
+            return new ArrayList<>(keep.subList(0, 1));
+        }
+        int perTurn = (burnable.size() + bestTurns - 1) / bestTurns;
+        int count = Math.min(burnable.size(), Math.min(Math.max(1, perTurn), tuning.maxCardsPerPlay()));
+        return new ArrayList<>(latestNeeded(burnable, target, seats).subList(0, count));
     }
 
     /** Cards ordered by how long until their own target comes up: the longest wait first. */
-    private List<Card> latestNeeded(List<Card> cards, ClaimTarget current) {
+    private List<Card> latestNeeded(List<Card> cards, ClaimTarget current, int seats) {
         List<Card> sorted = new ArrayList<>(cards);
-        sorted.sort(Comparator.comparingInt((Card card) -> stepsUntilNeeded(card, current)).reversed());
+        sorted.sort(Comparator.comparingInt((Card card) -> turnsUntilNeeded(card, current, seats)).reversed());
         return sorted;
     }
 
-    private int stepsUntilNeeded(Card card, ClaimTarget current) {
-        ClaimTarget target = claimMode.next(current);
-        for (int steps = 0; steps < HORIZON; steps++) {
-            if (matches(card, target)) {
-                return steps;
+    /**
+     * How many of the bot's own turns from now until a card's target is claimed on its turn, assuming
+     * nobody challenges in between: the target moves one step per play, so with {@code seats} players
+     * the bot meets targets {@code seats}, {@code 2 * seats}... steps after the current one. A card
+     * whose target never lands on the bot's turns counts as {@code HORIZON}.
+     */
+    private int turnsUntilNeeded(Card card, ClaimTarget current, int seats) {
+        ClaimTarget target = current;
+        for (int turns = 1; turns <= HORIZON; turns++) {
+            for (int step = 0; step < seats; step++) {
+                target = claimMode.next(target);
             }
-            target = claimMode.next(target);
+            if (matches(card, target)) {
+                return turns;
+            }
         }
-        return HORIZON;
+        return HORIZON + 1;
     }
 
     private boolean matches(Card card, ClaimTarget target) {

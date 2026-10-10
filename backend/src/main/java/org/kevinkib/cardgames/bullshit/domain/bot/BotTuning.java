@@ -9,8 +9,13 @@ public record BotTuning(
         double lieTwoCardsProbability,
         int maxCardsPerPlay) {
 
-    /** The single difficulty level. */
-    public static final BotTuning DEFAULT = new BotTuning(0.05, 0.95, 0.15, 0.70, 0.25, 4);
+    /**
+     * The single difficulty level. The call probability is capped well below 1 on purpose: a bot that
+     * challenged every claim it doubts would pick up and hand back the pile forever, so that a game
+     * between bots never ends (measured in {@code BotEndgameSimulationTest}); a lie slips through often
+     * enough for hands to shrink.
+     */
+    public static final BotTuning DEFAULT = new BotTuning(0.05, 0.30, 0.15, 0.70, 0.25, 4);
 
     public BotTuning {
         if (minCallProbability < 0 || maxCallProbability > 1 || minCallProbability > maxCallProbability) {
