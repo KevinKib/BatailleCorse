@@ -95,6 +95,11 @@ const myCardCount = computed(() => store.game?.myHand.length ?? 0);
 const pileWell = ref<HTMLElement | null>(null);
 const { enabled: soundEnabled, toggle: toggleSound } = useSoundPreference();
 
+// The face-down pile card itself (a direct child: never a card of the verdict overlay, which sits
+// in the same well).
+const pileCardEl = () => pileWell.value?.querySelector<HTMLElement>(':scope > .playing_card') ?? pileWell.value;
+const opponentsRing = ref<HTMLElement | null>(null);
+
 function discard() {
   const hand = store.game?.myHand ?? [];
   const sources = store.selectedCards
@@ -102,8 +107,7 @@ function discard() {
     .filter(i => i >= 0)
     .map(i => document.querySelector<HTMLElement>(`[data-test="hand-card-${i}"]`))
     .filter((el): el is HTMLElement => el !== null);
-  const pileCard = pileWell.value?.querySelector('.playing_card') ?? pileWell.value;
-  flyCardsToPile(sources, pileCard?.getBoundingClientRect() ?? null, { reduceMotion: prefersReducedMotion() });
+  flyCardsToPile(sources, pileCardEl()?.getBoundingClientRect() ?? null, { reduceMotion: prefersReducedMotion() });
   store.discard();
 }
 
@@ -111,12 +115,13 @@ function discard() {
 // that seat (or to my own zone). Visual only, like the discard flight: the counts come from the state.
 const myZone = ref<HTMLElement | null>(null);
 watch(() => store.reveal, (current, previous) => {
-  if (current || !previous) return;
+  // Only when a verdict ends (shown, then cleared); a new verdict replacing it, or a game that is
+  // no longer being played, does not fly anything.
+  if (current || !previous || store.phase !== 'playing') return;
   const destination = previous.pickerSeat === store.mySeat
     ? myZone.value
-    : document.querySelector<HTMLElement>(`[data-seat="${previous.pickerSeat}"] .seat-card`);
-  const pileCard = pileWell.value?.querySelector<HTMLElement>('.playing_card') ?? pileWell.value;
-  flyPileToTaker(pileCard, destination?.getBoundingClientRect() ?? null, previous.revealedCards.length,
+    : opponentsRing.value?.querySelector<HTMLElement>(`[data-seat="${previous.pickerSeat}"] .seat-card`);
+  flyPileToTaker(pileCardEl(), destination?.getBoundingClientRect() ?? null, previous.revealedCards.length,
     { reduceMotion: prefersReducedMotion() });
 });
 
@@ -133,14 +138,16 @@ watch(online, (isOnline, wasOnline) => {
 });
 
 // Discard invites a click only when it can be used: my turn, cards picked, connected.
-const canDiscardNow = computed(() => store.isMyTurn && store.selectedCards.length > 0 && online.value);
+const canDiscardNow = computed(() =>
+  store.canDiscard && store.isMyTurn && store.selectedCards.length > 0 && online.value);
 const canCallNow = computed(() => store.canCallBullshit && online.value);
 
 // Keyboard shortcuts mirror the buttons and the hand (digits follow the displayed, sorted order).
 useBullshitHotkeys({
   canDiscard: () => store.phase === 'playing' && canDiscardNow.value,
   canCall: () => store.phase === 'playing' && canCallNow.value,
-  handSize: () => (store.phase === 'playing' ? myCardCount.value : 0),
+  // Cards are only picked to be played: on my turn, with DISCARD allowed, connected.
+  handSize: () => (store.phase === 'playing' && store.isMyTurn && store.canDiscard && online.value ? myCardCount.value : 0),
   discard,
   call: () => store.callBullshit(),
   toggleCard: (i) => {
@@ -148,7 +155,8 @@ useBullshitHotkeys({
     if (card) store.toggleCard(card);
   },
 });
-const keysHint = format(ui.table.keysHint, { discard: DISCARD_KEY.toUpperCase(), call: CALL_KEY.toUpperCase() });
+const keysHint = computed(() =>
+  format(ui.table.keysHint, { discard: DISCARD_KEY.toUpperCase(), call: CALL_KEY.toUpperCase() }));
 
 // End screen. A win by forfeit says how the opponent left; a win with cards still in hand and no
 // known reason (the event was missed, e.g. after a reload) still must not claim an empty hand.
@@ -241,7 +249,7 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
       </div>
 
       <div class="table-frame">
-        <div class="opponents-ring">
+        <div ref="opponentsRing" class="opponents-ring">
           <div
             v-for="(opp, i) in opponents"
             :key="opp.id"

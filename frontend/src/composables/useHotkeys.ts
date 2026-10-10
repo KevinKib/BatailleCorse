@@ -12,15 +12,15 @@ export function useHotkeys(
   onSlap: () => void,
   getSendKeys: () => string[] = () => ['q'],
   getSlapKeys: () => string[] = () => ['d'],
-  // Called with every other key (lower-cased), for games that need more than two actions.
-  onOtherKey?: (key: string) => void,
+  // Called with every other key (lower-cased) and its physical code (layout independent), for games that need more than two actions.
+  onOtherKey?: (key: string, code: string) => void,
 ) {
   function handleKey(e: KeyboardEvent) {
     if (isIgnored(e)) return;
     const key = e.key.toLowerCase();
     if (getSendKeys().includes(key)) onSend();
     else if (getSlapKeys().includes(key)) onSlap();
-    else onOtherKey?.(key);
+    else onOtherKey?.(key, e.code);
   }
 
   onMounted(() => document.addEventListener('keyup', handleKey));

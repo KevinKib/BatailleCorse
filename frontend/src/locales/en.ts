@@ -155,7 +155,7 @@ export const messagesEn: Messages = {
       yourTurn: 'Your turn',
       verdictAnnouncement: '{verdict}. {caption}',
       shortcut: 'Shortcut: {key}',
-      keysHint: 'Keys: 1–9 pick a card · {discard} discard · {call} call Bullshit',
+      keysHint: 'Keys: 1–0 first 10 cards · {discard} discard · {call} call Bullshit',
       offline: 'Connection lost. Reconnecting…',
     },
     end: {

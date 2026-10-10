@@ -84,6 +84,22 @@ describe('BullshitGameScreen pile animation and sound', () => {
     wrapper.unmount();
   });
 
+  it('shortcuts follow the buttons: no discard when the server does not allow DISCARD', async () => {
+    const { store, wrapper } = setup();
+    const discard = vi.spyOn(store, 'discard').mockImplementation(() => {});
+    const key = (k: string, code: string) =>
+      document.dispatchEvent(new KeyboardEvent('keyup', { key: k, code, bubbles: true }));
+    key('&', 'Digit1');
+    await nextTick();
+    expect(store.selectedCards).toHaveLength(1);
+    store.applyEvent({ type: 'state-update', state: { ...state(0), availableActions: [] } as BullshitState });
+    await nextTick();
+    key('d', 'KeyD');
+    expect(discard).not.toHaveBeenCalled();
+    expect(wrapper.get('[data-test="discard"]').attributes('disabled')).toBeDefined();
+    wrapper.unmount();
+  });
+
   describe('pile taken by the contested player', () => {
     const call = (pickerSeat: number) => ({
       type: 'event' as const, eventType: 'CALL_BULLSHIT',

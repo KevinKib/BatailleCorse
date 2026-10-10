@@ -87,7 +87,7 @@ const cardLabel = (card: Card) =>
   padding: 0;
   cursor: pointer;
   border-radius: 6%;
-  transition: transform 0.18s cubic-bezier(0.34, 1.4, 0.64, 1), filter 0.18s ease;
+  transition: transform 0.16s ease-out, box-shadow 0.16s ease-out;
 }
 /* Neighbours overlap by (card width - step); a negative margin, or the plain gap when spaced. */
 .hand-card + .hand-card { margin-left: calc(var(--step) - var(--card-w)); }
@@ -96,7 +96,7 @@ const cardLabel = (card: Card) =>
    it overlaps and make them untappable in a crowded hand. */
 .hand-card.selected {
   transform: translateY(calc(-1 * var(--space-3)));
-  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.45));
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
 }
 .hand-card :deep(.playing_card) {
   display: block;

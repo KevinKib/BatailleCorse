@@ -13,8 +13,11 @@ function setup(over: Partial<Parameters<typeof useBullshitHotkeys>[0]> = {}) {
   }), { attachTo: document.body });
   return { actions, wrapper };
 }
+// QWERTY by default: digits come from the Digit row, letters from their Key code.
 const press = (key: string, init: KeyboardEventInit = {}, target: EventTarget = document.body) =>
-  target.dispatchEvent(new KeyboardEvent('keyup', { key, bubbles: true, ...init }));
+  target.dispatchEvent(new KeyboardEvent('keyup', {
+    key, code: /^\d$/.test(key) ? `Digit${key}` : `Key${key.toUpperCase()}`, bubbles: true, ...init,
+  }));
 
 describe('useBullshitHotkeys', () => {
   afterEach(() => { document.body.innerHTML = ''; });
@@ -39,6 +42,14 @@ describe('useBullshitHotkeys', () => {
     const { actions, wrapper } = setup({ handSize: () => 10 });
     press('1'); press('9'); press('0');
     expect(actions.toggleCard.mock.calls.map(c => c[0])).toEqual([0, 8, 9]);
+    wrapper.unmount();
+  });
+
+  it('picks cards on an AZERTY keyboard, where the digit row types symbols', () => {
+    const { actions, wrapper } = setup({ handSize: () => 10 });
+    press('&', { code: 'Digit1' }); press('é', { code: 'Digit2' }); press('à', { code: 'Digit0' });
+    press('7', { code: 'Numpad7' });
+    expect(actions.toggleCard.mock.calls.map(c => c[0])).toEqual([0, 1, 9, 6]);
     wrapper.unmount();
   });
 
