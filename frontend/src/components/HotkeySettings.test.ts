@@ -1,12 +1,15 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { mount } from '@vue/test-utils';
+import { ref } from 'vue';
 import HotkeySettings from './HotkeySettings.vue';
-import { useHotkeySettings } from '../../composables/useHotkeySettings';
+import { useHotkeySettings } from '../composables/useHotkeySettings';
+
+const labels = { discard: 'Discard', call: 'Call Bullshit' };
 
 function setup() {
   localStorage.clear();
   const settings = useHotkeySettings();
-  const wrapper = mount(HotkeySettings, { props: { settings }, attachTo: document.body });
+  const wrapper = mount(HotkeySettings, { props: { settings, labels, note: 'Digits are fixed.' }, attachTo: document.body });
   return { settings, wrapper };
 }
 const find = (w: ReturnType<typeof setup>['wrapper'], id: string) => w.find(`[data-test="${id}"]`);
@@ -84,6 +87,26 @@ describe('HotkeySettings', () => {
     await find(wrapper, 'hotkeys-reset').trigger('click');
     expect(settings.callKey.value).toBe('b');
     expect(find(wrapper, 'hotkey-call-key').text()).toBe('B');
+    wrapper.unmount();
+  });
+
+  it('lists the actions the game provides, with its own labels and without a master switch when there is none', async () => {
+    localStorage.clear();
+    const send = ref('q');
+    const slap = ref('d');
+    const settings = {
+      actions: [{ id: 'send', key: send }, { id: 'slap', key: slap }],
+      setKey: () => ({ ok: true as const, key: 'x' }),
+      reset: () => { send.value = 'q'; slap.value = 'd'; },
+    };
+    const wrapper = mount(HotkeySettings, {
+      props: { settings, labels: { send: 'Send card', slap: 'Slap pile' } }, attachTo: document.body });
+    await find(wrapper, 'hotkeys-button').trigger('click');
+    expect(find(wrapper, 'hotkeys-enabled').exists()).toBe(false);
+    expect(find(wrapper, 'hotkey-send-key').text()).toBe('Q');
+    expect(find(wrapper, 'hotkey-slap-key').text()).toBe('D');
+    expect(wrapper.text()).toContain('Send card');
+    expect(wrapper.text()).toContain('Slap pile');
     wrapper.unmount();
   });
 });

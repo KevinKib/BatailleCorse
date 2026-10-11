@@ -16,6 +16,7 @@ import org.kevinkib.cards.domain.pile.Pile;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 public class BatailleCorse implements Game {
 
@@ -26,6 +27,7 @@ public class BatailleCorse implements Game {
     private Penality penality;
     private IndexHandler indexHandler;
     private Result result;
+    private int version;
 
     public BatailleCorse(GameId id, int nbPlayers) {
         this.id = id;
@@ -52,6 +54,7 @@ public class BatailleCorse implements Game {
 
             result = Result.update(players, pile, slapRules);
             indexHandler.update();
+            version++;
         } catch (NoCardsException e) {
             throw new IllegalStateException("A player should always have cards after the no cards check.");
         } catch (FullCentralPileException e) {
@@ -74,6 +77,7 @@ public class BatailleCorse implements Game {
             penality.apply(player, pile);
         }
         result = Result.update(players, pile, slapRules);
+        version++;
 
         return successfulSlap;
     }
@@ -86,6 +90,7 @@ public class BatailleCorse implements Game {
 
         indexHandler.setCurrentPlayer(players.indexOf(player));
         result = Result.update(players, pile, slapRules);
+        version++;
     }
 
     // No-op when already finished: a natural win can race the disconnect-forfeit timer.
@@ -103,6 +108,28 @@ public class BatailleCorse implements Game {
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Unknown seat " + loser));
         this.result = new Result(winner);
+        version++;
+    }
+
+    /** Counts the state changes (send, slap, grab, forfeit), so a delayed action can tell the state moved on. */
+    public synchronized int version() {
+        return version;
+    }
+
+    /**
+     * The player entitled to collect the pile once the chances after an honour card are spent, or empty
+     * when nobody may grab (pile not full, empty, or game over).
+     */
+    public synchronized Optional<Player> autoGrabPlayer() {
+        if (isFinished() || !pile.isGrabbableByAnyPlayer()) {
+            return Optional.empty();
+        }
+        return Optional.ofNullable(pile.getPlayerThatAddedLastHonourCard());
+    }
+
+    /** Whether a slap right now would be valid under the rules in force (the game is not changed). */
+    public synchronized boolean slapWouldSucceed() {
+        return !isFinished() && !pile.isEmpty() && slapRules.applies(pile);
     }
 
     private void checkIfPlayerCanSend(Player player) throws NotPlayersTurnException, FullCentralPileException, FinishedGameException {

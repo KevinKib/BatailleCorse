@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { onBeforeUnmount, ref, watch } from 'vue';
 import { Button } from 'primevue';
-import { useI18n } from '../../composables/useI18n';
-import { format } from '../../locales/format';
-import type { HotkeyAction, HotkeyRejection, HotkeySettingsApi } from '../../composables/useHotkeySettings';
+import { useI18n } from '../composables/useI18n';
+import { format } from '../locales/format';
+import type { HotkeyPanelApi, HotkeyRejection } from '../composables/useHotkeySettings';
 
-const props = defineProps<{ settings: HotkeySettingsApi }>();
-const ui = useI18n().bullshitUi.hotkeys;
+const props = defineProps<{ settings: HotkeyPanelApi; labels: Record<string, string>; note?: string }>();
+const ui = useI18n().hotkeys;
 
 const open = ref(false);
-const capturing = ref<HotkeyAction | null>(null);
+const capturing = ref<string | null>(null);
 const error = ref<HotkeyRejection | null>(null);
 
 // The key press that sets a key is swallowed on the way down and on the way up, so it never
@@ -28,7 +28,7 @@ function onCaptureKeyDown(e: KeyboardEvent) {
 }
 function swallowKeyUp(e: KeyboardEvent) { e.stopPropagation(); }
 
-function startCapture(action: HotkeyAction) {
+function startCapture(action: string) {
   stopCapture();
   error.value = null;
   capturing.value = action;
@@ -50,12 +50,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('keyup', swallowKeyUp, true);
 });
 
-const rows = [
-  { action: 'discard' as const, label: ui.discard },
-  { action: 'call' as const, label: ui.call },
-];
-const keyOf = (action: HotkeyAction) =>
-  (action === 'discard' ? props.settings.discardKey.value : props.settings.callKey.value).toUpperCase();
+const keyOf = (id: string) => (props.settings.actions.find((a) => a.id === id)?.key.value ?? '').toUpperCase();
 </script>
 
 <template>
@@ -73,6 +68,7 @@ const keyOf = (action: HotkeyAction) =>
       @click="open = !open" />
     <div v-if="open" id="hotkeys-panel" class="panel" data-test="hotkeys-panel" role="group" :aria-label="ui.title">
       <Button
+        v-if="settings.enabled"
         data-test="hotkeys-enabled"
         class="enabled-switch"
         severity="secondary"
@@ -80,21 +76,21 @@ const keyOf = (action: HotkeyAction) =>
         :icon="settings.enabled.value ? 'pi pi-check-square' : 'pi pi-stop'"
         :label="ui.enabled"
         :aria-pressed="settings.enabled.value"
-        @click="settings.toggleEnabled()" />
-      <template v-if="settings.enabled.value">
-        <div v-for="row in rows" :key="row.action" class="row">
-          <span class="action-name">{{ row.label }}</span>
-          <kbd :data-test="`hotkey-${row.action}-key`" class="key">{{ keyOf(row.action) }}</kbd>
+        @click="settings.toggleEnabled?.()" />
+      <template v-if="settings.enabled?.value ?? true">
+        <div v-for="action in settings.actions" :key="action.id" class="row">
+          <span class="action-name">{{ labels[action.id] }}</span>
+          <kbd :data-test="`hotkey-${action.id}-key`" class="key">{{ keyOf(action.id) }}</kbd>
           <Button
-            :data-test="`hotkey-${row.action}-change`"
+            :data-test="`hotkey-${action.id}-change`"
             severity="secondary"
             size="small"
             variant="outlined"
-            :label="capturing === row.action ? ui.listening : ui.change"
-            :aria-label="format(ui.changeAria, { action: row.label })"
-            @click="startCapture(row.action)" />
+            :label="capturing === action.id ? ui.listening : ui.change"
+            :aria-label="format(ui.changeAria, { action: labels[action.id] })"
+            @click="startCapture(action.id)" />
         </div>
-        <p class="note">{{ ui.cardsNote }}</p>
+        <p v-if="note" class="note">{{ note }}</p>
         <p v-if="error" class="error" data-test="hotkeys-error" role="alert">{{ ui.errors[error] }}</p>
         <Button
           data-test="hotkeys-reset"

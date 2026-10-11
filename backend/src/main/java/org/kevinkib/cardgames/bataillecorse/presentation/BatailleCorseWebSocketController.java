@@ -34,11 +34,17 @@ public class BatailleCorseWebSocketController {
 
     private final SessionService sessionService;
     private final GameMessagingService gameMessagingService;
+    private final BatailleCorseGameActions actions;
+    private final BatailleCorseStateBroadcaster broadcaster;
 
     public BatailleCorseWebSocketController(SessionService sessionService,
-                                            GameMessagingService gameMessagingService) {
+                                            GameMessagingService gameMessagingService,
+                                            BatailleCorseGameActions actions,
+                                            BatailleCorseStateBroadcaster broadcaster) {
         this.sessionService = sessionService;
         this.gameMessagingService = gameMessagingService;
+        this.actions = actions;
+        this.broadcaster = broadcaster;
     }
 
     @MessageMapping("/create")
@@ -84,8 +90,7 @@ public class BatailleCorseWebSocketController {
             }
             BatailleCorse game = (BatailleCorse) sessionService.startGame(gameId, payload.token());
             sessionService.touch(gameId);
-            gameMessagingService.sendToGame(payload.gameId(), new SuccessResponse(
-                    type, new EmptyEventData(), "Game started.", BatailleCorseDto.from(game)));
+            broadcaster.broadcast(game, type, new EmptyEventData(), "Game started.");
         } catch (Exception e) {
             System.err.println(e.getMessage());
             gameMessagingService.sendToSeat(gameId, actor, new ErrorResponse(type, e.getMessage(), null));
@@ -94,98 +99,42 @@ public class BatailleCorseWebSocketController {
 
     @MessageMapping("/send")
     public void send(GameActionPayload payload) {
-        BatailleCorseEventType eventType = BatailleCorseEventType.SEND;
-
-        GameId gameId = new GameId(payload.gameId());
-        BatailleCorse batailleCorse = sessionService.getGame(gameId, BatailleCorse.class);
-
-        Response response;
-        try {
-            PlayerId playerId = sessionService
-                    .findPlayerIdByToken(gameId, payload.token())
-                    .orElseThrow(InvalidTokenException::new);
-            Player player = batailleCorse.getPlayerByIndex(playerId.id());
-
-            CardDto cardDto = CardDto.from(player.getCardOnTop());
-            batailleCorse.send(player);
-            sessionService.touch(gameId);
-
-            BatailleCorseDto batailleCorseDto = BatailleCorseDto.from(batailleCorse);
-            String message = "Player " + player.id() + " sent " + cardDto.getName() + ".";
-            SendEventData eventData = new SendEventData(PlayerIdDto.from(player));
-            response = new SuccessResponse(eventType.toString(), eventData, message, batailleCorseDto);
-
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
-            BatailleCorseDto batailleCorseDto = BatailleCorseDto.from(batailleCorse);
-            response = new ErrorResponse(eventType.toString(), e.getMessage(), batailleCorseDto);
-        }
-
-        gameMessagingService.sendToGame(payload.gameId(), response);
+        act(payload, BatailleCorseEventType.SEND, actions::send);
     }
 
     @MessageMapping("/slap")
     public void slap(GameActionPayload payload) {
-        BatailleCorseEventType eventType = BatailleCorseEventType.SLAP;
-
-        GameId gameId = new GameId(payload.gameId());
-        BatailleCorse batailleCorse = sessionService.getGame(gameId, BatailleCorse.class);
-
-        Response response;
-        try {
-            PlayerId playerId = sessionService
-                    .findPlayerIdByToken(gameId, payload.token())
-                    .orElseThrow(InvalidTokenException::new);
-            Player player = batailleCorse.getPlayerByIndex(playerId.id());
-
-            boolean successfulSlap = batailleCorse.slap(player);
-            sessionService.touch(gameId);
-            String message = successfulSlap
-                    ? "Player " + player.id() + " slapped and won."
-                    : "Player " + player.id() + " slapped, lost, and received a penality.";
-
-            BatailleCorseDto batailleCorseDto = BatailleCorseDto.from(batailleCorse);
-            SlapEventData eventData = new SlapEventData(successfulSlap, PlayerIdDto.from(player));
-            response = new SuccessResponse(eventType.toString(), eventData, message, batailleCorseDto);
-
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
-            BatailleCorseDto batailleCorseDto = BatailleCorseDto.from(batailleCorse);
-            response = new ErrorResponse(eventType.toString(), e.getMessage(), batailleCorseDto);
-        }
-
-        gameMessagingService.sendToGame(payload.gameId(), response);
+        act(payload, BatailleCorseEventType.SLAP, actions::slap);
     }
 
     @MessageMapping("/grab")
     public void grab(GameActionPayload payload) {
-        BatailleCorseEventType eventType = BatailleCorseEventType.GRAB;
+        act(payload, BatailleCorseEventType.GRAB, actions::grab);
+    }
 
+    @FunctionalInterface
+    private interface Use {
+        void run(GameId gameId, PlayerId playerId) throws Exception;
+    }
+
+    /**
+     * Authenticates the token, runs the use case (which broadcasts on success) and, on any failure,
+     * answers the whole game with an error response carrying the unchanged state.
+     */
+    private void act(GameActionPayload payload, BatailleCorseEventType eventType, Use use) {
         GameId gameId = new GameId(payload.gameId());
         BatailleCorse batailleCorse = sessionService.getGame(gameId, BatailleCorse.class);
 
-        Response response;
         try {
             PlayerId playerId = sessionService
                     .findPlayerIdByToken(gameId, payload.token())
                     .orElseThrow(InvalidTokenException::new);
-            Player player = batailleCorse.getPlayerByIndex(playerId.id());
-
-            batailleCorse.grab(player);
-            sessionService.touch(gameId);
-
-            BatailleCorseDto batailleCorseDto = BatailleCorseDto.from(batailleCorse);
-            String message = "Player " + player.id() + " grabbed the pile. ";
-            GrabEventData eventData = new GrabEventData(PlayerIdDto.from(player));
-            response = new SuccessResponse(eventType.toString(), eventData, message, batailleCorseDto);
-
+            use.run(gameId, playerId);
         } catch (Exception e) {
             System.err.println(e.getMessage());
-            BatailleCorseDto batailleCorseDto = BatailleCorseDto.from(batailleCorse);
-            response = new ErrorResponse(eventType.toString(), e.getMessage(), batailleCorseDto);
+            gameMessagingService.sendToGame(payload.gameId(),
+                    new ErrorResponse(eventType.toString(), e.getMessage(), BatailleCorseDto.from(batailleCorse)));
         }
-
-        gameMessagingService.sendToGame(payload.gameId(), response);
     }
 
     @MessageMapping("/rematch")
@@ -198,24 +147,17 @@ public class BatailleCorseWebSocketController {
 
             boolean unanimous = sessionService.requestRematch(gameId, playerId);
 
-            Response response;
             if (unanimous) {
                 BatailleCorse fresh = (BatailleCorse) sessionService.rematch(gameId);
-                response = new SuccessResponse(
-                        LifecycleEventType.REMATCH.toString(),
+                broadcaster.broadcast(fresh, LifecycleEventType.REMATCH.toString(),
                         new RematchEventData(RematchStatus.STARTED, new PlayerIdDto(String.valueOf(playerId.id()))),
-                        "Rematch started.",
-                        BatailleCorseDto.from(fresh));
+                        "Rematch started.");
             } else {
                 BatailleCorse current = sessionService.getGame(gameId, BatailleCorse.class);
-                response = new SuccessResponse(
-                        LifecycleEventType.REMATCH.toString(),
+                broadcaster.broadcast(current, LifecycleEventType.REMATCH.toString(),
                         new RematchEventData(RematchStatus.PENDING, new PlayerIdDto(String.valueOf(playerId.id()))),
-                        "Rematch requested.",
-                        BatailleCorseDto.from(current));
+                        "Rematch requested.");
             }
-
-            gameMessagingService.sendToGame(payload.gameId(), response);
         } catch (Exception e) {
             System.err.println(e.getMessage());
         }

@@ -13,7 +13,11 @@ import org.kevinkib.cardgames.sessionmanagement.core.application.GameDirectory;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
 import org.kevinkib.cardgames.sessionmanagement.core.application.port.SessionRepository;
 import org.kevinkib.cardgames.sessionmanagement.core.infrastructure.InMemorySessionRepository;
+import org.kevinkib.cardgames.bataillecorse.domain.bot.BatailleCorseBotTier;
+import org.kevinkib.cardgames.bataillecorse.presentation.BatailleCorseGameActions;
 import org.kevinkib.cardgames.bataillecorse.presentation.BatailleCorseLifecycleBroadcaster;
+import org.kevinkib.cardgames.bataillecorse.presentation.BatailleCorseStateBroadcaster;
+import org.kevinkib.cardgames.bataillecorse.presentation.bot.BatailleCorseBotCoordinator;
 import org.kevinkib.cardgames.bullshit.domain.bot.BotTuning;
 import org.kevinkib.cardgames.bullshit.domain.bot.ProbabilisticBotStrategy;
 import org.kevinkib.cardgames.bullshit.presentation.BullshitGameActions;
@@ -45,6 +49,7 @@ import org.kevinkib.cardgames.presentation.WebSocketDisconnectListener;
 import java.util.List;
 import java.util.random.RandomGenerator;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -53,6 +58,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 import java.time.Clock;
+import java.time.Duration;
 
 @Configuration
 @EnableScheduling
@@ -123,8 +129,42 @@ public class AppConfig {
     }
 
     @Bean
-    public GameLifecycleBroadcaster batailleCorseLifecycleBroadcaster(GameMessagingService gameMessagingService) {
-        return new BatailleCorseLifecycleBroadcaster(gameMessagingService, forfeitLog());
+    public BatailleCorseStateBroadcaster batailleCorseStateBroadcaster(GameMessagingService gameMessagingService) {
+        return new BatailleCorseStateBroadcaster(gameMessagingService);
+    }
+
+    @Bean
+    public BatailleCorseGameActions batailleCorseGameActions(BatailleCorseStateBroadcaster batailleCorseStateBroadcaster) {
+        return new BatailleCorseGameActions(sessionService(), batailleCorseStateBroadcaster);
+    }
+
+    @Bean
+    public GameLifecycleBroadcaster batailleCorseLifecycleBroadcaster(
+            BatailleCorseStateBroadcaster batailleCorseStateBroadcaster) {
+        return new BatailleCorseLifecycleBroadcaster(batailleCorseStateBroadcaster, forfeitLog());
+    }
+
+    /**
+     * Plays the computer seats of Bataille Corse rooms ({@code bataillecorse.bots.enabled}, on by default).
+     * Each bot reacts after its tier time (400 to 2100 ms, plus or minus 100 ms) plus
+     * {@code bataillecorse.bots.extra-delay-ms}. Unlike Bullshit, the {@code test} profile does not zero the
+     * tier delays, so end-to-end timing matches the former local AI; only the extra delay is tunable.
+     */
+    @Bean
+    @ConditionalOnProperty(name = "bataillecorse.bots.enabled", havingValue = "true", matchIfMissing = true)
+    public BatailleCorseBotCoordinator batailleCorseBotCoordinator(
+            BatailleCorseGameActions batailleCorseGameActions,
+            BatailleCorseStateBroadcaster batailleCorseStateBroadcaster,
+            BotScheduler botScheduler,
+            @Value("${bataillecorse.bots.extra-delay-ms:0}") long extraDelayMillis) {
+        // The jitter of -100..+99 ms around the tier time, as a delay of 0..199 ms added to (time - 100).
+        ThinkingDelay jitter = new UniformThinkingDelay(0, 2L * BatailleCorseBotTier.JITTER_MS - 1,
+                new ThreadLocalRandomGenerator());
+        BatailleCorseBotCoordinator coordinator = new BatailleCorseBotCoordinator(
+                sessionService()::botSeats, botSeatOptions(), gameDirectory(), batailleCorseGameActions,
+                botScheduler, jitter, Duration.ofMillis(extraDelayMillis));
+        batailleCorseStateBroadcaster.addListener(coordinator);
+        return coordinator;
     }
 
     @Bean
