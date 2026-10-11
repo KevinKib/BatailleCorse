@@ -1,8 +1,8 @@
 describe('2-player waiting and names', () => {
   it('keeps the waiting overlay visible after creating a Human game', () => {
     cy.visit('/games/bataillecorse');
-    cy.contains('button', 'New Game').click();
-    cy.url().should('include', '/create');
+    cy.contains('button', 'New game').click();
+    cy.url().should('include', '/new');
 
     cy.contains('button', 'Human').click();
     cy.get('#playerName').type('Alice');
@@ -19,7 +19,9 @@ describe('2-player waiting and names', () => {
 
   it('shows the opponent name once a second player joins', () => {
     cy.visit('/games/bataillecorse');
-    cy.contains('button', 'New Game').click();
+    cy.contains('button', 'New game').click();
+    // Deliberate fixed wait: a create sent before the WebSocket handshake ends throws "no underlying STOMP connection".
+    cy.wait(1500);
     cy.contains('button', 'Human').click();
     cy.get('#playerName').type('Alice');
     cy.contains('button', 'Create Game').click();

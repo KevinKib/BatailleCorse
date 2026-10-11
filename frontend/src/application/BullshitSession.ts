@@ -86,13 +86,14 @@ export default class BullshitSession {
     this.callbacks.onEvent({ type: 'seat-change', seat });
   }
 
-  async hydrate(): Promise<void> {
-    if (!this.gameId || this.myToken === null) return;
+  /** Loads the current state; false when the server no longer knows the game or refuses the token. */
+  async hydrate(): Promise<boolean> {
+    if (!this.gameId || this.myToken === null) return true;
     const res = await fetch(`/api/bullshit/game/${this.gameId}?token=${this.myToken}`);
-    if (res.ok) {
-      const state = await res.json() as BullshitView;
-      this.callbacks.onEvent({ type: 'state-update', state });
-    }
+    if (!res.ok) return false;
+    const state = await res.json() as BullshitView;
+    this.callbacks.onEvent({ type: 'state-update', state });
+    return true;
   }
 
   discard(cards: Card[]): void {

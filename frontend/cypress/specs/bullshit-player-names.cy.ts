@@ -5,8 +5,9 @@ function createRoom(name: string) {
   // Enter through the menu so the WebSocket is connected before we create (see bullshit-table-and-lobby).
   cy.visit('/games');
   cy.get('[data-test="play-bullshit"]').click();
-  cy.url().should('include', '/games/bullshit/create');
   cy.get('[data-test="name"]').type(name);
+  cy.get('[data-test="new-game"]').click();
+  cy.url().should('include', '/games/bullshit/new');
   // Deliberate fixed wait: a create sent before the WebSocket handshake finishes is reported as an error.
   cy.wait(1500);
   cy.get('[data-test="submit"]').click();

@@ -240,7 +240,6 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
       :winner-line="winnerLine"
       :subtitle="endSubtitle"
       :rematch-button="rematchButton"
-      :home-route="{ name: 'games' }"
       :error="store.rematch === 'failed' ? ui.end.rematchFailed : undefined"
       @play-again="store.playAgain()"
     />

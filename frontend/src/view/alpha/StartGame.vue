@@ -17,7 +17,7 @@
 
       <div class="panel-divider" />
 
-      <div v-if="screenMode === 'create'" class="field-group">
+      <div class="field-group">
         <label class="field-label">Opponent</label>
         <div class="opponent-toggle">
           <button
@@ -31,17 +31,6 @@
             @click="vsComputer = true"
           >Computer</button>
         </div>
-      </div>
-
-      <div v-if="screenMode === 'join'" class="field-group">
-        <label class="field-label" for="gameId">Game ID</label>
-        <InputText
-          id="gameId"
-          v-model="joinGameId"
-          placeholder="Paste game ID or link..."
-          class="name-input"
-        />
-        <p v-if="joinError" class="conflict-warning">{{ joinError }}</p>
       </div>
 
       <div class="field-group">
@@ -90,7 +79,7 @@
         </p>
       </div>
 
-      <div class="field-group" v-if="screenMode === 'create' && vsComputer">
+      <div class="field-group" v-if="vsComputer">
         <label class="field-label">Difficulty</label>
         <div class="difficulty-badge" :style="{ color: DIFFICULTY[difficulty].color }">
           {{ DIFFICULTY[difficulty].name }}
@@ -111,7 +100,7 @@
 
       <Button
         class="start-button"
-        :label="screenMode === 'join' ? 'Join Game' : (vsComputer ? 'Deal Cards' : 'Create Game')"
+        :label="vsComputer ? 'Deal Cards' : 'Create Game'"
         icon="pi pi-play"
         severity="success"
         size="large"
@@ -122,12 +111,12 @@
 
       <Button
         class="back-button"
-        label="Back to Lobby"
+        label="Back"
         icon="pi pi-arrow-left"
         severity="secondary"
         size="small"
         text
-        @click="router.push({ name: 'home' })"
+        @click="router.push('/games/bataillecorse')"
       />
 
 
@@ -137,7 +126,7 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
+import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { Button, InputText } from 'primevue';
 
@@ -151,17 +140,8 @@ const batailleCorseStore = useBatailleCorseStore();
 const settingsStore = useSettingsStore();
 const { playerName, sendKey, slapKey, difficulty } = storeToRefs(settingsStore);
 
-const route = useRoute();
-const screenMode = computed<'create' | 'join'>(() =>
-  route.name === 'join' ? 'join' : 'create');
-
 // New Game toggle: false = 2-player vs human (default), true = solo vs computer
 const vsComputer = ref(false);
-
-// Join: the game id to join (pre-filled from the share link)
-const joinGameId = ref<string>((route.params.id as string) ?? '');
-const joinError = ref<string>('');
-
 
 const capturing = ref<'send' | 'slap' | null>(null);
 let currentCaptureListener: ((e: KeyboardEvent) => void) | null = null;
@@ -213,10 +193,6 @@ function cancelCapture() {
 onBeforeUnmount(() => cancelCapture());
 
 function startGame() {
-  if (screenMode.value === 'join') {
-    joinGame();
-    return;
-  }
   const gameMode = vsComputer.value ? 'solo' : 'multiplayer';
   batailleCorseStore.create(gameMode, playerName.value || undefined);
   const unwatch = watch(() => batailleCorseStore.gameId, (id) => {
@@ -225,17 +201,6 @@ function startGame() {
       router.push({ name: 'room', params: { id } });
     }
   });
-}
-
-async function joinGame() {
-  const id = joinGameId.value.trim();
-  if (!id) return;
-  try {
-    await batailleCorseStore.join(id, playerName.value || undefined);
-    router.push({ name: 'room', params: { id } });
-  } catch (e) {
-    joinError.value = 'Could not join this game. Check the ID and try again.';
-  }
 }
 </script>
 

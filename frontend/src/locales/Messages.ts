@@ -94,14 +94,8 @@ export interface BullshitUiMessages {
     deckSizeLegend: string;
     deckSizes: { '32': string; '52': string };
     createGame: string;
-    gameId: string;
-    joinGame: string;
-    joinTitle: string;
     namePlaceholder: string;
-    gameIdPlaceholder: string;
-    joining: string;
     errors: {
-      joinFailed: string;
       createFailed: string;
     };
   };
@@ -171,6 +165,29 @@ export interface GamePickerMessages {
   bullshit: GameChoiceMessages;
 }
 
+// Game home (`/games/<game>`): the front door of every game.
+export interface GameHomeMessages {
+  newGame: string;
+  joinGame: string;
+  yourName: string;
+  namePlaceholder: string;
+  back: string;            // towards the Game selection
+  gameGone: string;        // notice after a room link that could not be restored
+}
+
+// Join form (`/games/<game>/join/<id?>`).
+export interface JoinGameMessages {
+  title: string;
+  gameId: string;
+  gameIdPlaceholder: string;
+  yourName: string;
+  namePlaceholder: string;
+  submit: string;
+  joining: string;
+  failed: string;          // a refused join stays on the form with this line
+  back: string;            // towards the Game home
+}
+
 // Whole-app message tree. Each game owns a rules namespace; future namespaces
 // (game, lobby, ...) are added here additively.
 export interface Messages {
@@ -178,4 +195,6 @@ export interface Messages {
   bullshit: RulesMessages;  // Bullshit
   bullshitUi: BullshitUiMessages; // Bullshit screens
   gamePicker: GamePickerMessages; // Game choice page
+  home: GameHomeMessages;   // Game home
+  join: JoinGameMessages;   // Join form
 }

@@ -1,14 +1,16 @@
-// The Bataille Corse menu panels (home, create, join) must fit narrow phones:
+// The Game home, create and join panels of both games must fit narrow phones:
 // no horizontal scroll at 375 px, and the same content at every width.
 const WIDTHS: Array<[number, number]> = [[375, 667], [1280, 720]];
 
 const VIEWS: Array<{ name: string; path: string; texts: string[] }> = [
-  { name: 'menu', path: '/games/bataillecorse', texts: ['Bataille Corse', 'New Game', 'Join Game', 'Back'] },
-  { name: 'create', path: '/games/bataillecorse/create', texts: ['Create Game', 'Back to Lobby'] },
-  { name: 'join', path: '/games/bataillecorse/join', texts: ['Join Game', 'Back to Lobby'] },
+  { name: 'Bataille Corse home', path: '/games/bataillecorse', texts: ['Bataille Corse', 'New game', 'Join game', 'Back'] },
+  { name: 'Bataille Corse create', path: '/games/bataillecorse/new', texts: ['Create Game', 'Back'] },
+  { name: 'Bataille Corse join', path: '/games/bataillecorse/join', texts: ['Join game', 'Back'] },
+  { name: 'Bullshit home', path: '/games/bullshit', texts: ['Bullshit', 'New game', 'Join game', 'Back'] },
+  { name: 'Bullshit join', path: '/games/bullshit/join', texts: ['Game ID', 'Join game', 'Back'] },
 ];
 
-describe('Bataille Corse menu panels fit the viewport', () => {
+describe('Game home, create and join panels fit the viewport', () => {
   for (const [w, h] of WIDTHS) {
     for (const view of VIEWS) {
       it(`${view.name} at ${w}px: no horizontal overflow, content preserved`, () => {

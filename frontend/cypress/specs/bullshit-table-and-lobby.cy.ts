@@ -4,8 +4,9 @@ function createBullshitGame(name: string, claimLabel?: string, deckLabel = '52 c
   // Enter through the menu, as a player does, so the WebSocket is connected before we create.
   cy.visit('/games');
   cy.get('[data-test="play-bullshit"]').click();
-  cy.url().should('include', '/games/bullshit/create');
   cy.get('[data-test="name"]').type(name);
+  cy.get('[data-test="new-game"]').click();
+  cy.url().should('include', '/games/bullshit/new');
   if (claimLabel) cy.contains('label', claimLabel).click();
   cy.contains('label', deckLabel).click();
   // Deliberate fixed wait: the app exposes no "connected" signal and a create sent before the
@@ -21,7 +22,7 @@ function gameIdFromUrl(): Cypress.Chainable<string> {
 
 describe('Bullshit start screens', () => {
   it('keeps every field of the create screen and a visible name label', () => {
-    cy.visit('/games/bullshit/create');
+    cy.visit('/games/bullshit/new');
     cy.get('h1').should('contain.text', 'Bullshit');
     cy.get('label[for="bullshit-name"]').should('be.visible').and('contain.text', 'Your name');
     cy.contains('legend', 'Claim mode').should('be.visible');
@@ -38,7 +39,7 @@ describe('Bullshit start screens', () => {
     cy.visit('/games/bullshit/join/does-not-exist');
     cy.get('[data-test="name"]').type('Zoe');
     cy.get('[data-test="submit"]').should('contain.text', 'Join game').click();
-    cy.get('[data-test="start-error"]', { timeout: 10000 })
+    cy.get('[data-test="join-error"]', { timeout: 10000 })
       .should('be.visible')
       .and('contain.text', 'Could not join this game');
     cy.location('pathname').should('include', '/games/bullshit/join/');
@@ -71,7 +72,7 @@ describe('Bullshit lobby', () => {
   });
 
   it('preselects 32 cards on the create screen and shows its rank range', () => {
-    cy.visit('/games/bullshit/create');
+    cy.visit('/games/bullshit/new');
     cy.contains('label', 'By rank (7→A)').should('be.visible');
     cy.contains('label', 'By rank').click();
     cy.contains('label', '52 cards').click();

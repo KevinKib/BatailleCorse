@@ -37,6 +37,12 @@ async function mountGameScreen() {
 }
 
 describe('GameScreen', () => {
+  it('givenBackLink_thenLeadsToTheGameSelection', async () => {
+    setActivePinia(createPinia());
+    const wrapper = await mountGameScreen();
+    expect(wrapper.get('.back_button').attributes('to')).toBe('/games');
+  });
+
   beforeEach(() => {
     setActivePinia(createPinia());
     routeLeaveGuards.length = 0;

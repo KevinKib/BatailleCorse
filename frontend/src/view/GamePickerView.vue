@@ -35,14 +35,14 @@ onMounted(() => preloadAllCards());
           :choice="gamePicker.bataillecorse"
           icon="pi pi-play"
           severity="success"
-          @play="router.push({ name: 'home' })"
+          @play="router.push('/games/bataillecorse')"
         />
         <GameChoiceCard
           game-key="bullshit"
           :choice="gamePicker.bullshit"
           icon="pi pi-bolt"
           severity="warn"
-          @play="router.push({ name: 'bullshit-create' })"
+          @play="router.push('/games/bullshit')"
         />
       </section>
     </main>

@@ -97,13 +97,10 @@ describe('English messages', () => {
     expect(lobby.copied).toBe('Copied!');
   });
 
-  it('givenBullshitUiMessages_thenStartScreensHaveJoinAndCreateErrors', () => {
+  it('givenBullshitUiMessages_thenStartScreenHasCreateError', () => {
     const start = messagesEn.bullshitUi.start;
-    expect(start.errors.joinFailed).toBeTruthy();
     expect(start.errors.createFailed).toBeTruthy();
-    expect(start.joinTitle).toBeTruthy();
     expect(start.namePlaceholder).toBeTruthy();
-    expect(start.gameIdPlaceholder).toBeTruthy();
   });
 
   it('givenBullshitUiMessages_thenHandCardsHaveAnAccessibleLabelTemplate', () => {
@@ -138,5 +135,21 @@ describe('English messages', () => {
     expect(messagesEn.gamePicker.bataillecorse.players).toBe('2 players');
     expect(messagesEn.gamePicker.bullshit.players).toBe('2–6 players');
     expect(messagesEn.gamePicker.bullshit.description).not.toMatch(/bot/i);
+  });
+});
+
+describe('game home and join messages', () => {
+  it('givenHomeAndJoin_thenEveryLeafStringIsNonEmpty', () => {
+    const empty: string[] = [];
+    const visit = (node: unknown, path: string) => {
+      if (typeof node === 'string') {
+        if (!node.trim()) empty.push(path);
+      } else if (node && typeof node === 'object') {
+        for (const [key, value] of Object.entries(node)) visit(value, `${path}.${key}`);
+      }
+    };
+    visit(messagesEn.home, 'home');
+    visit(messagesEn.join, 'join');
+    expect(empty).toEqual([]);
   });
 });

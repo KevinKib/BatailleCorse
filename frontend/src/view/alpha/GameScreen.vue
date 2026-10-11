@@ -45,7 +45,7 @@
 
     <div class="gamescreen_bottom flex">
       <div class="left_side">
-        <RouterLink :to="{ name: 'home' }" class="back_button">
+        <RouterLink to="/games" class="back_button">
           <Button severity="secondary" label="Back" icon="pi pi-undo" variant="text" rounded />
         </RouterLink>
       </div>

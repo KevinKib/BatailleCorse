@@ -7,8 +7,9 @@ const LONG_NAME = 'Maximilienne-Alexandrine'; // 24 characters
 function createBullshitGame(name: string) {
   cy.visit('/games');
   cy.get('[data-test="play-bullshit"]').click();
-  cy.url().should('include', '/games/bullshit/create');
   cy.get('[data-test="name"]').type(name);
+  cy.get('[data-test="new-game"]').click();
+  cy.url().should('include', '/games/bullshit/new');
   // Deliberate fixed wait: no "connected" signal is exposed and a create sent before the
   // WebSocket handshake ends is reported to the player as an error.
   cy.wait(1500);
@@ -55,7 +56,7 @@ describe('Atkinson Hyperlegible fit', () => {
       beforeEach(() => cy.viewport(width, height));
 
       it('keeps the create screen and a lobby with long names inside the screen', () => {
-        cy.visit('/games/bullshit/create');
+        cy.visit('/games/bullshit/new');
         cy.get('[data-test="name"]').type(LONG_NAME);
         expectNoOverflow('#app', width);
         createBullshitGame(LONG_NAME);

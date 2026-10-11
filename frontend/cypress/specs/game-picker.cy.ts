@@ -28,21 +28,23 @@ describe('Game picker', () => {
     });
   });
 
-  it('plays Bataille Corse: menu without any Bullshit button, Back returns to the picker', () => {
+  it('plays Bataille Corse: Game home without any Bullshit button, Back returns to the picker', () => {
     cy.visit('/games');
     cy.get('[data-test="play-bataillecorse"]').click();
     cy.location('pathname').should('eq', '/games/bataillecorse');
-    cy.contains('button', 'New Game').should('be.visible');
-    cy.contains('button', 'Join Game').should('be.visible');
+    cy.contains('button', 'New game').should('be.visible');
+    cy.contains('button', 'Join game').should('be.visible');
     cy.contains('Play Bullshit').should('not.exist');
     cy.get('[data-test="back"]').click();
     cy.location('pathname').should('eq', '/games');
   });
 
-  it('plays Bullshit: create screen, Back returns to the picker', () => {
+  it('plays Bullshit: Game home with New game and Join game, Back returns to the picker', () => {
     cy.visit('/games');
     cy.get('[data-test="play-bullshit"]').click();
-    cy.location('pathname').should('eq', '/games/bullshit/create');
+    cy.location('pathname').should('eq', '/games/bullshit');
+    cy.contains('button', 'New game').should('be.visible');
+    cy.contains('button', 'Join game').should('be.visible');
     cy.get('[data-test="back"]').click();
     cy.location('pathname').should('eq', '/games');
   });

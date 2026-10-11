@@ -1,9 +1,11 @@
 // Every way out of a Bullshit game leads to the game picker (/games), never to the Bataille Corse menu.
+// (New game opens the create screen: the Game home asks for the name first.)
 describe('Bullshit exits lead to /games', () => {
   function createGame() {
     cy.visit('/games');
     cy.get('[data-test="play-bullshit"]').click();
     cy.get('[data-test="name"]').type('Alice');
+    cy.get('[data-test="new-game"]').click();
     // Deliberate fixed wait: a create sent before the WebSocket handshake finishes is reported as an error.
     cy.wait(1500);
     cy.get('[data-test="submit"]').click();
