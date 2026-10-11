@@ -24,6 +24,7 @@ import { useSoundPreference } from '../../composables/useSoundPreference';
 import { useConnectionStatus } from '../../composables/useConnectionStatus';
 import { format, plural } from '../../locales/format';
 import { seatDisplayName } from '../../model/bullshit/displayName';
+import { opponentsInPlayOrder } from '../../model/bullshit/opponentOrder';
 import { claimSuit } from '../../model/bullshit/claimSuit';
 
 const props = defineProps<{ gameId: string }>();
@@ -61,9 +62,9 @@ function seatSecondsRemaining(seat: number): number | null {
   return deadline == null ? null : countdown.secondsRemainingFor(deadline);
 }
 
-// Opponents are everyone but me, in seat order.
-const opponents = computed(() =>
-  (store.game?.players ?? []).filter(p => p.id !== String(store.mySeat)));
+// Opponents are everyone but me, in the order they play after me (first one = my next player).
+const opponents = computed(() => opponentsInPlayOrder(store.game?.players ?? [], store.mySeat)
+  .filter(p => p.id !== String(store.mySeat)));
 
 // Angles (degrees) around the table for K opponents, skipping the bottom (my zone).
 // 0 = right, 90 = top, 180 = left. Single opp sits at top; pairs sit up on the
