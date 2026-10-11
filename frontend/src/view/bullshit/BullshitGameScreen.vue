@@ -14,8 +14,10 @@ import OpponentSeat from '../../components/bullshit/OpponentSeat.vue';
 import BullshitHand from '../../components/bullshit/BullshitHand.vue';
 import BullshitLobby from '../../components/bullshit/BullshitLobby.vue';
 import { useI18n } from '../../composables/useI18n';
-import { flyCardsToPile, prefersReducedMotion } from '../../composables/usePileAnimation';
+import { flyCardsToPile, flyPileToTaker, prefersReducedMotion } from '../../composables/usePileAnimation';
 import { cardSound } from '../../composables/useCardSound';
+import { useBullshitHotkeys, DISCARD_KEY, CALL_KEY } from '../../composables/useBullshitHotkeys';
+import { sortHand } from '../../model/bullshit/sortHand';
 import { useSoundPreference } from '../../composables/useSoundPreference';
 import { useConnectionStatus } from '../../composables/useConnectionStatus';
 import { format, plural } from '../../locales/format';
@@ -93,6 +95,11 @@ const myCardCount = computed(() => store.game?.myHand.length ?? 0);
 const pileWell = ref<HTMLElement | null>(null);
 const { enabled: soundEnabled, toggle: toggleSound } = useSoundPreference();
 
+// The face-down pile card itself (a direct child: never a card of the verdict overlay, which sits
+// in the same well).
+const pileCardEl = () => pileWell.value?.querySelector<HTMLElement>(':scope > .playing_card') ?? pileWell.value;
+const opponentsRing = ref<HTMLElement | null>(null);
+
 function discard() {
   const hand = store.game?.myHand ?? [];
   const sources = store.selectedCards
@@ -100,10 +107,23 @@ function discard() {
     .filter(i => i >= 0)
     .map(i => document.querySelector<HTMLElement>(`[data-test="hand-card-${i}"]`))
     .filter((el): el is HTMLElement => el !== null);
-  const pileCard = pileWell.value?.querySelector('.playing_card') ?? pileWell.value;
-  flyCardsToPile(sources, pileCard?.getBoundingClientRect() ?? null, { reduceMotion: prefersReducedMotion() });
+  flyCardsToPile(sources, pileCardEl()?.getBoundingClientRect() ?? null, { reduceMotion: prefersReducedMotion() });
   store.discard();
 }
+
+// The verdict is over and the pile goes to its taker: fly a few face-down cards from the pile to
+// that seat (or to my own zone). Visual only, like the discard flight: the counts come from the state.
+const myZone = ref<HTMLElement | null>(null);
+watch(() => store.reveal, (current, previous) => {
+  // Only when a verdict ends (shown, then cleared); a new verdict replacing it, or a game that is
+  // no longer being played, does not fly anything.
+  if (current || !previous || store.phase !== 'playing') return;
+  const destination = previous.pickerSeat === store.mySeat
+    ? myZone.value
+    : opponentsRing.value?.querySelector<HTMLElement>(`[data-seat="${previous.pickerSeat}"] .seat-card`);
+  flyPileToTaker(pileCardEl(), destination?.getBoundingClientRect() ?? null, previous.revealedCards.length,
+    { reduceMotion: prefersReducedMotion() });
+});
 
 // Any play (mine or an opponent's) makes the pile grow; taking the pile makes it shrink.
 watch(() => store.game?.discardPileSize ?? 0, (size, previous) => {
@@ -118,7 +138,25 @@ watch(online, (isOnline, wasOnline) => {
 });
 
 // Discard invites a click only when it can be used: my turn, cards picked, connected.
-const canDiscardNow = computed(() => store.isMyTurn && store.selectedCards.length > 0 && online.value);
+const canDiscardNow = computed(() =>
+  store.canDiscard && store.isMyTurn && store.selectedCards.length > 0 && online.value);
+const canCallNow = computed(() => store.canCallBullshit && online.value);
+
+// Keyboard shortcuts mirror the buttons and the hand (digits follow the displayed, sorted order).
+useBullshitHotkeys({
+  canDiscard: () => store.phase === 'playing' && canDiscardNow.value,
+  canCall: () => store.phase === 'playing' && canCallNow.value,
+  // Cards are only picked to be played: on my turn, with DISCARD allowed, connected.
+  handSize: () => (store.phase === 'playing' && store.isMyTurn && store.canDiscard && online.value ? myCardCount.value : 0),
+  discard,
+  call: () => store.callBullshit(),
+  toggleCard: (i) => {
+    const card = sortHand(store.game?.myHand ?? [])[i];
+    if (card) store.toggleCard(card);
+  },
+});
+const keysHint = computed(() =>
+  format(ui.table.keysHint, { discard: DISCARD_KEY.toUpperCase(), call: CALL_KEY.toUpperCase() }));
 
 // End screen. A win by forfeit says how the opponent left; a win with cards still in hand and no
 // known reason (the event was missed, e.g. after a reload) still must not claim an empty hand.
@@ -211,11 +249,12 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
       </div>
 
       <div class="table-frame">
-        <div class="opponents-ring">
+        <div ref="opponentsRing" class="opponents-ring">
           <div
             v-for="(opp, i) in opponents"
             :key="opp.id"
             class="seat-slot"
+            :data-seat="opp.id"
             :style="{ left: seatPositions[i].left + '%', top: seatPositions[i].top + '%' }">
             <OpponentSeat
               :label="displayName(Number(opp.id))"
@@ -277,7 +316,7 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
         </div>
       </div>
 
-      <div class="my-zone">
+      <div ref="myZone" class="my-zone">
         <div class="my-id">
           <span :class="['my-tag', { 'my-tag--active': store.isMyTurn }]">{{ ui.you }}</span>
           <span class="my-count" data-test="my-count" role="img"
@@ -297,6 +336,8 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
             rounded
             :class="{ 'discard--pulse': canDiscardNow }"
             :disabled="!canDiscardNow"
+            :title="format(ui.table.shortcut, { key: DISCARD_KEY.toUpperCase() })"
+            :aria-keyshortcuts="DISCARD_KEY"
             @click="discard" />
           <Button
             data-test="call"
@@ -304,9 +345,12 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
             icon="pi pi-flag"
             severity="danger"
             rounded
-            :disabled="!store.canCallBullshit || !online"
+            :disabled="!canCallNow"
+            :title="format(ui.table.shortcut, { key: CALL_KEY.toUpperCase() })"
+            :aria-keyshortcuts="CALL_KEY"
             @click="store.callBullshit()" />
         </div>
+        <p class="keys-hint" data-test="keys-hint">{{ keysHint }}</p>
       </div>
     </template>
   </div>
@@ -623,6 +667,21 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
   /* The room comes out of the table (flex: 1), never out of the page. */
   margin-top: var(--hand-actions-gap);
   padding-bottom: var(--space-1);
+}
+/* Discreet reminder of the keyboard shortcuts; useless (and noisy) on touch-only devices. */
+.keys-hint {
+  margin: 0;
+  max-width: 100%;
+  padding: 2px var(--space-1) var(--space-1);
+  font-size: 0.7rem;
+  line-height: 1.2;
+  color: rgba(255, 255, 255, 0.5);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@media (hover: none) {
+  .keys-hint { display: none; }
 }
 .actions :deep(.p-button) {
   flex: 1 1 0;
