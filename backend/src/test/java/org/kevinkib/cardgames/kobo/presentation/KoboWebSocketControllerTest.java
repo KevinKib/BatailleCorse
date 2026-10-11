@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.kobo.domain.Kobo;
-import org.kevinkib.cardgames.kobo.presentation.api.KoboCreatePayload;
 import org.kevinkib.cardgames.kobo.presentation.api.KoboGiftPayload;
 import org.kevinkib.cardgames.kobo.presentation.api.KoboMatchPayload;
 import org.kevinkib.cardgames.kobo.presentation.api.KoboSlotPayload;
@@ -13,7 +12,7 @@ import org.kevinkib.cardgames.kobo.presentation.api.KoboSwapPayload;
 import org.kevinkib.cardgames.kobo.presentation.api.KoboTargetPayload;
 import org.kevinkib.cardgames.kobo.presentation.dto.CardDto;
 import org.kevinkib.cardgames.kobo.presentation.dto.KoboDto;
-import org.kevinkib.cardgames.kobo.presentation.dto.event.KoboCreateEventData;
+import org.kevinkib.cardgames.sessionmanagement.core.application.RoomCreated;
 import org.kevinkib.cardgames.presentation.api.GameActionPayload;
 import org.kevinkib.cardgames.presentation.api.Response;
 
@@ -33,9 +32,8 @@ class KoboWebSocketControllerTest {
 
     private final KoboTable table = new KoboTable();
 
-    private KoboCreateEventData createRoom() {
-        Response create = table.ws.createGame(new KoboCreatePayload("Alice"));
-        return (KoboCreateEventData) create.getEventData();
+    private RoomCreated createRoom() {
+        return table.sessions.createRoom("kobo", "Alice");
     }
 
     private GameActionPayload action(Kobo game, int seat) {
@@ -45,23 +43,11 @@ class KoboWebSocketControllerTest {
     // ---- lobby
 
     @Test
-    void create_makesAKoboRoomAndReturnsTheHostToken() {
-        Response create = table.ws.createGame(new KoboCreatePayload("Alice"));
-        KoboCreateEventData data = (KoboCreateEventData) create.getEventData();
-
-        assertThat(create.isSuccess(), is(true));
-        assertThat(create.getEventType(), is("CREATE"));
-        assertThat(data.gameType(), is("kobo"));
-        assertThat(data.tokens().get(0), notNullValue());
-        assertThat(table.sessions.gameType(new GameId(data.gameId())), is("kobo"));
-    }
-
-    @Test
     void start_byTheHostDealsTheGameAndBroadcastsOneStatePerSeat() {
-        KoboCreateEventData room = createRoom();
+        RoomCreated room = createRoom();
         table.sessions.joinRoom(new GameId(room.gameId()), "Bob");
 
-        table.ws.start(new GameActionPayload(room.gameId(), room.tokens().get(0)));
+        table.ws.start(new GameActionPayload(room.gameId(), room.hostToken()));
 
         assertThat(table.messaging.payloads, hasSize(2));
         Response first = table.messaging.payloads.get(0);
@@ -74,8 +60,8 @@ class KoboWebSocketControllerTest {
 
     @Test
     void start_withTooFewPlayersOrByANonHost_repliesAnErrorToTheSenderOnly() {
-        KoboCreateEventData room = createRoom();
-        table.ws.start(new GameActionPayload(room.gameId(), room.tokens().get(0)));
+        RoomCreated room = createRoom();
+        table.ws.start(new GameActionPayload(room.gameId(), room.hostToken()));
         assertThat(table.messaging.payloads, hasSize(1));
         assertThat(table.messaging.payloads.get(0).isSuccess(), is(false));
         assertThat(table.messaging.seats.get(0), is(seat(0)));
@@ -154,16 +140,16 @@ class KoboWebSocketControllerTest {
 
     @Test
     void ready_thenDraw_throughTheWebSocketEndpoints() {
-        KoboCreateEventData room = createRoom();
+        RoomCreated room = createRoom();
         table.sessions.joinRoom(new GameId(room.gameId()), "Bob");
-        table.ws.start(new GameActionPayload(room.gameId(), room.tokens().get(0)));
+        table.ws.start(new GameActionPayload(room.gameId(), room.hostToken()));
         Kobo game = table.sessions.getGame(new GameId(room.gameId()), Kobo.class);
         table.messaging.clear();
 
-        table.ws.ready(new GameActionPayload(room.gameId(), room.tokens().get(0)));
+        table.ws.ready(new GameActionPayload(room.gameId(), room.hostToken()));
         table.ws.ready(new GameActionPayload(room.gameId(), table.token(game, 1)));
         table.messaging.clear();
-        table.ws.draw(new GameActionPayload(room.gameId(), room.tokens().get(0)));
+        table.ws.draw(new GameActionPayload(room.gameId(), room.hostToken()));
 
         assertThat(table.messaging.payloads.get(0).getEventType(), is("DRAW"));
         assertThat(game.phase(), is(Phase.DECISION));

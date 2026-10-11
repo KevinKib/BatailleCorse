@@ -5,29 +5,20 @@ import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.kobo.domain.Kobo;
 import org.kevinkib.cardgames.kobo.domain.KoboFactory;
-import org.kevinkib.cardgames.kobo.presentation.api.KoboCreatePayload;
 import org.kevinkib.cardgames.kobo.presentation.api.KoboGiftPayload;
 import org.kevinkib.cardgames.kobo.presentation.api.KoboMatchPayload;
 import org.kevinkib.cardgames.kobo.presentation.api.KoboSlotPayload;
 import org.kevinkib.cardgames.kobo.presentation.api.KoboSwapPayload;
 import org.kevinkib.cardgames.kobo.presentation.api.KoboTargetPayload;
-import org.kevinkib.cardgames.kobo.presentation.dto.event.KoboCreateEventData;
 import org.kevinkib.cardgames.kobo.presentation.dto.event.KoboEventType;
 import org.kevinkib.cardgames.presentation.GameMessagingService;
 import org.kevinkib.cardgames.presentation.api.ErrorResponse;
 import org.kevinkib.cardgames.presentation.api.GameActionPayload;
-import org.kevinkib.cardgames.presentation.api.Response;
-import org.kevinkib.cardgames.presentation.api.SuccessResponse;
 import org.kevinkib.cardgames.presentation.dto.event.EmptyEventData;
-import org.kevinkib.cardgames.presentation.dto.event.LifecycleEventType;
-import org.kevinkib.cardgames.sessionmanagement.core.application.RoomCreated;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
-
-import java.util.Map;
 
 /**
  * Kobo WebSocket endpoints, all under /kobo. They only authenticate the seat from its token and map
@@ -55,18 +46,6 @@ public class KoboWebSocketController {
         this.broadcaster = broadcaster;
         this.messaging = messaging;
         this.actions = actions;
-    }
-
-    @MessageMapping("/kobo/create")
-    @SendTo("/topic/game")
-    public Response createGame(@Payload(required = false) KoboCreatePayload payload) {
-        String name = (payload != null) ? payload.name() : null;
-        RoomCreated room = sessionService.createRoom(KoboFactory.GAME_TYPE, name);
-        return new SuccessResponse(
-                LifecycleEventType.CREATE.toString(),
-                new KoboCreateEventData(room.gameId(), KoboFactory.GAME_TYPE, Map.of(0, room.hostToken())),
-                "Room created",
-                null);
     }
 
     @MessageMapping("/kobo/start")
