@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { flushPromises, mount } from '@vue/test-utils';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { mount } from '@vue/test-utils';
 import { setActivePinia, createPinia } from 'pinia';
 import { createRouter, createMemoryHistory } from 'vue-router';
 import PrimeVue from 'primevue/config';
@@ -11,7 +11,7 @@ const router = createRouter({
   history: createMemoryHistory(),
   routes: [
     { path: '/', name: 'bullshit-create', component: { template: '<div/>' } },
-    { path: '/join/:id?', name: 'bullshit-join', component: { template: '<div/>' } },
+    { path: '/games/bullshit', name: 'game-home', component: { template: '<div/>' } },
     { path: '/games/bullshit/room/:id', component: { template: '<div/>' } },
   ],
 });
@@ -22,7 +22,6 @@ async function mountAt(path: string) {
   return mount(BullshitStartGame, { global: { plugins: [router, PrimeVue] } });
 }
 const mountCreate = () => mountAt('/');
-const mountJoin = (id = '') => mountAt(`/join/${id}`);
 
 describe('BullshitStartGame claim mode', () => {
   beforeEach(() => { setActivePinia(createPinia()); });
@@ -65,11 +64,6 @@ describe('BullshitStartGame claim mode', () => {
     expect(wrapper.get('[data-test="deck-size"]').text()).toContain(messagesEn.bullshitUi.start.deckSizes['52']);
   });
 
-  it('does not offer the deck size when joining', async () => {
-    const wrapper = await mountJoin('abc');
-    expect(wrapper.find('[data-test="deck-size"]').exists()).toBe(false);
-  });
-
   it('creates with suit when the suit radio is selected', async () => {
     const wrapper = await mountCreate();
     const store = useBullshitStore();
@@ -98,45 +92,25 @@ describe('BullshitStartGame claim mode', () => {
   });
 });
 
+describe('BullshitStartGame name', () => {
+  beforeEach(() => { setActivePinia(createPinia()); localStorage.setItem('bc_playerName', 'Alice'); setActivePinia(createPinia()); });
+  afterEach(() => { localStorage.clear(); });
+
+  it('prefills the name saved on the Game home', async () => {
+    const wrapper = await mountCreate();
+    expect((wrapper.get('[data-test="name"]').element as HTMLInputElement).value).toBe('Alice');
+  });
+
+  it('goes back to the Game home', async () => {
+    const wrapper = await mountCreate();
+    await wrapper.get('[data-test="back"]').trigger('click');
+    await new Promise(r => setTimeout(r));
+    expect(router.currentRoute.value.path).toBe('/games/bullshit');
+  });
+});
+
 describe('BullshitStartGame errors', () => {
   beforeEach(() => { setActivePinia(createPinia()); vi.useRealTimers(); });
-
-  it('shows an error and stays on the page when joining fails', async () => {
-    const wrapper = await mountJoin('abc');
-    const store = useBullshitStore();
-    vi.spyOn(store, 'join').mockRejectedValue(new Error('Join failed: 404'));
-    const push = vi.spyOn(router, 'push');
-    push.mockClear();
-
-    await wrapper.get('form').trigger('submit');
-    await flushPromises();
-
-    expect(wrapper.get('[data-test="start-error"]').text()).toBe(messagesEn.bullshitUi.start.errors.joinFailed);
-    expect(push).not.toHaveBeenCalled();
-  });
-
-  it('joins and navigates to the room on success, accepting a pasted link', async () => {
-    const wrapper = await mountJoin();
-    const store = useBullshitStore();
-    const join = vi.spyOn(store, 'join').mockResolvedValue();
-    const push = vi.spyOn(router, 'push');
-    push.mockClear();
-
-    await wrapper.get('[data-test="game-id"]').setValue('http://localhost:5173/games/bullshit/join/abc');
-    await wrapper.get('form').trigger('submit');
-    await flushPromises();
-
-    expect(join).toHaveBeenCalledWith('abc', undefined);
-    expect(push).toHaveBeenCalledWith('/games/bullshit/room/abc');
-    expect(wrapper.find('[data-test="start-error"]').exists()).toBe(false);
-  });
-
-  it('disables Join until a game id is entered', async () => {
-    const wrapper = await mountJoin();
-    expect((wrapper.get('[data-test="submit"]').element as HTMLButtonElement).disabled).toBe(true);
-    await wrapper.get('[data-test="game-id"]').setValue('abc');
-    expect((wrapper.get('[data-test="submit"]').element as HTMLButtonElement).disabled).toBe(false);
-  });
 
   it('shows an error when the create request cannot be sent', async () => {
     const wrapper = await mountCreate();

@@ -2,6 +2,7 @@ import { onBeforeUnmount, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useBatailleCorseStore } from '../state/BatailleCorse.store';
 import webSocketService from '../service/WebSocketService';
+import { findGame } from '../model/games';
 import type BatailleCorse from '../model/BatailleCorse';
 
 interface UseGameBootstrapOptions {
@@ -13,7 +14,7 @@ interface UseGameBootstrapOptions {
  * Owns the game's mount/unmount lifecycle: validates the stored tokens, fetches and
  * hydrates the initial state, restores the session, loads the multiplayer view, and
  * subscribes to the game's websocket topic. On unmount it cancels the auto-grab timer
- * and unsubscribes. Redirects home if tokens are missing or the fetch fails.
+ * and unsubscribes. Without a stored token it leads to the join form; if the game no longer exists, to the Game home with a notice.
  */
 export function useGameBootstrap(options: UseGameBootstrapOptions) {
   const { revealImmediatelyIfOver } = options;
@@ -26,13 +27,14 @@ export function useGameBootstrap(options: UseGameBootstrapOptions) {
 
     const stored = localStorage.getItem(`tokens:${gameId}`);
     if (!stored) {
-      router.replace({ name: 'home' });
+      // Someone shared the room URL instead of the invite link: join it.
+      router.replace(findGame('bataillecorse')!.joinRoute(gameId));
       return;
     }
 
     const response = await fetch(`/api/game/${gameId}`);
     if (!response.ok) {
-      router.replace({ name: 'home' });
+      router.replace({ path: findGame('bataillecorse')!.gameHomeRoute, query: { gone: '1' } });
       return;
     }
 

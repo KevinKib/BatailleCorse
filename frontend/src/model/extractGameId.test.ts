@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { extractGameId } from './gameId';
+import { extractGameId } from './extractGameId';
 
 describe('extractGameId', () => {
   it('returns a bare id unchanged, trimmed', () => {

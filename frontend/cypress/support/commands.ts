@@ -11,7 +11,7 @@ Cypress.Commands.add('createGame', () => {
   // to /create via client-side routing. A direct cy.visit('/create') would reload the
   // page mid-handshake, causing publish() to throw "no underlying STOMP connection".
   cy.visit('/games/bataillecorse');
-  cy.contains('button', 'New Game').click();
+  cy.contains('button', 'New game').click();
   // Deliberate fixed wait: no "connected" signal is exposed and a create sent before the
   // WebSocket handshake ends throws "no underlying STOMP connection".
   cy.wait(1500);

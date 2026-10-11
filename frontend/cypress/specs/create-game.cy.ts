@@ -2,8 +2,8 @@ describe('Create game', () => {
   it('navigates to game screen and shows initial game state', () => {
     cy.visit('/games/bataillecorse');
 
-    cy.contains('button', 'New Game').click();
-    cy.url().should('include', '/create');
+    cy.contains('button', 'New game').click();
+    cy.url().should('include', '/new');
 
     // Human is the default opponent; "Deal Cards" is the solo flow.
     cy.contains('button', 'Computer').click();

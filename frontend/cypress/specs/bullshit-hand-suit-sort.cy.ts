@@ -7,6 +7,8 @@ function startSuitGame() {
   cy.visit('/games');
   cy.get('[data-test="play-bullshit"]').click();
   cy.get('[data-test="name"]').type('Alice');
+  cy.get('[data-test="new-game"]').click();
+  cy.url().should('include', '/games/bullshit/new');
   cy.contains('label', 'By suit').click();
   cy.contains('label', '52 cards').click();
   // Deliberate fixed wait: a create sent before the WebSocket handshake ends is reported as an error.

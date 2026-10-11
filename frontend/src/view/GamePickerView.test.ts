@@ -36,17 +36,17 @@ describe('GamePickerView', () => {
     expect(buttons[1].attributes('aria-label')).toBe('Play Bullshit');
   });
 
-  it('givenPlayOnBatailleCorse_thenGoesToItsMenu', async () => {
+  it('givenPlayOnBatailleCorse_thenGoesToItsGameHome', async () => {
     const { wrapper, router } = await mountPicker();
     await wrapper.get('[data-test="play-bataillecorse"]').trigger('click');
     await flushPromises();
     expect(router.currentRoute.value.fullPath).toBe('/games/bataillecorse');
   });
 
-  it('givenPlayOnBullshit_thenGoesToItsCreateScreen', async () => {
+  it('givenPlayOnBullshit_thenGoesToItsGameHome', async () => {
     const { wrapper, router } = await mountPicker();
     await wrapper.get('[data-test="play-bullshit"]').trigger('click');
     await flushPromises();
-    expect(router.currentRoute.value.fullPath).toBe('/games/bullshit/create');
+    expect(router.currentRoute.value.fullPath).toBe('/games/bullshit');
   });
 });

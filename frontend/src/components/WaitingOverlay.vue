@@ -21,7 +21,7 @@ const route = useRoute();
 const router = useRouter();
 
 const shareLink = computed(() => {
-  const { href } = router.resolve({ name: 'join', params: { id: route.params.id } });
+  const { href } = router.resolve({ name: 'game-join', params: { game: 'bataillecorse', id: route.params.id } });
   return `${window.location.origin}${href}`;
 });
 

@@ -1,7 +1,7 @@
 // Non-regression for the Bullshit lobby bot controls and for the lobby / create screen spacing.
 function createBullshitGame(name: string) {
-  cy.visit('/games/bullshit/create');
-  cy.url().should('include', '/games/bullshit/create');
+  cy.visit('/games/bullshit/new');
+  cy.url().should('include', '/games/bullshit/new');
   cy.get('[data-test="name"]').type(name);
   // Deliberate fixed wait: the app exposes no "connected" signal and a create sent before the
   // WebSocket handshake finishes is reported to the player as an error.
@@ -68,7 +68,7 @@ describe('Bullshit lobby layout', () => {
   [375, 1280].forEach((width) => {
     it(`keeps 44 px targets and 24/16 px section gaps on the create screen at ${width} px`, () => {
       cy.viewport(width, 800);
-      cy.visit('/games/bullshit/create');
+      cy.visit('/games/bullshit/new');
       cy.get('[data-test="start-panel"]').should('be.visible');
       cy.document().then((doc) => {
         const rect = (sel: string) => (doc.querySelector(sel) as HTMLElement).getBoundingClientRect();

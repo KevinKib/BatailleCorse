@@ -1,29 +1,27 @@
 <script setup lang="ts">
 import { onBeforeUnmount, ref, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { useRouter } from 'vue-router';
 import { Button, InputText } from 'primevue';
 import { useBullshitStore } from '../../state/Bullshit.store';
 import { CLAIM_MODES, DEFAULT_CLAIM_MODE, type ClaimMode } from '../../model/bullshit/claimMode';
 import { DECK_SIZES, DEFAULT_DECK_SIZE, type DeckSize } from '../../model/bullshit/deckSize';
 import { claimModeLabel } from '../../model/bullshit/claimModeLabel';
-import { extractGameId } from '../../model/bullshit/gameId';
+import { useSettingsStore } from '../../state/Settings.store';
 import { useI18n } from '../../composables/useI18n';
 import TitleCardFan from '../../components/TitleCardFan.vue';
 
 const messages = useI18n().bullshitUi;
 const ui = messages.start;
-const route = useRoute();
 const router = useRouter();
 const store = useBullshitStore();
 
 // How long we wait for the server to confirm a new game before telling the player it failed.
 const CREATE_TIMEOUT_MS = 8000;
 
-const name = ref('');
+// The name typed on the Game home (persisted in the settings).
+const name = ref(useSettingsStore().playerName);
 const claimMode = ref<ClaimMode>(DEFAULT_CLAIM_MODE);
 const deckSize = ref<DeckSize>(DEFAULT_DECK_SIZE);
-const joinId = ref((route.params.id as string) ?? '');
-const isJoin = ref(route.name === 'bullshit-join');
 const error = ref('');
 const busy = ref(false);
 let createTimer: ReturnType<typeof setTimeout> | null = null;
@@ -59,25 +57,11 @@ function onCreate() {
   createTimer = setTimeout(() => fail(ui.errors.createFailed), CREATE_TIMEOUT_MS);
 }
 
-async function onJoin() {
-  const id = extractGameId(joinId.value);
-  if (!id) return;
-  error.value = '';
-  busy.value = true;
-  try {
-    await store.join(id, name.value || undefined);
-  } catch {
-    fail(ui.errors.joinFailed);
-    return;
-  }
-  busy.value = false;
-  router.push(`/games/bullshit/room/${id}`);
-}
 </script>
 
 <template>
   <div class="titlescreen">
-    <form class="title-panel" data-test="start-panel" @submit.prevent="isJoin ? onJoin() : onCreate()">
+    <form class="title-panel" data-test="start-panel" @submit.prevent="onCreate()">
       <TitleCardFan />
 
       <div class="title-block">
@@ -88,22 +72,9 @@ async function onJoin() {
           <span class="suit-accent">♣</span>
         </div>
         <h1 class="game-title">{{ ui.title }}</h1>
-        <h2 v-if="isJoin" class="subtitle">{{ ui.joinTitle }}</h2>
       </div>
 
       <div class="panel-divider" />
-
-      <div v-if="isJoin" class="field-group">
-        <label class="field-label" for="bullshit-game-id">{{ ui.gameId }}</label>
-        <InputText
-          id="bullshit-game-id"
-          v-model="joinId"
-          type="text"
-          :placeholder="ui.gameIdPlaceholder"
-          autocomplete="off"
-          class="text-input"
-          data-test="game-id" />
-      </div>
 
       <div class="field-group">
         <label class="field-label" for="bullshit-name">{{ ui.yourName }}</label>
@@ -118,7 +89,7 @@ async function onJoin() {
           data-test="name" />
       </div>
 
-      <fieldset v-if="!isJoin" class="field-group claim-mode" data-test="claim-mode-field">
+      <fieldset class="field-group claim-mode" data-test="claim-mode-field">
         <legend class="field-label">{{ ui.claimModeLegend }}</legend>
         <div class="mode-toggle">
           <label
@@ -132,7 +103,7 @@ async function onJoin() {
         </div>
       </fieldset>
 
-      <fieldset v-if="!isJoin" class="field-group claim-mode" data-test="deck-size">
+      <fieldset class="field-group claim-mode" data-test="deck-size">
         <legend class="field-label">{{ ui.deckSizeLegend }}</legend>
         <div class="mode-toggle">
           <label
@@ -149,7 +120,6 @@ async function onJoin() {
       <p v-if="error" class="error" role="alert" data-test="start-error">{{ error }}</p>
 
       <Button
-        v-if="!isJoin"
         data-test="submit"
         type="submit"
         class="start-button"
@@ -160,19 +130,6 @@ async function onJoin() {
         rounded
         :loading="busy" />
       <Button
-        v-else
-        data-test="submit"
-        type="submit"
-        class="start-button"
-        :label="busy ? ui.joining : ui.joinGame"
-        icon="pi pi-users"
-        severity="success"
-        size="large"
-        rounded
-        :disabled="!extractGameId(joinId)"
-        :loading="busy" />
-
-      <Button
         class="back-button"
         data-test="back"
         :label="messages.back"
@@ -180,7 +137,7 @@ async function onJoin() {
         severity="secondary"
         size="small"
         text
-        @click="router.push('/games')" />
+        @click="router.push('/games/bullshit')" />
     </form>
   </div>
 </template>
@@ -238,15 +195,6 @@ async function onJoin() {
   background-clip: text;
   margin: 0;
   line-height: 1.1;
-}
-.subtitle {
-  margin: 4px 0 0;
-  font-family: var(--font-title);
-  font-size: 0.875rem;
-  font-weight: 600;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.6);
 }
 
 .panel-divider {
