@@ -16,7 +16,9 @@ import BullshitLobby from '../../components/bullshit/BullshitLobby.vue';
 import { useI18n } from '../../composables/useI18n';
 import { flyCardsToPile, flyPileToTaker, prefersReducedMotion } from '../../composables/usePileAnimation';
 import { cardSound } from '../../composables/useCardSound';
-import { useBullshitHotkeys, DISCARD_KEY, CALL_KEY } from '../../composables/useBullshitHotkeys';
+import { useBullshitHotkeys } from '../../composables/useBullshitHotkeys';
+import { useHotkeySettings } from '../../composables/useHotkeySettings';
+import HotkeySettings from '../../components/bullshit/HotkeySettings.vue';
 import { sortHand } from '../../model/bullshit/sortHand';
 import { useSoundPreference } from '../../composables/useSoundPreference';
 import { useConnectionStatus } from '../../composables/useConnectionStatus';
@@ -143,6 +145,7 @@ const canDiscardNow = computed(() =>
 const canCallNow = computed(() => store.canCallBullshit && online.value);
 
 // Keyboard shortcuts mirror the buttons and the hand (digits follow the displayed, sorted order).
+const hotkeys = useHotkeySettings();
 useBullshitHotkeys({
   canDiscard: () => store.phase === 'playing' && canDiscardNow.value,
   canCall: () => store.phase === 'playing' && canCallNow.value,
@@ -154,9 +157,9 @@ useBullshitHotkeys({
     const card = sortHand(store.game?.myHand ?? [])[i];
     if (card) store.toggleCard(card);
   },
-});
+}, { enabled: () => hotkeys.enabled.value, discardKey: () => hotkeys.discardKey.value, callKey: () => hotkeys.callKey.value });
 const keysHint = computed(() =>
-  format(ui.table.keysHint, { discard: DISCARD_KEY.toUpperCase(), call: CALL_KEY.toUpperCase() }));
+  format(ui.table.keysHint, { discard: hotkeys.discardKey.value.toUpperCase(), call: hotkeys.callKey.value.toUpperCase() }));
 
 // End screen. A win by forfeit says how the opponent left; a win with cards still in hand and no
 // known reason (the event was missed, e.g. after a reload) still must not claim an empty hand.
@@ -234,6 +237,7 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
           :aria-label="soundEnabled ? ui.sound.mute : ui.sound.unmute"
           :aria-pressed="soundEnabled"
           @click="toggleSound" />
+        <HotkeySettings :settings="hotkeys" />
       </div>
 
       <Transition name="forfeit-fade">
@@ -336,8 +340,8 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
             rounded
             :class="{ 'discard--pulse': canDiscardNow }"
             :disabled="!canDiscardNow"
-            :title="format(ui.table.shortcut, { key: DISCARD_KEY.toUpperCase() })"
-            :aria-keyshortcuts="DISCARD_KEY"
+            :title="hotkeys.enabled.value ? format(ui.table.shortcut, { key: hotkeys.discardKey.value.toUpperCase() }) : undefined"
+            :aria-keyshortcuts="hotkeys.enabled.value ? hotkeys.discardKey.value : undefined"
             @click="discard" />
           <Button
             data-test="call"
@@ -346,11 +350,11 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
             severity="danger"
             rounded
             :disabled="!canCallNow"
-            :title="format(ui.table.shortcut, { key: CALL_KEY.toUpperCase() })"
-            :aria-keyshortcuts="CALL_KEY"
+            :title="hotkeys.enabled.value ? format(ui.table.shortcut, { key: hotkeys.callKey.value.toUpperCase() }) : undefined"
+            :aria-keyshortcuts="hotkeys.enabled.value ? hotkeys.callKey.value : undefined"
             @click="store.callBullshit()" />
         </div>
-        <p class="keys-hint" data-test="keys-hint">{{ keysHint }}</p>
+        <p v-if="hotkeys.enabled.value" class="keys-hint" data-test="keys-hint">{{ keysHint }}</p>
       </div>
     </template>
   </div>

@@ -61,6 +61,18 @@ describe('useHotkeys', () => {
     wrapper.unmount();
   });
 
+  it('does nothing at all while disabled, other keys included', () => {
+    const send = vi.fn(); const slap = vi.fn(); const other = vi.fn();
+    const wrapper = mount(defineComponent({
+      setup() { useHotkeys(send, slap, () => ['q'], () => ['d'], other, () => false); return () => h('div'); },
+    }), { attachTo: document.body });
+    press('q'); press('d'); press('1');
+    expect(send).not.toHaveBeenCalled();
+    expect(slap).not.toHaveBeenCalled();
+    expect(other).not.toHaveBeenCalled();
+    wrapper.unmount();
+  });
+
   it('stops listening once unmounted', () => {
     const { send, wrapper } = setup();
     wrapper.unmount();

@@ -3,13 +3,13 @@ import { defineComponent, h } from 'vue';
 import { mount } from '@vue/test-utils';
 import { useBullshitHotkeys } from './useBullshitHotkeys';
 
-function setup(over: Partial<Parameters<typeof useBullshitHotkeys>[0]> = {}) {
+function setup(over: Partial<Parameters<typeof useBullshitHotkeys>[0]> = {}, keys?: Parameters<typeof useBullshitHotkeys>[1]) {
   const actions = {
     canDiscard: () => true, canCall: () => true, handSize: () => 4,
     discard: vi.fn(), call: vi.fn(), toggleCard: vi.fn(), ...over,
   };
   const wrapper = mount(defineComponent({
-    setup() { useBullshitHotkeys(actions); return () => h('div'); },
+    setup() { useBullshitHotkeys(actions, keys); return () => h('div'); },
   }), { attachTo: document.body });
   return { actions, wrapper };
 }
@@ -67,6 +67,32 @@ describe('useBullshitHotkeys', () => {
     document.body.appendChild(input);
     press('d', {}, input);
     expect(actions.discard).not.toHaveBeenCalled();
+    wrapper.unmount();
+  });
+
+  it('follows remapped keys and no longer answers to the old ones', () => {
+    const { actions, wrapper } = setup({}, { enabled: () => true, discardKey: () => 'x', callKey: () => 'k' });
+    press('x'); press('K'); press('d'); press('b');
+    expect(actions.discard).toHaveBeenCalledTimes(1);
+    expect(actions.call).toHaveBeenCalledTimes(1);
+    wrapper.unmount();
+  });
+
+  it('reacts to a change of keys made after mounting', () => {
+    let discard = 'd';
+    const { actions, wrapper } = setup({}, { enabled: () => true, discardKey: () => discard, callKey: () => 'b' });
+    discard = 'z';
+    press('d'); press('z');
+    expect(actions.discard).toHaveBeenCalledTimes(1);
+    wrapper.unmount();
+  });
+
+  it('turns every shortcut off, digits included, when disabled', () => {
+    const { actions, wrapper } = setup({ handSize: () => 4 }, { enabled: () => false, discardKey: () => 'd', callKey: () => 'b' });
+    press('d'); press('b'); press('1');
+    expect(actions.discard).not.toHaveBeenCalled();
+    expect(actions.call).not.toHaveBeenCalled();
+    expect(actions.toggleCard).not.toHaveBeenCalled();
     wrapper.unmount();
   });
 
