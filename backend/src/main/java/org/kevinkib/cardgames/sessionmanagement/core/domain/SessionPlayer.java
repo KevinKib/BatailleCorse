@@ -52,6 +52,18 @@ public class SessionPlayer {
         this.token = SessionToken.generate();
     }
 
+    /** The same occupant on another seat: token, name, bot flag, options and rematch flags move with it. */
+    SessionPlayer movedTo(PlayerId newId) {
+        SessionPlayer moved = new SessionPlayer(newId, token);
+        moved.claimed = claimed;
+        moved.bot = bot;
+        moved.name = name;
+        moved.rematchRequested = rematchRequested;
+        moved.rematchDeparted = rematchDeparted;
+        moved.options.putAll(options);
+        return moved;
+    }
+
     void rename(String name) {
         this.name = name;
     }

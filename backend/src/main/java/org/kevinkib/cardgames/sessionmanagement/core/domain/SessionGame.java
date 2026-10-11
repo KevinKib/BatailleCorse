@@ -4,6 +4,7 @@ import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.GameOptions;
 import org.kevinkib.cardgames.game.PlayerId;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -125,6 +126,47 @@ public record SessionGame(GameId id, String gameType, GameOptions options, Map<P
             }
         }
         renumberBots();
+    }
+
+    /**
+     * A human leaves the lobby. Seats stay contiguous (a game is dealt to seats 0..claimed-1): later occupants shift
+     * down one seat and every seat left free gets a fresh token. Each occupant keeps its own token, name, bot flag,
+     * seat options and rematch flags on its new seat. When the host (seat 0) leaves, the first human by seat order
+     * takes seat 0 and becomes the host: a bot is never the host. Default names ("Player N", "Bot N") are renumbered
+     * so that two seats never share one.
+     */
+    public void vacate(PlayerId leaver) {
+        SessionPlayer leaving = seatOrThrow(leaver);
+        if (!leaving.isClaimed() || leaving.isBot()) {
+            throw new IllegalArgumentException("Seat " + leaver.id() + " is not held by a human");
+        }
+        List<SessionPlayer> staying = new ArrayList<>(seats().stream()
+                .filter(seat -> seat.isClaimed() && seat != leaving)
+                .toList());
+        if (isHost(leaver)) {
+            staying.stream().filter(seat -> !seat.isBot()).findFirst().ifPresent(newHost -> {
+                staying.remove(newHost);
+                staying.add(0, newHost);
+            });
+        }
+        List<PlayerId> seatIds = seats().stream().map(SessionPlayer::id).toList();
+        players.clear();
+        for (int i = 0; i < seatIds.size(); i++) {
+            PlayerId seatId = seatIds.get(i);
+            players.put(seatId, i < staying.size()
+                    ? staying.get(i).movedTo(seatId)
+                    : new SessionPlayer(seatId, SessionToken.generate()));
+        }
+        renumberBots();
+        renumberDefaultHumanNames();
+    }
+
+    private void renumberDefaultHumanNames() {
+        for (SessionPlayer seat : seats()) {
+            if (seat.isClaimed() && !seat.isBot() && seat.name() != null && seat.name().matches("Player \\d+")) {
+                seat.rename(seat.defaultName());
+            }
+        }
     }
 
     /** Longest player name kept; a longer one is cut. */
