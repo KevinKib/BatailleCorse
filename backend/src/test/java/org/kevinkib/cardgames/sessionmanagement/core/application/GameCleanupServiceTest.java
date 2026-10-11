@@ -7,7 +7,7 @@ import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.core.application.port.SessionRepository;
 import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionGame;
 import org.kevinkib.cardgames.sessionmanagement.presence.application.PresenceEvictionCleanup;
-import org.kevinkib.cardgames.sessionmanagement.presence.domain.Seat;
+import org.kevinkib.cardgames.sessionmanagement.presence.domain.SeatClaim;
 import org.kevinkib.cardgames.sessionmanagement.presence.infrastructure.InMemoryConnectionRegistry;
 import org.kevinkib.cardgames.sessionmanagement.presence.infrastructure.InMemoryForfeitLog;
 
@@ -51,11 +51,11 @@ class GameCleanupServiceTest {
         var forfeits = new InMemoryForfeitLog();
         var service = new GameCleanupService(repo, List.of(new PresenceEvictionCleanup(connections, forfeits)));
 
-        connections.bind("sess-1", new Seat(id, new PlayerId(1)));
+        connections.bind("sess-1", new SeatClaim(id, "token-1"));
 
         service.sweep();
 
-        assertThat(connections.seatOf("sess-1").isEmpty(), is(true));
+        assertThat(connections.claimOf("sess-1").isEmpty(), is(true));
     }
 
     @Test

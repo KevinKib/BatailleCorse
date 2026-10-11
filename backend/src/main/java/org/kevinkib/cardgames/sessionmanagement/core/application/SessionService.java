@@ -269,6 +269,7 @@ public class SessionService implements GameDirectory {
         return repository.loadSessionToken(gameId, playerId).uuid().toString();
     }
 
+    @Override
     public Optional<PlayerId> findPlayerIdByToken(GameId gameId, String token) {
         return repository.loadSessionGame(gameId).findPlayerByToken(new SessionToken(token));
     }

@@ -83,6 +83,10 @@ class PresenceServiceTest {
         gameId = game.getId();
     }
 
+    private String tokenOf(int seat) {
+        return sessionService.tokenForSeat(gameId, new PlayerId(seat));
+    }
+
     private List<String> eventTypes() {
         return messaging.sent.stream().map(Response::getEventType).toList();
     }
@@ -98,7 +102,7 @@ class PresenceServiceTest {
 
     @Test
     void givenSeatBound_whenDisconnect_thenSchedulesAndBroadcastsDisconnected() {
-        service.onPresence("sess-0", gameId, new PlayerId(0));
+        service.onPresence("sess-0", gameId, tokenOf(0));
 
         service.onDisconnect("sess-0");
 
@@ -108,10 +112,10 @@ class PresenceServiceTest {
 
     @Test
     void givenPendingForfeit_whenReconnect_thenCancelsAndBroadcastsReconnected() {
-        service.onPresence("sess-0", gameId, new PlayerId(0));
+        service.onPresence("sess-0", gameId, tokenOf(0));
         service.onDisconnect("sess-0");
 
-        service.onPresence("sess-0b", gameId, new PlayerId(0)); // same seat, new session
+        service.onPresence("sess-0b", gameId, tokenOf(0)); // same seat, new session
 
         assertThat(scheduler.cancelled, is(true));
         assertThat(eventTypes(), contains("OPPONENT_DISCONNECTED", "OPPONENT_RECONNECTED"));
@@ -119,7 +123,7 @@ class PresenceServiceTest {
 
     @Test
     void givenPendingForfeit_whenTimerFires_thenGameConcededAndForfeitBroadcast() {
-        service.onPresence("sess-0", gameId, new PlayerId(0));
+        service.onPresence("sess-0", gameId, tokenOf(0));
         service.onDisconnect("sess-0");
 
         scheduler.lastTask.run(); // simulate the 60s elapsing
@@ -134,7 +138,7 @@ class PresenceServiceTest {
     @Test
     void givenFinishedGame_whenDisconnect_thenNoBroadcastAndTimerOnlyLeavesTheRematch() {
         sessionService.getGame(gameId).forfeit(new PlayerId(1)); // already over
-        service.onPresence("sess-0", gameId, new PlayerId(0));
+        service.onPresence("sess-0", gameId, tokenOf(0));
 
         service.onDisconnect("sess-0");
         scheduler.lastTask.run(); // grace over: a departure from the rematch, never a forfeit
@@ -155,8 +159,8 @@ class PresenceServiceTest {
 
     @Test
     void givenBothPlayersDisconnect_whenBothTimersFire_thenFirstDroppedLosesAndOnlyOneForfeit() {
-        service.onPresence("sess-0", gameId, new PlayerId(0));
-        service.onPresence("sess-1", gameId, new PlayerId(1));
+        service.onPresence("sess-0", gameId, tokenOf(0));
+        service.onPresence("sess-1", gameId, tokenOf(1));
         service.onDisconnect("sess-0"); // seat 0 dropped first
         service.onDisconnect("sess-1");
 
@@ -171,11 +175,11 @@ class PresenceServiceTest {
 
     @Test
     void givenTimerAlreadyFired_whenLateReconnect_thenNoReconnectBroadcastAndStaysFinished() {
-        service.onPresence("sess-0", gameId, new PlayerId(0));
+        service.onPresence("sess-0", gameId, tokenOf(0));
         service.onDisconnect("sess-0");
         scheduler.lastTask.run(); // forfeit already happened
 
-        service.onPresence("sess-0b", gameId, new PlayerId(0)); // reconnect arrives too late
+        service.onPresence("sess-0b", gameId, tokenOf(0)); // reconnect arrives too late
 
         BatailleCorse game = (BatailleCorse) sessionService.getGame(gameId);
         assertThat(game.getWinner().id(), is(new PlayerId(1)));
