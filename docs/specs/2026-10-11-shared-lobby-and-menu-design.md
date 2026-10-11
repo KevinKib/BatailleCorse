@@ -128,20 +128,19 @@ Replaces `view/alpha/LobbyView.vue` and the front of both start pages.
   `/games/bataillecorse/{create,join,room}` and `/games/bullshit/{create,join,room}` redirect.
   Every "Back" from the Game home leads to the Game selection `/games`.
 
-### 4.1 Where leaving a game leads **[proposed, to confirm]**
+### 4.1 Where leaving a game leads (decided by the owner)
 
-The owner wants leaving a Bataille Corse game to return to its Game home (`/games/bataillecorse`), not
-to the Game selection. Bullshit currently returns to `/games` (fix #129, merged: `BullshitGameScreen.vue`
-passes `:home-route="{ name: 'games' }"` to `EndGameOverlay`). With a shared Game home it is coherent
-that leaving a game returns to **the Game home of the game just left, for both games**: Back during the
-game, the end screen's home button, forfeit, the lobby Leave button, a closed-lobby notice, and a failed
-join. Consequence for Bullshit: `/games/bullshit` instead of `/games` (a one-line change in each place,
-done in PR 5). The Game home itself still goes Back to `/games`.
+At the end of a game, **Play again** leads back to the **Lobby** (current behaviour, kept: `playAgain`
+reopens the lobby with the same options), and the other button (Back to home / leave) leads to the
+**Game selection `/games`**. This holds for both games, Bataille Corse included. The Lobby's Leave
+button (#128), Back during a game and a forfeit also lead to `/games`. There is no per-game exit route:
+`GameDefinition` carries no `homeRoute` for exits.
 
-Implementation: `GameDefinition.homeRoute` is the single source; `EndGameOverlay` takes it as
-`homeRoute` (its default `{ name: 'home' }` is removed), `GameLobby` emits `leave` and the screen
-navigates to `definition.homeRoute`, the Table's Back/leave guard (`useLeaveGuard`) uses the same value.
-Tests: one per exit path per game.
+Consequences: Bullshit stays as it is since #129 (`/games`); Bataille Corse's end screen and Back, which
+today lead to its old `home` menu (default `{ name: 'home' }` of `EndGameOverlay`), switch to `/games`.
+The `homeRoute` prop that #129 added to `EndGameOverlay` becomes unnecessary: the default becomes
+`/games` for everyone and the prop is removed in PR 1. Tests: one per exit path per game asserting
+`/games`, and one per game asserting that Play again lands in the Lobby.
 
 - All texts in locales (`home.*`).
 
@@ -188,8 +187,8 @@ flow; after the game, the rematch departure flow.
 
 **Rule (decided by the owner)**: the lobby is never closed while a human remains. A guest who leaves
 frees their seat. If the host leaves and at least one human remains, the next human becomes the host.
-The lobby is removed only when no human remains (bots alone). Every leaver goes to the Game home of the
-game they left (section 4.1).
+The lobby is removed only when no human remains (bots alone). Every leaver goes to the Game selection
+(section 4.1).
 
 **Mechanism, without a variable host**: `SessionGame.HOST_SEAT` stays the constant seat 0,
 `isHost(playerId)` stays `HOST_SEAT.equals(playerId)`. A new `SessionGame.vacate(PlayerId)` keeps the
@@ -563,7 +562,5 @@ home".
    once the create page is gone), and keep sound and shortcuts out of the lobby?
 6. **"Join game" on the Game selection**: also offer one place to paste any invite link on `/games`
    (the game is inferred from the id)?
-7. **Where leaving a game leads** (section 4.1): the Game home of the game left, for both games
-   (Bullshit: `/games/bullshit` instead of `/games`)? Proposed; confirm.
-8. **Start for a game against a bot**: the host always presses Start (this spec). Is a one-click
+7. **Start for a game against a bot**: the host always presses Start (this spec). Is a one-click
    "Play vs computer" shortcut on the Game home wanted later?

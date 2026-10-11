@@ -83,7 +83,7 @@ test doubles, which live in `bullshit.presentation.bot`; a game may not depend o
 ## PR 1: `feat: shared Game home for every game` (frontend)
 
 - Create:
-  - `frontend/src/model/games.ts`: `GameDefinition { key, titleKey, homeRoute, joinRoute, roomRoute, createLobby }` and the registry; `homeRoute` (`/games/:game`) is the single destination for every exit from a game (spec 4.1).
+  - `frontend/src/model/games.ts`: `GameDefinition { key, titleKey, gameHomeRoute, joinRoute, roomRoute, createLobby }` and the registry. Exits from a game never use it: they always lead to `/games` (spec 4.1).
   - `frontend/src/components/GameHome.vue`: title block, name field (persisted in `settingsStore.playerName`), New game, Join game, Back to the Game selection.
   - `frontend/src/components/JoinGameForm.vue`: game id or link (`extractGameId`, moved to `model/gameId.ts`), name, error line, Back.
   - Locale keys `home.*`, `join.*`.
@@ -94,7 +94,7 @@ test doubles, which live in `bullshit.presentation.bot`; a game may not depend o
   - `view/bullshit/BullshitStartGame.vue`: remove join mode.
   - Until PR5 and PR9, "New game" navigates to the game's existing create page (behaviour unchanged).
 - Tests first: `GameHome.test.ts` (New and Join for both definitions, name persisted, targets), `JoinGameForm.test.ts` (bare id or full link, prefilled from route, error, button disabled when empty), `router.test.ts` (legacy links, unknown game goes to `/games`, every Back reaches `/games`), updated `GamePickerView.test.ts`.
-- `components/EndGameOverlay.vue`: drop the default `{ name: 'home' }` and require `homeRoute`; `view/alpha/GameScreen.vue` passes the BC Game home (it already ends on it today); Bullshit switches in PR5 to avoid touching `BullshitGameScreen.vue` twice. Test: `EndGameOverlay` renders the given route.
+- `components/EndGameOverlay.vue`: remove the `homeRoute` prop added by #129 and the default `{ name: 'home' }`; the home button always goes to `/games`; Play again is unchanged. `view/alpha/GameScreen.vue` stops passing a route. Test: the overlay's home button targets `/games`; Play again does not navigate away from the game.
 - Cypress: update `game-picker.cy.ts`, `bataillecorse-menu-fit.cy.ts`, the entry steps of `bullshit-table-and-lobby.cy.ts`; 375 px fit of the Game home.
 - UI inventory: BC home and Bullshit create page before/after; nothing disappears, Bullshit gains a Join game button.
 - Parallel: yes. Merge value: both games share one home; no backend change.
@@ -174,8 +174,8 @@ left, the next human becomes seat 0 and host. The host stays the constant seat 0
   - `view/bullshit/BullshitGameScreen.vue`: render `GameLobby` (lobby block and imports only).
   - Delete `view/bullshit/BullshitStartGame.vue` and `components/bullshit/BullshitLobby.vue` (+ tests, moved). The Game home's New game creates the lobby straight away (`createLobby`, name only, server defaults).
 - Tests first: `GameLobby.test.ts` (port the whole `BullshitLobby.test.ts` first, then: editable options from descriptors for the host, read-only for guests, a change emits `set-option`, no section when descriptors are empty, own name editable and others not, free seat shows Add bot and invite for the host, Leave emits `leave`), `optionLabel.test.ts`, `Bullshit.store.test.ts`, `useLobbyActions.test.ts` (a lobby update changing `mySeat` makes the store host or not).
-- Exit destination (spec 4.1, proposed): `BullshitGameScreen.vue` passes `homeRoute` from the `GameDefinition` (`/games/bullshit`) to `EndGameOverlay`, the Back/leave guard and the lobby Leave use the same route; today it is `{ name: 'games' }` (fix #129). Tests: one per exit path (Back during the game, end screen home, forfeit, lobby Leave).
-- Cypress: update `bullshit-table-and-lobby.cy.ts`, `bullshit-lobby-bots.cy.ts`; new `shared-lobby.cy.ts` (two browsers: host picks 52 cards and the guest sees it live; the guest cannot edit; the guest leaves and the seat reopens; the host leaves and the guest becomes host, sees Start and the editable options without reloading; a guest leaving returns to `/games/bullshit`); 375 x 667 fit with 6 seats.
+- Exit destination (spec 4.1): nothing to change for Bullshit (`/games` since #129), but remove the now useless `:home-route` prop in `BullshitGameScreen.vue`. The lobby Leave also goes to `/games`. Tests: one per exit path (Back during the game, end screen home button, forfeit, lobby Leave) asserting `/games`, and one asserting that Play again leads to the lobby.
+- Cypress: update `bullshit-table-and-lobby.cy.ts`, `bullshit-lobby-bots.cy.ts`; new `shared-lobby.cy.ts` (two browsers: host picks 52 cards and the guest sees it live; the guest cannot edit; the guest leaves and the seat reopens; the host leaves and the guest becomes host, sees Start and the editable options without reloading; a guest leaving returns to `/games`); 375 x 667 fit with 6 seats.
 - UI inventory: every item the Bullshit lobby shows today (title, player count, rows with You / Bot / Host, remove button, claim mode, deck size, invite and Copy, Start and hint, waiting for host, bot error) stays; added: editable options, editable name, Leave.
 - Depends on PR1, 2, 3, 4. Conflict: see table. Parallel: no.
 
@@ -215,7 +215,7 @@ three days, plus the frontend removal in PR9).
   - Delete `view/alpha/StartGame.vue`, `components/WaitingOverlay.vue`, `model/ai/AI.ts` (+ test), the `difficulty` field of `Settings.store.ts`, the key-capture block and its CSS. `model/Difficulty.ts` stays only as the source of tier names and colours for the locale/labels (the 9 tiers are kept), or moves to locales.
   - `view/alpha/GameScreen.vue`: render `GameLobby` in the lobby phase; the opponent label comes from the seat list ("Bot 1 (Gold)" or the guest's name) instead of `Computer (<tier>)`; `model/RematchButton.ts` updated.
   - BC entry in the `GameDefinition` registry (create and start through the BC destinations).
-  - Exits: leaving a BC game (Back, forfeit, end screen, lobby Leave) goes to `/games/bataillecorse` via `GameDefinition.homeRoute`, one test per path.
+  - Exits: Back during a BC game, the end screen's home button and forfeit lead to `/games` (instead of the old `home` menu); the lobby Leave too; Play again leads to the lobby. One test per path.
   - Stored tokens: rewrite `tokens:<gameId>` to the single seat reported by the lobby view after a shift; ignore (do not crash on) an old two-token entry.
 - Backend cleanup: delete `SessionService.createGame` overloads, `GameMode`, `joinGame` (fixed seat 1), `claimAllSeats`, `/create`, the BC `join` path, `CreateGamePayload.mode`; delete or rewrite the stale disabled controller IT. `grep` for dead code first.
 - Tests first: BC store/session tests rewritten around the lobby flow; `GameScreen.test.ts`; Cypress specs listed in spec 9.1 rewritten, plus `bataillecorse-lobby.cy.ts` (solo with a bot at a chosen tier reaches the Table; invite flow in two browsers; Leave; 375 px fit).
@@ -227,7 +227,7 @@ three days, plus the frontend removal in PR9).
 - One Game home and one lobby component serve Bataille Corse and Bullshit (Kobo needs a `GameDefinition` entry).
 - The host edits game options in the lobby, everyone sees them live, they freeze at start and survive a rematch.
 - A guest can leave the lobby; when the host leaves, the next human becomes host, and the lobby disappears only when no human is left.
-- Leaving any game returns to the Game home of that game (if the owner confirms spec 4.1).
+- Leaving any game (Back, end screen, forfeit, lobby Leave) returns to `/games`; Play again returns to the lobby.
 - A Bataille Corse solo game is a lobby with a server bot at one of the 9 tiers; no local AI remains.
 - Old invite links still land on the right screen.
 - Dead code removed (`WaitingOverlay`, `StartGame`, `AI`, `GameMode`, create pages).
