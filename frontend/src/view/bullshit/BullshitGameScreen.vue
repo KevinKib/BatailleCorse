@@ -19,7 +19,7 @@ import { flyCardsToPile, flyPileToTaker, prefersReducedMotion } from '../../comp
 import { cardSound } from '../../composables/useCardSound';
 import { useBullshitHotkeys } from '../../composables/useBullshitHotkeys';
 import { useHotkeySettings } from '../../composables/useHotkeySettings';
-import HotkeySettings from '../../components/bullshit/HotkeySettings.vue';
+import HotkeySettings from '../../components/HotkeySettings.vue';
 import { sortHand } from '../../model/bullshit/sortHand';
 import { useSoundPreference } from '../../composables/useSoundPreference';
 import { useConnectionStatus } from '../../composables/useConnectionStatus';
@@ -269,7 +269,7 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
           :aria-label="soundEnabled ? ui.sound.mute : ui.sound.unmute"
           :aria-pressed="soundEnabled"
           @click="toggleSound" />
-        <HotkeySettings :settings="hotkeys" />
+        <HotkeySettings :settings="hotkeys" :labels="messages.hotkeys.actions" :note="messages.hotkeys.bullshitNote" />
       </div>
 
       <Transition name="forfeit-fade">

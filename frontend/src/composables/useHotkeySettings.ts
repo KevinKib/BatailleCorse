@@ -1,4 +1,4 @@
-import { ref } from 'vue';
+import { ref, type Ref } from 'vue';
 
 export const HOTKEY_STORAGE_KEY = 'bullshit.hotkeys';
 
@@ -7,6 +7,16 @@ export type HotkeyAction = 'discard' | 'call';
 export type HotkeyRejection = 'reserved' | 'digit' | 'duplicate';
 export type HotkeyValidation = { ok: true; key: string } | { ok: false; reason: HotkeyRejection };
 
+// What the shared settings panel needs from a game: its remappable actions (a game labels them), an
+// optional master switch, and the two operations. Bullshit and Bataille Corse each provide one.
+export interface HotkeyPanelApi {
+  actions: { id: string; key: Ref<string> }[];
+  enabled?: Ref<boolean>;
+  toggleEnabled?: () => void;
+  setKey: (action: string, e: { key: string; code: string }) => HotkeyValidation;
+  reset: () => void;
+}
+
 export const DEFAULT_HOTKEYS: Readonly<HotkeySettings> = { enabled: true, discard: 'd', call: 'b' };
 
 // Digits (any layout, main row or keypad) pick cards and are not remappable.
@@ -14,11 +24,11 @@ const isDigitCode = (code: string) => /^(?:Digit|Numpad)\d$/.test(code);
 
 // A shortcut is one printable character. Everything else (Tab, Enter, Space, Escape, modifiers,
 // arrows, dead keys...) is reserved for navigation and assistive technologies.
-export function validateHotkey(e: { key: string; code: string }, otherKey: string): HotkeyValidation {
+export function validateHotkey(e: { key: string; code: string }, otherKeys: string | string[]): HotkeyValidation {
   const key = e.key.toLowerCase();
   if ([...key].length !== 1 || key.trim() === '') return { ok: false, reason: 'reserved' };
   if (/\d/.test(key) || isDigitCode(e.code)) return { ok: false, reason: 'digit' };
-  if (key === otherKey) return { ok: false, reason: 'duplicate' };
+  if ([otherKeys].flat().includes(key)) return { ok: false, reason: 'duplicate' };
   return { ok: true, key };
 }
 
@@ -66,7 +76,7 @@ export function useHotkeySettings() {
     enabled.value = !enabled.value;
     persist();
   }
-  function setKey(action: HotkeyAction, e: { key: string; code: string }): HotkeyValidation {
+  function setKey(action: string, e: { key: string; code: string }): HotkeyValidation {
     const result = validateHotkey(e, action === 'discard' ? callKey.value : discardKey.value);
     if (!result.ok) return result;
     (action === 'discard' ? discardKey : callKey).value = result.key;
@@ -79,7 +89,7 @@ export function useHotkeySettings() {
     callKey.value = DEFAULT_HOTKEYS.call;
     persist();
   }
-  return { enabled, discardKey, callKey, toggleEnabled, setKey, reset };
+  const actions = [{ id: 'discard', key: discardKey }, { id: 'call', key: callKey }];
+  return { enabled, discardKey, callKey, actions, toggleEnabled, setKey, reset };
 }
 
-export type HotkeySettingsApi = ReturnType<typeof useHotkeySettings>;
