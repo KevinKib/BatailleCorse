@@ -30,6 +30,15 @@ public class GameFactories {
         return factoryFor(gameType).validate(options);
     }
 
+    public List<OptionDescriptor> seatOptionDescriptors(String gameType) {
+        return factoryFor(gameType).seatOptionDescriptors();
+    }
+
+    /** Strict validation of one seat option by the game itself; see {@link GameFactory#validateSeatOption}. */
+    public void validateSeatOption(String gameType, String key, String value) {
+        factoryFor(gameType).validateSeatOption(key, value);
+    }
+
     public int minPlayers(String gameType) {
         return factoryFor(gameType).minPlayers();
     }

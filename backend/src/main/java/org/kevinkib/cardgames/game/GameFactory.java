@@ -27,6 +27,27 @@ public interface GameFactory {
         return List.of();
     }
 
+    /** The options the host may set on a computer seat (for example its tier), in display order. None by default. */
+    default List<OptionDescriptor> seatOptionDescriptors() {
+        return List.of();
+    }
+
+    /**
+     * Strict validation of one seat option, with the same rule as the game options: the key must be declared
+     * by {@link #seatOptionDescriptors()} and the value one of its values.
+     *
+     * @throws InvalidOptionException when the key or the value is unknown
+     */
+    default void validateSeatOption(String key, String value) {
+        OptionDescriptor descriptor = seatOptionDescriptors().stream()
+                .filter(d -> d.key().equals(key))
+                .findFirst()
+                .orElseThrow(() -> new InvalidOptionException("Unknown seat option " + key));
+        if (!descriptor.values().contains(value)) {
+            throw new InvalidOptionException("Invalid value " + value + " for seat option " + key);
+        }
+    }
+
     /**
      * Strict validation of a full option map: a key absent from {@link #optionDescriptors()} or a value
      * outside its descriptor's values is refused, a missing key takes its default. Returns the completed

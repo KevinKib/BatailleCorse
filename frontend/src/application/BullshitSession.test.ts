@@ -170,18 +170,18 @@ describe('BullshitSession', () => {
     expect(published).toContainEqual({ dest: '/app/forfeit', body: JSON.stringify({ gameId: 'g1', token: 'tok-1' }) });
   });
 
-  it('addBot publishes to /app/bullshit/addBot with the gameId and token', () => {
+  it('addBot publishes to /app/lobby/addBot with the gameId and token', () => {
     const { session, published } = makeSession();
     session.restore('g1', 0, 'tok-0');
     session.addBot();
-    expect(published).toContainEqual({ dest: '/app/bullshit/addBot', body: JSON.stringify({ gameId: 'g1', token: 'tok-0' }) });
+    expect(published).toContainEqual({ dest: '/app/lobby/addBot', body: JSON.stringify({ gameId: 'g1', token: 'tok-0' }) });
   });
 
-  it('removeBot publishes to /app/bullshit/removeBot with the gameId, token and seat', () => {
+  it('removeBot publishes to /app/lobby/removeBot with the gameId, token and seat', () => {
     const { session, published } = makeSession();
     session.restore('g1', 0, 'tok-0');
     session.removeBot(2);
-    expect(published).toContainEqual({ dest: '/app/bullshit/removeBot', body: JSON.stringify({ gameId: 'g1', token: 'tok-0', seat: 2 }) });
+    expect(published).toContainEqual({ dest: '/app/lobby/removeBot', body: JSON.stringify({ gameId: 'g1', token: 'tok-0', seat: 2 }) });
   });
 
   it('surfaces an ErrorResponse as an error event, without a regular event', () => {

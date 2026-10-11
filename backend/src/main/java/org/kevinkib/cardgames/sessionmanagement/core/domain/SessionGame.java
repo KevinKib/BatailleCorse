@@ -102,12 +102,41 @@ public record SessionGame(GameId id, String gameType, GameOptions options, Map<P
             SessionPlayer next = i + 1 < ordered.size() ? ordered.get(i + 1) : null;
             if (next != null && next.isClaimed()) {
                 ordered.get(i).claimAsBot(next.name(), next.name());
+                ordered.get(i).replaceOptions(next.options());
             } else {
                 ordered.get(i).release();
                 break;
             }
         }
         renumberBots();
+    }
+
+    /** Longest player name kept; a longer one is cut. */
+    public static final int MAX_NAME_LENGTH = 20;
+
+    /**
+     * Renames the human occupying a seat: trimmed, cut at {@link #MAX_NAME_LENGTH} characters, a blank name
+     * restores the default "Player N".
+     */
+    public void renameSeat(PlayerId playerId, String name) {
+        SessionPlayer seat = seatOrThrow(playerId);
+        if (!seat.isClaimed() || seat.isBot()) {
+            throw new IllegalArgumentException("Seat " + playerId.id() + " is not held by a human");
+        }
+        String trimmed = name == null ? "" : name.trim();
+        if (trimmed.length() > MAX_NAME_LENGTH) {
+            trimmed = trimmed.substring(0, MAX_NAME_LENGTH).trim();
+        }
+        seat.rename(trimmed.isEmpty() ? seat.defaultName() : trimmed);
+    }
+
+    /** Sets an opaque option on a computer seat; the game validates the key and value before this is called. */
+    public void setSeatOption(PlayerId playerId, String key, String value) {
+        SessionPlayer seat = seatOrThrow(playerId);
+        if (!seat.isClaimed() || !seat.isBot()) {
+            throw new NotABotSeatException(playerId);
+        }
+        seat.setOption(key, value);
     }
 
     private void renumberBots() {

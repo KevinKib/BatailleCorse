@@ -144,6 +144,37 @@ public class SessionService implements GameDirectory {
         return lobbyViews(id);
     }
 
+    /**
+     * Occupant-only: renames the caller's own seat in a not-yet-started room (see {@link SessionGame#renameSeat}).
+     * Returns the per-viewer lobby views, computed in the same critical section.
+     */
+    public synchronized List<LobbyView> renameSeat(GameId id, String token, String name) {
+        if (repository.findGame(id).isPresent()) {
+            throw new GameAlreadyStartedException(id);
+        }
+        SessionGame lobby = repository.loadSessionGame(id);
+        PlayerId actor = lobby.findPlayerByToken(new SessionToken(token)).orElseThrow(InvalidTokenException::new);
+        lobby.renameSeat(actor, name);
+        return lobbyViews(id);
+    }
+
+    /**
+     * Host-only: sets one option on a computer seat of a not-yet-started room. The game validates the key and
+     * the value (strictly); a refused update leaves the seat unchanged. Returns the per-viewer lobby views.
+     */
+    public synchronized List<LobbyView> setSeatOption(GameId id, String hostToken, int seat, String key, String value) {
+        SessionGame lobby = openLobbyOwnedBy(id, hostToken);
+        gameFactories.validateSeatOption(lobby.gameType(), key, value);
+        lobby.setSeatOption(new PlayerId(seat), key, value);
+        return lobbyViews(id);
+    }
+
+    /** The options set on a seat (empty for a human or a free seat); answers the {@code BotSeatOptions} port. */
+    public Map<String, String> seatOptions(GameId id, PlayerId seat) {
+        SessionPlayer player = repository.loadSessionGame(id).players().get(seat);
+        return player == null ? Map.of() : player.options();
+    }
+
     /** Seats held by computer players, for whoever must drive them once the game runs. */
     public Set<PlayerId> botSeats(GameId id) {
         return repository.loadSessionGame(id).botSeats();
@@ -296,7 +327,8 @@ public class SessionService implements GameDirectory {
         PlayerId viewer = lobby.findPlayerByToken(new SessionToken(token))
                 .orElseThrow(InvalidTokenException::new);
         return LobbyView.forViewer(lobby, minPlayers(lobby.gameType()), maxPlayers(lobby.gameType()),
-                gameFactories.optionDescriptors(lobby.gameType()), viewer);
+                gameFactories.optionDescriptors(lobby.gameType()),
+                gameFactories.seatOptionDescriptors(lobby.gameType()), viewer);
     }
 
     public List<LobbyView> lobbyViews(GameId id) {
@@ -304,9 +336,10 @@ public class SessionService implements GameDirectory {
         int min = minPlayers(lobby.gameType());
         int max = maxPlayers(lobby.gameType());
         List<OptionDescriptor> descriptors = gameFactories.optionDescriptors(lobby.gameType());
+        List<OptionDescriptor> seatDescriptors = gameFactories.seatOptionDescriptors(lobby.gameType());
         return lobby.seats().stream()
                 .filter(seat -> seat.isClaimed() && !seat.isBot())
-                .map(seat -> LobbyView.forViewer(lobby, min, max, descriptors, seat.id()))
+                .map(seat -> LobbyView.forViewer(lobby, min, max, descriptors, seatDescriptors, seat.id()))
                 .toList();
     }
 }

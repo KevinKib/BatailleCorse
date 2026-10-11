@@ -114,12 +114,12 @@ export default class BullshitSession {
 
   /** Host only: seat a computer-controlled player. The server answers with a lobby refresh. */
   addBot(): void {
-    this.webSocket.publish('/app/bullshit/addBot', JSON.stringify({ gameId: this.gameId, token: this.myToken }));
+    this.webSocket.publish('/app/lobby/addBot', JSON.stringify({ gameId: this.gameId, token: this.myToken }));
   }
 
   /** Host only: free the bot seat (the server refuses when a human sits above it). */
   removeBot(seat: number): void {
-    this.webSocket.publish('/app/bullshit/removeBot', JSON.stringify({ gameId: this.gameId, token: this.myToken, seat }));
+    this.webSocket.publish('/app/lobby/removeBot', JSON.stringify({ gameId: this.gameId, token: this.myToken, seat }));
   }
 
   async playAgain(name?: string): Promise<void> {

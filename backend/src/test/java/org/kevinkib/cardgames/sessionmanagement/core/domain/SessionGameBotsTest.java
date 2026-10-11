@@ -161,4 +161,62 @@ class SessionGameBotsTest {
 
         assertThat(flags, contains(false, true, false, false));
     }
+
+    @Test
+    void givenBotWithOption_whenSetSeatOption_thenStoredOnTheSeat() {
+        SessionPlayer bot = lobby.claimBot(null);
+
+        lobby.setSeatOption(bot.id(), "tier", "3");
+
+        assertThat(lobby.players().get(bot.id()).options(), is(java.util.Map.of("tier", "3")));
+    }
+
+    @Test
+    void givenHumanOrFreeSeat_whenSetSeatOption_thenNotABotSeat() {
+        assertThrows(NotABotSeatException.class, () -> lobby.setSeatOption(new PlayerId(0), "tier", "3"));
+        assertThrows(NotABotSeatException.class, () -> lobby.setSeatOption(new PlayerId(2), "tier", "3"));
+    }
+
+    @Test
+    void givenBotsWithOptions_whenAnEarlierBotIsRemoved_thenLaterBotsKeepTheirOptions() {
+        lobby.claimBot(null);
+        SessionPlayer second = lobby.claimBot(null);
+        SessionPlayer third = lobby.claimBot(null);
+        lobby.setSeatOption(second.id(), "tier", "5");
+        lobby.setSeatOption(third.id(), "tier", "7");
+
+        lobby.removeBot(new PlayerId(1));
+
+        assertThat(lobby.players().get(new PlayerId(1)).options(), is(java.util.Map.of("tier", "5")));
+        assertThat(lobby.players().get(new PlayerId(2)).options(), is(java.util.Map.of("tier", "7")));
+        assertThat(lobby.players().get(new PlayerId(3)).options(), is(java.util.Map.of()));
+    }
+
+    @Test
+    void givenBotWithOption_whenRemoved_thenNoOptionLeaksToTheNextBotInThatSeat() {
+        SessionPlayer bot = lobby.claimBot(null);
+        lobby.setSeatOption(bot.id(), "tier", "5");
+        lobby.removeBot(bot.id());
+
+        SessionPlayer next = lobby.claimBot(null);
+
+        assertThat(next.options(), is(java.util.Map.of()));
+    }
+
+    @Test
+    void givenHuman_whenRenameSeat_thenTrimmedCutAndBlankRestoresTheDefault() {
+        lobby.renameSeat(new PlayerId(0), "  Alicia ");
+        assertThat(lobby.players().get(new PlayerId(0)).name(), is("Alicia"));
+
+        lobby.renameSeat(new PlayerId(0), "abcdefghijklmnopqrstuvwxyz");
+        assertThat(lobby.players().get(new PlayerId(0)).name(), is("abcdefghijklmnopqrst"));
+
+        lobby.renameSeat(new PlayerId(0), " ");
+        assertThat(lobby.players().get(new PlayerId(0)).name(), is("Player 1"));
+    }
+
+    @Test
+    void givenFreeSeat_whenRenameSeat_thenRefused() {
+        assertThrows(IllegalArgumentException.class, () -> lobby.renameSeat(new PlayerId(2), "X"));
+    }
 }
