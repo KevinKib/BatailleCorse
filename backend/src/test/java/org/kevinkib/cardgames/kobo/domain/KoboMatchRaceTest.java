@@ -3,6 +3,7 @@ package org.kevinkib.cardgames.kobo.domain;
 import org.kevinkib.cardgames.kobo.domain.turn.Phase;
 import org.kevinkib.cardgames.kobo.domain.tableau.StaleSlotException;
 import org.junit.jupiter.api.Test;
+import org.kevinkib.cardgames.kobo.domain.event.KoboEvent;
 import org.kevinkib.cards.domain.Rank;
 
 import java.util.ArrayList;
@@ -14,7 +15,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.anyOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.hamcrest.Matchers.is;
 import static org.kevinkib.cardgames.kobo.domain.KoboBuilder.aKobo;
 import static org.kevinkib.cardgames.kobo.domain.KoboBuilder.ref;
@@ -109,22 +110,37 @@ class KoboMatchRaceTest {
     }
 
     @Test
-    void matchRacingADiscardOfAnotherRank_isEitherAMatchOrAnUnpenalisedStaleAttempt() throws Exception {
-        for (int run = 0; run < 100; run++) {
-            Kobo kobo = aKobo().withTableau("AH", "2H", "3H", "4H").withTableau("7D", "2C", "3C", "4C")
-                    .withDiscard("7H").inPhase(Phase.DECISION).withDrawn("5S").build();
-            int cards = kobo.cardsInPlay();
+    void matchArrivingAfterTheTopMoved_isStaleAndNotPenalised() throws Exception {
+        Kobo kobo = aKobo().withTableau("AH", "2H", "3H", "4H").withTableau("7D", "2C", "3C", "4C")
+                .withDiscard("7H").withDrawPile("8C", "9C").inPhase(Phase.DECISION).withDrawn("5S").build();
+        int cards = kobo.cardsInPlay();
 
-            List<Throwable> outcomes = race(List.of(
-                    () -> kobo.discardDrawn(seat(0)),
-                    () -> match(kobo, seat(1), ref(1, 0), null, SEVEN)));
+        kobo.discardDrawn(seat(0));
+        int version = kobo.version();
+        assertThrows(StaleDiscardException.class, () -> match(kobo, seat(1), ref(1, 0), null, SEVEN));
 
-            assertThat(outcomes.get(0), is((Throwable) null));
-            Throwable second = outcomes.get(1);
-            assertThat(second == null || second instanceof StaleDiscardException, is(true));
-            assertThat(kobo.cardsInPlay(), is(cards));
-            assertThat(kobo.handSize(seat(1)), anyOf(is(3), is(4)));
-            assertThat(kobo.slots(seat(1)).size(), is(4));
-        }
+        assertThat(kobo.discardTop().get(), is(card("5S")));
+        assertThat(kobo.version(), is(version));
+        assertThat(kobo.cardsInPlay(), is(cards));
+        assertThat(kobo.drawPileSize(), is(2));
+        assertThat(kobo.handSize(seat(1)), is(4));
+        assertThat(kobo.slots(seat(1)).size(), is(4));
+    }
+
+    @Test
+    void matchArrivingBeforeTheTopMoves_succeedsAndTheDiscardStillGoesOnTop() throws Exception {
+        Kobo kobo = aKobo().withTableau("AH", "2H", "3H", "4H").withTableau("7D", "2C", "3C", "4C")
+                .withDiscard("7H").withDrawPile("8C", "9C").inPhase(Phase.DECISION).withDrawn("5S").build();
+        int cards = kobo.cardsInPlay();
+
+        assertThat(match(kobo, seat(1), ref(1, 0), null, SEVEN) instanceof KoboEvent.MatchSucceeded, is(true));
+        kobo.discardDrawn(seat(0));
+
+        assertThat(kobo.discardTop().get(), is(card("5S")));
+        assertThat(kobo.cardsInPlay(), is(cards));
+        assertThat(kobo.drawPileSize(), is(2));
+        assertThat(kobo.handSize(seat(1)), is(3));
+        assertThat(kobo.slots(seat(1)).size(), is(4));
+        assertThat(kobo.discardSize(), is(3));
     }
 }
