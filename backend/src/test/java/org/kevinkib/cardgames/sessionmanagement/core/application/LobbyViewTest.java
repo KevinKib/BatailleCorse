@@ -1,7 +1,9 @@
 package org.kevinkib.cardgames.sessionmanagement.core.application;
 
 import org.junit.jupiter.api.Test;
+import org.kevinkib.cardgames.bullshit.domain.BullshitFactory;
 import org.kevinkib.cardgames.game.GameId;
+import org.kevinkib.cardgames.game.OptionDescriptor;
 import org.kevinkib.cardgames.game.GameOptions;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionGame;
@@ -13,6 +15,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
 class LobbyViewTest {
+
+    private static final List<OptionDescriptor> NO_OPTIONS = List.of();
+    private static final List<OptionDescriptor> BULLSHIT_OPTIONS = new BullshitFactory().optionDescriptors();
 
     private SessionGame lobbyWith(int claimedSeats, int maxSeats) {
         List<PlayerId> seats = new java.util.ArrayList<>();
@@ -30,7 +35,7 @@ class LobbyViewTest {
     void givenHostViewerAtMin_whenForViewer_thenCanStartTrueAndNotStarted() {
         SessionGame lobby = lobbyWith(2, 6);
 
-        LobbyView dto = LobbyView.forViewer(lobby, 2, 6, new PlayerId(0));
+        LobbyView dto = LobbyView.forViewer(lobby, 2, 6, NO_OPTIONS, new PlayerId(0));
 
         assertThat(dto.started(), is(false));
         assertThat(dto.hostSeat(), is(0));
@@ -47,7 +52,7 @@ class LobbyViewTest {
     void givenNonHostViewer_whenForViewer_thenCanStartFalse() {
         SessionGame lobby = lobbyWith(2, 6);
 
-        LobbyView dto = LobbyView.forViewer(lobby, 2, 6, new PlayerId(1));
+        LobbyView dto = LobbyView.forViewer(lobby, 2, 6, NO_OPTIONS, new PlayerId(1));
 
         assertThat(dto.mySeat(), is(1));
         assertThat(dto.canStart(), is(false));
@@ -57,7 +62,7 @@ class LobbyViewTest {
     void givenHostBelowMin_whenForViewer_thenCanStartFalse() {
         SessionGame lobby = lobbyWith(1, 6);
 
-        LobbyView dto = LobbyView.forViewer(lobby, 2, 6, new PlayerId(0));
+        LobbyView dto = LobbyView.forViewer(lobby, 2, 6, NO_OPTIONS, new PlayerId(0));
 
         assertThat(dto.canStart(), is(false));
     }
@@ -67,8 +72,44 @@ class LobbyViewTest {
         SessionGame lobby = SessionGame.create(
                 GameId.generate(), 2, "bullshit", GameOptions.of(Map.of("claimMode", "suit")));
 
-        LobbyView view = LobbyView.forViewer(lobby, 2, 6, new PlayerId(0));
+        LobbyView view = LobbyView.forViewer(lobby, 2, 6, BULLSHIT_OPTIONS, new PlayerId(0));
 
-        assertThat(view.options(), is(Map.of("claimMode", "suit")));
+        assertThat(view.options(), is(Map.of("claimMode", "suit", "deckSize", "32")));
+    }
+
+    @Test
+    void givenDescriptors_whenForViewer_thenViewCarriesThem() {
+        SessionGame lobby = lobbyWith(2, 6);
+
+        LobbyView view = LobbyView.forViewer(lobby, 2, 6, BULLSHIT_OPTIONS, new PlayerId(0));
+
+        assertThat(view.optionDescriptors(), is(BULLSHIT_OPTIONS));
+    }
+
+    @Test
+    void givenHostViewer_whenForViewer_thenOnlyHostCanEditOptions() {
+        SessionGame lobby = lobbyWith(2, 6);
+
+        assertThat(LobbyView.forViewer(lobby, 2, 6, BULLSHIT_OPTIONS, new PlayerId(0)).canEditOptions(), is(true));
+        assertThat(LobbyView.forViewer(lobby, 2, 6, BULLSHIT_OPTIONS, new PlayerId(1)).canEditOptions(), is(false));
+    }
+
+    @Test
+    void givenGameWithoutOptions_whenForViewer_thenHostCannotEditAndNothingDeclared() {
+        SessionGame lobby = lobbyWith(2, 2);
+
+        LobbyView view = LobbyView.forViewer(lobby, 2, 2, NO_OPTIONS, new PlayerId(0));
+
+        assertThat(view.optionDescriptors().isEmpty(), is(true));
+        assertThat(view.canEditOptions(), is(false));
+    }
+
+    @Test
+    void givenNoStoredOptions_whenForViewer_thenDefaultsFilledForMissingKeys() {
+        SessionGame lobby = lobbyWith(2, 6);
+
+        LobbyView view = LobbyView.forViewer(lobby, 2, 6, BULLSHIT_OPTIONS, new PlayerId(0));
+
+        assertThat(view.options(), is(Map.of("claimMode", "rank", "deckSize", "32")));
     }
 }

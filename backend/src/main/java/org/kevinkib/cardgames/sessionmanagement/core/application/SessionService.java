@@ -3,6 +3,7 @@ package org.kevinkib.cardgames.sessionmanagement.core.application;
 import org.kevinkib.cardgames.game.Game;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.GameOptions;
+import org.kevinkib.cardgames.game.OptionDescriptor;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.core.application.port.SessionRepository;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameMode;
@@ -12,7 +13,9 @@ import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionGame;
 import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionPlayer;
 import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionToken;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -125,6 +128,20 @@ public class SessionService implements GameDirectory {
     public void removeBot(GameId id, String hostToken, int seat) {
         SessionGame lobby = openLobbyOwnedBy(id, hostToken);
         lobby.removeBot(new PlayerId(seat));
+    }
+
+    /**
+     * Host-only: merges {@code changes} into the options of a not-yet-started room. The whole merged map is
+     * validated by the game (an unknown key or value is refused and nothing changes), then stored with the
+     * defaults filled. Returns the per-viewer lobby views, computed in the same critical section.
+     */
+    public synchronized List<LobbyView> updateOptions(GameId id, String hostToken, Map<String, String> changes) {
+        SessionGame lobby = openLobbyOwnedBy(id, hostToken);
+        Map<String, String> merged = new HashMap<>(lobby.options().values());
+        merged.putAll(changes);
+        GameOptions validated = gameFactories.validate(lobby.gameType(), GameOptions.of(merged));
+        repository.saveLobby(new SessionGame(lobby.id(), lobby.gameType(), validated, lobby.players()));
+        return lobbyViews(id);
     }
 
     /** Seats held by computer players, for whoever must drive them once the game runs. */
@@ -277,16 +294,18 @@ public class SessionService implements GameDirectory {
         SessionGame lobby = repository.loadSessionGame(id);
         PlayerId viewer = lobby.findPlayerByToken(new SessionToken(token))
                 .orElseThrow(InvalidTokenException::new);
-        return LobbyView.forViewer(lobby, minPlayers(lobby.gameType()), maxPlayers(lobby.gameType()), viewer);
+        return LobbyView.forViewer(lobby, minPlayers(lobby.gameType()), maxPlayers(lobby.gameType()),
+                gameFactories.optionDescriptors(lobby.gameType()), viewer);
     }
 
     public List<LobbyView> lobbyViews(GameId id) {
         SessionGame lobby = repository.loadSessionGame(id);
         int min = minPlayers(lobby.gameType());
         int max = maxPlayers(lobby.gameType());
+        List<OptionDescriptor> descriptors = gameFactories.optionDescriptors(lobby.gameType());
         return lobby.seats().stream()
                 .filter(seat -> seat.isClaimed() && !seat.isBot())
-                .map(seat -> LobbyView.forViewer(lobby, min, max, seat.id()))
+                .map(seat -> LobbyView.forViewer(lobby, min, max, descriptors, seat.id()))
                 .toList();
     }
 }

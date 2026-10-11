@@ -12,6 +12,7 @@ import org.kevinkib.cards.domain.hand.Hand;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * The deck a Bullshit game is played with. {@link #ranks()} lists the ranks present in the order the
@@ -70,6 +71,16 @@ public enum DeckSize {
             }
         }
         return deck.distributeAll(nbPlayers);
+    }
+
+    /** Resolves a key to its size, or empty when the key is unknown. */
+    public static Optional<DeckSize> find(String key) {
+        for (DeckSize size : values()) {
+            if (size.key.equals(key)) {
+                return Optional.of(size);
+            }
+        }
+        return Optional.empty();
     }
 
     /** Resolves a key to its size; unknown or {@code null} keys fall back to {@link #DEFAULT}. */

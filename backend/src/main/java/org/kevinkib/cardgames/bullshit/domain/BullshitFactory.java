@@ -6,7 +6,13 @@ import org.kevinkib.cardgames.game.Game;
 import org.kevinkib.cardgames.game.GameFactory;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.GameOptions;
+import org.kevinkib.cardgames.game.OptionDescriptor;
+import org.kevinkib.cardgames.game.OptionType;
+import org.kevinkib.cardgames.bullshit.domain.claim.ClaimModeOption;
+import org.kevinkib.cardgames.bullshit.domain.deck.DeckSize;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.random.RandomGenerator;
 
 public class BullshitFactory implements GameFactory {
@@ -48,5 +54,21 @@ public class BullshitFactory implements GameFactory {
     public Game create(GameId id, int nbPlayers, GameOptions options) {
         BullshitOptions parsed = BullshitOptions.from(options);
         return new Bullshit(id, nbPlayers, parsed.toClaimMode(random), parsed.deckSize());
+    }
+
+    @Override
+    public List<OptionDescriptor> optionDescriptors() {
+        return List.of(
+                new OptionDescriptor(BullshitOptions.CLAIM_MODE_KEY, OptionType.CHOICE,
+                        Arrays.stream(ClaimModeOption.values()).map(ClaimModeOption::key).toList(),
+                        ClaimModeOption.DEFAULT.key(), "options.bullshit.claimMode"),
+                new OptionDescriptor(BullshitOptions.DECK_SIZE_KEY, OptionType.CHOICE,
+                        Arrays.stream(DeckSize.values()).map(DeckSize::key).toList(),
+                        DeckSize.DEFAULT.key(), "options.bullshit.deckSize"));
+    }
+
+    @Override
+    public GameOptions validate(GameOptions requested) {
+        return BullshitOptions.parseStrict(requested).toGameOptions();
     }
 }
