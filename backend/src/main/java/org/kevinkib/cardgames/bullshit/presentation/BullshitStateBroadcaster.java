@@ -1,7 +1,7 @@
 package org.kevinkib.cardgames.bullshit.presentation;
 
 import org.kevinkib.cardgames.bullshit.domain.Bullshit;
-import org.kevinkib.cardgames.bullshit.presentation.bot.BotSeats;
+import org.kevinkib.cardgames.presentation.bot.BotSeats;
 import org.kevinkib.cardgames.bullshit.presentation.bot.SeatNames;
 import org.kevinkib.cardgames.bullshit.presentation.dto.BullshitDto;
 import org.kevinkib.cardgames.game.PlayerId;

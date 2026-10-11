@@ -1,5 +1,7 @@
 package org.kevinkib.cardgames.bullshit.presentation.bot;
 
+import org.kevinkib.cardgames.presentation.bot.FixedThinkingDelay;
+import org.kevinkib.cardgames.presentation.bot.ManualBotScheduler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.bullshit.domain.Bullshit;

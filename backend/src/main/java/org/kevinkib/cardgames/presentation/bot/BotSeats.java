@@ -1,4 +1,4 @@
-package org.kevinkib.cardgames.bullshit.presentation.bot;
+package org.kevinkib.cardgames.presentation.bot;
 
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
