@@ -7,6 +7,7 @@ import org.kevinkib.cardgames.game.OptionDescriptor;
 import org.kevinkib.cardgames.game.GameOptions;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionGame;
+import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionPlayer;
 
 import java.util.List;
 import java.util.Map;
@@ -111,5 +112,32 @@ class LobbyViewTest {
         LobbyView view = LobbyView.forViewer(lobby, 2, 6, BULLSHIT_OPTIONS, new PlayerId(0));
 
         assertThat(view.options(), is(Map.of("claimMode", "rank", "deckSize", "32")));
+    }
+
+    @Test
+    void givenSeatDescriptors_whenForViewer_thenViewCarriesThemAndBotSeatsGetDefaultsFilled() {
+        List<OptionDescriptor> seatDescriptors = new TieredFactory().seatOptionDescriptors();
+        SessionGame lobby = lobbyWith(1, 3);
+        lobby.claimBot(null);
+        SessionPlayer tuned = lobby.claimBot(null);
+        lobby.setSeatOption(tuned.id(), "tier", "2");
+
+        LobbyView view = LobbyView.forViewer(lobby, 2, 3, NO_OPTIONS, seatDescriptors, new PlayerId(0));
+
+        assertThat(view.seatOptionDescriptors(), is(seatDescriptors));
+        assertThat(view.players().get(0).seatOptions(), is(Map.of()));
+        assertThat(view.players().get(1).seatOptions(), is(Map.of("tier", "1")));
+        assertThat(view.players().get(2).seatOptions(), is(Map.of("tier", "2")));
+    }
+
+    @Test
+    void givenGameWithoutSeatOptions_whenForViewer_thenBotSeatsCarryNone() {
+        SessionGame lobby = lobbyWith(1, 3);
+        lobby.claimBot(null);
+
+        LobbyView view = LobbyView.forViewer(lobby, 2, 3, NO_OPTIONS, new PlayerId(0));
+
+        assertThat(view.seatOptionDescriptors().isEmpty(), is(true));
+        assertThat(view.players().get(1).seatOptions(), is(Map.of()));
     }
 }

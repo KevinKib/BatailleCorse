@@ -18,6 +18,7 @@ import org.kevinkib.cardgames.bullshit.domain.bot.BotTuning;
 import org.kevinkib.cardgames.bullshit.domain.bot.ProbabilisticBotStrategy;
 import org.kevinkib.cardgames.bullshit.presentation.BullshitGameActions;
 import org.kevinkib.cardgames.presentation.bot.BotScheduler;
+import org.kevinkib.cardgames.presentation.bot.BotSeatOptions;
 import org.kevinkib.cardgames.bullshit.presentation.bot.BullshitBotCoordinator;
 import org.kevinkib.cardgames.bullshit.presentation.bot.CallDecisionDelay;
 import org.kevinkib.cardgames.presentation.bot.TaskSchedulerBotScheduler;
@@ -130,6 +131,12 @@ public class AppConfig {
     public BullshitStateBroadcaster bullshitStateBroadcaster(GameMessagingService gameMessagingService) {
         return new BullshitStateBroadcaster(gameMessagingService, sessionService()::botSeats,
                 sessionService()::seatNames);
+    }
+
+    /** The options set on computer seats, answered by the session core for whoever drives the bots. */
+    @Bean
+    public BotSeatOptions botSeatOptions() {
+        return sessionService()::seatOptions;
     }
 
     @Bean

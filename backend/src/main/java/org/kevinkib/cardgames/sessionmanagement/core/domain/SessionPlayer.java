@@ -2,6 +2,9 @@ package org.kevinkib.cardgames.sessionmanagement.core.domain;
 
 import org.kevinkib.cardgames.game.PlayerId;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 public class SessionPlayer {
 
     private final PlayerId id;
@@ -11,6 +14,7 @@ public class SessionPlayer {
     private String name;
     private boolean rematchRequested;
     private boolean rematchDeparted;
+    private final Map<String, String> options = new LinkedHashMap<>();
 
     public SessionPlayer(PlayerId id, SessionToken token) {
         this.id = id;
@@ -39,12 +43,27 @@ public class SessionPlayer {
         this.claimed = false;
         this.bot = false;
         this.name = null;
+        this.options.clear();
         this.rematchRequested = false;
         this.rematchDeparted = false;
     }
 
     void rename(String name) {
         this.name = name;
+    }
+
+    void setOption(String key, String value) {
+        options.put(key, value);
+    }
+
+    void replaceOptions(Map<String, String> replacement) {
+        options.clear();
+        options.putAll(replacement);
+    }
+
+    /** The seat options, opaque to the session core (a computer seat's tier, for example). A copy. */
+    public Map<String, String> options() {
+        return Map.copyOf(options);
     }
 
     public String defaultName() {
