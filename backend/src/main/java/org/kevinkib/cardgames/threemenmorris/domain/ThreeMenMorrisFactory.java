@@ -25,6 +25,10 @@ public class ThreeMenMorrisFactory implements GameFactory {
 
     @Override
     public Game create(GameId id, int nbPlayers) {
+        if (nbPlayers != ThreeMenMorris.PLAYERS) {
+            throw new IllegalArgumentException("Three Men's Morris is played by exactly "
+                    + ThreeMenMorris.PLAYERS + " players, not " + nbPlayers);
+        }
         return new ThreeMenMorris(id);
     }
 }

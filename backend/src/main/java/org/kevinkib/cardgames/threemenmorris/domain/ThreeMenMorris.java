@@ -5,6 +5,7 @@ import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -41,13 +42,38 @@ public class ThreeMenMorris implements Game {
     /**
      * Test constructor: a board written row by row (nine characters, W white, B black, anything else
      * empty), the pieces still in hand and the seat to play. No win is looked for in the layout.
+     * Each player must hold three pieces, on the board and in hand together.
      */
     static ThreeMenMorris fromLayout(GameId id, String layout, int whiteInHand, int blackInHand,
                                      PlayerId current) {
+        return fromLayout(id, layout, whiteInHand, blackInHand, PIECES, PIECES, current);
+    }
+
+    /**
+     * Like the other overload, for artificial positions where the players hold another number of
+     * pieces (for example to test the blocked rule, which three pieces each cannot reach without an
+     * alignment first).
+     */
+    static ThreeMenMorris fromLayout(GameId id, String layout, int whiteInHand, int blackInHand,
+                                     int whitePieces, int blackPieces, PlayerId current) {
+        if (layout == null || layout.length() != Board.POINTS) {
+            throw new IllegalArgumentException("A layout has exactly " + Board.POINTS + " characters");
+        }
+        if (!WHITE.equals(current) && !BLACK.equals(current)) {
+            throw new IllegalArgumentException("No such seat: " + current);
+        }
         ThreeMenMorris game = new ThreeMenMorris(id);
+        int[] onBoard = new int[PLAYERS];
         for (int point = 0; point < Board.POINTS; point++) {
             char c = layout.charAt(point);
             game.board[point] = c == 'W' ? WHITE : c == 'B' ? BLACK : null;
+            if (game.board[point] != null) {
+                onBoard[game.board[point].id()]++;
+            }
+        }
+        if (onBoard[0] + whiteInHand != whitePieces || onBoard[1] + blackInHand != blackPieces) {
+            throw new IllegalArgumentException("Pieces on the board plus in hand must be " + whitePieces
+                    + " for white and " + blackPieces + " for black");
         }
         game.inHand[0] = whiteInHand;
         game.inHand[1] = blackInHand;
@@ -147,10 +173,21 @@ public class ThreeMenMorris implements Game {
 
     /** The owner of the piece on the point, null when the point is free. */
     public synchronized PlayerId owner(int point) {
+        if (!Board.isPoint(point)) {
+            throw new InvalidQueryException("No such point: " + point);
+        }
         return board[point];
     }
 
+    /** The owner of each point, row by row (null entries are free points): a snapshot. */
+    public synchronized List<PlayerId> board() {
+        return Arrays.asList(board.clone());
+    }
+
     public synchronized int piecesToPlace(PlayerId seat) {
+        if (seat == null || seat.id() == null || seat.id() < 0 || seat.id() >= PLAYERS) {
+            throw new InvalidQueryException("No such seat: " + seat);
+        }
         return inHand[seat.id()];
     }
 

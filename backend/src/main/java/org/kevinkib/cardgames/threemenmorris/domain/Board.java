@@ -31,6 +31,12 @@ final class Board {
         return point >= 0 && point < POINTS;
     }
 
+    static void requireInRange(int point) {
+        if (!isPoint(point)) {
+            throw new IllegalArgumentException("No such point: " + point);
+        }
+    }
+
     static List<Integer> neighbours(int point) {
         return NEIGHBOURS.get(point);
     }

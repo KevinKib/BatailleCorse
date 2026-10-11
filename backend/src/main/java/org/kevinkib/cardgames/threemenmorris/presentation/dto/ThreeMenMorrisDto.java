@@ -8,7 +8,6 @@ import org.kevinkib.cardgames.threemenmorris.domain.MorrisResult;
 import org.kevinkib.cardgames.threemenmorris.domain.ThreeMenMorris;
 import org.kevinkib.cardgames.threemenmorris.domain.ThreeMenMorrisFactory;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -57,11 +56,7 @@ public record ThreeMenMorrisDto(
 
     public static ThreeMenMorrisDto forViewer(ThreeMenMorris game, PlayerId viewer, Map<PlayerId, String> names) {
         synchronized (game) {
-            List<Integer> board = new ArrayList<>();
-            for (int point = 0; point < 9; point++) {
-                PlayerId owner = game.owner(point);
-                board.add(owner == null ? null : owner.id());
-            }
+            List<Integer> board = game.board().stream().map(owner -> owner == null ? null : owner.id()).toList();
             List<PlayerDto> players = game.getPlayerIds().stream()
                     .map(p -> new PlayerDto(p.id(), names.get(p), p.equals(game.currentSeat()),
                             game.piecesToPlace(p)))

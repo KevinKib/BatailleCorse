@@ -25,7 +25,7 @@ class ThreeMenMorrisMovementTest {
 
     @Test
     void movingAPieceToAnAdjacentFreePointPassesTheTurn() throws Exception {
-        ThreeMenMorris game = movement("W.B" + ".WB" + "...", WHITE);
+        ThreeMenMorris game = movement("W.B" + ".WB" + "W.B", WHITE);
 
         MorrisEvent event = game.move(WHITE, 0, 1);
 
@@ -39,14 +39,14 @@ class ThreeMenMorrisMovementTest {
 
     @Test
     void aRejectedMoveNeverMutatesTheGame() {
-        ThreeMenMorris game = movement("W.B" + ".WB" + "...", WHITE);
+        ThreeMenMorris game = movement("W.B" + ".WB" + "W.B", WHITE);
 
         assertThrows(NotPlayersTurnException.class, () -> game.move(BLACK, 2, 1));
         assertThrows(NotYourPieceException.class, () -> game.move(WHITE, 2, 1));
         assertThrows(NotYourPieceException.class, () -> game.move(WHITE, 7, 6));
         assertThrows(PointOccupiedException.class, () -> game.move(WHITE, 0, 4));
         assertThrows(PointOccupiedException.class, () -> game.move(WHITE, 4, 5));
-        assertThrows(NotAdjacentException.class, () -> game.move(WHITE, 0, 8));
+        assertThrows(NotAdjacentException.class, () -> game.move(WHITE, 0, 7));
         assertThrows(InvalidPointException.class, () -> game.move(WHITE, 4, 9));
         assertThrows(InvalidPointException.class, () -> game.move(WHITE, -1, 1));
         assertThrows(WrongPhaseException.class, () -> game.place(WHITE, 1));
@@ -58,14 +58,14 @@ class ThreeMenMorrisMovementTest {
 
     @Test
     void thereIsNoJumpOverAPiece() {
-        ThreeMenMorris game = movement("WB." + "..." + "...", WHITE);
+        ThreeMenMorris game = movement("WB." + "B.B" + "W.W", WHITE);
 
         assertThrows(NotAdjacentException.class, () -> game.move(WHITE, 0, 2));
     }
 
     @Test
     void aCornerStepsToTheCentreAlongTheDiagonal() throws Exception {
-        ThreeMenMorris game = movement("W.." + "..." + "..B", WHITE);
+        ThreeMenMorris game = movement("W.W" + "..B" + "BWB", WHITE);
 
         game.move(WHITE, 0, 4);
 
@@ -74,7 +74,7 @@ class ThreeMenMorrisMovementTest {
 
     @Test
     void aSideMiddleStepsToTheCentre() throws Exception {
-        ThreeMenMorris game = movement(".W." + "..." + "B..", WHITE);
+        ThreeMenMorris game = movement(".WB" + "W.B" + "B.W", WHITE);
 
         game.move(WHITE, 1, 4);
 
@@ -83,9 +83,10 @@ class ThreeMenMorrisMovementTest {
 
     @Test
     void legalMovesListsEveryFreeAdjacentPointOfTheSeatToPlayAndNothingForTheOther() {
-        ThreeMenMorris game = movement("W.." + "..." + "..B", WHITE);
+        ThreeMenMorris game = movement("W.W" + "..B" + "BWB", WHITE);
 
-        assertThat(game.legalMoves(WHITE), containsInAnyOrder(new Move(0, 1), new Move(0, 3), new Move(0, 4)));
+        assertThat(game.legalMoves(WHITE), containsInAnyOrder(new Move(0, 1), new Move(0, 3), new Move(0, 4),
+                new Move(2, 1), new Move(2, 4), new Move(7, 4)));
         assertThat(game.legalMoves(BLACK), is(empty()));
         assertThat(game.availableActions(WHITE), is(List.of(Action.MOVE)));
         assertThat(game.availableActions(BLACK), is(List.of()));
@@ -93,7 +94,7 @@ class ThreeMenMorrisMovementTest {
 
     @Test
     void movingIntoARowWins() throws Exception {
-        ThreeMenMorris game = movement("WW." + "..W" + "B.B", WHITE);
+        ThreeMenMorris game = movement("WW." + "B.W" + "B.B", WHITE);
 
         game.move(WHITE, 5, 2);
 
@@ -107,7 +108,7 @@ class ThreeMenMorrisMovementTest {
 
     @Test
     void movingIntoADiagonalWins() throws Exception {
-        ThreeMenMorris game = movement("W.B" + "B.." + "B.W", BLACK);
+        ThreeMenMorris game = movement("W.B" + "B.W" + "B.W", BLACK);
 
         game.move(BLACK, 3, 4);
 
@@ -120,7 +121,7 @@ class ThreeMenMorrisMovementTest {
         // Artificial position (white holds four pieces): black's two pieces on 0 and 1 are boxed in by
         // white 2, 3 and 4. Any white move that keeps the box leaves black without a move and without
         // a white line. With three pieces each this cannot happen without a white line first.
-        ThreeMenMorris game = movement("BBW" + "WW." + "..W", WHITE);
+        ThreeMenMorris game = ThreeMenMorris.fromLayout(GameId.generate(), "BBW" + "WW." + "..W", 0, 0, 4, 2, WHITE);
 
         game.move(WHITE, 8, 7);
 
