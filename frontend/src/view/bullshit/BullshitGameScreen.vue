@@ -25,6 +25,7 @@ import { useConnectionStatus } from '../../composables/useConnectionStatus';
 import { format, plural } from '../../locales/format';
 import { seatDisplayName } from '../../model/bullshit/displayName';
 import { claimSuit } from '../../model/bullshit/claimSuit';
+import { CLAIM_MODE_RANK, CLAIM_MODE_SUIT, type ClaimMode } from '../../model/bullshit/claimMode';
 
 const props = defineProps<{ gameId: string }>();
 const messages = useI18n();
@@ -89,6 +90,8 @@ const seatPositions = computed(() => {
 
 // Suit claims get their symbol next to the word (rank claims: null).
 const targetSuit = computed(() => claimSuit(store.game?.currentTarget.label));
+// A suit target means a suit claim mode (the game view does not carry the mode itself): the hand sorts by suit.
+const handSortMode = computed<ClaimMode>(() => (targetSuit.value ? CLAIM_MODE_SUIT : CLAIM_MODE_RANK));
 const myCardCount = computed(() => store.game?.myHand.length ?? 0);
 
 // Card-to-pile animation and sound. The flight is a visual copy of the played hand cards
@@ -154,7 +157,7 @@ useBullshitHotkeys({
   discard,
   call: () => store.callBullshit(),
   toggleCard: (i) => {
-    const card = sortHand(store.game?.myHand ?? [])[i];
+    const card = sortHand(store.game?.myHand ?? [], handSortMode.value)[i];
     if (card) store.toggleCard(card);
   },
 }, { enabled: () => hotkeys.enabled.value, discardKey: () => hotkeys.discardKey.value, callKey: () => hotkeys.callKey.value });
@@ -330,6 +333,7 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
         <BullshitHand
           :cards="store.game?.myHand ?? []"
           :selected="store.selectedCards"
+          :claim-mode="handSortMode"
           @toggle="store.toggleCard" />
         <div class="actions">
           <Button

@@ -32,4 +32,25 @@ describe('sortHand', () => {
   it('puts unknown ranks last instead of failing', () => {
     expect(sortHand([c('JOKER', 'NONE'), c('2', 'CLUB')]).map(x => x.rank)).toEqual(['2', 'JOKER']);
   });
+
+  describe('suit claim mode', () => {
+    it('groups by suit in the claim cycle order (heart, diamond, club, spade), then by rank within the suit', () => {
+      const hand = [c('KING', 'SPADE'), c('5', 'HEART'), c('ACE', 'CLUB'), c('3', 'SPADE'), c('ACE', 'HEART'), c('9', 'DIAMOND'), c('2', 'CLUB')];
+      expect(sortHand(hand, 'suit').map(x => x.name)).toEqual(
+        ['HEART_ACE', 'HEART_5', 'DIAMOND_9', 'CLUB_ACE', 'CLUB_2', 'SPADE_3', 'SPADE_KING']);
+    });
+
+    it('keeps the rank sort for the rank mode, which is also the default', () => {
+      const hand = [c('KING', 'HEART'), c('2', 'SPADE'), c('ACE', 'CLUB')];
+      expect(sortHand(hand, 'rank')).toEqual(sortHand(hand));
+      expect(sortHand(hand).map(x => x.rank)).toEqual(['ACE', '2', 'KING']);
+    });
+
+    it('does not mutate its input and puts unknown suits last', () => {
+      const hand = [c('JOKER', 'NONE'), c('2', 'CLUB')];
+      const copy = [...hand];
+      expect(sortHand(hand, 'suit').map(x => x.suit)).toEqual(['CLUB', 'NONE']);
+      expect(hand).toEqual(copy);
+    });
+  });
 });
