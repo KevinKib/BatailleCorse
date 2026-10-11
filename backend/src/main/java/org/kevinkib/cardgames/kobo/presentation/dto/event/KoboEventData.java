@@ -84,7 +84,7 @@ public record KoboEventData(
 
     public static KoboEventType typeOf(KoboEvent event) {
         if (event instanceof KoboEvent.Ready e) {
-            return KoboEventType.READY;
+            return e.barrierOpened() ? KoboEventType.ROUND_START : KoboEventType.READY;
         }
         if (event instanceof KoboEvent.Drawn e) {
             return KoboEventType.DRAW;

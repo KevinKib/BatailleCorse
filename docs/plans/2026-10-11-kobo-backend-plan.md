@@ -291,7 +291,7 @@
   - `KoboStateBroadcaster.broadcast(game, type, data, message)` sends one `SuccessResponse` per human seat on `sendToSeat`, each with its own `KoboDto`; `stateFor(game, seat)` for REST and errors. Same constructor shape as `BullshitStateBroadcaster` (messaging, seat names supplier); no bot filtering (out of scope).
   - `KoboGameActions` has one method per command (`ready`, `draw`, `swapDrawn`, `discardDrawn`, `skipPower`, `endTurn`, `announceKobo`, `peek`, `blindSwap`, `kingSwap`, `match`, `giveTen`): domain call, `sessionService.touch`, one broadcast with the right `KoboEventType` and public `KoboEventData` (peek carries no value; failed match carries the actor only; successful match carries the card; round scored carries the `RoundResult`). Domain exceptions propagate unchanged. A rejected command broadcasts nothing and does not touch.
   - Order: the call, touch and broadcast run inside `synchronized (game)`: a test with two threads and a recording messaging double asserts the `version` carried by successive broadcasts is non-decreasing.
-  - After a command that finishes the round, the broadcast event type is `ROUND_END`; after one that ends the game, `GAME_OVER`.
+  - After a command that finishes the round, the broadcast event type is `ROUND_END`; after one that ends the game, `GAME_OVER`; a `ready` that opens the barrier is `ROUND_START`.
 - [ ] **Step 2:** Run (red). **Step 3:** Implement. **Step 4:** Green. Commit `feat: add Kobo state broadcaster and use cases`.
 
 ---
@@ -387,7 +387,7 @@
 
 - **H4 decided**: `matchDiscard` takes the rank the client saw on top of the discard pile (`expectedTopRank`, required); a moved pile throws `StaleDiscardException` with no penalty.
 - **Added `expectedRevision`** (required, like `expectedTopRank`; a command without it is a validation error with no effect, since an optional one would let a lost race on a refilled slot be penalised) on the match: a card given into a slot after a match refills it, so a second attempt on the same position would otherwise find a card of another rank and be penalised for a lost race. A changed slot revision throws `StaleSlotException`, no penalty. The WebSocket payload carries it; the spec row for `/kobo/match` is updated.
-- **Event types**: no `ROUND_START` event (the phase in the state tells it); a command that closes a round is broadcast as `ROUND_END`, one that ends the game as `GAME_OVER`, with the command named in the event data (`KoboEventData.action`).
+- **Event types**: the type follows the command, not the final state: a command that moves the game into ROUND_OVER is broadcast as `ROUND_END`, one that ends the game as `GAME_OVER`, a `ready` that opens a barrier (end of memorising, or the next round dealt) as `ROUND_START`, any other command (including a `ready` that does not open the barrier, while in ROUND_OVER) by its own type; the command is always named in the event data (`KoboEventData.action`).
 - **DTO layout**: the sub-records (`SlotDto`, `PlayerDto`, `RevealDto`, `RoundDto`...) are nested in `KoboDto`; `CardDto` and `OutcomeDto` are separate files. Java source level is 17, so events are mapped with `instanceof` patterns, not pattern `switch`.
 - **Tests grouped by theme** instead of one class per task (`KoboTurnAndPowersTest`, `KoboMatchTest`, `KoboRoundTest`, ...); every listed case is covered.
 - **Task 24 wiring** is covered by `KoboGameIntegrationTest` (real Spring context: lifecycle broadcaster lookup, presence forfeit, play-again) and `KoboWebSocketControllerIT` instead of a dedicated `KoboWiringTest`.

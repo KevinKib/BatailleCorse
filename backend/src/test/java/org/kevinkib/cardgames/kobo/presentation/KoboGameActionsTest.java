@@ -137,6 +137,39 @@ class KoboGameActionsTest {
     }
 
     @Test
+    void readyDuringRoundOver_isBroadcastAsReadyUntilTheBarrierOpensAsRoundStart() throws Exception {
+        Kobo game = table.install(aKobo().withTableau("AH", "KH", "KD", "AD").withTableau("5S", "6S", "9D", "KS")
+                .withTableau("2C", "3C", "4C", "KC").withDiscard("2S").withDrawPile("2D", "3D", "4D")
+                .inPhase(Phase.ROUND_OVER).build());
+
+        table.actions.ready(game.getId(), seat(0));
+        assertThat(table.messaging.payloads.get(0).getEventType(), is("READY"));
+        table.messaging.clear();
+        table.actions.ready(game.getId(), seat(1));
+        assertThat(table.messaging.payloads.get(0).getEventType(), is("READY"));
+        table.messaging.clear();
+        table.actions.ready(game.getId(), seat(2));
+
+        assertThat(table.messaging.payloads.get(0).getEventType(), is("ROUND_START"));
+        assertThat(((KoboEventData) table.messaging.payloads.get(0).getEventData()).action(), is("READY"));
+        assertThat(game.phase(), is(Phase.MEMORISING));
+    }
+
+    @Test
+    void readyDuringMemorising_isBroadcastAsReadyThenRoundStartWhenTheBarrierOpens() throws Exception {
+        Kobo game = table.install(aKobo().withTableau("AH", "KH", "KD", "AD").withTableau("5S", "6S", "9D", "KS")
+                .withDiscard("2S").withDrawPile("2D", "3D", "4D").inPhase(Phase.MEMORISING).build());
+
+        table.actions.ready(game.getId(), seat(0));
+        assertThat(table.messaging.payloads.get(0).getEventType(), is("READY"));
+        table.messaging.clear();
+        table.actions.ready(game.getId(), seat(1));
+
+        assertThat(table.messaging.payloads.get(0).getEventType(), is("ROUND_START"));
+        assertThat(game.phase(), is(Phase.DRAW));
+    }
+
+    @Test
     void broadcastVersionsNeverGoBackwardsWhenSeatsRace() throws Exception {
         for (int run = 0; run < 50; run++) {
             table.messaging.clear();

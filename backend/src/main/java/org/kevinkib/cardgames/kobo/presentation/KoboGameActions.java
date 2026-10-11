@@ -85,18 +85,25 @@ public class KoboGameActions {
     private void run(GameId gameId, Command command, String message) throws KoboException {
         Kobo game = sessionService.getGame(gameId, Kobo.class);
         synchronized (game) {
+            Phase before = game.phase();
             KoboEvent event = command.apply(game);
             sessionService.touch(gameId);
-            broadcaster.broadcast(game, broadcastType(game, event).toString(), KoboEventData.from(event), message);
+            broadcaster.broadcast(game, broadcastType(before, game, event).toString(), KoboEventData.from(event),
+                    message);
         }
     }
 
-    /** A command that closes a round or the game is announced as such; the data still names the command. */
-    private static KoboEventType broadcastType(Kobo game, KoboEvent event) {
-        if (game.isFinished()) {
+    /**
+     * The type follows the command: a command that moved the game into ROUND_OVER or FINISHED is
+     * announced as ROUND_END or GAME_OVER, a ready that opens a barrier as ROUND_START, anything else
+     * (a ready that does not, a command played while the game was already in ROUND_OVER) by its own
+     * type. The data still names the command.
+     */
+    private static KoboEventType broadcastType(Phase before, Kobo game, KoboEvent event) {
+        if (game.isFinished() && before != Phase.FINISHED) {
             return KoboEventType.GAME_OVER;
         }
-        if (game.phase() == Phase.ROUND_OVER) {
+        if (game.phase() == Phase.ROUND_OVER && before != Phase.ROUND_OVER) {
             return KoboEventType.ROUND_END;
         }
         return KoboEventData.typeOf(event);
