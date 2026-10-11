@@ -627,7 +627,7 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
 }
 
 .verdict {
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: 0.12em;
   font-size: 0.95rem;
   color: #fff;
