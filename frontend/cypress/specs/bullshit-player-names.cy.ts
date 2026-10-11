@@ -7,10 +7,6 @@ function createRoom(name: string) {
   cy.get('[data-test="play-bullshit"]').click();
   cy.get('[data-test="name"]').type(name);
   cy.get('[data-test="new-game"]').click();
-  cy.url().should('include', '/games/bullshit/new');
-  // Deliberate fixed wait: a create sent before the WebSocket handshake finishes is reported as an error.
-  cy.wait(1500);
-  cy.get('[data-test="submit"]').click();
   cy.url({ timeout: 10000 }).should('match', /\/games\/bullshit\/room\/.+/);
   return cy.url().then((url) => url.split('/room/')[1]);
 }

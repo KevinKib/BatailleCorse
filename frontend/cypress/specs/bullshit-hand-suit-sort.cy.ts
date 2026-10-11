@@ -8,13 +8,12 @@ function startSuitGame() {
   cy.get('[data-test="play-bullshit"]').click();
   cy.get('[data-test="name"]').type('Alice');
   cy.get('[data-test="new-game"]').click();
-  cy.url().should('include', '/games/bullshit/new');
-  cy.contains('label', 'By suit').click();
-  cy.contains('label', '52 cards').click();
-  // Deliberate fixed wait: a create sent before the WebSocket handshake ends is reported as an error.
-  cy.wait(1500);
-  cy.get('[data-test="submit"]').click();
   cy.url({ timeout: 10000 }).should('match', /\/games\/bullshit\/room\/.+/);
+  // The host picks the options in the lobby; the server's answer marks the choice.
+  cy.contains('[data-test="lobby"] label', 'By suit').click();
+  cy.get('[data-test="option-claimMode"] .choice--on').should('contain.text', 'By suit');
+  cy.contains('[data-test="lobby"] label', '52 cards').click();
+  cy.get('[data-test="option-deckSize"] .choice--on').should('contain.text', '52 cards');
   cy.url().then((url) => cy.request('POST', `/api/bullshit/game/${url.split('/room/')[1]}/join`, { name: 'Bob' }));
   cy.get('[data-test="start"]', { timeout: 10000 }).should('not.be.disabled').click();
   cy.get('[data-test="hand-card-0"]', { timeout: 10000 }).should('exist');

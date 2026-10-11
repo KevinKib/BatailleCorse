@@ -6,10 +6,6 @@ function startTwoPlayerGame() {
   cy.get('[data-test="play-bullshit"]').click();
   cy.get('[data-test="name"]').type('Alice');
   cy.get('[data-test="new-game"]').click();
-  cy.url().should('include', '/games/bullshit/new');
-  // Deliberate fixed wait: a create sent before the WebSocket handshake finishes is reported as an error.
-  cy.wait(1500);
-  cy.get('[data-test="submit"]').click();
   cy.url({ timeout: 10000 }).should('match', /\/games\/bullshit\/room\/.+/);
   cy.url().then((url) => cy.request('POST', `/api/bullshit/game/${url.split('/room/')[1]}/join`, { name: 'Bob' }));
   cy.get('[data-test="start"]', { timeout: 10000 }).should('not.be.disabled').click();

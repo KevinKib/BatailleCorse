@@ -6,33 +6,31 @@ function createBullshitGame(name: string, claimLabel?: string, deckLabel = '52 c
   cy.get('[data-test="play-bullshit"]').click();
   cy.get('[data-test="name"]').type(name);
   cy.get('[data-test="new-game"]').click();
-  cy.url().should('include', '/games/bullshit/new');
-  if (claimLabel) cy.contains('label', claimLabel).click();
-  cy.contains('label', deckLabel).click();
-  // Deliberate fixed wait: the app exposes no "connected" signal and a create sent before the
-  // WebSocket handshake finishes is reported to the player as an error (asserted elsewhere).
-  cy.wait(1500);
-  cy.get('[data-test="submit"]').click();
   cy.url({ timeout: 10000 }).should('match', /\/games\/bullshit\/room\/.+/);
+  cy.get('[data-test="lobby"]').should('be.visible');
+  // The host picks the options in the lobby; the server's answer marks the choice (no optimistic UI).
+  if (claimLabel) {
+    cy.contains('[data-test="lobby"] label', claimLabel).click();
+    cy.get('[data-test="option-claimMode"] .choice--on').should('contain.text', claimLabel);
+  }
+  cy.contains('[data-test="lobby"] label', deckLabel).click();
+  cy.get('[data-test="option-deckSize"] .choice--on').should('contain.text', deckLabel);
 }
 
 function gameIdFromUrl(): Cypress.Chainable<string> {
   return cy.url().then((url) => url.split('/room/')[1]);
 }
 
-describe('Bullshit start screens', () => {
-  it('keeps every field of the create screen and a visible name label', () => {
-    cy.visit('/games/bullshit/new');
+describe('Bullshit Game home and join form', () => {
+  it('creates the lobby straight from the Game home, with every field of the home still there', () => {
+    cy.visit('/games/bullshit');
     cy.get('h1').should('contain.text', 'Bullshit');
-    cy.get('label[for="bullshit-name"]').should('be.visible').and('contain.text', 'Your name');
-    cy.contains('legend', 'Claim mode').should('be.visible');
-    cy.contains('label', 'By rank').should('be.visible');
-    cy.contains('label', 'By suit').should('be.visible');
-    cy.contains('legend', 'Deck').should('be.visible');
-    cy.contains('label', '32 cards').should('be.visible');
-    cy.contains('label', '52 cards').should('be.visible');
-    cy.get('[data-test="submit"]').should('be.visible').and('contain.text', 'Create game');
+    cy.get('label[for="home-name"]').should('be.visible').and('contain.text', 'Your name');
+    cy.get('[data-test="join-game"]').should('be.visible');
     cy.get('[data-test="back"]').should('be.visible');
+    cy.get('[data-test="new-game"]').should('be.visible').click();
+    cy.url({ timeout: 10000 }).should('match', /\/games\/bullshit\/room\/.+/);
+    cy.get('[data-test="lobby"]').should('be.visible');
   });
 
   it('shows a visible error, and stays put, when joining an unknown game', () => {
@@ -41,7 +39,7 @@ describe('Bullshit start screens', () => {
     cy.get('[data-test="submit"]').should('contain.text', 'Join game').click();
     cy.get('[data-test="join-error"]', { timeout: 10000 })
       .should('be.visible')
-      .and('contain.text', 'Could not join this game');
+      .and('contain.text', 'No game found');
     cy.location('pathname').should('include', '/games/bullshit/join/');
   });
 });
@@ -52,31 +50,33 @@ describe('Bullshit lobby', () => {
     cy.get('[data-test="lobby"]').should('be.visible');
     cy.get('[data-test="lobby"] h1').should('contain.text', 'Bullshit');
     cy.get('[data-test="player-count"]').should('contain.text', '1 / 6');
-    cy.get('.players li').should('have.length', 1).first().should('contain.text', 'Alice');
+    cy.get('.players li').should('have.length', 1);
+    cy.get('input[data-test="rename"]').should('have.value', 'Alice');
     cy.get('[data-test="badge-you"]').should('be.visible');
-    cy.get('[data-test="claim-mode"]').should('contain.text', 'By suit');
-    cy.get('[data-test="deck-size"]').should('contain.text', '32 cards');
+    cy.get('[data-test="option-claimMode"] .choice--on').should('contain.text', 'By suit');
+    cy.get('[data-test="option-deckSize"] .choice--on').should('contain.text', '32 cards');
     cy.get('[data-test="invite-link"]').invoke('val').should('match', /\/games\/bullshit\/join\/.+/);
     cy.get('[data-test="copy-link"]').should('be.visible').and('contain.text', 'Copy');
     cy.get('[data-test="start"]').should('be.visible').and('be.disabled');
     cy.get('[data-test="start-hint"]').should('contain.text', 'Waiting for 1 more player');
   });
 
-  it('shows the deck chosen at creation, read-only, with its rank range', () => {
+  it('lets the host change the deck, which changes the rank range, and keeps it when a bot joins', () => {
     createBullshitGame('Alice', undefined, '52 cards');
-    cy.get('[data-test="deck-size"]').should('contain.text', '52 cards');
-    cy.get('[data-test="claim-mode"]').should('contain.text', 'By rank (A→K)');
+    cy.get('[data-test="option-claimMode"] .choice--on').should('contain.text', 'By rank (A\u2192K)');
     cy.get('[data-test="add-bot"]').click();
-    cy.get('[data-test="deck-size"]').should('contain.text', '52 cards');
-    cy.get('[data-test="deck-size"] input, [data-test="deck-size"] button').should('not.exist');
+    cy.get('[data-test="badge-bot"]').should('have.length', 1);
+    cy.get('[data-test="option-deckSize"] .choice--on').should('contain.text', '52 cards');
   });
 
-  it('preselects 32 cards on the create screen and shows its rank range', () => {
-    cy.visit('/games/bullshit/new');
-    cy.contains('label', 'By rank (7→A)').should('be.visible');
-    cy.contains('label', 'By rank').click();
-    cy.contains('label', '52 cards').click();
-    cy.contains('label', 'By rank (A→K)').should('be.visible');
+  it('preselects 32 cards in a new lobby and shows its rank range', () => {
+    cy.visit('/games/bullshit');
+    cy.get('[data-test="name"]').type('Alice');
+    cy.get('[data-test="new-game"]').click();
+    cy.get('[data-test="option-deckSize"] .choice--on', { timeout: 10000 }).should('contain.text', '32 cards');
+    cy.contains('[data-test="lobby"] label', 'By rank (7\u2192A)').should('be.visible');
+    cy.contains('[data-test="lobby"] label', '52 cards').click();
+    cy.contains('[data-test="lobby"] label', 'By rank (A\u2192K)').should('be.visible');
   });
 
   it('fits a phone screen without horizontal overflow', () => {

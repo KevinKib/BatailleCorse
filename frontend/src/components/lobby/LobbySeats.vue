@@ -171,7 +171,8 @@ function revertName() {
 .player-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
 /* My own name is a field that looks like the other names until it is focused. */
 :deep(.player-name--edit.p-inputtext) {
-  min-height: 36px;
+  align-self: stretch;
+  min-height: 0;
   padding: 0 6px;
   font-family: var(--font-ui);
   font-size: 1rem;

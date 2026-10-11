@@ -6,9 +6,6 @@ describe('Bullshit exits lead to /games', () => {
     cy.get('[data-test="play-bullshit"]').click();
     cy.get('[data-test="name"]').type('Alice');
     cy.get('[data-test="new-game"]').click();
-    // Deliberate fixed wait: a create sent before the WebSocket handshake finishes is reported as an error.
-    cy.wait(1500);
-    cy.get('[data-test="submit"]').click();
     cy.url({ timeout: 10000 }).should('match', /\/games\/bullshit\/room\/.+/);
   }
 

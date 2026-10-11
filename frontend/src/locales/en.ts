@@ -180,7 +180,7 @@ export const messagesEn: Messages = {
     submit: 'Join game',
     joining: 'Joining…',
     failed: 'Could not join this game. Check the ID and try again.',
-    notFound: 'This game no longer exists.',
+    notFound: 'No game found. It may have been closed, or the ID is wrong.',
     back: 'Back',
   },
   lobby: {
