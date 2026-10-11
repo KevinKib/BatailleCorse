@@ -32,6 +32,16 @@ describe('useGameBootstrap restore failures', () => {
     expect(router.currentRoute.value.fullPath).toBe('/games/bataillecorse/join/g1');
   });
 
+  it.each(['{not json', '42', 'null', '[1]'])('givenCorruptedStoredToken_%s_thenGoesToTheJoinFormAndForgetsIt', async (raw) => {
+    localStorage.setItem('tokens:g1', raw);
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    const router = await mountAtRoom('g1');
+    expect(router.currentRoute.value.fullPath).toBe('/games/bataillecorse/join/g1');
+    expect(localStorage.getItem('tokens:g1')).toBeNull();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it('givenStoredTokenButGameGone_thenGoesToTheGameHomeWithTheNotice', async () => {
     localStorage.setItem('tokens:g1', JSON.stringify({ 0: 'tok' }));
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false }));

@@ -18,6 +18,18 @@ describe('resolveBullshitSession', () => {
   it('returns null when no token is stored', () => {
     expect(resolveBullshitSession('g1')).toBeNull();
   });
+
+  it('givenInvalidJson_thenReturnsNullAndClearsTheEntry', () => {
+    localStorage.setItem('bullshit:tokens:g1', '{not json');
+    expect(resolveBullshitSession('g1')).toBeNull();
+    expect(localStorage.getItem('bullshit:tokens:g1')).toBeNull();
+  });
+
+  it.each(['null', '42', '"str"', '[1,2]'])('givenNonObjectValue_%s_thenReturnsNullAndClearsTheEntry', (raw) => {
+    localStorage.setItem('bullshit:tokens:g1', raw);
+    expect(resolveBullshitSession('g1')).toBeNull();
+    expect(localStorage.getItem('bullshit:tokens:g1')).toBeNull();
+  });
 });
 
 describe('useBullshitBootstrap restore failures', () => {
@@ -38,6 +50,13 @@ describe('useBullshitBootstrap restore failures', () => {
   it('givenNoStoredToken_thenGoesToTheJoinFormWithTheIdPrefilled', async () => {
     const router = await mountAtRoom('g1');
     expect(router.currentRoute.value.fullPath).toBe('/games/bullshit/join/g1');
+  });
+
+  it.each(['{not json', '42'])('givenCorruptedStoredToken_%s_thenGoesToTheJoinFormAndForgetsIt', async (raw) => {
+    localStorage.setItem('bullshit:tokens:g1', raw);
+    const router = await mountAtRoom('g1');
+    expect(router.currentRoute.value.fullPath).toBe('/games/bullshit/join/g1');
+    expect(localStorage.getItem('bullshit:tokens:g1')).toBeNull();
   });
 
   it('givenStoredTokenButGameGone_thenGoesToTheGameHomeWithTheNoticeAndForgetsTheToken', async () => {
