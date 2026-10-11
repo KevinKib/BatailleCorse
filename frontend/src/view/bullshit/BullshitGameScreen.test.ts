@@ -262,6 +262,18 @@ describe('BullshitGameScreen', () => {
     expect(spy).toHaveBeenCalled();
   });
 
+  it('seats opponents left to right in the order they play after me', () => {
+    const store = useBullshitStore();
+    store.applyEvent({ type: 'seat-change', seat: 2 });
+    store.applyEvent({ type: 'state-update', state: playingState({
+      players: [0, 1, 2, 3].map(i => ({ id: String(i), handCount: 5, isCurrentPlayer: i === 2 })),
+    }) });
+    const wrapper = mount(BullshitGameScreen, { props: { gameId: 'g1' }, global: { plugins: [router, PrimeVue] } });
+
+    const order = wrapper.findAll('.seat-slot').map(s => s.attributes('data-seat'));
+    expect(order).toEqual(['3', '0', '1']);
+  });
+
   describe('opponent presence', () => {
     beforeEach(() => vi.useFakeTimers({ now: 1_000_000 }));
     afterEach(() => vi.useRealTimers());
