@@ -91,7 +91,7 @@ public class BullshitRestController {
             JoinResult result = sessionService.joinRoom(gameId, name);
             sessionService.touch(gameId);
 
-            lobbyBroadcaster.broadcast(gameId, LifecycleEventType.JOIN.toString(), new EmptyEventData(),
+            lobbyBroadcaster.send(gameId, result.views(), LifecycleEventType.JOIN.toString(), new EmptyEventData(),
                     "Player " + (result.playerId().id() + 1) + " joined.");
 
             return ResponseEntity.ok(new JoinResponseDto(
@@ -119,7 +119,7 @@ public class BullshitRestController {
             String name = (payload != null) ? payload.name() : null;
             JoinResult result = sessionService.playAgain(gameId, name);
             sessionService.touch(gameId);
-            lobbyBroadcaster.broadcast(gameId, LifecycleEventType.JOIN.toString(), new EmptyEventData(),
+            lobbyBroadcaster.send(gameId, result.views(), LifecycleEventType.JOIN.toString(), new EmptyEventData(),
                     "Player " + (result.playerId().id() + 1) + " joined.");
             return ResponseEntity.ok(new JoinResponseDto(result.playerId().id(), result.token()));
         } catch (RoomFullException e) {

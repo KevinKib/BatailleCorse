@@ -35,10 +35,11 @@ class BullshitRestControllerTest {
     private BullshitRestController controller;
     private RecordingMessaging messaging;
 
-    static final class RecordingMessaging extends org.kevinkib.cardgames.presentation.GameMessagingService {
+    static final class RecordingMessaging extends org.kevinkib.cardgames.presentation.TokenResolvingMessaging {
         final java.util.List<Integer> seats = new java.util.ArrayList<>();
         final java.util.List<String> eventTypes = new java.util.ArrayList<>();
-        RecordingMessaging() { super(null, null); }
+        RecordingMessaging() {  }
+
         @Override
         public void sendToSeat(org.kevinkib.cardgames.game.GameId gameId,
                                org.kevinkib.cardgames.game.PlayerId seat, Object payload) {
@@ -53,10 +54,11 @@ class BullshitRestControllerTest {
                 new InMemorySessionRepository(Clock.systemUTC()),
                 new GameFactories(List.of(new BullshitFactory())));
         messaging = new RecordingMessaging();
+        messaging.resolver = sessionService;
         controller = new BullshitRestController(
                 sessionService,
                 new BullshitStateBroadcaster(messaging, sessionService::botSeats, sessionService::seatNames),
-                new LobbyBroadcaster(messaging, sessionService));
+                new LobbyBroadcaster(messaging));
     }
 
     @Test

@@ -22,10 +22,11 @@ import static org.hamcrest.Matchers.is;
 
 class LobbyBroadcasterTest {
 
-    static final class RecordingMessaging extends GameMessagingService {
+    static final class RecordingMessaging extends org.kevinkib.cardgames.presentation.TokenResolvingMessaging {
         final List<PlayerId> seats = new ArrayList<>();
         final List<Response> payloads = new ArrayList<>();
-        RecordingMessaging() { super(null, null); }
+        RecordingMessaging() {  }
+
         @Override public void sendToSeat(GameId gameId, PlayerId seat, Object payload) {
             seats.add(seat);
             payloads.add((Response) payload);
@@ -33,23 +34,24 @@ class LobbyBroadcasterTest {
     }
 
     @Test
-    void givenTwoClaimedSeats_whenBroadcast_thenOnlyClaimedReceiveLobbyView() {
+    void givenAddressedViews_whenSend_thenEachGoesToItsOwnTokenOnly() {
         SessionGame lobby = SessionGame.create(
                 GameId.generate(),
                 List.of(new PlayerId(0), new PlayerId(1), new PlayerId(2)),
                 "bullshit");
         lobby.claimSeat(new PlayerId(0), "Host");
         lobby.claimSeat(new PlayerId(1), "Bob");
-
         InMemorySessionRepository repository = new InMemorySessionRepository(Clock.systemUTC());
         repository.saveLobby(lobby);
         SessionService sessionService =
                 new SessionService(repository, new GameFactories(List.of(new BullshitFactory())));
 
         RecordingMessaging messaging = new RecordingMessaging();
-        LobbyBroadcaster broadcaster = new LobbyBroadcaster(messaging, sessionService);
+        messaging.resolver = sessionService;
+        LobbyBroadcaster broadcaster = new LobbyBroadcaster(messaging);
 
-        broadcaster.broadcast(lobby.id(), LifecycleEventType.JOIN.toString(), new EmptyEventData(), "Bob joined.");
+        broadcaster.send(lobby.id(), sessionService.lobbyViews(lobby.id()), LifecycleEventType.JOIN.toString(),
+                new EmptyEventData(), "Bob joined.");
 
         assertThat(messaging.seats, is(List.of(new PlayerId(0), new PlayerId(1))));
         Response toHost = messaging.payloads.get(0);

@@ -20,13 +20,14 @@ import java.util.List;
 /** The Kobo application layer wired over a real session core and a recording messaging double. */
 final class KoboTable {
 
-    static final class RecordingMessaging extends GameMessagingService {
+    static final class RecordingMessaging extends org.kevinkib.cardgames.presentation.TokenResolvingMessaging {
         final List<PlayerId> seats = Collections.synchronizedList(new ArrayList<>());
         final List<Response> payloads = Collections.synchronizedList(new ArrayList<>());
 
         RecordingMessaging() {
-            super(null, null);
+            
         }
+
 
         @Override
         public void sendToSeat(GameId gameId, PlayerId seat, Object payload) {
@@ -43,9 +44,10 @@ final class KoboTable {
     final InMemorySessionRepository repository = new InMemorySessionRepository(Clock.systemUTC());
     final SessionService sessions = new SessionService(repository, new GameFactories(List.of(new KoboFactory())));
     final RecordingMessaging messaging = new RecordingMessaging();
+    { messaging.resolver = sessions; }
     final KoboStateBroadcaster broadcaster = new KoboStateBroadcaster(messaging, sessions::seatNames);
     final KoboGameActions actions = new KoboGameActions(sessions, broadcaster);
-    final LobbyBroadcaster lobbyBroadcaster = new LobbyBroadcaster(messaging, sessions);
+    final LobbyBroadcaster lobbyBroadcaster = new LobbyBroadcaster(messaging);
     final KoboWebSocketController ws = new KoboWebSocketController(sessions, broadcaster, messaging, actions);
     final KoboRestController rest = new KoboRestController(sessions, broadcaster, lobbyBroadcaster);
 

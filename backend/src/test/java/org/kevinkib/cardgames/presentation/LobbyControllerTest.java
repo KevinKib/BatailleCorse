@@ -29,13 +29,14 @@ import static org.hamcrest.Matchers.is;
 
 class LobbyControllerTest {
 
-    static final class RecordingMessaging extends GameMessagingService {
+    static final class RecordingMessaging extends org.kevinkib.cardgames.presentation.TokenResolvingMessaging {
         final List<PlayerId> seats = new ArrayList<>();
         final List<Response> payloads = new ArrayList<>();
 
         RecordingMessaging() {
-            super(null, null);
+            
         }
+
 
         @Override
         public void sendToSeat(GameId gameId, PlayerId seat, Object payload) {
@@ -59,6 +60,7 @@ class LobbyControllerTest {
                 new InMemorySessionRepository(Clock.systemUTC()),
                 new GameFactories(List.of(new BullshitFactory(), new BatailleCorseFactory(), new TieredFactory())));
         messaging = new RecordingMessaging();
+        messaging.resolver = sessionService;
         controller = new LobbyController(sessionService, messaging);
     }
 
@@ -221,5 +223,73 @@ class LobbyControllerTest {
 
         assertThat(messaging.seats, is(List.of(new PlayerId(0))));
         assertThat(messaging.payloads.get(0).isSuccess(), is(false));
+    }
+
+    @Test
+    void givenGuest_whenLeave_thenOnlyTheRemainingSeatsReceiveTheFreeSeat() {
+        RoomCreated room = sessionService.createRoom("bullshit", "Alice");
+        String bobToken = sessionService.joinRoom(new GameId(room.gameId()), "Bob").token();
+        messaging.clear();
+
+        controller.leave(new GameActionPayload(room.gameId(), bobToken));
+
+        assertThat(messaging.seats, is(List.of(new PlayerId(0))));
+        assertThat(lobbyOf(messaging.payloads.get(0)).players().get(1).joined(), is(false));
+    }
+
+    @Test
+    void givenHostAndGuest_whenHostLeaves_thenTheGuestReceivesAViewAsSeatZeroWithStart() {
+        RoomCreated room = sessionService.createRoom("bullshit", "Alice");
+        sessionService.joinRoom(new GameId(room.gameId()), "Bob");
+        sessionService.joinRoom(new GameId(room.gameId()), "Carol");
+        messaging.clear();
+
+        controller.leave(new GameActionPayload(room.gameId(), room.hostToken()));
+
+        assertThat(messaging.seats, is(List.of(new PlayerId(0), new PlayerId(1))));
+        LobbyView bobView = lobbyOf(messaging.payloads.get(0));
+        assertThat(bobView.mySeat(), is(0));
+        assertThat(bobView.canStart(), is(true));
+        assertThat(bobView.players().get(0).name(), is("Bob"));
+    }
+
+    @Test
+    void givenOnlyBotsWouldRemain_whenHostLeaves_thenNothingIsSentAndTheLobbyIsGone() {
+        RoomCreated room = sessionService.createRoom("bullshit", "Alice");
+        controller.addBot(new GameActionPayload(room.gameId(), room.hostToken()));
+        messaging.clear();
+
+        controller.leave(new GameActionPayload(room.gameId(), room.hostToken()));
+
+        assertThat(messaging.seats.isEmpty(), is(true));
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
+                () -> sessionService.joinRoom(new GameId(room.gameId()), "Bob"));
+    }
+
+    @Test
+    void givenUnknownTokenOrStartedGame_whenLeave_thenIgnoredOrRefusedToTheLeaverOnly() {
+        RoomCreated room = sessionService.createRoom("bullshit", "Alice");
+        String bobToken = sessionService.joinRoom(new GameId(room.gameId()), "Bob").token();
+        messaging.clear();
+        controller.leave(new GameActionPayload(room.gameId(), UUID.randomUUID().toString()));
+        assertThat(messaging.seats.isEmpty(), is(true));
+
+        sessionService.startGame(new GameId(room.gameId()), room.hostToken());
+        controller.leave(new GameActionPayload(room.gameId(), bobToken));
+
+        assertThat(messaging.seats, is(List.of(new PlayerId(1))));
+        assertThat(messaging.payloads.get(0).isSuccess(), is(false));
+    }
+
+    @Test
+    void givenALobbyAlreadyRemoved_whenALateLeaveArrives_thenItIsIgnoredWithoutError() {
+        RoomCreated room = sessionService.createRoom("bullshit", "Alice");
+        controller.leave(new GameActionPayload(room.gameId(), room.hostToken()));
+        messaging.clear();
+
+        controller.leave(new GameActionPayload(room.gameId(), room.hostToken()));
+        controller.addBot(new GameActionPayload(room.gameId(), room.hostToken()));
+
+        assertThat(messaging.seats.isEmpty(), is(true));
     }
 }

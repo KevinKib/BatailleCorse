@@ -110,7 +110,7 @@ public class BatailleCorseRestController {
             if (sessionService.findGame(gameId).isEmpty()) {
                 JoinResult joined = sessionService.joinRoom(gameId, name);
                 sessionService.touch(gameId);
-                lobbyBroadcaster.broadcast(gameId, LifecycleEventType.JOIN.toString(), new EmptyEventData(),
+                lobbyBroadcaster.send(gameId, joined.views(), LifecycleEventType.JOIN.toString(), new EmptyEventData(),
                         "Player " + (joined.playerId().id() + 1) + " joined.");
                 return ResponseEntity.ok(new JoinResponseDto(joined.playerId().id(), joined.token()));
             }

@@ -24,12 +24,17 @@ public class GameCleanupService {
         this.listeners = listeners;
     }
 
+    /** Tells every listener that a game was removed outside the sweep. */
+    public void evicted(GameId id) {
+        listeners.forEach(listener -> listener.onEvicted(id));
+    }
+
     @Scheduled(fixedDelayString = "PT1M")
     public void sweep() {
         List<GameId> evicted = repository.evictStale(FINISHED_GRACE, IDLE_TTL);
         if (!evicted.isEmpty()) {
             log.info("Evicted {} stale game(s): {}", evicted.size(), evicted);
-            evicted.forEach(id -> listeners.forEach(l -> l.onEvicted(id)));
+            evicted.forEach(this::evicted);
         }
     }
 }

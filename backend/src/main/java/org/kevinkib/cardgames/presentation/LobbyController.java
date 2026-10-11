@@ -11,7 +11,7 @@ import org.kevinkib.cardgames.presentation.api.LobbySeatPayload;
 import org.kevinkib.cardgames.presentation.api.SuccessResponse;
 import org.kevinkib.cardgames.presentation.dto.event.EmptyEventData;
 import org.kevinkib.cardgames.presentation.dto.event.LifecycleEventType;
-import org.kevinkib.cardgames.sessionmanagement.core.application.LobbyView;
+import org.kevinkib.cardgames.sessionmanagement.core.application.AddressedLobbyView;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -45,18 +45,23 @@ public class LobbyController {
 
     @MessageMapping("/lobby/addBot")
     public void addBot(@Payload GameActionPayload payload) {
-        handle(payload.gameId(), payload.token(), "Bot joined.", gameId -> {
-            sessionService.addBot(gameId, payload.token());
-            return sessionService.lobbyViews(gameId);
-        });
+        handle(payload.gameId(), payload.token(), "Bot joined.",
+                gameId -> sessionService.addBotViews(gameId, payload.token()));
     }
 
     @MessageMapping("/lobby/removeBot")
     public void removeBot(@Payload LobbySeatPayload payload) {
-        handle(payload.gameId(), payload.token(), "Bot removed from seat " + payload.seat() + ".", gameId -> {
-            sessionService.removeBot(gameId, payload.token(), payload.seat());
-            return sessionService.lobbyViews(gameId);
-        });
+        handle(payload.gameId(), payload.token(), "Bot removed from seat " + payload.seat() + ".", gameId -> sessionService.removeBotViews(gameId, payload.token(), payload.seat()));
+    }
+
+    /**
+     * The sender leaves the lobby; the remaining humans receive their new view. Nothing goes to the leaver (their
+     * token no longer resolves) and nothing at all when the lobby disappears because no human is left.
+     */
+    @MessageMapping("/lobby/leave")
+    public void leave(@Payload GameActionPayload payload) {
+        handle(payload.gameId(), payload.token(), "A player left.",
+                gameId -> sessionService.leaveLobby(gameId, payload.token()).views());
     }
 
     @MessageMapping("/lobby/rename")
@@ -76,22 +81,27 @@ public class LobbyController {
      * Runs a lobby command and sends the resulting per-viewer lobby to each human seat; a refusal goes to the
      * acting seat only, and an unknown token is ignored.
      */
-    private void handle(String rawGameId, String token, String message, Function<GameId, List<LobbyView>> command) {
-        GameId gameId = new GameId(rawGameId);
-        PlayerId actor = sessionService.findPlayerIdByToken(gameId, token).orElse(null);
-        if (actor == null) {
+    private void handle(String rawGameId, String token, String message, Function<GameId, List<AddressedLobbyView>> command) {
+        GameId gameId;
+        try {
+            gameId = new GameId(rawGameId);
+            if (sessionService.findPlayerIdByToken(gameId, token).isEmpty()) {
+                return;
+            }
+        } catch (IllegalArgumentException e) {
+            // the lobby no longer exists (a late command after the last human left): nobody to answer
             return;
         }
         try {
-            List<LobbyView> views = command.apply(gameId);
+            List<AddressedLobbyView> views = command.apply(gameId);
             sessionService.touch(gameId);
-            for (LobbyView view : views) {
-                messaging.sendToSeat(gameId, new PlayerId(view.mySeat()), new SuccessResponse(
-                        LifecycleEventType.JOIN.toString(), new EmptyEventData(), message, view));
+            for (AddressedLobbyView addressed : views) {
+                messaging.sendToToken(gameId, addressed.token(), new SuccessResponse(
+                        LifecycleEventType.JOIN.toString(), new EmptyEventData(), message, addressed.view()));
             }
         } catch (Exception e) {
             System.err.println(e.getMessage());
-            messaging.sendToSeat(gameId, actor,
+            messaging.sendToToken(gameId, token,
                     new ErrorResponse(LifecycleEventType.JOIN.toString(), e.getMessage(), null));
         }
     }

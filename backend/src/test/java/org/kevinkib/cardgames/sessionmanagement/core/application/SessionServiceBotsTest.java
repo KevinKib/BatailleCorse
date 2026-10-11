@@ -137,7 +137,7 @@ class SessionServiceBotsTest {
         service.addBot(id, hostToken);
         service.addBot(id, hostToken);
 
-        List<LobbyView> views = service.lobbyViews(id);
+        List<LobbyView> views = service.lobbyViews(id).stream().map(AddressedLobbyView::view).toList();
 
         assertThat(views.size(), is(1));
         LobbyView host = views.get(0);
@@ -155,7 +155,7 @@ class SessionServiceBotsTest {
         service.addBot(id, hostToken);
         service.joinRoom(id, "Bob"); // seat 3
 
-        assertThat(service.lobbyViews(id).get(0).removableBotSeats(), is(empty()));
+        assertThat(service.lobbyViews(id).get(0).view().removableBotSeats(), is(empty()));
     }
 
     @Test
@@ -173,7 +173,7 @@ class SessionServiceBotsTest {
 
         assertThrows(IllegalArgumentException.class, () -> service.tokenForSeat(id, botSeat));
         assertThat(service.findPlayerIdByToken(id, hostToken).get(), is(new PlayerId(0)));
-        assertThat(service.lobbyViews(id).toString(), not(containsString("token")));
+        assertThat(service.lobbyViews(id).stream().map(AddressedLobbyView::view).toList().toString(), not(containsString("token")));
         assertThat(service.seats(id).toString(), not(containsString("token")));
     }
 

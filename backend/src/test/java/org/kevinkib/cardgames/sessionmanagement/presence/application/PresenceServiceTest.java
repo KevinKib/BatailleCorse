@@ -82,6 +82,7 @@ class PresenceServiceTest {
 
         BatailleCorse game = (BatailleCorse) sessionService.createGame("bataille-corse", 2, GameMode.MULTIPLAYER);
         gameId = game.getId();
+        sessionService.joinGame(gameId);
     }
 
     private String tokenOf(int seat) {

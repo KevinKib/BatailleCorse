@@ -4,16 +4,33 @@ import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.GameOptions;
 import org.kevinkib.cardgames.game.PlayerId;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public record SessionGame(GameId id, String gameType, GameOptions options, Map<PlayerId, SessionPlayer> players) {
+public record SessionGame(GameId id, String gameType, GameOptions options, Map<PlayerId, SessionPlayer> players,
+                          AtomicLong version) {
+
+    public SessionGame(GameId id, String gameType, GameOptions options, Map<PlayerId, SessionPlayer> players) {
+        this(id, gameType, options, players, new AtomicLong());
+    }
+
+    /** Counter of the lobby's mutations; carried by every lobby view. */
+    public long lobbyVersion() {
+        return version.get();
+    }
+
+    /** Records one mutation of the lobby and returns the new version. */
+    public long bumpVersion() {
+        return version.incrementAndGet();
+    }
 
     public static final PlayerId HOST_SEAT = new PlayerId(0);
 
@@ -109,6 +126,47 @@ public record SessionGame(GameId id, String gameType, GameOptions options, Map<P
             }
         }
         renumberBots();
+    }
+
+    /**
+     * A human leaves the lobby. Seats stay contiguous (a game is dealt to seats 0..claimed-1): later occupants shift
+     * down one seat and every seat left free gets a fresh token. Each occupant keeps its own token, name, bot flag,
+     * seat options and rematch flags on its new seat. When the host (seat 0) leaves, the first human by seat order
+     * takes seat 0 and becomes the host: a bot is never the host. Default names ("Player N", "Bot N") are renumbered
+     * so that two seats never share one.
+     */
+    public void vacate(PlayerId leaver) {
+        SessionPlayer leaving = seatOrThrow(leaver);
+        if (!leaving.isClaimed() || leaving.isBot()) {
+            throw new IllegalArgumentException("Seat " + leaver.id() + " is not held by a human");
+        }
+        List<SessionPlayer> staying = new ArrayList<>(seats().stream()
+                .filter(seat -> seat.isClaimed() && seat != leaving)
+                .toList());
+        if (isHost(leaver)) {
+            staying.stream().filter(seat -> !seat.isBot()).findFirst().ifPresent(newHost -> {
+                staying.remove(newHost);
+                staying.add(0, newHost);
+            });
+        }
+        List<PlayerId> seatIds = seats().stream().map(SessionPlayer::id).toList();
+        players.clear();
+        for (int i = 0; i < seatIds.size(); i++) {
+            PlayerId seatId = seatIds.get(i);
+            players.put(seatId, i < staying.size()
+                    ? staying.get(i).movedTo(seatId)
+                    : new SessionPlayer(seatId, SessionToken.generate()));
+        }
+        renumberBots();
+        renumberDefaultHumanNames();
+    }
+
+    private void renumberDefaultHumanNames() {
+        for (SessionPlayer seat : seats()) {
+            if (seat.isClaimed() && !seat.isBot() && seat.name() != null && seat.name().matches("Player \\d+")) {
+                seat.rename(seat.defaultName());
+            }
+        }
     }
 
     /** Longest player name kept; a longer one is cut. */
@@ -255,17 +313,17 @@ public record SessionGame(GameId id, String gameType, GameOptions options, Map<P
         return seat;
     }
 
-    /** The token of a human seat; a bot seat's token never leaves the session, so it is not found. */
+    /** The token of a claimed human seat; a free seat or a bot seat has none to give. */
     public Optional<SessionToken> findTokenByPlayer(PlayerId playerId) {
         return Optional.ofNullable(players.get(playerId))
-                .filter(seat -> !seat.isBot())
+                .filter(seat -> seat.isClaimed() && !seat.isBot())
                 .map(SessionPlayer::token);
     }
 
-    /** Resolves a human seat; a bot seat can never be impersonated, even with its internal token. */
+    /** Resolves a claimed human seat; a free seat's token or a bot's internal token resolves to nothing. */
     public Optional<PlayerId> findPlayerByToken(SessionToken token) {
         return players.values().stream()
-                .filter(seat -> !seat.isBot())
+                .filter(seat -> seat.isClaimed() && !seat.isBot())
                 .filter(seat -> seat.token().equals(token))
                 .map(SessionPlayer::id)
                 .findFirst();

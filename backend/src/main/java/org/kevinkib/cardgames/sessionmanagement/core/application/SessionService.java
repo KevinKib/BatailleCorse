@@ -18,13 +18,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 
+/**
+ * Session use cases. Every operation that reads or mutates a lobby's seats or options, and the computation of the
+ * per-viewer views with their tokens, runs under the monitor of this service (one lock for all lobbies: traffic is
+ * tiny, and a per-game lock can replace it later without changing a caller). Each mutation of a lobby increments
+ * its version, carried by every view, so a client can drop a view older than the one it holds.
+ */
 public class SessionService implements GameDirectory {
 
     private static final PlayerId JOINER_SEAT = new PlayerId(1);
 
     private final SessionRepository repository;
     private final GameFactories gameFactories;
+    private volatile Consumer<GameId> lobbyRemovalListener = removed -> { };
 
     public SessionService(SessionRepository repository, GameFactories gameFactories) {
         this.repository = repository;
@@ -60,7 +68,7 @@ public class SessionService implements GameDirectory {
         return joinGame(gameId, null);
     }
 
-    public JoinResult joinGame(GameId gameId, String name) {
+    public synchronized JoinResult joinGame(GameId gameId, String name) {
         SessionGame sessionGame = repository.loadSessionGame(gameId);
         try {
             SessionPlayer claimed = sessionGame.claimSeat(JOINER_SEAT, name);
@@ -70,14 +78,15 @@ public class SessionService implements GameDirectory {
         }
     }
 
-    public JoinResult joinRoom(GameId id, String name) {
+    public synchronized JoinResult joinRoom(GameId id, String name) {
         if (repository.findGame(id).isPresent()) {
             throw new GameAlreadyStartedException(id);
         }
         SessionGame lobby = repository.loadSessionGame(id);
         try {
             SessionPlayer claimed = lobby.claimNextFreeSeat(name);
-            return new JoinResult(claimed.id(), claimed.token().uuid().toString());
+            lobby.bumpVersion();
+            return new JoinResult(claimed.id(), claimed.token().uuid().toString(), lobbyViews(id));
         } catch (NoFreeSeatException e) {
             throw new RoomFullException(id);
         }
@@ -95,7 +104,9 @@ public class SessionService implements GameDirectory {
         GameOptions options = existing.options();
         if (repository.findGame(id).isPresent()) {
             repository.remove(id);
-            repository.saveLobby(SessionGame.create(id, gameFactories.maxPlayers(type), type, options));
+            SessionGame fresh = SessionGame.create(id, gameFactories.maxPlayers(type), type, options);
+            // The reopened lobby continues the version of the one it replaces: a client never sees it go backwards.
+            repository.saveLobby(new SessionGame(id, type, options, fresh.players(), existing.version()));
         }
         return joinRoom(id, name);
     }
@@ -104,7 +115,7 @@ public class SessionService implements GameDirectory {
         return createRoom(gameType, hostName, GameOptions.none());
     }
 
-    public RoomCreated createRoom(String gameType, String hostName, GameOptions options) {
+    public synchronized RoomCreated createRoom(String gameType, String hostName, GameOptions options) {
         GameId id = GameId.generate();
         SessionGame lobby = SessionGame.create(id, gameFactories.maxPlayers(gameType), gameType, options);
         lobby.claimHost(hostName);
@@ -115,19 +126,34 @@ public class SessionService implements GameDirectory {
     }
 
     /** Host-only: fills the lowest free seat of a not-yet-started room with a computer player. */
-    public PlayerId addBot(GameId id, String hostToken) {
+    public synchronized PlayerId addBot(GameId id, String hostToken) {
         SessionGame lobby = openLobbyOwnedBy(id, hostToken);
         try {
-            return lobby.claimBot(null).id();
+            PlayerId bot = lobby.claimBot(null).id();
+            lobby.bumpVersion();
+            return bot;
         } catch (NoFreeSeatException e) {
             throw new RoomFullException(id);
         }
     }
 
+    /** {@link #addBot} and the resulting views, in one critical section. */
+    public synchronized List<AddressedLobbyView> addBotViews(GameId id, String hostToken) {
+        addBot(id, hostToken);
+        return lobbyViews(id);
+    }
+
+    /** {@link #removeBot} and the resulting views, in one critical section. */
+    public synchronized List<AddressedLobbyView> removeBotViews(GameId id, String hostToken, int seat) {
+        removeBot(id, hostToken, seat);
+        return lobbyViews(id);
+    }
+
     /** Host-only: frees a bot seat of a not-yet-started room (see {@link SessionGame#removeBot}). */
-    public void removeBot(GameId id, String hostToken, int seat) {
+    public synchronized void removeBot(GameId id, String hostToken, int seat) {
         SessionGame lobby = openLobbyOwnedBy(id, hostToken);
         lobby.removeBot(new PlayerId(seat));
+        lobby.bumpVersion();
     }
 
     /**
@@ -135,12 +161,13 @@ public class SessionService implements GameDirectory {
      * validated by the game (an unknown key or value is refused and nothing changes), then stored with the
      * defaults filled. Returns the per-viewer lobby views, computed in the same critical section.
      */
-    public synchronized List<LobbyView> updateOptions(GameId id, String hostToken, Map<String, String> changes) {
+    public synchronized List<AddressedLobbyView> updateOptions(GameId id, String hostToken, Map<String, String> changes) {
         SessionGame lobby = openLobbyOwnedBy(id, hostToken);
         Map<String, String> merged = new HashMap<>(lobby.options().values());
         merged.putAll(changes);
         GameOptions validated = gameFactories.validate(lobby.gameType(), GameOptions.of(merged));
-        repository.saveLobby(new SessionGame(lobby.id(), lobby.gameType(), validated, lobby.players()));
+        repository.saveLobby(new SessionGame(lobby.id(), lobby.gameType(), validated, lobby.players(), lobby.version()));
+        lobby.bumpVersion();
         return lobbyViews(id);
     }
 
@@ -148,13 +175,14 @@ public class SessionService implements GameDirectory {
      * Occupant-only: renames the caller's own seat in a not-yet-started room (see {@link SessionGame#renameSeat}).
      * Returns the per-viewer lobby views, computed in the same critical section.
      */
-    public synchronized List<LobbyView> renameSeat(GameId id, String token, String name) {
+    public synchronized List<AddressedLobbyView> renameSeat(GameId id, String token, String name) {
         if (repository.findGame(id).isPresent()) {
             throw new GameAlreadyStartedException(id);
         }
         SessionGame lobby = repository.loadSessionGame(id);
         PlayerId actor = lobby.findPlayerByToken(new SessionToken(token)).orElseThrow(InvalidTokenException::new);
         lobby.renameSeat(actor, name);
+        lobby.bumpVersion();
         return lobbyViews(id);
     }
 
@@ -162,21 +190,22 @@ public class SessionService implements GameDirectory {
      * Host-only: sets one option on a computer seat of a not-yet-started room. The game validates the key and
      * the value (strictly); a refused update leaves the seat unchanged. Returns the per-viewer lobby views.
      */
-    public synchronized List<LobbyView> setSeatOption(GameId id, String hostToken, int seat, String key, String value) {
+    public synchronized List<AddressedLobbyView> setSeatOption(GameId id, String hostToken, int seat, String key, String value) {
         SessionGame lobby = openLobbyOwnedBy(id, hostToken);
         gameFactories.validateSeatOption(lobby.gameType(), key, value);
         lobby.setSeatOption(new PlayerId(seat), key, value);
+        lobby.bumpVersion();
         return lobbyViews(id);
     }
 
     /** The options set on a seat (empty for a human or a free seat); answers the {@code BotSeatOptions} port. */
-    public Map<String, String> seatOptions(GameId id, PlayerId seat) {
+    public synchronized Map<String, String> seatOptions(GameId id, PlayerId seat) {
         SessionPlayer player = repository.loadSessionGame(id).players().get(seat);
         return player == null ? Map.of() : player.options();
     }
 
     /** Seats held by computer players, for whoever must drive them once the game runs. */
-    public Set<PlayerId> botSeats(GameId id) {
+    public synchronized Set<PlayerId> botSeats(GameId id) {
         return repository.loadSessionGame(id).botSeats();
     }
 
@@ -193,11 +222,47 @@ public class SessionService implements GameDirectory {
         return lobby;
     }
 
+    /**
+     * Called with the id of a lobby removed because its last human left. Wired to the eviction listeners
+     * (presence registry, forfeit log, bot coordinators) so a removed lobby leaves no per-game state behind.
+     */
+    public void setLobbyRemovalListener(Consumer<GameId> listener) {
+        this.lobbyRemovalListener = listener;
+    }
+
+    /**
+     * A human leaves a not-yet-started lobby; the seats behind them shift (see {@link SessionGame#vacate}) and the
+     * next human becomes the host if the host left. The lobby is removed only when no human remains. The seat is
+     * resolved from the token inside the lock, so of two simultaneous departures the second sees the shifted seats.
+     */
+    public LeaveResult leaveLobby(GameId id, String token) {
+        LeaveResult result = leaveUnderLock(id, token);
+        if (result.lobbyRemoved()) {
+            lobbyRemovalListener.accept(id);
+        }
+        return result;
+    }
+
+    private synchronized LeaveResult leaveUnderLock(GameId id, String token) {
+        if (repository.findGame(id).isPresent()) {
+            throw new GameAlreadyStartedException(id);
+        }
+        SessionGame lobby = repository.loadSessionGame(id);
+        PlayerId leaver = lobby.findPlayerByToken(new SessionToken(token)).orElseThrow(InvalidTokenException::new);
+        lobby.vacate(leaver);
+        if (lobby.players().values().stream().noneMatch(seat -> seat.isClaimed() && !seat.isBot())) {
+            repository.remove(id);
+            return new LeaveResult(true, List.of());
+        }
+        lobby.bumpVersion();
+        return new LeaveResult(false, lobbyViews(id));
+    }
+
     public String gameType(GameId id) {
         return repository.loadSessionGame(id).gameType();
     }
 
-    public Game startGame(GameId id, String hostToken) {
+    public synchronized Game startGame(GameId id, String hostToken) {
         if (repository.findGame(id).isPresent()) {
             throw new GameAlreadyStartedException(id);
         }
@@ -246,10 +311,16 @@ public class SessionService implements GameDirectory {
      * the fresh game is returned. Empty when the game is not over, or when the rematch is still
      * waiting for someone, or cannot be played any more (too few players left).
      */
-    public synchronized Optional<Game> leaveRematch(GameId id, PlayerId playerId) {
+    public Optional<Game> leaveRematch(GameId id, PlayerId playerId) {
+        // Lock order: the game's own lock is never taken under this monitor (a Kobo action holds its game lock and
+        // then calls the service), so the game is inspected before entering the monitor. A finished game stays finished.
         if (repository.findGame(id).filter(Game::isFinished).isEmpty()) {
             return Optional.empty();
         }
+        return leaveRematchUnderLock(id, playerId);
+    }
+
+    private synchronized Optional<Game> leaveRematchUnderLock(GameId id, PlayerId playerId) {
         SessionGame session = repository.loadSessionGame(id);
         session.leaveRematch(playerId);
         return isRematchReady(session) ? Optional.of(rematch(id)) : Optional.empty();
@@ -260,7 +331,7 @@ public class SessionService implements GameDirectory {
                 && session.isRematchPlayable(gameFactories.minPlayers(session.gameType()));
     }
 
-    public Game rematch(GameId id) {
+    public synchronized Game rematch(GameId id) {
         SessionGame session = repository.loadSessionGame(id);
         session.releaseDepartedSeats();
         // Deal the rematch to the players who actually joined, not every room seat (matches startGame).
@@ -270,7 +341,7 @@ public class SessionService implements GameDirectory {
         return fresh;
     }
 
-    public List<SeatView> seats(GameId gameId) {
+    public synchronized List<SeatView> seats(GameId gameId) {
         return repository.loadSessionGame(gameId).seats().stream()
                 .map(s -> new SeatView(s.id().id(), s.name(), s.isClaimed(), s.isBot()))
                 .toList();
@@ -287,7 +358,7 @@ public class SessionService implements GameDirectory {
         return names;
     }
 
-    public boolean isSeatClaimed(GameId gameId, PlayerId playerId) {
+    public synchronized boolean isSeatClaimed(GameId gameId, PlayerId playerId) {
         return repository.loadSessionGame(gameId).isClaimed(playerId);
     }
 
@@ -313,16 +384,16 @@ public class SessionService implements GameDirectory {
         repository.touch(id);
     }
 
-    public String tokenForSeat(GameId gameId, PlayerId playerId) {
+    public synchronized String tokenForSeat(GameId gameId, PlayerId playerId) {
         return repository.loadSessionToken(gameId, playerId).uuid().toString();
     }
 
     @Override
-    public Optional<PlayerId> findPlayerIdByToken(GameId gameId, String token) {
+    public synchronized Optional<PlayerId> findPlayerIdByToken(GameId gameId, String token) {
         return repository.loadSessionGame(gameId).findPlayerByToken(new SessionToken(token));
     }
 
-    public LobbyView lobbyView(GameId id, String token) {
+    public synchronized LobbyView lobbyView(GameId id, String token) {
         SessionGame lobby = repository.loadSessionGame(id);
         PlayerId viewer = lobby.findPlayerByToken(new SessionToken(token))
                 .orElseThrow(InvalidTokenException::new);
@@ -331,7 +402,7 @@ public class SessionService implements GameDirectory {
                 gameFactories.seatOptionDescriptors(lobby.gameType()), viewer);
     }
 
-    public List<LobbyView> lobbyViews(GameId id) {
+    public synchronized List<AddressedLobbyView> lobbyViews(GameId id) {
         SessionGame lobby = repository.loadSessionGame(id);
         int min = minPlayers(lobby.gameType());
         int max = maxPlayers(lobby.gameType());
@@ -339,7 +410,8 @@ public class SessionService implements GameDirectory {
         List<OptionDescriptor> seatDescriptors = gameFactories.seatOptionDescriptors(lobby.gameType());
         return lobby.seats().stream()
                 .filter(seat -> seat.isClaimed() && !seat.isBot())
-                .map(seat -> LobbyView.forViewer(lobby, min, max, descriptors, seatDescriptors, seat.id()))
+                .map(seat -> new AddressedLobbyView(seat.token().uuid().toString(),
+                        LobbyView.forViewer(lobby, min, max, descriptors, seatDescriptors, seat.id())))
                 .toList();
     }
 }

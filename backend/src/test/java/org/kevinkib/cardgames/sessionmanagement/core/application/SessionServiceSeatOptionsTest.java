@@ -104,7 +104,7 @@ class SessionServiceSeatOptionsTest {
     @Test
     void givenSeatOptionSet_whenLobbyViews_thenBotSeatCarriesItAndHumansCarryNone() {
         PlayerId bot = service.addBot(id, hostToken);
-        List<LobbyView> views = service.setSeatOption(id, hostToken, bot.id(), "tier", "0");
+        List<LobbyView> views = service.setSeatOption(id, hostToken, bot.id(), "tier", "0").stream().map(AddressedLobbyView::view).toList();
 
         LobbyView view = views.get(1);
         assertThat(view.seatOptionDescriptors().size(), is(1));

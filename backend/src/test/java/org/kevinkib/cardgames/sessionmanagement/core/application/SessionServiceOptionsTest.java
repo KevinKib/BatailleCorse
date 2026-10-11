@@ -38,7 +38,7 @@ class SessionServiceOptionsTest {
 
     @Test
     void givenHost_whenUpdateOptions_thenStoredAndReturnedViewsCarryThem() {
-        List<LobbyView> views = service.updateOptions(id, hostToken, Map.of("claimMode", "suit"));
+        List<LobbyView> views = service.updateOptions(id, hostToken, Map.of("claimMode", "suit")).stream().map(AddressedLobbyView::view).toList();
 
         assertThat(views.size(), is(2));
         assertThat(views.get(0).options().get("claimMode"), is("suit"));
@@ -113,7 +113,7 @@ class SessionServiceOptionsTest {
 
         service.playAgain(id, "Alice");
 
-        assertThat(service.lobbyViews(id).get(0).options(), is(Map.of("claimMode", "suit", "deckSize", "52")));
+        assertThat(service.lobbyViews(id).get(0).view().options(), is(Map.of("claimMode", "suit", "deckSize", "52")));
     }
 
     @Test

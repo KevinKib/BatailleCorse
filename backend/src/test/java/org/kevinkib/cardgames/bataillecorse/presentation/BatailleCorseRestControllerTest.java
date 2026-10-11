@@ -45,7 +45,7 @@ class BatailleCorseRestControllerTest {
         Clock clock = Clock.fixed(Instant.parse("2026-06-11T10:00:00Z"), ZoneOffset.UTC);
         sessionService = new SessionService(new InMemorySessionRepository(clock), new org.kevinkib.cardgames.sessionmanagement.core.application.GameFactories(java.util.List.of(new org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseFactory())));
         forfeitLog = new InMemoryForfeitLog();
-        controller = new BatailleCorseRestController(sessionService, new RecordingMessaging(), forfeitLog, new LobbyBroadcaster(new RecordingMessaging(), sessionService));
+        controller = new BatailleCorseRestController(sessionService, new RecordingMessaging(), forfeitLog, new LobbyBroadcaster(new RecordingMessaging()));
     }
 
     @Test

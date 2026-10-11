@@ -28,6 +28,7 @@ class SessionGameTest {
             var players = playerIds(2);
 
             var sessionGame = SessionGame.create(GameId.generate(), players, "bataille-corse");
+            sessionGame.claimAllSeats();
 
             assertThat(sessionGame.findTokenByPlayer(new PlayerId(0)).isPresent(), is(true));
             assertThat(sessionGame.findTokenByPlayer(new PlayerId(1)).isPresent(), is(true));
@@ -38,6 +39,7 @@ class SessionGameTest {
             var players = playerIds(2);
 
             var sessionGame = SessionGame.create(GameId.generate(), players, "bataille-corse");
+            sessionGame.claimAllSeats();
 
             var token0 = sessionGame.findTokenByPlayer(new PlayerId(0)).orElseThrow();
             var token1 = sessionGame.findTokenByPlayer(new PlayerId(1)).orElseThrow();
@@ -159,6 +161,7 @@ class SessionGameTest {
         public void givenSessionGame_withToken_whenLookingUp_thenReturnPlayerId() {
             var players = playerIds(2);
             var sessionGame = SessionGame.create(GameId.generate(), players, "bataille-corse");
+            sessionGame.claimAllSeats();
             var tokenForPlayer0 = sessionGame.findTokenByPlayer(new PlayerId(0)).orElseThrow();
 
             Optional<PlayerId> result = sessionGame.findPlayerByToken(tokenForPlayer0);

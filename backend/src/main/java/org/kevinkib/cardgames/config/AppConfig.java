@@ -225,7 +225,7 @@ public class AppConfig {
 
     @Bean
     public LobbyBroadcaster lobbyBroadcaster(GameMessagingService gameMessagingService) {
-        return new LobbyBroadcaster(gameMessagingService, sessionService());
+        return new LobbyBroadcaster(gameMessagingService);
     }
 
     @Bean
@@ -282,6 +282,9 @@ public class AppConfig {
 
     @Bean
     public GameCleanupService gameCleanupService(List<GameEvictionListener> evictionListeners) {
-        return new GameCleanupService(sessionRepository(), evictionListeners);
+        GameCleanupService cleanup = new GameCleanupService(sessionRepository(), evictionListeners);
+        // A lobby whose last human left goes through the same path as an evicted one.
+        sessionService().setLobbyRemovalListener(cleanup::evicted);
+        return cleanup;
     }
 }

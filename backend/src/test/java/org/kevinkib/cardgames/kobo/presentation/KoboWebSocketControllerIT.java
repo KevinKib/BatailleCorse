@@ -104,6 +104,9 @@ class KoboWebSocketControllerIT {
     private static final class Frames {
         final BlockingQueue<Map<String, Object>> queue = new LinkedBlockingQueue<>();
 
+        /** Frames an earlier {@link #await} skipped: still searchable by {@link #awaitAny}. */
+        private final List<Map<String, Object>> skipped = new ArrayList<>();
+
         Map<String, Object> await(Predicate<Map<String, Object>> predicate) throws Exception {
             long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(TIMEOUT_SECONDS);
             while (System.nanoTime() < deadline) {
@@ -111,8 +114,21 @@ class KoboWebSocketControllerIT {
                 if (frame != null && predicate.test(frame)) {
                     return frame;
                 }
+                if (frame != null) {
+                    skipped.add(frame);
+                }
             }
             throw new AssertionError("No matching frame received");
+        }
+
+        /** Like {@link #await}, but also looks at the frames already skipped, whatever their arrival order. */
+        Map<String, Object> awaitAny(Predicate<Map<String, Object>> predicate) throws Exception {
+            for (Map<String, Object> frame : skipped) {
+                if (predicate.test(frame)) {
+                    return frame;
+                }
+            }
+            return await(predicate);
         }
 
         List<Map<String, Object>> drain() {
@@ -271,7 +287,7 @@ class KoboWebSocketControllerIT {
         boolean twoWon = game.handSize(new PlayerId(2)) == 3;
         assertThat(zeroWon ^ twoWon, is(true));
         Frames loser = zeroWon ? f2 : f0;
-        loser.await(f -> Boolean.FALSE.equals(f.get("success")));
+        loser.awaitAny(f -> Boolean.FALSE.equals(f.get("success")));
         for (int seat = 0; seat < 3; seat++) {
             assertThat(game.slots(new PlayerId(seat)).size(), is(4));
         }

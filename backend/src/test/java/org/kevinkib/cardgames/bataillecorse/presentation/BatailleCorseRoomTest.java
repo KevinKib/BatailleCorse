@@ -38,12 +38,13 @@ import static org.hamcrest.Matchers.is;
 /** Bataille Corse on the room model: lobby, join, start and the game-type guard, without a server. */
 class BatailleCorseRoomTest {
 
-    private static final class Recorder extends GameMessagingService {
+    private static final class Recorder extends org.kevinkib.cardgames.presentation.TokenResolvingMessaging {
         final List<PlayerId> seats = Collections.synchronizedList(new ArrayList<>());
         final List<Response> toSeats = Collections.synchronizedList(new ArrayList<>());
         final List<Response> toGame = Collections.synchronizedList(new ArrayList<>());
 
-        Recorder() { super(null, null); }
+        Recorder() {  }
+
 
         @Override public void sendToSeat(GameId gameId, PlayerId seat, Object payload) {
             seats.add(seat);
@@ -57,8 +58,9 @@ class BatailleCorseRoomTest {
             new InMemorySessionRepository(Clock.systemUTC()),
             new GameFactories(List.of(new BatailleCorseFactory(), new BullshitFactory())));
     private final Recorder messaging = new Recorder();
+    { messaging.resolver = sessions; }
     private final BatailleCorseRestController rest = new BatailleCorseRestController(
-            sessions, messaging, new InMemoryForfeitLog(), new LobbyBroadcaster(messaging, sessions));
+            sessions, messaging, new InMemoryForfeitLog(), new LobbyBroadcaster(messaging));
     private final BatailleCorseStateBroadcaster broadcaster = new BatailleCorseStateBroadcaster(messaging);
     private final BatailleCorseWebSocketController ws = new BatailleCorseWebSocketController(
             sessions, messaging, new BatailleCorseGameActions(sessions, broadcaster), broadcaster);
