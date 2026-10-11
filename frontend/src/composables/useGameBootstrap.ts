@@ -3,6 +3,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useBatailleCorseStore } from '../state/BatailleCorse.store';
 import webSocketService from '../service/WebSocketService';
 import { findGame } from '../model/games';
+import { readStoredTokens } from './readStoredTokens';
 import type BatailleCorse from '../model/BatailleCorse';
 
 interface UseGameBootstrapOptions {
@@ -25,7 +26,7 @@ export function useGameBootstrap(options: UseGameBootstrapOptions) {
   onMounted(async () => {
     const gameId = route.params.id as string;
 
-    const stored = localStorage.getItem(`tokens:${gameId}`);
+    const stored = readStoredTokens(`tokens:${gameId}`);
     if (!stored) {
       // Someone shared the room URL instead of the invite link: join it.
       router.replace(findGame('bataillecorse')!.joinRoute(gameId));
@@ -41,7 +42,7 @@ export function useGameBootstrap(options: UseGameBootstrapOptions) {
     const gameState = await response.json() as BatailleCorse;
     store.hydrate(gameId, gameState);
     revealImmediatelyIfOver();
-    store.restoreSession(JSON.parse(stored));
+    store.restoreSession(stored as Record<number, string>);
     await store.loadSessionView(gameId);
     webSocketService.subscribeToGame(gameId);
   });

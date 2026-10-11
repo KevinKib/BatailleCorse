@@ -1,13 +1,13 @@
 import { onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { findGame } from '../model/games';
+import { readStoredTokens } from './readStoredTokens';
 import { useBullshitStore } from '../state/Bullshit.store';
 
 /** Reads the persisted seat+token for a game, or null if none stored. */
 export function resolveBullshitSession(gameId: string): { seat: number; token: string } | null {
-  const stored = localStorage.getItem(`bullshit:tokens:${gameId}`);
-  if (!stored) return null;
-  const tokens = JSON.parse(stored) as Record<string, string>;
+  const tokens = readStoredTokens(`bullshit:tokens:${gameId}`);
+  if (!tokens) return null;
   const seats = Object.keys(tokens).map(Number);
   if (seats.length === 0) return null;
   const seat = seats[0];
