@@ -2,11 +2,14 @@ package org.kevinkib.cardgames.presentation;
 
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.kevinkib.cardgames.bataillecorse.presentation.bot.BatailleCorseBotCoordinator;
 import org.kevinkib.cardgames.bullshit.presentation.bot.BullshitBotCoordinator;
 import org.kevinkib.cardgames.bullshit.presentation.bot.CallDecisionDelay;
 import org.kevinkib.cardgames.presentation.bot.ThinkingDelay;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameEvictionListener;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.core.env.Environment;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
@@ -61,6 +64,33 @@ class BotWiringTest {
             assertThat(evictionListeners, hasItem(instanceOf(BullshitBotCoordinator.class)));
             assertThat(coordinator != null, is(true));
         }
+
+        @Test
+        void batailleCorseBotIsWiredAndReleasedWhenAGameIsEvicted() {
+            assertThat(evictionListeners, hasItem(instanceOf(BatailleCorseBotCoordinator.class)));
+        }
+
+        @Autowired
+        Environment environment;
+
+        @Test
+        void batailleCorseBotsAreEnabledWithNoExtraDelayByDefault() {
+            assertThat(environment.getProperty("bataillecorse.bots.enabled"), is("true"));
+            assertThat(environment.getProperty("bataillecorse.bots.extra-delay-ms"), is("0"));
+        }
+    }
+
+    @Nested
+    @SpringBootTest(properties = "bataillecorse.bots.enabled=false")
+    class BatailleCorseBotsDisabled {
+
+        @Autowired
+        ApplicationContext context;
+
+        @Test
+        void noBatailleCorseBotCoordinatorExists() {
+            assertThat(context.getBeansOfType(BatailleCorseBotCoordinator.class).isEmpty(), is(true));
+        }
     }
 
     @Nested
@@ -82,6 +112,14 @@ class BotWiringTest {
         @Test
         void callDecisionDelayIsPinnedToZero() {
             assertThat(callDecisionDelay.next(), is(Duration.ZERO));
+        }
+
+        @Autowired
+        Environment environment;
+
+        @Test
+        void batailleCorseExtraDelayIsZeroInTheTestProfile() {
+            assertThat(environment.getProperty("bataillecorse.bots.extra-delay-ms"), is("0"));
         }
     }
 }
