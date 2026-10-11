@@ -255,17 +255,17 @@ public record SessionGame(GameId id, String gameType, GameOptions options, Map<P
         return seat;
     }
 
-    /** The token of a human seat; a bot seat's token never leaves the session, so it is not found. */
+    /** The token of a claimed human seat; a free seat or a bot seat has none to give. */
     public Optional<SessionToken> findTokenByPlayer(PlayerId playerId) {
         return Optional.ofNullable(players.get(playerId))
-                .filter(seat -> !seat.isBot())
+                .filter(seat -> seat.isClaimed() && !seat.isBot())
                 .map(SessionPlayer::token);
     }
 
-    /** Resolves a human seat; a bot seat can never be impersonated, even with its internal token. */
+    /** Resolves a claimed human seat; a free seat's token or a bot's internal token resolves to nothing. */
     public Optional<PlayerId> findPlayerByToken(SessionToken token) {
         return players.values().stream()
-                .filter(seat -> !seat.isBot())
+                .filter(seat -> seat.isClaimed() && !seat.isBot())
                 .filter(seat -> seat.token().equals(token))
                 .map(SessionPlayer::id)
                 .findFirst();

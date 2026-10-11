@@ -8,7 +8,7 @@ import java.util.Map;
 public class SessionPlayer {
 
     private final PlayerId id;
-    private final SessionToken token;
+    private SessionToken token;
     private boolean claimed;
     private boolean bot;
     private String name;
@@ -38,7 +38,10 @@ public class SessionPlayer {
         this.name = (name == null || name.isBlank()) ? defaultBotName : name.trim();
     }
 
-    /** Frees the seat; a seat that was held by a bot goes back to being an ordinary free seat. */
+    /**
+     * Frees the seat; a seat that was held by a bot goes back to being an ordinary free seat. The seat gets a
+     * fresh token, so the previous occupant's token never authenticates the next one.
+     */
     void release() {
         this.claimed = false;
         this.bot = false;
@@ -46,6 +49,7 @@ public class SessionPlayer {
         this.options.clear();
         this.rematchRequested = false;
         this.rematchDeparted = false;
+        this.token = SessionToken.generate();
     }
 
     void rename(String name) {
