@@ -259,9 +259,9 @@ class KoboWebSocketControllerIT {
         send(s2, "/kobo/match", body(gameId, token(game, 2), "seat", 1, "slot", 0, "giveSlot", 0,
                 "expectedTopRank", seven, "expectedRevision", 0));
 
-        Map<String, Object> match0 = f0.await(f -> "MATCH".equals(f.get("eventType")));
-        Map<String, Object> match2 = f2.await(f -> "MATCH".equals(f.get("eventType")));
-        assertThat(match0.get("success"), is(match2.get("success")));
+        // the winner's broadcast reaches both seats; which seat won is decided by the server
+        f0.await(f -> "MATCH".equals(f.get("eventType")) && Boolean.TRUE.equals(f.get("success")));
+        f2.await(f -> "MATCH".equals(f.get("eventType")) && Boolean.TRUE.equals(f.get("success")));
         // one of the two seats got the rejection, the other gave a card away
         boolean zeroWon = game.handSize(new PlayerId(0)) == 3;
         boolean twoWon = game.handSize(new PlayerId(2)) == 3;
