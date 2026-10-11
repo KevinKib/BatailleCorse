@@ -23,7 +23,8 @@ public record BullshitDto(
         TableDto table,
         PendingWinnerDto pendingWinner,
         OutcomeDto outcome,
-        int deckSize) {
+        int deckSize,
+        int mySeat) {
 
     public static BullshitDto forViewer(Bullshit game, PlayerId viewer) {
         return forViewer(game, viewer, Map.of(), Set.of());
@@ -60,6 +61,7 @@ public record BullshitDto(
                 TableDto.from(game),
                 PendingWinnerDto.from(game),
                 OutcomeDto.from(game),
-                game.getDeckSize().cardCount());
+                game.getDeckSize().cardCount(),
+                viewer.id());
     }
 }

@@ -21,6 +21,5 @@ class BullshitEventTypeTest {
     void eventDataImplementsMarker() {
         assertThat(new DiscardEventData(0, "ACE", 1), instanceOf(EventData.class));
         assertThat(new CallBullshitEventData(1, 0, false, 0, List.of()), instanceOf(EventData.class));
-        assertThat(new BullshitCreateEventData("id", "bullshit", java.util.Map.of()), instanceOf(EventData.class));
     }
 }

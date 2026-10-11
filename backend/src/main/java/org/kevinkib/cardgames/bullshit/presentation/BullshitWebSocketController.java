@@ -1,34 +1,22 @@
 package org.kevinkib.cardgames.bullshit.presentation;
 
 import org.kevinkib.cardgames.bullshit.domain.Bullshit;
-import org.kevinkib.cardgames.bullshit.domain.BullshitFactory;
-import org.kevinkib.cardgames.bullshit.domain.options.BullshitOptions;
-import org.kevinkib.cardgames.bullshit.presentation.api.BullshitCreatePayload;
 import org.kevinkib.cardgames.bullshit.presentation.api.BullshitDiscardPayload;
-import org.kevinkib.cardgames.bullshit.presentation.dto.event.BullshitCreateEventData;
 import org.kevinkib.cardgames.bullshit.presentation.dto.event.BullshitEventType;
 import org.kevinkib.cardgames.game.GameId;
-import org.kevinkib.cardgames.game.GameOptions;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.presentation.GameMessagingService;
 import org.kevinkib.cardgames.presentation.api.ErrorResponse;
 import org.kevinkib.cardgames.presentation.api.GameActionPayload;
-import org.kevinkib.cardgames.presentation.api.Response;
-import org.kevinkib.cardgames.presentation.api.SuccessResponse;
 import org.kevinkib.cardgames.presentation.dto.event.EmptyEventData;
-import org.kevinkib.cardgames.presentation.dto.event.LifecycleEventType;
 import org.kevinkib.cardgames.sessionmanagement.core.application.InvalidTokenException;
-import org.kevinkib.cardgames.sessionmanagement.core.application.RoomCreated;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
 import org.kevinkib.cards.domain.Card;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Controller
 public class BullshitWebSocketController {
@@ -46,30 +34,6 @@ public class BullshitWebSocketController {
         this.broadcaster = broadcaster;
         this.messaging = messaging;
         this.actions = actions;
-    }
-
-    @MessageMapping("/bullshit/create")
-    @SendTo("/topic/game")
-    public Response createGame(@Payload(required = false) BullshitCreatePayload payload) {
-        String name = (payload != null) ? payload.name() : null;
-        String claimMode = (payload != null) ? payload.claimMode() : null;
-        String deckSize = (payload != null) ? payload.deckSize() : null;
-        Map<String, String> values = new HashMap<>();
-        if (claimMode != null) {
-            values.put(BullshitOptions.CLAIM_MODE_KEY, claimMode);
-        }
-        if (deckSize != null) {
-            values.put(BullshitOptions.DECK_SIZE_KEY, deckSize);
-        }
-        GameOptions options = GameOptions.of(values);
-        RoomCreated room = sessionService.createRoom(BullshitFactory.GAME_TYPE, name, options);
-        Map<Integer, String> tokens = Map.of(0, room.hostToken());
-
-        return new SuccessResponse(
-                LifecycleEventType.CREATE.toString(),
-                new BullshitCreateEventData(room.gameId(), BullshitFactory.GAME_TYPE, tokens),
-                "Room created",
-                null);
     }
 
     @MessageMapping("/bullshit/start")
