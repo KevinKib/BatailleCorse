@@ -85,7 +85,7 @@ class PresenceRematchTest {
         FakeGame game = (FakeGame) sessions.startGame(id, room.hostToken());
         game.finish();
         for (int seat = 0; seat < 3; seat++) {
-            presence.onPresence("conn-" + seat, id, new PlayerId(seat));
+            presence.onPresence("conn-" + seat, id, sessions.tokenForSeat(id, new PlayerId(seat)));
         }
     }
 
@@ -126,7 +126,7 @@ class PresenceRematchTest {
         sessions.requestRematch(id, new PlayerId(1));
         presence.onDisconnect("conn-2");
 
-        presence.onPresence("conn-2b", id, new PlayerId(2));
+        presence.onPresence("conn-2b", id, sessions.tokenForSeat(id, new PlayerId(2)));
 
         assertThat(scheduler.cancelled.get(0), is(true));
         assertThat(broadcaster.events, is(empty())); // no "reconnected" noise on a finished game
@@ -173,7 +173,7 @@ class PresenceRematchTest {
         id = new GameId(room.gameId());
         sessions.joinRoom(id, "Bob");
         ((FakeGame) sessions.startGame(id, room.hostToken())).finish();
-        presence.onPresence("conn-1", id, new PlayerId(1));
+        presence.onPresence("conn-1", id, sessions.tokenForSeat(id, new PlayerId(1)));
         sessions.requestRematch(id, new PlayerId(0));
 
         presence.onDisconnect("conn-1");

@@ -5,6 +5,7 @@ import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameDirectory;
 import org.kevinkib.cardgames.sessionmanagement.presence.domain.Seat;
+import org.kevinkib.cardgames.sessionmanagement.presence.domain.SeatClaim;
 import org.kevinkib.cardgames.sessionmanagement.presence.port.ConnectionRegistry;
 import org.kevinkib.cardgames.sessionmanagement.presence.port.ForfeitLog;
 import org.kevinkib.cardgames.sessionmanagement.presence.port.ForfeitReason;
@@ -52,11 +53,18 @@ public class PresenceService {
         this.broadcasters = broadcasters;
     }
 
-    /** Records presence; if this seat had a pending forfeit, cancels it and announces the return. */
-    public void onPresence(String connectionId, GameId gameId, PlayerId playerId) {
-        Seat seat = new Seat(gameId, playerId);
-        registry.bind(connectionId, seat);
+    /**
+     * Records presence for a seat token; if the seat it currently holds had a pending forfeit, cancels
+     * it and announces the return. A token that resolves to no seat binds nothing.
+     */
+    public void onPresence(String connectionId, GameId gameId, String token) {
+        Optional<PlayerId> playerId = resolve(gameId, token);
+        if (playerId.isEmpty()) {
+            return;
+        }
+        registry.bind(connectionId, new SeatClaim(gameId, token));
 
+        Seat seat = new Seat(gameId, playerId.get());
         ScheduledForfeit pending = pendingForfeits.remove(seat);
         if (pending != null) {
             pending.cancel();
@@ -74,11 +82,16 @@ public class PresenceService {
      * same cancel-on-reconnect, but silent: nothing is broadcast until the delay is over).
      */
     public void onDisconnect(String connectionId) {
-        Optional<Seat> maybeSeat = registry.unbind(connectionId);
-        if (maybeSeat.isEmpty()) {
+        Optional<SeatClaim> claim = registry.unbind(connectionId);
+        if (claim.isEmpty()) {
             return;
         }
-        Seat seat = maybeSeat.get();
+        // The seat is resolved now, not at bind time: a token that no longer resolves holds nothing.
+        Optional<PlayerId> playerId = resolve(claim.get().gameId(), claim.get().token());
+        if (playerId.isEmpty()) {
+            return;
+        }
+        Seat seat = new Seat(claim.get().gameId(), playerId.get());
 
         Game game = findGame(seat.gameId());
         if (game == null) {
@@ -118,6 +131,14 @@ public class PresenceService {
         forfeitLog.record(seat, reason);
         games.touch(gameId); // start the finished-grace clock
         broadcasters.broadcasterFor(game).forfeited(game, playerId, reason);
+    }
+
+    private Optional<PlayerId> resolve(GameId gameId, String token) {
+        try {
+            return games.findPlayerIdByToken(gameId, token);
+        } catch (IllegalArgumentException unknownGame) {
+            return Optional.empty();
+        }
     }
 
     private Game findGame(GameId gameId) {

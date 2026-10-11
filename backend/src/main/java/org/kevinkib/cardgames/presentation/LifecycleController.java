@@ -29,10 +29,7 @@ public class LifecycleController {
     public void presence(@Payload PresencePayload payload, SimpMessageHeaderAccessor headers) {
         GameId gameId = new GameId(payload.gameId());
         try {
-            PlayerId playerId = sessionService
-                    .findPlayerIdByToken(gameId, payload.token())
-                    .orElseThrow(InvalidTokenException::new);
-            presenceService.onPresence(headers.getSessionId(), gameId, playerId);
+            presenceService.onPresence(headers.getSessionId(), gameId, payload.token());
         } catch (Exception e) {
             System.err.println(e.getMessage());
         }

@@ -11,6 +11,9 @@ public interface GameDirectory {
     Optional<Game> findGame(GameId id);
     void touch(GameId id);
 
+    /** The seat a token currently holds in a game; empty when the token (or the game) is unknown. */
+    Optional<PlayerId> findPlayerIdByToken(GameId id, String token);
+
     /**
      * A player leaves a finished game's rematch for good; returns the fresh game when that
      * departure completes the rematch (every other expected player had already asked).

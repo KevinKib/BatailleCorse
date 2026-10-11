@@ -2,8 +2,7 @@ package org.kevinkib.cardgames.sessionmanagement.presence.infrastructure;
 
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.game.GameId;
-import org.kevinkib.cardgames.game.PlayerId;
-import org.kevinkib.cardgames.sessionmanagement.presence.domain.Seat;
+import org.kevinkib.cardgames.sessionmanagement.presence.domain.SeatClaim;
 import org.kevinkib.cardgames.sessionmanagement.presence.port.ConnectionRegistry;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -16,20 +15,20 @@ class InMemoryConnectionRegistryTest {
     @Test
     void givenBoundSession_whenSeatOf_thenReturnsSeat() {
         ConnectionRegistry registry = new InMemoryConnectionRegistry();
-        var seat = new Seat(gameId, new PlayerId(0));
-        registry.bind("sess-1", seat);
+        var claim = new SeatClaim(gameId, "token-0");
+        registry.bind("sess-1", claim);
 
-        assertThat(registry.seatOf("sess-1").orElseThrow(), is(seat));
+        assertThat(registry.claimOf("sess-1").orElseThrow(), is(claim));
     }
 
     @Test
     void givenBoundSession_whenUnbind_thenReturnsSeatAndForgets() {
         ConnectionRegistry registry = new InMemoryConnectionRegistry();
-        var seat = new Seat(gameId, new PlayerId(1));
-        registry.bind("sess-2", seat);
+        var claim = new SeatClaim(gameId, "token-1");
+        registry.bind("sess-2", claim);
 
-        assertThat(registry.unbind("sess-2").orElseThrow(), is(seat));
-        assertThat(registry.seatOf("sess-2").isEmpty(), is(true));
+        assertThat(registry.unbind("sess-2").orElseThrow(), is(claim));
+        assertThat(registry.claimOf("sess-2").isEmpty(), is(true));
     }
 
     @Test
@@ -41,15 +40,15 @@ class InMemoryConnectionRegistryTest {
     @Test
     void givenSessionsForGame_whenRemoveGame_thenAllForgotten() {
         ConnectionRegistry registry = new InMemoryConnectionRegistry();
-        registry.bind("a", new Seat(gameId, new PlayerId(0)));
-        registry.bind("b", new Seat(gameId, new PlayerId(1)));
+        registry.bind("a", new SeatClaim(gameId, "token-0"));
+        registry.bind("b", new SeatClaim(gameId, "token-1"));
         var otherGame = GameId.generate();
-        registry.bind("c", new Seat(otherGame, new PlayerId(0)));
+        registry.bind("c", new SeatClaim(otherGame, "token-0"));
 
         registry.removeGame(gameId);
 
-        assertThat(registry.seatOf("a").isEmpty(), is(true));
-        assertThat(registry.seatOf("b").isEmpty(), is(true));
-        assertThat(registry.seatOf("c").isPresent(), is(true));
+        assertThat(registry.claimOf("a").isEmpty(), is(true));
+        assertThat(registry.claimOf("b").isEmpty(), is(true));
+        assertThat(registry.claimOf("c").isPresent(), is(true));
     }
 }
