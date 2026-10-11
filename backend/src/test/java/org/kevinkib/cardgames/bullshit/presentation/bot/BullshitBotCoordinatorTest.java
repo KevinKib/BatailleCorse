@@ -48,6 +48,7 @@ import static org.kevinkib.cards.domain.deck.french.FrenchRank.TWO;
 class BullshitBotCoordinatorTest {
 
     private static final Duration DELAY = Duration.ofMillis(1500);
+    private static final Duration CALL_DELAY = Duration.ofMillis(2500);
 
     static final class RecordingMessaging extends GameMessagingService {
         final List<PlayerId> seats = new ArrayList<>();
@@ -73,6 +74,7 @@ class BullshitBotCoordinatorTest {
     private Function<BotObservation, BotDecision> script;
     private final AtomicInteger decisions = new AtomicInteger();
     private BullshitBotCoordinator coordinator;
+    private Duration callDelay = Duration.ZERO;
 
     @BeforeEach
     void setUp() {
@@ -92,7 +94,8 @@ class BullshitBotCoordinatorTest {
             return script.apply(observation);
         };
         coordinator = new BullshitBotCoordinator(
-                sessionService::botSeats, gameActions, scheduler, new FixedThinkingDelay(DELAY), game -> strategy);
+                sessionService::botSeats, gameActions, scheduler, new FixedThinkingDelay(DELAY),
+                () -> callDelay, game -> strategy);
         broadcaster.addListener(coordinator);
     }
 
@@ -222,6 +225,85 @@ class BullshitBotCoordinatorTest {
 
         assertThat(thinking.isCancelled(), is(false));
         assertThat(scheduler.all().size(), is(1));
+    }
+
+    // ---- hesitation before calling Bullshit ---------------------------------------------------
+
+    private Bullshit humanClaimedAndBotWantsToCall() throws Exception {
+        callDelay = CALL_DELAY;
+        Bullshit game = threeSeatGame();
+        start(game);
+        script = obs -> obs.me().equals(new PlayerId(2))
+                ? new BotDecision.CallBullshit()
+                : new BotDecision.Pass();
+        actions.discard(game.getId(), new PlayerId(0), List.of(game.getPlayers().get(0).getCards().get(0)));
+        return game;
+    }
+
+    @Test
+    void givenBotDecidesToCall_thenTheCallWaitsForTheCallDelayBeforeBeingApplied() throws Exception {
+        Bullshit game = humanClaimedAndBotWantsToCall();
+
+        scheduler.pending().get(1).run(); // seat 2 finishes thinking and decides to call
+
+        assertThat(game.getLastDiscard().isPresent(), is(true)); // not called yet: the human can still react
+        assertThat(scheduler.pending().size(), is(2));
+        assertThat(scheduler.pending().get(1).delay(), is(CALL_DELAY));
+
+        scheduler.pending().get(1).run();
+
+        assertThat(game.getLastDiscard().isPresent(), is(false));
+    }
+
+    @Test
+    void givenBotHesitatingToCall_whenTheHumanCallsFirst_thenTheBotCallIsDroppedAndTheHumanCallStands() throws Exception {
+        callDelay = CALL_DELAY;
+        Bullshit game = register(aBullshit()
+                .withPlayers(playerWithRanks(0, ACE, KING), playerWithRanks(1, TWO, NINE), playerWithRanks(2, FOUR, FIVE))
+                .withCurrentPlayerIndex(2)
+                .build());
+        start(game);
+        script = obs -> obs.me().equals(new PlayerId(2)) && obs.can(org.kevinkib.cardgames.bullshit.domain.Action.DISCARD)
+                ? new BotDecision.Discard(List.of(obs.hand().get(0)))
+                : obs.me().equals(new PlayerId(1)) ? new BotDecision.CallBullshit() : new BotDecision.Pass();
+        scheduler.runNext(); // bot 2 claims
+        assertThat(game.getLastDiscard().isPresent(), is(true));
+        scheduler.pending().get(0).run(); // bot 1 decides to call, but hesitates
+        ManualBotScheduler.Entry hesitating = scheduler.pending().get(0);
+        assertThat(hesitating.delay(), is(CALL_DELAY));
+
+        actions.callBullshit(game.getId(), new PlayerId(0)); // the human is faster
+
+        assertThat(hesitating.isCancelled(), is(true));
+        assertThat(game.getLastDiscard().isPresent(), is(false));
+        assertThat(game.getDiscardPileSize(), is(0));
+    }
+
+    @Test
+    void givenBotHesitatingToCall_whenTheCallTaskFiresAfterTheStateMoved_thenItDoesNothing() throws Exception {
+        Bullshit game = humanClaimedAndBotWantsToCall();
+        scheduler.pending().get(1).run();
+        ManualBotScheduler.Entry hesitating = scheduler.pending().get(1);
+        int pileBefore = game.getDiscardPileSize();
+
+        game.discard(new PlayerId(1), List.of(game.getPlayers().get(1).getCards().get(0))); // moves on without a broadcast
+        hesitating.run();
+
+        assertThat(game.getDiscardPileSize(), is(pileBefore + 1)); // the stale call did not pick the pile up
+    }
+
+    @Test
+    void givenBotHesitatingToCall_whenTheGameEnds_thenTheCallIsCancelled() throws Exception {
+        Bullshit game = humanClaimedAndBotWantsToCall();
+        scheduler.pending().get(1).run();
+        ManualBotScheduler.Entry hesitating = scheduler.pending().get(1);
+
+        game.forfeit(new PlayerId(0));
+        game.forfeit(new PlayerId(1));
+        broadcaster.broadcast(game, "FORFEIT", new EmptyEventData(), "forfeit");
+
+        assertThat(hesitating.isCancelled(), is(true));
+        assertThat(scheduler.pending(), is(empty()));
     }
 
     // ---- end of game and humans leaving -------------------------------------------------------

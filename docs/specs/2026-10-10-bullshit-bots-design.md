@@ -17,7 +17,7 @@ Decisions already taken with the product owner:
    the cards it knows are in the pile, the cards revealed by a challenge) to estimate how
    plausible a claim is, and challenges with some randomness. When it lacks the target cards it
    bluffs with a simple rule.
-4. A short delay (about 1-2 s) before every bot action.
+4. A delay before every bot action (originally 1-2 s, now 1.5-3.5 s, plus a further 1.5-3 s hesitation before a bot calls Bullshit; see #120).
 
 ## Current behaviour that the design relies on
 

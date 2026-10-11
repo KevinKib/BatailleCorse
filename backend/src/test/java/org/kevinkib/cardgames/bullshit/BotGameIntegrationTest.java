@@ -54,6 +54,10 @@ class BotGameIntegrationTest {
         final String hostToken;
 
         Table(String claimMode, int bots, long seed) {
+            this(claimMode, bots, seed, Duration.ZERO);
+        }
+
+        Table(String claimMode, int bots, long seed, Duration callDelay) {
             sessions = new SessionService(
                     new InMemorySessionRepository(Clock.systemUTC()),
                     new GameFactories(List.of(new BullshitFactory())));
@@ -70,7 +74,7 @@ class BotGameIntegrationTest {
             actions = new BullshitGameActions(sessions, broadcaster);
             Random random = new Random(seed);
             coordinator = new BullshitBotCoordinator(sessions::botSeats, actions, scheduler,
-                    new FixedThinkingDelay(Duration.ZERO),
+                    new FixedThinkingDelay(Duration.ZERO), () -> callDelay,
                     g -> new ProbabilisticBotStrategy(g.getClaimMode(), random, BotTuning.DEFAULT));
             broadcaster.addListener(coordinator);
 
@@ -137,6 +141,17 @@ class BotGameIntegrationTest {
 
             assertThat("seed " + seed, table.game.isFinished(), is(true));
             assertThat(table.game.getWinner() != null, is(true));
+        }
+    }
+
+    @Test
+    void givenACallDelay_whenPlayed_thenEveryGameStillReachesAWinner() throws Exception {
+        for (long seed = 1; seed <= 6; seed++) {
+            Table table = new Table(ClaimModeOption.SUIT.key(), 2, seed, Duration.ofSeconds(2));
+
+            play(table, seed);
+
+            assertThat("seed " + seed, table.game.isFinished(), is(true));
         }
     }
 
