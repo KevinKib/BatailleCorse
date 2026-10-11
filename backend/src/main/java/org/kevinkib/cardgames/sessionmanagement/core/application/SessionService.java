@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 
 /**
  * Session use cases. Every operation that reads or mutates a lobby's seats or options, and the computation of the
@@ -31,6 +32,7 @@ public class SessionService implements GameDirectory {
 
     private final SessionRepository repository;
     private final GameFactories gameFactories;
+    private volatile Consumer<GameId> lobbyRemovalListener = removed -> { };
 
     public SessionService(SessionRepository repository, GameFactories gameFactories) {
         this.repository = repository;
@@ -218,6 +220,42 @@ public class SessionService implements GameDirectory {
             throw new NotHostException(id);
         }
         return lobby;
+    }
+
+    /**
+     * Called with the id of a lobby removed because its last human left. Wired to the eviction listeners
+     * (presence registry, forfeit log, bot coordinators) so a removed lobby leaves no per-game state behind.
+     */
+    public void setLobbyRemovalListener(Consumer<GameId> listener) {
+        this.lobbyRemovalListener = listener;
+    }
+
+    /**
+     * A human leaves a not-yet-started lobby; the seats behind them shift (see {@link SessionGame#vacate}) and the
+     * next human becomes the host if the host left. The lobby is removed only when no human remains. The seat is
+     * resolved from the token inside the lock, so of two simultaneous departures the second sees the shifted seats.
+     */
+    public LeaveResult leaveLobby(GameId id, String token) {
+        LeaveResult result = leaveUnderLock(id, token);
+        if (result.lobbyRemoved()) {
+            lobbyRemovalListener.accept(id);
+        }
+        return result;
+    }
+
+    private synchronized LeaveResult leaveUnderLock(GameId id, String token) {
+        if (repository.findGame(id).isPresent()) {
+            throw new GameAlreadyStartedException(id);
+        }
+        SessionGame lobby = repository.loadSessionGame(id);
+        PlayerId leaver = lobby.findPlayerByToken(new SessionToken(token)).orElseThrow(InvalidTokenException::new);
+        lobby.vacate(leaver);
+        if (lobby.players().values().stream().noneMatch(seat -> seat.isClaimed() && !seat.isBot())) {
+            repository.remove(id);
+            return new LeaveResult(true, List.of());
+        }
+        lobby.bumpVersion();
+        return new LeaveResult(false, lobbyViews(id));
     }
 
     public String gameType(GameId id) {

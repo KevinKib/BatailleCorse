@@ -140,4 +140,123 @@ class SessionServiceConcurrencyTest {
             }
         }
     }
+
+    @Test
+    void givenAFullRoom_whenAGuestLeavesWhileSomeoneJoins_thenSeatsStayContiguousAndTokensDistinct() throws Exception {
+        for (int round = 0; round < ROUNDS; round++) {
+            newRoom();
+            String bobToken = service.joinRoom(id, "Bob").token();
+            for (int i = 0; i < 4; i++) {
+                service.addBot(id, hostToken);
+            }
+
+            List<Object> outcomes = race(List.of(
+                    () -> service.leaveLobby(id, bobToken),
+                    () -> service.joinRoom(id, "Carol")));
+
+            assertThat("round " + round, outcomes.get(0), instanceOf(LeaveResult.class));
+            // Either the join came first and found the room full, or after the leave and took a seat.
+            Object join = outcomes.get(1);
+            boolean joined = join instanceof JoinResult;
+            if (!joined) {
+                assertThat("round " + round, join, instanceOf(RoomFullException.class));
+            }
+            List<SeatView> seats = service.seats(id);
+            int claimed = (int) seats.stream().filter(SeatView::joined).count();
+            assertThat("round " + round, claimed, is(joined ? 6 : 5));
+            for (int i = 0; i < seats.size(); i++) {
+                assertThat("round " + round + " seat " + i, seats.get(i).joined(), is(i < claimed));
+            }
+            assertThat("round " + round, service.findPlayerIdByToken(id, bobToken).isPresent(), is(false));
+            if (joined) {
+                String carolToken = ((JoinResult) join).token();
+                assertThat("round " + round, carolToken.equals(bobToken), is(false));
+                assertThat("round " + round, service.findPlayerIdByToken(id, carolToken).isPresent(), is(true));
+            }
+        }
+    }
+
+    @Test
+    void givenAJoinAndAStart_thenTheJoinerIsEitherDealtInOrRefusedAsStarted() throws Exception {
+        for (int round = 0; round < ROUNDS; round++) {
+            newRoom();
+            service.joinRoom(id, "Bob");
+
+            List<Object> outcomes = race(List.of(
+                    () -> service.startGame(id, hostToken),
+                    () -> service.joinRoom(id, "Carol")));
+
+            assertThat("round " + round, outcomes.get(0), instanceOf(org.kevinkib.cardgames.game.Game.class));
+            int dealt = ((org.kevinkib.cardgames.game.Game) outcomes.get(0)).getPlayerIds().size();
+            if (outcomes.get(1) instanceof JoinResult) {
+                assertThat("round " + round, dealt, is(3));
+            } else {
+                assertThat("round " + round, outcomes.get(1), instanceOf(GameAlreadyStartedException.class));
+                assertThat("round " + round, dealt, is(2));
+            }
+        }
+    }
+
+    @Test
+    void givenALeaveAndAStart_thenExactlyOneWinsInEitherOrder() throws Exception {
+        for (int round = 0; round < ROUNDS; round++) {
+            newRoom();
+            String bobToken = service.joinRoom(id, "Bob").token();
+
+            List<Object> outcomes = race(List.of(
+                    () -> service.startGame(id, hostToken),
+                    () -> service.leaveLobby(id, bobToken)));
+
+            boolean started = outcomes.get(0) instanceof org.kevinkib.cardgames.game.Game;
+            boolean left = outcomes.get(1) instanceof LeaveResult;
+            if (started) {
+                assertThat("round " + round, outcomes.get(1), instanceOf(GameAlreadyStartedException.class));
+                assertThat("round " + round, service.findPlayerIdByToken(id, bobToken).isPresent(), is(true));
+            } else {
+                assertThat("round " + round, left, is(true));
+                assertThat("round " + round, outcomes.get(0), instanceOf(NotEnoughPlayersException.class));
+                assertThat("round " + round, service.findGame(id).isPresent(), is(false));
+            }
+        }
+    }
+
+    @Test
+    void givenAGuestLeavingWhileTheHostStartsWithThree_thenTheDealUsesThePostShiftSeats() throws Exception {
+        for (int round = 0; round < ROUNDS; round++) {
+            newRoom();
+            String bobToken = service.joinRoom(id, "Bob").token();
+            String carolToken = service.joinRoom(id, "Carol").token();
+
+            List<Object> outcomes = race(List.of(
+                    () -> service.startGame(id, hostToken),
+                    () -> service.leaveLobby(id, bobToken)));
+
+            org.kevinkib.cardgames.game.Game game = (org.kevinkib.cardgames.game.Game) outcomes.get(0);
+            if (outcomes.get(1) instanceof LeaveResult) {
+                assertThat("round " + round, game.getPlayerIds().size(), is(2));
+                assertThat("round " + round, service.findPlayerIdByToken(id, carolToken).get().id(), is(1));
+            } else {
+                assertThat("round " + round, game.getPlayerIds().size(), is(3));
+                assertThat("round " + round, service.findPlayerIdByToken(id, carolToken).get().id(), is(2));
+            }
+        }
+    }
+
+    @Test
+    void givenTwoHumansLeavingAtOnce_thenTheLobbyIsRemovedExactlyOnce() throws Exception {
+        for (int round = 0; round < ROUNDS; round++) {
+            newRoom();
+            List<GameId> removed = Collections.synchronizedList(new ArrayList<>());
+            service.setLobbyRemovalListener(removed::add);
+            String bobToken = service.joinRoom(id, "Bob").token();
+
+            List<Object> outcomes = race(List.of(
+                    () -> service.leaveLobby(id, hostToken),
+                    () -> service.leaveLobby(id, bobToken)));
+
+            long removals = outcomes.stream().filter(o -> o instanceof LeaveResult r && r.lobbyRemoved()).count();
+            assertThat("round " + round, removals, is(1L));
+            assertThat("round " + round, removed.size(), is(1));
+        }
+    }
 }

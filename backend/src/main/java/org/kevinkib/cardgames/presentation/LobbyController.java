@@ -54,6 +54,16 @@ public class LobbyController {
         handle(payload.gameId(), payload.token(), "Bot removed from seat " + payload.seat() + ".", gameId -> sessionService.removeBotViews(gameId, payload.token(), payload.seat()));
     }
 
+    /**
+     * The sender leaves the lobby; the remaining humans receive their new view. Nothing goes to the leaver (their
+     * token no longer resolves) and nothing at all when the lobby disappears because no human is left.
+     */
+    @MessageMapping("/lobby/leave")
+    public void leave(@Payload GameActionPayload payload) {
+        handle(payload.gameId(), payload.token(), "A player left.",
+                gameId -> sessionService.leaveLobby(gameId, payload.token()).views());
+    }
+
     @MessageMapping("/lobby/rename")
     public void rename(@Payload LobbyRenamePayload payload) {
         handle(payload.gameId(), payload.token(), "Player renamed.",

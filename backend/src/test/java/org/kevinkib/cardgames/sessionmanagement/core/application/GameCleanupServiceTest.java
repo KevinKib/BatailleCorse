@@ -68,4 +68,15 @@ class GameCleanupServiceTest {
         assertThat(List.of(repo.lastFinishedGrace, repo.lastIdleTtl),
                 contains(GameCleanupService.FINISHED_GRACE, GameCleanupService.IDLE_TTL));
     }
+
+    @Test
+    void givenALobbyRemovedOutsideTheSweep_whenEvicted_thenEveryListenerIsNotified() {
+        var id = GameId.generate();
+        var seen = new ArrayList<GameId>();
+        var service = new GameCleanupService(new StubRepository(), List.of(seen::add, seen::add));
+
+        service.evicted(id);
+
+        assertThat(seen, contains(id, id));
+    }
 }
