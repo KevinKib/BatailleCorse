@@ -4,12 +4,10 @@ import { ref, computed, watch } from 'vue';
 import webSocketService from '../service/WebSocketService';
 import BullshitSession, { type BullshitSessionEvent } from '../application/BullshitSession';
 import type { BullshitPlayer, BullshitState, BullshitView } from '../model/bullshit/BullshitState';
-import type { LobbyView } from '../model/bullshit/LobbyView';
+import type { LobbyView } from '../model/lobby/LobbyView';
 import type { CallBullshitEventData } from '../model/bullshit/BullshitEvents';
 import type Card from '../model/Card';
 import { useSeatPresence, FORFEIT_NOTICE_HOLD_MS } from '../composables/useSeatPresence';
-import { type ClaimMode } from '../model/bullshit/claimMode';
-import { type DeckSize } from '../model/bullshit/deckSize';
 import type { ForfeitReason } from '../model/ForfeitReason';
 import type { ForfeitEventData } from '../model/SeatLifecycleEvents';
 
@@ -28,8 +26,9 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
   // Every seat seen in this game, kept after it leaves the table (a forfeited player drops out of
   // `players`, yet "Bob forfeited" must still name him). Cleared when the room goes back to a lobby.
   const roster = ref<Record<string, BullshitPlayer>>({});
-  // Last refusal of an add/remove bot request (server message), cleared by the next lobby refresh.
-  const botError = ref<string | null>(null);
+  // Last refusal of a lobby command (server message, or 'connection' when it could not be sent), cleared by the
+  // next lobby refresh. Whatever the event type: a Start refusal is typed START, a Leave is typed JOIN.
+  const lobbyError = ref<string | null>(null);
   // Rematch request of this client: pending while the HTTP call runs, failed when refused.
   const rematch = ref<RematchState>('idle');
   // Last seat that left (resigned or timed out), kept for the end screen after the notice is gone.
@@ -53,7 +52,7 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
     switch (event.type) {
       case 'state-update':
         state.value = event.state;
-        botError.value = null;
+        lobbyError.value = null;
         if (event.state.started) {
           for (const p of event.state.players) roster.value = { ...roster.value, [p.id]: p };
         } else {
@@ -66,7 +65,7 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
         if (gameId.value !== event.gameId) roster.value = {};
         gameId.value = event.gameId;
         break;
-      case 'error': botError.value = event.eventType === 'JOIN' ? event.message : null; break;
+      case 'error': lobbyError.value = state.value?.started ? null : event.message; break;
       case 'seat-change': mySeat.value = event.seat; break;
       case 'event':
         if (event.eventType === 'CALL_BULLSHIT') {
@@ -103,13 +102,27 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
   watch(phase, (p) => { if (p === 'lobby') presence.reset(); });
 
   // Publishing throws while the socket is down (reconnecting): report it like a server refusal.
-  function requestBotChange(send: () => void) {
-    botError.value = null;
+  // Returns whether the command was sent.
+  function requestLobbyChange(send: () => void): boolean {
+    lobbyError.value = null;
     try {
       send();
+      return true;
     } catch {
-      botError.value = 'connection';
+      lobbyError.value = 'connection';
+      return false;
     }
+  }
+
+  // Leaves the lobby and forgets everything about it, so the next room starts from a clean store.
+  // Returns whether the lobby was left: false when the command could not be sent (the player is still seated).
+  function leave(): boolean {
+    if (!requestLobbyChange(() => session.leave())) return false;
+    state.value = null;
+    gameId.value = null;
+    roster.value = {};
+    lobbyError.value = null;
+    return true;
   }
 
   async function playAgain() {
@@ -130,19 +143,23 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
   function clearSelection() { selectedCards.value = []; }
 
   return {
-    state, game, lobby, roster, botError, gameId, mySeat, reveal, selectedCards, rematch, lastForfeit,
+    state, game, lobby, roster, lobbyError, gameId, mySeat, reveal, selectedCards, rematch, lastForfeit,
     disconnections: presence.disconnections,
     liveDisconnections: presence.liveDisconnections,
     forfeitNotice: presence.forfeitNotice,
     isMyTurn, canDiscard, canCallBullshit, iWon, isHost, canStart, phase,
     applyEvent, toggleCard, clearSelection,
-    create: (name?: string, claimMode?: ClaimMode, deckSize?: DeckSize) => session.create(name, claimMode, deckSize),
+    create: (name?: string) => session.create(name),
     join: (id: string, name?: string) => session.join(id, name),
     restore: (id: string, seat: number, token: string) => session.restore(id, seat, token),
     hydrate: () => session.hydrate(),
     startGame: () => session.startGame(),
-    addBot: () => requestBotChange(() => session.addBot()),
-    removeBot: (seat: number) => requestBotChange(() => session.removeBot(seat)),
+    addBot: () => requestLobbyChange(() => session.addBot()),
+    removeBot: (seat: number) => requestLobbyChange(() => session.removeBot(seat)),
+    setOption: (key: string, value: string) => requestLobbyChange(() => session.setOption(key, value)),
+    setSeatOption: (seat: number, key: string, value: string) => requestLobbyChange(() => session.setSeatOption(seat, key, value)),
+    rename: (name: string) => requestLobbyChange(() => session.rename(name)),
+    leave,
     discard: () => { session.discard(selectedCards.value); clearSelection(); },
     callBullshit: () => session.callBullshit(),
     forfeit: () => session.forfeit(),

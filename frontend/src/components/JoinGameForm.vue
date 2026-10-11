@@ -8,6 +8,7 @@ import type { GameDefinition } from '../model/games';
 import { extractGameId } from '../model/extractGameId';
 import { useSettingsStore } from '../state/Settings.store';
 import { useI18n } from '../composables/useI18n';
+import { HttpError } from '../model/HttpError';
 
 const props = defineProps<{
   game: GameDefinition;
@@ -33,9 +34,10 @@ async function onSubmit() {
   busy.value = true;
   try {
     await props.join(id.value, playerName.value || undefined);
-  } catch {
+  } catch (e) {
     busy.value = false;
-    error.value = ui.failed;
+    // A 404 means the lobby was deleted (everybody left): say so rather than blame the ID.
+    error.value = e instanceof HttpError && e.status === 404 ? ui.notFound : ui.failed;
     return;
   }
   busy.value = false;

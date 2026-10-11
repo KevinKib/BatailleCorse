@@ -28,10 +28,12 @@ export function useBullshitBootstrap(gameId: string) {
       return;
     }
     store.restore(gameId, session.seat, session.token);
-    if (!(await store.hydrate())) {
-      // The game is gone or the token is refused: forget it and offer a new game.
+    const result = await store.hydrate();
+    if (result !== 'ok') {
+      // The game is gone (404) or the stored token no longer resolves (403, the seat was lost): forget the
+      // token and offer a new game, saying which of the two happened.
       localStorage.removeItem(`bullshit:tokens:${gameId}`);
-      router.replace({ path: game.gameHomeRoute, query: { gone: '1' } });
+      router.replace({ path: game.gameHomeRoute, query: result === 'lost' ? { lost: '1' } : { gone: '1' } });
     }
   });
 }

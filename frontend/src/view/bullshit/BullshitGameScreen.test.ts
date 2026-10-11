@@ -8,7 +8,7 @@ import EndGameOverlay from '../../components/EndGameOverlay.vue';
 import OpponentSeat from '../../components/bullshit/OpponentSeat.vue';
 import { useBullshitStore } from '../../state/Bullshit.store';
 import type { BullshitState } from '../../model/bullshit/BullshitState';
-import type { LobbyView } from '../../model/bullshit/LobbyView';
+import type { LobbyView } from '../../model/lobby/LobbyView';
 import { setConnectionOnline } from '../../composables/useConnectionStatus';
 
 function playingState(overrides: Partial<BullshitState> = {}): BullshitState {
@@ -184,7 +184,9 @@ describe('BullshitGameScreen', () => {
     expect(wrapper.find('[data-test="lobby"]').exists()).toBe(true);
     const items = wrapper.findAll('[data-test="lobby"] .players li');
     expect(items).toHaveLength(2);
-    expect(items[0].text()).toContain('Alice');
+    // My own row holds my name in an editable field.
+    expect((items[0].get('input').element as HTMLInputElement).value).toBe('Alice');
+    expect(items[1].text()).toContain('Bob');
   });
 
   it('shows the player count and how many more players are needed when the host cannot start yet', () => {

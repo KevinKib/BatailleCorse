@@ -63,10 +63,22 @@ describe('useBullshitBootstrap restore failures', () => {
     localStorage.setItem('bullshit:tokens:g1', JSON.stringify({ 0: 'tok' }));
     const store = useBullshitStore();
     vi.spyOn(store, 'restore').mockImplementation(() => {});
-    vi.spyOn(store, 'hydrate').mockResolvedValue(false);
+    vi.spyOn(store, 'hydrate').mockResolvedValue('gone');
     const router = await mountAtRoom('g1');
     expect(router.currentRoute.value.path).toBe('/games/bullshit');
     expect(router.currentRoute.value.query.gone).toBe('1');
+    expect(localStorage.getItem('bullshit:tokens:g1')).toBeNull();
+  });
+
+  it('givenStoredTokenRefused_thenGoesToTheGameHomeWithTheLostSeatNoticeAndForgetsTheToken', async () => {
+    localStorage.setItem('bullshit:tokens:g1', JSON.stringify({ 0: 'tok' }));
+    const store = useBullshitStore();
+    vi.spyOn(store, 'restore').mockImplementation(() => {});
+    vi.spyOn(store, 'hydrate').mockResolvedValue('lost');
+    const router = await mountAtRoom('g1');
+    expect(router.currentRoute.value.path).toBe('/games/bullshit');
+    expect(router.currentRoute.value.query.lost).toBe('1');
+    expect(router.currentRoute.value.query.gone).toBeUndefined();
     expect(localStorage.getItem('bullshit:tokens:g1')).toBeNull();
   });
 
@@ -74,7 +86,7 @@ describe('useBullshitBootstrap restore failures', () => {
     localStorage.setItem('bullshit:tokens:g1', JSON.stringify({ 0: 'tok' }));
     const store = useBullshitStore();
     vi.spyOn(store, 'restore').mockImplementation(() => {});
-    vi.spyOn(store, 'hydrate').mockResolvedValue(true);
+    vi.spyOn(store, 'hydrate').mockResolvedValue('ok');
     const router = await mountAtRoom('g1');
     expect(router.currentRoute.value.path).toBe('/games/bullshit/room/g1');
   });

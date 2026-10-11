@@ -10,22 +10,25 @@ export interface GameDefinition {
   gameHomeRoute: string;
   joinRoute: (id?: string) => string;
   roomRoute: (id: string) => string;
-  /** Where "New game" leads until the lobby creates games straight away. */
-  newGameRoute: string;
+  /**
+   * Where "New game" leads for a game that still has its own create page. A game without one creates its
+   * lobby straight away (`POST /api/lobby`) and the player lands in it.
+   */
+  newGameRoute?: string;
 }
 
-function define(key: GameKey): GameDefinition {
+function define(key: GameKey, hasCreatePage: boolean): GameDefinition {
   const base = `/games/${key}`;
   return {
     key,
     gameHomeRoute: base,
     joinRoute: (id) => (id ? `${base}/join/${id}` : `${base}/join`),
     roomRoute: (id) => `${base}/room/${id}`,
-    newGameRoute: `${base}/new`,
+    ...(hasCreatePage ? { newGameRoute: `${base}/new` } : {}),
   };
 }
 
-export const GAMES: readonly GameDefinition[] = [define('bataillecorse'), define('bullshit')];
+export const GAMES: readonly GameDefinition[] = [define('bataillecorse', true), define('bullshit', false)];
 
 export function findGame(key: unknown): GameDefinition | undefined {
   return GAMES.find(g => g.key === key);

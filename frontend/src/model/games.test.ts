@@ -12,9 +12,12 @@ describe('game registry', () => {
     }
   });
 
-  it('givenExistingCreatePages_thenNewGameLeadsThereUntilTheLobbyExists', () => {
+  it('givenBatailleCorse_thenNewGameStillLeadsToItsCreatePage', () => {
     expect(findGame('bataillecorse')?.newGameRoute).toBe('/games/bataillecorse/new');
-    expect(findGame('bullshit')?.newGameRoute).toBe('/games/bullshit/new');
+  });
+
+  it('givenBullshit_thenNewGameCreatesTheLobbyDirectlyWithoutACreatePage', () => {
+    expect(findGame('bullshit')?.newGameRoute).toBeUndefined();
   });
 
   it('givenUnknownKey_thenFindGameReturnsUndefined', () => {

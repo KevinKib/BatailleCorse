@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { Button } from 'primevue';
+import { useRouter } from 'vue-router';
 import { useBullshitStore, REVEAL_HOLD_MS } from '../../state/Bullshit.store';
 import { useEndScreen } from '../../composables/useEndScreen';
 import { useBullshitBootstrap } from '../../composables/useBullshitBootstrap';
@@ -13,7 +14,8 @@ import ForfeitBanner from '../../components/ForfeitBanner.vue';
 import RulesPanel from '../../components/RulesPanel.vue';
 import OpponentSeat from '../../components/bullshit/OpponentSeat.vue';
 import BullshitHand from '../../components/bullshit/BullshitHand.vue';
-import BullshitLobby from '../../components/bullshit/BullshitLobby.vue';
+import GameLobby from '../../components/lobby/GameLobby.vue';
+import { findGame } from '../../model/games';
 import { useI18n } from '../../composables/useI18n';
 import { flyCardsToPile, flyPileToTaker, prefersReducedMotion } from '../../composables/usePileAnimation';
 import { cardSound } from '../../composables/useCardSound';
@@ -33,6 +35,7 @@ const props = defineProps<{ gameId: string }>();
 const messages = useI18n();
 const ui = messages.bullshitUi;
 const store = useBullshitStore();
+const router = useRouter();
 // The roster outlives a forfeit (the player leaves `players`, the banner still names him).
 // Seats are 0-based internally; the typed name wins, else "Bot N" / "Player N" (numbered from 1).
 // Names are user input: only ever rendered as text.
@@ -220,18 +223,29 @@ const verdictAnnouncement = computed(() => {
   });
 });
 
-const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.gameId}`);
+const game = findGame('bullshit')!;
+
+// Leaving frees the seat: the leaver goes to the Game selection like every other exit. A leave that could not
+// be sent keeps the player in the lobby, with the error shown.
+function leaveLobby() {
+  if (store.leave()) router.push({ name: 'games' });
+}
 </script>
 
 <template>
   <div class="bullshit-screen" :class="{ 'bullshit-screen--lobby': store.phase === 'lobby' }">
-    <BullshitLobby
+    <GameLobby
       v-if="store.phase === 'lobby' && store.lobby"
+      :game="game"
       :lobby="store.lobby"
-      :join-link="joinLink"
-      :is-host="store.isHost"
-      :can-start="store.canStart"
-      @start="store.startGame()" />
+      :error="store.lobbyError"
+      @start="store.startGame()"
+      @leave="leaveLobby"
+      @add-bot="store.addBot()"
+      @remove-bot="seat => store.removeBot(seat)"
+      @set-option="(key, value) => store.setOption(key, value)"
+      @set-seat-option="(seat, key, value) => store.setSeatOption(seat, key, value)"
+      @rename="name => store.rename(name)" />
 
     <EndGameOverlay
       v-else-if="store.phase === 'finished' && endScreen.showEndOverlay.value"
