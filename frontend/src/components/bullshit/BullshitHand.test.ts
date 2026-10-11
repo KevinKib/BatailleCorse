@@ -19,6 +19,16 @@ describe('BullshitHand', () => {
       .toEqual(['ace of heart', '2 of club', 'king of spade']);
   });
 
+  it('sorts by suit then rank in suit mode, rank order otherwise; indexes and aria follow the displayed order', () => {
+    const more = [{ rank: '5', suit: 'HEART', name: 'HEART_5' }, ...cards];
+    const suit = mount(BullshitHand, { props: { cards: more, selected: [], claimMode: 'suit' } });
+    expect(suit.findAll('button.hand-card').map(b => b.attributes('aria-label')))
+      .toEqual(['ace of heart', '5 of heart', '2 of club', 'king of spade']);
+    expect(suit.get('[data-test="hand-card-1"]').attributes('aria-label')).toBe('5 of heart');
+    const rank = mount(BullshitHand, { props: { cards: more, selected: [], claimMode: 'rank' } });
+    expect(rank.get('[data-test="hand-card-1"]').attributes('aria-label')).toBe('2 of club');
+  });
+
   it('emits toggle with the clicked card, whatever its displayed position', async () => {
     const wrapper = mount(BullshitHand, { props: { cards, selected: [] } });
     await wrapper.get('[data-test="hand-card-2"]').trigger('click');
