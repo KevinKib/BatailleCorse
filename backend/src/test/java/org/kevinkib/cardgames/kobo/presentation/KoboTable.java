@@ -28,6 +28,15 @@ final class KoboTable {
             super(null, null);
         }
 
+
+        SessionService resolver;
+
+        /** Lobby views are addressed by token; the double maps it back to the seat to keep its assertions. */
+        @Override
+        public void sendToToken(GameId gameId, String token, Object payload) {
+            sendToSeat(gameId, resolver.findPlayerIdByToken(gameId, token).orElseThrow(), payload);
+        }
+
         @Override
         public void sendToSeat(GameId gameId, PlayerId seat, Object payload) {
             seats.add(seat);
@@ -43,6 +52,7 @@ final class KoboTable {
     final InMemorySessionRepository repository = new InMemorySessionRepository(Clock.systemUTC());
     final SessionService sessions = new SessionService(repository, new GameFactories(List.of(new KoboFactory())));
     final RecordingMessaging messaging = new RecordingMessaging();
+    { messaging.resolver = sessions; }
     final KoboStateBroadcaster broadcaster = new KoboStateBroadcaster(messaging, sessions::seatNames);
     final KoboGameActions actions = new KoboGameActions(sessions, broadcaster);
     final LobbyBroadcaster lobbyBroadcaster = new LobbyBroadcaster(messaging, sessions);

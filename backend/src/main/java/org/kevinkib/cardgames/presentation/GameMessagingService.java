@@ -31,6 +31,14 @@ public class GameMessagingService {
         messagingTemplate.convertAndSend(seatDestination(gameId, token), payload);
     }
 
+    /**
+     * Sends to the private channel of a token captured under the lobby lock. A lobby view is addressed this way,
+     * never by seat number: a seat can shift between the computation of the view and its delivery.
+     */
+    public void sendToToken(GameId gameId, String token, Object payload) {
+        messagingTemplate.convertAndSend(seatDestination(gameId, token), payload);
+    }
+
     private String destination(String gameId) {
         return "/topic/game/" + gameId;
     }

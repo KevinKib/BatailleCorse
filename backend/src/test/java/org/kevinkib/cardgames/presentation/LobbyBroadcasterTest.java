@@ -26,6 +26,15 @@ class LobbyBroadcasterTest {
         final List<PlayerId> seats = new ArrayList<>();
         final List<Response> payloads = new ArrayList<>();
         RecordingMessaging() { super(null, null); }
+
+        SessionService resolver;
+
+        /** Lobby views are addressed by token; the double maps it back to the seat to keep its assertions. */
+        @Override
+        public void sendToToken(GameId gameId, String token, Object payload) {
+            sendToSeat(gameId, resolver.findPlayerIdByToken(gameId, token).orElseThrow(), payload);
+        }
+
         @Override public void sendToSeat(GameId gameId, PlayerId seat, Object payload) {
             seats.add(seat);
             payloads.add((Response) payload);
@@ -47,6 +56,7 @@ class LobbyBroadcasterTest {
                 new SessionService(repository, new GameFactories(List.of(new BullshitFactory())));
 
         RecordingMessaging messaging = new RecordingMessaging();
+        messaging.resolver = sessionService;
         LobbyBroadcaster broadcaster = new LobbyBroadcaster(messaging, sessionService);
 
         broadcaster.broadcast(lobby.id(), LifecycleEventType.JOIN.toString(), new EmptyEventData(), "Bob joined.");

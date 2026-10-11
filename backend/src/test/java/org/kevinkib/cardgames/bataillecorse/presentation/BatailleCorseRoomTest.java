@@ -45,6 +45,15 @@ class BatailleCorseRoomTest {
 
         Recorder() { super(null, null); }
 
+
+        SessionService resolver;
+
+        /** Lobby views are addressed by token; the double maps it back to the seat to keep its assertions. */
+        @Override
+        public void sendToToken(GameId gameId, String token, Object payload) {
+            sendToSeat(gameId, resolver.findPlayerIdByToken(gameId, token).orElseThrow(), payload);
+        }
+
         @Override public void sendToSeat(GameId gameId, PlayerId seat, Object payload) {
             seats.add(seat);
             toSeats.add((Response) payload);
@@ -57,6 +66,7 @@ class BatailleCorseRoomTest {
             new InMemorySessionRepository(Clock.systemUTC()),
             new GameFactories(List.of(new BatailleCorseFactory(), new BullshitFactory())));
     private final Recorder messaging = new Recorder();
+    { messaging.resolver = sessions; }
     private final BatailleCorseRestController rest = new BatailleCorseRestController(
             sessions, messaging, new InMemoryForfeitLog(), new LobbyBroadcaster(messaging, sessions));
     private final BatailleCorseWebSocketController ws = new BatailleCorseWebSocketController(sessions, messaging);

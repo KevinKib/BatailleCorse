@@ -87,7 +87,7 @@ class SessionServiceRenameTest {
 
     @Test
     void givenRename_whenLobbyViews_thenEveryHumanSeesTheNewName() {
-        List<LobbyView> views = service.renameSeat(id, guestToken, "Robert");
+        List<LobbyView> views = service.renameSeat(id, guestToken, "Robert").stream().map(AddressedLobbyView::view).toList();
 
         assertThat(views.size(), is(2));
         assertThat(views.get(0).players().get(1).name(), is("Robert"));

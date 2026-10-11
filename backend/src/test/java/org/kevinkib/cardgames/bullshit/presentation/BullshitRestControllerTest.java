@@ -39,6 +39,15 @@ class BullshitRestControllerTest {
         final java.util.List<Integer> seats = new java.util.ArrayList<>();
         final java.util.List<String> eventTypes = new java.util.ArrayList<>();
         RecordingMessaging() { super(null, null); }
+
+        SessionService resolver;
+
+        /** Lobby views are addressed by token; the double maps it back to the seat to keep its assertions. */
+        @Override
+        public void sendToToken(org.kevinkib.cardgames.game.GameId gameId, String token, Object payload) {
+            sendToSeat(gameId, resolver.findPlayerIdByToken(gameId, token).orElseThrow(), payload);
+        }
+
         @Override
         public void sendToSeat(org.kevinkib.cardgames.game.GameId gameId,
                                org.kevinkib.cardgames.game.PlayerId seat, Object payload) {
@@ -53,6 +62,7 @@ class BullshitRestControllerTest {
                 new InMemorySessionRepository(Clock.systemUTC()),
                 new GameFactories(List.of(new BullshitFactory())));
         messaging = new RecordingMessaging();
+        messaging.resolver = sessionService;
         controller = new BullshitRestController(
                 sessionService,
                 new BullshitStateBroadcaster(messaging, sessionService::botSeats, sessionService::seatNames),

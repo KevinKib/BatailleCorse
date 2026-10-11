@@ -17,7 +17,8 @@ import java.util.Map;
  * {@code optionDescriptors} are the game's declared options, {@code options} their current values
  * (defaults filled for missing keys) and {@code canEditOptions} is true for the host when the game
  * declares at least one option. {@code seatOptionDescriptors} are the options of a computer seat; each bot
- * player carries its {@code seatOptions} (defaults filled), a human none.
+ * player carries its {@code seatOptions} (defaults filled), a human none. {@code lobbyVersion} increases with
+ * every mutation of the lobby: a client ignores a view older than the one it holds.
  */
 public record LobbyView(
         boolean started,
@@ -32,7 +33,8 @@ public record LobbyView(
         List<OptionDescriptor> optionDescriptors,
         List<OptionDescriptor> seatOptionDescriptors,
         boolean canEditOptions,
-        List<Integer> removableBotSeats) {
+        List<Integer> removableBotSeats,
+        long lobbyVersion) {
 
     public record LobbyPlayer(int seat, String name, boolean joined, boolean bot, Map<String, String> seatOptions) {
     }
@@ -73,7 +75,8 @@ public record LobbyView(
                 optionDescriptors,
                 seatOptionDescriptors,
                 host && !optionDescriptors.isEmpty(),
-                removableBotSeats);
+                removableBotSeats,
+                lobby.lobbyVersion());
     }
 
     /** A bot's options with the game's defaults filled in; a human or free seat carries none. */

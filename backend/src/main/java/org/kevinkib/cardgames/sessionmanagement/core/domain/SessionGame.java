@@ -10,10 +10,26 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public record SessionGame(GameId id, String gameType, GameOptions options, Map<PlayerId, SessionPlayer> players) {
+public record SessionGame(GameId id, String gameType, GameOptions options, Map<PlayerId, SessionPlayer> players,
+                          AtomicLong version) {
+
+    public SessionGame(GameId id, String gameType, GameOptions options, Map<PlayerId, SessionPlayer> players) {
+        this(id, gameType, options, players, new AtomicLong());
+    }
+
+    /** Counter of the lobby's mutations; carried by every lobby view. */
+    public long lobbyVersion() {
+        return version.get();
+    }
+
+    /** Records one mutation of the lobby and returns the new version. */
+    public long bumpVersion() {
+        return version.incrementAndGet();
+    }
 
     public static final PlayerId HOST_SEAT = new PlayerId(0);
 
