@@ -178,13 +178,13 @@ class SessionServiceBotsTest {
     }
 
     @Test
-    void givenGameWithBots_whenPlayAgain_thenLobbyHasNoBots() {
+    void givenGameWithBots_whenPlayAgain_thenLobbyKeepsTheBots() {
         service.addBot(id, hostToken);
         service.startGame(id, hostToken);
 
         service.playAgain(id, "Alice");
 
-        assertThat(service.botSeats(id), is(empty()));
-        assertThat(service.seats(id).get(1).joined(), is(false));
+        assertThat(service.botSeats(id), is(Set.of(new PlayerId(1))));
+        assertThat(service.seats(id).get(1).bot(), is(true));
     }
 }

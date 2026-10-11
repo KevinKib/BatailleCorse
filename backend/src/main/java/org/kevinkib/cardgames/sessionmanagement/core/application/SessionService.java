@@ -94,8 +94,8 @@ public class SessionService implements GameDirectory {
 
     /**
      * Re-join the room for a rematch. If a game is present (finished or not), the room is first
-     * reopened — the game is dropped and the lobby reset to empty — then a seat is claimed; the
-     * first caller takes seat 0 and becomes host. Synchronized so a burst of simultaneous
+     * reopened — the game is dropped and the lobby reset, keeping the computer players (order, names and seat
+     * options) on the seats right after seat 0 — then a seat is claimed; the first caller takes seat 0 and becomes host. Synchronized so a burst of simultaneous
      * Play-Again calls reopen exactly once before any of them claims a seat.
      */
     public synchronized JoinResult playAgain(GameId id, String name) {
@@ -105,6 +105,7 @@ public class SessionService implements GameDirectory {
         if (repository.findGame(id).isPresent()) {
             repository.remove(id);
             SessionGame fresh = SessionGame.create(id, gameFactories.maxPlayers(type), type, options);
+            fresh.claimBotsOf(existing);
             // The reopened lobby continues the version of the one it replaces: a client never sees it go backwards.
             repository.saveLobby(new SessionGame(id, type, options, fresh.players(), existing.version()));
         }
