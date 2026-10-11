@@ -25,8 +25,17 @@ public final class BatailleCorseScenario {
     }
 
     public static BatailleCorse game(List<FrenchRank> seat0, List<FrenchRank> seat1, SlapRules rules) {
+        return game(GameId.generate(), seat0, seat1, rules);
+    }
+
+    /** A fresh game under an existing id, as a rematch or a Play again deals one. */
+    public static BatailleCorse game(GameId id, List<FrenchRank> seat0, List<FrenchRank> seat1) {
+        return game(id, seat0, seat1, SlapRules.DEFAULT);
+    }
+
+    private static BatailleCorse game(GameId id, List<FrenchRank> seat0, List<FrenchRank> seat1, SlapRules rules) {
         return new BatailleCorse(
-                GameId.generate(),
+                id,
                 List.of(player(0, seat0), player(1, seat1)),
                 0,
                 CentralPileBuilder.aCentralPile().withNoCards().withState(CentralPileState.NEUTRAL).build(),

@@ -43,6 +43,8 @@ graph TB
 
 **BatailleCorse (Core)** — upstream, pure game rules. `BatailleCorse` is the aggregate root. No knowledge of sessions, tokens, or transport.
 
+**BatailleCorse computer seats** — a room seat held by a bot is played by the server. The pure part lives in `bataillecorse/domain/bot` (`BatailleCorseBotTier`: the nine tiers of the former local AI; `BatailleCorseBotStrategy`: slap, send or nothing, read from the rules in force). `BatailleCorseBotCoordinator` (`presentation/bot`) listens to the `BatailleCorseStateBroadcaster`, schedules the bot after its tier reaction time (seat option `tier`, 0 to 8, default 1, plus `bataillecorse.bots.extra-delay-ms`), re-checks `BatailleCorse.version()` under the game monitor before acting, and collects a won pile for the bot after 1500 ms (`autoGrabPlayer()`). It uses the same `BatailleCorseGameActions` as a human, starts on START, stops on game end, forfeit or eviction, and restarts on the next START after Play again. `bataillecorse.bots.enabled=false` switches it off.
+
 **Bullshit** — a second upstream game-rules context (`org.kevinkib.cardgames.bullshit.domain`), sibling to BatailleCorse, depending only on `frenchcards`. `Bullshit` is the aggregate root; the claim/match mechanic sits behind a pluggable `ClaimMode` strategy (ascending-rank over the deck in play, or a suit variant that draws a random starting suit each round through an injected `RandomGenerator`); the deck (`DeckSize`: 32 cards from 7 to Ace, or 52) is a creation option. As of Slice 1 it has **no** session, presentation, or transport wiring — that is Slice 2 (generalizing Session Management over a `Game` abstraction).
 
 **Session Management** — downstream, conforms to Core's model. Two responsibilities:

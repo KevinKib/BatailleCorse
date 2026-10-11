@@ -59,7 +59,9 @@ class BatailleCorseRoomTest {
     private final Recorder messaging = new Recorder();
     private final BatailleCorseRestController rest = new BatailleCorseRestController(
             sessions, messaging, new InMemoryForfeitLog(), new LobbyBroadcaster(messaging, sessions));
-    private final BatailleCorseWebSocketController ws = new BatailleCorseWebSocketController(sessions, messaging);
+    private final BatailleCorseStateBroadcaster broadcaster = new BatailleCorseStateBroadcaster(messaging);
+    private final BatailleCorseWebSocketController ws = new BatailleCorseWebSocketController(
+            sessions, messaging, new BatailleCorseGameActions(sessions, broadcaster), broadcaster);
 
     private RoomCreated room() {
         return sessions.createRoom(BatailleCorseFactory.GAME_TYPE, "Alice");
@@ -197,5 +199,17 @@ class BatailleCorseRoomTest {
         assertThat(sessions.botSeats(id), is(Set.of(new PlayerId(1))));
         ws.start(new GameActionPayload(room.gameId(), room.hostToken()));
         assertThat(sessions.getGame(id, BatailleCorse.class).getPlayers(), hasSize(2));
+    }
+
+    @Test
+    void startTellsTheStateListenersSoABotCanStart() {
+        RoomCreated room = room();
+        sessions.addBot(new GameId(room.gameId()), room.hostToken());
+        List<String> events = new ArrayList<>();
+        broadcaster.addListener((game, type, data) -> events.add(type));
+
+        ws.start(new GameActionPayload(room.gameId(), room.hostToken()));
+
+        assertThat(events, is(List.of("START")));
     }
 }

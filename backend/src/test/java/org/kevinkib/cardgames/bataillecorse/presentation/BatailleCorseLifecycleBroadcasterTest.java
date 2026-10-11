@@ -27,8 +27,9 @@ class BatailleCorseLifecycleBroadcasterTest {
 
     private final RecordingMessaging messaging = new RecordingMessaging();
     private final ForfeitLog reasons = new InMemoryForfeitLog();
+    private final BatailleCorseStateBroadcaster stateBroadcaster = new BatailleCorseStateBroadcaster(messaging);
     private final BatailleCorseLifecycleBroadcaster broadcaster =
-            new BatailleCorseLifecycleBroadcaster(messaging, reasons);
+            new BatailleCorseLifecycleBroadcaster(stateBroadcaster, reasons);
 
     @Test
     void givenForfeit_whenBroadcast_thenSendsForfeitResponseWithBatailleCorseState() {
@@ -50,5 +51,19 @@ class BatailleCorseLifecycleBroadcasterTest {
 
         assertThat(messaging.last.getEventType(), is("OPPONENT_DISCONNECTED"));
         assertThat(messaging.last.getState(), instanceOf(BatailleCorseDto.class));
+    }
+
+    @Test
+    void everyLifecycleEventTellsTheStateListeners() {
+        BatailleCorse game = new BatailleCorse(GameId.generate(), 2);
+        java.util.List<String> events = new java.util.ArrayList<>();
+        stateBroadcaster.addListener((g, type, data) -> events.add(type));
+
+        broadcaster.disconnected(game, new PlayerId(0), 123L);
+        broadcaster.reconnected(game, new PlayerId(0));
+        broadcaster.forfeited(game, new PlayerId(0), ForfeitReason.RESIGNED);
+        broadcaster.rematchStarted(game, new PlayerId(1));
+
+        assertThat(events, is(java.util.List.of("OPPONENT_DISCONNECTED", "OPPONENT_RECONNECTED", "FORFEIT", "REMATCH")));
     }
 }

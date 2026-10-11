@@ -1,5 +1,4 @@
 package org.kevinkib.cardgames.bataillecorse.presentation;
-import org.kevinkib.cardgames.presentation.GameMessagingService;
 import org.kevinkib.cardgames.sessionmanagement.presence.port.ForfeitLog;
 import org.kevinkib.cardgames.sessionmanagement.presence.port.ForfeitReason;
 import org.kevinkib.cardgames.sessionmanagement.presence.port.GameLifecycleBroadcaster;
@@ -7,7 +6,6 @@ import org.kevinkib.cardgames.sessionmanagement.presence.port.GameLifecycleBroad
 import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorse;
 import org.kevinkib.cardgames.game.Game;
 import org.kevinkib.cardgames.game.PlayerId;
-import org.kevinkib.cardgames.presentation.api.SuccessResponse;
 import org.kevinkib.cardgames.bataillecorse.presentation.dto.BatailleCorseDto;
 import org.kevinkib.cardgames.bataillecorse.presentation.dto.event.RematchEventData;
 import org.kevinkib.cardgames.bataillecorse.presentation.dto.PlayerIdDto;
@@ -19,12 +17,12 @@ import org.kevinkib.cardgames.presentation.dto.event.OpponentReconnectedEventDat
 
 public class BatailleCorseLifecycleBroadcaster implements GameLifecycleBroadcaster {
 
-    private final GameMessagingService messaging;
+    private final BatailleCorseStateBroadcaster broadcaster;
     private final ForfeitLog forfeitLog;
 
-    public BatailleCorseLifecycleBroadcaster(GameMessagingService messaging,
+    public BatailleCorseLifecycleBroadcaster(BatailleCorseStateBroadcaster broadcaster,
                                              ForfeitLog forfeitLog) {
-        this.messaging = messaging;
+        this.broadcaster = broadcaster;
         this.forfeitLog = forfeitLog;
     }
 
@@ -35,40 +33,35 @@ public class BatailleCorseLifecycleBroadcaster implements GameLifecycleBroadcast
 
     @Override
     public void disconnected(Game game, PlayerId player, long deadlineEpochMs) {
-        BatailleCorse bc = (BatailleCorse) game;
-        messaging.sendToGame(game.getId().uuid().toString(), new SuccessResponse(
+        broadcaster.broadcast((BatailleCorse) game,
                 LifecycleEventType.OPPONENT_DISCONNECTED.toString(),
                 new OpponentDisconnectedEventData(player.id(), deadlineEpochMs),
-                "Player " + player + " disconnected.",
-                BatailleCorseDto.from(bc)));
+                "Player " + player + " disconnected.");
     }
 
     @Override
     public void reconnected(Game game, PlayerId player) {
-        BatailleCorse bc = (BatailleCorse) game;
-        messaging.sendToGame(game.getId().uuid().toString(), new SuccessResponse(
+        broadcaster.broadcast((BatailleCorse) game,
                 LifecycleEventType.OPPONENT_RECONNECTED.toString(),
                 new OpponentReconnectedEventData(player.id()),
-                "Player " + player + " reconnected.",
-                BatailleCorseDto.from(bc)));
+                "Player " + player + " reconnected.");
     }
 
     @Override
     public void rematchStarted(Game fresh, PlayerId triggeredBy) {
-        messaging.sendToGame(fresh.getId().uuid().toString(), new SuccessResponse(
+        broadcaster.broadcast((BatailleCorse) fresh,
                 LifecycleEventType.REMATCH.toString(),
                 new RematchEventData(RematchStatus.STARTED, new PlayerIdDto(String.valueOf(triggeredBy.id()))),
-                "Rematch started.",
-                BatailleCorseDto.from((BatailleCorse) fresh)));
+                "Rematch started.");
     }
 
     @Override
     public void forfeited(Game game, PlayerId player, ForfeitReason reason) {
         BatailleCorse bc = (BatailleCorse) game;
-        messaging.sendToGame(game.getId().uuid().toString(), new SuccessResponse(
+        broadcaster.broadcast(bc,
                 LifecycleEventType.FORFEIT.toString(),
                 new ForfeitEventData(player.id(), reason.name()),
                 "Player " + player + " forfeited.",
-                BatailleCorseDto.from(bc, forfeitLog.reasonsBySeat(game.getId()))));
+                BatailleCorseDto.from(bc, forfeitLog.reasonsBySeat(game.getId())));
     }
 }

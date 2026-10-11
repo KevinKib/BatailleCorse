@@ -75,7 +75,8 @@ class PresenceServiceTest {
         messaging = new RecordingMessaging();
         registry = new InMemoryConnectionRegistry();
         forfeitLog = new InMemoryForfeitLog();
-        var broadcaster = new BatailleCorseLifecycleBroadcaster(messaging, forfeitLog);
+        var broadcaster = new BatailleCorseLifecycleBroadcaster(
+                new org.kevinkib.cardgames.bataillecorse.presentation.BatailleCorseStateBroadcaster(messaging), forfeitLog);
         var broadcasters = new GameLifecycleBroadcasters(List.of(broadcaster));
         service = new PresenceService(sessionService, registry, scheduler, clock, forfeitLog, broadcasters);
 
