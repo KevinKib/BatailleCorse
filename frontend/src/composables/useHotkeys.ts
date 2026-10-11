@@ -14,9 +14,11 @@ export function useHotkeys(
   getSlapKeys: () => string[] = () => ['d'],
   // Called with every other key (lower-cased) and its physical code (layout independent), for games that need more than two actions.
   onOtherKey?: (key: string, code: string) => void,
+  // Checked at every key press: when false, no key does anything (accessibility opt-out).
+  isEnabled: () => boolean = () => true,
 ) {
   function handleKey(e: KeyboardEvent) {
-    if (isIgnored(e)) return;
+    if (!isEnabled() || isIgnored(e)) return;
     const key = e.key.toLowerCase();
     if (getSendKeys().includes(key)) onSend();
     else if (getSlapKeys().includes(key)) onSlap();

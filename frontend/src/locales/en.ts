@@ -94,6 +94,23 @@ export const messagesEn: Messages = {
     you: 'You',
     back: 'Back',
     sound: { mute: 'Mute sound', unmute: 'Unmute sound' },
+    hotkeys: {
+      open: 'Keyboard shortcuts',
+      title: 'Keyboard shortcuts',
+      enabled: 'Shortcuts enabled',
+      discard: 'Discard',
+      call: 'Call Bullshit',
+      change: 'Change',
+      changeAria: 'Change the key for {action}',
+      listening: 'Press a key…',
+      reset: 'Reset to defaults',
+      cardsNote: 'Keys 1–0 pick cards and cannot be changed.',
+      errors: {
+        reserved: 'Use a single letter or symbol key (not Tab, Enter, Space, Esc, arrows or modifiers).',
+        digit: 'Digits are used to pick cards.',
+        duplicate: 'That key is already used by the other action.',
+      },
+    },
     connecting: 'Joining the table…',
     start: {
       title: 'Bullshit',

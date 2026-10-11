@@ -469,6 +469,51 @@ describe('BullshitGameScreen', () => {
     });
   });
 
+  describe('keyboard shortcut settings', () => {
+    function mountPlaying() {
+      const store = useBullshitStore();
+      store.applyEvent({ type: 'seat-change', seat: 0 });
+      store.applyEvent({ type: 'state-update', state: playingState() });
+      return mount(BullshitGameScreen, { props: { gameId: 'g1' }, global: { plugins: [router, PrimeVue] }, attachTo: document.body });
+    }
+
+    it('shows the default keys in the hint, tooltips and aria-keyshortcuts', () => {
+      const wrapper = mountPlaying();
+      expect(wrapper.get('[data-test="keys-hint"]').text()).toContain('D discard');
+      expect(wrapper.get('[data-test="discard"]').attributes('aria-keyshortcuts')).toBe('d');
+      expect(wrapper.get('[data-test="call"]').attributes('title')).toContain('B');
+      expect(wrapper.find('[data-test="hotkeys-button"]').exists()).toBe(true);
+      wrapper.unmount();
+    });
+
+    it('reflects remapped keys at once', async () => {
+      localStorage.setItem('bullshit.hotkeys', JSON.stringify({ enabled: true, discard: 'x', call: 'k' }));
+      const wrapper = mountPlaying();
+      expect(wrapper.get('[data-test="keys-hint"]').text()).toContain('X discard');
+      expect(wrapper.get('[data-test="keys-hint"]').text()).toContain('K call Bullshit');
+      expect(wrapper.get('[data-test="discard"]').attributes('aria-keyshortcuts')).toBe('x');
+      expect(wrapper.get('[data-test="call"]').attributes('aria-keyshortcuts')).toBe('k');
+      wrapper.unmount();
+    });
+
+    it('hides the hint, tooltips and aria-keyshortcuts when shortcuts are off', () => {
+      localStorage.setItem('bullshit.hotkeys', JSON.stringify({ enabled: false, discard: 'd', call: 'b' }));
+      const wrapper = mountPlaying();
+      expect(wrapper.find('[data-test="keys-hint"]').exists()).toBe(false);
+      expect(wrapper.get('[data-test="discard"]').attributes('aria-keyshortcuts')).toBeUndefined();
+      expect(wrapper.get('[data-test="discard"]').attributes('title')).toBeUndefined();
+      wrapper.unmount();
+    });
+
+    it('turning the switch off in the panel updates the screen', async () => {
+      const wrapper = mountPlaying();
+      await wrapper.get('[data-test="hotkeys-button"]').trigger('click');
+      await wrapper.get('[data-test="hotkeys-enabled"]').trigger('click');
+      expect(wrapper.find('[data-test="keys-hint"]').exists()).toBe(false);
+      wrapper.unmount();
+    });
+  });
+
   describe('end of game', () => {
     function mountFinished(opts: { winner: string; hand?: number; forfeit?: { loserSeat: number; reason?: string } }) {
       const store = useBullshitStore();
