@@ -208,6 +208,7 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
       :did-i-win="store.iWon"
       :subtitle="endSubtitle"
       :rematch-button="rematchButton"
+      :home-route="{ name: 'games' }"
       :error="store.rematch === 'failed' ? ui.end.rematchFailed : undefined"
       @play-again="store.playAgain()"
     />
@@ -224,7 +225,7 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
       <RulesPanel :rules="messages.bullshit" />
 
       <div class="top-bar">
-        <RouterLink :to="{ path: '/' }" class="leave-button" data-test="leave">
+        <RouterLink :to="{ name: 'games' }" class="leave-button" data-test="leave">
           <Button severity="secondary" :label="ui.back" icon="pi pi-undo" variant="text" rounded />
         </RouterLink>
         <Button

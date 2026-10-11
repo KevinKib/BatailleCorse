@@ -16,7 +16,7 @@
           data-cy="play-again"
           @click="emit('playAgain')"
         />
-        <RouterLink :to="{ name: 'home' }" class="end-home-button">
+        <RouterLink :to="homeRoute ?? { name: 'home' }" class="end-home-button">
           <Button label="Back to home" icon="pi pi-home" rounded />
         </RouterLink>
       </div>
@@ -26,6 +26,7 @@
 
 <script setup lang="ts">
 import { Button } from 'primevue';
+import type { RouteLocationRaw } from 'vue-router';
 import type { RematchButton } from '../model/RematchButton';
 
 interface Props {
@@ -34,6 +35,8 @@ interface Props {
   rematchButton: RematchButton;
   /** Why the rematch could not start (shown above the buttons, announced). */
   error?: string;
+  /** Where "Back to home" leads; defaults to the Bataille Corse menu. */
+  homeRoute?: RouteLocationRaw;
 }
 
 interface Emits {
