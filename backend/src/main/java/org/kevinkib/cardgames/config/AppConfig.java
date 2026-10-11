@@ -2,6 +2,10 @@ package org.kevinkib.cardgames.config;
 
 import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseFactory;
 import org.kevinkib.cardgames.bullshit.domain.BullshitFactory;
+import org.kevinkib.cardgames.kobo.domain.KoboFactory;
+import org.kevinkib.cardgames.kobo.presentation.KoboGameActions;
+import org.kevinkib.cardgames.kobo.presentation.KoboLifecycleBroadcaster;
+import org.kevinkib.cardgames.kobo.presentation.KoboStateBroadcaster;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameCleanupService;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameEvictionListener;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameFactories;
@@ -69,7 +73,12 @@ public class AppConfig {
 
     @Bean
     public GameFactories gameFactories() {
-        return new GameFactories(List.of(batailleCorseFactory(), bullshitFactory()));
+        return new GameFactories(List.of(batailleCorseFactory(), bullshitFactory(), koboFactory()));
+    }
+
+    @Bean
+    public KoboFactory koboFactory() {
+        return new KoboFactory();
     }
 
     @Bean
@@ -160,6 +169,21 @@ public class AppConfig {
     @Bean
     public GameLifecycleBroadcaster bullshitLifecycleBroadcaster(BullshitStateBroadcaster bullshitStateBroadcaster) {
         return new BullshitLifecycleBroadcaster(bullshitStateBroadcaster);
+    }
+
+    @Bean
+    public KoboStateBroadcaster koboStateBroadcaster(GameMessagingService gameMessagingService) {
+        return new KoboStateBroadcaster(gameMessagingService, sessionService()::seatNames);
+    }
+
+    @Bean
+    public KoboGameActions koboGameActions(KoboStateBroadcaster koboStateBroadcaster) {
+        return new KoboGameActions(sessionService(), koboStateBroadcaster);
+    }
+
+    @Bean
+    public GameLifecycleBroadcaster koboLifecycleBroadcaster(KoboStateBroadcaster koboStateBroadcaster) {
+        return new KoboLifecycleBroadcaster(koboStateBroadcaster);
     }
 
     @Bean
