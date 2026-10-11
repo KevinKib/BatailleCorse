@@ -3,6 +3,7 @@
     <div :class="['end-card', didIWin ? 'end-card--victory' : 'end-card--defeat']">
       <div v-if="didIWin" class="end-trophy" data-cy="victory-flourish">🏆</div>
       <h1 class="end-title">{{ didIWin ? 'VICTORY' : 'DEFEAT' }}</h1>
+      <p v-if="winnerLine" class="end-winner" data-test="end-winner">{{ winnerLine }}</p>
       <p class="end-sub">{{ subtitle }}</p>
       <p v-if="error" class="end-error" data-test="rematch-error" role="alert">{{ error }}</p>
       <div class="end-actions">
@@ -32,6 +33,8 @@ import type { RematchButton } from '../model/RematchButton';
 interface Props {
   didIWin: boolean;
   subtitle: string;
+  /** Names who won ("Winner: Alice"); omitted by games that do not need it. */
+  winnerLine?: string;
   rematchButton: RematchButton;
   /** Why the rematch could not start (shown above the buttons, announced). */
   error?: string;
@@ -79,6 +82,13 @@ const emit = defineEmits<Emits>();
   font-weight: 700;
   letter-spacing: 0.06em;
   margin: 0;
+}
+
+.end-winner {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin: 0;
+  overflow-wrap: anywhere;
 }
 
 .end-sub {

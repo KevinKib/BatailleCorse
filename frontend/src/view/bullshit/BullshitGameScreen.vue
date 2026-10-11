@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { Button } from 'primevue';
-import { useBullshitStore } from '../../state/Bullshit.store';
+import { useBullshitStore, REVEAL_HOLD_MS } from '../../state/Bullshit.store';
+import { useEndScreen } from '../../composables/useEndScreen';
 import { useBullshitBootstrap } from '../../composables/useBullshitBootstrap';
 import { useSeatDisconnectCountdown } from '../../composables/useSeatDisconnectCountdown';
 import { useLeaveGuard } from '../../composables/useLeaveGuard';
@@ -120,16 +121,36 @@ function discard() {
 // The verdict is over and the pile goes to its taker: fly a few face-down cards from the pile to
 // that seat (or to my own zone). Visual only, like the discard flight: the counts come from the state.
 const myZone = ref<HTMLElement | null>(null);
+// The last turn must play out before the end screen: from the moment a verdict shows until the
+// pile has landed (or nothing flies), `settling` holds the end screen back. It is state, not a delay.
+const settling = ref(false);
 watch(() => store.reveal, (current, previous) => {
-  // Only when a verdict ends (shown, then cleared); a new verdict replacing it, or a game that is
-  // no longer being played, does not fly anything.
-  if (current || !previous || store.phase !== 'playing') return;
+  if (current) settling.value = true;
+  // Only when a verdict ends (shown, then cleared); a new verdict replacing it, or a table that
+  // is gone (lobby), does not fly anything. A finished game still flies: its last verdict is the
+  // one that decided it.
+  if (current || !previous || !store.game) { if (!current) settling.value = false; return; }
   const destination = previous.pickerSeat === store.mySeat
     ? myZone.value
     : opponentsRing.value?.querySelector<HTMLElement>(`[data-seat="${previous.pickerSeat}"] .seat-card`);
-  flyPileToTaker(pileCardEl(), destination?.getBoundingClientRect() ?? null, previous.revealedCards.length,
-    { reduceMotion: prefersReducedMotion() });
+  const flights = flyPileToTaker(pileCardEl(), destination?.getBoundingClientRect() ?? null,
+    previous.revealedCards.length,
+    { reduceMotion: prefersReducedMotion(), onSettled: () => { settling.value = false; } });
+  if (flights === 0) settling.value = false;
 });
+
+// End screen: shown once the game is over AND the verdict/flight are done (reduced motion: no
+// flight, so only the verdict is waited for). The bound keeps a stuck animation from hiding it.
+const END_SCREEN_MAX_WAIT_MS = REVEAL_HOLD_MS + 3000;
+const endScreen = useEndScreen(
+  () => store.phase === 'finished',
+  () => store.reveal !== null || settling.value,
+  undefined,
+  END_SCREEN_MAX_WAIT_MS,
+);
+// Reloading into a finished game: nothing to wait for.
+endScreen.revealImmediatelyIfOver();
+onBeforeUnmount(() => endScreen.cancel());
 
 // Any play (mine or an opponent's) makes the pile grow; taking the pile makes it shrink.
 watch(() => store.game?.discardPileSize ?? 0, (size, previous) => {
@@ -174,6 +195,12 @@ const endSubtitle = computed(() => {
   if (left?.reason === 'DISCONNECTED') return format(ui.end.youWonDisconnected, { player: displayName(left.seat) });
   return myCardCount.value > 0 ? ui.end.youWonOthersLeft : ui.end.youWon;
 });
+const winnerLine = computed(() => {
+  const outcome = store.game?.outcome;
+  return outcome?.status === 'FINISHED'
+    ? format(ui.end.winner, { player: displayName(Number(outcome.winnerId)) })
+    : undefined;
+});
 const rematchButton = computed(() => ({
   label: store.rematch === 'pending' ? ui.end.rematchPending : ui.end.playAgain,
   disabled: store.rematch === 'pending',
@@ -207,9 +234,10 @@ const joinLink = computed(() => `${location.origin}/games/bullshit/join/${props.
       @start="store.startGame()" />
 
     <EndGameOverlay
-      v-else-if="store.phase === 'finished'"
+      v-else-if="store.phase === 'finished' && endScreen.showEndOverlay.value"
       data-test="end"
       :did-i-win="store.iWon"
+      :winner-line="winnerLine"
       :subtitle="endSubtitle"
       :rematch-button="rematchButton"
       :home-route="{ name: 'games' }"

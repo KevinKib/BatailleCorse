@@ -143,6 +143,7 @@ export interface BullshitUiMessages {
     offline: string;                   // my own connection is down; the socket retries by itself
   };
   end: {
+    winner: string;                    // '{player}': names the winner on the end screen
     youWon: string;
     youLost: string;
     youWonResigned: string;            // '{player}': the last opponent resigned

@@ -98,6 +98,17 @@ describe('flyPileToTaker', () => {
     expect(document.querySelectorAll('[data-test="flying-pile"]')).toHaveLength(0);
   });
 
+  it('tells when the last ghost has landed (onSettled), and not before', async () => {
+    const onSettled = vi.fn();
+    flyPileToTaker(pile(), taker, 8, { reduceMotion: false, onSettled });
+    finishers.slice(0, 2).forEach(f => f());
+    await Promise.resolve(); await Promise.resolve();
+    expect(onSettled).not.toHaveBeenCalled();
+    finishers[2]();
+    await Promise.resolve(); await Promise.resolve();
+    expect(onSettled).toHaveBeenCalledTimes(1);
+  });
+
   it('flies fewer ghosts for a smaller pile', () => {
     expect(flyPileToTaker(pile(), taker, 1, { reduceMotion: false })).toBe(1);
   });

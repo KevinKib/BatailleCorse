@@ -20,14 +20,22 @@ export function useEndScreen(
   isOver: () => boolean,
   isAnimating: () => boolean,
   delayMs = END_SCREEN_DELAY_MS,
+  /** Safety bound: reveal anyway when the animation has not settled this long after the game is over. */
+  maxWaitMs?: number,
 ) {
   const showEndOverlay = ref(false);
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
+  let boundId: ReturnType<typeof setTimeout> | null = null;
+
+  function clearBound() {
+    if (boundId !== null) { clearTimeout(boundId); boundId = null; }
+  }
 
   function scheduleReveal() {
     if (timeoutId !== null) clearTimeout(timeoutId);
     timeoutId = setTimeout(() => {
       timeoutId = null;
+      clearBound();
       showEndOverlay.value = true;
     }, delayMs);
   }
@@ -40,8 +48,15 @@ export function useEndScreen(
     ([over, animating]) => {
       if (over && !animating) {
         scheduleReveal();
-      } else if (!over) {
+      } else if (over) {
+        // An animation (re)started before the overlay showed: hold the pending reveal.
         if (timeoutId !== null) { clearTimeout(timeoutId); timeoutId = null; }
+        if (maxWaitMs !== undefined && boundId === null && !showEndOverlay.value) {
+          boundId = setTimeout(() => { boundId = null; showEndOverlay.value = true; }, maxWaitMs);
+        }
+      } else {
+        if (timeoutId !== null) { clearTimeout(timeoutId); timeoutId = null; }
+        clearBound();
         showEndOverlay.value = false;
       }
     },
@@ -50,7 +65,7 @@ export function useEndScreen(
 
   // Reload into an already-finished game: no animation in flight, reveal at once.
   function revealImmediatelyIfOver() {
-    if (isOver()) showEndOverlay.value = true;
+    if (isOver()) { clearBound(); showEndOverlay.value = true; }
   }
 
   // Cancel a pending reveal and stop watching; caller wires into onBeforeUnmount.
@@ -59,6 +74,7 @@ export function useEndScreen(
       clearTimeout(timeoutId);
       timeoutId = null;
     }
+    clearBound();
     stopWatch();
   }
 
