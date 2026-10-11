@@ -6,6 +6,6 @@ package org.kevinkib.cardgames.kobo.presentation.api;
  * (required: a moved pile rejects the attempt without penalty); {@code expectedRevision} the
  * revision of the target slot as the client knew it (required, same protection for the slot: a changed slot rejects the attempt without penalty).
  */
-public record KoboMatchPayload(String gameId, String token, int seat, int slot, Integer giveSlot,
+public record KoboMatchPayload(String gameId, String token, Integer seat, Integer slot, Integer giveSlot,
                                String expectedTopRank, Integer expectedRevision) {
 }

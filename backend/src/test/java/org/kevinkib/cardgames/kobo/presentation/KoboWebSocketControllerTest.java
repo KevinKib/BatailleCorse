@@ -87,7 +87,70 @@ class KoboWebSocketControllerTest {
         assertThat(table.messaging.payloads.get(0).isSuccess(), is(false));
     }
 
+    @Test
+    void start_onAnotherGameTypesRoom_isRejectedAndDoesNotStartThatGame() {
+        org.kevinkib.cardgames.sessionmanagement.core.application.SessionService both =
+                new org.kevinkib.cardgames.sessionmanagement.core.application.SessionService(table.repository,
+                        new org.kevinkib.cardgames.sessionmanagement.core.application.GameFactories(List.of(
+                                new org.kevinkib.cardgames.kobo.domain.KoboFactory(),
+                                new org.kevinkib.cardgames.bullshit.domain.BullshitFactory())));
+        KoboWebSocketController ws = new KoboWebSocketController(both, table.broadcaster, table.messaging,
+                new KoboGameActions(both, table.broadcaster));
+        org.kevinkib.cardgames.sessionmanagement.core.application.RoomCreated room =
+                both.createRoom(org.kevinkib.cardgames.bullshit.domain.BullshitFactory.GAME_TYPE, "Alice");
+        both.joinRoom(new GameId(room.gameId()), "Bob");
+
+        ws.start(new GameActionPayload(room.gameId(), room.hostToken()));
+
+        assertThat(both.findGame(new GameId(room.gameId())).isPresent(), is(false));
+        assertThat(table.messaging.payloads, hasSize(1));
+        assertThat(table.messaging.payloads.get(0).isSuccess(), is(false));
+    }
+
     // ---- commands
+
+    @Test
+    void commandsWithAMissingSeatOrSlotAreRejectedWithoutAnyEffect() {
+        Kobo game = table.install(aKobo().withTableau("7S", "2H", "3H", "4H").withTableau("5S", "6S", "7D", "KS")
+                .withDiscard("7H").build());
+        String gameId = game.getId().uuid().toString();
+        String t0 = table.token(game, 0);
+        String seven = CardDto.from(card("7H")).rank();
+
+        table.ws.match(new KoboMatchPayload(gameId, t0, null, 1, null, seven, 0));
+        table.ws.match(new KoboMatchPayload(gameId, t0, 0, null, null, seven, 0));
+        table.ws.peek(new KoboTargetPayload(gameId, t0, null, 0));
+        table.ws.blindSwap(new KoboSwapPayload(gameId, t0, null, 1, 0));
+        table.ws.swapDrawn(new KoboSlotPayload(gameId, t0, null));
+        table.ws.kingSwap(new KoboSlotPayload(gameId, t0, null));
+
+        assertThat(table.messaging.payloads, hasSize(6));
+        assertThat(table.messaging.payloads.stream().noneMatch(Response::isSuccess), is(true));
+        assertThat(game.version(), is(0));
+        assertThat(game.slots(seat(0)).size(), is(4));
+    }
+
+    @Test
+    void giveTenWithoutASeatGivesNothingToSeatZero() throws Exception {
+        Kobo game = table.install(aKobo().withTableau("AH", "KH", "KD", "AD").withTableau("5S", "6S", "9D", "KS")
+                .withTableau("2C", "3C", "4C", "KC").withDiscard("2S").withDrawPile("2D", "3D", "4D", "5D", "6D", "7D")
+                .inPhase(Phase.TURN_END).build());
+        game.announceKobo(seat(0));
+        for (int s : new int[]{1, 2}) {
+            game.draw(seat(s));
+            game.discardDrawn(seat(s));
+            game.endTurn(seat(s));
+        }
+        assertThat(game.phase(), is(Phase.GIFT));
+        table.messaging.clear();
+        int version = game.version();
+
+        table.ws.giveTen(new KoboGiftPayload(game.getId().uuid().toString(), table.token(game, 0), null));
+
+        assertThat(table.messaging.payloads.get(0).isSuccess(), is(false));
+        assertThat(game.phase(), is(Phase.GIFT));
+        assertThat(game.version(), is(version));
+    }
 
     @Test
     void ready_thenDraw_throughTheWebSocketEndpoints() {

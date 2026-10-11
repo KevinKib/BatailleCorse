@@ -72,6 +72,9 @@ public class KoboWebSocketController {
     @MessageMapping("/kobo/start")
     public void start(@Payload GameActionPayload payload) {
         handle(payload.gameId(), payload.token(), KoboEventType.START, (gameId, seat) -> {
+            if (!KoboFactory.GAME_TYPE.equals(sessionService.gameType(gameId))) {
+                throw new IllegalArgumentException("This room is not a Kobo game");
+            }
             Kobo game = (Kobo) sessionService.startGame(gameId, payload.token());
             sessionService.touch(gameId);
             broadcaster.broadcast(game, KoboEventType.START.toString(), new EmptyEventData(), "Game started.");
@@ -90,7 +93,7 @@ public class KoboWebSocketController {
 
     @MessageMapping("/kobo/swapDrawn")
     public void swapDrawn(@Payload KoboSlotPayload p) {
-        handle(p.gameId(), p.token(), KoboEventType.SWAP, (id, seat) -> actions.swapDrawn(id, seat, p.slot()));
+        handle(p.gameId(), p.token(), KoboEventType.SWAP, (id, seat) -> actions.swapDrawn(id, seat, required(p.slot(), "slot")));
     }
 
     @MessageMapping("/kobo/discardDrawn")
@@ -111,12 +114,12 @@ public class KoboWebSocketController {
     @MessageMapping("/kobo/blindSwap")
     public void blindSwap(@Payload KoboSwapPayload p) {
         handle(p.gameId(), p.token(), KoboEventType.BLIND_SWAP,
-                (id, seat) -> actions.blindSwap(id, seat, p.ownSlot(), ref(p.seat(), p.slot())));
+                (id, seat) -> actions.blindSwap(id, seat, required(p.ownSlot(), "ownSlot"), ref(p.seat(), p.slot())));
     }
 
     @MessageMapping("/kobo/kingSwap")
     public void kingSwap(@Payload KoboSlotPayload p) {
-        handle(p.gameId(), p.token(), KoboEventType.KING_SWAP, (id, seat) -> actions.kingSwap(id, seat, p.slot()));
+        handle(p.gameId(), p.token(), KoboEventType.KING_SWAP, (id, seat) -> actions.kingSwap(id, seat, required(p.slot(), "slot")));
     }
 
     @MessageMapping("/kobo/endTurn")
@@ -139,11 +142,18 @@ public class KoboWebSocketController {
     @MessageMapping("/kobo/giveTen")
     public void giveTen(@Payload KoboGiftPayload p) {
         handle(p.gameId(), p.token(), KoboEventType.GIVE_TEN,
-                (id, seat) -> actions.giveTen(id, seat, new PlayerId(p.seat())));
+                (id, seat) -> actions.giveTen(id, seat, new PlayerId(required(p.seat(), "seat"))));
     }
 
-    private static SlotRef ref(int seat, int slot) {
-        return new SlotRef(new PlayerId(seat), slot);
+    private static int required(Integer value, String field) {
+        if (value == null) {
+            throw new IllegalArgumentException("Missing field: " + field);
+        }
+        return value;
+    }
+
+    private static SlotRef ref(Integer seat, Integer slot) {
+        return new SlotRef(new PlayerId(required(seat, "seat")), required(slot, "slot"));
     }
 
     private void handle(String rawGameId, String token, KoboEventType type, Action action) {
