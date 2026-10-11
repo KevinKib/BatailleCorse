@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.bullshit.presentation.bot.BullshitBotCoordinator;
 import org.kevinkib.cardgames.bullshit.presentation.bot.CallDecisionDelay;
-import org.kevinkib.cardgames.bullshit.presentation.bot.ThinkingDelay;
+import org.kevinkib.cardgames.presentation.bot.ThinkingDelay;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameEvictionListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
