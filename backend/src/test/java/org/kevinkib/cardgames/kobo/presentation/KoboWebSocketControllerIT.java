@@ -201,13 +201,17 @@ class KoboWebSocketControllerIT {
     @SuppressWarnings("unchecked")
     void lobbyStartAndPrivateStates() throws Exception {
         StompSession host = connect();
-        Frames created = subscribe(host, "/topic/game", null);
-        send(host, "/kobo/create", Map.of("name", "Alice"));
-        Map<String, Object> eventData = (Map<String, Object>) created.await(f -> "CREATE".equals(f.get("eventType")))
-                .get("eventData");
+        HttpResponse<String> created = HttpClient.newHttpClient().send(
+                HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/api/lobby"))
+                        .header("Content-Type", "application/json")
+                        .POST(HttpRequest.BodyPublishers.ofString("{\"gameType\":\"kobo\",\"name\":\"Alice\"}"))
+                        .build(),
+                HttpResponse.BodyHandlers.ofString());
+        assertThat(created.statusCode(), is(200));
+        Map<String, Object> eventData = objectMapper.readValue(created.body(), Map.class);
         String gameId = (String) eventData.get("gameId");
-        String hostToken = ((Map<String, String>) eventData.get("tokens")).get("0");
-        assertThat(eventData.get("gameType"), is("kobo"));
+        String hostToken = (String) eventData.get("token");
+        assertThat(sessionService.gameType(new GameId(gameId)), is("kobo"));
 
         String guestToken = sessionService.joinRoom(new GameId(gameId), "Bob").token();
         StompSession guest = connect();

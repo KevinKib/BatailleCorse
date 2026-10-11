@@ -62,6 +62,36 @@ public class BatailleCorseWebSocketController {
                 BatailleCorseDto.from(batailleCorse));
     }
 
+    /** Room model: the host starts the game once enough seats are taken (humans or bots). */
+    @MessageMapping("/bataillecorse/start")
+    public void start(@Payload GameActionPayload payload) {
+        GameId gameId;
+        PlayerId actor;
+        try {
+            gameId = new GameId(payload.gameId());
+            actor = sessionService.findPlayerIdByToken(gameId, payload.token()).orElse(null);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+            return;
+        }
+        if (actor == null) {
+            return;
+        }
+        String type = BatailleCorseEventType.START.toString();
+        try {
+            if (!BatailleCorseFactory.GAME_TYPE.equals(sessionService.gameType(gameId))) {
+                throw new IllegalArgumentException("This room is not a Bataille Corse game");
+            }
+            BatailleCorse game = (BatailleCorse) sessionService.startGame(gameId, payload.token());
+            sessionService.touch(gameId);
+            gameMessagingService.sendToGame(payload.gameId(), new SuccessResponse(
+                    type, new EmptyEventData(), "Game started.", BatailleCorseDto.from(game)));
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+            gameMessagingService.sendToSeat(gameId, actor, new ErrorResponse(type, e.getMessage(), null));
+        }
+    }
+
     @MessageMapping("/send")
     public void send(GameActionPayload payload) {
         BatailleCorseEventType eventType = BatailleCorseEventType.SEND;
