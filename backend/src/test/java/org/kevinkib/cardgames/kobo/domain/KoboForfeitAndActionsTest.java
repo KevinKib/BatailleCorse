@@ -15,6 +15,7 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.kevinkib.cardgames.kobo.domain.KoboBuilder.aKobo;
 import static org.kevinkib.cardgames.kobo.domain.KoboBuilder.seat;
 import static org.kevinkib.cardgames.kobo.domain.KoboFixtures.card;
@@ -162,6 +163,72 @@ class KoboForfeitAndActionsTest {
 
         assertThat(kobo.phase(), is(Phase.ROUND_OVER));
         assertThat(kobo.lastRoundResult().get().giftTo(), is((org.kevinkib.cardgames.game.PlayerId) null));
+    }
+
+    @Test
+    void forfeitWhileRoundOver_reevaluatesTheBarrierAndDealsTheNextRoundToTheRemainingPlayers() throws Exception {
+        Kobo kobo = threePlayers().inPhase(Phase.ROUND_OVER).build();
+        kobo.ready(seat(0));
+        kobo.forfeit(seat(1));
+        assertThat(kobo.phase(), is(Phase.ROUND_OVER));
+
+        kobo.forfeit(seat(2) /* the last unready player leaves: the lone remaining player wins */);
+
+        assertThat(kobo.isFinished(), is(true));
+        assertThat(kobo.result().winners(), contains(seat(0)));
+
+        Kobo other = threePlayers().inPhase(Phase.ROUND_OVER).build();
+        other.ready(seat(0));
+        other.ready(seat(1));
+        other.forfeit(seat(2));
+
+        assertThat(other.phase(), is(Phase.MEMORISING));
+        assertThat(other.round(), is(2));
+        assertThat(other.getPlayerIds(), contains(seat(0), seat(1)));
+        assertThat(other.handSize(seat(0)), is(4));
+    }
+
+    @Test
+    void nonAnnouncerForfeitsInGift_theAnnouncerStillGivesTheTenToARemainingPlayer() throws Exception {
+        Kobo kobo = threePlayers().inPhase(Phase.TURN_END).build();
+        kobo.announceKobo(seat(0));
+        for (int s : new int[]{1, 2}) {
+            kobo.draw(seat(s));
+            kobo.discardDrawn(seat(s));
+            kobo.endTurn(seat(s));
+        }
+        assertThat(kobo.phase(), is(Phase.GIFT));
+
+        kobo.forfeit(seat(1));
+
+        assertThat(kobo.phase(), is(Phase.GIFT));
+        assertThat(kobo.currentSeat(), is(seat(0)));
+        assertThrows(InvalidGiftTargetException.class, () -> kobo.giveTen(seat(0), seat(1)));
+        kobo.giveTen(seat(0), seat(2));
+        assertThat(kobo.phase(), is(Phase.ROUND_OVER));
+        assertThat(kobo.lastRoundResult().get().giftTo(), is(seat(2)));
+    }
+
+    @Test
+    void currentPlayerForfeitsInKingDecision_theTurnPassesOnWithNoPendingPower() {
+        Kobo kobo = threePlayers().inPhase(Phase.KING_DECISION).build();
+
+        kobo.forfeit(seat(0));
+
+        assertThat(kobo.phase(), is(Phase.DRAW));
+        assertThat(kobo.currentSeat(), is(seat(1)));
+        assertThat(kobo.pendingPower(), is(Power.NONE));
+        assertThat(kobo.getPlayerIds(), contains(seat(1), seat(2)));
+    }
+
+    @Test
+    void otherPlayerForfeitsInKingDecision_theKingDecisionStays() {
+        Kobo kobo = threePlayers().inPhase(Phase.KING_DECISION).build();
+
+        kobo.forfeit(seat(2));
+
+        assertThat(kobo.phase(), is(Phase.KING_DECISION));
+        assertThat(kobo.currentSeat(), is(seat(0)));
     }
 
     @Test
