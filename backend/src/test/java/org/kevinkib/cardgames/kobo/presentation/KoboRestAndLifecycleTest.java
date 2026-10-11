@@ -9,6 +9,7 @@ import org.kevinkib.cardgames.kobo.presentation.dto.KoboDto;
 import org.kevinkib.cardgames.presentation.api.JoinGamePayload;
 import org.kevinkib.cardgames.presentation.api.Response;
 import org.kevinkib.cardgames.presentation.dto.JoinResponseDto;
+import org.kevinkib.cardgames.presentation.dto.event.ForfeitEventData;
 import org.kevinkib.cardgames.sessionmanagement.core.application.LobbyView;
 import org.kevinkib.cardgames.sessionmanagement.core.application.RoomCreated;
 import org.kevinkib.cardgames.sessionmanagement.presence.port.ForfeitReason;
@@ -122,6 +123,24 @@ class KoboRestAndLifecycleTest {
     }
 
     // ---- lifecycle
+
+    @Test
+    void lifecycleBroadcaster_forfeitCarriesTheReason() {
+        Kobo game = table.install(aKobo().withPlayers(3).build());
+        KoboLifecycleBroadcaster lifecycle = new KoboLifecycleBroadcaster(table.broadcaster);
+
+        game.forfeit(seat(2));
+        lifecycle.forfeited(game, seat(2), ForfeitReason.RESIGNED);
+        game.forfeit(seat(1));
+        lifecycle.forfeited(game, seat(1), ForfeitReason.DISCONNECTED);
+
+        Response resigned = table.messaging.payloads.get(0);
+        Response disconnected = table.messaging.payloads.get(table.messaging.payloads.size() - 1);
+        assertThat(resigned.getEventType(), is("FORFEIT"));
+        assertThat(((ForfeitEventData) resigned.getEventData()).reason(), is("RESIGNED"));
+        assertThat(((ForfeitEventData) resigned.getEventData()).loserSeat(), is(2));
+        assertThat(((ForfeitEventData) disconnected.getEventData()).reason(), is("DISCONNECTED"));
+    }
 
     @Test
     void lifecycleBroadcaster_supportsKoboOnlyAndBroadcastsTheThreeEvents() {
