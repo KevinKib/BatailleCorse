@@ -58,8 +58,8 @@ with an `ErrorResponse` carrying its current state.
 | `GET /api/three-men-morris/game/{id}?token=` | | the viewer's state, or the `LobbyView` before the start |
 | `POST /api/three-men-morris/game/{id}/join`, `/play-again` | `JoinGamePayload` | as Kobo |
 | STOMP `/app/three-men-morris/start` | `GameActionPayload` | host starts, `START` + one state per seat |
-| STOMP `/app/three-men-morris/place` | `MorrisPlacePayload(gameId, token, point)` | placement |
-| STOMP `/app/three-men-morris/move` | `MorrisMovePayload(gameId, token, from, to)` | step |
+| STOMP `/app/three-men-morris/place` | `ThreeMenMorrisPlacePayload(gameId, token, point)` | placement |
+| STOMP `/app/three-men-morris/move` | `ThreeMenMorrisMovePayload(gameId, token, from, to)` | step |
 
 Broadcast events (`SuccessResponse(eventType, eventData, message, state)` to every seat on its
 private topic): `START`, `PLACE`, `MOVE`, `GAME_OVER` (a command that ended the game is announced as
