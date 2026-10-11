@@ -21,8 +21,7 @@
 
 <script setup lang="ts">
 import { onMounted, onUnmounted } from 'vue';
-
-const TRANSITION_MS = 800;
+import { fadeIn, fadeOut } from './composables/routeFade';
 
 // iOS Safari ignores CSS touch-action on some elements; a JS guard is the
 // only reliable fallback. passive: false is required for preventDefault to work.
@@ -50,35 +49,8 @@ onMounted(() => {
 });
 onUnmounted(() => document.removeEventListener('touchstart', blockDoubleTapZoom));
 
-function onEnter(el: Element, done: () => void) {
-  const div = el as HTMLElement;
-  div.style.willChange = 'opacity';
-  div.style.position = 'absolute';
-  div.style.inset = '0';
-  div.style.zIndex = '1';
-  div.style.opacity = '0';
-  requestAnimationFrame(() => requestAnimationFrame(() => {
-    div.style.transition = `opacity ${TRANSITION_MS}ms ease`;
-    div.style.opacity = '1';
-    div.addEventListener('transitionend', () => {
-      div.style.cssText = '';
-      done();
-    }, { once: true });
-  }));
-}
-
-function onLeave(el: Element, done: () => void) {
-  const div = el as HTMLElement;
-  div.style.willChange = 'opacity';
-  div.style.position = 'absolute';
-  div.style.inset = '0';
-  div.style.zIndex = '0';
-  requestAnimationFrame(() => requestAnimationFrame(() => {
-    div.style.transition = `opacity ${TRANSITION_MS}ms ease`;
-    div.style.opacity = '0';
-    div.addEventListener('transitionend', () => done(), { once: true });
-  }));
-}
+const onEnter = fadeIn;
+const onLeave = fadeOut;
 </script>
 
 <style>

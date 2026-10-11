@@ -18,7 +18,8 @@ describe('Game home', () => {
         .should('be.visible')
         .and('contain.text', 'Could not join this game');
       cy.location('pathname').should('eq', `/games/${key}/join`);
-      cy.get('[data-test="back"]').click();
+      // The previous view is still fading out for a moment: wait until only this one is left.
+      cy.get('[data-test="back"]').should('have.length', 1).click();
       cy.location('pathname').should('eq', `/games/${key}`);
     });
 
