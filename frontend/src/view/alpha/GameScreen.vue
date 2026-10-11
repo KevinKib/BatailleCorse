@@ -5,6 +5,8 @@
 
     <RulesPanel :rules="messages.rules" />
 
+    <HotkeySettings class="gamescreen_hotkeys" :settings="hotkeySettings" :labels="messages.hotkeys.actions" />
+
     <div class="gamescreen_top flex">
       <div class="left_side"></div>
       <div class="middle_side">
@@ -140,6 +142,7 @@
 import PlayingCard from '../../components/PlayingCard.vue';
 import CardCounter from '../../components/CardCounter.vue';
 import RulesPanel from '../../components/RulesPanel.vue';
+import HotkeySettings from '../../components/HotkeySettings.vue';
 import GameTimer from '../../components/GameTimer.vue';
 import WaitingOverlay from '../../components/WaitingOverlay.vue';
 import DisconnectOverlay from '../../components/DisconnectOverlay.vue';
@@ -152,6 +155,7 @@ import { useSettingsStore } from '../../state/Settings.store';
 import { DIFFICULTY } from '../../model/Difficulty';
 import { useGameAnimations } from '../../composables/useGameAnimations';
 import { useHotkeys } from '../../composables/useHotkeys';
+import { useBatailleCorseHotkeySettings } from '../../composables/useBatailleCorseHotkeySettings';
 import { useEndScreen } from '../../composables/useEndScreen';
 import { useGameDuration } from '../../composables/useGameDuration';
 import { useSeatDisconnectCountdown } from '../../composables/useSeatDisconnectCountdown';
@@ -271,6 +275,8 @@ const { showMyTurn, showOpponentTurn, showFirstTurnHint, YOUR_TURN_LABEL, cancel
   showEndOverlay: () => showEndOverlay.value,
 });
 
+const hotkeySettings = useBatailleCorseHotkeySettings();
+
 useHotkeys(
   () => { if (!isButtonDisabled(myPlayerIndex.value, 'send')) send(myPlayerIndex.value); },
   () => { if (!isButtonDisabled(myPlayerIndex.value, 'slap')) slap(myPlayerIndex.value); },
@@ -288,6 +294,22 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+
+/* Bottom-right corner, mirroring Back: the top row (timer, opponent label, rules) has no room left
+   at phone width. The panel opens upwards from it. */
+.gamescreen_hotkeys {
+  position: absolute;
+  right: calc(10px + env(safe-area-inset-right, 0px));
+  bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  z-index: 1400;
+  margin: 0;
+}
+.gamescreen_hotkeys :deep(.panel) {
+  top: auto;
+  left: auto;
+  right: 8px;
+  bottom: 56px;
+}
 
 .gamescreen {
   /* Two-layer background: vignette on top, deep felt below. Calmer than the

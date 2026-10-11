@@ -63,6 +63,20 @@ export interface PluralForms {
   other: string;
 }
 
+// Keyboard shortcut settings shared by every game (WCAG 2.1.4: turn off or remap single-key shortcuts).
+export interface HotkeyMessages {
+  open: string;                        // accessible name and tooltip of the gear button
+  title: string;
+  enabled: string;                     // label of the master switch (pressed = shortcuts on)
+  actions: { discard: string; call: string; send: string; slap: string }; // names of the remappable actions
+  change: string;                      // button that starts listening for a new key
+  changeAria: string;                  // '{action}': accessible name of that button
+  listening: string;                   // shown on the button while it waits for a key
+  reset: string;
+  bullshitNote: string;                // Bullshit: digits are fixed
+  errors: { reserved: string; digit: string; duplicate: string };
+}
+
 // Screen text of the Bullshit game. Placeholders use `{name}` and are filled by
 // `format()` / `plural()` in `./format`.
 export interface BullshitUiMessages {
@@ -71,19 +85,6 @@ export interface BullshitUiMessages {
   you: string;
   back: string;
   sound: { mute: string; unmute: string }; // accessible names of the sound toggle (the action it performs)
-  hotkeys: {                           // keyboard shortcut settings (WCAG 2.1.4: turn off or remap single-key shortcuts)
-    open: string;                      // accessible name and tooltip of the gear button
-    title: string;
-    enabled: string;                   // label of the master switch (pressed = shortcuts on)
-    discard: string;                   // name of the Discard action
-    call: string;                      // name of the Call Bullshit action
-    change: string;                    // button that starts listening for a new key
-    changeAria: string;                // '{action}': accessible name of that button
-    listening: string;                 // shown on the button while it waits for a key
-    reset: string;
-    cardsNote: string;                 // digits are fixed
-    errors: { reserved: string; digit: string; duplicate: string };
-  };
   connecting: string;                  // shown while the first server state is on its way
   start: {
     title: string;
@@ -193,6 +194,7 @@ export interface JoinGameMessages {
 export interface Messages {
   rules: RulesMessages;     // BatailleCorse
   bullshit: RulesMessages;  // Bullshit
+  hotkeys: HotkeyMessages; // keyboard shortcut settings
   bullshitUi: BullshitUiMessages; // Bullshit screens
   gamePicker: GamePickerMessages; // Game choice page
   home: GameHomeMessages;   // Game home

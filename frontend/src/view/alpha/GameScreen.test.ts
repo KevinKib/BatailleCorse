@@ -25,6 +25,7 @@ vi.mock('../../service/WebSocketService', () => ({
 
 import GameScreen from './GameScreen.vue';
 import DisconnectOverlay from '../../components/DisconnectOverlay.vue';
+import HotkeySettings from '../../components/HotkeySettings.vue';
 import { useBatailleCorseStore } from '../../state/BatailleCorse.store';
 import { buildGame } from '../../model/fixtures';
 
@@ -41,6 +42,16 @@ describe('GameScreen', () => {
     setActivePinia(createPinia());
     const wrapper = await mountGameScreen();
     expect(wrapper.get('.back_button').attributes('to')).toBe('/games');
+  });
+
+  describe('keyboard shortcuts gear', () => {
+    it('offers the shortcut settings with the Send and Slap actions on the table', async () => {
+      const wrapper = await mountGameScreen();
+      const gear = wrapper.findComponent(HotkeySettings);
+      expect(gear.exists()).toBe(true);
+      expect(gear.props('settings').actions.map((a: { id: string }) => a.id)).toEqual(['send', 'slap']);
+      expect(gear.props('labels')).toMatchObject({ send: 'Send card', slap: 'Slap pile' });
+    });
   });
 
   beforeEach(() => {

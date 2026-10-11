@@ -55,10 +55,22 @@ describe('validateHotkey', () => {
   it('rejects the key already used by the other action', () => {
     expect(validateHotkey(ev('B'), 'b')).toEqual({ ok: false, reason: 'duplicate' });
   });
+
+  it('rejects any key in a list of other actions keys', () => {
+    expect(validateHotkey(ev('C'), ['b', 'c'])).toEqual({ ok: false, reason: 'duplicate' });
+    expect(validateHotkey(ev('x'), ['b', 'c'])).toEqual({ ok: true, key: 'x' });
+  });
 });
 
 describe('useHotkeySettings', () => {
   beforeEach(() => localStorage.clear());
+
+  it('exposes its two actions for the shared settings panel', () => {
+    const s = useHotkeySettings();
+    expect(s.actions.map((a) => [a.id, a.key.value])).toEqual([['discard', 'd'], ['call', 'b']]);
+    s.setKey('call', ev('k'));
+    expect(s.actions[1].key.value).toBe('k');
+  });
 
   it('applies and persists a new key, rejecting a duplicate without changing anything', () => {
     const s = useHotkeySettings();
