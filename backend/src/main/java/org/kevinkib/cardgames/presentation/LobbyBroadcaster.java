@@ -4,7 +4,6 @@ import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.presentation.api.SuccessResponse;
 import org.kevinkib.cardgames.presentation.dto.event.EventData;
 import org.kevinkib.cardgames.sessionmanagement.core.application.AddressedLobbyView;
-import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
 
 import java.util.List;
 
@@ -12,16 +11,9 @@ import java.util.List;
 public class LobbyBroadcaster {
 
     private final GameMessagingService messaging;
-    private final SessionService sessionService;
 
-    public LobbyBroadcaster(GameMessagingService messaging, SessionService sessionService) {
+    public LobbyBroadcaster(GameMessagingService messaging) {
         this.messaging = messaging;
-        this.sessionService = sessionService;
-    }
-
-    /** Computes the views under the lobby lock, then sends them. */
-    public void broadcast(GameId gameId, String eventType, EventData eventData, String message) {
-        send(gameId, sessionService.lobbyViews(gameId), eventType, eventData, message);
     }
 
     /** Sends views that a use case already computed under the lobby lock. */

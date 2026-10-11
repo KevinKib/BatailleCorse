@@ -185,7 +185,7 @@ public class AppConfig {
 
     @Bean
     public LobbyBroadcaster lobbyBroadcaster(GameMessagingService gameMessagingService) {
-        return new LobbyBroadcaster(gameMessagingService, sessionService());
+        return new LobbyBroadcaster(gameMessagingService);
     }
 
     @Bean

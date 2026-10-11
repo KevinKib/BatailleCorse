@@ -68,4 +68,17 @@ class SessionServiceLobbyVersionTest {
                     is(addressed.view().mySeat()));
         }
     }
+
+    @Test
+    void givenAReopenedLobby_thenItsVersionContinuesFromTheOneItReplaces() {
+        service.joinRoom(id, "Bob");
+        long beforeReopen = service.lobbyView(id, hostToken).lobbyVersion();
+        service.startGame(id, hostToken);
+
+        JoinResult reopened = service.playAgain(id, "Alice");
+
+        long after = reopened.views().stream().filter(v -> v.token().equals(reopened.token())).findFirst()
+                .orElseThrow().view().lobbyVersion();
+        assertThat(after, greaterThan(beforeReopen));
+    }
 }

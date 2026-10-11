@@ -311,10 +311,16 @@ public class SessionService implements GameDirectory {
      * the fresh game is returned. Empty when the game is not over, or when the rematch is still
      * waiting for someone, or cannot be played any more (too few players left).
      */
-    public synchronized Optional<Game> leaveRematch(GameId id, PlayerId playerId) {
+    public Optional<Game> leaveRematch(GameId id, PlayerId playerId) {
+        // Lock order: the game's own lock is never taken under this monitor (a Kobo action holds its game lock and
+        // then calls the service), so the game is inspected before entering the monitor. A finished game stays finished.
         if (repository.findGame(id).filter(Game::isFinished).isEmpty()) {
             return Optional.empty();
         }
+        return leaveRematchUnderLock(id, playerId);
+    }
+
+    private synchronized Optional<Game> leaveRematchUnderLock(GameId id, PlayerId playerId) {
         SessionGame session = repository.loadSessionGame(id);
         session.leaveRematch(playerId);
         return isRematchReady(session) ? Optional.of(rematch(id)) : Optional.empty();

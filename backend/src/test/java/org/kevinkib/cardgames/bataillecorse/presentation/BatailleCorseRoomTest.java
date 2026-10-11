@@ -38,21 +38,13 @@ import static org.hamcrest.Matchers.is;
 /** Bataille Corse on the room model: lobby, join, start and the game-type guard, without a server. */
 class BatailleCorseRoomTest {
 
-    private static final class Recorder extends GameMessagingService {
+    private static final class Recorder extends org.kevinkib.cardgames.presentation.TokenResolvingMessaging {
         final List<PlayerId> seats = Collections.synchronizedList(new ArrayList<>());
         final List<Response> toSeats = Collections.synchronizedList(new ArrayList<>());
         final List<Response> toGame = Collections.synchronizedList(new ArrayList<>());
 
-        Recorder() { super(null, null); }
+        Recorder() {  }
 
-
-        SessionService resolver;
-
-        /** Lobby views are addressed by token; the double maps it back to the seat to keep its assertions. */
-        @Override
-        public void sendToToken(GameId gameId, String token, Object payload) {
-            sendToSeat(gameId, resolver.findPlayerIdByToken(gameId, token).orElseThrow(), payload);
-        }
 
         @Override public void sendToSeat(GameId gameId, PlayerId seat, Object payload) {
             seats.add(seat);
@@ -68,7 +60,7 @@ class BatailleCorseRoomTest {
     private final Recorder messaging = new Recorder();
     { messaging.resolver = sessions; }
     private final BatailleCorseRestController rest = new BatailleCorseRestController(
-            sessions, messaging, new InMemoryForfeitLog(), new LobbyBroadcaster(messaging, sessions));
+            sessions, messaging, new InMemoryForfeitLog(), new LobbyBroadcaster(messaging));
     private final BatailleCorseWebSocketController ws = new BatailleCorseWebSocketController(sessions, messaging);
 
     private RoomCreated room() {

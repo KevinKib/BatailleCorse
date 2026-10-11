@@ -29,22 +29,14 @@ import static org.hamcrest.Matchers.is;
 
 class LobbyControllerTest {
 
-    static final class RecordingMessaging extends GameMessagingService {
+    static final class RecordingMessaging extends org.kevinkib.cardgames.presentation.TokenResolvingMessaging {
         final List<PlayerId> seats = new ArrayList<>();
         final List<Response> payloads = new ArrayList<>();
 
         RecordingMessaging() {
-            super(null, null);
+            
         }
 
-
-        SessionService resolver;
-
-        /** Lobby views are addressed by token; the double maps it back to the seat to keep its assertions. */
-        @Override
-        public void sendToToken(GameId gameId, String token, Object payload) {
-            sendToSeat(gameId, resolver.findPlayerIdByToken(gameId, token).orElseThrow(), payload);
-        }
 
         @Override
         public void sendToSeat(GameId gameId, PlayerId seat, Object payload) {
@@ -287,5 +279,17 @@ class LobbyControllerTest {
 
         assertThat(messaging.seats, is(List.of(new PlayerId(1))));
         assertThat(messaging.payloads.get(0).isSuccess(), is(false));
+    }
+
+    @Test
+    void givenALobbyAlreadyRemoved_whenALateLeaveArrives_thenItIsIgnoredWithoutError() {
+        RoomCreated room = sessionService.createRoom("bullshit", "Alice");
+        controller.leave(new GameActionPayload(room.gameId(), room.hostToken()));
+        messaging.clear();
+
+        controller.leave(new GameActionPayload(room.gameId(), room.hostToken()));
+        controller.addBot(new GameActionPayload(room.gameId(), room.hostToken()));
+
+        assertThat(messaging.seats.isEmpty(), is(true));
     }
 }

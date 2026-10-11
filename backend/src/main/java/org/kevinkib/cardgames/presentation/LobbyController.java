@@ -82,9 +82,14 @@ public class LobbyController {
      * acting seat only, and an unknown token is ignored.
      */
     private void handle(String rawGameId, String token, String message, Function<GameId, List<AddressedLobbyView>> command) {
-        GameId gameId = new GameId(rawGameId);
-        PlayerId actor = sessionService.findPlayerIdByToken(gameId, token).orElse(null);
-        if (actor == null) {
+        GameId gameId;
+        try {
+            gameId = new GameId(rawGameId);
+            if (sessionService.findPlayerIdByToken(gameId, token).isEmpty()) {
+                return;
+            }
+        } catch (IllegalArgumentException e) {
+            // the lobby no longer exists (a late command after the last human left): nobody to answer
             return;
         }
         try {
