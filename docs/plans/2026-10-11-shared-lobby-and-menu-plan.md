@@ -83,7 +83,7 @@ test doubles, which live in `bullshit.presentation.bot`; a game may not depend o
 ## PR 1: `feat: shared Game home for every game` (frontend)
 
 - Create:
-  - `frontend/src/model/games.ts`: `GameDefinition { key, titleKey, homeRoute, joinRoute, roomRoute, createLobby }` and the registry.
+  - `frontend/src/model/games.ts`: `GameDefinition { key, titleKey, homeRoute, joinRoute, roomRoute, createLobby }` and the registry; `homeRoute` (`/games/:game`) is the single destination for every exit from a game (spec 4.1).
   - `frontend/src/components/GameHome.vue`: title block, name field (persisted in `settingsStore.playerName`), New game, Join game, Back to the Game selection.
   - `frontend/src/components/JoinGameForm.vue`: game id or link (`extractGameId`, moved to `model/gameId.ts`), name, error line, Back.
   - Locale keys `home.*`, `join.*`.
@@ -94,6 +94,7 @@ test doubles, which live in `bullshit.presentation.bot`; a game may not depend o
   - `view/bullshit/BullshitStartGame.vue`: remove join mode.
   - Until PR5 and PR9, "New game" navigates to the game's existing create page (behaviour unchanged).
 - Tests first: `GameHome.test.ts` (New and Join for both definitions, name persisted, targets), `JoinGameForm.test.ts` (bare id or full link, prefilled from route, error, button disabled when empty), `router.test.ts` (legacy links, unknown game goes to `/games`, every Back reaches `/games`), updated `GamePickerView.test.ts`.
+- `components/EndGameOverlay.vue`: drop the default `{ name: 'home' }` and require `homeRoute`; `view/alpha/GameScreen.vue` passes the BC Game home (it already ends on it today); Bullshit switches in PR5 to avoid touching `BullshitGameScreen.vue` twice. Test: `EndGameOverlay` renders the given route.
 - Cypress: update `game-picker.cy.ts`, `bataillecorse-menu-fit.cy.ts`, the entry steps of `bullshit-table-and-lobby.cy.ts`; 375 px fit of the Game home.
 - UI inventory: BC home and Bullshit create page before/after; nothing disappears, Bullshit gains a Join game button.
 - Parallel: yes. Merge value: both games share one home; no backend change.
@@ -125,16 +126,41 @@ test doubles, which live in `bullshit.presentation.bot`; a game may not depend o
 - Tests first: `SessionGameBotsTest` (options carried through shifting, human seat refused), `SessionServiceBotsTest` (host only, lobby only, unknown key refused by the game), `SessionServiceRenameTest` (occupant only, blank restores default, trimmed, 20 characters, refused after start), `LobbyViewTest`, `LobbyControllerIT` (rename reaches all seats; deprecated Bullshit aliases still work).
 - Conflict: after PR2 (same classes). Parallel: Wave B.
 
-## PR 4: `feat: leave the lobby` (backend, issue #128)
+## PR 4: `feat: leave the lobby, the host passes to the next human` (backend, issue #128)
+
+Rule (spec 5.1): the lobby is removed only when no human remains; if the host leaves with a human
+left, the next human becomes seat 0 and host. The host stays the constant seat 0 (no variable host).
 
 - Modify:
-  - `SessionGame.vacate(PlayerId)` (frees a human seat, shifts later humans and bots down so seats stay contiguous; tokens move with the person) and tests for every gap case.
-  - `SessionService.leaveLobby(GameId, token)`: lobby phase only (`GameAlreadyStartedException` otherwise); guest: vacate and broadcast; host: per the owner's answer to question 7. Recommended first step: close the lobby (remove it from the repository, broadcast a `LOBBY_CLOSED` event to every other human seat, no transfer).
-  - `LobbyController`: `/lobby/leave`; a new lifecycle event type `LOBBY_CLOSED` in `presentation/dto/event`.
-- Tests first: `SessionGameVacateTest` (guest in the middle, last seat, bots after, humans after), `SessionServiceLeaveLobbyTest` (guest frees the seat and can be replaced, host leave closes, bots-only remainder cleaned, refused during a game, unknown token refused), `LobbyLeaveIT` (two clients: the guest leaves, the host sees the seat free; the host leaves, the guest receives the closing event).
-- Presence interaction (spec 5.1): none in a lobby; no change to `PresenceService`.
-- If the owner picks host transfer (question 7), add a follow-up PR 4b: movable host in `SessionGame`, `isHost` and `LobbyView.hostSeat` driven by it, `playAgain` rule.
-- Conflict: after PR3. Parallel: no (Wave C).
+  - `SessionGame.vacate(PlayerId)`: frees a human seat and keeps seats contiguous by moving occupant
+    data (token, name, bot flag, seat options, rematch flags) between records, or rebuilding the
+    entries. Vacating seat 0 first moves the first *human* by seat order to seat 0 (a bot is never
+    host), then the others follow in order; any other seat shifts the later occupants down by one.
+  - `SessionService.leaveLobby(GameId, token)`: `synchronized`, lobby phase only
+    (`GameAlreadyStartedException` otherwise); token resolved inside the lock; vacate, then remove
+    the lobby if no human is left, else broadcast; `startGame` takes the same lock and re-checks
+    `claimedCount >= minPlayers`.
+  - Presence: rebind the registry entries of shifted seats (`ConnectionRegistry` gets a
+    `rebind(gameId, oldSeat, newSeat)` or equivalent), so a later disconnect forfeits the right seat.
+  - `LobbyController`: `/lobby/leave`. No `LOBBY_CLOSED` event is needed any more: nobody is left to
+    notify when the lobby disappears (the last human just left).
+- Tests first:
+  - `SessionGameVacateTest`: every position of the leaver (host, middle, last), with humans only,
+    bots between humans, bots after, a bot at seat 1 when the host leaves (the human at seat 2 becomes
+    seat 0, never the bot); tokens, names, bot flags and seat options follow their occupant;
+    default bot names renumbered; contiguous seats afterwards.
+  - `SessionServiceLeaveLobbyTest`: guest frees the seat and a newcomer can take it; host leaves with a
+    human left (new host, `canStart` and `removableBotSeats` for the new host), host leaves with bots
+    only (lobby removed, later join returns not found); refused after the start; unknown or already used
+    token refused; two concurrent leaves (threads) end consistent; leave versus start race in both
+    orders.
+  - `ConnectionRegistry` rebind test and a `PresenceService` test: after a shift and a start, a
+    disconnect of the shifted player targets their new seat.
+  - `LobbyLeaveIT` (STOMP, two or three clients): the guest leaves and the host sees the free seat; the
+    host leaves and the next client receives a lobby view with `mySeat = 0`, host badge and
+    Start available, over the same subscription (token channel, no re-subscribe).
+- Presence/forfeit: not applied to lobbies (spec 5.1 summary).
+- Conflict: after PR3 (same classes). Parallel: no (Wave C).
 
 ## PR 5: `feat: shared lobby component, adopted by Bullshit` (frontend)
 
@@ -144,11 +170,12 @@ test doubles, which live in `bullshit.presentation.bot`; a game may not depend o
   - `composables/useLobbyActions.ts`: sends `/lobby/*` for every game store.
   - Locale keys `lobby.*`, `options.bullshit.*` (moved from `bullshitUi.start`).
 - Modify:
-  - `state/Bullshit.store.ts` and `BullshitSession.ts`: `setOption`, `rename`, `leave` via `useLobbyActions`; handle `LOBBY_CLOSED` (navigate to `/games` with a notice).
+  - `state/Bullshit.store.ts` and `BullshitSession.ts`: `setOption`, `rename`, `leave` via `useLobbyActions`; **set `mySeat` from every lobby state update** (the host transfer shifts seats; `isHost` follows `mySeat === 0`) and update the stored token entry if it records the seat; announce "You are now the host" in the live region; the leaver navigates to the game's Game home (below).
   - `view/bullshit/BullshitGameScreen.vue`: render `GameLobby` (lobby block and imports only).
   - Delete `view/bullshit/BullshitStartGame.vue` and `components/bullshit/BullshitLobby.vue` (+ tests, moved). The Game home's New game creates the lobby straight away (`createLobby`, name only, server defaults).
-- Tests first: `GameLobby.test.ts` (port the whole `BullshitLobby.test.ts` first, then: editable options from descriptors for the host, read-only for guests, a change emits `set-option`, no section when descriptors are empty, own name editable and others not, free seat shows Add bot and invite for the host, Leave emits `leave`), `optionLabel.test.ts`, `Bullshit.store.test.ts`, `useLobbyActions.test.ts`.
-- Cypress: update `bullshit-table-and-lobby.cy.ts`, `bullshit-lobby-bots.cy.ts`; new `shared-lobby.cy.ts` (two browsers: host picks 52 cards and the guest sees it live; the guest cannot edit; the guest leaves and the seat reopens; the host leaves and the guest returns to `/games`); 375 x 667 fit with 6 seats.
+- Tests first: `GameLobby.test.ts` (port the whole `BullshitLobby.test.ts` first, then: editable options from descriptors for the host, read-only for guests, a change emits `set-option`, no section when descriptors are empty, own name editable and others not, free seat shows Add bot and invite for the host, Leave emits `leave`), `optionLabel.test.ts`, `Bullshit.store.test.ts`, `useLobbyActions.test.ts` (a lobby update changing `mySeat` makes the store host or not).
+- Exit destination (spec 4.1, proposed): `BullshitGameScreen.vue` passes `homeRoute` from the `GameDefinition` (`/games/bullshit`) to `EndGameOverlay`, the Back/leave guard and the lobby Leave use the same route; today it is `{ name: 'games' }` (fix #129). Tests: one per exit path (Back during the game, end screen home, forfeit, lobby Leave).
+- Cypress: update `bullshit-table-and-lobby.cy.ts`, `bullshit-lobby-bots.cy.ts`; new `shared-lobby.cy.ts` (two browsers: host picks 52 cards and the guest sees it live; the guest cannot edit; the guest leaves and the seat reopens; the host leaves and the guest becomes host, sees Start and the editable options without reloading; a guest leaving returns to `/games/bullshit`); 375 x 667 fit with 6 seats.
 - UI inventory: every item the Bullshit lobby shows today (title, player count, rows with You / Bot / Host, remove button, claim mode, deck size, invite and Copy, Start and hint, waiting for host, bot error) stays; added: editable options, editable name, Leave.
 - Depends on PR1, 2, 3, 4. Conflict: see table. Parallel: no.
 
@@ -188,6 +215,8 @@ three days, plus the frontend removal in PR9).
   - Delete `view/alpha/StartGame.vue`, `components/WaitingOverlay.vue`, `model/ai/AI.ts` (+ test), the `difficulty` field of `Settings.store.ts`, the key-capture block and its CSS. `model/Difficulty.ts` stays only as the source of tier names and colours for the locale/labels (the 9 tiers are kept), or moves to locales.
   - `view/alpha/GameScreen.vue`: render `GameLobby` in the lobby phase; the opponent label comes from the seat list ("Bot 1 (Gold)" or the guest's name) instead of `Computer (<tier>)`; `model/RematchButton.ts` updated.
   - BC entry in the `GameDefinition` registry (create and start through the BC destinations).
+  - Exits: leaving a BC game (Back, forfeit, end screen, lobby Leave) goes to `/games/bataillecorse` via `GameDefinition.homeRoute`, one test per path.
+  - Stored tokens: rewrite `tokens:<gameId>` to the single seat reported by the lobby view after a shift; ignore (do not crash on) an old two-token entry.
 - Backend cleanup: delete `SessionService.createGame` overloads, `GameMode`, `joinGame` (fixed seat 1), `claimAllSeats`, `/create`, the BC `join` path, `CreateGamePayload.mode`; delete or rewrite the stale disabled controller IT. `grep` for dead code first.
 - Tests first: BC store/session tests rewritten around the lobby flow; `GameScreen.test.ts`; Cypress specs listed in spec 9.1 rewritten, plus `bataillecorse-lobby.cy.ts` (solo with a bot at a chosen tier reaches the Table; invite flow in two browsers; Leave; 375 px fit).
 - UI inventory: everything the BC create page, waiting overlay and Table show today (opponent toggle, tier, name, keys, invite link, opponent label, rematch) is found elsewhere or consciously removed, listed in the PR.
@@ -197,7 +226,8 @@ three days, plus the frontend removal in PR9).
 
 - One Game home and one lobby component serve Bataille Corse and Bullshit (Kobo needs a `GameDefinition` entry).
 - The host edits game options in the lobby, everyone sees them live, they freeze at start and survive a rematch.
-- A guest can leave the lobby; the host-leaves behaviour follows the owner's answer.
+- A guest can leave the lobby; when the host leaves, the next human becomes host, and the lobby disappears only when no human is left.
+- Leaving any game returns to the Game home of that game (if the owner confirms spec 4.1).
 - A Bataille Corse solo game is a lobby with a server bot at one of the 9 tiers; no local AI remains.
 - Old invite links still land on the right screen.
 - Dead code removed (`WaitingOverlay`, `StartGame`, `AI`, `GameMode`, create pages).

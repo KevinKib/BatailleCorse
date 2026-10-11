@@ -4,7 +4,7 @@ Status: revised after the owner's answers (decisions in section 3 are confirmed 
 **[proposed]**). Classification: architectural (it changes the Bataille Corse session model, adds a
 kernel concept and touches both frontends). Open questions are in section 14.
 
-## 0. Glossary (product term, proposed to the owner, to confirm, and its name in the code)
+## 0. Glossary (product term, validated by the owner, and its name in the code)
 
 | Product term | Meaning | Name in the code |
 |---|---|---|
@@ -83,7 +83,9 @@ Confirmed by the owner:
 - **(d)** No game options for Bataille Corse.
 - **(e)** The local AI of Bataille Corse is deleted and the bot moves server side (cost in section 8).
 - **(f)** The shared lobby gets a Leave button (section 6.3).
-- Terminology of section 0 is proposed and awaits confirmation.
+- Terminology of section 0 is validated.
+- **(g)** Host leaving the lobby: the lobby closes only when no human remains; otherwise the next human
+  becomes host (section 5.1).
 
 Design (the structure is **[proposed]**):
 
@@ -124,8 +126,23 @@ Replaces `view/alpha/LobbyView.vue` and the front of both start pages.
   home; adding Kobo is one entry.
 - Routes: `/games/:game`, `/games/:game/join/:id?`, `/games/:game/room/:id`. The old
   `/games/bataillecorse/{create,join,room}` and `/games/bullshit/{create,join,room}` redirect.
-  Every "Back" leads to `/games` (issue #123 is fixed independently, but the new components must
-  respect it).
+  Every "Back" from the Game home leads to the Game selection `/games`.
+
+### 4.1 Where leaving a game leads **[proposed, to confirm]**
+
+The owner wants leaving a Bataille Corse game to return to its Game home (`/games/bataillecorse`), not
+to the Game selection. Bullshit currently returns to `/games` (fix #129, merged: `BullshitGameScreen.vue`
+passes `:home-route="{ name: 'games' }"` to `EndGameOverlay`). With a shared Game home it is coherent
+that leaving a game returns to **the Game home of the game just left, for both games**: Back during the
+game, the end screen's home button, forfeit, the lobby Leave button, a closed-lobby notice, and a failed
+join. Consequence for Bullshit: `/games/bullshit` instead of `/games` (a one-line change in each place,
+done in PR 5). The Game home itself still goes Back to `/games`.
+
+Implementation: `GameDefinition.homeRoute` is the single source; `EndGameOverlay` takes it as
+`homeRoute` (its default `{ name: 'home' }` is removed), `GameLobby` emits `leave` and the screen
+navigates to `definition.homeRoute`, the Table's Back/leave guard (`useLeaveGuard`) uses the same value.
+Tests: one per exit path per game.
+
 - All texts in locales (`home.*`).
 
 ## 5. Shared lobby (`GameLobby`)
@@ -166,41 +183,76 @@ Behaviour:
 
 ### 5.1 Leaving the lobby (issue #128)
 
-Command `leaveLobby(gameId, token)`, lobby phase only (a game in progress keeps the existing
-forfeit/presence flow; after the game, the rematch departure flow).
+Command `leaveLobby(gameId, token)`, lobby phase only. A game in progress keeps the forfeit/presence
+flow; after the game, the rematch departure flow.
 
-- **Guest leaves**: the seat is freed (`SessionPlayer.release()`) and the guest goes to the Game
-  selection (`/games`); their token stops working. A game is dealt to seats 0..claimed-1, so a gap
-  below another human must not remain. `removeBot` already shifts later bots down; for humans the
-  seat id is tied to the token (`SessionPlayer` has a final `id` and `token`), so shifting a human
-  means moving the token, name and flags between seat records and telling each client its new
-  `mySeat` through the next `LobbyView`. That is the only non-trivial part. Bataille Corse (2 seats)
-  never has a gap. For Bullshit, v1 option: when the leaver is followed by humans, shift them down
-  (cost: a `SessionGame.vacate(seat)` method with tests, plus the frontend re-reading `mySeat` from the
-  view, which `Bullshit.store` already does through `seat-change`); fallback if it proves risky:
-  refuse to start while a gap exists and show "Seat N is empty" to the host.
-- **Host leaves**: **open question** (section 14, question 7). Options and costs:
-  1. *Close the lobby*: every other human gets "The host left", is sent to the Game selection;
-     the game is removed. Cost: smallest (one command, one broadcast event, one repository
-     removal, no seat renumbering, no change to the "host = seat 0" assumption used by
-     `SessionService`, `LobbyView`, the Bullshit frontend `isHost = mySeat === 0`). Downside: a
-     guest loses the lobby because the host misclicked.
-  2. *Transfer the host to the next seat*: needs a movable host (`SessionGame.HOST_SEAT` is a
-     constant, `isHost` compares to it, `LobbyView.hostSeat` is already a field but the frontend
-     computes `isHost` from seat 0), seat renumbering or an explicit `hostSeat` in `SessionGame`,
-     reassignment of bots, and a rematch rule (`playAgain` gives seat 0 to the first caller).
-     Cost: medium, with regression risk in every place that assumes seat 0.
-  3. *Depends on presence*: close if no other human is left (only bots remain, the lobby is
-     garbage), transfer otherwise. Cost: the sum of both, plus two behaviours to test.
-  **Recommendation: option 3 implemented in two steps**: ship "close when the host leaves" first
-  (option 1, covers the last-human case too); add the transfer when someone asks, since it is the
-  only part needing the host-movable refactor. If the owner prefers a single behaviour, option 1.
-- **Interaction with presence/forfeit**: they do not apply in a lobby (no `Game`, no timers). So a
-  closed tab leaves the seat taken: today's behaviour, now with a reason to fix it. Out of scope for
-  v1 except a note: an explicit Leave is the only way to free a seat; a lobby with a dropped host is
-  cleaned by the existing idle eviction (`GameCleanupService`). A later improvement could run the
-  disconnect grace timer on lobby seats too.
-- Leave during the Table is untouched: forfeit (`/forfeit`, RESIGNED) stays the way out.
+**Rule (decided by the owner)**: the lobby is never closed while a human remains. A guest who leaves
+frees their seat. If the host leaves and at least one human remains, the next human becomes the host.
+The lobby is removed only when no human remains (bots alone). Every leaver goes to the Game home of the
+game they left (section 4.1).
+
+**Mechanism, without a variable host**: `SessionGame.HOST_SEAT` stays the constant seat 0,
+`isHost(playerId)` stays `HOST_SEAT.equals(playerId)`. A new `SessionGame.vacate(PlayerId)` keeps the
+seats contiguous (a game is dealt to seats 0..claimed-1), so the host's departure naturally makes the
+next human seat 0. One rule is needed so that seat 0 is never a bot: when seat 0 is vacated, the first
+*human* by seat order moves to seat 0, and the remaining occupants (humans and bots) follow in their
+existing order. When any other seat is vacated, later occupants shift down one seat, as `removeBot`
+already does for bots.
+
+**Does it hold? Verified against `main`**
+
+| Concern | Finding |
+|---|---|
+| Tokens / `PlayerId` of shifted players | `SessionPlayer` has a final `id` and a final `token`, and `SessionGame.players` maps seat id to record. A shift must therefore move the *occupant data* (token, name, bot flag, seat options, rematch flags) between records, or rebuild the entries (new `SessionPlayer(newSeatId, oldToken)`). Doable inside `SessionGame` because `players` is a mutable `LinkedHashMap`; it is the main new code and the main test target. The token stays with the person, so authentication still works. |
+| Messages reach the right client | Seat channels are addressed by **token** (`GameMessagingService.sendToSeat` looks up the token of the seat; `SeatSubscriptionInterceptor` checks the token). A shifted player keeps their subscription and receives their lobby view with no re-subscription. This is the strongest point in favour of the approach. |
+| Local seat on the client | `Bullshit.store.mySeat` is set only by the `seat-change` event raised at join/restore (`BullshitSession.bind`). The lobby view already carries `mySeat`, so PR 5 must also set `mySeat` from every lobby state update. `isHost = mySeat === 0` then follows automatically. The persisted `tokens:<gameId>` entry of Bataille Corse is keyed by seat number (`{ seat: token }`) and must be rewritten (PR 9) when the lobby reports a different `mySeat`. |
+| Bot seats | Bots carry no identity: they shift with the order (existing behaviour of `removeBot`, including renumbering default names "Bot N"). Their seat options (Bataille Corse tier) move with them. |
+| Names and seat options | Move with the occupant (same move of data). |
+| Presence | **Real risk.** `PresenceService.onPresence` binds `connectionId -> Seat(gameId, playerId)` in `InMemoryConnectionRegistry` even in a lobby. After a shift that binding is stale; if the game then starts and the player disconnects, the grace timer and forfeit would target the *old* seat number (another player). Mitigation (pick one, test it): rebind the connections of shifted seats inside the leave use case (rewrite bindings by `(gameId, oldSeat)`), or make the client re-send `/presence` whenever `mySeat` changes (cheap, relies on the client). Prefer the server-side rebind. |
+| Rematch | `playAgain` reopens a lobby, clears rematch flags and gives seat 0 to the first caller; unaffected, because leaving only happens in the lobby phase. A leave during the finished-game phase keeps using `leaveRematch`. |
+| `LobbyView.hostSeat` | Already a field; stays 0. |
+
+So it holds without a variable host. The alternative (a variable host: `hostSeat` stored in
+`SessionGame`, with `isHost`, `claimHost`, `playAgain` and `LobbyView` driven by it, and the frontend
+`isHost` computed from the view instead of `mySeat === 0`) would cost about as much as `vacate` and
+would still need the contiguity shift for guests, so it is not recommended.
+
+**Real risks of the transfer rule**
+
+1. The data move in `SessionGame` (final `id` and `token`): easy to get subtly wrong (a token left on
+   the wrong seat authenticates the wrong person). Needs exhaustive tests: every position of the
+   leaver, with humans and bots before and after.
+2. The stale presence binding above.
+3. The client must take `mySeat` from the lobby view and rewrite its stored tokens; a missed update
+   shows a guest as non-host or sends commands for the wrong seat number (the token still protects
+   the server).
+4. Play order changes when the host leaves (the first human jumps ahead of bots): acceptable in a
+   lobby, but visible; the lobby live region announces "You are now the host".
+5. Races, see edge cases 3 and 4.
+
+**Edge cases**
+
+1. *Host leaves and only bots would remain*: no human is left, so the lobby is removed (repository
+   removal, no broadcast target). A late request on that id gets a 404.
+2. *Host leaves while other humans and bots are present*: the first human by seat order becomes seat 0
+   and host; everything else follows; one broadcast. Bots never become host.
+3. *Two simultaneous departures*: `leaveLobby` is `synchronized` on the service (like `playAgain`) and
+   resolves the seat from the token inside the lock, so the second call sees the shifted seats; if the
+   second leaver was the last human the lobby is removed. A token that no longer resolves (already
+   left) returns an "invalid token" error that the client ignores.
+4. *Leave at the moment of Start*: `startGame` and `leaveLobby` take the same lock; whichever runs
+   first wins. If Start wins, the leave is refused (`GameAlreadyStartedException`) and the leaver is
+   handled by the forfeit flow like any player of a running game. If Leave wins, `startGame`
+   re-checks `claimedCount` against `minPlayers` and the host gets the usual "not enough players"
+   error. The deal always uses the post-shift seats.
+5. *Invite link used after the host left*: the link is the game id, not a seat, so it still works
+   while a human remains: the newcomer takes the lowest free seat and the lobby has its new host. If
+   the lobby was removed, the join returns 404 and the join form shows its error.
+6. *Closed tab instead of Leave*: unchanged (no timer in a lobby, section 2.2). A ghost host would
+   block the lobby: noted as a follow-up (disconnect grace timer on lobby seats), not part of v1.
+
+**Presence and forfeit, summary**: neither applies to the lobby phase; Leave is the only way to free a
+seat before the start; the connection registry must follow seat shifts.
 
 ## 6. Backend model for game options **[proposed]**
 
@@ -379,6 +431,77 @@ BC keyboard shortcuts move from the create page to a gear on the BC Table by gen
 option chosen in the lobby; the stored value can seed the default tier of a newly added bot (small,
 optional: question list does not include it; default is the fixed Bronze).
 
+### 9.4 What removing "solo mode" means, exactly
+
+**In plain words.** Today "solo" is a special way of creating a game: the server creates the game
+already dealt, gives *one browser* the keys (tokens) to *both* seats, and that browser plays the second
+seat itself with a small program (the local AI). After the change there is no special mode: a "solo"
+game is an ordinary lobby where the host adds a bot to the second seat. The bot runs on the server and
+has no key at all. Nothing about how a human plays changes; what changes is how the game is set up and
+who moves the opponent's cards.
+
+**What is deleted** (all verified in the code):
+
+| Where | What | Why it goes |
+|---|---|---|
+| `sessionmanagement/core/application/GameMode.java` | the enum `SOLO` / `MULTIPLAYER` | no more modes |
+| `SessionService.createGame(type, n, mode, name)` | the `if (mode == SOLO) sessionGame.claimAllSeats()` branch, and the whole `createGame` family | rooms are created by `createRoom` |
+| `SessionGame.claimAllSeats()` | one owner claims every seat (all tokens held by one client) | no one owns several seats any more |
+| `SessionService.joinGame` | joins the fixed seat 1 | replaced by `joinRoom` (next free seat) |
+| `presentation/api/CreateGamePayload.mode` | the `mode` field (`GameMode`) | nothing to choose at creation |
+| `BatailleCorseWebSocketController` `/create` | `GameMode mode` defaulting to `SOLO`, and `seatsToReturn = (mode == SOLO) ? NB_PLAYERS : 1` (returns one token per seat in solo) | the create response returns only the host's token, like Bullshit |
+| `BatailleCorseRestController.joinGame` | the fixed-seat join | same |
+| Frontend `GameSession.ts` | `create('solo'|'multiplayer')`, `serverMode = 'SOLO' | 'MULTIPLAYER'`, `mode` and `waiting` state, `isLocalSeat` (solo controls every seat), the `ai.play(...)` block "puppet AI only drives player 1 in solo", the solo rematch path, `restoreSession` inferring the mode from the number of stored tokens | the browser controls exactly one seat |
+| `model/ai/AI.ts` (+ test) | the local AI that plays seat 1 using the second token | replaced by the server bot (section 8) |
+| Persisted tokens in `localStorage` | `tokens:<gameId>` holding `{0: t0, 1: t1}` in solo | one entry from now on |
+| `StartGame.vue` | the Human / Computer toggle and tier slider | the lobby has Add bot and the tier selector |
+| `WaitingOverlay.vue` | the invite overlay | the lobby shows the invite |
+
+**What changes (and is kept)**
+
+- Creating: New game opens the lobby. To play alone: Add bot, optionally pick a tier, Start. To play
+  a friend: copy the link, wait for them, Start. The **host presses Start in both cases** (one rule
+  for every game; the old "starts immediately" for solo and "starts when seat 1 joins" for friends are
+  both gone). A one-click shortcut ("Play vs computer" on the Game home) is possible later but is not
+  planned; ask in question 9 if wanted.
+- Tokens: a solo game now has one human token; the bot's token never leaves the backend (the existing
+  rule for Bullshit bots). The hack "the creator's browser holds both tokens" disappears for good, and
+  with it the possibility for a client to act as the bot's seat.
+- Auto-grab: the pile is collected for the bot by the server (section 8.3 risk 1).
+- Rematch: shared `playAgain` (question 1).
+
+**Tests to rewrite**
+
+- `BatailleCorseWebSocketControllerIT` (currently `@Disabled`, stale): its header says `/app/create`
+  answered "with one token per seat in SOLO mode" and it has `givenSoloGame_whenCreateGame_thenOneTokenPerSeatIsReturned`
+  and a helper sending `{"mode":"SOLO"}`. It is rewritten around the lobby flow (create, join or add
+  bot, start, then send/slap with each seat's own token). The "distinct token per seat" assertion
+  becomes "each human seat gets its own token, a bot seat has none".
+- Backend: `SessionServiceTest`, `SessionServiceGenericGameTest`, `SessionGameTest` cases using
+  `createGame`, `GameMode` or `claimAllSeats`; `GameCleanupServiceTest` if it creates games that way
+  (grep before the PR).
+- Frontend: `GameSession.test.ts` (solo and AI cases), `BatailleCorse.store` tests, `GameScreen.test.ts`
+  (computer label), `AI.test.ts` removed; Cypress `create-game`, `send-card`, `rehydrate-game`,
+  `waiting-and-names`, `turn-indicator`, `responsive-game-screen`, `rules-panel`, `visual-direction`,
+  `bataillecorse-menu-fit`.
+
+**Compatibility**
+
+- No data migration: sessions are in memory only (no database), so a deploy already drops every game.
+  No stored server data refers to the mode.
+- Browsers with old tokens: `tokens:<gameId>` entries from earlier solo games may remain in
+  `localStorage`. They point at games that no longer exist on the server; restoring them already ends
+  with the existing "game not found" handling and a new game. The restore code must tolerate (ignore)
+  a two-token entry rather than crash (a test). Old entries can be left to expire or be cleaned when
+  the Game home loads.
+- A solo game in progress during the deploy is lost, as any game is.
+- Invite links of two-player games: unchanged (`/games/bataillecorse/join/<id>` keeps redirecting).
+
+**What disappears for good**: the ability to play a game without a server-side bot or room (a purely
+local practice mode), the 9-tier slider on a create page (the tiers survive as a seat option), the
+"Computer (Gold)" label wording (the seat is "Bot 1" with its tier), and any code path where one client
+holds several seats.
+
 ## 10. Accessibility and mobile
 
 - 375 px: the Game home and the lobby fit with no page scroll and no horizontal scroll (precedents:
@@ -440,8 +563,7 @@ home".
    once the create page is gone), and keep sound and shortcuts out of the lobby?
 6. **"Join game" on the Game selection**: also offer one place to paste any invite link on `/games`
    (the game is inferred from the id)?
-7. **Host leaves the lobby**: close the lobby (cheapest, simple), transfer the host to the next seat
-   (needs a movable host and renumbering), or close only when no other human remains (recommended,
-   in two steps: close first, transfer later)? Section 5.1 gives the costs.
-8. **Terminology**: confirm the glossary of section 0 (Game selection, Game home, Lobby, Table,
-   Game options, Seat options, Local preferences), and the French UI words to use.
+7. **Where leaving a game leads** (section 4.1): the Game home of the game left, for both games
+   (Bullshit: `/games/bullshit` instead of `/games`)? Proposed; confirm.
+8. **Start for a game against a bot**: the host always presses Start (this spec). Is a one-click
+   "Play vs computer" shortcut on the Game home wanted later?
