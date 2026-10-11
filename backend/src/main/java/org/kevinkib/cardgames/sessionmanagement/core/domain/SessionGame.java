@@ -102,6 +102,24 @@ public record SessionGame(GameId id, String gameType, GameOptions options, Map<P
     }
 
     /**
+     * Re-seats the computer players of {@code previous}, in seat order, on the lowest free seats after the host seat,
+     * with their names and seat options. Seat 0 is left for the human who reopens the room (a bot is never the host).
+     */
+    public void claimBotsOf(SessionGame previous) {
+        for (SessionPlayer former : previous.seats()) {
+            if (!former.isClaimed() || !former.isBot()) {
+                continue;
+            }
+            SessionPlayer free = seats().stream()
+                    .filter(seat -> !seat.isClaimed() && !seat.id().equals(HOST_SEAT))
+                    .findFirst()
+                    .orElseThrow(() -> new NoFreeSeatException(id));
+            free.claimAsBot(former.name(), botName(botSeats().size() + 1));
+            free.replaceOptions(former.options());
+        }
+    }
+
+    /**
      * Frees a bot seat. A game is dealt to the contiguous seats 0..claimed-1, so a gap must not
      * appear below a human: removal is refused when a human sits after the bot. Bots after it shift
      * down one seat (they carry no identity) and their default names are renumbered.
