@@ -176,6 +176,7 @@ export const messagesEn: Messages = {
       offline: 'Connection lost. Reconnecting…',
     },
     end: {
+      winner: 'Winner: {player}',
       youWon: 'You emptied your hand first.',
       youLost: 'Another player emptied their hand first.',
       youWonResigned: '{player} resigned.',

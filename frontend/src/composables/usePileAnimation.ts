@@ -61,12 +61,13 @@ const TAKE_GHOSTS = 3;
 // Flies a few face-down copies of the pile to the player who takes it (a seat or my own zone):
 // they shrink and fade as they arrive, centered on the destination. Same technique as
 // flyCardsToPile (fixed ghosts on <body>, no layout change). Returns the ghosts launched: 0 under
-// reduced motion, without a source or target, or without Web Animations support.
+// reduced motion, without a source or target, or without Web Animations support (onSettled is
+// then never called: there is nothing to wait for).
 export function flyPileToTaker(
   source: HTMLElement | null,
   target: Pick<DOMRect, 'left' | 'top' | 'width' | 'height'> | null,
   pileSize: number,
-  opts: { reduceMotion: boolean },
+  opts: { reduceMotion: boolean; onSettled?: () => void },
 ): number {
   if (opts.reduceMotion || !source || !target || pileSize <= 0) return 0;
   if (typeof HTMLElement.prototype.animate !== 'function') return 0;
@@ -74,6 +75,10 @@ export function flyPileToTaker(
   if (from.width === 0) return 0;
 
   const count = Math.min(TAKE_GHOSTS, pileSize);
+  // onSettled fires once every ghost has landed (or failed): callers that must wait for the flight
+  // (the end screen) hang on this instead of guessing a duration.
+  let remaining = count;
+  const landed = () => { if (--remaining === 0) opts.onSettled?.(); };
   const scale = Math.min(1, Math.max(0.3, target.width / from.width));
   const toLeft = target.left + target.width / 2 - from.width / 2;
   const toTop = target.top + target.height / 2 - from.height / 2;
@@ -96,7 +101,7 @@ export function flyPileToTaker(
       ],
       { duration: TAKE_MS, delay: i * TAKE_STAGGER_MS, easing: 'cubic-bezier(0.5, 0, 0.75, 0.3)', fill: 'both' },
     );
-    const remove = () => ghost.remove();
+    const remove = () => { ghost.remove(); landed(); };
     animation.finished.then(remove, remove);
   }
   return count;

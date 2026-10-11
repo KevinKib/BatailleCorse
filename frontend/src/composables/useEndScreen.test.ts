@@ -112,4 +112,33 @@ describe('useEndScreen', () => {
     vi.advanceTimersByTime(END_SCREEN_DELAY_MS + 100);
     expect(showEndOverlay.value).toBe(false);
   });
+
+  it('givenAnimationRestartsBeforeTheBeatElapses_thenThePendingRevealIsCancelled', async () => {
+    const over = ref(true);
+    const animating = ref(false);
+    const { showEndOverlay } = useEndScreen(() => over.value, () => animating.value);
+    await nextTick();
+    vi.advanceTimersByTime(END_SCREEN_DELAY_MS - 1);
+
+    animating.value = true; // a verdict starts during the beat
+    await nextTick();
+    vi.advanceTimersByTime(END_SCREEN_DELAY_MS + 100);
+    expect(showEndOverlay.value).toBe(false);
+
+    animating.value = false;
+    await nextTick();
+    vi.advanceTimersByTime(END_SCREEN_DELAY_MS);
+    expect(showEndOverlay.value).toBe(true);
+  });
+
+  it('givenAnimationNeverSettles_thenTheSafetyBoundRevealsAnyway', async () => {
+    const over = ref(true);
+    const animating = ref(true);
+    const { showEndOverlay } = useEndScreen(() => over.value, () => animating.value, 100, 5000);
+    await nextTick();
+    vi.advanceTimersByTime(4999);
+    expect(showEndOverlay.value).toBe(false);
+    vi.advanceTimersByTime(1);
+    expect(showEndOverlay.value).toBe(true);
+  });
 });
