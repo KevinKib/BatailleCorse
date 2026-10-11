@@ -132,6 +132,31 @@ describe('BullshitSession', () => {
     expect(events.some(e => e.type === 'seat-change' && (e as any).seat === 0)).toBe(true);
   });
 
+  it('playAgain re-sends the name typed at join, so the rematch lobby keeps it', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ playerId: 1, token: 't1' }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => sampleState() })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ playerId: 0, token: 't2' }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => sampleState() });
+    vi.stubGlobal('fetch', fetchMock);
+    const { session } = makeSession();
+    await session.join('g1', 'Bob');
+    await session.playAgain();
+    expect(JSON.parse(fetchMock.mock.calls[2][1].body)).toEqual({ name: 'Bob' });
+  });
+
+  it('playAgain re-sends the name typed at create (host)', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ playerId: 0, token: 't2' }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => sampleState() });
+    vi.stubGlobal('fetch', fetchMock);
+    const { session } = makeSession();
+    session.create('Alice');
+    session.restore('g1', 0, 'tok');
+    await session.playAgain();
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({ name: 'Alice' });
+  });
+
   it('registers presence (gameId + token) when binding a seat, so a drop is attributable', () => {
     const { session, presences } = makeSession();
     session.restore('g1', 2, 'tok-2');

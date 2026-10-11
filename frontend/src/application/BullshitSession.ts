@@ -26,6 +26,8 @@ export default class BullshitSession {
   private gameId: string | null = null;
   private myToken: string | null = null;
   private pendingCreate = false;
+  // Name typed by this player, re-sent on Play again: the reopened lobby starts empty.
+  private myName: string | null = null;
 
   constructor(
     private readonly webSocket: BullshitWebSocketPort,
@@ -34,6 +36,7 @@ export default class BullshitSession {
 
   create(name?: string, claimMode: ClaimMode = DEFAULT_CLAIM_MODE, deckSize?: DeckSize): void {
     this.pendingCreate = true;
+    this.myName = name ?? null;
     this.webSocket.setLobbyListener(r => this.onLobby(r));
     this.webSocket.publish('/app/bullshit/create', JSON.stringify({ name: name ?? null, claimMode, ...(deckSize ? { deckSize } : {}) }));
   }
@@ -54,6 +57,7 @@ export default class BullshitSession {
   }
 
   async join(gameId: string, name?: string): Promise<void> {
+    this.myName = name ?? null;
     const res = await fetch(`/api/bullshit/game/${gameId}/join`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -120,10 +124,11 @@ export default class BullshitSession {
 
   async playAgain(name?: string): Promise<void> {
     if (!this.gameId) return;
+    if (name !== undefined) this.myName = name;
     const res = await fetch(`/api/bullshit/game/${this.gameId}/play-again`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: name ?? null }),
+      body: JSON.stringify({ name: this.myName }),
     });
     if (!res.ok) throw new Error(`Play again failed: ${res.status}`);
     const body = await res.json() as { playerId: number; token: string };
