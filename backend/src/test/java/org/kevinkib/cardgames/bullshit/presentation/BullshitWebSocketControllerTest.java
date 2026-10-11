@@ -76,7 +76,7 @@ class BullshitWebSocketControllerTest {
         BullshitGameActions actions = new BullshitGameActions(sessionService, broadcaster);
         botScheduler = new ManualBotScheduler();
         broadcaster.addListener(new BullshitBotCoordinator(
-                sessionService::botSeats, actions, botScheduler, new FixedThinkingDelay(Duration.ZERO),
+                sessionService::botSeats, actions, botScheduler, new FixedThinkingDelay(Duration.ZERO), () -> Duration.ZERO,
                 game -> (observation, memory) -> new BotDecision.Pass()));
         controller = new BullshitWebSocketController(sessionService, broadcaster, messaging, actions,
                 new LobbyBroadcaster(messaging, sessionService));

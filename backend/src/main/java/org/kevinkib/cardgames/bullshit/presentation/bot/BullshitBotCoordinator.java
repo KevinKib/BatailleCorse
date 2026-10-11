@@ -20,6 +20,7 @@ import org.kevinkib.cards.domain.Card;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -38,6 +39,10 @@ import java.util.concurrent.ConcurrentHashMap;
  * monitor, so two bots can never both act on the same claim. Everything that touches a game's bot
  * state runs under that monitor, so tasks, human actions and forfeits are serialised per game.
  *
+ * <p>A bot that decides to call "Bullshit" waits a further {@link CallDecisionDelay} before doing so
+ * (unless it is zero), so a human gets a window to call first; the human's call changes the state and
+ * cancels the bot's pending call.
+ *
  * <p>When no human is left in a live game (all forfeited) nothing is scheduled: the game is left to
  * the idle eviction. A bot that fails (strategy or rules exception) falls back to discarding its
  * lowest card so the table does not stall.
@@ -50,6 +55,7 @@ public class BullshitBotCoordinator implements BullshitStateListener, GameEvicti
     private final BullshitGameActions actions;
     private final BotScheduler scheduler;
     private final ThinkingDelay thinkingDelay;
+    private final CallDecisionDelay callDecisionDelay;
     private final BotStrategyFactory strategies;
     private final Map<GameId, Table> tables = new ConcurrentHashMap<>();
 
@@ -57,11 +63,13 @@ public class BullshitBotCoordinator implements BullshitStateListener, GameEvicti
                                   BullshitGameActions actions,
                                   BotScheduler scheduler,
                                   ThinkingDelay thinkingDelay,
+                                  CallDecisionDelay callDecisionDelay,
                                   BotStrategyFactory strategies) {
         this.botSeats = botSeats;
         this.actions = actions;
         this.scheduler = scheduler;
         this.thinkingDelay = thinkingDelay;
+        this.callDecisionDelay = callDecisionDelay;
         this.strategies = strategies;
     }
 
@@ -207,7 +215,7 @@ public class BullshitBotCoordinator implements BullshitStateListener, GameEvicti
             BotMemory memory = table.memoryOf(seat);
             try {
                 BotDecision decision = table.strategy.decide(BotObservation.forSeat(game, seat), memory);
-                apply(game, seat, memory, decision);
+                apply(game, table, seat, memory, decision, version);
             } catch (Exception e) {
                 log.warn("Bot {} failed in game {}; falling back to its lowest card", seat, game.getId(), e);
                 fallback(game, seat, memory);
@@ -215,14 +223,35 @@ public class BullshitBotCoordinator implements BullshitStateListener, GameEvicti
         }
     }
 
-    private void apply(Bullshit game, PlayerId seat, BotMemory memory, BotDecision decision) throws Exception {
+    private void apply(Bullshit game, Table table, PlayerId seat, BotMemory memory, BotDecision decision,
+                       int version) throws Exception {
         if (decision instanceof BotDecision.CallBullshit) {
-            actions.callBullshit(game.getId(), seat);
+            Duration hesitation = callDecisionDelay.next();
+            if (hesitation.isZero()) {
+                actions.callBullshit(game.getId(), seat);
+            } else {
+                // Leave the humans a window to call first: any state change cancels this task.
+                table.track(scheduler.schedule(hesitation, () -> confirmCall(game, seat, version)));
+            }
         } else if (decision instanceof BotDecision.Discard discard) {
             actions.discard(game.getId(), seat, discard.cards());
             memory.onOwnDiscard(discard.cards());
         }
         // Pass: nothing to do until the next state change.
+    }
+
+    /** The delayed half of a call: runs only if nothing happened at the table during the hesitation. */
+    private void confirmCall(Bullshit game, PlayerId seat, int version) {
+        synchronized (game) {
+            if (!tables.containsKey(game.getId()) || game.isFinished() || game.version() != version) {
+                return;
+            }
+            try {
+                actions.callBullshit(game.getId(), seat);
+            } catch (Exception e) {
+                log.warn("Bot {} could not call Bullshit in game {}", seat, game.getId(), e);
+            }
+        }
     }
 
     private void fallback(Bullshit game, PlayerId seat, BotMemory memory) {

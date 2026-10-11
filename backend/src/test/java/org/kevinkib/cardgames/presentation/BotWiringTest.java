@@ -3,6 +3,7 @@ package org.kevinkib.cardgames.presentation;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.bullshit.presentation.bot.BullshitBotCoordinator;
+import org.kevinkib.cardgames.bullshit.presentation.bot.CallDecisionDelay;
 import org.kevinkib.cardgames.bullshit.presentation.bot.ThinkingDelay;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameEvictionListener;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,12 +35,24 @@ class BotWiringTest {
         @Autowired
         List<GameEvictionListener> evictionListeners;
 
+        @Autowired
+        CallDecisionDelay callDecisionDelay;
+
         @Test
-        void thinkingDelayIsBetweenOneAndTwoSeconds() {
-            for (int i = 0; i < 50; i++) {
+        void thinkingDelayIsBetweenOneAndAHalfAndThreeAndAHalfSeconds() {
+            for (int i = 0; i < 200; i++) {
                 Duration delay = thinkingDelay.next();
-                assertThat(delay.toMillis(), greaterThanOrEqualTo(1000L));
-                assertThat(delay.toMillis(), lessThanOrEqualTo(2000L));
+                assertThat(delay.toMillis(), greaterThanOrEqualTo(1500L));
+                assertThat(delay.toMillis(), lessThanOrEqualTo(3500L));
+            }
+        }
+
+        @Test
+        void callDecisionDelayIsBetweenOneAndAHalfAndThreeSeconds() {
+            for (int i = 0; i < 200; i++) {
+                Duration delay = callDecisionDelay.next();
+                assertThat(delay.toMillis(), greaterThanOrEqualTo(1500L));
+                assertThat(delay.toMillis(), lessThanOrEqualTo(3000L));
             }
         }
 
@@ -58,9 +71,17 @@ class BotWiringTest {
         @Autowired
         ThinkingDelay thinkingDelay;
 
+        @Autowired
+        CallDecisionDelay callDecisionDelay;
+
         @Test
         void thinkingDelayIsPinnedToZero() {
             assertThat(thinkingDelay.next(), is(Duration.ZERO));
+        }
+
+        @Test
+        void callDecisionDelayIsPinnedToZero() {
+            assertThat(callDecisionDelay.next(), is(Duration.ZERO));
         }
     }
 }

@@ -19,6 +19,7 @@ import org.kevinkib.cardgames.bullshit.domain.bot.ProbabilisticBotStrategy;
 import org.kevinkib.cardgames.bullshit.presentation.BullshitGameActions;
 import org.kevinkib.cardgames.bullshit.presentation.bot.BotScheduler;
 import org.kevinkib.cardgames.bullshit.presentation.bot.BullshitBotCoordinator;
+import org.kevinkib.cardgames.bullshit.presentation.bot.CallDecisionDelay;
 import org.kevinkib.cardgames.bullshit.presentation.bot.TaskSchedulerBotScheduler;
 import org.kevinkib.cardgames.bullshit.presentation.bot.ThinkingDelay;
 import org.kevinkib.cardgames.bullshit.presentation.bot.ThreadLocalRandomGenerator;
@@ -136,21 +137,35 @@ public class AppConfig {
         return new TaskSchedulerBotScheduler(taskScheduler());
     }
 
-    /** A bot "thinks" for a random 1000-2000 ms; the {@code test} profile pins it to 0 so e2e runs are not slowed. */
+    /**
+     * A bot "thinks" for a random 1500-3500 ms before a move. Both bounds are properties
+     * ({@code bullshit.bots.delay-min-ms} / {@code delay-max-ms}); the {@code test} profile pins them to 0.
+     */
     @Bean
-    public ThinkingDelay botThinkingDelay(@Value("${bullshit.bots.delay-min-ms:1000}") long minMillis,
-                                          @Value("${bullshit.bots.delay-max-ms:2000}") long maxMillis) {
+    public ThinkingDelay botThinkingDelay(@Value("${bullshit.bots.delay-min-ms:1500}") long minMillis,
+                                          @Value("${bullshit.bots.delay-max-ms:3500}") long maxMillis) {
         return new UniformThinkingDelay(minMillis, maxMillis, new ThreadLocalRandomGenerator());
+    }
+
+    /**
+     * Once a bot has decided to call Bullshit it waits a further random 1500-3000 ms, the window in which a
+     * human can call first ({@code bullshit.bots.call-delay-min-ms} / {@code call-delay-max-ms}).
+     */
+    @Bean
+    public CallDecisionDelay botCallDecisionDelay(@Value("${bullshit.bots.call-delay-min-ms:1500}") long minMillis,
+                                                  @Value("${bullshit.bots.call-delay-max-ms:3000}") long maxMillis) {
+        return new UniformThinkingDelay(minMillis, maxMillis, new ThreadLocalRandomGenerator())::next;
     }
 
     @Bean
     public BullshitBotCoordinator bullshitBotCoordinator(BullshitGameActions actions,
                                                          BullshitStateBroadcaster broadcaster,
                                                          BotScheduler botScheduler,
-                                                         ThinkingDelay botThinkingDelay) {
+                                                         ThinkingDelay botThinkingDelay,
+                                                         CallDecisionDelay callDecisionDelay) {
         RandomGenerator random = new ThreadLocalRandomGenerator();
         BullshitBotCoordinator coordinator = new BullshitBotCoordinator(
-                sessionService()::botSeats, actions, botScheduler, botThinkingDelay,
+                sessionService()::botSeats, actions, botScheduler, botThinkingDelay, callDecisionDelay,
                 game -> new ProbabilisticBotStrategy(game.getClaimMode(), random, BotTuning.DEFAULT));
         broadcaster.addListener(coordinator);
         return coordinator;
