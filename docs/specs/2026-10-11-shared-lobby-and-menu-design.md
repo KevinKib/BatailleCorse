@@ -51,7 +51,7 @@ Other #122 items (end screens, buttons, player tags) are out of scope (section 1
 | Player name | `settingsStore.playerName` (persisted) | local `ref`, not persisted | None. |
 | Keyboard shortcuts | Captured on the create page only | Gear on the Table (`HotkeySettings.vue`) | Accidental; the gear is the right place. |
 | Routes | `home`, `create`, `join`, `room` under `/games/bataillecorse` | `bullshit-create`, `bullshit-join`, `bullshit-room` under `/games/bullshit` | Invite links exist in both shapes: keep them working. |
-| Rematch | Solo: new game; multiplayer: both ask | `playAgain` reopens the lobby with the same options | Falls out of the room model. |
+| Rematch | In place: `/rematch` then `SessionService.requestRematch`/`rematch` keep the seats (bots included, they never vote) and deal again; solo is instant | `playAgain` reopens an **empty** lobby with the same options (bots are dropped: `SessionGame.create` from scratch) | Falls out of the room model; "Play again" now leads to the lobby for both (section 4.1, 9.1). |
 | Leaving the lobby | n/a (no lobby) | No button (issue #128) | Missing in both. |
 
 Kobo (backend merged, no frontend) already follows the room model, so it will reuse the lobby by
@@ -125,8 +125,28 @@ Replaces `view/alpha/LobbyView.vue` and the front of both start pages.
 - A `GameDefinition` registry (`model/games.ts`) feeds the Game selection, the router and the Game
   home; adding Kobo is one entry.
 - Routes: `/games/:game`, `/games/:game/join/:id?`, `/games/:game/room/:id`. The old
-  `/games/bataillecorse/{create,join,room}` and `/games/bullshit/{create,join,room}` redirect.
-  Every "Back" from the Game home leads to the Game selection `/games`.
+  `.../join/:id?` and `.../room/:id` paths of both games already have this exact shape, so they keep
+  resolving without a redirect; only `/games/bataillecorse/create`, `/games/bullshit/create` and the old
+  route *names* (`home`, `create`, `join`, `room`, `bullshit-*`, used in code) need redirects or
+  replacing. `/games/:game` with a key absent from the registry (e.g. `kobo` before its frontend)
+  redirects to `/games`. Every "Back" from the Game home leads to the Game selection `/games`.
+- **Creating a lobby** goes through REST: `POST /api/lobby` (`{gameType, name}`) returns `{gameId, token}` to the
+  caller only (like join). Today `/bullshit/create` and `/create` answer with `@SendTo("/topic/game")`:
+  every connected client receives the host token of every new game, and `BullshitSession.onLobby`
+  adopts the first `CREATE` of the right type, so two simultaneous creations can swap games
+  (verified). The new flow sends no token on a shared topic.
+
+### 4.0 Arriving on a room link that cannot be restored (decided here)
+
+Not an exit (the player did not choose to leave), so it does not follow section 4.1:
+
+- Room URL opened without a stored token (someone shared the room URL instead of the invite link):
+  go to the join form of that game with the id prefilled (`/games/<game>/join/<id>`).
+- Stored token but the game no longer exists or the token is refused: go to the Game home of that
+  game (`/games/<game>`) with a "This game no longer exists" notice, so New game / Join game are one
+  click away. Today `useGameBootstrap.ts` (lines 29 and 35) sends both cases to the BC `home` route,
+  whose name disappears in PR 1; Bullshit gets the same rule.
+- A failed join from `JoinGameForm` stays on the form with its error line.
 
 ### 4.1 Where leaving a game leads (decided by the owner)
 
@@ -137,7 +157,9 @@ button (#128), Back during a game and a forfeit also lead to `/games`. There is 
 `GameDefinition` carries no `homeRoute` for exits.
 
 Consequences: Bullshit stays as it is since #129 (`/games`); Bataille Corse's end screen and Back, which
-today lead to its old `home` menu (default `{ name: 'home' }` of `EndGameOverlay`), switch to `/games`.
+today lead to its old `home` menu (default `{ name: 'home' }` of `EndGameOverlay`, and the Back link
+`<RouterLink :to="{ name: 'home' }">` in `view/alpha/GameScreen.vue`), switch to `/games`.
+`cypress/specs/bullshit-exit-to-games.cy.ts` (#129) must stay green unchanged.
 The `homeRoute` prop that #129 added to `EndGameOverlay` becomes unnecessary: the default becomes
 `/games` for everyone and the prop is removed in PR 1. Tests: one per exit path per game asserting
 `/games`, and one per game asserting that Play again lands in the Lobby.
@@ -171,8 +193,16 @@ Behaviour:
   like the existing bot error.
 - Game options are **frozen at start**; after `startGame` the commands are refused
   (`GameAlreadyStartedException`). A rematch reopens the lobby with the same options.
-- A join racing with an option change is harmless: the command touches options only and the
-  broadcast carries the whole lobby.
+- **One lock for every lobby mutation** (section 5.2). Today only `playAgain` and the rematch methods
+  are `synchronized`; `joinRoom`, `addBot`, `removeBot` and `startGame` are not, while
+  `SessionGame.players` is a plain `LinkedHashMap` of mutable `SessionPlayer` (verified). Two
+  simultaneous joins can already claim the same seat and get the same token, and a join between
+  `claimedCount()` and `repository.save` in `startGame` gets a seat absent from the dealt game.
+- **Ordered, correctly addressed broadcasts**: the per-viewer views are computed *with the token of
+  each viewer* inside the lock, then sent by token (not by seat number, which a later shift may give
+  to someone else). `LobbyView` carries a `lobbyVersion` incremented by every mutation; the client
+  drops a view older than the last one it applied. Today `LobbyBroadcaster` computes the views, then
+  `sendToSeat` re-reads the seat's token at send time, outside any lock (verified).
 - Decoupling: `GameLobby` takes `lobby: LobbyView` and emits `start`, `leave`, `add-bot`,
   `remove-bot`, `set-seat-option`, `set-option`, `rename`; a `LobbyActions` composable sends them to
   `/lobby/*`. The component imports no store.
@@ -198,44 +228,76 @@ next human seat 0. One rule is needed so that seat 0 is never a bot: when seat 0
 existing order. When any other seat is vacated, later occupants shift down one seat, as `removeBot`
 already does for bots.
 
+**Token hygiene (blocking, verified on `main`)**: a `SessionPlayer` token is `final` and belongs to
+the seat *record*, not to the claim; `release()` keeps it; `SessionGame.findPlayerByToken` does not
+check `isClaimed()`, so a freed seat's token still resolves; `claimNextFreeSeat` hands out
+`claimed.token()`. Without a fix, a guest who leaves keeps a working token, and the next newcomer on
+that record receives the *same* token: the leaver's still-open STOMP subscription (the connection is
+an app-wide singleton that survives SPA navigation) then receives the newcomer's private messages
+(the Bullshit hand), and the leaver can act for them. Rules:
+
+- `vacate` rebuilds the seat map: each occupant keeps its own token on its new seat; **every seat
+  left free gets a fresh `SessionToken.generate()`** (a new `SessionPlayer`).
+- `findPlayerByToken` and `findTokenByPlayer` resolve **claimed** seats only.
+- Tests: the leaver's token resolves to nothing; a newcomer's token differs from the leaver's; every
+  shifted occupant still resolves to its new seat.
+
+**Default names (M1)**: `defaultName()` is `"Player " + (id + 1)` frozen at claim time; after a shift
+"Player 3" may sit at seat 1 and a newcomer at seat 2 also be "Player 3". Default human names are
+renumbered after a shift, exactly as `renumberBots` does for "Bot N" (only names matching
+`Player \d+`; a chosen name is kept).
+
 **Does it hold? Verified against `main`**
 
 | Concern | Finding |
 |---|---|
-| Tokens / `PlayerId` of shifted players | `SessionPlayer` has a final `id` and a final `token`, and `SessionGame.players` maps seat id to record. A shift must therefore move the *occupant data* (token, name, bot flag, seat options, rematch flags) between records, or rebuild the entries (new `SessionPlayer(newSeatId, oldToken)`). Doable inside `SessionGame` because `players` is a mutable `LinkedHashMap`; it is the main new code and the main test target. The token stays with the person, so authentication still works. |
-| Messages reach the right client | Seat channels are addressed by **token** (`GameMessagingService.sendToSeat` looks up the token of the seat; `SeatSubscriptionInterceptor` checks the token). A shifted player keeps their subscription and receives their lobby view with no re-subscription. This is the strongest point in favour of the approach. |
-| Local seat on the client | `Bullshit.store.mySeat` is set only by the `seat-change` event raised at join/restore (`BullshitSession.bind`). The lobby view already carries `mySeat`, so PR 5 must also set `mySeat` from every lobby state update. `isHost = mySeat === 0` then follows automatically. The persisted `tokens:<gameId>` entry of Bataille Corse is keyed by seat number (`{ seat: token }`) and must be rewritten (PR 9) when the lobby reports a different `mySeat`. |
+| Tokens / `PlayerId` of shifted players | `SessionPlayer` has a final `id` and a final `token`, and `SessionGame.players` maps seat id to record. The shift rebuilds the entries (`new SessionPlayer(newSeatId, sameToken)` plus copied state) inside `SessionGame`; freed seats get fresh tokens (token hygiene above). The token stays with the person, so authentication still works. Main new code and main test target. |
+| Messages reach the right client | Seat channels are addressed by **token** (`GameMessagingService.sendToSeat` looks up the token of the seat; `SeatSubscriptionInterceptor` checks the token at subscribe time). A shifted player keeps their subscription and receives their lobby view with no re-subscription. The broadcaster must send by the token captured under the lock (section 5, behaviour), not re-read it by seat number. |
+| Local seat on the client | The server is the source of truth for `mySeat`: every lobby view and every game state sets it. `Bullshit.store.mySeat` is set today only by the `seat-change` event at join/restore (`BullshitSession.bind`), and the restore takes the seat from the key of the stored entry (`bullshit:tokens:<id>` = `{seat: token}`; BC `tokens:<id>` likewise). The stored seat key is only a hint; after a restore the client takes `mySeat` from the GET response. Stored entries are rewritten when the server reports another seat. |
 | Bot seats | Bots carry no identity: they shift with the order (existing behaviour of `removeBot`, including renumbering default names "Bot N"). Their seat options (Bataille Corse tier) move with them. |
-| Names and seat options | Move with the occupant (same move of data). |
-| Presence | **Real risk.** `PresenceService.onPresence` binds `connectionId -> Seat(gameId, playerId)` in `InMemoryConnectionRegistry` even in a lobby. After a shift that binding is stale; if the game then starts and the player disconnects, the grace timer and forfeit would target the *old* seat number (another player). Mitigation (pick one, test it): rebind the connections of shifted seats inside the leave use case (rewrite bindings by `(gameId, oldSeat)`), or make the client re-send `/presence` whenever `mySeat` changes (cheap, relies on the client). Prefer the server-side rebind. |
-| Rematch | `playAgain` reopens a lobby, clears rematch flags and gives seat 0 to the first caller; unaffected, because leaving only happens in the lobby phase. A leave during the finished-game phase keeps using `leaveRematch`. |
+| Names and seat options | Move with the occupant (same rebuild); default human names renumbered (M1). |
+| Presence | **Real risk, solved by PR-presence.** `PresenceService.onPresence` binds `connectionId -> Seat(gameId, playerId)` in `InMemoryConnectionRegistry` even in a lobby (`/presence` is sent and re-sent on reconnect by `WebSocketService`). After a shift the bindings of the shifted players are stale, and the **leaver's** binding is too: the leaver goes back to `/games` with the connection still open; once the game started, closing that tab would start the 60 s forfeit of whoever now holds the leaver's old seat number. A "rebind" inside `leaveLobby` is not allowed: `sessionmanagement.core` must not depend on `presence` (`package-info`; `presence` already depends on `core` through `GameDirectory`). **Fix**: the registry binds `connectionId -> (gameId, token)` and the seat is resolved through `GameDirectory` when the disconnect happens; a token that no longer resolves (the leaver's) does nothing, a shifted player is followed automatically. Change confined to `presence`. |
+| Rematch | `playAgain` reopens a lobby, clears rematch flags and gives seat 0 to the first caller; leaving only happens in the lobby phase. A leave during the finished-game phase keeps using `leaveRematch`. |
 | `LobbyView.hostSeat` | Already a field; stays 0. |
 
-So it holds without a variable host. The alternative (a variable host: `hostSeat` stored in
-`SessionGame`, with `isHost`, `claimHost`, `playAgain` and `LobbyView` driven by it, and the frontend
-`isHost` computed from the view instead of `mySeat === 0`) would cost about as much as `vacate` and
-would still need the contiguity shift for guests, so it is not recommended.
+**Alternative considered and rejected (option B)**: stable seat numbers during the lobby (gaps
+allowed), host designated by token, and a single compaction to seats 0..k-1 inside `startGame` under
+the lock. Gains: no `mySeat` change during the lobby, `removeBot` loses its
+`BotRemovalBlockedException` rule. Costs: `SessionGame` (a record) needs a mutable host; compaction at
+start still moves tokens and seat numbers, client side included (BC derives its index from the stored
+seat key); the Bullshit lobby visibly changes (gaps in the seat list, seat order of #125); `startGame`
+changes for three games. Same size (about 1.5 to 2 days either way) and it removes none of the four
+fixes that make the shift safe (token hygiene, presence by token, single lock, ordered broadcasts).
+`vacate` is kept.
 
 **Real risks of the transfer rule**
 
 1. The data move in `SessionGame` (final `id` and `token`): easy to get subtly wrong (a token left on
    the wrong seat authenticates the wrong person). Needs exhaustive tests: every position of the
-   leaver, with humans and bots before and after.
-2. The stale presence binding above.
-3. The client must take `mySeat` from the lobby view and rewrite its stored tokens; a missed update
-   shows a guest as non-host or sends commands for the wrong seat number (the token still protects
-   the server).
+   leaver, with humans and bots before and after, plus the token hygiene tests.
+2. Presence bindings: solved by binding tokens (PR-presence), tested with a shift then a start then a
+   disconnect, and with a leaver who disconnects after the start.
+3. The client must take `mySeat` from the server and rewrite its stored tokens; a missed update shows
+   a guest as non-host (the token still protects the server). `lobbyVersion` prevents a late, older
+   view from undoing a newer one.
 4. Play order changes when the host leaves (the first human jumps ahead of bots): acceptable in a
    lobby, but visible; the lobby live region announces "You are now the host".
-5. Races, see edge cases 3 and 4.
+5. Races, see edge cases 3, 4 and 7, all under the single lobby lock (section 5.2).
+
+**Client on Leave**: after `/lobby/leave` is sent, the client calls
+`webSocketService.unsubscribeFromSeat()`, `unsubscribeFromGame()` and `clearPresence()`, removes its
+stored token entry for the game, then navigates to `/games`. The server-side token hygiene makes this
+a courtesy, not the protection.
 
 **Edge cases**
 
-1. *Host leaves and only bots would remain*: no human is left, so the lobby is removed (repository
-   removal, no broadcast target). A late request on that id gets a 404.
+1. *Host leaves and only bots would remain*: no human is left, so the lobby is removed through the
+   same path as eviction (`GameCleanupService` notifying every `GameEvictionListener`: presence
+   registry and forfeit log cleanup, bot coordinators), not a bare `repository.remove`. No broadcast
+   target. A late request on that id gets a 404.
 2. *Host leaves while other humans and bots are present*: the first human by seat order becomes seat 0
    and host; everything else follows; one broadcast. Bots never become host.
-3. *Two simultaneous departures*: `leaveLobby` is `synchronized` on the service (like `playAgain`) and
+3. *Two simultaneous departures*: `leaveLobby` takes the single lobby lock (section 5.2) and
    resolves the seat from the token inside the lock, so the second call sees the shifted seats; if the
    second leaver was the last human the lobby is removed. A token that no longer resolves (already
    left) returns an "invalid token" error that the client ignores.
@@ -249,9 +311,28 @@ would still need the contiguity shift for guests, so it is not recommended.
    the lobby was removed, the join returns 404 and the join form shows its error.
 6. *Closed tab instead of Leave*: unchanged (no timer in a lobby, section 2.2). A ghost host would
    block the lobby: noted as a follow-up (disconnect grace timer on lobby seats), not part of v1.
+7. *Join while someone leaves*: both take the lobby lock; the join sees either the seats before the
+   shift or after it, never half a shift, and always gets a token nobody else holds.
 
 **Presence and forfeit, summary**: neither applies to the lobby phase; Leave is the only way to free a
-seat before the start; the connection registry must follow seat shifts.
+seat before the start; the connection registry follows seat shifts because it binds tokens, not seat
+numbers.
+
+### 5.2 Concurrency of the session core
+
+- Every operation that reads or mutates a lobby's seats or options runs under one lock: `joinRoom`,
+  `addBot`, `removeBot`, `startGame`, `playAgain`, `updateOptions`, `renameSeat`, `setSeatOption`,
+  `leaveLobby`, and the computation of the per-viewer views with their tokens. v1 uses the service
+  monitor (`synchronized`, as `playAgain` already does): traffic is tiny and a per-game lock can
+  replace it later without changing callers.
+- The use case returns the views with their tokens (`List<AddressedLobbyView>`), computed inside the
+  lock; the controller sends them by token. `lobbyVersion` is a counter on the lobby, incremented by
+  every mutation, carried by each view.
+- Tests: two threads joining the last free seat (exactly one wins, distinct tokens); join versus leave;
+  join versus start (the joiner either is dealt in or is refused with "already started"); leave versus
+  start in both orders; a burst of mutations ends with every client holding the highest version.
+- Kobo uses the same `joinRoom`/`startGame`/`playAgain`: its IT (`KoboWebSocketControllerIT`) is part of
+  the regression run.
 
 ## 6. Backend model for game options **[proposed]**
 
@@ -265,39 +346,63 @@ public record OptionDescriptor(
         OptionType type,            // CHOICE (v1); BOOLEAN / INT_RANGE reserved, not built
         List<String> values,        // permitted values, display order
         String defaultValue,
-        String labelKey,            // locale key, e.g. "options.bullshit.claimMode"
-        Optional<String> dependsOnKey) {}
+        String labelKey) {}         // locale key, e.g. "options.bullshit.claimMode"
 
 public interface GameFactory {
     ...
     default List<OptionDescriptor> optionDescriptors() { return List.of(); }
-    /** Domain validation of a full option map; throws InvalidOptionException. */
-    default GameOptions validate(GameOptions requested) { return requested; }
+    /**
+     * Strict domain validation of a full option map; throws InvalidOptionException.
+     * Default: any key absent from optionDescriptors() is refused, any value outside its
+     * descriptor's values is refused, missing keys take their default.
+     */
+    default GameOptions validate(GameOptions requested) { ... }
 }
 ```
 
 - Value labels come from the frontend locales (`<labelKey>.<value>`), unknown label falls back to the
-  raw value. The backend never sends text.
+  raw value. The backend never sends text. A label that depends on another option (the Bullshit
+  claim mode label quotes the deck size) is resolved by the frontend, which receives the whole option
+  map: no `dependsOnKey` in the kernel (presentation concern).
+- **Strict validation (verified gap)**: `BullshitOptions.from` never refuses anything,
+  `ClaimModeOption.fromKey` and `DeckSize.fromKey` fall back to the default on an unknown value. So
+  `validate` cannot be "call `from`". `BullshitFactory.validate` uses a new strict parse in the domain
+  (`BullshitOptions.parseStrict`, throwing `InvalidOptionException` on an unknown key or value);
+  `from` stays lenient for `createRoom` and stale clients. With the default `validate`, a Bataille
+  Corse or Kobo host can no longer store arbitrary keys (today any map would be stored and
+  broadcast).
 - `BullshitFactory` declares `claimMode` and `deckSize` from `ClaimModeOption` and `DeckSize`
-  (single source of truth) and `validate` calls `BullshitOptions.from`. `BatailleCorseFactory` and
-  `KoboFactory` keep the empty default.
+  (single source of truth). `BatailleCorseFactory` and `KoboFactory` declare none, so every key is
+  refused for them.
 - `GameFactories` exposes `optionDescriptors(type)` and `validate(type, options)`;
   `sessionmanagement` still depends only on the kernel.
 
 ### 6.2 Update command
 
 `SessionService.updateOptions(GameId, hostToken, Map<String,String>)`: refuse if started or not the
-host (reuse `openLobbyOwnedBy`); merge, `validate` through the factory, store by saving the lobby with
-the new options (`SessionGame` is a record; same seat map), broadcast.
+host (reuse `openLobbyOwnedBy`), under the lobby lock (section 5.2); merge, `validate` through the
+factory (the whole merged map, so an unknown key is refused), store by saving the lobby with the new
+options (`SessionGame` is a record; same seat map), bump `lobbyVersion`, return the addressed views.
+A refused update leaves the options unchanged.
 
 Transport: game-agnostic `LobbyController` (like `LifecycleController`) with `/lobby/setOptions`,
-`/lobby/addBot`, `/lobby/removeBot`, `/lobby/setSeatOption`, `/lobby/rename`, `/lobby/leave`.
-`/bullshit/addBot` and `/bullshit/removeBot` stay as aliases for one release, then go. `start` stays
-per game (it broadcasts the game's own state).
+`/lobby/addBot`, `/lobby/removeBot`, `/lobby/setSeatOption`, `/lobby/rename`, `/lobby/leave`. The token
+proves membership of the game, so no game-type check is needed there. `/bullshit/addBot` and
+`/bullshit/removeBot` are **deleted** in the PR that adds `/lobby/addBot` and `/lobby/removeBot`
+(PR 3), with the Bullshit client switched in the same PR: the SPA is served by the same deploy as
+the backend, so an alias would only serve a tab left open across a deploy, which loses its in-memory
+game anyway. `start` stays per game (it broadcasts the game's own state). Per-game REST endpoints
+(create, join, play-again, GET) keep checking the game type (as the Bullshit ones do; the BC
+`/api/game/{id}` ones do not today).
+
+Lobby creation: one shared `LobbyRestController`, `POST /api/lobby` (body `{gameType, name}`, type checked against `GameFactories`), returns `{gameId, token}` to the caller only
+(section 4). The WebSocket `/bullshit/create`, `/kobo/create` and `/create` answers on `/topic/game`
+are removed once their clients have switched (PR 5 for Bullshit, PR 9 for Bataille Corse; Kobo has no
+client yet: `/kobo/create` is removed in PR 6, which adds the shared endpoint, with its IT switched).
 
 ### 6.3 What the lobby view carries
 
-`LobbyView` gains `optionDescriptors`, `seatOptionDescriptors`, `canEditOptions` (host, not started)
+`LobbyView` gains `lobbyVersion`, `optionDescriptors`, `seatOptionDescriptors`, `canEditOptions` (host, not started)
 and, per `LobbyPlayer`, `seatOptions` (a `Map<String,String>`, empty for humans and for Bullshit
 bots). `options` keeps its `Map<String,String>` shape; defaults are filled server side.
 
@@ -305,9 +410,10 @@ bots). `options` keeps its `Map<String,String>` shape; defaults are filled serve
 
 - `createRoom(..., GameOptions)` and `BullshitCreatePayload` (`claimMode`, `deckSize` optional) keep
   working for stale clients and tests. The new flow sends neither; defaults equal today's (rank, 32).
-- The Bullshit claim mode label depends on the deck size: `dependsOnKey = deckSize`, and the label
-  resolver passes the current deck size as a placeholder.
-- `playAgain` copies `existing.options()`; unchanged.
+- The Bullshit claim mode label depends on the deck size: the frontend label resolver receives the
+  whole option map and passes the current deck size as a placeholder.
+- `playAgain` copies `existing.options()` and, from PR 4b, the bot seats with their seat options
+  (section 9.1).
 - The session core still never interprets a key; `validate` is the game's.
 
 ### 6.5 Rule placement
@@ -319,7 +425,7 @@ never *what*. The frontend renders descriptors and sends `{key, value}`.
 
 - **Name**: `SessionGame.renameSeat(PlayerId, String)`; the occupant only, lobby only, trimmed, 20
   characters max, blank restores "Player N". Bot names stay "Bot N" rendered by the frontend. Fixed
-  once the game starts (question 6).
+  once the game starts (question 2).
 - **Seat descriptors**: `GameFactory.seatOptionDescriptors()` (default empty), same record as game
   options but applying to a bot seat, and `validateSeatOption(key, value)`. Stored on
   `SessionPlayer` as an opaque `Map<String,String>`; the core never reads a key.
@@ -330,9 +436,16 @@ never *what*. The frontend renders descriptors and sends `{key, value}`.
     default `1` (Bronze, the current stored default `bc_difficulty = 1`). A selector for 9 values is a
     labelled `<select>` (a radio group of 9 does not fit 375 px). The current tier colours are
     dropped from the lobby (colour alone carried meaning); the name carries it.
-  - `setSeatOption(gameId, hostToken, seat, key, value)`: host only, bot seat only, lobby only.
+  - `setSeatOption(gameId, hostToken, seat, key, value)`: host only, bot seat only, lobby only,
+    under the lobby lock; unknown key or value refused by the game (same strict rule as game
+    options).
 - `removeBot` keeps its rules (`BotRemovalBlockedException`); a bot shifted down by a removal
   carries its seat options.
+- **Reaching the bot driver**: the existing port `BotSeats` (`Set<PlayerId> botSeats(GameId)`) is used
+  by `BullshitBotCoordinator`. Rather than change its signature (which would make PR 7 edit Bullshit
+  code), a second port `BotSeatOptions` (`Map<String,String> seatOptions(GameId, PlayerId)`) is added
+  next to it in the shared bot package (PR 0) and answered by the session core. Bullshit keeps
+  `BotSeats` untouched.
 
 ## 8. Bataille Corse bot, server side (decision e): cost and risks
 
@@ -353,12 +466,24 @@ Backend, mirror of `BullshitBotCoordinator`, but simpler (no memory, no claims):
 |---|---|---|
 | `BatailleCorseBotStrategy` (domain) | Pure: given the visible pile and the game's `SlapRules`, returns `SEND`, `SLAP` or nothing. Uses the *game's* rules object instead of the copied heuristic, so rule changes no longer drift | ~60 lines |
 | `BatailleCorseBotTier` (domain) | 9 tiers, reaction time, jitter; ported from `Difficulty.ts` unchanged | ~40 lines |
-| `BatailleCorseGameActions` | Extract the send/slap/grab logic out of `BatailleCorseWebSocketController` so a bot and a human use the same use case (as `BullshitGameActions`) | ~120 lines moved |
-| `BatailleCorseBotCoordinator` | After each state broadcast: drop stale tasks, schedule the bot's action after its tier delay, re-check the game version and the monitor before acting; stop when no human is left or the game is over; **also run the bot's auto-grab** | ~200 lines |
-| Wiring | `AppConfig` beans, `BotSeats` extended to return seat options so the tier reaches the coordinator, lifecycle (forfeit of the human stops the bot, rematch drops the table) | ~60 lines |
-| Tests | strategy, tiers, coordinator with `ManualBotScheduler`/`FixedThinkingDelay` (already exist for Bullshit), full game IT with a bot | 5 to 6 classes |
+| `BatailleCorse.version()` (domain) | A counter incremented by `send`, `slap`, `grab` and `forfeit`, read under the game's monitor (as `Bullshit.version()` and `Kobo.version()`). Does not exist today (verified) | ~15 lines |
+| Auto-grab query (domain) | `BatailleCorse.autoGrabPlayer()`: the player entitled to grab, or empty. Today only the frontend has it (`Pile.getAutoGrabPlayer()` from `grabbable` and `playerThatAddedLastHonourCard`); the backend has `isGrabbableByPlayer` only | ~15 lines |
+| `BatailleCorseStateBroadcaster` + listener | Today the controller builds `BatailleCorseDto` inline and calls `sendToGame`: there is nothing a coordinator can listen to. New broadcaster (as `BullshitStateBroadcaster`) with a `BatailleCorseStateListener`, fired after every send, slap, grab, start (PR 6), forfeit and lobby reopening | ~80 lines |
+| `BatailleCorseGameActions` | Extract the send/slap/grab logic out of `BatailleCorseWebSocketController` so a bot and a human use the same use case (as `BullshitGameActions`), broadcasting through the new broadcaster | ~120 lines moved |
+| `BatailleCorseBotCoordinator` | After each state broadcast: drop stale tasks, schedule the bot's action after its tier delay, re-check the game version under the monitor before acting; stop when no human is left or the game is over; **run the bot's auto-grab** after 1500 ms when `autoGrabPlayer()` is the bot. Lifecycle: starts on START, stops on forfeit and on game end, drops its table on eviction (`GameEvictionListener`) and when the lobby reopens (Play again), restarts on the next START | ~220 lines |
+| Wiring | `AppConfig` beans, `BotSeatOptions` port so the tier reaches the coordinator, `bataillecorse.bots.*` properties (below) | ~60 lines |
+| Tests | strategy, tiers, version, auto-grab query, broadcaster, coordinator with `ManualBotScheduler`/`FixedThinkingDelay` (already exist for Bullshit), full game IT with a bot | 7 to 8 classes |
 
-Total: roughly 500 lines of production code and as much test code, two to three working days for
+**Test profile**: the `test` profile pins the Bullshit bot delays to 0, which for Bataille Corse
+would make the bot slap and grab instantly and every e2e spec racy. PR 7 adds
+`bataillecorse.bots.extra-delay-ms` (added to the tier delay, `0` by default and in the `test`
+profile) and `bataillecorse.bots.enabled` (`true`); the `test` profile does **not** zero the tier
+delays: the BC e2e specs passed until now against the local AI playing at its real tier delays, and
+keeping them gives the same timing. Backend tests never depend on these properties: they use
+`ManualBotScheduler` and `FixedThinkingDelay`. If a rewritten spec proves flaky, the e2e stack can set
+`extra-delay-ms` without touching the code.
+
+Total: roughly 600 lines of production code and as much test code, **three to four working days** for
 one developer familiar with the Bullshit coordinator, in one PR (PR 7), plus about one day of
 integration on the frontend side (PR 9) where the solo branches are removed. Deterministic tests use
 the existing ports: `BotScheduler` (manual), `ThinkingDelay` (fixed) and `RandomGenerator`
@@ -379,12 +504,15 @@ already has a constructor taking players, pile, rules and penalty).
    top tiers slightly harder in practice; a per-tier correction is possible but is not planned.
 3. **Animations are client side.** The old bot started after `GameSession` received the state and
    the client awaited card animations before the next move (`awaitAnimation`). The server does not
-   know animation durations; a fast bot (400 ms) may send while a card is still flying. Mitigation:
-   verify in the browser that the client queues or tolerates a move during an animation; if not, add
-   a floor (minimum delay) to the bot delay or make the Table ignore the animation lock for server
-   events. This is the most likely source of visual bugs.
+   know animation durations; a fast bot (400 ms) may send while a card is still flying. In
+   multiplayer the client already receives the opponent's moves from the server with no regard for
+   its own animations, so this path exists today (hypothesis, not checked in the browser: the risk is
+   probably smaller than first thought). Mitigation: verify in the browser; if needed, use
+   `extra-delay-ms` as a floor or make the Table tolerate server events during an animation.
 4. **Slap decisions on stale state**: a bot must not slap a pile that changed during its delay. The
-   version check of the Bullshit coordinator solves it; to be asserted in a test.
+   version check of the Bullshit coordinator solves it once `BatailleCorse.version()` exists; to be
+   asserted in a test. Human actions already go through the `synchronized` domain methods; the
+   coordinator re-checks the version inside `synchronized (game)`.
 5. **Penalty parity**: the old local AI accepted any penalty from a bad slap; the heuristic never
    slaps wrongly, so this should not change, but the new strategy reads the real rules, and any
    difference with the old heuristic (e.g. a rule present in the domain but not in the heuristic) will
@@ -392,8 +520,9 @@ already has a constructor taking players, pile, rules and penalty).
 6. **Session model migration** (PR 9, not PR 7): deleting `SOLO`, the two-token rehydration and
    `restoreTokens` for two seats touches reconnection logic; an in-progress solo game during a
    deploy is lost (state is in memory anyway).
-7. **Rematch against a bot** needs a rule (question 1): today a solo rematch is instant; the shared
-   `playAgain` empties the lobby.
+7. **Rematch against a bot**: Play again leads to the lobby (section 4.1). Today BC's in-place
+   `/rematch` keeps the bot and the shared `playAgain` drops every bot; section 9.1 makes `playAgain`
+   keep the bot seats and their seat options.
 8. **Thread safety**: coordinator tasks run on the scheduler thread while humans act on websocket
    threads; follow the Bullshit rule (everything under the game's monitor).
 9. **Idle games with a bot only**: when the human leaves, the bot must stop (same as Bullshit's
@@ -410,12 +539,27 @@ already has a constructor taking players, pile, rules and penalty).
   are deleted (PR 9).
 - "Play against the computer": New game, Add bot, pick a tier, Start. "Play with a friend": New game,
   copy the link, the friend joins, Start. Same screen.
-- Rematch: see question 1.
+- **Rematch = Play again, through the lobby** (section 4.1). Today BC uses its own in-place rematch
+  (`/rematch`, `SessionService.requestRematch`/`rematch`, unanimity of humans, seats and bots kept);
+  Bullshit and Kobo use `playAgain`, which reopens an empty lobby and drops the bots. Decision:
+  - `playAgain` **keeps the bot seats with their seat options** (tier) when it reopens the lobby: the
+    fresh `SessionGame` re-claims the former bots, in order, right after the first caller's seat 0
+    (and keeps their default names "Bot N"). Humans still come back one by one. Applies to every game,
+    Bullshit included (proposed, question 1). Done in a small core PR (PR 4b) with its tests.
+  - BC switches its client to `play-again` in PR 9. The BC `/rematch` endpoint and, if nothing else
+    uses them, `SessionService.requestRematch`/`rematch`/`isRematchReady` and
+    `SessionGame.requestRematch`/`isRematchUnanimous` become dead. **Check before deleting**:
+    `PresenceService.forfeit` on a finished game calls `GameDirectory.leaveRematch`, which itself
+    calls `isRematchReady`/`rematch`; it must be reduced to "nothing to do" (no in-place rematch any
+    more) or kept, and `PresenceRematchTest` adjusted accordingly.
 - Reconnection: a solo game now holds one human token instead of two; client rehydration must stop
   expecting two.
-- Cypress specs relying on SOLO must be rewritten: `create-game`, `send-card`, `rehydrate-game`,
-  `waiting-and-names`, `bataillecorse-menu-fit`, `turn-indicator`, `responsive-game-screen`,
-  `rules-panel`, `visual-direction`.
+- Cypress specs relying on SOLO or on the old BC routes must be rewritten: `create-game`,
+  `send-card`, `rehydrate-game`, `waiting-and-names`, `bataillecorse-menu-fit`, `turn-indicator`,
+  `responsive-game-screen`, `rules-panel`, `visual-direction`, `font-fit` (visits
+  `/games/bataillecorse`), `game-picker`, and above all the shared command
+  `cypress/support/commands.ts` `createGame`, which drives the solo "Computer" flow used by most of
+  them. `bullshit-exit-to-games` stays as is.
 
 ### 9.2 Game options for Bataille Corse
 
@@ -462,12 +606,12 @@ who moves the opponent's cards.
   a friend: copy the link, wait for them, Start. The **host presses Start in both cases** (one rule
   for every game; the old "starts immediately" for solo and "starts when seat 1 joins" for friends are
   both gone). A one-click shortcut ("Play vs computer" on the Game home) is possible later but is not
-  planned; ask in question 9 if wanted.
+  planned; see question 7.
 - Tokens: a solo game now has one human token; the bot's token never leaves the backend (the existing
   rule for Bullshit bots). The hack "the creator's browser holds both tokens" disappears for good, and
   with it the possibility for a client to act as the bot's seat.
 - Auto-grab: the pile is collected for the bot by the server (section 8.3 risk 1).
-- Rematch: shared `playAgain` (question 1).
+- Rematch: shared `playAgain` through the lobby, keeping the bot and its tier (section 9.1).
 
 **Tests to rewrite**
 
@@ -480,9 +624,12 @@ who moves the opponent's cards.
   `createGame`, `GameMode` or `claimAllSeats`; `GameCleanupServiceTest` if it creates games that way
   (grep before the PR).
 - Frontend: `GameSession.test.ts` (solo and AI cases), `BatailleCorse.store` tests, `GameScreen.test.ts`
-  (computer label), `AI.test.ts` removed; Cypress `create-game`, `send-card`, `rehydrate-game`,
-  `waiting-and-names`, `turn-indicator`, `responsive-game-screen`, `rules-panel`, `visual-direction`,
-  `bataillecorse-menu-fit`.
+  (computer label), `AI.test.ts` removed; Cypress: the shared command `support/commands.ts`
+  `createGame` first, then `create-game`, `send-card`, `rehydrate-game`, `waiting-and-names`,
+  `turn-indicator`, `responsive-game-screen`, `rules-panel`, `visual-direction`,
+  `bataillecorse-menu-fit`, `font-fit`, `game-picker`.
+- Backend rematch: `PresenceRematchTest` and the BC `/rematch` tests if the in-place rematch is
+  removed (section 9.1).
 
 **Compatibility**
 
@@ -494,7 +641,8 @@ who moves the opponent's cards.
   a two-token entry rather than crash (a test). Old entries can be left to expire or be cleaned when
   the Game home loads.
 - A solo game in progress during the deploy is lost, as any game is.
-- Invite links of two-player games: unchanged (`/games/bataillecorse/join/<id>` keeps redirecting).
+- Invite links of two-player games: unchanged (`/games/bataillecorse/join/<id>` already matches
+  `/games/:game/join/:id?`).
 
 **What disappears for good**: the ability to play a game without a server-side bot or room (a purely
 local practice mode), the 9-tier slider on a create page (the tiers survive as a seat option), the
@@ -507,7 +655,10 @@ holds several seats.
   `bataillecorse-menu-fit`, Bullshit lobby specs). The lobby is the tallest screen: the card fan
   hides on short viewports, seat rows are one line, the panel scrolls inside itself if a game
   declares many options, never the page. Worst case to test: Bullshit, 6 seats, 2 options, invite,
-  Start and Leave at 375 x 667.
+  Start and Leave at 375 x 667. This case very probably needs the panel's inner scroll (hypothesis:
+  six one-line seats with an editable name, two radio groups, the invite, Start and Leave exceed
+  667 px). The Cypress spec asserts "no page scroll, no horizontal scroll, Start reachable by
+  scrolling the panel", not "everything visible without scrolling".
 - Keyboard: logical order; Enter commits a name; Escape reverts.
 - Screen readers: lobby changes announced in one `aria-live="polite"` region ("Bot 1 added", "The host
   changed the deck size", "Alice left"); option groups with `legend`; Copy keeps `role="status"`.
@@ -516,14 +667,26 @@ holds several seats.
 
 ## 11. Tests
 
-- Backend (TDD, domain first): descriptors per factory (defaults valid, `validate` rules); 
-  `updateOptions` (host only, refused after start, invalid refused, merged, kept on `playAgain`);
-  `renameSeat`; seat options (host only, bot only, validated by the game, kept when a bot shifts);
-  `leaveLobby` (guest frees the seat, host leave per the chosen policy, refused during a game);
-  `LobbyView` projection; STOMP ITs with two clients for options, rename, leave; Bataille Corse bot
-  (section 8.2) with manual scheduler and fixed delay; BC room flow IT.
-- Frontend (Vitest): `GameHome`, `JoinGameForm`, `GameLobby` (host vs guest, options, seat options, rename, leave, Copy fallback),
-  label resolver with `dependsOnKey`, `LobbyActions`, router redirects.
+- Backend (TDD, domain first): descriptors per factory (defaults valid, strict `validate`: unknown
+  key and unknown value refused, `from` still lenient);
+  `updateOptions` (host only, refused after start, invalid refused and options unchanged, merged,
+  kept on `playAgain`);
+  `renameSeat` (default names renumbered after a shift); seat options (host only, bot only,
+  validated by the game, kept when a bot shifts, kept by `playAgain`);
+  `leaveLobby` (guest frees the seat, host leave per the rule, refused during a game);
+  **token hygiene** (the leaver's token resolves to nothing; a newcomer gets a token different from
+  the leaver's; shifted occupants resolve to their new seats; a released seat's token never resolves);
+  **concurrency** (section 5.2: join/join, join/leave, join/start, leave/start, version ordering);
+  **presence by token** (shift then start then disconnect forfeits the right seat; a leaver who
+  disconnects after the start forfeits nobody); lobby removal notifies the eviction listeners;
+  `LobbyView` projection with `lobbyVersion`; STOMP ITs with two clients for options, rename, leave;
+  shared `POST /api/lobby` (token only to the caller, unknown type refused); Bataille Corse bot
+  (section 8.2) with manual scheduler and fixed delay; BC room flow IT; Kobo IT unchanged and green.
+- Frontend (Vitest): `GameHome`, `JoinGameForm`, `GameLobby` (host vs guest, options, seat options,
+  rename, leave, Copy fallback), label resolver receiving the whole option map, `LobbyActions`
+  (older `lobbyVersion` ignored; `mySeat` taken from every view; on Leave: unsubscribe from seat and
+  game, clear presence, remove the stored token), router (legacy create paths and names, unknown game
+  key, section 4.0 restore failures).
 - Cypress: Bullshit lobby specs updated; new `shared-lobby.cy.ts` (host edits an option, guest sees it
   live, guest cannot edit, guest leaves and the seat reopens); BC solo with a bot; BC invite flow;
   Game home and lobby fit at 375 px. One e2e stack at a time (`CLAUDE.md`).
@@ -550,17 +713,34 @@ Added: leave-lobby command and button, seat option descriptors, glossary, cost o
 Renamed: `GameEntryMenu` is now `GameHome`; "room options" are "Game options"; "entry menu" is "Game
 home".
 
+After the independent architecture review (all points verified on `main` at `2b8e4b4`):
+token hygiene on leave (fresh token for freed seats, claimed-only token lookup); presence bound by
+token instead of seat number, in `presence` only (no rebind from the core); one lock for every lobby
+mutation and addressed, versioned lobby broadcasts (`lobbyVersion`); strict option validation
+(unknown keys refused; `BullshitOptions.from` stays lenient); lobby creation through
+`POST /api/lobby` instead of `@SendTo("/topic/game")`; Bataille Corse bot estimate raised to 3 to 4
+days with `version()`, auto-grab query, state broadcaster and lifecycle; `playAgain` keeps bots and
+their seat options; restore failures (section 4.0); full list of e2e files to rewrite and the
+`bataillecorse.bots.*` properties; default human names renumbered; lobby removal through the eviction
+listeners; `dependsOnKey` and the `/bullshit/addBot` aliases removed; `BotSeatOptions` port instead of
+changing `BotSeats`. Option B (stable seats, host by token) considered and rejected (section 5.1).
+
 ## 14. Open questions for the owner
 
-1. **Rematch against a bot**: keep the bot seat and its tier across a rematch (more natural for
-   solo play), or reopen an empty lobby as `playAgain` does today?
+1. **Rematch against a bot**: this spec now proposes that `playAgain` keeps the bot seats and their
+   tier for every game (Bullshit included: today Bullshit's Play again drops its bots). Confirm, or
+   keep bots only for Bataille Corse, or reopen an empty lobby as today.
 2. **Renaming**: only in the lobby (this spec) or also during the game?
 3. **Bataille Corse players**: stays at 2, or 3 to 4 someday (it would change only `maxPlayers` and
    the dealing rules)?
-4. **Old invite links**: redirects forever, or for a limited time?
+4. **Old invite links**: they already match the new routes (section 4), so they keep working at no
+   cost; only `/create` paths and route names need redirects. Nothing to decide unless the owner wants
+   the `create` redirects dropped later.
 5. **Gear on the BC Table**: add the keyboard-shortcut gear to the Bataille Corse game screen (needed
    once the create page is gone), and keep sound and shortcuts out of the lobby?
 6. **"Join game" on the Game selection**: also offer one place to paste any invite link on `/games`
    (the game is inferred from the id)?
 7. **Start for a game against a bot**: the host always presses Start (this spec). Is a one-click
    "Play vs computer" shortcut on the Game home wanted later?
+8. **Restore failures** (section 4.0, decided here, can be overridden): a room URL without token goes
+   to the join form; a game that no longer exists goes to the Game home of that game with a notice.
