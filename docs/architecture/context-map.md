@@ -140,6 +140,10 @@ graph TB
 - **Privacy**: `KoboDto.forViewer` is the only projection. Face-down values appear only in the viewer own DTO (starting cards before the first draw, the drawn card while deciding, the last peek) and in everyone's DTO once the round is revealed.
 - **Not covered yet**: bots and the frontend.
 
+## Three Men's Morris
+
+Spec: `docs/specs/2026-10-11-three-men-morris-backend-design.md`. A fourth upstream game-rules context (`org.kevinkib.cardgames.threemenmorris`), two players, plugged into the session core through a `ThreeMenMorrisFactory` in `GameFactories` (type `three-men-morris`, no options); nothing changes in `sessionmanagement`. `ThreeMenMorrisWebSocketController` (`/three-men-morris/start|place|move`) and `ThreeMenMorrisRestController` (`/api/three-men-morris`) authenticate by seat token and delegate to `ThreeMenMorrisGameActions` (call, touch, one broadcast of a `ThreeMenMorrisDto` per seat); `ThreeMenMorrisLifecycleBroadcaster` serves presence and forfeit. The rules (board B, placement, movement, lines, blocked player) live in the `ThreeMenMorris` aggregate. Not covered yet: bots and the frontend.
+
 ## Relationship
 
 Session Management has a **Conformist** relationship to Core: it speaks Core's language (`BatailleCorseId`, `PlayerId`) without translation. Core has no dependency on Session Management.

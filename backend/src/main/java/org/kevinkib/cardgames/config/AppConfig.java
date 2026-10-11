@@ -6,6 +6,10 @@ import org.kevinkib.cardgames.kobo.domain.KoboFactory;
 import org.kevinkib.cardgames.kobo.presentation.KoboGameActions;
 import org.kevinkib.cardgames.kobo.presentation.KoboLifecycleBroadcaster;
 import org.kevinkib.cardgames.kobo.presentation.KoboStateBroadcaster;
+import org.kevinkib.cardgames.threemenmorris.domain.ThreeMenMorrisFactory;
+import org.kevinkib.cardgames.threemenmorris.presentation.ThreeMenMorrisGameActions;
+import org.kevinkib.cardgames.threemenmorris.presentation.ThreeMenMorrisLifecycleBroadcaster;
+import org.kevinkib.cardgames.threemenmorris.presentation.ThreeMenMorrisStateBroadcaster;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameCleanupService;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameEvictionListener;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameFactories;
@@ -81,12 +85,18 @@ public class AppConfig {
 
     @Bean
     public GameFactories gameFactories() {
-        return new GameFactories(List.of(batailleCorseFactory(), bullshitFactory(), koboFactory()));
+        return new GameFactories(List.of(batailleCorseFactory(), bullshitFactory(), koboFactory(),
+                threeMenMorrisFactory()));
     }
 
     @Bean
     public KoboFactory koboFactory() {
         return new KoboFactory();
+    }
+
+    @Bean
+    public ThreeMenMorrisFactory threeMenMorrisFactory() {
+        return new ThreeMenMorrisFactory();
     }
 
     @Bean
@@ -246,6 +256,23 @@ public class AppConfig {
     @Bean
     public GameLifecycleBroadcaster koboLifecycleBroadcaster(KoboStateBroadcaster koboStateBroadcaster) {
         return new KoboLifecycleBroadcaster(koboStateBroadcaster);
+    }
+
+    @Bean
+    public ThreeMenMorrisStateBroadcaster threeMenMorrisStateBroadcaster(GameMessagingService gameMessagingService) {
+        return new ThreeMenMorrisStateBroadcaster(gameMessagingService, sessionService()::seatNames);
+    }
+
+    @Bean
+    public ThreeMenMorrisGameActions threeMenMorrisGameActions(
+            ThreeMenMorrisStateBroadcaster threeMenMorrisStateBroadcaster) {
+        return new ThreeMenMorrisGameActions(sessionService(), threeMenMorrisStateBroadcaster);
+    }
+
+    @Bean
+    public GameLifecycleBroadcaster threeMenMorrisLifecycleBroadcaster(
+            ThreeMenMorrisStateBroadcaster threeMenMorrisStateBroadcaster) {
+        return new ThreeMenMorrisLifecycleBroadcaster(threeMenMorrisStateBroadcaster);
     }
 
     @Bean
