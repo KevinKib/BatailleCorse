@@ -197,6 +197,20 @@ class KoboWebSocketControllerTest {
     }
 
     @Test
+    void aMatchWithoutExpectedRevisionIsAnErrorForTheSenderWithoutPenalty() {
+        Kobo game = table.install(aKobo().withTableau("7S", "2H", "3H", "4H").withTableau("5S", "6S", "7D", "KS")
+                .withDiscard("7H").build());
+        String seven = CardDto.from(card("7H")).rank();
+
+        table.ws.match(new KoboMatchPayload(game.getId().uuid().toString(), table.token(game, 0), 0, 1, null,
+                seven, null));
+
+        assertThat(table.messaging.payloads.get(0).isSuccess(), is(false));
+        assertThat(game.version(), is(0));
+        assertThat(game.slots(seat(0)).size(), is(4));
+    }
+
+    @Test
     void giveTen_isAuthenticatedAndMappedToTheTarget() {
         Kobo game = table.install(aKobo().withTableau("AH", "KH", "KD", "AD").withTableau("5S", "6S", "9D", "KS")
                 .withDiscard("2S").withDrawPile("2D", "3D").inPhase(Phase.TURN_END).build());

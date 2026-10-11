@@ -18,6 +18,7 @@ import static org.kevinkib.cardgames.kobo.domain.KoboBuilder.aKobo;
 import static org.kevinkib.cardgames.kobo.domain.KoboBuilder.ref;
 import static org.kevinkib.cardgames.kobo.domain.KoboBuilder.seat;
 import static org.kevinkib.cardgames.kobo.domain.KoboFixtures.card;
+import static org.kevinkib.cardgames.kobo.domain.KoboFixtures.match;
 
 class KoboRoundTest {
 
@@ -91,7 +92,7 @@ class KoboRoundTest {
         assertThat(kobo.phase(), is(Phase.DRAW));
         assertThat(kobo.currentSeat(), is(seat(2)));
         // the top is now seat 1 discarded 2D: seat 2 matches it with its own 2C
-        kobo.matchDiscard(seat(2), ref(2, 0), null, card("2D").getRank());
+        match(kobo, seat(2), ref(2, 0), null, card("2D").getRank());
         playQuickTurn(kobo, 2);
 
         assertThat(kobo.phase(), is(Phase.GIFT));

@@ -1,6 +1,11 @@
 package org.kevinkib.cardgames.kobo.domain;
 
+import org.kevinkib.cardgames.game.PlayerId;
+import org.kevinkib.cardgames.kobo.domain.event.KoboEvent;
+import org.kevinkib.cardgames.kobo.domain.rules.KoboException;
+import org.kevinkib.cardgames.kobo.domain.tableau.SlotRef;
 import org.kevinkib.cards.domain.Card;
+import org.kevinkib.cards.domain.Rank;
 import org.kevinkib.cards.domain.deck.french.FrenchRank;
 import org.kevinkib.cards.domain.deck.french.FrenchSuit;
 
@@ -39,6 +44,21 @@ public final class KoboFixtures {
             default -> throw new IllegalArgumentException(code);
         };
         return new Card(r, suit);
+    }
+
+    /**
+     * A matching-discard attempt carrying the current revision of the targeted slot, as a client that
+     * is up to date would send it (0 when the slot does not exist: the domain then rejects it).
+     */
+    public static KoboEvent match(Kobo kobo, PlayerId seat, SlotRef target, Integer giveSlot, Rank expectedTopRank)
+            throws KoboException {
+        int revision = 0;
+        try {
+            revision = kobo.slots(target.seat()).get(target.slot()).revision();
+        } catch (RuntimeException e) {
+            // unknown seat or slot: let the aggregate reject it
+        }
+        return kobo.matchDiscard(seat, target, giveSlot, expectedTopRank, revision);
     }
 
     public static List<Card> cards(String... codes) {

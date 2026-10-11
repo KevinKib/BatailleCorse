@@ -17,6 +17,7 @@ import static org.kevinkib.cardgames.kobo.domain.KoboBuilder.aKobo;
 import static org.kevinkib.cardgames.kobo.domain.KoboBuilder.ref;
 import static org.kevinkib.cardgames.kobo.domain.KoboBuilder.seat;
 import static org.kevinkib.cardgames.kobo.domain.KoboFixtures.card;
+import static org.kevinkib.cardgames.kobo.domain.KoboFixtures.match;
 
 class KoboMatchTest {
 
@@ -40,7 +41,7 @@ class KoboMatchTest {
     void ownCardOfSameRank_leavesTheTableauAndBecomesTheTop() throws Exception {
         Kobo kobo = table().build();
 
-        KoboEvent event = kobo.matchDiscard(seat(0), ref(0, 0), null, SEVEN);
+        KoboEvent event = match(kobo, seat(0), ref(0, 0), null, SEVEN);
 
         assertThat(event instanceof KoboEvent.MatchSucceeded, is(true));
         assertThat(kobo.discardTop().get(), is(card("7S")));
@@ -56,7 +57,7 @@ class KoboMatchTest {
         for (Phase phase : new Phase[]{Phase.DRAW, Phase.DECISION, Phase.POWER, Phase.KING_DECISION, Phase.TURN_END}) {
             Kobo kobo = table().inPhase(phase).currentSeat(1).withDrawn("2S").build();
 
-            kobo.matchDiscard(seat(0), ref(0, 0), null, SEVEN);
+            match(kobo, seat(0), ref(0, 0), null, SEVEN);
 
             assertThat(phase.name(), kobo.discardTop().get(), is(card("7S")));
             assertThat(kobo.phase(), is(phase));
@@ -67,7 +68,7 @@ class KoboMatchTest {
     void colourIsIrrelevant_redAndBlackKingsAnswerEachOther() throws Exception {
         Kobo kobo = table().withDiscard("KH").build();
 
-        kobo.matchDiscard(seat(2), ref(2, 3), null, KING);
+        match(kobo, seat(2), ref(2, 3), null, KING);
 
         assertThat(kobo.discardTop().get(), is(card("KD")));
     }
@@ -76,7 +77,7 @@ class KoboMatchTest {
     void wrongRank_givesThePenaltyAsANewSlotAndHidesTheTarget() throws Exception {
         Kobo kobo = table().build();
 
-        KoboEvent event = kobo.matchDiscard(seat(0), ref(0, 1), null, SEVEN);
+        KoboEvent event = match(kobo, seat(0), ref(0, 1), null, SEVEN);
 
         assertThat(event instanceof KoboEvent.MatchPenalised, is(true));
         assertThat(kobo.slots(seat(0)).size(), is(5));
@@ -91,9 +92,9 @@ class KoboMatchTest {
     @Test
     void penaltyNeverReusesAnEmptySlot() throws Exception {
         Kobo kobo = table().build();
-        kobo.matchDiscard(seat(0), ref(0, 0), null, SEVEN);
+        match(kobo, seat(0), ref(0, 0), null, SEVEN);
 
-        kobo.matchDiscard(seat(0), ref(0, 1), null, SEVEN);
+        match(kobo, seat(0), ref(0, 1), null, SEVEN);
 
         assertThat(kobo.slots(seat(0)).get(0).occupied(), is(false));
         assertThat(kobo.slots(seat(0)).size(), is(5));
@@ -102,12 +103,12 @@ class KoboMatchTest {
     @Test
     void penaltyWithEmptyDrawPile_reshufflesThePile_andWithNothingLeftGivesNoCard() throws Exception {
         Kobo reshuffle = table().withDrawPile().build();
-        reshuffle.matchDiscard(seat(0), ref(0, 1), null, SEVEN);
+        match(reshuffle, seat(0), ref(0, 1), null, SEVEN);
         assertThat(reshuffle.slots(seat(0)).size(), is(5));
         assertThat(reshuffle.discardTop().get(), is(card("7H")));
 
         Kobo nothing = table().withDrawPile().withDiscard("7H").build();
-        KoboEvent event = nothing.matchDiscard(seat(0), ref(0, 1), null, SEVEN);
+        KoboEvent event = match(nothing, seat(0), ref(0, 1), null, SEVEN);
         assertThat(((KoboEvent.MatchPenalised) event).cardGiven(), is(false));
         assertThat(nothing.slots(seat(0)).size(), is(4));
     }
@@ -115,10 +116,10 @@ class KoboMatchTest {
     @Test
     void emptyTargetSlot_isRejectedWithoutPenaltyOrVersionBump() throws Exception {
         Kobo kobo = table().build();
-        kobo.matchDiscard(seat(0), ref(0, 0), null, SEVEN);
+        match(kobo, seat(0), ref(0, 0), null, SEVEN);
         int version = kobo.version();
 
-        assertThrows(EmptySlotException.class, () -> kobo.matchDiscard(seat(1), ref(0, 0), 0, SEVEN));
+        assertThrows(EmptySlotException.class, () -> match(kobo, seat(1), ref(0, 0), 0, SEVEN));
 
         assertThat(kobo.version(), is(version));
         assertThat(kobo.slots(seat(1)).size(), is(4));
@@ -128,15 +129,15 @@ class KoboMatchTest {
     void unknownSlotOrSeat_isInvalid() {
         Kobo kobo = table().build();
 
-        assertThrows(InvalidSlotException.class, () -> kobo.matchDiscard(seat(0), ref(0, 9), null, SEVEN));
-        assertThrows(InvalidSlotException.class, () -> kobo.matchDiscard(seat(0), ref(8, 0), null, SEVEN));
+        assertThrows(InvalidSlotException.class, () -> match(kobo, seat(0), ref(0, 9), null, SEVEN));
+        assertThrows(InvalidSlotException.class, () -> match(kobo, seat(0), ref(8, 0), null, SEVEN));
     }
 
     @Test
     void emptyDiscardPile_isRejectedWithoutPenalty() {
         Kobo kobo = table().withDiscard().build();
 
-        assertThrows(NothingToMatchException.class, () -> kobo.matchDiscard(seat(0), ref(0, 0), null, SEVEN));
+        assertThrows(NothingToMatchException.class, () -> match(kobo, seat(0), ref(0, 0), null, SEVEN));
         assertThat(kobo.version(), is(0));
         assertThat(kobo.slots(seat(0)).size(), is(4));
     }
@@ -145,7 +146,7 @@ class KoboMatchTest {
     void staleExpectedRank_isRejectedWithoutPenalty() {
         Kobo kobo = table().build();
 
-        assertThrows(StaleDiscardException.class, () -> kobo.matchDiscard(seat(0), ref(0, 0), null, KING));
+        assertThrows(StaleDiscardException.class, () -> match(kobo, seat(0), ref(0, 0), null, KING));
 
         assertThat(kobo.version(), is(0));
         assertThat(kobo.slots(seat(0)).size(), is(4));
@@ -155,7 +156,7 @@ class KoboMatchTest {
     @Test
     void staleExpectedRevision_isRejectedWithoutPenalty() throws Exception {
         Kobo kobo = table().build();
-        kobo.matchDiscard(seat(0), ref(1, 2), 3, SEVEN); // a card is given into (1, 2): revision 2
+        match(kobo, seat(0), ref(1, 2), 3, SEVEN); // a card is given into (1, 2): revision 2
         int version = kobo.version();
 
         assertThrows(StaleSlotException.class, () -> kobo.matchDiscard(seat(2), ref(1, 2), 0, SEVEN, 0));
@@ -165,10 +166,25 @@ class KoboMatchTest {
     }
 
     @Test
+    void missingExpectedRevision_isRejectedAsValidationWithoutPenalty() {
+        Kobo kobo = table().build();
+        int version = kobo.version();
+        int drawPile = kobo.drawPileSize();
+
+        assertThrows(IllegalArgumentException.class, () -> kobo.matchDiscard(seat(0), ref(0, 1), null, SEVEN, null));
+        assertThrows(IllegalArgumentException.class, () -> kobo.matchDiscard(seat(0), ref(0, 0), null, SEVEN, null));
+
+        assertThat(kobo.version(), is(version));
+        assertThat(kobo.slots(seat(0)).size(), is(4));
+        assertThat(kobo.drawPileSize(), is(drawPile));
+        assertThat(kobo.discardTop().get(), is(card("7H")));
+    }
+
+    @Test
     void missingExpectedRank_isAnIllegalArgument() {
         Kobo kobo = table().build();
 
-        assertThrows(IllegalArgumentException.class, () -> kobo.matchDiscard(seat(0), ref(0, 0), null, null));
+        assertThrows(IllegalArgumentException.class, () -> match(kobo, seat(0), ref(0, 0), null, null));
     }
 
     @Test
@@ -178,7 +194,7 @@ class KoboMatchTest {
 
             Class<? extends Exception> expected =
                     phase == Phase.FINISHED ? FinishedGameException.class : WrongPhaseException.class;
-            assertThrows(expected, () -> kobo.matchDiscard(seat(0), ref(0, 0), null, SEVEN));
+            assertThrows(expected, () -> match(kobo, seat(0), ref(0, 0), null, SEVEN));
         }
     }
 
@@ -187,7 +203,7 @@ class KoboMatchTest {
         Kobo kobo = aKobo().withTableau("7S").withTableau("AC", "2C", "7D", "9C")
                 .withDiscard("7H").inPhase(Phase.DRAW).build();
 
-        kobo.matchDiscard(seat(0), ref(0, 0), null, SEVEN);
+        match(kobo, seat(0), ref(0, 0), null, SEVEN);
 
         assertThat(kobo.handSize(seat(0)), is(0));
         assertThat(kobo.handPoints(seat(0)), is(0));
@@ -199,7 +215,7 @@ class KoboMatchTest {
     void otherPlayersCard_goesToThePile_andTheActorGivesOneOfTheirOwn() throws Exception {
         Kobo kobo = table().build();
 
-        KoboEvent event = kobo.matchDiscard(seat(0), ref(1, 2), 3, SEVEN);
+        KoboEvent event = match(kobo, seat(0), ref(1, 2), 3, SEVEN);
 
         assertThat(kobo.discardTop().get(), is(card("7D")));
         assertThat(kobo.slots(seat(1)).get(2).card(), is(card("4H")));
@@ -214,7 +230,7 @@ class KoboMatchTest {
     void otherPlayersCard_wrongRankOnlyPenalisesTheActor() throws Exception {
         Kobo kobo = table().build();
 
-        kobo.matchDiscard(seat(0), ref(1, 0), 1, SEVEN);
+        match(kobo, seat(0), ref(1, 0), 1, SEVEN);
 
         assertThat(kobo.slots(seat(0)).size(), is(5));
         assertThat(kobo.slots(seat(0)).get(1).card(), is(card("2H")));
@@ -225,8 +241,8 @@ class KoboMatchTest {
     void invalidGiveSlot_isRejectedBeforeAnyChange() {
         Kobo kobo = table().build();
 
-        assertThrows(InvalidGiveSlotException.class, () -> kobo.matchDiscard(seat(0), ref(1, 2), null, SEVEN));
-        assertThrows(InvalidGiveSlotException.class, () -> kobo.matchDiscard(seat(0), ref(1, 2), 9, SEVEN));
+        assertThrows(InvalidGiveSlotException.class, () -> match(kobo, seat(0), ref(1, 2), null, SEVEN));
+        assertThrows(InvalidGiveSlotException.class, () -> match(kobo, seat(0), ref(1, 2), 9, SEVEN));
 
         assertThat(kobo.version(), is(0));
         assertThat(kobo.slots(seat(1)).get(2).card(), is(card("7D")));
@@ -237,7 +253,7 @@ class KoboMatchTest {
         Kobo kobo = aKobo().withTableau().withTableau("AC", "2C", "7D", "9C")
                 .withDiscard("7H").inPhase(Phase.DRAW).build();
 
-        kobo.matchDiscard(seat(0), ref(1, 2), null, SEVEN);
+        match(kobo, seat(0), ref(1, 2), null, SEVEN);
 
         assertThat(kobo.slots(seat(1)).get(2).occupied(), is(false));
         assertThat(kobo.discardTop().get(), is(card("7D")));
@@ -247,7 +263,7 @@ class KoboMatchTest {
     void giveSlotIsIgnoredOnAnOwnCard() throws Exception {
         Kobo kobo = table().build();
 
-        kobo.matchDiscard(seat(0), ref(0, 0), 9, SEVEN);
+        match(kobo, seat(0), ref(0, 0), 9, SEVEN);
 
         assertThat(kobo.handSize(seat(0)), is(3));
     }
@@ -257,8 +273,8 @@ class KoboMatchTest {
         Kobo kobo = table().build();
         int before = kobo.cardsInPlay();
 
-        kobo.matchDiscard(seat(0), ref(1, 2), 3, SEVEN);
-        kobo.matchDiscard(seat(2), ref(2, 0), null, SEVEN);
+        match(kobo, seat(0), ref(1, 2), 3, SEVEN);
+        match(kobo, seat(2), ref(2, 0), null, SEVEN);
 
         assertThat(kobo.cardsInPlay(), is(before));
     }

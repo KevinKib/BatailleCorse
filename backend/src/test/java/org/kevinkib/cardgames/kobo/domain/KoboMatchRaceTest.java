@@ -20,6 +20,7 @@ import static org.kevinkib.cardgames.kobo.domain.KoboBuilder.aKobo;
 import static org.kevinkib.cardgames.kobo.domain.KoboBuilder.ref;
 import static org.kevinkib.cardgames.kobo.domain.KoboBuilder.seat;
 import static org.kevinkib.cardgames.kobo.domain.KoboFixtures.card;
+import static org.kevinkib.cardgames.kobo.domain.KoboFixtures.match;
 
 class KoboMatchRaceTest {
 
@@ -78,13 +79,30 @@ class KoboMatchRaceTest {
     }
 
     @Test
+    void sameCardRaceWithoutExpectedRevision_isRejectedAsValidationForEveryone() throws Exception {
+        Kobo kobo = aKobo()
+                .withTableau("AH", "2H", "3H", "4H").withTableau("7D", "2C", "3C", "4C")
+                .withTableau("AD", "2D", "3D", "4D").withDiscard("7H").withDrawPile("8C", "9C", "10C").build();
+        int cards = kobo.cardsInPlay();
+
+        List<Throwable> outcomes = race(List.of(
+                () -> kobo.matchDiscard(seat(0), ref(1, 0), 0, SEVEN, null),
+                () -> kobo.matchDiscard(seat(2), ref(1, 0), 0, SEVEN, null)));
+
+        assertThat(outcomes.stream().allMatch(t -> t instanceof IllegalArgumentException), is(true));
+        assertThat(kobo.version(), is(0));
+        assertThat(kobo.cardsInPlay(), is(cards));
+        assertThat(kobo.handSize(seat(1)), is(4));
+    }
+
+    @Test
     void twoDifferentCardsOfTheSameRank_bothSucceed() throws Exception {
         Kobo kobo = aKobo().withTableau("7S", "2H", "3H", "4H").withTableau("7D", "2C", "3C", "4C")
                 .withDiscard("7H").build();
 
         List<Throwable> outcomes = race(List.of(
-                () -> kobo.matchDiscard(seat(0), ref(0, 0), null, SEVEN),
-                () -> kobo.matchDiscard(seat(1), ref(1, 0), null, SEVEN)));
+                () -> match(kobo, seat(0), ref(0, 0), null, SEVEN),
+                () -> match(kobo, seat(1), ref(1, 0), null, SEVEN)));
 
         assertThat(outcomes.stream().allMatch(t -> t == null), is(true));
         assertThat(kobo.discardSize(), is(3));
@@ -99,7 +117,7 @@ class KoboMatchRaceTest {
 
             List<Throwable> outcomes = race(List.of(
                     () -> kobo.discardDrawn(seat(0)),
-                    () -> kobo.matchDiscard(seat(1), ref(1, 0), null, SEVEN)));
+                    () -> match(kobo, seat(1), ref(1, 0), null, SEVEN)));
 
             assertThat(outcomes.get(0), is((Throwable) null));
             Throwable second = outcomes.get(1);

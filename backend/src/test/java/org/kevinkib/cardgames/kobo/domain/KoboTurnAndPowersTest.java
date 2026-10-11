@@ -17,6 +17,7 @@ import static org.kevinkib.cardgames.kobo.domain.KoboBuilder.aKobo;
 import static org.kevinkib.cardgames.kobo.domain.KoboBuilder.ref;
 import static org.kevinkib.cardgames.kobo.domain.KoboBuilder.seat;
 import static org.kevinkib.cardgames.kobo.domain.KoboFixtures.card;
+import static org.kevinkib.cardgames.kobo.domain.KoboFixtures.match;
 
 class KoboTurnAndPowersTest {
 
@@ -149,7 +150,7 @@ class KoboTurnAndPowersTest {
     void peekOfAnEmptySlotOrWithoutAPeekPower_isRejected() throws Exception {
         Kobo kobo = deciding("9S");
         kobo.discardDrawn(seat(0));
-        kobo.matchDiscard(seat(1), ref(1, 2), null, card("9S").getRank());
+        match(kobo, seat(1), ref(1, 2), null, card("9S").getRank());
         assertThrows(EmptySlotException.class, () -> kobo.peek(seat(0), ref(1, 2)));
 
         Kobo jack = deciding("JS");
@@ -264,7 +265,7 @@ class KoboTurnAndPowersTest {
         kobo.discardDrawn(seat(0));
         kobo.peek(seat(0), ref(1, 3));
 
-        kobo.matchDiscard(seat(1), ref(1, 3), null, card("KS").getRank());
+        match(kobo, seat(1), ref(1, 3), null, card("KS").getRank());
 
         assertThrows(EmptySlotException.class, () -> kobo.kingSwap(seat(0), 0));
         kobo.skipPower(seat(0));
@@ -277,7 +278,7 @@ class KoboTurnAndPowersTest {
         kobo.discardDrawn(seat(0));
         kobo.peek(seat(0), ref(1, 3));
 
-        kobo.matchDiscard(seat(2), ref(1, 3), 0, card("KS").getRank());
+        match(kobo, seat(2), ref(1, 3), 0, card("KS").getRank());
 
         assertThrows(StaleSlotException.class, () -> kobo.kingSwap(seat(0), 0));
         kobo.skipPower(seat(0));

@@ -24,6 +24,7 @@ import static org.kevinkib.cardgames.kobo.domain.KoboBuilder.aKobo;
 import static org.kevinkib.cardgames.kobo.domain.KoboBuilder.ref;
 import static org.kevinkib.cardgames.kobo.domain.KoboBuilder.seat;
 import static org.kevinkib.cardgames.kobo.domain.KoboFixtures.card;
+import static org.kevinkib.cardgames.kobo.domain.KoboFixtures.match;
 
 class KoboDtoTest {
 
@@ -144,7 +145,7 @@ class KoboDtoTest {
     @Test
     void slotsExposeOccupancyAndRevisionButNoCard() throws Exception {
         Kobo kobo = midRound(Phase.DRAW);
-        kobo.matchDiscard(seat(0), ref(0, 0), null, card("QD").getRank()); // wrong rank: penalty slot
+        match(kobo, seat(0), ref(0, 0), null, card("QD").getRank()); // wrong rank: penalty slot
 
         KoboDto dto = KoboDto.forViewer(kobo, seat(1));
 

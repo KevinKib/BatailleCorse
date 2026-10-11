@@ -358,19 +358,19 @@ public class Kobo implements Game {
     /**
      * Tries to put the targeted card (anyone's) on the discard pile. {@code expectedTopRank} is the
      * rank the caller saw on top of the pile: if the top moved meanwhile the attempt is rejected
-     * without penalty. A wrong rank costs the caller a penalty card.
-     */
-    public KoboEvent matchDiscard(PlayerId seat, SlotRef target, Integer giveSlot, Rank expectedTopRank)
-            throws KoboException {
-        return matchDiscard(seat, target, giveSlot, expectedTopRank, null);
-    }
-
-    /**
-     * Same, and when {@code expectedRevision} is not null the attempt is also rejected without penalty
-     * if the targeted slot changed since the caller saw it (a card was given into it after a match).
+     * without penalty. {@code expectedRevision} is the revision of the targeted slot the caller saw:
+     * if a card was given into it meanwhile the attempt is also rejected without penalty. Both are
+     * required (an IllegalArgumentException, with no effect, otherwise). A wrong rank costs the
+     * caller a penalty card.
      */
     public synchronized KoboEvent matchDiscard(PlayerId seat, SlotRef target, Integer giveSlot, Rank expectedTopRank,
                                                Integer expectedRevision) throws KoboException {
+        if (expectedTopRank == null) {
+            throw new IllegalArgumentException("expectedTopRank is required");
+        }
+        if (expectedRevision == null) {
+            throw new IllegalArgumentException("expectedRevision is required");
+        }
         requireNotFinished();
         if (!LIVE_PHASES.contains(phase)) {
             throw new WrongPhaseException(phase, "a live round phase");
@@ -378,15 +378,12 @@ public class Kobo implements Game {
         KoboPlayer actor = player(seat);
         Tableau targetTableau = targetTableau(target);
         Card targetCard = targetTableau.card(target.slot());
-        if (expectedRevision != null && targetTableau.revision(target.slot()) != expectedRevision) {
+        if (targetTableau.revision(target.slot()) != expectedRevision) {
             throw new StaleSlotException("That card changed since you saw it");
         }
         Card top = discard.peekFirst();
         if (top == null) {
             throw new NothingToMatchException();
-        }
-        if (expectedTopRank == null) {
-            throw new IllegalArgumentException("expectedTopRank is required");
         }
         if (!top.getRank().equals(expectedTopRank)) {
             throw new StaleDiscardException();

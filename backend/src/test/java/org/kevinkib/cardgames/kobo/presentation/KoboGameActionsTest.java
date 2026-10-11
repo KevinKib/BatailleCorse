@@ -96,10 +96,10 @@ class KoboGameActionsTest {
         Kobo game = table.install(aKobo().withTableau("7S", "2H", "3H", "4H").withTableau("5S", "6S", "9D", "KS")
                 .withDiscard("7H").build());
 
-        table.actions.match(game.getId(), seat(0), ref(0, 1), null, rank("7H"), null);
+        table.actions.match(game.getId(), seat(0), ref(0, 1), null, rank("7H"), 0);
         KoboEventData failed = (KoboEventData) table.messaging.payloads.get(0).getEventData();
         table.messaging.clear();
-        table.actions.match(game.getId(), seat(0), ref(0, 0), null, rank("7H"), null);
+        table.actions.match(game.getId(), seat(0), ref(0, 0), null, rank("7H"), 0);
         KoboEventData succeeded = (KoboEventData) table.messaging.payloads.get(0).getEventData();
 
         assertThat(failed.success(), is(false));
@@ -180,7 +180,7 @@ class KoboGameActionsTest {
     private void attempt(Kobo game, int actor, org.kevinkib.cardgames.kobo.domain.tableau.SlotRef target) {
         try {
             table.actions.match(game.getId(), new PlayerId(actor), target, actor == 0 ? 0 : null,
-                    rank("7H"), null);
+                    rank("7H"), 0);
         } catch (Exception ignored) {
             // losing the race is expected
         }
@@ -190,9 +190,9 @@ class KoboGameActionsTest {
     void emptySlotRejectionComesFromTheDomain() throws Exception {
         Kobo game = table.install(aKobo().withTableau("7S", "2H", "3H", "4H").withTableau("5S", "6S", "9D", "KS")
                 .withDiscard("7H").build());
-        table.actions.match(game.getId(), seat(0), ref(0, 0), null, rank("7H"), null);
+        table.actions.match(game.getId(), seat(0), ref(0, 0), null, rank("7H"), 0);
 
         assertThrows(EmptySlotException.class,
-                () -> table.actions.match(game.getId(), seat(0), ref(0, 0), null, rank("7H"), null));
+                () -> table.actions.match(game.getId(), seat(0), ref(0, 0), null, rank("7H"), 0));
     }
 }
