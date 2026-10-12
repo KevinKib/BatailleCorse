@@ -4,6 +4,8 @@ Status: revised after the owner's answers (decisions in section 3 are confirmed 
 **[proposed]**). Classification: architectural (it changes the Bataille Corse session model, adds a
 kernel concept and touches both frontends). Open questions are in section 14.
 
+Implementation status: see the table at the top of `docs/plans/2026-10-11-shared-lobby-and-menu-plan.md`.
+
 ## 0. Glossary (product term, validated by the owner, and its name in the code)
 
 | Product term | Meaning | Name in the code |
@@ -396,9 +398,9 @@ game anyway. `start` stays per game (it broadcasts the game's own state). Per-ga
 `/api/game/{id}` ones do not today).
 
 Lobby creation: one shared `LobbyRestController`, `POST /api/lobby` (body `{gameType, name}`, type checked against `GameFactories`), returns `{gameId, token}` to the caller only
-(section 4). The WebSocket `/bullshit/create`, `/kobo/create` and `/create` answers on `/topic/game`
-are removed once their clients have switched (PR 5 for Bullshit, PR 9 for Bataille Corse; Kobo has no
-client yet: `/kobo/create` is removed in PR 6, which adds the shared endpoint, with its IT switched).
+(section 4). The WebSocket `/bullshit/create` and `/create` answers on `/topic/game`
+are removed once their clients have switched (PR 5 for Bullshit, PR 9 for Bataille Corse). Kobo's
+`/kobo/create` is gone: PR 6 (#136) removed it when it added the shared endpoint, its IT switched.
 
 ### 6.3 What the lobby view carries
 

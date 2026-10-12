@@ -30,6 +30,26 @@ Single-test commands:
 - E2E (one stack at a time, see `CLAUDE.md`): `docker compose -f docker-compose.e2e.yml up --build -d --wait`,
   then `cd frontend && npx cypress run --spec cypress/specs/<file>`
 
+## Status (2026-10-12)
+
+| PR | State |
+|----|-------|
+| PR0 | [x] merged, #134 |
+| PR-P | [x] merged, #135 |
+| PR6 | [x] merged, #136 |
+| PR2 | [x] merged, #137 |
+| PR3 | [x] merged, #138 |
+| PR8 | [x] merged, #139 |
+| PR1 | [x] merged, #140 |
+| PR4 | [x] merged, #141 |
+| PR7 | [x] merged, #142 |
+| PR4b | [x] merged, #145 |
+| PR5 | [x] merged, #150 |
+| Screen homogenization | [x] merged, #153 |
+| Table polish after playtest | [x] merged, #165 |
+| Bataille Corse animations | [x] merged, #166 |
+| PR9 | [ ] in progress, no PR opened yet (`gh pr list` on 2026-10-12) |
+
 ## Overview
 
 ```
@@ -78,7 +98,7 @@ Rebase on `main` and re-check `gh pr list` before each task.
 | `sessionmanagement/presence/*` (`ConnectionRegistry`, `InMemoryConnectionRegistry`, `PresenceService`, `Seat`) | PRP only | Low: sole editor |
 | `SessionService`, `SessionGame`, `SessionPlayer`, `LobbyView`, `LobbyBroadcaster`, `LobbyController` | PR2, PR3, PR4, PR4b (and PR6 for create/join callers) | High if parallel: PR2, PR3, PR4, PR4b strictly sequential; PR6 only calls existing methods |
 | `BatailleCorseWebSocketController`, `BatailleCorseRestController` | PR6 (adds), PR7 (extracts `BatailleCorseGameActions`, new broadcaster), PR9 (removes) | Medium: PR7 after PR6 |
-| `KoboWebSocketController` (+ IT) | PR6 (`/kobo/create` removed, IT switched to `POST /api/lobby`) | Low |
+| `KoboWebSocketController` (+ IT) | PR6 (done, #136: Kobo's WebSocket create removed, IT switched to `POST /api/lobby`) | Low |
 | `config/AppConfig.java` | PR0 (imports), PRP (registry bean), PR6 (`LobbyRestController` deps), PR7 (bot beans, properties) | Low: small hunks, rebase |
 | `cypress/support/commands.ts` | PR1 (entry steps), PR9 (`createGame` rewritten) | Low: sequential |
 | `locales/Messages.ts`, `locales/en.ts` | every frontend PR | Low but constant: one section per PR, rebase often |
@@ -232,7 +252,7 @@ Spec 9.1. Small, after PR4 (same lock and seat model).
   - `BatailleCorseWebSocketController`: new `/bataillecorse/start` (`startGame` then the state broadcast, like Bullshit); the old `/create` stays until PR9.
   - `BatailleCorseRestController`: `GET /api/game/{id}?token=` returns the lobby view while not started (403 without a valid token), the game state otherwise; `POST /api/game/{id}/join` uses `joinRoom` when the room is not started; both **check the game type** (404 for a Bullshit or Kobo id, as the Bullshit endpoints do); the tokenless GET for the old client stays until PR9.
   - Lobby broadcasts after join (shared `LobbyBroadcaster`).
-  - `KoboWebSocketController`: delete `/kobo/create` (no client yet); `KoboWebSocketControllerIT` creates through `POST /api/lobby`.
+  - `KoboWebSocketController`: the WebSocket create endpoint was deleted (no client); `KoboWebSocketControllerIT` creates through `POST /api/lobby` (done in #136).
 - Tests first (new `BatailleCorseRoomIT`; the old controller IT is `@Disabled` and stale): create through `POST /api/lobby` (the token never appears on `/topic/game`), join, `canStart` false until two seats are taken, start deals two players, a third join refused, join after start refused, a Bullshit id refused on the BC endpoints. The bot seat is tested at the **service level** (`SessionService.addBot` on a BC lobby, then start deals two players); the transport test for adding a bot comes with `/lobby/addBot` in PR3. `LobbyRestControllerIT` (unknown type, name, token returned only to the caller).
 - Old solo and seat-1 paths stay until PR9, so the current frontend keeps working.
 - Parallel: yes (Wave A).
