@@ -9,7 +9,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.messaging.simp.broker.SimpleBrokerMessageHandler;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.messaging.simp.stomp.StompSession;
+import org.springframework.web.client.RestTemplate;
 import tools.jackson.databind.ObjectMapper;
 
 import java.util.List;
@@ -21,9 +25,10 @@ import static org.kevinkib.cardgames.presentation.support.StompTestClient.body;
 import static org.hamcrest.Matchers.*;
 
 /**
- * End-to-end test of the Bataille Corse STOMP protocol over a real WebSocket: the game is created over
- * /app/create (answered on the lobby topic /topic/game, with one token per seat in SOLO mode), then game
- * events are received on /topic/game/{id} after sending token-authenticated actions to /app/send and /app/slap.
+ * End-to-end test of the Bataille Corse STOMP protocol over a real WebSocket, on the room model: the lobby is
+ * created over {@code POST /api/lobby} (the token goes back to the caller only), a second human joins over REST,
+ * the host starts it on /app/bataillecorse/start, then game events are received on /topic/game/{id} after
+ * sending token-authenticated actions to /app/send and /app/slap.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class BatailleCorseWebSocketControllerIT {
@@ -37,6 +42,7 @@ class BatailleCorseWebSocketControllerIT {
     @Autowired
     private SimpleBrokerMessageHandler broker;
 
+    private final RestTemplate rest = new RestTemplate();
     private StompTestClient client;
     private StompSession stompSession;
 
@@ -53,16 +59,14 @@ class BatailleCorseWebSocketControllerIT {
 
     @Test
     @SuppressWarnings("unchecked")
-    void givenNoGame_whenCreateGame_thenResponseIsSuccessAndGameStateIsConsistent() throws Exception {
-        Map<String, Object> response = createGame();
+    void givenTwoSeatsTaken_whenTheHostStarts_thenTheGameTopicReceivesTheDealtGame() throws Exception {
+        Started started = startGame();
 
+        Map<String, Object> response = started.start();
         assertThat(response.get("success"), is(true));
-        assertThat(response.get("eventType"), is("CREATE"));
-        assertThat(response.get("message"), is("Game created"));
+        assertThat(response.get("eventType"), is("START"));
 
         Map<String, Object> state = (Map<String, Object>) response.get("state");
-        assertThat(state, notNullValue());
-
         // Two players, each holding half the deck (52 / 2 = 26)
         List<Map<String, Object>> players = (List<Map<String, Object>>) state.get("players");
         assertThat(players, hasSize(2));
@@ -81,24 +85,21 @@ class BatailleCorseWebSocketControllerIT {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
-    void givenSoloGame_whenCreateGame_thenOneTokenPerSeatIsReturned() throws Exception {
-        Map<String, Object> eventData = (Map<String, Object>) createGame().get("eventData");
+    void eachHumanSeat_getsItsOwnToken() {
+        Started started = startGame();
 
-        Map<String, String> tokens = (Map<String, String>) eventData.get("tokens");
-        assertThat(tokens.keySet(), containsInAnyOrder("0", "1"));
-        assertThat(tokens.get("0"), not(equalTo(tokens.get("1"))));
-        // Tokens are UUIDs
-        UUID.fromString(tokens.get("0"));
-        UUID.fromString(tokens.get("1"));
+        assertThat(started.hostToken(), not(equalTo(started.guestToken())));
+        UUID.fromString(started.hostToken());
+        UUID.fromString(started.guestToken());
     }
 
     @Test
     @SuppressWarnings("unchecked")
     void givenGameAndSeatToken_whenSend_thenGameTopicReceivesSendEventAndTurnPasses() throws Exception {
-        Map<String, Object> created = createGame();
-        String gameId = gameIdOf(created);
-        String token = tokenOf(created, 0);
+        Started started = startGame();
+        started.start();
+        String gameId = started.gameId();
+        String token = started.hostToken();
         Frames events = subscribeToGame(gameId);
 
         client.send(stompSession, "/app/send", body(gameId, token));
@@ -118,9 +119,10 @@ class BatailleCorseWebSocketControllerIT {
     @Test
     @SuppressWarnings("unchecked")
     void givenGameAndOtherSeatToken_whenSendOutOfTurn_thenGameTopicReceivesErrorAndStateIsUnchanged() throws Exception {
-        Map<String, Object> created = createGame();
-        String gameId = gameIdOf(created);
-        String tokenOfSecondPlayer = tokenOf(created, 1);
+        Started started = startGame();
+        started.start();
+        String gameId = started.gameId();
+        String tokenOfSecondPlayer = started.guestToken();
         Frames events = subscribeToGame(gameId);
 
         client.send(stompSession, "/app/send", body(gameId, tokenOfSecondPlayer));
@@ -134,7 +136,9 @@ class BatailleCorseWebSocketControllerIT {
 
     @Test
     void givenGame_whenSendWithUnknownToken_thenGameTopicReceivesErrorResponse() throws Exception {
-        String gameId = gameIdOf(createGame());
+        Started started = startGame();
+        started.start();
+        String gameId = started.gameId();
         Frames events = subscribeToGame(gameId);
 
         client.send(stompSession, "/app/send", body(gameId, UUID.randomUUID().toString()));
@@ -146,11 +150,12 @@ class BatailleCorseWebSocketControllerIT {
 
     @Test
     void givenEmptyPile_whenSlap_thenGameTopicReceivesSlapEvent() throws Exception {
-        Map<String, Object> created = createGame();
-        String gameId = gameIdOf(created);
+        Started started = startGame();
+        started.start();
+        String gameId = started.gameId();
         Frames events = subscribeToGame(gameId);
 
-        client.send(stompSession, "/app/slap", body(gameId, tokenOf(created, 0)));
+        client.send(stompSession, "/app/slap", body(gameId, started.hostToken()));
 
         Map<String, Object> event = events.await(f -> true);
         assertThat(event.get("eventType"), is("SLAP"));
@@ -159,26 +164,43 @@ class BatailleCorseWebSocketControllerIT {
 
     // ---- helpers ----
 
-    private Map<String, Object> createGame() throws Exception {
-        Frames created = client.subscribe(stompSession, "/topic/game");
-        client.send(stompSession, "/app/create", Map.of("mode", "SOLO"));
-        return created.await(f -> true);
+    /** A lobby with the host and a second human seated; {@link #start()} has the host start it. */
+    private record Started(String gameId, String hostToken, String guestToken, Starter starter) {
+        Map<String, Object> start() throws Exception {
+            return starter.start(this);
+        }
+    }
+
+    @FunctionalInterface
+    private interface Starter {
+        Map<String, Object> start(Started room) throws Exception;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Started startGame() {
+        Map<String, String> lobby = rest.postForObject(url("/api/lobby"),
+                json("{\"gameType\":\"bataille-corse\",\"name\":\"Alice\"}"), Map.class);
+        String gameId = lobby.get("gameId");
+        Map<String, Object> joined = rest.postForObject(url("/api/game/" + gameId + "/join"),
+                json("{\"name\":\"Bob\"}"), Map.class);
+        return new Started(gameId, lobby.get("token"), (String) joined.get("token"), room -> {
+            Frames events = subscribeToGame(room.gameId());
+            client.send(stompSession, "/app/bataillecorse/start", body(room.gameId(), room.hostToken()));
+            return events.await(f -> true);
+        });
+    }
+
+    private String url(String path) {
+        return "http://localhost:" + port + path;
+    }
+
+    private static HttpEntity<String> json(String body) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        return new HttpEntity<>(body, headers);
     }
 
     private Frames subscribeToGame(String gameId) {
         return client.subscribe(stompSession, "/topic/game/" + gameId);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static String gameIdOf(Map<String, Object> created) {
-        Map<String, Object> eventData = (Map<String, Object>) created.get("eventData");
-        Map<String, Object> game = (Map<String, Object>) eventData.get("game");
-        return (String) game.get("id");
-    }
-
-    @SuppressWarnings("unchecked")
-    private static String tokenOf(Map<String, Object> created, int seat) {
-        Map<String, Object> eventData = (Map<String, Object>) created.get("eventData");
-        return ((Map<String, String>) eventData.get("tokens")).get(String.valueOf(seat));
     }
 }

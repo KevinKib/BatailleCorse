@@ -77,20 +77,6 @@ export function buildResponse(overrides: Partial<Response> = {}): Response {
   };
 }
 
-export function buildCreateResponse(
-  gameId: string,
-  tokens: Record<number, string>,
-  state: BatailleCorse = buildGame(),
-): Response {
-  return {
-    success: true,
-    eventType: 'CREATE',
-    eventData: { game: { id: gameId }, tokens },
-    message: 'Game created',
-    state,
-  };
-}
-
 export function buildGrabResponse(
   winnerPlayerId: string,
   state: BatailleCorse = buildGame(),

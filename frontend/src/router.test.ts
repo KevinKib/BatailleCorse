@@ -50,11 +50,8 @@ describe('app router', () => {
     expect((await resolveAt('/games/bullshit/create')).fullPath).toBe('/games/bullshit');
   });
 
-  it('givenBatailleCorseNewGamePage_thenItKeepsItsCreateScreen', async () => {
-    expect((await resolveAt('/games/bataillecorse/new')).name).toBe('create');
-  });
-
-  it('givenTheRemovedBullshitCreatePage_thenLeadsToTheGameHome', async () => {
+  it('givenTheRemovedCreatePages_thenLeadToTheGameHome', async () => {
+    expect((await resolveAt('/games/bataillecorse/new')).fullPath).toBe('/games/bataillecorse');
     expect((await resolveAt('/games/bullshit/new')).fullPath).toBe('/games/bullshit');
   });
 

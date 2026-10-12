@@ -1,36 +1,26 @@
 package org.kevinkib.cardgames.bataillecorse.presentation;
 import org.kevinkib.cardgames.presentation.*;
 
-import java.util.HashMap;
-import java.util.Map;
 
 import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorse;
 import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseFactory;
 import org.kevinkib.cardgames.game.GameId;
-import org.kevinkib.cardgames.bataillecorse.domain.Player;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.core.application.InvalidTokenException;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
-import org.kevinkib.cardgames.sessionmanagement.core.application.GameMode;
-import org.kevinkib.cardgames.presentation.api.CreateGamePayload;
 import org.kevinkib.cardgames.presentation.api.ErrorResponse;
 import org.kevinkib.cardgames.presentation.api.GameActionPayload;
 import org.kevinkib.cardgames.presentation.api.Response;
-import org.kevinkib.cardgames.presentation.api.SuccessResponse;
 import org.kevinkib.cardgames.presentation.dto.*;
 import org.kevinkib.cardgames.bataillecorse.presentation.dto.*;
 import org.kevinkib.cardgames.presentation.dto.event.*;
 import org.kevinkib.cardgames.bataillecorse.presentation.dto.event.*;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
 
 @Controller
 public class BatailleCorseWebSocketController {
-
-    public static final int NB_PLAYERS = 2;
-    public static final String GAME_CREATED_MESSAGE = "Game created";
 
     private final SessionService sessionService;
     private final GameMessagingService gameMessagingService;
@@ -45,27 +35,6 @@ public class BatailleCorseWebSocketController {
         this.gameMessagingService = gameMessagingService;
         this.actions = actions;
         this.broadcaster = broadcaster;
-    }
-
-    @MessageMapping("/create")
-    @SendTo("/topic/game")
-    public Response createGame(@Payload(required = false) CreateGamePayload payload) {
-        GameMode mode = (payload != null && payload.mode() != null) ? payload.mode() : GameMode.SOLO;
-        String name = (payload != null) ? payload.name() : null;
-
-        BatailleCorse batailleCorse = (BatailleCorse) sessionService.createGame(BatailleCorseFactory.GAME_TYPE, NB_PLAYERS, mode, name);
-
-        int seatsToReturn = (mode == GameMode.SOLO) ? NB_PLAYERS : 1;
-        Map<Integer, String> tokens = new HashMap<>();
-        for (int i = 0; i < seatsToReturn; i++) {
-            tokens.put(i, sessionService.tokenForSeat(batailleCorse.getId(), new PlayerId(i)));
-        }
-
-        return new SuccessResponse(
-                LifecycleEventType.CREATE.toString(),
-                new CreateEventData(new BatailleCorseIdDto(batailleCorse.getId()), tokens),
-                GAME_CREATED_MESSAGE,
-                BatailleCorseDto.from(batailleCorse));
     }
 
     /** Room model: the host starts the game once enough seats are taken (humans or bots). */
@@ -134,32 +103,6 @@ public class BatailleCorseWebSocketController {
             System.err.println(e.getMessage());
             gameMessagingService.sendToGame(payload.gameId(),
                     new ErrorResponse(eventType.toString(), e.getMessage(), BatailleCorseDto.from(batailleCorse)));
-        }
-    }
-
-    @MessageMapping("/rematch")
-    public void rematch(GameActionPayload payload) {
-        GameId gameId = new GameId(payload.gameId());
-        try {
-            PlayerId playerId = sessionService
-                    .findPlayerIdByToken(gameId, payload.token())
-                    .orElseThrow(InvalidTokenException::new);
-
-            boolean unanimous = sessionService.requestRematch(gameId, playerId);
-
-            if (unanimous) {
-                BatailleCorse fresh = (BatailleCorse) sessionService.rematch(gameId);
-                broadcaster.broadcast(fresh, LifecycleEventType.REMATCH.toString(),
-                        new RematchEventData(RematchStatus.STARTED, new PlayerIdDto(String.valueOf(playerId.id()))),
-                        "Rematch started.");
-            } else {
-                BatailleCorse current = sessionService.getGame(gameId, BatailleCorse.class);
-                broadcaster.broadcast(current, LifecycleEventType.REMATCH.toString(),
-                        new RematchEventData(RematchStatus.PENDING, new PlayerIdDto(String.valueOf(playerId.id()))),
-                        "Rematch requested.");
-            }
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
         }
     }
 }

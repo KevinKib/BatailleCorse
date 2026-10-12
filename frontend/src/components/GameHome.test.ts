@@ -10,12 +10,13 @@ import { findGame } from '../model/games';
 import { useSettingsStore } from '../state/Settings.store';
 import { messagesEn } from '../locales/en';
 
-async function mountHome(key: 'bataillecorse' | 'bullshit', query = '', createLobby?: (name?: string) => Promise<string>) {
+async function mountHome(key: 'bataillecorse' | 'bullshit', query = '',
+  createLobby: (name?: string) => Promise<string> = vi.fn().mockResolvedValue('g1')) {
   const router = createAppRouter(createMemoryHistory());
   await router.push(`/games/${key}${query}`);
   await router.isReady();
   const wrapper = mount(GameHome, {
-    props: { game: findGame(key)!, ...(createLobby ? { createLobby } : {}) },
+    props: { game: findGame(key)!, createLobby },
     global: { plugins: [router, PrimeVue] },
   });
   return { wrapper, router };
@@ -35,14 +36,14 @@ describe('GameHome', () => {
       expect(wrapper.get('[data-test="back"]').text()).toBe(messagesEn.home.back);
     });
 
-    if (key === 'bataillecorse') {
-      it('given_bataillecorse_whenNewGame_thenLeadsToItsNewGamePage', async () => {
-        const { wrapper, router } = await mountHome(key);
-        await wrapper.get('[data-test="new-game"]').trigger('click');
-        await flushPromises();
-        expect(router.currentRoute.value.path).toBe('/games/bataillecorse/new');
-      });
-    }
+    it(`given_${key}_whenNewGame_thenCreatesTheLobbyAndLandsInItsRoom`, async () => {
+      const createLobby = vi.fn().mockResolvedValue('g7');
+      const { wrapper, router } = await mountHome(key, '', createLobby);
+      await wrapper.get('[data-test="new-game"]').trigger('click');
+      await flushPromises();
+      expect(createLobby).toHaveBeenCalledTimes(1);
+      expect(router.currentRoute.value.path).toBe(`/games/${key}/room/g7`);
+    });
 
     it(`given_${key}_whenJoinGame_thenLeadsToItsJoinForm`, async () => {
       const { wrapper, router } = await mountHome(key);

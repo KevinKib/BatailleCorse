@@ -126,8 +126,7 @@ class MalformedTokenIT {
                 forEachBadToken("bc start", t -> assertDoesNotThrow(() -> batailleCorse.start(new GameActionPayload(room, t)))),
                 forEachBadToken("bc send", t -> assertDoesNotThrow(() -> batailleCorse.send(new GameActionPayload(id, t)))),
                 forEachBadToken("bc slap", t -> assertDoesNotThrow(() -> batailleCorse.slap(new GameActionPayload(id, t)))),
-                forEachBadToken("bc grab", t -> assertDoesNotThrow(() -> batailleCorse.grab(new GameActionPayload(id, t)))),
-                forEachBadToken("bc rematch", t -> assertDoesNotThrow(() -> batailleCorse.rematch(new GameActionPayload(id, t)))))
+                forEachBadToken("bc grab", t -> assertDoesNotThrow(() -> batailleCorse.grab(new GameActionPayload(id, t)))))
                 .flatMap(s -> s);
     }
 

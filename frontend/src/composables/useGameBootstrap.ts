@@ -4,7 +4,6 @@ import { useBatailleCorseStore } from '../state/BatailleCorse.store';
 import webSocketService from '../service/WebSocketService';
 import { findGame } from '../model/games';
 import { readStoredTokens } from './readStoredTokens';
-import type BatailleCorse from '../model/BatailleCorse';
 
 interface UseGameBootstrapOptions {
   /** From useEndScreen — reveal the end overlay synchronously if reloading into a finished game. */
@@ -12,43 +11,57 @@ interface UseGameBootstrapOptions {
 }
 
 /**
- * Owns the game's mount/unmount lifecycle: validates the stored tokens, fetches and
- * hydrates the initial state, restores the session, loads the multiplayer view, and
- * subscribes to the game's websocket topic. On unmount it cancels the auto-grab timer
- * and unsubscribes. Without a stored token it leads to the join form; if the game no longer exists, to the Game home with a notice.
+ * The one seat stored for a game, or null. An entry holding several seats comes from the former solo mode
+ * (one browser held both tokens); that game is gone, so the entry is forgotten.
+ */
+export function resolveBatailleCorseSeat(gameId: string): { seat: number; token: string } | null {
+  const key = `tokens:${gameId}`;
+  const tokens = readStoredTokens(key);
+  if (!tokens) return null;
+  const seats = Object.keys(tokens);
+  if (seats.length !== 1 || typeof tokens[seats[0]] !== 'string') {
+    localStorage.removeItem(key);
+    return null;
+  }
+  return { seat: Number(seats[0]), token: tokens[seats[0]] };
+}
+
+/**
+ * Owns the room's mount/unmount lifecycle: re-attaches to the stored seat and loads the lobby or the running
+ * game. Without a stored seat it leads to the join form; if the game no longer exists or the seat was lost,
+ * to the Game home with a notice. On unmount it cancels the auto-grab timer and unsubscribes.
  */
 export function useGameBootstrap(options: UseGameBootstrapOptions) {
   const { revealImmediatelyIfOver } = options;
   const store = useBatailleCorseStore();
   const route = useRoute();
   const router = useRouter();
+  const game = findGame('bataillecorse')!;
 
   onMounted(async () => {
     const gameId = route.params.id as string;
 
-    const stored = readStoredTokens(`tokens:${gameId}`);
+    const stored = resolveBatailleCorseSeat(gameId);
     if (!stored) {
       // Someone shared the room URL instead of the invite link: join it.
-      router.replace(findGame('bataillecorse')!.joinRoute(gameId));
+      router.replace(game.joinRoute(gameId));
       return;
     }
 
-    const response = await fetch(`/api/game/${gameId}`);
-    if (!response.ok) {
-      router.replace({ path: findGame('bataillecorse')!.gameHomeRoute, query: { gone: '1' } });
+    store.restore(gameId, stored.seat, stored.token);
+    const result = await store.hydrate();
+    // A server that fails or cannot be reached (`unavailable`) proves nothing: keep the token and the room page.
+    if (result === 'gone' || result === 'lost') {
+      localStorage.removeItem(`tokens:${gameId}`);
+      router.replace({ path: game.gameHomeRoute, query: result === 'lost' ? { lost: '1' } : { gone: '1' } });
       return;
     }
-
-    const gameState = await response.json() as BatailleCorse;
-    store.hydrate(gameId, gameState);
     revealImmediatelyIfOver();
-    store.restoreSession(stored as Record<number, string>);
-    await store.loadSessionView(gameId);
-    webSocketService.subscribeToGame(gameId);
   });
 
   onBeforeUnmount(() => {
     store.cancelAutoGrab();
     webSocketService.unsubscribeFromGame();
+    webSocketService.unsubscribeFromSeat();
   });
 }

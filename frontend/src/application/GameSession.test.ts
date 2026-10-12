@@ -1,14 +1,14 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import GameSession, { type WebSocketPort, type GameSessionCallbacks } from './GameSession';
-import AI from '../model/ai/AI';
 import type { GameEvent } from './GameEvent';
+import type { LobbyView } from '../model/lobby/LobbyView';
 import {
-  buildCreateResponse,
   buildGrabResponse,
   buildSlapResponse,
   buildGame,
   buildPile,
   buildCard,
+  buildPlayer,
   buildResponse,
 } from '../model/fixtures';
 
@@ -16,224 +16,373 @@ import {
 // Test harness
 // ---------------------------------------------------------------------------
 
-function makeSession() {
+function lobbyView(overrides: Partial<LobbyView> = {}): LobbyView {
+  return {
+    started: false, gameId: 'game-1',
+    players: [
+      { seat: 0, name: 'Alice', joined: true, bot: false, seatOptions: {} },
+      { seat: 1, name: null, joined: true, bot: true, seatOptions: { tier: '3' } },
+    ],
+    hostSeat: 0, mySeat: 0, minPlayers: 2, maxPlayers: 2, canStart: true, lobbyVersion: 1,
+    ...overrides,
+  };
+}
+
+/** A game state as the server sends it (plain JSON). */
+function gameJson(overrides: Record<string, unknown> = {}) {
+  return {
+    currentPlayer: { id: '0', nbCards: 26, availableActions: ['SEND'] },
+    pile: { cards: [], grabbable: false, nbCardsSinceLastHonourCard: 0, playerThatAddedLastHonourCard: { id: '0' } },
+    players: [
+      { id: '0', nbCards: 26, availableActions: ['SEND'] },
+      { id: '1', nbCards: 26, availableActions: [] },
+    ],
+    winner: null,
+    ...overrides,
+  };
+}
+
+function respond(body: unknown, status = 200) {
+  return { ok: status >= 200 && status < 300, status, json: async () => body };
+}
+
+function makeSession(awaitAnimation: () => Promise<void> = () => Promise.resolve()) {
   const events: GameEvent[] = [];
   const published: { dest: string; body?: string }[] = [];
   const subscribed: string[] = [];
-
+  const seatSubs: { gameId: string; seat: number; token: string }[] = [];
   const presence: string[] = [];
+  const teardown: string[] = [];
+  let seatFn: ((r: any) => void) | null = null;
+
   const webSocket: WebSocketPort = {
     publish: (dest, body) => published.push({ dest, body }),
     subscribeToGame: (id) => subscribed.push(id),
+    subscribeToSeat: (gameId, seat, token, onMessage) => { seatSubs.push({ gameId, seat, token }); seatFn = onMessage; },
+    unsubscribeFromSeat: () => { teardown.push('seat'); seatFn = null; },
+    unsubscribeFromGame: () => { teardown.push('game'); },
     setPresence: (body) => presence.push(body),
-    clearPresence: () => { presence.length = 0; },
+    clearPresence: () => { teardown.push('presence'); },
   };
 
   const callbacks: GameSessionCallbacks = {
     onEvent: (e) => events.push(e),
-    awaitAnimation: () => Promise.resolve(),
+    awaitAnimation,
   };
 
-  const session = new GameSession(webSocket, callbacks, () => new AI(1, 0));
+  const session = new GameSession(webSocket, callbacks);
 
-  return { session, events, published, subscribed, presence };
+  return {
+    session, events, published, subscribed, seatSubs, presence, teardown,
+    fireSeat: (r: any) => seatFn?.(r),
+  };
 }
 
-function buildRematchResponse(status: 'PENDING' | 'STARTED', requestedById: string) {
-  return buildResponse({
-    eventType: 'REMATCH',
-    eventData: { status, requestedBy: { id: requestedById } },
-  });
+/** A session seated at `seat` of a running game (no network). */
+function playing(seat = 0, state = buildGame()) {
+  const harness = makeSession();
+  harness.session.restore('game-1', seat, `tok-${seat}`);
+  harness.session.hydrateGame(state);
+  harness.events.length = 0;
+  harness.published.length = 0;
+  return harness;
 }
+
+const lastOf = <T extends GameEvent['type']>(events: GameEvent[], type: T) =>
+  events.filter((e): e is Extract<GameEvent, { type: T }> => e.type === type).at(-1);
 
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 
 describe('GameSession', () => {
-  afterEach(() => { vi.useRealTimers(); });
+  beforeEach(() => { localStorage.clear(); });
+  afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 
-  // --- CREATE ---------------------------------------------------------------
+  // --- Lobby: create, join, restore ----------------------------------------
 
-  describe('CREATE event', () => {
-    it('emits game-id-change and subscribes to per-game channel', async () => {
-      const { session, events, subscribed } = makeSession();
-      session.create('solo', 'Alice');
-      await session.onResponse(buildCreateResponse('game-1', { 0: 'tok-a', 1: 'tok-b' }));
+  describe('create', () => {
+    it('posts the name to /api/lobby, sits at seat 0 with the one returned token and shows the lobby', async () => {
+      const fetchMock = vi.fn()
+        .mockResolvedValueOnce(respond({ gameId: 'game-1', token: 'tok-0' }))
+        .mockResolvedValueOnce(respond(lobbyView()));
+      vi.stubGlobal('fetch', fetchMock);
+      const { session, events, seatSubs, subscribed, presence, published } = makeSession();
+
+      const id = await session.create('Alice');
+
+      expect(id).toBe('game-1');
+      expect(fetchMock.mock.calls[0][0]).toBe('/api/lobby');
+      expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({ gameType: 'bataille-corse', name: 'Alice' });
+      expect(fetchMock.mock.calls[1][0]).toBe('/api/game/game-1?token=tok-0');
+      expect(JSON.parse(localStorage.getItem('tokens:game-1')!)).toEqual({ 0: 'tok-0' });
+      expect(seatSubs).toEqual([{ gameId: 'game-1', seat: 0, token: 'tok-0' }]);
+      expect(subscribed).toEqual(['game-1']);
+      expect(JSON.parse(presence[0])).toEqual({ gameId: 'game-1', token: 'tok-0' });
       expect(events).toContainEqual({ type: 'game-id-change', gameId: 'game-1' });
-      expect(subscribed).toContain('game-1');
-    });
-
-    it('stores tokens in localStorage', async () => {
-      const { session } = makeSession();
-      session.create('solo');
-      await session.onResponse(buildCreateResponse('game-42', { 0: 'tok-x', 1: 'tok-y' }));
-      const stored = JSON.parse(localStorage.getItem('tokens:game-42')!);
-      expect(stored).toEqual({ 0: 'tok-x', 1: 'tok-y' });
-    });
-
-    it('ignores CREATE events when no create is pending', async () => {
-      const { session, events, subscribed } = makeSession();
-      // no session.create() call — pendingCreate stays false
-      await session.onResponse(buildCreateResponse('game-1', { 0: 'tok-a', 1: 'tok-b' }));
-      expect(events.find(e => e.type === 'game-id-change')).toBeUndefined();
-      expect(subscribed).toHaveLength(0);
-    });
-  });
-
-  // --- Multiplayer mode -----------------------------------------------------
-
-  describe('multiplayer mode', () => {
-    it('create("multiplayer") announces waiting and sends MULTIPLAYER', () => {
-      const { session, events, published } = makeSession();
-      session.create('multiplayer');
-      expect(events).toContainEqual({ type: 'mode-change', mode: 'multiplayer' });
-      expect(events).toContainEqual({ type: 'waiting-change', waiting: true });
-      expect(published).toContainEqual({ dest: '/app/create', body: JSON.stringify({ mode: 'MULTIPLAYER' }) });
-    });
-
-    it('create("solo") is not waiting and sends SOLO', () => {
-      const { session, events, published } = makeSession();
-      session.create('solo');
-      expect(events).toContainEqual({ type: 'mode-change', mode: 'solo' });
-      expect(events).toContainEqual({ type: 'waiting-change', waiting: false });
-      expect(published).toContainEqual({ dest: '/app/create', body: JSON.stringify({ mode: 'SOLO' }) });
-    });
-
-    it('clears waiting when a JOIN event arrives', async () => {
-      const { session, events } = makeSession();
-      session.create('multiplayer');
-      await session.onResponse(buildResponse({ eventType: 'JOIN', state: buildGame() }));
-      const waitingChanges = events.filter(e => e.type === 'waiting-change');
-      expect(waitingChanges.at(-1)).toEqual({ type: 'waiting-change', waiting: false });
-    });
-
-    it('restoreSession derives multiplayer perspective from a single token', () => {
-      const { session, events } = makeSession();
-      session.restoreSession({ 1: 'tok-1' });
-      expect(events).toContainEqual({ type: 'mode-change', mode: 'multiplayer' });
-      expect(events).toContainEqual({ type: 'my-index-change', playerIndex: 1 });
-    });
-
-    it('restoreSession derives solo perspective from both tokens', () => {
-      const { session, events } = makeSession();
-      session.restoreSession({ 0: 'tok-0', 1: 'tok-1' });
-      expect(events).toContainEqual({ type: 'mode-change', mode: 'solo' });
       expect(events).toContainEqual({ type: 'my-index-change', playerIndex: 0 });
+      expect(lastOf(events, 'lobby-update')?.lobby.gameId).toBe('game-1');
+      // Nothing goes over the old shared create channel any more.
+      expect(published.some(p => p.dest === '/app/create')).toBe(false);
+    });
+
+    it('rejects with the HTTP status when the lobby cannot be created', async () => {
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce(respond({}, 500)));
+      const { session } = makeSession();
+      await expect(session.create('Alice')).rejects.toMatchObject({ status: 500 });
     });
   });
 
-  // --- GRAB -----------------------------------------------------------------
+  describe('join', () => {
+    it('claims the seat the server gives, stores its token alone and shows the lobby', async () => {
+      const fetchMock = vi.fn()
+        .mockResolvedValueOnce(respond({ playerId: 1, token: 'tok-1' }))
+        .mockResolvedValueOnce(respond(lobbyView({ mySeat: 1 })));
+      vi.stubGlobal('fetch', fetchMock);
+      const { session, events, seatSubs } = makeSession();
+
+      await session.join('game-1', 'Bob');
+
+      expect(fetchMock.mock.calls[0][0]).toBe('/api/game/game-1/join');
+      expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({ name: 'Bob' });
+      expect(JSON.parse(localStorage.getItem('tokens:game-1')!)).toEqual({ 1: 'tok-1' });
+      expect(seatSubs).toEqual([{ gameId: 'game-1', seat: 1, token: 'tok-1' }]);
+      expect(lastOf(events, 'my-index-change')).toEqual({ type: 'my-index-change', playerIndex: 1 });
+      expect(lastOf(events, 'lobby-update')).toBeDefined();
+    });
+
+    it('rejects with the HTTP status of a refused join (404: the lobby is gone)', async () => {
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce(respond({}, 404)));
+      const { session } = makeSession();
+      await expect(session.join('game-1')).rejects.toMatchObject({ status: 404 });
+    });
+  });
+
+  describe('hydrate', () => {
+    it.each([[404, 'gone'], [403, 'lost'], [500, 'unavailable']] as const)('answers %s with %s', async (status, result) => {
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce(respond({}, status)));
+      const { session } = makeSession();
+      session.restore('game-1', 0, 'tok-0');
+      expect(await session.hydrate()).toBe(result);
+    });
+
+    it('answers unavailable when the server cannot be reached', async () => {
+      vi.stubGlobal('fetch', vi.fn().mockRejectedValueOnce(new Error('offline')));
+      const { session } = makeSession();
+      session.restore('game-1', 0, 'tok-0');
+      expect(await session.hydrate()).toBe('unavailable');
+    });
+
+    it('loads a running game, then its seats with the bot tier', async () => {
+      const fetchMock = vi.fn()
+        .mockResolvedValueOnce(respond(gameJson()))
+        .mockResolvedValueOnce(respond({ players: [
+          { id: 0, name: 'Alice', joined: true, bot: false, seatOptions: {} },
+          { id: 1, name: null, joined: true, bot: true, seatOptions: { tier: '5' } },
+        ] }));
+      vi.stubGlobal('fetch', fetchMock);
+      const { session, events } = makeSession();
+      session.restore('game-1', 0, 'tok-0');
+
+      expect(await session.hydrate()).toBe('ok');
+
+      expect(fetchMock.mock.calls[1][0]).toBe('/api/game/game-1/session');
+      expect(lastOf(events, 'state-update')?.state.players).toHaveLength(2);
+      expect(lastOf(events, 'seats-change')?.seats[1]).toEqual(
+        { id: 1, name: null, joined: true, bot: true, seatOptions: { tier: '5' } });
+    });
+  });
+
+  // --- Lobby views on the seat channel --------------------------------------
+
+  describe('lobby views', () => {
+    it('apply the seats of the lobby, and drop a view older than the one held', () => {
+      const { session, events, fireSeat } = makeSession();
+      session.restore('game-1', 0, 'tok-0');
+
+      fireSeat(buildResponse({ eventType: 'JOIN', state: lobbyView({ lobbyVersion: 3 }) as never }));
+      fireSeat(buildResponse({ eventType: 'JOIN', state: lobbyView({ lobbyVersion: 2, canStart: false }) as never }));
+
+      const lobbies = events.filter(e => e.type === 'lobby-update');
+      expect(lobbies).toHaveLength(1);
+      expect(lastOf(events, 'seats-change')?.seats.map(s => s.bot)).toEqual([false, true]);
+    });
+
+    it('take my seat from the server and rewrite the stored token entry when it moves', () => {
+      const { session, events, fireSeat } = makeSession();
+      session.restore('game-1', 1, 'tok-1');
+
+      fireSeat(buildResponse({ eventType: 'JOIN', state: lobbyView({ mySeat: 0 }) as never }));
+
+      expect(lastOf(events, 'my-index-change')).toEqual({ type: 'my-index-change', playerIndex: 0 });
+      expect(JSON.parse(localStorage.getItem('tokens:game-1')!)).toEqual({ 0: 'tok-1' });
+    });
+
+    it('surface a refused command as an error, keeping the lobby it carries', () => {
+      const { session, events, fireSeat } = makeSession();
+      session.restore('game-1', 0, 'tok-0');
+
+      fireSeat({ success: false, eventType: 'START', eventData: {}, message: 'Not enough players', state: null });
+
+      expect(events).toContainEqual({ type: 'error', eventType: 'START', message: 'Not enough players' });
+    });
+
+    it('are ignored once the game state came in', async () => {
+      const { session, events, fireSeat } = makeSession();
+      session.restore('game-1', 0, 'tok-0');
+      await session.onResponse(buildResponse({ eventType: 'START' as never, state: buildGame() }));
+      events.length = 0;
+
+      fireSeat(buildResponse({ eventType: 'JOIN', state: lobbyView({ lobbyVersion: 9 }) as never }));
+
+      expect(events.find(e => e.type === 'lobby-update')).toBeUndefined();
+    });
+  });
+
+  // --- Lobby commands --------------------------------------------------------
+
+  describe('lobby commands', () => {
+    it('start, add a bot and set its tier with my one token', () => {
+      const { session, published } = makeSession();
+      session.restore('game-1', 0, 'tok-0');
+
+      session.startGame();
+      session.addBot();
+      session.setSeatOption(1, 'tier', '6');
+
+      expect(published.map(p => p.dest)).toEqual(['/app/bataillecorse/start', '/app/lobby/addBot', '/app/lobby/setSeatOption']);
+      expect(JSON.parse(published[0].body!)).toEqual({ gameId: 'game-1', token: 'tok-0' });
+      expect(JSON.parse(published[2].body!)).toEqual({ gameId: 'game-1', token: 'tok-0', seat: 1, key: 'tier', value: '6' });
+    });
+
+    it('leave tears everything down and forgets the stored token; nothing that arrives afterwards counts', async () => {
+      const { session, published, teardown, events, fireSeat } = makeSession();
+      session.restore('game-1', 1, 'tok-1');
+      localStorage.setItem('tokens:game-1', JSON.stringify({ 1: 'tok-1' }));
+
+      session.leave();
+      fireSeat(buildResponse({ eventType: 'JOIN', state: lobbyView({ lobbyVersion: 9 }) as never }));
+      await session.onResponse(buildResponse({ eventType: 'START' as never, state: buildGame() }));
+
+      expect(published.at(-1)?.dest).toBe('/app/lobby/leave');
+      expect(teardown).toEqual(['seat', 'game', 'presence']);
+      expect(localStorage.getItem('tokens:game-1')).toBeNull();
+      expect(events.find(e => e.type === 'lobby-update' || e.type === 'state-update')).toBeUndefined();
+    });
+  });
+
+  // --- Play again ------------------------------------------------------------
+
+  describe('playAgain', () => {
+    it('reopens the lobby through the REST endpoint and binds to the seat it gives', async () => {
+      const fetchMock = vi.fn()
+        .mockResolvedValueOnce(respond({ playerId: 0, token: 'tok-new' }))
+        .mockResolvedValueOnce(respond(lobbyView({ lobbyVersion: 7 })));
+      vi.stubGlobal('fetch', fetchMock);
+      const { session, events, seatSubs } = playing(1);
+
+      await session.playAgain('Bob');
+
+      expect(fetchMock.mock.calls[0][0]).toBe('/api/game/game-1/play-again');
+      expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({ name: 'Bob' });
+      expect(seatSubs.at(-1)).toEqual({ gameId: 'game-1', seat: 0, token: 'tok-new' });
+      expect(JSON.parse(localStorage.getItem('tokens:game-1')!)).toEqual({ 0: 'tok-new' });
+      expect(lastOf(events, 'lobby-update')?.lobby.lobbyVersion).toBe(7);
+    });
+
+    it('rejects when the server refuses it', async () => {
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce(respond({}, 409)));
+      const { session } = playing(0);
+      await expect(session.playAgain()).rejects.toMatchObject({ status: 409 });
+    });
+
+    it('a finished game ignores the states of the next one until I play again', async () => {
+      const { session, events } = playing(1);
+      await session.onResponse(buildResponse({ eventType: 'GRAB', state: buildGame({ winner: { id: '0' } }) }));
+      events.length = 0;
+
+      // The other player already played again and started a new game on the same id.
+      await session.onResponse(buildResponse({ eventType: 'START' as never, state: buildGame() }));
+
+      expect(events).toHaveLength(0);
+    });
+  });
+
+  // --- Game topic ------------------------------------------------------------
+
+  describe('refused action on the game topic', () => {
+    it('keeps the state it carries and reports the error, without any animation', async () => {
+      const { session, events } = playing(0);
+
+      await session.onResponse({ ...buildResponse({ eventType: 'SLAP', state: buildGame() }), success: false, message: 'nope' });
+
+      expect(events.map(e => e.type)).toEqual(['state-update', 'error']);
+    });
+  });
 
   describe('GRAB event', () => {
     it('emits grab event with a snapshot of the pile before state update', async () => {
-      const { session, events } = makeSession();
       const cardBeforeGrab = buildCard({ rank: 'A', suit: 'spade' });
-      session.hydrate('game-1', buildGame({ pile: buildPile({ cards: [cardBeforeGrab] }) }));
-      session.restoreTokens({ 0: 'tok-a', 1: 'tok-b' });
+      const { session, events } = playing(0, buildGame({ pile: buildPile({ cards: [cardBeforeGrab] }) }));
 
-      // after the grab, the server clears the pile
-      const response = buildGrabResponse('0', buildGame({ pile: buildPile({ cards: [] }) }));
-      await session.onResponse(response);
+      await session.onResponse(buildGrabResponse('0', buildGame({ pile: buildPile({ cards: [] }) })));
 
-      const grabEvent = events.find(e => e.type === 'grab') as Extract<GameEvent, { type: 'grab' }> | undefined;
-      expect(grabEvent).toBeDefined();
+      const grabEvent = lastOf(events, 'grab');
       expect(grabEvent!.winnerPlayerIndex).toBe(0);
       expect(grabEvent!.pileCards).toContainEqual(cardBeforeGrab);
-    });
-
-    it('emits state-update after the grab', async () => {
-      const { session, events } = makeSession();
-      session.hydrate('game-1', buildGame());
-      session.restoreTokens({ 0: 'tok-a', 1: 'tok-b' });
-      await session.onResponse(buildGrabResponse('0'));
-      expect(events.find(e => e.type === 'state-update')).toBeDefined();
+      expect(lastOf(events, 'state-update')).toBeDefined();
     });
   });
 
-  // --- SLAP -----------------------------------------------------------------
-
   describe('SLAP event', () => {
     it('emits successful-slap event with winner and pile snapshot', async () => {
-      const { session, events } = makeSession();
       const cardInPile = buildCard({ rank: 'K' });
-      session.hydrate('game-1', buildGame({ pile: buildPile({ cards: [cardInPile] }) }));
-      session.restoreTokens({ 0: 'tok-a', 1: 'tok-b' });
+      const { session, events } = playing(0, buildGame({ pile: buildPile({ cards: [cardInPile] }) }));
 
       await session.onResponse(buildSlapResponse(true, '1'));
 
-      const slapEvent = events.find(e => e.type === 'successful-slap') as
-        Extract<GameEvent, { type: 'successful-slap' }> | undefined;
-      expect(slapEvent).toBeDefined();
+      const slapEvent = lastOf(events, 'successful-slap');
       expect(slapEvent!.winnerPlayerIndex).toBe(1);
       expect(slapEvent!.pileCards).toContainEqual(cardInPile);
     });
 
     it('emits erroneous-slap event with the slapper index', async () => {
-      const { session, events } = makeSession();
-      session.hydrate('game-1', buildGame());
-      session.restoreTokens({ 0: 'tok-a', 1: 'tok-b' });
-
+      const { session, events } = playing(0);
       await session.onResponse(buildSlapResponse(false, '0'));
-
-      const errEvent = events.find(e => e.type === 'erroneous-slap') as
-        Extract<GameEvent, { type: 'erroneous-slap' }> | undefined;
-      expect(errEvent).toBeDefined();
-      expect(errEvent!.playerIndex).toBe(0);
+      expect(lastOf(events, 'erroneous-slap')!.playerIndex).toBe(0);
     });
   });
 
-  // --- SEND / SLAP user actions ---------------------------------------------
+  // --- My actions ------------------------------------------------------------
 
-  describe('send()', () => {
-    it('publishes to /app/send with the correct token', () => {
-      const { session, published } = makeSession();
-      session.hydrate('game-1', buildGame());
-      session.restoreTokens({ 0: 'tok-a', 1: 'tok-b' });
+  describe('my actions', () => {
+    it('send, slap, grab and forfeit publish with my one token', () => {
+      const { session, published } = playing(1);
 
-      session.send(0);
+      session.send();
+      session.slap();
+      session.grab();
+      session.forfeit();
 
-      expect(published).toHaveLength(1);
-      expect(published[0].dest).toBe('/app/send');
-      expect(JSON.parse(published[0].body!).token).toBe('tok-a');
-      expect(JSON.parse(published[0].body!).gameId).toBe('game-1');
+      expect(published.map(p => p.dest)).toEqual(['/app/send', '/app/slap', '/app/grab', '/app/forfeit']);
+      for (const p of published) expect(JSON.parse(p.body!)).toEqual({ gameId: 'game-1', token: 'tok-1' });
     });
 
-    it('emits a send event with topCard snapshot', () => {
-      const { session, events } = makeSession();
+    it('send emits an optimistic send event for my seat with the top card snapshot', () => {
       const topCard = buildCard({ rank: 'Q', suit: 'diamond' });
-      session.hydrate('game-1', buildGame({ pile: buildPile({ cards: [topCard] }) }));
-      session.restoreTokens({ 0: 'tok-a', 1: 'tok-b' });
+      const { session, events } = playing(1, buildGame({ pile: buildPile({ cards: [topCard] }) }));
 
-      session.send(0);
+      session.send();
+      session.send();
 
-      const sendEvent = events.find(e => e.type === 'send') as
-        Extract<GameEvent, { type: 'send' }> | undefined;
-      expect(sendEvent).toBeDefined();
-      expect(sendEvent!.topCard).toEqual(topCard);
-    });
-  });
-
-  describe('slap()', () => {
-    it('publishes to /app/slap with the correct token', () => {
-      const { session, published } = makeSession();
-      session.hydrate('game-1', buildGame());
-      session.restoreTokens({ 0: 'tok-a', 1: 'tok-b' });
-
-      session.slap(1);
-
-      expect(published).toHaveLength(1);
-      expect(published[0].dest).toBe('/app/slap');
-      expect(JSON.parse(published[0].body!).token).toBe('tok-b');
+      const sends = events.filter((e): e is Extract<GameEvent, { type: 'send' }> => e.type === 'send');
+      expect(sends[0]).toMatchObject({ playerIndex: 1, topCard });
+      expect(sends[1].seq).toBe(sends[0].seq + 1);
     });
 
-    it('emits a slap event immediately', () => {
-      const { session, events } = makeSession();
-      session.hydrate('game-1', buildGame());
-      session.restoreTokens({ 0: 'tok-a', 1: 'tok-b' });
-
-      session.slap(0);
-
+    it('slap emits a slap event immediately', () => {
+      const { session, events } = playing(0);
+      session.slap();
       expect(events).toContainEqual({ type: 'slap' });
     });
   });
@@ -241,357 +390,100 @@ describe('GameSession', () => {
   // --- Auto-grab timer ------------------------------------------------------
 
   describe('auto-grab timer', () => {
-    it('fires grab after 1500 ms when pile becomes grabbable', async () => {
-      vi.useFakeTimers();
-      const { session, published } = makeSession();
-      session.hydrate('game-1', buildGame());
-      session.restoreTokens({ 0: 'tok-a', 1: 'tok-b' });
+    const grabbableBy = (id: string) => buildResponse({
+      eventType: 'SEND',
+      state: buildGame({ pile: buildPile({ grabbable: true, playerThatAddedLastHonourCard: { id } }) }),
+    });
 
-      await session.onResponse(buildResponse({
-        eventType: 'SEND',
-        state: buildGame({
-          pile: buildPile({ grabbable: true, playerThatAddedLastHonourCard: { id: '0' } }),
-        }),
-      }));
+    it('fires my grab after 1500 ms when the pile is mine to grab', async () => {
+      vi.useFakeTimers();
+      const { session, published } = playing(0);
+
+      await session.onResponse(grabbableBy('0'));
 
       vi.advanceTimersByTime(1499);
       expect(published.some(p => p.dest === '/app/grab')).toBe(false);
-
       vi.advanceTimersByTime(1);
-      expect(published.some(p => p.dest === '/app/grab')).toBe(true);
+      expect(published.filter(p => p.dest === '/app/grab')).toHaveLength(1);
+      expect(JSON.parse(published.at(-1)!.body!).token).toBe('tok-0');
     });
 
-    it('cancels pending auto-grab when next event arrives', async () => {
+    it('never grabs for the other seat (a bot grabs for itself on the server)', async () => {
       vi.useFakeTimers();
-      const { session, published } = makeSession();
-      session.hydrate('game-1', buildGame());
-      session.restoreTokens({ 0: 'tok-a', 1: 'tok-b' });
+      const { session, published } = playing(0);
 
-      // First event: pile is grabbable — timer starts
-      await session.onResponse(buildResponse({
-        eventType: 'SEND',
-        state: buildGame({
-          pile: buildPile({ grabbable: true, playerThatAddedLastHonourCard: { id: '0' } }),
-        }),
-      }));
+      await session.onResponse(grabbableBy('1'));
+      vi.advanceTimersByTime(5000);
 
+      expect(published.some(p => p.dest === '/app/grab')).toBe(false);
+    });
+
+    it('cancels a pending auto-grab when the next event arrives, or on cancelAll', async () => {
+      vi.useFakeTimers();
+      const { session, published } = playing(0);
+
+      await session.onResponse(grabbableBy('0'));
       vi.advanceTimersByTime(500);
-
-      // Second event: pile is no longer grabbable — timer is cancelled
-      await session.onResponse(buildResponse({
-        eventType: 'SEND',
-        state: buildGame({ pile: buildPile({ grabbable: false }) }),
-      }));
-
-      vi.advanceTimersByTime(2000);
-      expect(published.some(p => p.dest === '/app/grab')).toBe(false);
-    });
-
-    it('cancelAll stops a pending auto-grab', async () => {
-      vi.useFakeTimers();
-      const { session, published } = makeSession();
-      session.hydrate('game-1', buildGame());
-      session.restoreTokens({ 0: 'tok-a', 1: 'tok-b' });
-
-      await session.onResponse(buildResponse({
-        eventType: 'SEND',
-        state: buildGame({
-          pile: buildPile({ grabbable: true, playerThatAddedLastHonourCard: { id: '0' } }),
-        }),
-      }));
-
+      await session.onResponse(buildResponse({ eventType: 'SEND', state: buildGame() }));
+      await session.onResponse(grabbableBy('0'));
       session.cancelAll();
-      vi.advanceTimersByTime(2000);
+      vi.advanceTimersByTime(5000);
+
       expect(published.some(p => p.dest === '/app/grab')).toBe(false);
-    });
-  });
-
-  // --- Names and session view -----------------------------------------------
-
-  describe('names and session view', () => {
-    it('create("multiplayer", name) sends name in payload', () => {
-      const { session, published } = makeSession();
-      session.create('multiplayer', 'Alice');
-      expect(published).toContainEqual({
-        dest: '/app/create',
-        body: JSON.stringify({ mode: 'MULTIPLAYER', name: 'Alice' }),
-      });
-    });
-
-    it('emits my-name-change on create with a name', () => {
-      const { session, events } = makeSession();
-      session.create('multiplayer', 'Alice');
-      expect(events).toContainEqual({ type: 'my-name-change', name: 'Alice' });
-    });
-
-    it('applySessionView keeps waiting while opponent seat is not joined', () => {
-      const { session, events } = makeSession();
-      session.create('multiplayer', 'Alice');
-      session.applySessionView([
-        { id: 0, name: 'Alice', joined: true },
-        { id: 1, name: null, joined: false },
-      ]);
-      const waitingEvents = events.filter(e => e.type === 'waiting-change');
-      expect(waitingEvents.at(-1)).toEqual({ type: 'waiting-change', waiting: true });
-      expect(events).toContainEqual({ type: 'opponent-name-change', name: null });
-    });
-
-    it('applySessionView clears waiting and sets opponent name once joined', () => {
-      const { session, events } = makeSession();
-      session.create('multiplayer', 'Alice');
-      session.applySessionView([
-        { id: 0, name: 'Alice', joined: true },
-        { id: 1, name: 'Bob', joined: true },
-      ]);
-      const waitingEvents = events.filter(e => e.type === 'waiting-change');
-      expect(waitingEvents.at(-1)).toEqual({ type: 'waiting-change', waiting: false });
-      expect(events).toContainEqual({ type: 'opponent-name-change', name: 'Bob' });
-    });
-
-    it('applySessionView is a no-op in solo mode', () => {
-      const { session, events } = makeSession();
-      session.create('solo', 'Alice');
-      events.length = 0;
-      session.applySessionView([
-        { id: 0, name: 'Alice', joined: true },
-        { id: 1, name: 'Player 2', joined: true },
-      ]);
-      expect(events).toHaveLength(0);
-    });
-
-    it('a JOIN event carrying seats applies them (clears waiting, sets opponent name)', async () => {
-      const { session, events } = makeSession();
-      session.create('multiplayer', 'Alice');
-      await session.onResponse(buildResponse({
-        eventType: 'JOIN',
-        eventData: { player: { id: '1' }, players: [
-          { id: 0, name: 'Alice', joined: true },
-          { id: 1, name: 'Bob', joined: true },
-        ] },
-        state: buildGame(),
-      }));
-      const waitingChanges = events.filter(e => e.type === 'waiting-change');
-      expect(waitingChanges.at(-1)).toEqual({ type: 'waiting-change', waiting: false });
-      expect(events).toContainEqual({ type: 'opponent-name-change', name: 'Bob' });
-    });
-
-    it('restoreSession does not force waiting to false for a multiplayer host', () => {
-      const { session, events } = makeSession();
-      session.create('multiplayer', 'Alice'); // host is waiting
-      events.length = 0;
-      session.restoreSession({ 0: 'tok-0' });
-      const forcedFalse = events.filter(
-        e => e.type === 'waiting-change' && e.waiting === false);
-      expect(forcedFalse).toHaveLength(0);
     });
   });
 
   // --- SEND server response (opponent / echo dedup) -------------------------
 
   describe('SEND response', () => {
-    it('emits a send event for the opponent in multiplayer, with the pre-send topCard', async () => {
-      const { session, events } = makeSession();
+    it('emits a send event for the opponent, with the pre-send top card', async () => {
       const topCard = buildCard({ rank: 'K', suit: 'spade' });
-      session.hydrate('game-1', buildGame({ pile: buildPile({ cards: [topCard] }) }));
-      session.restoreSession({ 1: 'tok-b' }); // multiplayer, my seat = 1, opponent = 0
+      const { session, events } = playing(1, buildGame({ pile: buildPile({ cards: [topCard] }) }));
 
-      await session.onResponse(buildResponse({
-        eventType: 'SEND',
-        eventData: { player: { id: '0' } },
-        state: buildGame(),
-      }));
+      await session.onResponse(buildResponse({ eventType: 'SEND', eventData: { player: { id: '0' } }, state: buildGame() }));
 
-      const sendEvent = events.find(e => e.type === 'send') as
-        Extract<GameEvent, { type: 'send' }> | undefined;
-      expect(sendEvent).toBeDefined();
-      expect(sendEvent!.playerIndex).toBe(0);
-      expect(sendEvent!.topCard).toEqual(topCard);
+      expect(lastOf(events, 'send')).toMatchObject({ playerIndex: 0, topCard });
     });
 
-    it('does NOT emit a second send event for the local player in multiplayer (optimistic already fired)', async () => {
-      const { session, events } = makeSession();
-      session.hydrate('game-1', buildGame({ pile: buildPile({ cards: [buildCard()] }) }));
-      session.restoreSession({ 1: 'tok-b' }); // multiplayer, my seat = 1
+    it('does not emit a second send event for my own send (the optimistic one already fired)', async () => {
+      const { session, events } = playing(1, buildGame({ pile: buildPile({ cards: [buildCard()] }) }));
 
-      session.send(1); // optimistic emit for my own send
+      session.send();
+      await session.onResponse(buildResponse({ eventType: 'SEND', eventData: { player: { id: '1' } }, state: buildGame() }));
 
-      await session.onResponse(buildResponse({
-        eventType: 'SEND',
-        eventData: { player: { id: '1' } }, // server echo of my own send
-        state: buildGame(),
-      }));
-
-      const mySendEvents = events.filter(
-        e => e.type === 'send' && e.playerIndex === 1,
-      );
-      expect(mySendEvents).toHaveLength(1); // only the optimistic one
-    });
-
-    it('does NOT emit a send event from the SEND response in solo (AI already emits via send(1))', async () => {
-      const { session, events } = makeSession();
-      session.hydrate('game-1', buildGame({ pile: buildPile({ cards: [buildCard()] }) }));
-      session.restoreSession({ 0: 'tok-a', 1: 'tok-b' }); // solo, my seat = 0
-
-      await session.onResponse(buildResponse({
-        eventType: 'SEND',
-        eventData: { player: { id: '1' } },
-        state: buildGame(), // empty pile + no available actions => AI stays idle
-      }));
-
-      expect(events.find(e => e.type === 'send')).toBeUndefined();
+      expect(events.filter(e => e.type === 'send')).toHaveLength(1);
     });
 
     it('skips opponent send animations while catching up (queue backed up)', async () => {
-      const events: GameEvent[] = [];
       let releaseAnimation!: () => void;
       const animationGate = new Promise<void>(res => { releaseAnimation = res; });
-
-      const webSocket: WebSocketPort = {
-        publish: () => {},
-        subscribeToGame: () => {},
-        setPresence: () => {},
-        clearPresence: () => {},
-      };
-      const callbacks: GameSessionCallbacks = {
-        onEvent: (e) => events.push(e),
-        awaitAnimation: () => animationGate,
-      };
-      const session = new GameSession(webSocket, callbacks, () => new AI(1, 0));
-      session.hydrate('game-1', buildGame());
-      session.restoreSession({ 1: 'tok-b' }); // multiplayer, my seat = 1, opponent = 0
+      const { session, events } = makeSession(() => animationGate);
+      session.restore('game-1', 1, 'tok-1');
+      session.hydrateGame(buildGame({ players: [buildPlayer({ id: '0' }), buildPlayer({ id: '1' })] }));
 
       // A GRAB by the opponent blocks on awaitAnimation, letting the queue build.
       const drain = session.onResponse(buildGrabResponse('0', buildGame()));
-      // Four opponent SEND responses pile up behind the blocked grab animation.
       for (let i = 0; i < 4; i++) {
-        session.onResponse(buildResponse({
-          eventType: 'SEND',
-          eventData: { player: { id: '0' } },
-          state: buildGame(),
-        }));
+        session.onResponse(buildResponse({ eventType: 'SEND', eventData: { player: { id: '0' } }, state: buildGame() }));
       }
       releaseAnimation();
       await drain;
 
-      const sendEvents = events.filter(e => e.type === 'send');
       // With threshold 3: the first SEND (3 still queued) is skipped, the rest emit.
-      expect(sendEvents).toHaveLength(3);
+      expect(events.filter(e => e.type === 'send')).toHaveLength(3);
     });
   });
 
-  // --- Presence + connection events -----------------------------------------
+  // --- Presence --------------------------------------------------------------
 
-  describe('presence + connection events', () => {
-    it('sends presence after a multiplayer create', async () => {
-      const { session, presence } = makeSession();
-      session.create('multiplayer', 'Bob');
-      await session.onResponse(buildCreateResponse('game-7', { 0: 'tok-mp' }));
-      expect(presence.some(p => p.includes('game-7') && p.includes('tok-mp'))).toBe(true);
-    });
-
-    it('does NOT send presence in solo mode', async () => {
-      const { session, presence } = makeSession();
-      session.create('solo', 'Solo');
-      await session.onResponse(buildCreateResponse('game-8', { 0: 'a', 1: 'b' }));
-      expect(presence.length).toBe(0);
-    });
-
-    it('emits presence-event on OPPONENT_DISCONNECTED, forwarding eventData verbatim', async () => {
-      const { session, events } = makeSession();
-      session.create('multiplayer', 'Bob');
-      await session.onResponse(buildCreateResponse('game-9', { 0: 'tok' }));
-      await session.onResponse(buildResponse({
-        eventType: 'OPPONENT_DISCONNECTED',
-        eventData: { disconnectedSeat: 1, deadlineEpochMs: 1234 },
-      }));
-      expect(events).toContainEqual({
-        type: 'presence-event',
-        eventType: 'OPPONENT_DISCONNECTED',
-        eventData: { disconnectedSeat: 1, deadlineEpochMs: 1234 },
-      });
-    });
-
-    it('emits presence-event on OPPONENT_RECONNECTED, forwarding eventData verbatim', async () => {
-      const { session, events } = makeSession();
-      session.create('multiplayer', 'Bob');
-      await session.onResponse(buildCreateResponse('game-10', { 0: 'tok' }));
-      await session.onResponse(buildResponse({
-        eventType: 'OPPONENT_RECONNECTED',
-        eventData: { reconnectedSeat: 1 },
-      }));
-      expect(events).toContainEqual({
-        type: 'presence-event',
-        eventType: 'OPPONENT_RECONNECTED',
-        eventData: { reconnectedSeat: 1 },
-      });
-    });
-  });
-
-  // --- REMATCH --------------------------------------------------------------
-
-  describe('REMATCH', () => {
-    it('solo rematch() publishes /app/rematch for BOTH seat tokens', async () => {
-      const { session, published } = makeSession();
-      session.create('solo');
-      await session.onResponse(buildCreateResponse('game-1', { 0: 'tok-a', 1: 'tok-b' }));
-
-      session.rematch();
-
-      const rematchPublishes = published.filter(p => p.dest === '/app/rematch');
-      expect(rematchPublishes).toHaveLength(2);
-      const tokens = rematchPublishes.map(p => JSON.parse(p.body!).token).sort();
-      expect(tokens).toEqual(['tok-a', 'tok-b']);
-    });
-
-    it('multiplayer rematch() publishes only for the local seat and emits pending', async () => {
-      const { session, published, events } = makeSession();
-      session.create('multiplayer', 'Alice');
-      await session.onResponse(buildCreateResponse('game-1', { 0: 'tok-a' }));
-
-      session.rematch();
-
-      const rematchPublishes = published.filter(p => p.dest === '/app/rematch');
-      expect(rematchPublishes).toHaveLength(1);
-      expect(JSON.parse(rematchPublishes[0].body!).token).toBe('tok-a');
-      expect(events).toContainEqual({ type: 'rematch', status: 'pending', requestedBy: 0 });
-    });
-
-    it('REMATCH pending from opponent emits a pending event with their seat', async () => {
-      const { session, events } = makeSession();
-      session.create('multiplayer', 'Alice');
-      await session.onResponse(buildCreateResponse('game-1', { 0: 'tok-a' }));
-
-      await session.onResponse(buildRematchResponse('PENDING', '1'));
-
-      expect(events).toContainEqual({ type: 'rematch', status: 'pending', requestedBy: 1 });
-    });
-
-    it('REMATCH started emits a started event', async () => {
-      const { session, events } = makeSession();
-      session.create('solo');
-      await session.onResponse(buildCreateResponse('game-1', { 0: 'tok-a', 1: 'tok-b' }));
-
-      await session.onResponse(buildRematchResponse('STARTED', '0'));
-
-      expect(events).toContainEqual({ type: 'rematch', status: 'started' });
-    });
-  });
-
-  // --- Event queue ----------------------------------------------------------
-
-  describe('event queue seq counters', () => {
-    it('increments seq on each send event', () => {
-      const { session, events } = makeSession();
-      session.hydrate('game-1', buildGame());
-      session.restoreTokens({ 0: 'tok-a', 1: 'tok-b' });
-
-      session.send(0);
-      session.send(0);
-
-      const seqs = events
-        .filter((e): e is Extract<GameEvent, { type: 'send' }> => e.type === 'send')
-        .map(e => e.seq);
-      expect(seqs[1]).toBe(seqs[0] + 1);
+  describe('presence events', () => {
+    it.each([
+      ['OPPONENT_DISCONNECTED', { disconnectedSeat: 1, deadlineEpochMs: 1234 }],
+      ['OPPONENT_RECONNECTED', { reconnectedSeat: 1 }],
+    ] as const)('forwards %s verbatim', async (eventType, eventData) => {
+      const { session, events } = playing(0);
+      await session.onResponse(buildResponse({ eventType, eventData }));
+      expect(events).toContainEqual({ type: 'presence-event', eventType, eventData });
     });
   });
 });

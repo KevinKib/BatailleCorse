@@ -30,12 +30,6 @@ class WebSocketService {
         this.log('[STOMP] Connected:', frame);
         setConnectionOnline(true);
 
-        // Generic channel: still carries Bataille Corse's CREATE answer until it adopts the shared lobby.
-        stompClient.subscribe('/topic/game', message => {
-          const response = JSON.parse(message.body);
-          useBatailleCorseStore().onResponse(response);
-        });
-
         // Re-subscribe to per-game channel after reconnect.
         if (this.currentGameId) {
           this.doSubscribeToGame(this.currentGameId);

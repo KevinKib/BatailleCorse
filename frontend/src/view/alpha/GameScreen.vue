@@ -1,4 +1,31 @@
 <template>
+  <!-- One root for every phase: the route fade then follows the room, and switching from the lobby to the
+       table is a plain re-render instead of a cross-fade of two screens on top of each other. -->
+  <div class="bc-room">
+  <div v-if="phase === 'lobby' && lobby" class="room-screen">
+    <GameLobby
+      :game="game"
+      :lobby="lobby"
+      :error="lobbyError"
+      :starting="starting"
+      @start="batailleCorseStore.startGame()"
+      @leave="leaveLobby"
+      @add-bot="batailleCorseStore.addBot()"
+      @remove-bot="seat => batailleCorseStore.removeBot(seat)"
+      @set-option="(key, value) => batailleCorseStore.setOption(key, value)"
+      @set-seat-option="(seat, key, value) => batailleCorseStore.setSeatOption(seat, key, value)"
+      @rename="name => batailleCorseStore.rename(name)" />
+  </div>
+
+  <!-- First server answer not here yet (e.g. arriving through an invite link): a neutral felt screen, not the
+       table, so the game UI never flashes before the lobby. -->
+  <div v-else-if="phase === 'connecting'" class="room-screen connecting" data-test="connecting"
+       role="status" aria-live="polite">
+    <i class="pi pi-spin pi-spinner connecting-spinner" aria-hidden="true"></i>
+    <span>{{ ui.connecting }}</span>
+  </div>
+
+  <template v-else>
   <div class="gamescreen flex">
 
     <GameTimer :time="formattedDuration" />
@@ -55,7 +82,7 @@
       <div class="middle_side">
         <div class="player_tag_wrap">
           <YourTurnIndicator class="turn-slot" :active="showFirstTurnHint" />
-          <h1 :class="['player_tag', { 'player_tag--active': showMyTurn }]">{{ myName || settingsStore.playerName || 'You' }}</h1>
+          <h1 :class="['player_tag', { 'player_tag--active': showMyTurn }]">{{ myLabel }}</h1>
         </div>
         <div class="card stacked">
           <PlayingCard
@@ -71,16 +98,14 @@
         </div>
         <div class="action_buttons">
           <Button class="action_button" icon="pi pi-arrow-up" severity="success" label="Send" rounded
-            @click="send(myPlayerIndex)" :disabled="isButtonDisabled(myPlayerIndex, 'send')"/>
+            @click="send()" :disabled="isButtonDisabled(myPlayerIndex, 'send')"/>
           <Button class="action_button" icon="pi pi-hammer" severity="warn" label="Slap" rounded
-            @click="slap(myPlayerIndex)" :disabled="isButtonDisabled(myPlayerIndex, 'slap')"/>
+            @click="slap()" :disabled="isButtonDisabled(myPlayerIndex, 'slap')"/>
         </div>
       </div>
 
       <div class="right_side"></div>
     </div>
-
-    <WaitingOverlay v-if="isWaiting" />
 
     <DisconnectOverlay
       v-if="opponentDisconnected"
@@ -93,6 +118,7 @@
       :did-i-win="didIWin"
       :subtitle="endSubtitle"
       :rematch-button="rematchButton"
+      :error="rematch === 'failed' ? ui.rematchFailed : undefined"
       @play-again="onPlayAgain"
     />
   </div>
@@ -131,6 +157,8 @@
   >
     {{ cardDeltaIndicator.delta > 0 ? '+' : '' }}{{ cardDeltaIndicator.delta }}
   </div>
+  </template>
+  </div>
 
 </template>
 
@@ -141,15 +169,20 @@ import RulesPanel from '../../components/RulesPanel.vue';
 import HotkeySettings from '../../components/HotkeySettings.vue';
 import GameTimer from '../../components/GameTimer.vue';
 import YourTurnIndicator from '../../components/YourTurnIndicator.vue';
-import WaitingOverlay from '../../components/WaitingOverlay.vue';
+import GameLobby from '../../components/lobby/GameLobby.vue';
 import DisconnectOverlay from '../../components/DisconnectOverlay.vue';
 import EndGameOverlay from '../../components/EndGameOverlay.vue';
 import { rematchButtonFor } from '../../model/RematchButton';
 import { Button } from 'primevue';
 import { storeToRefs } from 'pinia';
+import { useRouter } from 'vue-router';
 import { useBatailleCorseStore } from '../../state/BatailleCorse.store';
 import { useSettingsStore } from '../../state/Settings.store';
-import { DIFFICULTY } from '../../model/Difficulty';
+import { findGame } from '../../model/games';
+import { optionLabel } from '../../model/lobby/optionLabel';
+import type { OptionDescriptor } from '../../model/lobby/LobbyView';
+import { format } from '../../locales/format';
+import type SessionSeat from '../../model/SessionSeat';
 import { useGameAnimations } from '../../composables/useGameAnimations';
 import { useHotkeys } from '../../composables/useHotkeys';
 import { useBatailleCorseHotkeySettings } from '../../composables/useBatailleCorseHotkeySettings';
@@ -165,9 +198,12 @@ import { computed, onBeforeUnmount, useTemplateRef } from 'vue';
 import { endGameMessage } from '../../model/endGameMessage';
 
 const messages = useI18n();
+const ui = messages.batailleCorseUi;
+const game = findGame('bataillecorse')!;
+const router = useRouter();
 const batailleCorseStore = useBatailleCorseStore();
-const { state: batailleCorse, mode, myPlayerIndex, waiting, myName, opponentName, liveDisconnections,
-        rematchState } = storeToRefs(batailleCorseStore);
+const { state: batailleCorse, lobby, phase, lobbyError, starting, rematch, myPlayerIndex, seats, mySeatInfo,
+        opponentSeat, liveDisconnections } = storeToRefs(batailleCorseStore);
 
 const pile = useTemplateRef("pile");
 const opponentCard = useTemplateRef("opponentCard");
@@ -188,23 +224,35 @@ function isButtonDisabled(playerIndex: number, action: Action) {
   return !(batailleCorse.value?.canPlayerAct(playerIndex, action) ?? false);
 }
 
-function send(playerIndex: number) {
-  batailleCorseStore.send(playerIndex);
+// The buttons and the shortcuts act for my own seat only.
+function send() {
+  batailleCorseStore.send();
 }
 
-function slap(playerIndex: number) {
-  batailleCorseStore.slap(playerIndex);
+function slap() {
+  batailleCorseStore.slap();
 }
 
 const settingsStore = useSettingsStore();
 
-const difficultyLabel = computed(() => DIFFICULTY[settingsStore.difficulty]?.name);
-
 const opponentIndex = computed(() => 1 - myPlayerIndex.value);
-const isSolo = computed(() => mode.value === 'solo');
-const isWaiting = computed(() => waiting.value);
-const opponentLabel = computed(() =>
-  isSolo.value ? `Computer (${difficultyLabel.value})` : (opponentName.value ?? 'Opponent'));
+
+// How a seat is called at the table: a bot is "Bot N (tier)", a human the name typed in the lobby, else
+// "Player N". Names are user input: only ever rendered as text.
+const tierDescriptor: OptionDescriptor = {
+  key: 'tier', type: 'CHOICE', values: [], defaultValue: '1', labelKey: 'options.bataillecorse.tier',
+};
+function seatLabel(seat: SessionSeat): string {
+  if (seat.bot) {
+    const botNumber = seats.value.filter(s => s.bot && s.id <= seat.id).length;
+    const bot = format(ui.botLabel, { n: botNumber });
+    const tier = seat.seatOptions?.tier;
+    return tier === undefined ? bot : format(ui.botWithTier, { bot, tier: optionLabel(messages, tierDescriptor, tier, {}) });
+  }
+  return seat.name?.trim() || format(ui.playerLabel, { n: seat.id + 1 });
+}
+const opponentLabel = computed(() => (opponentSeat.value ? seatLabel(opponentSeat.value) : ui.opponent));
+const myLabel = computed(() => mySeatInfo.value?.name?.trim() || settingsStore.playerName || 'You');
 
 const pileIsEmpty = computed(() => (batailleCorse.value?.pile.cards.length ?? 0) === 0);
 
@@ -217,10 +265,19 @@ const endSubtitle = computed(() =>
     batailleCorse.value?.opponentForfeitReason(myPlayerIndex.value) ?? null,
   ));
 
-const rematchButton = computed(() => rematchButtonFor(isSolo.value, rematchState.value));
+const rematchButton = computed(() =>
+  rematchButtonFor(rematch.value, { playAgain: ui.playAgain, pending: ui.rematchPending }));
 
+// Play again reopens the lobby (the bot and its tier come back); the screen follows the phase.
 function onPlayAgain() {
-  batailleCorseStore.rematch();
+  void batailleCorseStore.playAgain(mySeatInfo.value?.name ?? (settingsStore.playerName || undefined));
+}
+
+// Leaving frees the seat: the leaver goes to the Game selection like every other exit. A leave that could not
+// be sent keeps the player in the lobby, with the error shown.
+function leaveLobby() {
+  // Replace, not push: Back must not return to a room the player no longer sits in.
+  if (batailleCorseStore.leave()) router.replace({ name: 'games' });
 }
 
 // A game can end on ANY move — a winning grab/slap or a SEND that empties the
@@ -232,17 +289,16 @@ const { showEndOverlay, revealImmediatelyIfOver, cancel: cancelEndScreen } =
 
 useGameBootstrap({ revealImmediatelyIfOver });
 
-// An in-progress game: state loaded, not waiting, not yet over. Drives both the
-// leave-confirmation guard and the cosmetic game-duration timer.
-const isInProgress = computed(() =>
-  !!batailleCorse.value && !isGameOver.value && !isWaiting.value);
+// An in-progress game: state loaded, not yet over. Drives both the leave-confirmation guard and the
+// cosmetic game-duration timer.
+const isInProgress = computed(() => phase.value === 'playing');
 
 // Cosmetic game-duration timer; the composable freezes the value at game over.
 const { formattedDuration, cancel: cancelGameDuration } =
   useGameDuration(() => isInProgress.value, () => isGameOver.value);
 
 // BC has a single opponent, so the disconnections map holds at most one entry.
-// liveDisconnections already excludes solo / self via the store's presentSeats narrowing.
+// liveDisconnections already excludes my own seat via the store's presentSeats narrowing.
 const { secondsRemainingFor, cancel: cancelDisconnectCountdown } = useSeatDisconnectCountdown({
   disconnections: () => liveDisconnections.value,
   isGameOver: () => isGameOver.value,
@@ -260,23 +316,21 @@ const secondsRemaining = computed(() =>
 
 useLeaveGuard({
   isInProgress: () => isInProgress.value,
-  mode: () => mode.value,
-  forfeit: () => batailleCorseStore.forfeit(myPlayerIndex.value),
+  forfeit: () => batailleCorseStore.forfeit(),
 });
 
 const { showMyTurn, showOpponentTurn, showFirstTurnHint, cancel: cancelTurnIndicator } = useTurnIndicator({
   state: () => batailleCorse.value,
   myPlayerIndex: () => myPlayerIndex.value,
   opponentIndex: () => opponentIndex.value,
-  isWaiting: () => isWaiting.value,
   showEndOverlay: () => showEndOverlay.value,
 });
 
 const hotkeySettings = useBatailleCorseHotkeySettings();
 
 useHotkeys(
-  () => { if (!isButtonDisabled(myPlayerIndex.value, 'send')) send(myPlayerIndex.value); },
-  () => { if (!isButtonDisabled(myPlayerIndex.value, 'slap')) slap(myPlayerIndex.value); },
+  () => { if (!isButtonDisabled(myPlayerIndex.value, 'send')) send(); },
+  () => { if (!isButtonDisabled(myPlayerIndex.value, 'slap')) slap(); },
   () => [settingsStore.sendKey],
   () => [settingsStore.slapKey],
 );
@@ -291,6 +345,23 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+
+/* The lobby and the connecting screen sit on the shared felt background, full height. */
+.room-screen {
+  height: 100vh;
+  height: 100dvh;
+}
+.connecting {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  color: rgba(255, 255, 255, 0.85);
+  font-family: var(--font-title);
+  letter-spacing: 0.04em;
+}
+.connecting-spinner { font-size: 1.5rem; color: var(--gold); }
 
 /* Bottom-right corner, mirroring Back: the top row (timer, opponent label, rules) has no room left
    at phone width. The panel opens upwards from it. */

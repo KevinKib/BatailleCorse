@@ -143,6 +143,16 @@ export const messagesEn: Messages = {
       rematchFailed: 'Could not start a new game. Try again.',
     },
   },
+  batailleCorseUi: {
+    connecting: 'Joining the table…',
+    opponent: 'Opponent',
+    playerLabel: 'Player {n}',
+    botLabel: 'Bot {n}',
+    botWithTier: '{bot} ({tier})',
+    playAgain: 'Play again',
+    rematchPending: 'Joining the new table…',
+    rematchFailed: 'Could not start a new game. Try again.',
+  },
   gamePicker: {
     title: 'Card Games',
     choose: 'Choose a game',
@@ -212,6 +222,13 @@ export const messagesEn: Messages = {
     nowHost: 'You are now the host.',
   },
   options: {
+    bataillecorse: {
+      tier: {
+        label: 'Level',
+        '0': 'Training', '1': 'Bronze', '2': 'Silver', '3': 'Gold', '4': 'Platinum',
+        '5': 'Diamond', '6': 'Champion', '7': 'Challenger', '8': 'Legend',
+      },
+    },
     bullshit: {
       claimMode: { label: 'Claim mode', rank: 'By rank ({range})', suit: 'By suit' },
       deckSize: { label: 'Deck', '32': '32 cards (7 to Ace)', '52': '52 cards' },

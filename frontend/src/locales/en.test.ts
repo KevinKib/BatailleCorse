@@ -119,6 +119,19 @@ describe('English messages', () => {
     expect(o.vars.range.deckSize['52']).toBeTruthy();
   });
 
+  it('givenBatailleCorseTier_thenTheNineTiersAreNamedFromTrainingToLegend', () => {
+    const tier = messagesEn.options.bataillecorse.tier;
+    expect(tier.label).toBeTruthy();
+    expect(['0', '1', '2', '3', '4', '5', '6', '7', '8'].map(v => tier[v])).toEqual(
+      ['Training', 'Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Champion', 'Challenger', 'Legend']);
+  });
+
+  it('givenBatailleCorseTableMessages_thenEveryLeafStringIsNonEmptyAndTheBotNameQuotesItsTier', () => {
+    for (const text of Object.values(messagesEn.batailleCorseUi)) expect(text).toBeTruthy();
+    expect(messagesEn.batailleCorseUi.botWithTier).toContain('{bot}');
+    expect(messagesEn.batailleCorseUi.botWithTier).toContain('{tier}');
+  });
+
   it('givenGamePickerMessages_thenEveryLeafStringIsNonEmpty', () => {
     const empty: string[] = [];
     const visit = (node: unknown, path: string) => {
