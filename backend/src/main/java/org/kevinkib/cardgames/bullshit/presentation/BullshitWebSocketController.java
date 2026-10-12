@@ -2,6 +2,7 @@ package org.kevinkib.cardgames.bullshit.presentation;
 
 import org.kevinkib.cardgames.presentation.dto.CardLabels;
 import org.kevinkib.cardgames.bullshit.domain.Bullshit;
+import org.kevinkib.cardgames.bullshit.domain.BullshitFactory;
 import org.kevinkib.cardgames.bullshit.presentation.api.BullshitDiscardPayload;
 import org.kevinkib.cardgames.bullshit.presentation.dto.event.BullshitEventType;
 import org.kevinkib.cardgames.game.GameId;
@@ -38,7 +39,10 @@ public class BullshitWebSocketController {
     @MessageMapping("/bullshit/start")
     public void start(@Payload GameActionPayload payload) {
         seatCommands.handle(payload.gameId(), payload.token(), BullshitEventType.START.toString(), (gameId, seat) -> {
-            Bullshit game = (Bullshit) sessionService.startGame(gameId, payload.token());
+            if (!BullshitFactory.GAME_TYPE.equals(sessionService.gameType(gameId))) {
+                throw new IllegalArgumentException("This room is not a Bullshit game");
+            }
+            Bullshit game = sessionService.startGame(gameId, payload.token(), Bullshit.class);
             sessionService.touch(gameId);
             broadcaster.broadcast(game, BullshitEventType.START.toString(), new EmptyEventData(), "Game started.");
         }, this::stateFor);

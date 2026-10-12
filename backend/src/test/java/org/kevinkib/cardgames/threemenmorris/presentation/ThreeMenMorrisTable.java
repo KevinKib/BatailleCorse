@@ -13,7 +13,7 @@ import org.kevinkib.cardgames.threemenmorris.domain.ThreeMenMorrisFactory;
 /** The Three Men's Morris application layer wired over a real session core and a recording messaging double. */
 final class ThreeMenMorrisTable {
 
-    private final SessionTable base = new SessionTable(new ThreeMenMorrisFactory());
+    private final SessionTable base = new SessionTable(new ThreeMenMorrisFactory(), new org.kevinkib.cardgames.bullshit.domain.BullshitFactory());
 
     final InMemorySessionRepository repository = base.repository;
     final SessionService sessions = base.sessions;

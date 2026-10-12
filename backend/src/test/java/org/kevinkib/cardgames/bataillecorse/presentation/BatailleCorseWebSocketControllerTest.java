@@ -29,12 +29,27 @@ class BatailleCorseWebSocketControllerTest {
 
     @BeforeEach
     void setUp() {
-        sessionService = new SessionService(new InMemorySessionRepository(java.time.Clock.systemUTC()), new org.kevinkib.cardgames.sessionmanagement.core.application.GameFactories(java.util.List.of(new org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseFactory())));
+        sessionService = new SessionService(new InMemorySessionRepository(java.time.Clock.systemUTC()), new org.kevinkib.cardgames.sessionmanagement.core.application.GameFactories(java.util.List.of(new org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseFactory(), new org.kevinkib.cardgames.bullshit.domain.BullshitFactory())));
         template = mock(SimpMessagingTemplate.class);
-        GameMessagingService messaging = new GameMessagingService(template, null);
+        GameMessagingService messaging = new GameMessagingService(template, sessionService);
         BatailleCorseStateBroadcaster broadcaster = new BatailleCorseStateBroadcaster(messaging);
         controller = new BatailleCorseWebSocketController(sessionService, messaging,
                 new BatailleCorseGameActions(sessionService, broadcaster), broadcaster);
+    }
+
+    @Test
+    void givenARoomOfAnotherGame_whenStart_thenRefusedToTheSenderAndNotStarted() {
+        var room = sessionService.createRoom("bullshit", "Alice");
+        GameId id = new GameId(room.gameId());
+        sessionService.joinRoom(id, "Bob");
+
+        controller.start(new GameActionPayload(room.gameId(), room.hostToken()));
+
+        verify(template).convertAndSend(
+                org.mockito.ArgumentMatchers.anyString(),
+                (Object) argThat(r -> !((Response) r).isSuccess()
+                        && "This room is not a Bataille Corse game".equals(((Response) r).getMessage())));
+        org.junit.jupiter.api.Assertions.assertTrue(sessionService.findGame(id).isEmpty());
     }
 
     @Nested

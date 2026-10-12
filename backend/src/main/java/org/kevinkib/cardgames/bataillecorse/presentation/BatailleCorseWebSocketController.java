@@ -88,7 +88,7 @@ public class BatailleCorseWebSocketController {
             if (!BatailleCorseFactory.GAME_TYPE.equals(sessionService.gameType(gameId))) {
                 throw new IllegalArgumentException("This room is not a Bataille Corse game");
             }
-            BatailleCorse game = (BatailleCorse) sessionService.startGame(gameId, payload.token());
+            BatailleCorse game = sessionService.startGame(gameId, payload.token(), BatailleCorse.class);
             sessionService.touch(gameId);
             broadcaster.broadcast(game, type, new EmptyEventData(), "Game started.");
         } catch (Exception e) {

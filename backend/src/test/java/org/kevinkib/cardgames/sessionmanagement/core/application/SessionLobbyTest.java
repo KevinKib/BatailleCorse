@@ -73,6 +73,18 @@ class SessionLobbyTest {
     }
 
     @Test
+    void givenHostAndEnoughPlayers_whenStartGameTyped_thenReturnsTheConcreteGame() {
+        RoomCreated room = service.createRoom("bullshit", "Alice");
+        GameId id = new GameId(room.gameId());
+        service.joinRoom(id, "Bob");
+
+        org.kevinkib.cardgames.bullshit.domain.Bullshit game =
+                service.startGame(id, room.hostToken(), org.kevinkib.cardgames.bullshit.domain.Bullshit.class);
+
+        assertThat(service.findGame(id).get() == game, is(true));
+    }
+
+    @Test
     void givenNonHostToken_whenStartGame_thenThrowsNotHost() {
         GameId id = new GameId(service.createRoom("bullshit", "Alice").gameId());
         JoinResult bob = service.joinRoom(id, "Bob");

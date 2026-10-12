@@ -44,7 +44,7 @@ public class ThreeMenMorrisWebSocketController {
             if (!ThreeMenMorrisFactory.GAME_TYPE.equals(sessionService.gameType(gameId))) {
                 throw new IllegalArgumentException("This room is not a Three Men's Morris game");
             }
-            ThreeMenMorris game = (ThreeMenMorris) sessionService.startGame(gameId, payload.token());
+            ThreeMenMorris game = sessionService.startGame(gameId, payload.token(), ThreeMenMorris.class);
             sessionService.touch(gameId);
             broadcaster.broadcast(game, ThreeMenMorrisEventType.START.toString(), new EmptyEventData(),
                     "Game started.");
