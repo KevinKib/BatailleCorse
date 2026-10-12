@@ -10,7 +10,7 @@ import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.kobo.domain.Kobo;
 import org.kevinkib.cardgames.kobo.presentation.KoboGameActions;
 import org.kevinkib.cardgames.kobo.presentation.KoboStateBroadcaster;
-import org.kevinkib.cardgames.kobo.presentation.dto.CardDto;
+import org.kevinkib.cardgames.presentation.dto.CardDto;
 import org.kevinkib.cardgames.kobo.presentation.dto.KoboDto;
 import org.kevinkib.cardgames.sessionmanagement.core.application.RoomCreated;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;

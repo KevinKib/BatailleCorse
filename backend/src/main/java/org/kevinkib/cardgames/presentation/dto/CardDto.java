@@ -1,9 +1,14 @@
-package org.kevinkib.cardgames.kobo.presentation.dto;
+package org.kevinkib.cardgames.presentation.dto;
 
 import org.kevinkib.cards.domain.Card;
 
+/**
+ * A card as the frontend sees it: its rank and suit labels, and a name ({@code SUIT_RANK}) naming its
+ * image. Shared by every game that deals French cards; the games' domains never see it.
+ */
 public record CardDto(String rank, String suit, String name) {
 
+    /** The DTO of a card, or null for no card. A missing rank or suit stays null and leaves the name. */
     public static CardDto from(Card card) {
         if (card == null) {
             return null;

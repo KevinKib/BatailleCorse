@@ -1,7 +1,7 @@
 package org.kevinkib.cardgames.kobo.presentation.dto.event;
 
 import org.kevinkib.cardgames.kobo.domain.event.KoboEvent;
-import org.kevinkib.cardgames.kobo.presentation.dto.CardDto;
+import org.kevinkib.cardgames.presentation.dto.CardDto;
 import org.kevinkib.cardgames.presentation.dto.event.EventData;
 
 /**

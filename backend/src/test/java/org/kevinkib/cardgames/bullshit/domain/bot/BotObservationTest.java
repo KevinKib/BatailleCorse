@@ -10,7 +10,7 @@ import org.kevinkib.cardgames.bullshit.domain.pile.Discard;
 import org.kevinkib.cardgames.bullshit.domain.player.Player;
 import org.kevinkib.cardgames.bullshit.presentation.dto.BullshitDto;
 import org.kevinkib.cardgames.bullshit.presentation.dto.BullshitPlayerDto;
-import org.kevinkib.cardgames.bullshit.presentation.dto.CardDto;
+import org.kevinkib.cardgames.presentation.dto.CardDto;
 import org.kevinkib.cardgames.bullshit.presentation.dto.PendingWinnerDto;
 import org.kevinkib.cardgames.bullshit.presentation.dto.TableDto;
 import org.kevinkib.cardgames.game.PlayerId;

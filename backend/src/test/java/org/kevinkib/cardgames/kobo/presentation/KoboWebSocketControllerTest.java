@@ -10,7 +10,7 @@ import org.kevinkib.cardgames.kobo.presentation.api.KoboMatchPayload;
 import org.kevinkib.cardgames.kobo.presentation.api.KoboSlotPayload;
 import org.kevinkib.cardgames.kobo.presentation.api.KoboSwapPayload;
 import org.kevinkib.cardgames.kobo.presentation.api.KoboTargetPayload;
-import org.kevinkib.cardgames.kobo.presentation.dto.CardDto;
+import org.kevinkib.cardgames.presentation.dto.CardDto;
 import org.kevinkib.cardgames.kobo.presentation.dto.KoboDto;
 import org.kevinkib.cardgames.sessionmanagement.core.application.RoomCreated;
 import org.kevinkib.cardgames.presentation.api.GameActionPayload;

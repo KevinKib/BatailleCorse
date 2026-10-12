@@ -1,5 +1,6 @@
 package org.kevinkib.cardgames.bullshit.presentation.bot;
 
+import org.kevinkib.cardgames.presentation.dto.CardLabels;
 import org.kevinkib.cardgames.presentation.bot.ThinkingDelay;
 import org.kevinkib.cardgames.presentation.bot.BotSeats;
 import org.kevinkib.cardgames.presentation.bot.BotScheduler;
@@ -9,7 +10,6 @@ import org.kevinkib.cardgames.bullshit.domain.bot.BotDecision;
 import org.kevinkib.cardgames.bullshit.domain.bot.BotMemory;
 import org.kevinkib.cardgames.bullshit.domain.bot.BotObservation;
 import org.kevinkib.cardgames.bullshit.domain.bot.BotStrategy;
-import org.kevinkib.cardgames.bullshit.presentation.BullshitCardMapper;
 import org.kevinkib.cardgames.bullshit.presentation.BullshitGameActions;
 import org.kevinkib.cardgames.bullshit.presentation.BullshitStateListener;
 import org.kevinkib.cardgames.bullshit.presentation.dto.event.BullshitEventType;
@@ -175,7 +175,7 @@ public class BullshitBotCoordinator implements BullshitStateListener, GameEvicti
         } else if (BullshitEventType.CALL_BULLSHIT.toString().equals(eventType)
                 && eventData instanceof CallBullshitEventData call) {
             resolveClaim(table);
-            List<Card> revealed = BullshitCardMapper.toCards(call.revealedCards());
+            List<Card> revealed = call.revealedCards().stream().map(CardLabels::card).toList();
             PlayerId picker = new PlayerId(call.pickerSeat());
             table.memories.values().forEach(memory -> {
                 memory.onReveal(picker, revealed);
