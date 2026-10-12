@@ -132,3 +132,22 @@ describe('GameHome', () => {
     expect(wrapper.find('[data-test="gone-notice"]').exists()).toBe(false);
   });
 });
+
+describe('GameHome local preferences', () => {
+  beforeEach(() => { setActivePinia(createPinia()); localStorage.clear(); });
+
+  for (const [key, actions] of [['bataillecorse', ['send', 'slap']], ['bullshit', ['discard', 'call']]] as const) {
+    it(`given_${key}_thenAGearOpensItsShortcutsBeforeAnyGameStarts`, async () => {
+      const { wrapper } = await mountHome(key);
+      const gear = wrapper.get('[data-test="hotkeys-button"]');
+      expect(gear.attributes('aria-label')).toBe(messagesEn.hotkeys.open);
+      await gear.trigger('click');
+      for (const id of actions) expect(wrapper.find(`[data-test="hotkey-${id}-key"]`).exists()).toBe(true);
+    });
+  }
+
+  it('givenTheGear_thenItLivesInsideThePanelSoItNeverMovesTheLayout', async () => {
+    const { wrapper } = await mountHome('bullshit');
+    expect(wrapper.get('[data-test="start-panel"]').find('[data-test="hotkeys-button"]').exists()).toBe(true);
+  });
+});

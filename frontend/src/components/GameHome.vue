@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { Button, InputText } from 'primevue';
 import TitlePanel from './TitlePanel.vue';
+import LocalPreferences from './LocalPreferences.vue';
 import type { GameDefinition } from '../model/games';
 import { useSettingsStore } from '../state/Settings.store';
 import { useI18n } from '../composables/useI18n';
@@ -53,6 +54,7 @@ onMounted(() => preloadAllCards());
 
 <template>
   <TitlePanel :title="gameName">
+    <LocalPreferences :game="game" />
     <p v-if="gone" class="notice" role="status" data-test="gone-notice">{{ ui.gameGone }}</p>
     <p v-else-if="lost" class="notice" role="status" data-test="lost-notice">{{ ui.seatLost }}</p>
     <div class="field-group">
