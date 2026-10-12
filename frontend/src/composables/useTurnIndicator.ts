@@ -1,7 +1,5 @@
 import { computed, readonly, ref, watch } from 'vue';
 
-export const YOUR_TURN_LABEL = 'YOUR TURN';
-
 /** Minimal structural view of the game model this composable needs. `BatailleCorse` satisfies it. */
 export interface TurnState {
   canSend(playerIndex: number): boolean;
@@ -18,7 +16,7 @@ interface UseTurnIndicatorOptions {
 /**
  * Per-seat turn glow driven by the backend's `canSend(seat)` (the server only
  * offers SEND to the player whose turn it is and only while a card can be added),
- * plus a one-time "YOUR TURN" hint shown the first time it becomes the player's
+ * plus a one-time "Your turn" hint shown the first time it becomes the player's
  * turn and then dismissed for the rest of the game. Cues are suppressed while an
  * overlay owns the screen. The caller wires `cancel()` into onBeforeUnmount.
  */
@@ -49,5 +47,5 @@ export function useTurnIndicator(options: UseTurnIndicatorOptions) {
     stop();
   }
 
-  return { showMyTurn, showOpponentTurn, showFirstTurnHint: readonly(showFirstTurnHint), YOUR_TURN_LABEL, cancel };
+  return { showMyTurn, showOpponentTurn, showFirstTurnHint: readonly(showFirstTurnHint), cancel };
 }

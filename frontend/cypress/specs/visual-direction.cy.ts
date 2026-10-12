@@ -17,7 +17,7 @@ describe('Visual direction (C bis)', () => {
     cy.contains('button', 'Send').should('be.visible');
     cy.contains('button', 'Slap').should('be.visible');
     cy.contains('button', 'Back').should('be.visible');
-    cy.get('[data-cy="turn-hint"]').should('be.visible').and('contain.text', 'YOUR TURN');
+    cy.get('[data-test="turn-hint"]').should('be.visible').and('contain.text', 'Your turn');
   });
 
   it('uses Atkinson Hyperlegible for titles and the interface, in 400 and 700 only', () => {
@@ -43,6 +43,35 @@ describe('Visual direction (C bis)', () => {
     });
     cy.get('.turn-hint__dot').should('have.css', 'animation-name', 'none');
     cy.contains('button', 'Send').should('have.css', 'animation-name', 'none');
+  });
+
+  it('keeps the green Send button clean on my turn: no gold ring, a visible outline only for keyboard focus', () => {
+    cy.contains('button', 'Send').should('not.be.disabled').then(($button) => {
+      const resting = getComputedStyle($button[0]);
+      // The gold ring that used to sit inside the button on my turn is gone.
+      expect(resting.boxShadow, 'no gold ring or glow at rest').to.eq('none');
+      expect(resting.outlineStyle, 'no outline at rest').to.eq('none');
+      expect(resting.backgroundColor).to.eq('rgb(74, 222, 128)');
+      expect(resting.borderColor).to.eq('rgb(74, 222, 128)');
+    });
+    // Keyboard focus (:focus-visible) keeps a visible outline, drawn outside the button (WCAG 2.4.7).
+    cy.contains('button', 'Send').focus().then(($button) => {
+      expect($button[0].matches(':focus-visible')).to.eq(true);
+      const focused = getComputedStyle($button[0]);
+      expect(focused.outlineStyle).to.eq('solid');
+      expect(parseFloat(focused.outlineWidth)).to.be.at.least(1);
+      expect(parseFloat(focused.outlineOffset)).to.be.at.least(1);
+      expect(focused.boxShadow, 'focus does not add a gold ring').to.eq('none');
+    });
+    // A mouse click never shows the focus outline.
+    cy.contains('button', 'Slap').then(($slap) => {
+      $slap[0].blur();
+    });
+    cy.contains('button', 'Send').click();
+    cy.contains('button', 'Send').then(($button) => {
+      expect($button[0].matches(':focus-visible')).to.eq(false);
+      expect(getComputedStyle($button[0]).outlineStyle).to.eq('none');
+    });
   });
 
   it('renders buttons flat with a 0.4rem radius', () => {

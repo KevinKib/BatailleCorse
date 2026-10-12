@@ -51,4 +51,46 @@ describe('route fade', () => {
     vi.advanceTimersByTime(ROUTE_FADE_MS + 500);
     expect(done).toHaveBeenCalledTimes(1);
   });
+
+  // A navigation during a fade: Vue calls leave on the view that was still entering. The cancelled
+  // enter must not later reset the styles of the now leaving view (it would flash back in place).
+  describe('a navigation during a fade', () => {
+    const nextNavigation = () => Promise.resolve();
+
+    it('keeps the view leaving after a cancelled enter, instead of resetting its styles', async () => {
+      const el = document.createElement('div');
+      const enterDone = vi.fn();
+      const leaveDone = vi.fn();
+      fadeIn(el, enterDone);
+      vi.advanceTimersByTime(100);
+      await nextNavigation();
+      fadeOut(el, leaveDone);
+      vi.advanceTimersByTime(ROUTE_FADE_MS - 100 + 250); // the old enter timeout has passed
+      expect(enterDone).not.toHaveBeenCalled();
+      expect(el.style.position).toBe('absolute');
+      expect(el.style.opacity).toBe('0');
+      vi.advanceTimersByTime(ROUTE_FADE_MS);
+      expect(leaveDone).toHaveBeenCalledTimes(1);
+    });
+
+    it('finishes a view still leaving from the previous navigation right away', async () => {
+      const first = document.createElement('div');
+      const firstDone = vi.fn();
+      fadeOut(first, firstDone);
+      vi.advanceTimersByTime(100);
+      await nextNavigation();
+      fadeIn(document.createElement('div'), vi.fn());
+      expect(firstDone).toHaveBeenCalledTimes(1);
+    });
+
+    it('lets the view leaving in the same navigation fade normally', () => {
+      const leaving = document.createElement('div');
+      const leavingDone = vi.fn();
+      fadeOut(leaving, leavingDone);
+      fadeIn(document.createElement('div'), vi.fn());
+      expect(leavingDone).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(ROUTE_FADE_MS + 500);
+      expect(leavingDone).toHaveBeenCalledTimes(1);
+    });
+  });
 });

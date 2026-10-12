@@ -89,7 +89,7 @@ describe('BullshitGameScreen pile animation and sound', () => {
     const discard = vi.spyOn(store, 'discard').mockImplementation(() => {});
     const key = (k: string, code: string) =>
       document.dispatchEvent(new KeyboardEvent('keyup', { key: k, code, bubbles: true }));
-    key('&', 'Digit1');
+    await wrapper.get('[data-test="hand-card-0"]').trigger('click');
     await nextTick();
     expect(store.selectedCards).toHaveLength(1);
     store.applyEvent({ type: 'state-update', state: { ...state(0), availableActions: [] } as BullshitState });

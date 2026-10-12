@@ -9,7 +9,7 @@ const labels = { discard: 'Discard', call: 'Call Bullshit' };
 function setup() {
   localStorage.clear();
   const settings = useHotkeySettings();
-  const wrapper = mount(HotkeySettings, { props: { settings, labels, note: 'Digits are fixed.' }, attachTo: document.body });
+  const wrapper = mount(HotkeySettings, { props: { settings, labels }, attachTo: document.body });
   return { settings, wrapper };
 }
 const find = (w: ReturnType<typeof setup>['wrapper'], id: string) => w.find(`[data-test="${id}"]`);

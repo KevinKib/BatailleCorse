@@ -4,7 +4,7 @@ export const HOTKEY_STORAGE_KEY = 'bullshit.hotkeys';
 
 export interface HotkeySettings { enabled: boolean; discard: string; call: string }
 export type HotkeyAction = 'discard' | 'call';
-export type HotkeyRejection = 'reserved' | 'digit' | 'duplicate';
+export type HotkeyRejection = 'reserved' | 'duplicate';
 export type HotkeyValidation = { ok: true; key: string } | { ok: false; reason: HotkeyRejection };
 
 // What the shared settings panel needs from a game: its remappable actions (a game labels them), an
@@ -19,15 +19,11 @@ export interface HotkeyPanelApi {
 
 export const DEFAULT_HOTKEYS: Readonly<HotkeySettings> = { enabled: true, discard: 'd', call: 'b' };
 
-// Digits (any layout, main row or keypad) pick cards and are not remappable.
-const isDigitCode = (code: string) => /^(?:Digit|Numpad)\d$/.test(code);
-
 // A shortcut is one printable character. Everything else (Tab, Enter, Space, Escape, modifiers,
 // arrows, dead keys...) is reserved for navigation and assistive technologies.
 export function validateHotkey(e: { key: string; code: string }, otherKeys: string | string[]): HotkeyValidation {
   const key = e.key.toLowerCase();
   if ([...key].length !== 1 || key.trim() === '') return { ok: false, reason: 'reserved' };
-  if (/\d/.test(key) || isDigitCode(e.code)) return { ok: false, reason: 'digit' };
   if ([otherKeys].flat().includes(key)) return { ok: false, reason: 'duplicate' };
   return { ok: true, key };
 }

@@ -14,6 +14,7 @@ import EndGameOverlay from '../../components/EndGameOverlay.vue';
 import ForfeitBanner from '../../components/ForfeitBanner.vue';
 import RulesPanel from '../../components/RulesPanel.vue';
 import GameTimer from '../../components/GameTimer.vue';
+import YourTurnIndicator from '../../components/YourTurnIndicator.vue';
 import OpponentSeat from '../../components/bullshit/OpponentSeat.vue';
 import BullshitHand from '../../components/bullshit/BullshitHand.vue';
 import GameLobby from '../../components/lobby/GameLobby.vue';
@@ -24,7 +25,6 @@ import { cardSound } from '../../composables/useCardSound';
 import { useBullshitHotkeys } from '../../composables/useBullshitHotkeys';
 import { useHotkeySettings } from '../../composables/useHotkeySettings';
 import HotkeySettings from '../../components/HotkeySettings.vue';
-import { sortHand } from '../../model/bullshit/sortHand';
 import { useSoundPreference } from '../../composables/useSoundPreference';
 import { useConnectionStatus } from '../../composables/useConnectionStatus';
 import { format, plural } from '../../locales/format';
@@ -180,19 +180,13 @@ const canDiscardNow = computed(() =>
   store.canDiscard && store.isMyTurn && store.selectedCards.length > 0 && online.value);
 const canCallNow = computed(() => store.canCallBullshit && online.value);
 
-// Keyboard shortcuts mirror the buttons and the hand (digits follow the displayed, sorted order).
+// Keyboard shortcuts mirror the two action buttons.
 const hotkeys = useHotkeySettings();
 useBullshitHotkeys({
   canDiscard: () => store.phase === 'playing' && canDiscardNow.value,
   canCall: () => store.phase === 'playing' && canCallNow.value,
-  // Cards are only picked to be played: on my turn, with DISCARD allowed, connected.
-  handSize: () => (store.phase === 'playing' && store.isMyTurn && store.canDiscard && online.value ? myCardCount.value : 0),
   discard,
   call: () => store.callBullshit(),
-  toggleCard: (i) => {
-    const card = sortHand(store.game?.myHand ?? [], handSortMode.value)[i];
-    if (card) store.toggleCard(card);
-  },
 }, { enabled: () => hotkeys.enabled.value, discardKey: () => hotkeys.discardKey.value, callKey: () => hotkeys.callKey.value });
 const keysHint = computed(() =>
   format(ui.table.keysHint, { discard: hotkeys.discardKey.value.toUpperCase(), call: hotkeys.callKey.value.toUpperCase() }));
@@ -277,11 +271,10 @@ function leaveLobby() {
     </div>
 
     <template v-else>
-      <GameTimer :time="formattedDuration" />
-
       <RulesPanel :rules="messages.bullshit" />
 
       <div class="top-bar">
+        <GameTimer :time="formattedDuration" inline />
         <Button
           data-test="sound-toggle"
           class="sound-toggle"
@@ -379,7 +372,7 @@ function leaveLobby() {
           <span :class="['my-tag', { 'my-tag--active': store.isMyTurn }]">{{ ui.you }}</span>
           <span class="my-count" data-test="my-count" role="img"
                 :aria-label="plural(ui.table.myCards, myCardCount)">{{ myCardCount }}</span>
-          <span v-if="store.isMyTurn" class="turn-hint" data-test="turn-hint">{{ ui.table.yourTurn }}</span>
+          <YourTurnIndicator class="turn-slot" :active="store.isMyTurn" />
         </div>
         <BullshitHand
           :cards="store.game?.myHand ?? []"
@@ -417,7 +410,7 @@ function leaveLobby() {
           <Button severity="secondary" :label="ui.back" icon="pi pi-undo" variant="text" rounded />
         </RouterLink>
         <p v-if="hotkeys.enabled.value" class="keys-hint" data-test="keys-hint">{{ keysHint }}</p>
-        <HotkeySettings class="footer-hotkeys" :settings="hotkeys" :labels="messages.hotkeys.actions" :note="messages.hotkeys.bullshitNote" />
+        <HotkeySettings class="footer-hotkeys" :settings="hotkeys" :labels="messages.hotkeys.actions" />
       </div>
     </template>
   </div>
@@ -468,13 +461,21 @@ function leaveLobby() {
   background: none;
 }
 
+/* The same top row as the Bataille Corse table: the duration chip, then the sound toggle, on one
+   centre line (the rules toggle, pinned at the right, is centred on it too). Same height and same side
+   gutter as the chips the other table pins to its corners. */
 .top-bar {
   flex: none;
   display: flex;
   align-items: center;
-  min-height: 48px;
-  /* Leaves the corners free: the duration chip on the left, the rules toggle on the right. */
-  padding-left: 88px;
+  gap: var(--space-2);
+  box-sizing: border-box;
+  height: calc(var(--hud-inset) * 2 + var(--hud-chip-h) + env(safe-area-inset-top, 0px));
+  /* The screen already pads by a space-2: the rest of the gutter is added here. */
+  padding: env(safe-area-inset-top, 0px) 0 0 calc(var(--hud-inset) - var(--space-2) + env(safe-area-inset-left, 0px));
+  /* Row of its own, above the screen padding: pulled up by it so the row measures from the edge. */
+  margin-top: calc(var(--space-2) * -1);
+  /* Leaves the right corner free for the rules toggle. */
   padding-right: 120px;
 }
 .leave-button { text-decoration: none; }
@@ -795,6 +796,7 @@ function leaveLobby() {
 .my-tag { position: relative; }
 /* "You" and my card count form one row; the gap to the hand is carried by the row. */
 .my-id {
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--space-2);
@@ -813,12 +815,14 @@ function leaveLobby() {
   min-width: 2ch;
   text-align: center;
 }
-/* Words for the turn: the glow on "You" is easy to miss and says nothing to a screen reader. */
-.turn-hint {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--gold);
-  white-space: nowrap;
+/* The shared "Your turn" cue (words for the turn: the glow on "You" says nothing to a screen reader).
+   Out of the flow, right after the count, so the row does not move when the turn changes. */
+.turn-slot {
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-left: var(--space-2);
 }
 /* Discard breathes while it is the thing to press (my turn, cards picked). */
 .discard--pulse { animation: discard-pulse 1.6s ease-in-out infinite; }

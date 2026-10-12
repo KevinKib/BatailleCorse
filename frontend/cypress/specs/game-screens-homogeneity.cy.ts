@@ -249,3 +249,48 @@ describe('Local preferences gear on the Game home and in the lobby', () => {
     cy.get('[data-test="discard"]', { timeout: 10000 }).should('have.attr', 'aria-keyshortcuts', 'x');
   });
 });
+
+// The top row of a table: the duration chip, the sound toggle (Bullshit) and the rules toggle sit on one
+// line, with the same side gutter on both games.
+describe('Top row of the table', () => {
+  const centerY = (r: DOMRect) => (r.top + r.bottom) / 2;
+  const rect = (selector: string) => cy.get(selector).then(($e) => $e[0].getBoundingClientRect());
+
+  VIEWPORTS.forEach(([vw, vh]) => {
+    it(`${vw}x${vh} Bataille Corse: the timer and the rules toggle share one centre line, 10px from the edges`, () => {
+      cy.viewport(vw, vh);
+      cy.clearLocalStorage();
+      cy.createGame();
+      cy.get('[data-cy="game-timer"]', { timeout: 10000 }).should('be.visible');
+      rect('[data-cy="game-timer"]').then((timer) => {
+        rect('[data-cy="rules-toggle"]').then((rules) => {
+          expect(Math.abs(centerY(timer) - centerY(rules)), 'timer and rules vertical centres').to.be.at.most(1);
+          expect(timer.height, 'same chip height').to.be.closeTo(rules.height, 1);
+          expect(timer.left, 'left gutter').to.be.closeTo(10, 1);
+          expect(vw - rules.right, 'right gutter').to.be.closeTo(10, 1);
+        });
+      });
+      noScroll();
+    });
+
+    it(`${vw}x${vh} Bullshit: the timer, the sound toggle and the rules toggle share one centre line, evenly spaced`, () => {
+      cy.viewport(vw, vh);
+      cy.clearLocalStorage();
+      startBullshit();
+      cy.get('[data-cy="game-timer"]').should('be.visible');
+      rect('[data-cy="game-timer"]').then((timer) => {
+        rect('[data-test="sound-toggle"]').then((sound) => {
+          rect('[data-cy="rules-toggle"]').then((rules) => {
+            expect(Math.abs(centerY(timer) - centerY(sound)), 'timer and sound vertical centres').to.be.at.most(1);
+            expect(Math.abs(centerY(timer) - centerY(rules)), 'timer and rules vertical centres').to.be.at.most(1);
+            expect(timer.height, 'same chip height').to.be.closeTo(rules.height, 1);
+            expect(sound.left - timer.right, 'constant gap between the timer and the sound toggle').to.be.closeTo(8, 1);
+            expect(timer.left, 'same left gutter as Bataille Corse').to.be.closeTo(10, 1);
+            expect(vw - rules.right, 'same right gutter as Bataille Corse').to.be.closeTo(10, 1);
+          });
+        });
+      });
+      noScroll();
+    });
+  });
+});

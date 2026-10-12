@@ -5,8 +5,8 @@ describe('Responsive game screen (phone portrait)', () => {
   beforeEach(() => {
     cy.viewport(VIEWPORT_W, VIEWPORT_H);
     cy.createGame();
-    // Wait for the active board (the one-time YOUR TURN hint only renders there).
-    cy.get('[data-cy="turn-hint"]', { timeout: 10000 }).should('exist');
+    // Wait for the active board (the one-time Your turn hint only renders there).
+    cy.get('[data-test="turn-hint"]', { timeout: 10000 }).should('exist');
   });
 
   it('fits the whole board on screen with no scrolling', () => {

@@ -155,8 +155,8 @@ onBeforeUnmount(() => document.removeEventListener('keydown', handleKeydown));
    cards (z 1000/1001) but below the waiting/end overlays (z 2000). */
 .rules-toggle {
   position: absolute;
-  top: calc(16px + env(safe-area-inset-top, 0px));
-  right: calc(16px + env(safe-area-inset-right, 0px));
+  top: calc(var(--hud-inset) + env(safe-area-inset-top, 0px));
+  right: calc(var(--hud-inset) + env(safe-area-inset-right, 0px));
   z-index: 1500;
   display: inline-flex;
   align-items: center;
@@ -169,7 +169,9 @@ onBeforeUnmount(() => document.removeEventListener('keydown', handleKeydown));
   background: rgba(0, 0, 0, 0.45);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 999px;
-  padding: 6px 14px;
+  box-sizing: border-box;
+  height: var(--hud-chip-h);
+  padding: 0 14px;
   cursor: pointer;
 }
 

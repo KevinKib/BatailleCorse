@@ -18,7 +18,8 @@ describe('LocalPreferences', () => {
     await wrapper.get('[data-test="hotkeys-button"]').trigger('click');
     expect(wrapper.get('[data-test="hotkey-discard-key"]').text()).toBe('D');
     expect(wrapper.get('[data-test="hotkey-call-key"]').text()).toBe('B');
-    expect(wrapper.text()).toContain(messagesEn.hotkeys.bullshitNote);
+    expect(wrapper.find('.note').exists()).toBe(false);
+    expect(messagesEn.hotkeys).not.toHaveProperty('bullshitNote');
     wrapper.unmount();
   });
 
@@ -30,7 +31,6 @@ describe('LocalPreferences', () => {
     expect(wrapper.get('[data-test="hotkey-send-key"]').text()).toBe('W');
     expect(wrapper.get('[data-test="hotkey-slap-key"]').text()).toBe('D');
     expect(wrapper.find('[data-test="hotkey-discard-key"]').exists()).toBe(false);
-    expect(wrapper.text()).not.toContain(messagesEn.hotkeys.bullshitNote);
     wrapper.unmount();
   });
 

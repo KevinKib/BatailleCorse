@@ -1,12 +1,13 @@
 <template>
-  <div class="game-timer" data-cy="game-timer">
+  <div :class="['game-timer', { 'game-timer--inline': inline }]" data-cy="game-timer">
     <i class="pi pi-clock game-timer__icon" aria-hidden="true"></i>
     <span class="game-timer__time">{{ time }}</span>
   </div>
 </template>
 
 <script setup lang="ts">
-defineProps<{ time: string }>();
+// `inline`: flows in a row of the table (the Bullshit top bar) instead of being pinned to the corner.
+defineProps<{ time: string; inline?: boolean }>();
 </script>
 
 <style scoped>
@@ -16,8 +17,8 @@ defineProps<{ time: string }>();
    waiting/disconnect/end overlays (1900-2000) so those cover it. */
 .game-timer {
   position: absolute;
-  top: calc(10px + env(safe-area-inset-top, 0px));
-  left: calc(10px + env(safe-area-inset-left, 0px));
+  top: calc(var(--hud-inset) + env(safe-area-inset-top, 0px));
+  left: calc(var(--hud-inset) + env(safe-area-inset-left, 0px));
   z-index: 1500;
   display: inline-flex;
   align-items: center;
@@ -31,8 +32,14 @@ defineProps<{ time: string }>();
   background: rgba(0, 0, 0, 0.45);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 999px;
-  padding: 4px 12px;
+  box-sizing: border-box;
+  height: var(--hud-chip-h);
+  padding: 0 12px;
   pointer-events: none;
+}
+
+.game-timer--inline {
+  position: static;
 }
 
 .game-timer__icon {

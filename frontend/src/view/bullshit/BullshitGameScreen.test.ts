@@ -523,6 +523,7 @@ describe('BullshitGameScreen', () => {
     it('shows the default keys in the hint, tooltips and aria-keyshortcuts', () => {
       const wrapper = mountPlaying();
       expect(wrapper.get('[data-test="keys-hint"]').text()).toContain('D discard');
+      expect(wrapper.get('[data-test="keys-hint"]').text()).not.toMatch(/[0-9]/);
       expect(wrapper.get('[data-test="discard"]').attributes('aria-keyshortcuts')).toBe('d');
       expect(wrapper.get('[data-test="call"]').attributes('title')).toContain('B');
       expect(wrapper.find('[data-test="hotkeys-button"]').exists()).toBe(true);
@@ -667,6 +668,15 @@ describe('BullshitGameScreen table chrome (same places as Bataille Corse)', () =
     const wrapper = mountPlaying();
     expect(wrapper.get('[data-cy="game-timer"]').text()).toBe('00:00');
     expect(wrapper.get('.top-bar').find('[data-test="sound-toggle"]').exists()).toBe(true);
+    wrapper.unmount();
+  });
+
+  it('puts the duration chip and the sound toggle in the same top bar, the chip first, flowing in the row', () => {
+    const wrapper = mountPlaying();
+    const bar = wrapper.get('.top-bar');
+    const ids = bar.findAll('[data-cy="game-timer"], [data-test="sound-toggle"]').map(e => e.attributes('data-cy') ?? e.attributes('data-test'));
+    expect(ids).toEqual(['game-timer', 'sound-toggle']);
+    expect(bar.get('[data-cy="game-timer"]').classes()).toContain('game-timer--inline');
     wrapper.unmount();
   });
 
