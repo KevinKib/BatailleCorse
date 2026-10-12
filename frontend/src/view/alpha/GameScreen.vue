@@ -1,4 +1,7 @@
 <template>
+  <!-- One root for every phase: the route fade then follows the room, and switching from the lobby to the
+       table is a plain re-render instead of a cross-fade of two screens on top of each other. -->
+  <div class="bc-room">
   <div v-if="phase === 'lobby' && lobby" class="room-screen">
     <GameLobby
       :game="game"
@@ -155,6 +158,7 @@
     {{ cardDeltaIndicator.delta > 0 ? '+' : '' }}{{ cardDeltaIndicator.delta }}
   </div>
   </template>
+  </div>
 
 </template>
 

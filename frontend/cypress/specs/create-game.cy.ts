@@ -1,21 +1,17 @@
 describe('Create game', () => {
-  it('navigates to game screen and shows initial game state', () => {
-    cy.visit('/games/bataillecorse');
-
-    cy.contains('button', 'New game').click();
-    cy.url().should('include', '/new');
-
-    // Human is the default opponent; "Deal Cards" is the solo flow.
-    cy.contains('button', 'Computer').click();
-
-    cy.contains('button', 'Deal Cards').click();
-
-    // The store watches for a WebSocket CREATE response and navigates on gameId.
-    cy.url({ timeout: 10000 }).should('match', /\/room\/.+/);
+  it('New game opens the lobby, a bot fills the second seat, Start deals the cards', () => {
+    cy.openBatailleCorseLobby().then((gameId) => {
+      cy.url().should('include', `/games/bataillecorse/room/${gameId}`);
+      cy.get('[data-test="start"]').should('be.disabled');
+      cy.get('[data-test="add-bot"]').click();
+      cy.get('[data-test="start"]').should('not.be.disabled').click();
+    });
 
     // Initial state: 52 cards split evenly, pile empty.
-    cy.get('[data-cy="player-card-count"]').should('contain.text', '26');
+    cy.get('[data-cy="player-card-count"]', { timeout: 10000 }).should('contain.text', '26');
     cy.get('[data-cy="opponent-card-count"]').should('contain.text', '26');
     cy.get('[data-cy="pile-card-count"]').should('contain.text', '0');
+    // The default tier of a new bot is Bronze.
+    cy.get('.player_tag').first().should('have.text', 'Bot 1 (Bronze)');
   });
 });

@@ -1,7 +1,7 @@
 // The shared Game home: Join game for both games, and the room links that cannot be restored.
 const GAMES = [
-  { key: 'bataillecorse', title: 'Bataille Corse', joinError: 'Could not join this game' },
-  // Bullshit words a missing game (404) apart from a refusal (full, already started).
+  // Both games word a missing game (404) apart from a refusal (full, already started).
+  { key: 'bataillecorse', title: 'Bataille Corse', joinError: 'No game found' },
   { key: 'bullshit', title: 'Bullshit', joinError: 'No game found' },
 ];
 
