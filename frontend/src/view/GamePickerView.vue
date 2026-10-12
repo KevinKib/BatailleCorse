@@ -1,13 +1,16 @@
 <script setup lang="ts">
-import { onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { computed, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import TitleCardFan from '../components/TitleCardFan.vue';
 import GameChoiceCard from '../components/GameChoiceCard.vue';
 import { preloadAllCards } from '../composables/useCardAnimation';
 import { useI18n } from '../composables/useI18n';
 
 const router = useRouter();
-const { gamePicker } = useI18n();
+const route = useRoute();
+const { gamePicker, lobby } = useI18n();
+// Set when the host removed this player from a lobby.
+const removed = computed(() => route.query.removed === '1');
 
 onMounted(() => preloadAllCards());
 </script>
@@ -26,6 +29,8 @@ onMounted(() => preloadAllCards());
         </div>
         <h1 class="game-title" data-test="picker-title">{{ gamePicker.title }}</h1>
       </div>
+
+      <p v-if="removed" class="removed-notice" role="status" data-test="removed-notice">{{ lobby.removedByHost }}</p>
 
       <div class="panel-divider" />
 
@@ -102,6 +107,19 @@ onMounted(() => preloadAllCards());
   background-clip: text;
   margin: 0;
   line-height: 1.1;
+}
+
+.removed-notice {
+  width: 100%;
+  margin: 0;
+  padding: 8px 12px;
+  box-sizing: border-box;
+  text-align: center;
+  font-size: 0.875rem;
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .panel-divider {

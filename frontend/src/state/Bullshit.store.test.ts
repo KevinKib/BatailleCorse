@@ -167,6 +167,26 @@ describe('Bullshit store', () => {
     });
   });
 
+  describe('removed by the host', () => {
+    it('forgets the lobby and says so; removeSeat sends the command', () => {
+      const store = useBullshitStore();
+      store.restore('g1', 1, 'tok');
+      store.applyEvent({ type: 'state-update', state: lobbyView({ mySeat: 1 }) });
+      const publish = vi.spyOn(webSocketService, 'publish').mockImplementation(() => {});
+      expect(store.removedByHost).toBe(false);
+
+      store.removeSeat(2);
+      expect(publish.mock.calls.at(-1)?.[0]).toBe('/app/lobby/removeSeat');
+
+      store.applyEvent({ type: 'removed' });
+
+      expect(store.removedByHost).toBe(true);
+      expect(store.state).toBeNull();
+      expect(store.gameId).toBeNull();
+      expect(store.phase).toBe('connecting');
+    });
+  });
+
   describe('leaving the lobby', () => {
     it('tears the seat down and forgets the lobby, so the next room starts clean', () => {
       const store = useBullshitStore();

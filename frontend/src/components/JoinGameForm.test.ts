@@ -77,7 +77,25 @@ describe('JoinGameForm', () => {
     expect(router.currentRoute.value.path).toBe('/games/bullshit/join/abc');
   });
 
-  it('givenAFullGame_thenTheFormKeepsTheGenericLine', async () => {
+  it('givenAFullLobby_thenTheFormSaysItIsFull', async () => {
+    const join = vi.fn().mockRejectedValue(new HttpError('Join failed: 409', 409, 'full'));
+    const { wrapper, router } = await mountForm('bullshit', join, '/games/bullshit/join/abc');
+    await wrapper.get('form').trigger('submit');
+    await flushPromises();
+    expect(wrapper.get('[data-test="join-error"]').text()).toBe('This lobby is full.');
+    expect(messagesEn.join.full).toBe('This lobby is full.');
+    expect(router.currentRoute.value.path).toBe('/games/bullshit/join/abc');
+  });
+
+  it('givenAStartedGame_thenTheFormSaysItAlreadyStarted', async () => {
+    const join = vi.fn().mockRejectedValue(new HttpError('Join failed: 409', 409, 'started'));
+    const { wrapper } = await mountForm('bataillecorse', join, '/games/bataillecorse/join/abc');
+    await wrapper.get('form').trigger('submit');
+    await flushPromises();
+    expect(wrapper.get('[data-test="join-error"]').text()).toBe('This game has already started.');
+  });
+
+  it('givenAConflictWithoutReason_thenTheFormKeepsTheGenericLine', async () => {
     const join = vi.fn().mockRejectedValue(new HttpError('Join failed: 409', 409));
     const { wrapper } = await mountForm('bullshit', join, '/games/bullshit/join/abc');
     await wrapper.get('form').trigger('submit');

@@ -28,6 +28,8 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
   // A Start is on its way: from the click until the game state or a refusal comes back.
   const starting = ref(false);
   const rematch = ref<RematchState>('idle');
+  // The host removed me from the lobby: the screen leads to the Game selection with a notice.
+  const removedByHost = ref(false);
 
   const lastSend = ref<{ playerIndex: number; seq: number; topCard: Card | undefined } | null>(null);
   const lastGrab = ref<{ winnerPlayerIndex: number; seq: number; pileCards: Card[] } | null>(null);
@@ -68,6 +70,15 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
         starting.value = false;
         rematch.value = 'idle';
         presence.reset();
+        break;
+      case 'removed':
+        lobby.value = null;
+        state.value = undefined;
+        gameId.value = null;
+        seats.value = [];
+        lobbyError.value = null;
+        starting.value = false;
+        removedByHost.value = true;
         break;
       case 'seats-change':    seats.value = event.seats; break;
       case 'game-id-change':  gameId.value = event.gameId; break;
@@ -159,6 +170,7 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
     mySeatInfo,
     opponentSeat,
     lobbyError,
+    removedByHost,
     starting,
     rematch,
     phase,
@@ -176,6 +188,7 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
     startGame,
     addBot:          () => requestLobbyChange(() => session.addBot()),
     removeBot:       (seat: number) => requestLobbyChange(() => session.removeBot(seat)),
+    removeSeat:      (seat: number) => requestLobbyChange(() => session.removeSeat(seat)),
     setOption:       (key: string, value: string) => requestLobbyChange(() => session.setOption(key, value)),
     setSeatOption:   (seat: number, key: string, value: string) => requestLobbyChange(() => session.setSeatOption(seat, key, value)),
     rename:          (name: string) => requestLobbyChange(() => session.rename(name)),

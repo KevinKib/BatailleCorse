@@ -345,6 +345,32 @@ describe('BullshitSession', () => {
     });
   });
 
+  describe('removed by the host', () => {
+    const removedNotice = { success: true, eventType: 'REMOVED', eventData: {}, message: 'You were removed from the lobby by the host', state: null };
+
+    it('removeSeat publishes the seat with my token', () => {
+      const { session, published } = makeSession();
+      session.restore('g1', 0, 'tok-0');
+      session.removeSeat(2);
+      expect(published).toContainEqual({ dest: '/app/lobby/removeSeat', body: JSON.stringify({ gameId: 'g1', token: 'tok-0', seat: 2 }) });
+    });
+
+    it('a REMOVED notice tears the client down, forgets the token and reports it once', () => {
+      const { session, events, teardown, fireSeat, published } = makeSession();
+      session.restore('g1', 1, 'tok-1');
+      localStorage.setItem('bullshit:tokens:g1', JSON.stringify({ 1: 'tok-1' }));
+      events.length = 0;
+
+      fireSeat(removedNotice);
+      fireSeat(removedNotice);
+
+      expect(events).toEqual([{ type: 'removed' }]);
+      expect(teardown).toEqual(['seat', 'game', 'presence']);
+      expect(localStorage.getItem('bullshit:tokens:g1')).toBeNull();
+      expect(published.some(p => p.dest === '/app/lobby/leave')).toBe(false);
+    });
+  });
+
   describe('leave', () => {
     it('publishes /app/lobby/leave, then unsubscribes, clears presence and forgets the stored token', () => {
       const { session, published, teardown } = makeSession();

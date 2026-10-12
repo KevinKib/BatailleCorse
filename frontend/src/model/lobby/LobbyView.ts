@@ -17,6 +17,8 @@ export interface LobbyPlayer {
   bot?: boolean;
   /** Options of a computer seat, defaults filled; empty for a human. */
   seatOptions?: Record<string, string>;
+  /** A human whose connection is down: the host may remove the seat. */
+  disconnected?: boolean;
 }
 
 /** What the server tells one viewer about a lobby (the game is not started). */

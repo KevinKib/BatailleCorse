@@ -162,6 +162,24 @@ describe('BatailleCorse store', () => {
     });
   });
 
+  describe('removed by the host', () => {
+    it('forgets the lobby and says so; removeSeat sends the command', () => {
+      const store = seated(1);
+      store.applyEvent({ type: 'lobby-update', lobby: lobbyView({ mySeat: 1 }) });
+      expect(store.removedByHost).toBe(false);
+
+      store.removeSeat(2);
+      expect(vi.mocked(webSocketService.publish).mock.calls.at(-1)?.[0]).toBe('/app/lobby/removeSeat');
+
+      store.applyEvent({ type: 'removed' });
+
+      expect(store.removedByHost).toBe(true);
+      expect(store.lobby).toBeNull();
+      expect(store.gameId).toBeNull();
+      expect(store.phase).toBe('connecting');
+    });
+  });
+
   describe('playAgain', () => {
     it('is pending while the request runs, failed when refused, idle again in the new lobby', async () => {
       const store = seated();

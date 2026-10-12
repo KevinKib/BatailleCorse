@@ -28,6 +28,15 @@ const error = ref('');
 const busy = ref(false);
 const id = computed(() => extractGameId(joinId.value));
 
+// 404: the lobby was deleted (everybody left); 409: no free seat left, or the game has started.
+function joinErrorMessage(e: unknown): string {
+  if (!(e instanceof HttpError)) return ui.failed;
+  if (e.status === 404) return ui.notFound;
+  if (e.status === 409 && e.reason === 'full') return ui.full;
+  if (e.status === 409 && e.reason === 'started') return ui.started;
+  return ui.failed;
+}
+
 async function onSubmit() {
   if (!id.value || busy.value) return;
   error.value = '';
@@ -36,8 +45,7 @@ async function onSubmit() {
     await props.join(id.value, playerName.value || undefined);
   } catch (e) {
     busy.value = false;
-    // A 404 means the lobby was deleted (everybody left): say so rather than blame the ID.
-    error.value = e instanceof HttpError && e.status === 404 ? ui.notFound : ui.failed;
+    error.value = joinErrorMessage(e);
     return;
   }
   busy.value = false;

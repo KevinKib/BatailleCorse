@@ -12,6 +12,7 @@
       @leave="leaveLobby"
       @add-bot="batailleCorseStore.addBot()"
       @remove-bot="seat => batailleCorseStore.removeBot(seat)"
+      @remove-seat="seat => batailleCorseStore.removeSeat(seat)"
       @set-option="(key, value) => batailleCorseStore.setOption(key, value)"
       @set-seat-option="(seat, key, value) => batailleCorseStore.setSeatOption(seat, key, value)"
       @rename="name => batailleCorseStore.rename(name)" />
@@ -190,11 +191,12 @@ import { useEndScreen } from '../../composables/useEndScreen';
 import { useGameDuration } from '../../composables/useGameDuration';
 import { useSeatDisconnectCountdown } from '../../composables/useSeatDisconnectCountdown';
 import { useLeaveGuard } from '../../composables/useLeaveGuard';
+import { useRemovedRedirect } from '../../composables/useRemovedRedirect';
 import { useTurnIndicator } from '../../composables/useTurnIndicator';
 import { useGameBootstrap } from '../../composables/useGameBootstrap';
 import { useI18n } from '../../composables/useI18n';
 import { Action } from '../../model/Action';
-import { computed, onBeforeUnmount, useTemplateRef } from 'vue';
+import { computed, onBeforeUnmount, toRef, useTemplateRef } from 'vue';
 import { endGameMessage } from '../../model/endGameMessage';
 
 const messages = useI18n();
@@ -272,6 +274,9 @@ const rematchButton = computed(() =>
 function onPlayAgain() {
   void batailleCorseStore.playAgain(mySeatInfo.value?.name ?? (settingsStore.playerName || undefined));
 }
+
+// The host removed me from the lobby: lead to the Game selection with a notice.
+useRemovedRedirect(toRef(batailleCorseStore, 'removedByHost'), () => { batailleCorseStore.removedByHost = false; });
 
 // Leaving frees the seat: the leaver goes to the Game selection like every other exit. A leave that could not
 // be sent keeps the player in the lobby, with the error shown.

@@ -27,6 +27,7 @@ const emit = defineEmits<{
   leave: [];
   'add-bot': [];
   'remove-bot': [seat: number];
+  'remove-seat': [seat: number];
   'set-seat-option': [seat: number, key: string, value: string];
   'set-option': [key: string, value: string];
   rename: [name: string];
@@ -78,6 +79,7 @@ onBeforeUnmount(() => { if (noticeTimer) clearTimeout(noticeTimer); });
         :lobby="lobby"
         @add-bot="emit('add-bot')"
         @remove-bot="seat => emit('remove-bot', seat)"
+        @remove-seat="seat => emit('remove-seat', seat)"
         @rename="name => emit('rename', name)"
         @set-seat-option="(seat, key, value) => emit('set-seat-option', seat, key, value)" />
 

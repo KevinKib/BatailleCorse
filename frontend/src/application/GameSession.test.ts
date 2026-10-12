@@ -255,6 +255,29 @@ describe('GameSession', () => {
       expect(JSON.parse(published[2].body!)).toEqual({ gameId: 'game-1', token: 'tok-0', seat: 1, key: 'tier', value: '6' });
     });
 
+    it('removeSeat publishes the seat with my token', () => {
+      const { session, published } = makeSession();
+      session.restore('game-1', 0, 'tok-0');
+      session.removeSeat(2);
+      expect(published.at(-1)).toEqual({ dest: '/app/lobby/removeSeat', body: JSON.stringify({ gameId: 'game-1', token: 'tok-0', seat: 2 }) });
+    });
+
+    it('a REMOVED notice tears the client down, forgets the token and reports it once', () => {
+      const { session, teardown, events, fireSeat, published } = makeSession();
+      session.restore('game-1', 1, 'tok-1');
+      localStorage.setItem('tokens:game-1', JSON.stringify({ 1: 'tok-1' }));
+      events.length = 0;
+      const notice = buildResponse({ eventType: 'REMOVED' as never, state: null as never });
+
+      fireSeat(notice);
+      fireSeat(notice);
+
+      expect(events.filter(e => e.type === 'removed')).toHaveLength(1);
+      expect(teardown).toEqual(['seat', 'game', 'presence']);
+      expect(localStorage.getItem('tokens:game-1')).toBeNull();
+      expect(published.some(p => p.dest === '/app/lobby/leave')).toBe(false);
+    });
+
     it('leave tears everything down and forgets the stored token; nothing that arrives afterwards counts', async () => {
       const { session, published, teardown, events, fireSeat } = makeSession();
       session.restore('game-1', 1, 'tok-1');

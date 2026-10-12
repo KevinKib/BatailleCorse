@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, ref, toRef, watch } from 'vue';
 import { Button } from 'primevue';
 import { useRouter } from 'vue-router';
 import { useBullshitStore, REVEAL_HOLD_MS } from '../../state/Bullshit.store';
@@ -7,6 +7,7 @@ import { useEndScreen } from '../../composables/useEndScreen';
 import { useBullshitBootstrap } from '../../composables/useBullshitBootstrap';
 import { useSeatDisconnectCountdown } from '../../composables/useSeatDisconnectCountdown';
 import { useLeaveGuard } from '../../composables/useLeaveGuard';
+import { useRemovedRedirect } from '../../composables/useRemovedRedirect';
 import { useGameDuration } from '../../composables/useGameDuration';
 import PlayingCard from '../../components/PlayingCard.vue';
 import CardCounter from '../../components/CardCounter.vue';
@@ -226,6 +227,9 @@ const verdictAnnouncement = computed(() => {
 
 const game = findGame('bullshit')!;
 
+// The host removed me from the lobby: lead to the Game selection with a notice.
+useRemovedRedirect(toRef(store, 'removedByHost'), () => { store.removedByHost = false; });
+
 // Leaving frees the seat: the leaver goes to the Game selection like every other exit. A leave that could not
 // be sent keeps the player in the lobby, with the error shown.
 function leaveLobby() {
@@ -246,6 +250,7 @@ function leaveLobby() {
       @leave="leaveLobby"
       @add-bot="store.addBot()"
       @remove-bot="seat => store.removeBot(seat)"
+      @remove-seat="seat => store.removeSeat(seat)"
       @set-option="(key, value) => store.setOption(key, value)"
       @set-seat-option="(seat, key, value) => store.setSeatOption(seat, key, value)"
       @rename="name => store.rename(name)" />

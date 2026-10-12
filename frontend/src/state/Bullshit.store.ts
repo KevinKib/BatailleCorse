@@ -33,6 +33,8 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
   const starting = ref(false);
   // Rematch request of this client: pending while the HTTP call runs, failed when refused.
   const rematch = ref<RematchState>('idle');
+  // The host removed me from the lobby: the screen leads to the Game selection with a notice.
+  const removedByHost = ref(false);
   // Last seat that left (resigned or timed out), kept for the end screen after the notice is gone.
   const lastForfeit = ref<{ seat: number; reason: ForfeitReason | null } | null>(null);
   let revealTimer: ReturnType<typeof setTimeout> | null = null;
@@ -72,6 +74,15 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
       case 'error':
         lobbyError.value = state.value?.started ? null : event.message;
         starting.value = false;
+        break;
+      case 'removed':
+        state.value = null;
+        clearSelection();
+        gameId.value = null;
+        roster.value = {};
+        lobbyError.value = null;
+        starting.value = false;
+        removedByHost.value = true;
         break;
       case 'seat-change': mySeat.value = event.seat; break;
       case 'event':
@@ -169,7 +180,7 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
   function clearSelection() { selectedCards.value = []; }
 
   return {
-    state, game, lobby, roster, lobbyError, starting, gameId, mySeat, reveal, selectedCards, rematch, lastForfeit,
+    state, game, lobby, roster, lobbyError, removedByHost, starting, gameId, mySeat, reveal, selectedCards, rematch, lastForfeit,
     disconnections: presence.disconnections,
     liveDisconnections: presence.liveDisconnections,
     forfeitNotice: presence.forfeitNotice,
@@ -182,6 +193,7 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
     startGame,
     addBot: () => requestLobbyChange(() => session.addBot()),
     removeBot: (seat: number) => requestLobbyChange(() => session.removeBot(seat)),
+    removeSeat: (seat: number) => requestLobbyChange(() => session.removeSeat(seat)),
     setOption: (key: string, value: string) => requestLobbyChange(() => session.setOption(key, value)),
     setSeatOption: (seat: number, key: string, value: string) => requestLobbyChange(() => session.setSeatOption(seat, key, value)),
     rename: (name: string) => requestLobbyChange(() => session.rename(name)),

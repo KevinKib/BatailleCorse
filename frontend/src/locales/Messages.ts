@@ -153,6 +153,8 @@ export interface JoinGameMessages {
   submit: string;
   joining: string;
   failed: string;          // a refused join stays on the form with this line
+  full: string;            // the lobby has no free seat left (409)
+  started: string;         // the game has already started (409)
   notFound: string;        // the invite link points to a game that no longer exists (404)
   back: string;            // towards the Game home
 }
@@ -171,6 +173,9 @@ export interface LobbyMessages {
   seatOptionLabel: string;           // '{option}', '{name}': accessible name of a computer seat's option selector
   addBot: string;
   removeBot: string;                 // '{name}': accessible name of the remove button
+  removeSeat: string;                // '{name}': accessible name of the host's remove-player button
+  offlineBadge: string;              // a player whose connection dropped
+  removedByHost: string;             // notice on the Game selection after the host removed me
   actionFailed: string;              // a lobby command was refused or could not be sent
   renameLabel: string;               // accessible name of the field holding my own name
   waitingForPlayer: string;          // free seat, shown to guests

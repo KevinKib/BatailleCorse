@@ -112,7 +112,7 @@ export default class GameSession {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: name ?? null }),
     });
-    if (!res.ok) throw new HttpError(`Join failed: ${res.status}`, res.status);
+    if (!res.ok) throw HttpError.fromResponse(res, 'Join failed');
     const body = await res.json() as { playerId: number; token: string };
     this.seat(gameId, body.playerId, body.token);
     await this.hydrate();
@@ -244,6 +244,10 @@ export default class GameSession {
   /** The seat channel: lobby views, and the refusals of my own commands. */
   onSeatResponse(response: SeatResponse): void {
     if (this.left) return;
+    if (response.eventType === 'REMOVED') {
+      this.removedByHost();
+      return;
+    }
     if (response.success === false) {
       if (response.state) this.applyLobby(response.state);
       this.callbacks.onEvent({ type: 'error', eventType: response.eventType, message: response.message });
@@ -265,6 +269,9 @@ export default class GameSession {
 
   /** Host only: free a bot seat. */
   removeBot(seat: number): void { this.lobby.removeBot(seat); }
+
+  /** Host only: remove another human from the lobby, connected or not. */
+  removeSeat(seat: number): void { this.lobby.removeSeat(seat); }
 
   /** Host only: change one game option (Bataille Corse declares none). */
   setOption(key: string, value: string): void { this.lobby.setOption(key, value); }
@@ -297,6 +304,22 @@ export default class GameSession {
     this.myToken = null;
     this.lobbyVersion = null;
     this.started = false;
+  }
+
+  /** The host removed this seat: the server already freed it, so tear down without a Leave command. */
+  private removedByHost(): void {
+    const gameId = this.gameId;
+    this.left = true;
+    this.cancelAll();
+    this.webSocket.unsubscribeFromSeat();
+    this.webSocket.unsubscribeFromGame();
+    this.webSocket.clearPresence();
+    if (gameId) localStorage.removeItem(tokenKey(gameId));
+    this.gameId = null;
+    this.myToken = null;
+    this.lobbyVersion = null;
+    this.started = false;
+    this.callbacks.onEvent({ type: 'removed' });
   }
 
   private act(destination: string): void {
