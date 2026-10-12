@@ -4,6 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseFactory;
 import org.kevinkib.cardgames.bullshit.domain.BullshitFactory;
+import org.kevinkib.cardgames.game.Game;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.presentation.api.GameActionPayload;
@@ -17,6 +18,12 @@ import org.kevinkib.cardgames.sessionmanagement.core.application.RoomCreated;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
 import org.kevinkib.cardgames.sessionmanagement.core.application.TieredFactory;
 import org.kevinkib.cardgames.sessionmanagement.core.infrastructure.InMemorySessionRepository;
+import org.kevinkib.cardgames.sessionmanagement.presence.application.GameLifecycleBroadcasters;
+import org.kevinkib.cardgames.sessionmanagement.presence.application.PresenceService;
+import org.kevinkib.cardgames.sessionmanagement.presence.infrastructure.InMemoryConnectionRegistry;
+import org.kevinkib.cardgames.sessionmanagement.presence.infrastructure.InMemoryForfeitLog;
+import org.kevinkib.cardgames.sessionmanagement.presence.port.ForfeitReason;
+import org.kevinkib.cardgames.sessionmanagement.presence.port.GameLifecycleBroadcaster;
 
 import java.time.Clock;
 import java.util.ArrayList;
@@ -50,7 +57,19 @@ class LobbyControllerTest {
         }
     }
 
+    /** Records the forfeits the presence service announces. */
+    private static final class RecordingBroadcaster implements GameLifecycleBroadcaster {
+        final List<String> events = new ArrayList<>();
+
+        @Override public boolean supports(Game game) { return true; }
+        @Override public void disconnected(Game game, PlayerId player, long deadlineEpochMs) { }
+        @Override public void reconnected(Game game, PlayerId player) { }
+        @Override public void forfeited(Game game, PlayerId player, ForfeitReason reason) { events.add(reason + " " + player.id()); }
+        @Override public void rematchStarted(Game fresh, PlayerId triggeredBy) { }
+    }
+
     private SessionService sessionService;
+    private RecordingBroadcaster broadcaster;
     private RecordingMessaging messaging;
     private LobbyController controller;
 
@@ -61,7 +80,11 @@ class LobbyControllerTest {
                 new GameFactories(List.of(new BullshitFactory(), new BatailleCorseFactory(), new TieredFactory())));
         messaging = new RecordingMessaging();
         messaging.resolver = sessionService;
-        controller = new LobbyController(sessionService, messaging);
+        broadcaster = new RecordingBroadcaster();
+        PresenceService presence = new PresenceService(sessionService, new InMemoryConnectionRegistry(),
+                (deadline, task) -> () -> { }, Clock.systemUTC(), new InMemoryForfeitLog(),
+                new GameLifecycleBroadcasters(List.of(broadcaster)));
+        controller = new LobbyController(sessionService, messaging, presence);
     }
 
     private static LobbyView lobbyOf(Response response) {
@@ -267,18 +290,27 @@ class LobbyControllerTest {
     }
 
     @Test
-    void givenUnknownTokenOrStartedGame_whenLeave_thenIgnoredOrRefusedToTheLeaverOnly() {
+    void givenUnknownToken_whenLeave_thenIgnored() {
         RoomCreated room = sessionService.createRoom("bullshit", "Alice");
         String bobToken = sessionService.joinRoom(new GameId(room.gameId()), "Bob").token();
         messaging.clear();
         controller.leave(new GameActionPayload(room.gameId(), UUID.randomUUID().toString()));
         assertThat(messaging.seats.isEmpty(), is(true));
+    }
 
+    @Test
+    void givenAStartedGame_whenAPlayerLeaves_thenTheSeatForfeitsAndNothingIsRefused() {
+        // The Start reached the server before the Leave: the leaver has already torn down its client, so the
+        // seat must not stay seated for the others to wait on. It resigns, like /app/forfeit.
+        RoomCreated room = sessionService.createRoom("bullshit", "Alice");
+        String bobToken = sessionService.joinRoom(new GameId(room.gameId()), "Bob").token();
         sessionService.startGame(new GameId(room.gameId()), room.hostToken());
+        messaging.clear();
+
         controller.leave(new GameActionPayload(room.gameId(), bobToken));
 
-        assertThat(messaging.seats, is(List.of(new PlayerId(1))));
-        assertThat(messaging.payloads.get(0).isSuccess(), is(false));
+        assertThat(broadcaster.events, is(List.of("RESIGNED 1")));
+        assertThat(messaging.seats.isEmpty(), is(true));
     }
 
     @Test
