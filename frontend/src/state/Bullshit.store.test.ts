@@ -445,4 +445,66 @@ describe('Bullshit store', () => {
       expect(store.roster).toEqual({});
     });
   });
+  describe('card selection', () => {
+    const ace = { rank: 'ACE', suit: 'HEART', name: 'HEART_ACE' } as const;
+    const king = { rank: 'KING', suit: 'SPADE', name: 'SPADE_KING' } as const;
+    const started = () => {
+      const store = useBullshitStore();
+      store.applyEvent({ type: 'seat-change', seat: 0 });
+      store.applyEvent({ type: 'state-update', state: state() });
+      return store;
+    };
+
+    it('is emptied when the room goes back to a lobby, so a redealt card is not pre-selected', () => {
+      const store = started();
+      store.toggleCard(ace);
+      store.applyEvent({ type: 'state-update', state: lobbyView() });
+      store.applyEvent({ type: 'state-update', state: state() });
+      expect(store.selectedCards).toEqual([]);
+    });
+
+    it('is emptied when a game starts after a finished one', () => {
+      const store = started();
+      store.toggleCard(ace);
+      store.applyEvent({ type: 'state-update', state: state({ outcome: { status: 'FINISHED', winnerId: '1' } }) });
+      store.applyEvent({ type: 'state-update', state: state({ id: 'g2' }) });
+      expect(store.selectedCards).toEqual([]);
+    });
+
+    it('is emptied when another game is rehydrated', () => {
+      const store = started();
+      store.toggleCard(ace);
+      store.applyEvent({ type: 'state-update', state: state({ id: 'other' }) });
+      expect(store.selectedCards).toEqual([]);
+    });
+
+    it('is emptied by leave() and playAgain()', async () => {
+      const store = started();
+      store.toggleCard(ace);
+      store.leave();
+      expect(store.selectedCards).toEqual([]);
+      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(() =>
+        Promise.resolve(new Response(JSON.stringify({ playerId: 0, token: 't' }), { status: 200 })));
+      store.applyEvent({ type: 'state-update', state: state() });
+      store.toggleCard(king);
+      await store.playAgain();
+      expect(store.selectedCards).toEqual([]);
+      fetchSpy.mockRestore();
+    });
+
+    it('drops a card that left my hand but keeps the others', () => {
+      const store = started();
+      store.toggleCard(ace);
+      store.toggleCard(king);
+      store.applyEvent({ type: 'state-update', state: state({ myHand: [king] }) });
+      expect(store.selectedCards.map(c => c.name)).toEqual(['SPADE_KING']);
+    });
+
+    it('keeps the selection across an unrelated update of the same game', () => {
+      const store = started();
+      store.toggleCard(ace);
+      store.applyEvent({ type: 'state-update', state: state({ discardPileSize: 1 }) });
+      expect(store.selectedCards.map(c => c.name)).toEqual(['HEART_ACE']);
+    });
+  });
 });
