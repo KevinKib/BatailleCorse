@@ -4,6 +4,8 @@ import org.kevinkib.cardgames.game.GameFactory;
 import org.kevinkib.cardgames.presentation.GameMessagingService;
 import org.kevinkib.cardgames.presentation.command.SeatCommands;
 import org.kevinkib.cardgames.presentation.LobbyBroadcaster;
+import org.kevinkib.cardgames.presentation.dto.event.EmptyEventData;
+import org.kevinkib.cardgames.presentation.dto.event.LifecycleEventType;
 import org.kevinkib.cardgames.presentation.SeatSubscriptionInterceptor;
 import org.kevinkib.cardgames.presentation.WebSocketDisconnectListener;
 import org.kevinkib.cardgames.presentation.bot.BotScheduler;
@@ -133,10 +135,15 @@ public class AppConfig {
 
     @Bean
     public PresenceService presenceService(GameDirectory gameDirectory,
-                                           GameLifecycleBroadcasters gameLifecycleBroadcasters) {
-        return new PresenceService(
+                                           GameLifecycleBroadcasters gameLifecycleBroadcasters,
+                                           LobbyBroadcaster lobbyBroadcaster) {
+        PresenceService presence = new PresenceService(
                 gameDirectory, connectionRegistry(), forfeitScheduler(), clock(), forfeitLog(),
                 gameLifecycleBroadcasters);
+        // A lobby seat whose connection dropped (or came back) is flagged to the others, so the host can remove it.
+        presence.setLobbyPresenceListener((gameId, views) -> lobbyBroadcaster.send(gameId, views,
+                LifecycleEventType.JOIN.toString(), new EmptyEventData(), "A player's connection changed."));
+        return presence;
     }
 
     @Bean

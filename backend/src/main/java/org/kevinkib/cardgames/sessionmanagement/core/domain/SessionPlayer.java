@@ -14,6 +14,7 @@ public class SessionPlayer {
     private String name;
     private boolean rematchRequested;
     private boolean rematchDeparted;
+    private boolean disconnected;
     private final Map<String, String> options = new LinkedHashMap<>();
 
     public SessionPlayer(PlayerId id, SessionToken token) {
@@ -49,6 +50,7 @@ public class SessionPlayer {
         this.options.clear();
         this.rematchRequested = false;
         this.rematchDeparted = false;
+        this.disconnected = false;
         this.token = SessionToken.generate();
     }
 
@@ -60,6 +62,7 @@ public class SessionPlayer {
         moved.name = name;
         moved.rematchRequested = rematchRequested;
         moved.rematchDeparted = rematchDeparted;
+        moved.disconnected = disconnected;
         moved.options.putAll(options);
         return moved;
     }
@@ -109,6 +112,15 @@ public class SessionPlayer {
 
     public boolean hasRequestedRematch() {
         return rematchRequested;
+    }
+
+    /** True while the human's connection is known to be down in a lobby (the host may remove the seat). */
+    public boolean isDisconnected() {
+        return disconnected;
+    }
+
+    void setDisconnected(boolean disconnected) {
+        this.disconnected = disconnected;
     }
 
     public PlayerId id() {

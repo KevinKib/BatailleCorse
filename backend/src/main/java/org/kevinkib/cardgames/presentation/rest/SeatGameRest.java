@@ -67,7 +67,7 @@ public class SeatGameRest {
         try {
             return joined(gameId, sessionService.joinRoom(gameId, nameOf(payload)));
         } catch (GameAlreadyStartedException | RoomFullException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+            return JoinRefusal.conflict(e);
         }
     }
 
@@ -80,7 +80,7 @@ public class SeatGameRest {
         try {
             return joined(gameId, sessionService.playAgain(gameId, nameOf(payload)));
         } catch (RoomFullException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+            return JoinRefusal.conflict(e);
         }
     }
 

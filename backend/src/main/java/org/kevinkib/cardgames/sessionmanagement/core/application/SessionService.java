@@ -273,6 +273,28 @@ public class SessionService implements GameDirectory {
         return new LeaveResult(false, lobbyViews(id));
     }
 
+    /**
+     * Records that the human holding {@code token} lost or regained its connection in a not-yet-started lobby.
+     * Returns the views to publish; empty when nothing changed (same state, unknown token, or the game started).
+     */
+    @Override
+    public synchronized List<AddressedLobbyView> markSeatConnection(GameId id, String token, boolean connected) {
+        if (repository.findGame(id).isPresent()) {
+            return List.of();
+        }
+        SessionGame lobby;
+        try {
+            lobby = repository.loadSessionGame(id);
+        } catch (IllegalArgumentException unknownLobby) {
+            return List.of();
+        }
+        if (!lobby.markConnection(new SessionToken(token), connected)) {
+            return List.of();
+        }
+        lobby.bumpVersion();
+        return lobbyViews(id);
+    }
+
     public String gameType(GameId id) {
         return repository.loadSessionGame(id).gameType();
     }

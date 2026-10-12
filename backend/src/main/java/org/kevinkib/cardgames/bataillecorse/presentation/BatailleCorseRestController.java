@@ -10,6 +10,7 @@ import org.kevinkib.cardgames.presentation.api.JoinGamePayload;
 import org.kevinkib.cardgames.presentation.dto.JoinResponseDto;
 import org.kevinkib.cardgames.presentation.dto.event.EmptyEventData;
 import org.kevinkib.cardgames.presentation.dto.event.LifecycleEventType;
+import org.kevinkib.cardgames.presentation.rest.JoinRefusal;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameAlreadyStartedException;
 import org.kevinkib.cardgames.sessionmanagement.core.application.InvalidGameIdException;
 import org.kevinkib.cardgames.sessionmanagement.core.application.JoinResult;
@@ -80,7 +81,7 @@ public class BatailleCorseRestController {
         try {
             return ResponseEntity.ok(seated(gameId.get(), sessionService.joinRoom(gameId.get(), nameOf(payload))));
         } catch (GameAlreadyStartedException | RoomFullException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+            return JoinRefusal.conflict(e);
         }
     }
 
@@ -95,7 +96,7 @@ public class BatailleCorseRestController {
         try {
             return ResponseEntity.ok(seated(gameId.get(), sessionService.playAgain(gameId.get(), nameOf(payload))));
         } catch (RoomFullException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+            return JoinRefusal.conflict(e);
         }
     }
 
