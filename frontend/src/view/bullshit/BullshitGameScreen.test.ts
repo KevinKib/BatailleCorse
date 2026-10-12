@@ -671,6 +671,15 @@ describe('BullshitGameScreen table chrome (same places as Bataille Corse)', () =
     wrapper.unmount();
   });
 
+  it('puts the duration chip and the sound toggle in the same top bar, the chip first, flowing in the row', () => {
+    const wrapper = mountPlaying();
+    const bar = wrapper.get('.top-bar');
+    const ids = bar.findAll('[data-cy="game-timer"], [data-test="sound-toggle"]').map(e => e.attributes('data-cy') ?? e.attributes('data-test'));
+    expect(ids).toEqual(['game-timer', 'sound-toggle']);
+    expect(bar.get('[data-cy="game-timer"]').classes()).toContain('game-timer--inline');
+    wrapper.unmount();
+  });
+
   it('keeps the keys hint, in the footer between Back and the gear', () => {
     const wrapper = mountPlaying();
     expect(wrapper.get('[data-test="table-footer"]').find('[data-test="keys-hint"]').exists()).toBe(true);

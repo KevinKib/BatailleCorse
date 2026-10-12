@@ -83,6 +83,11 @@ const onLeave = fadeOut;
   --turn-ring: inset 0 0 0 1px var(--turn-ring-color);
   --turn-dot-size: 6px;
 
+  /* Top row of a game table (duration chip, sound toggle, rules toggle): one gutter from the screen
+     edges and one chip height, so everything in it shares a centre line. */
+  --hud-inset: 10px;
+  --hud-chip-h: 28px;
+
   /* Buttons: flat, small radius. */
   --button-radius: 0.4rem;
 

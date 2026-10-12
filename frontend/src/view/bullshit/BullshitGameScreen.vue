@@ -270,11 +270,10 @@ function leaveLobby() {
     </div>
 
     <template v-else>
-      <GameTimer :time="formattedDuration" />
-
       <RulesPanel :rules="messages.bullshit" />
 
       <div class="top-bar">
+        <GameTimer :time="formattedDuration" inline />
         <Button
           data-test="sound-toggle"
           class="sound-toggle"
@@ -461,13 +460,21 @@ function leaveLobby() {
   background: none;
 }
 
+/* The same top row as the Bataille Corse table: the duration chip, then the sound toggle, on one
+   centre line (the rules toggle, pinned at the right, is centred on it too). Same height and same side
+   gutter as the chips the other table pins to its corners. */
 .top-bar {
   flex: none;
   display: flex;
   align-items: center;
-  min-height: 48px;
-  /* Leaves the corners free: the duration chip on the left, the rules toggle on the right. */
-  padding-left: 88px;
+  gap: var(--space-2);
+  box-sizing: border-box;
+  height: calc(var(--hud-inset) * 2 + var(--hud-chip-h) + env(safe-area-inset-top, 0px));
+  /* The screen already pads by a space-2: the rest of the gutter is added here. */
+  padding: env(safe-area-inset-top, 0px) 0 0 calc(var(--hud-inset) - var(--space-2) + env(safe-area-inset-left, 0px));
+  /* Row of its own, above the screen padding: pulled up by it so the row measures from the edge. */
+  margin-top: calc(var(--space-2) * -1);
+  /* Leaves the right corner free for the rules toggle. */
   padding-right: 120px;
 }
 .leave-button { text-decoration: none; }
