@@ -128,3 +128,24 @@ describe('Bullshit end screen waits for the last turn to play out', () => {
     me.wrapper.unmount();
   });
 });
+
+describe('Bullshit game duration timer', () => {
+  beforeEach(() => { setActivePinia(createPinia()); localStorage.clear(); take.mockClear(); reduced = false; vi.useFakeTimers(); });
+  afterEach(() => vi.useRealTimers());
+
+  it('counts from the start of the game and freezes at game over, while the last verdict is still on the table', async () => {
+    const { store, wrapper } = setup(state(null));
+    const timer = () => wrapper.get('[data-cy="game-timer"]').text();
+    expect(timer()).toBe('00:00');
+    await tick(65_000);
+    expect(timer()).toBe('01:05');
+
+    store.applyEvent({ type: 'state-update', state: state('1') });
+    store.applyEvent(truthfulCall);
+    await nextTick();
+    await tick(2_000);
+    expect(wrapper.find('[data-test="reveal"]').exists()).toBe(true);
+    expect(timer()).toBe('01:05');
+    wrapper.unmount();
+  });
+});

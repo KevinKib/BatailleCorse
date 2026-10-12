@@ -7,6 +7,8 @@ function createBullshitGame(name: string, claimLabel?: string, deckLabel = '52 c
   cy.get('[data-test="name"]').type(name);
   cy.get('[data-test="new-game"]').click();
   cy.url({ timeout: 10000 }).should('match', /\/games\/bullshit\/room\/.+/);
+  // The Game home fades out while the room fades in: continue once the room is alone.
+  cy.get('[data-test="start-panel"]').should('not.exist');
   cy.get('[data-test="lobby"]').should('be.visible');
   // The host picks the options in the lobby; the server's answer marks the choice (no optimistic UI).
   if (claimLabel) {
@@ -30,6 +32,8 @@ describe('Bullshit Game home and join form', () => {
     cy.get('[data-test="back"]').should('be.visible');
     cy.get('[data-test="new-game"]').should('be.visible').click();
     cy.url({ timeout: 10000 }).should('match', /\/games\/bullshit\/room\/.+/);
+    // The Game home fades out while the room fades in: continue once the room is alone.
+    cy.get('[data-test="start-panel"]').should('not.exist');
     cy.get('[data-test="lobby"]').should('be.visible');
   });
 

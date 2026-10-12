@@ -423,3 +423,15 @@ describe('GameLobby', () => {
     });
   });
 });
+
+describe('GameLobby local preferences', () => {
+  it('offers the shortcut gear inside the panel, with the game\'s own actions, to the host and to a guest', async () => {
+    for (const mySeat of [0, 1]) {
+      const wrapper = mountLobby({ lobby: lobby({ mySeat }) });
+      expect(wrapper.get('[data-test="lobby"]').find('[data-test="hotkeys-button"]').exists()).toBe(true);
+      await wrapper.get('[data-test="hotkeys-button"]').trigger('click');
+      expect(wrapper.find('[data-test="hotkey-discard-key"]').exists()).toBe(true);
+      expect(wrapper.find('[data-test="hotkey-call-key"]').exists()).toBe(true);
+    }
+  });
+});

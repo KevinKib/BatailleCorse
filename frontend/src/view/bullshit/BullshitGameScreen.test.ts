@@ -639,3 +639,40 @@ describe('BullshitGameScreen', () => {
     expect(wrapper.find('[data-test="connecting"]').exists()).toBe(false);
   });
 });
+
+describe('BullshitGameScreen table chrome (same places as Bataille Corse)', () => {
+  beforeEach(() => { setActivePinia(createPinia()); localStorage.clear(); });
+  function mountPlaying() {
+    const store = useBullshitStore();
+    store.applyEvent({ type: 'seat-change', seat: 0 });
+    store.applyEvent({ type: 'state-update', state: playingState() });
+    return mount(BullshitGameScreen, { props: { gameId: 'g1' }, global: { plugins: [router, PrimeVue] }, attachTo: document.body });
+  }
+
+  it('puts Back at the bottom left and the shortcut gear at the bottom right, in one footer', () => {
+    const wrapper = mountPlaying();
+    const footer = wrapper.get('[data-test="table-footer"]');
+    const ids = footer.findAll('[data-test]').map(e => e.attributes('data-test'));
+    expect(ids.indexOf('leave')).toBeGreaterThanOrEqual(0);
+    expect(ids.indexOf('hotkeys-button')).toBeGreaterThan(ids.indexOf('leave'));
+    expect(wrapper.get('.top-bar').find('[data-test="leave"]').exists()).toBe(false);
+    expect(wrapper.get('.top-bar').find('[data-test="hotkeys-button"]').exists()).toBe(false);
+    // The table's own order: the footer is below the hand and the actions.
+    const html = wrapper.html();
+    expect(html.indexOf('data-test="table-footer"')).toBeGreaterThan(html.indexOf('data-test="call"'));
+    wrapper.unmount();
+  });
+
+  it('shows the game duration chip at the top left and keeps the sound toggle', () => {
+    const wrapper = mountPlaying();
+    expect(wrapper.get('[data-cy="game-timer"]').text()).toBe('00:00');
+    expect(wrapper.get('.top-bar').find('[data-test="sound-toggle"]').exists()).toBe(true);
+    wrapper.unmount();
+  });
+
+  it('keeps the keys hint, in the footer between Back and the gear', () => {
+    const wrapper = mountPlaying();
+    expect(wrapper.get('[data-test="table-footer"]').find('[data-test="keys-hint"]').exists()).toBe(true);
+    wrapper.unmount();
+  });
+});

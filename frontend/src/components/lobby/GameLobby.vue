@@ -5,6 +5,7 @@ import TitleCardFan from '../TitleCardFan.vue';
 import LobbySeats from './LobbySeats.vue';
 import LobbyGameOptions from './LobbyGameOptions.vue';
 import LobbyInvite from './LobbyInvite.vue';
+import LocalPreferences from '../LocalPreferences.vue';
 import { useI18n } from '../../composables/useI18n';
 import { plural } from '../../locales/format';
 import type { GameDefinition } from '../../model/games';
@@ -55,6 +56,7 @@ onBeforeUnmount(() => { if (noticeTimer) clearTimeout(noticeTimer); });
 <template>
   <div class="titlescreen">
     <div data-test="lobby" class="title-panel">
+      <LocalPreferences :game="game" />
       <TitleCardFan class="lobby-fan" />
 
       <div class="title-block">
