@@ -16,16 +16,14 @@ import org.kevinkib.cardgames.bullshit.domain.options.BullshitOptions;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.GameOptions;
 import org.kevinkib.cardgames.game.PlayerId;
-import org.kevinkib.cardgames.presentation.GameMessagingService;
-import org.kevinkib.cardgames.sessionmanagement.core.application.GameFactories;
+import org.kevinkib.cardgames.presentation.api.Response;
+import org.kevinkib.cardgames.presentation.support.RecordingMessaging;
+import org.kevinkib.cardgames.presentation.support.SessionTable;
 import org.kevinkib.cardgames.sessionmanagement.core.application.RoomCreated;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
-import org.kevinkib.cardgames.sessionmanagement.core.infrastructure.InMemorySessionRepository;
 import org.kevinkib.cards.domain.Card;
 
-import java.time.Clock;
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -48,7 +46,7 @@ class BotGameIntegrationTest {
         final ManualBotScheduler scheduler = new ManualBotScheduler();
         final BullshitGameActions actions;
         final BullshitBotCoordinator coordinator;
-        final List<Object> humanMessages = new ArrayList<>();
+        final List<Response> humanMessages;
         final Bullshit game;
         final GameId id;
         final String hostToken;
@@ -58,18 +56,17 @@ class BotGameIntegrationTest {
         }
 
         Table(String claimMode, int bots, long seed, Duration callDelay) {
-            sessions = new SessionService(
-                    new InMemorySessionRepository(Clock.systemUTC()),
-                    new GameFactories(List.of(new BullshitFactory())));
-            GameMessagingService messaging = new GameMessagingService(null, null) {
+            sessions = new SessionTable(new BullshitFactory()).sessions;
+            RecordingMessaging messaging = new RecordingMessaging() {
                 @Override
                 public void sendToSeat(GameId gameId, PlayerId seat, Object payload) {
                     if (sessions.botSeats(gameId).contains(seat)) {
                         throw new AssertionError("A bot seat was messaged: " + seat);
                     }
-                    humanMessages.add(payload);
+                    super.sendToSeat(gameId, seat, payload);
                 }
             };
+            humanMessages = messaging.payloads;
             BullshitStateBroadcaster broadcaster = new BullshitStateBroadcaster(messaging, sessions::botSeats);
             actions = new BullshitGameActions(sessions, broadcaster);
             Random random = new Random(seed);

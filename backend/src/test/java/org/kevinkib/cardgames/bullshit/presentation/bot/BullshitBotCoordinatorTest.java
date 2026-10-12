@@ -15,9 +15,8 @@ import org.kevinkib.cardgames.bullshit.presentation.BullshitGameActions;
 import org.kevinkib.cardgames.bullshit.presentation.BullshitStateBroadcaster;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
-import org.kevinkib.cardgames.presentation.GameMessagingService;
-import org.kevinkib.cardgames.presentation.api.Response;
 import org.kevinkib.cardgames.presentation.dto.event.EmptyEventData;
+import org.kevinkib.cardgames.presentation.support.RecordingMessaging;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameFactories;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
 import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionGame;
@@ -28,7 +27,6 @@ import org.kevinkib.cards.domain.deck.french.FrenchSuit;
 
 import java.time.Clock;
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
@@ -52,21 +50,7 @@ class BullshitBotCoordinatorTest {
     private static final Duration DELAY = Duration.ofMillis(1500);
     private static final Duration CALL_DELAY = Duration.ofMillis(2500);
 
-    static final class RecordingMessaging extends GameMessagingService {
-        final List<PlayerId> seats = new ArrayList<>();
-        final List<Response> payloads = new ArrayList<>();
-
-        RecordingMessaging() {
-            super(null, null);
-        }
-
-        @Override
-        public void sendToSeat(GameId gameId, PlayerId seat, Object payload) {
-            seats.add(seat);
-            payloads.add((Response) payload);
-        }
-    }
-
+    
     private InMemorySessionRepository repository;
     private SessionService sessionService;
     private RecordingMessaging messaging;

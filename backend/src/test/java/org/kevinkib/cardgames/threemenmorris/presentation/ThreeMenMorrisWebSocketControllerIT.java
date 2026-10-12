@@ -4,24 +4,14 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.game.GameId;
+import org.kevinkib.cardgames.presentation.support.StompTestClient.Frames;
+import org.kevinkib.cardgames.presentation.support.StompTestClient;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
-import org.kevinkib.cardgames.threemenmorris.domain.ThreeMenMorris;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.messaging.Message;
-import org.springframework.messaging.converter.StringMessageConverter;
-import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
-import org.springframework.messaging.simp.SimpMessageType;
 import org.springframework.messaging.simp.broker.SimpleBrokerMessageHandler;
-import org.springframework.messaging.simp.stomp.StompFrameHandler;
-import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.messaging.simp.stomp.StompSession;
-import org.springframework.messaging.simp.stomp.StompSessionHandlerAdapter;
-import org.springframework.messaging.support.MessageBuilder;
-import org.springframework.util.MimeTypeUtils;
-import org.springframework.web.socket.client.standard.StandardWebSocketClient;
-import org.springframework.web.socket.messaging.WebSocketStompClient;
 import tools.jackson.databind.ObjectMapper;
 
 import java.lang.reflect.Type;
@@ -29,14 +19,8 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Predicate;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
@@ -48,8 +32,6 @@ import static org.hamcrest.Matchers.is;
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class ThreeMenMorrisWebSocketControllerIT {
-
-    private static final int TIMEOUT_SECONDS = 5;
 
     @LocalServerPort
     private int port;
@@ -63,16 +45,16 @@ class ThreeMenMorrisWebSocketControllerIT {
     @Autowired
     private SessionService sessionService;
 
-    private final List<StompSession> sessions = new ArrayList<>();
+    private StompTestClient client;
 
     @BeforeEach
     void setUp() {
-        sessions.clear();
+        client = new StompTestClient(port, objectMapper, broker);
     }
 
     @AfterEach
     void tearDown() {
-        sessions.stream().filter(StompSession::isConnected).forEach(StompSession::disconnect);
+        client.disconnectAll();
     }
 
     /** A started two-player table: both clients subscribed to their private seat topic. */
@@ -96,8 +78,8 @@ class ThreeMenMorrisWebSocketControllerIT {
             tokens[1] = (String) objectMapper.readValue(joined.body(), Map.class).get("token");
 
             for (int seat = 0; seat < 2; seat++) {
-                stomp[seat] = connect();
-                frames[seat] = subscribe(stomp[seat], "/topic/game/" + gameId + "/seat/" + tokens[seat], tokens[seat]);
+                stomp[seat] = client.connect();
+                frames[seat] = client.subscribeSeat(stomp[seat], gameId, tokens[seat]);
             }
             send(0, "/three-men-morris/start", body(tokens[0]));
             for (int seat = 0; seat < 2; seat++) {
@@ -107,17 +89,11 @@ class ThreeMenMorrisWebSocketControllerIT {
         }
 
         void send(int seat, String destination, Map<String, Object> body) {
-            ThreeMenMorrisWebSocketControllerIT.this.send(stomp[seat], destination, body);
+            client.sendApp(stomp[seat], destination, body);
         }
 
         Map<String, Object> body(String token, Object... more) {
-            Map<String, Object> map = new HashMap<>();
-            map.put("gameId", gameId);
-            map.put("token", token);
-            for (int i = 0; i < more.length; i += 2) {
-                map.put((String) more[i], more[i + 1]);
-            }
-            return map;
+            return StompTestClient.body(gameId, token, more);
         }
 
         /** Places a piece and waits until both seats have seen the event. */
@@ -157,87 +133,6 @@ class ThreeMenMorrisWebSocketControllerIT {
                         .POST(HttpRequest.BodyPublishers.ofString(json))
                         .build(),
                 HttpResponse.BodyHandlers.ofString());
-    }
-
-    private StompSession connect() throws Exception {
-        WebSocketStompClient client = new WebSocketStompClient(new StandardWebSocketClient());
-        client.setMessageConverter(new StringMessageConverter() {
-            {
-                addSupportedMimeTypes(MimeTypeUtils.APPLICATION_JSON);
-            }
-        });
-        StompSession session = client.connectAsync("ws://localhost:" + port + "/ws", new StompSessionHandlerAdapter() { })
-                .get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
-        sessions.add(session);
-        return session;
-    }
-
-    /** All the frames a subscription receives, in order. */
-    private static final class Frames {
-        final BlockingQueue<Map<String, Object>> queue = new LinkedBlockingQueue<>();
-
-        /** Every frame received, whatever {@link #await} consumed. */
-        final List<Map<String, Object>> all = new java.util.concurrent.CopyOnWriteArrayList<>();
-
-        Map<String, Object> await(Predicate<Map<String, Object>> predicate) throws Exception {
-            long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(TIMEOUT_SECONDS);
-            while (System.nanoTime() < deadline) {
-                Map<String, Object> frame = queue.poll(100, TimeUnit.MILLISECONDS);
-                if (frame != null && predicate.test(frame)) {
-                    return frame;
-                }
-            }
-            throw new AssertionError("No matching frame received");
-        }
-
-        List<Map<String, Object>> drain() {
-            List<Map<String, Object>> all = new ArrayList<>();
-            queue.drainTo(all);
-            return all;
-        }
-    }
-
-    private Frames subscribe(StompSession session, String destination, String token) {
-        Frames frames = new Frames();
-        StompHeaders headers = new StompHeaders();
-        headers.setDestination(destination);
-        headers.add("token", token);
-        session.subscribe(headers, new StompFrameHandler() {
-            @Override
-            public Type getPayloadType(StompHeaders headers) {
-                return String.class;
-            }
-
-            @Override
-            @SuppressWarnings("unchecked")
-            public void handleFrame(StompHeaders headers, Object payload) {
-                Map<String, Object> frame = objectMapper.readValue((String) payload, Map.class);
-                frames.all.add(frame);
-                frames.queue.add(frame);
-            }
-        });
-        awaitBrokerSubscription(destination);
-        return frames;
-    }
-
-    private void awaitBrokerSubscription(String destination) {
-        SimpMessageHeaderAccessor accessor = SimpMessageHeaderAccessor.create(SimpMessageType.MESSAGE);
-        accessor.setDestination(destination);
-        Message<byte[]> probe = MessageBuilder.createMessage(new byte[0], accessor.getMessageHeaders());
-        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(TIMEOUT_SECONDS);
-        while (broker.getSubscriptionRegistry().findSubscriptions(probe).isEmpty()) {
-            if (System.nanoTime() > deadline) {
-                throw new AssertionError("Subscription to " + destination + " was not registered by the broker");
-            }
-            Thread.onSpinWait();
-        }
-    }
-
-    private void send(StompSession session, String destination, Map<String, Object> body) {
-        StompHeaders headers = new StompHeaders();
-        headers.setDestination("/app" + destination);
-        headers.setContentType(MimeTypeUtils.APPLICATION_JSON);
-        session.send(headers, objectMapper.writeValueAsString(body));
     }
 
     @SuppressWarnings("unchecked")

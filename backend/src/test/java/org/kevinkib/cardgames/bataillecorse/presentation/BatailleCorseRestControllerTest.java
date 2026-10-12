@@ -1,5 +1,6 @@
 package org.kevinkib.cardgames.bataillecorse.presentation;
 import org.kevinkib.cardgames.presentation.*;
+import org.kevinkib.cardgames.presentation.support.RecordingMessaging;
 import org.kevinkib.cardgames.sessionmanagement.presence.domain.Seat;
 import org.kevinkib.cardgames.sessionmanagement.presence.infrastructure.InMemoryForfeitLog;
 import org.kevinkib.cardgames.sessionmanagement.presence.port.ForfeitReason;
@@ -13,7 +14,6 @@ import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameMode;
 import org.kevinkib.cardgames.sessionmanagement.core.infrastructure.InMemorySessionRepository;
-import org.kevinkib.cardgames.presentation.api.Response;
 import org.kevinkib.cardgames.bataillecorse.presentation.dto.BatailleCorseDto;
 import org.kevinkib.cardgames.bataillecorse.presentation.dto.PlayerDto;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +21,6 @@ import org.springframework.http.ResponseEntity;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -29,12 +28,6 @@ import static org.hamcrest.Matchers.is;
 
 class BatailleCorseRestControllerTest {
 
-    /** Records every broadcast instead of touching a real broker. */
-    private static final class RecordingMessaging extends GameMessagingService {
-        final List<Response> sent = new ArrayList<>();
-        RecordingMessaging() { super(null, null); }
-        @Override public void sendToGame(String gameId, Object payload) { sent.add((Response) payload); }
-    }
 
     private SessionService sessionService;
     private ForfeitLog forfeitLog;

@@ -11,8 +11,8 @@ import org.kevinkib.cardgames.bullshit.presentation.dto.event.CallBullshitEventD
 import org.kevinkib.cardgames.bullshit.presentation.dto.event.DiscardEventData;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
-import org.kevinkib.cardgames.presentation.GameMessagingService;
 import org.kevinkib.cardgames.presentation.api.Response;
+import org.kevinkib.cardgames.presentation.support.RecordingMessaging;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameFactories;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameMode;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
@@ -23,7 +23,6 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -34,21 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class BullshitGameActionsTest {
 
-    static final class RecordingMessaging extends GameMessagingService {
-        final List<PlayerId> seats = new ArrayList<>();
-        final List<Response> payloads = new ArrayList<>();
-
-        RecordingMessaging() {
-            super(null, null);
-        }
-
-        @Override
-        public void sendToSeat(GameId gameId, PlayerId seat, Object payload) {
-            seats.add(seat);
-            payloads.add((Response) payload);
-        }
-    }
-
+    
     static final class MutableClock extends Clock {
         Instant now = Instant.parse("2026-01-01T00:00:00Z");
 
