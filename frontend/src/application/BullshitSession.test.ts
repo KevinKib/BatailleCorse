@@ -209,6 +209,17 @@ describe('BullshitSession', () => {
     expect(events.some(e => e.type === 'event')).toBe(false);
   });
 
+  it('applies the sender state carried by an ErrorResponse, then surfaces the error without a regular event', () => {
+    const { session, events, fireSeat } = makeSession();
+    session.restore('g1', 0, 'tok-0');
+    fireSeat({ success: false, eventType: 'DISCARD', eventData: {}, message: 'Not the turn of player 0', state: sampleState() });
+    const kinds = events.map(e => e.type);
+    expect(kinds.indexOf('state-update')).toBeGreaterThanOrEqual(0);
+    expect(kinds.indexOf('state-update')).toBeLessThan(kinds.indexOf('error'));
+    expect(events).toContainEqual({ type: 'error', eventType: 'DISCARD', message: 'Not the turn of player 0' });
+    expect(events.some(e => e.type === 'event')).toBe(false);
+  });
+
   it('on an incoming seat message, emits state-update and the event', () => {
     const { session, events, fireSeat } = makeSession();
     session.restore('g1', 0, 'tok-0');

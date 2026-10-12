@@ -2,6 +2,7 @@ package org.kevinkib.cardgames.config;
 
 import org.kevinkib.cardgames.game.GameFactory;
 import org.kevinkib.cardgames.presentation.GameMessagingService;
+import org.kevinkib.cardgames.presentation.command.SeatCommands;
 import org.kevinkib.cardgames.presentation.LobbyBroadcaster;
 import org.kevinkib.cardgames.presentation.SeatSubscriptionInterceptor;
 import org.kevinkib.cardgames.presentation.WebSocketDisconnectListener;
@@ -103,6 +104,11 @@ public class AppConfig {
     @Bean
     public BotScheduler botScheduler() {
         return new TaskSchedulerBotScheduler(taskScheduler());
+    }
+
+    @Bean
+    public SeatCommands seatCommands(SessionService sessionService, GameMessagingService gameMessagingService) {
+        return new SeatCommands(sessionService, gameMessagingService);
     }
 
     @Bean

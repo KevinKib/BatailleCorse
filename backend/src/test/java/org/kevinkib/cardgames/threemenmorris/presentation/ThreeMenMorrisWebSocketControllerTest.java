@@ -70,7 +70,7 @@ class ThreeMenMorrisWebSocketControllerTest {
         SessionService both = new SessionService(table.repository,
                 new GameFactories(List.of(new ThreeMenMorrisFactory(), new BullshitFactory())));
         ThreeMenMorrisWebSocketController ws = new ThreeMenMorrisWebSocketController(both, table.broadcaster,
-                table.messaging, new ThreeMenMorrisGameActions(both, table.broadcaster));
+                new org.kevinkib.cardgames.presentation.command.SeatCommands(both, table.messaging), new ThreeMenMorrisGameActions(both, table.broadcaster));
         RoomCreated room = both.createRoom(BullshitFactory.GAME_TYPE, "Alice");
         both.joinRoom(new GameId(room.gameId()), "Bob");
 
@@ -131,5 +131,25 @@ class ThreeMenMorrisWebSocketControllerTest {
         assertThat(table.messaging.payloads, hasSize(3));
         assertThat(table.messaging.payloads.stream().noneMatch(Response::isSuccess), is(true));
         assertThat(game.version(), is(0));
+    }
+
+    @Test
+    void aRefusedStartOfALobby_carriesNoState() {
+        RoomCreated room = createRoom();
+
+        table.ws.start(new GameActionPayload(room.gameId(), room.hostToken()));
+
+        assertThat(table.messaging.seats, is(List.of(WHITE)));
+        assertThat(table.messaging.payloads.get(0).getState(), is(nullValue()));
+    }
+
+    @Test
+    void aMalformedOrUnknownGameId_isIgnoredWithoutAnyException() {
+        for (String rawId : new String[]{"not-a-uuid", "", java.util.UUID.randomUUID().toString()}) {
+            table.ws.place(new ThreeMenMorrisPlacePayload(rawId, "token", 0));
+            table.ws.start(new GameActionPayload(rawId, "token"));
+        }
+
+        assertThat(table.messaging.payloads.isEmpty(), is(true));
     }
 }

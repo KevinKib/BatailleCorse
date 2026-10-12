@@ -8,6 +8,8 @@ import org.kevinkib.cardgames.sessionmanagement.presence.application.PresenceSer
 import org.kevinkib.cardgames.sessionmanagement.presence.port.ForfeitReason;
 import org.kevinkib.cardgames.presentation.api.GameActionPayload;
 import org.kevinkib.cardgames.presentation.api.PresencePayload;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
@@ -16,6 +18,8 @@ import org.springframework.stereotype.Controller;
 /** Game-agnostic lifecycle endpoints. Pure delegation to the session/forfeit services; builds no game state. */
 @Controller
 public class LifecycleController {
+
+    private static final Logger log = LoggerFactory.getLogger(LifecycleController.class);
 
     private final SessionService sessionService;
     private final PresenceService presenceService;
@@ -31,7 +35,7 @@ public class LifecycleController {
         try {
             presenceService.onPresence(headers.getSessionId(), gameId, payload.token());
         } catch (Exception e) {
-            System.err.println(e.getMessage());
+            log.debug("Lifecycle command refused: {}", e.getMessage());
         }
     }
 
@@ -44,7 +48,7 @@ public class LifecycleController {
                     .orElseThrow(InvalidTokenException::new);
             presenceService.forfeit(gameId, playerId, ForfeitReason.RESIGNED);
         } catch (Exception e) {
-            System.err.println(e.getMessage());
+            log.debug("Lifecycle command refused: {}", e.getMessage());
         }
     }
 }

@@ -1,5 +1,6 @@
 package org.kevinkib.cardgames.kobo.presentation;
 
+import org.kevinkib.cardgames.presentation.command.SeatCommands;
 import org.kevinkib.cardgames.kobo.domain.Kobo;
 import org.kevinkib.cardgames.kobo.domain.KoboFactory;
 import org.kevinkib.cardgames.presentation.LobbyBroadcaster;
@@ -19,7 +20,8 @@ final class KoboTable {
     final KoboStateBroadcaster broadcaster = new KoboStateBroadcaster(messaging, sessions::seatNames);
     final KoboGameActions actions = new KoboGameActions(sessions, broadcaster);
     final LobbyBroadcaster lobbyBroadcaster = new LobbyBroadcaster(messaging);
-    final KoboWebSocketController ws = new KoboWebSocketController(sessions, broadcaster, messaging, actions);
+    final KoboWebSocketController ws = new KoboWebSocketController(sessions, broadcaster,
+            new SeatCommands(sessions, messaging), actions);
     final KoboRestController rest = new KoboRestController(sessions, broadcaster, lobbyBroadcaster);
 
     /** Registers an already built game with every seat claimed (one token per seat). */

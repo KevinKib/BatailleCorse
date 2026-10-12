@@ -8,13 +8,14 @@ import org.kevinkib.cardgames.presentation.api.LobbyOptionsPayload;
 import org.kevinkib.cardgames.presentation.api.LobbyRenamePayload;
 import org.kevinkib.cardgames.presentation.api.LobbySeatOptionPayload;
 import org.kevinkib.cardgames.presentation.api.LobbySeatPayload;
-import org.kevinkib.cardgames.presentation.api.SuccessResponse;
 import org.kevinkib.cardgames.presentation.dto.event.EmptyEventData;
 import org.kevinkib.cardgames.presentation.dto.event.LifecycleEventType;
 import org.kevinkib.cardgames.sessionmanagement.core.application.AddressedLobbyView;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
 import org.kevinkib.cardgames.sessionmanagement.presence.application.PresenceService;
 import org.kevinkib.cardgames.sessionmanagement.presence.port.ForfeitReason;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Controller;
@@ -30,13 +31,17 @@ import java.util.function.Function;
 @Controller
 public class LobbyController {
 
+    private static final Logger log = LoggerFactory.getLogger(LobbyController.class);
+
     private final SessionService sessionService;
     private final GameMessagingService messaging;
+    private final LobbyBroadcaster lobbyBroadcaster;
     private final PresenceService presenceService;
 
     public LobbyController(SessionService sessionService, GameMessagingService messaging, PresenceService presenceService) {
         this.sessionService = sessionService;
         this.messaging = messaging;
+        this.lobbyBroadcaster = new LobbyBroadcaster(messaging);
         this.presenceService = presenceService;
     }
 
@@ -105,12 +110,9 @@ public class LobbyController {
         try {
             List<AddressedLobbyView> views = command.apply(gameId);
             sessionService.touch(gameId);
-            for (AddressedLobbyView addressed : views) {
-                messaging.sendToToken(gameId, addressed.token(), new SuccessResponse(
-                        LifecycleEventType.JOIN.toString(), new EmptyEventData(), message, addressed.view()));
-            }
+            lobbyBroadcaster.send(gameId, views, LifecycleEventType.JOIN.toString(), new EmptyEventData(), message);
         } catch (Exception e) {
-            System.err.println(e.getMessage());
+            log.debug("Lobby command refused: {}", e.getMessage());
             messaging.sendToToken(gameId, token,
                     new ErrorResponse(LifecycleEventType.JOIN.toString(), e.getMessage(), null));
         }
