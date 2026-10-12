@@ -49,7 +49,7 @@ public class KoboWebSocketController {
             if (!KoboFactory.GAME_TYPE.equals(sessionService.gameType(gameId))) {
                 throw new IllegalArgumentException("This room is not a Kobo game");
             }
-            Kobo game = (Kobo) sessionService.startGame(gameId, payload.token());
+            Kobo game = sessionService.startGame(gameId, payload.token(), Kobo.class);
             sessionService.touch(gameId);
             broadcaster.broadcast(game, KoboEventType.START.toString(), new EmptyEventData(), "Game started.");
         });

@@ -283,6 +283,11 @@ public class SessionService implements GameDirectory {
         return game;
     }
 
+    /** Starts the room's game and returns it as the game type the caller has checked the room for. */
+    public synchronized <T extends Game> T startGame(GameId id, String hostToken, Class<T> type) {
+        return type.cast(startGame(id, hostToken));
+    }
+
     @Override
     public Optional<Game> findGame(GameId id) {
         return repository.findGame(id);
