@@ -228,7 +228,8 @@ const game = findGame('bullshit')!;
 // Leaving frees the seat: the leaver goes to the Game selection like every other exit. A leave that could not
 // be sent keeps the player in the lobby, with the error shown.
 function leaveLobby() {
-  if (store.leave()) router.push({ name: 'games' });
+  // Replace, not push: Back must not return to a room the player no longer sits in.
+  if (store.leave()) router.replace({ name: 'games' });
 }
 </script>
 
@@ -239,6 +240,7 @@ function leaveLobby() {
       :game="game"
       :lobby="store.lobby"
       :error="store.lobbyError"
+      :starting="store.starting"
       @start="store.startGame()"
       @leave="leaveLobby"
       @add-bot="store.addBot()"

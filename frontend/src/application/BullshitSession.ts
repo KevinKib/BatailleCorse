@@ -24,8 +24,11 @@ export interface BullshitSessionCallbacks {
   onEvent(event: BullshitSessionEvent): void;
 }
 
-/** How a rehydration ended: the game is gone (404), the token no longer resolves (403), or all is well. */
-export type HydrateResult = 'ok' | 'gone' | 'lost';
+/**
+ * How a rehydration ended: the game is gone (404), the token no longer resolves (403), the server could not
+ * answer (5xx, network: nothing is known, so nothing is forgotten), or all is well.
+ */
+export type HydrateResult = 'ok' | 'gone' | 'lost' | 'unavailable';
 
 const tokenKey = (gameId: string) => `bullshit:tokens:${gameId}`;
 
@@ -35,6 +38,9 @@ export default class BullshitSession {
   private mySeat: number | null = null;
   // Highest lobby version applied; null when none is held (a fresh bind, or a game state came in).
   private lobbyVersion: number | null = null;
+  // Set once a game state came in: a lobby view is then stale (a late hydration GET, a reordered frame) until the
+  // next bind, which Play again always goes through.
+  private started = false;
   // Set once this client has left the lobby: nothing that still arrives concerns it.
   private left = false;
   // Name typed by this player, re-sent on Play again: the reopened lobby starts empty.
@@ -88,6 +94,7 @@ export default class BullshitSession {
     this.myToken = token;
     this.mySeat = seat;
     this.lobbyVersion = null;
+    this.started = false;
     this.left = false;
     this.webSocket.subscribeToSeat(gameId, seat, token, r => this.onResponse(r));
     // Tell the server which seat this connection occupies, so a socket drop is
@@ -98,11 +105,21 @@ export default class BullshitSession {
     this.callbacks.onEvent({ type: 'seat-change', seat });
   }
 
-  /** Loads the current state; `gone` when the server no longer knows the game, `lost` when it refuses the token. */
+  /**
+   * Loads the current state; `gone` when the server no longer knows the game (404), `lost` when it refuses the
+   * token (403), `unavailable` for anything else (the caller keeps the token and the seat).
+   */
   async hydrate(): Promise<HydrateResult> {
     if (!this.gameId || this.myToken === null) return 'ok';
-    const res = await fetch(`/api/bullshit/game/${this.gameId}?token=${this.myToken}`);
-    if (!res.ok) return res.status === 403 ? 'lost' : 'gone';
+    let res: Response;
+    try {
+      res = await fetch(`/api/bullshit/game/${this.gameId}?token=${this.myToken}`);
+    } catch {
+      return 'unavailable';
+    }
+    if (res.status === 404) return 'gone';
+    if (res.status === 403) return 'lost';
+    if (!res.ok) return 'unavailable';
     this.applyView(await res.json() as BullshitView);
     return 'ok';
   }
@@ -114,12 +131,14 @@ export default class BullshitSession {
   private applyView(view: BullshitView): void {
     if (this.left) return;
     if (!view.started) {
+      if (this.started) return;
       const incoming = view.lobbyVersion;
       if (incoming !== undefined) {
         if (this.lobbyVersion !== null && incoming <= this.lobbyVersion) return;
         this.lobbyVersion = incoming;
       }
     } else {
+      this.started = true;
       this.lobbyVersion = null;
     }
     const seat = view.mySeat;
@@ -186,6 +205,7 @@ export default class BullshitSession {
     this.myToken = null;
     this.mySeat = null;
     this.lobbyVersion = null;
+    this.started = false;
   }
 
   async playAgain(name?: string): Promise<void> {

@@ -176,11 +176,11 @@ export interface LobbyMessages {
   actionFailed: string;              // a lobby command was refused or could not be sent
   renameLabel: string;               // accessible name of the field holding my own name
   waitingForPlayer: string;          // free seat, shown to guests
-  optionsLabel: string;              // title of the game options section
   inviteLabel: string;
   copy: string;
   copied: string;
   startGame: string;
+  starting: string;                  // announced while the Start is on its way
   waitingForPlayers: PluralForms;    // '{n}' = players still needed
   waitingForHost: string;
   nowHost: string;                   // announced when the host seat passes to me

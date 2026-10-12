@@ -86,7 +86,8 @@ describe('Shared lobby', () => {
   it('makes the next human the host without a reload when the host leaves', () => {
     guestLobby('Hosty', 'Zoe').then(({ host }) => {
       cy.get('[data-test="start"]').should('not.exist');
-      cy.get('[data-test="host-notice"]').should('have.text', '');
+      // Empty, yet still rendered: a live region taken out of the tree (display none) is not announced later.
+      cy.get('[data-test="host-notice"]').should('have.text', '').and('not.have.css', 'display', 'none');
       host.publish('/app/lobby/leave', {});
       cy.get('[data-test="host-notice"]').should('contain.text', 'You are now the host');
       cy.get('[data-test="start"]').scrollIntoView().should('be.visible');
@@ -98,6 +99,66 @@ describe('Shared lobby', () => {
         const id = path.split('/room/')[1];
         cy.window().then((win) => expect(JSON.parse(win.localStorage.getItem(`bullshit:tokens:${id}`)!)).to.have.keys('0'));
       });
+    });
+  });
+
+  it('makes a Leave that reaches a started game a forfeit, so the table does not wait for the leaver', () => {
+    hostLobby('Alice');
+    // A round trip through the server proves the host's seat channel is live before anybody joins.
+    cy.get('[data-test="option-deckSize-52"]').click();
+    cy.get('[data-test="option-deckSize-52"]').should('be.checked');
+    roomId().then((id) => {
+      cy.request('POST', `/api/bullshit/game/${id}/join`, { name: 'Bob' }).then((res) => {
+        connectScriptedPlayer(id, res.body.token as string, res.body.playerId).then((guest) => {
+          cy.get('[data-test="player-count"]').should('contain.text', '2 / 6');
+          cy.get('[data-test="start"]').click();
+          cy.get('[data-test="lobby"]').should('not.exist');
+          // Queued, not called now: Cypress commands run later than this callback body.
+          cy.then(() => guest.publish('/app/lobby/leave', {}));
+          cy.get('[data-test="end"]', { timeout: 10000 }).should('be.visible');
+        });
+      });
+    });
+  });
+
+  [[375, 667], [1280, 800]].forEach(([width, height]) => {
+    it(`lays the lobby out consistently at ${width}x${height}`, () => {
+      cy.viewport(width, height);
+      hostLobby('Alice');
+      cy.get('[data-test="add-bot"]').click();
+      cy.get('[data-test="player-count"]').should('contain.text', '2 / 6');
+
+      // The name starts the same distance after the seat number for my row (a field) and for a bot (text).
+      cy.get('.players li').then(($rows) => {
+        const offset = (row: HTMLElement) => {
+          const seat = row.querySelector('.player-seat')!.getBoundingClientRect();
+          const name = row.querySelector('.player-name')!;
+          const box = name.getBoundingClientRect();
+          const style = getComputedStyle(name);
+          return { gap: box.left - seat.right, pad: parseFloat(style.paddingLeft) + parseFloat(style.borderLeftWidth) };
+        };
+        expect(offset($rows[1])).to.deep.eq(offset($rows[0]));
+      });
+
+      // The titles of the option groups sit the same distance above their choices.
+      cy.get('[data-test="game-options"] fieldset').then(($groups) => {
+        const gaps = [...$groups].map((g) => g.querySelector('.choices')!.getBoundingClientRect().top - g.querySelector('legend')!.getBoundingClientRect().bottom);
+        expect(gaps.length).to.be.greaterThan(1);
+        gaps.forEach((gap) => expect(gap).to.eq(gaps[0]));
+        expect(gaps[0]).to.eq(8);
+      });
+
+      // Leave has its own place under Start, on the same grid.
+      cy.get('[data-test="leave-lobby"]').scrollIntoView().then(($leave) => {
+        cy.get('[data-test="start"]').then(($start) => {
+          const leave = $leave[0].getBoundingClientRect();
+          const start = $start[0].getBoundingClientRect();
+          expect(leave.top, 'below Start').to.be.greaterThan(start.bottom);
+          expect(leave.left).to.eq(start.left);
+          expect(leave.width).to.eq(start.width);
+        });
+      });
+      cy.document().then((doc) => expect(doc.documentElement.scrollWidth).to.be.at.most(width));
     });
   });
 

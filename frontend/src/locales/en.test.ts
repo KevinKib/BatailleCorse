@@ -91,7 +91,7 @@ describe('English messages', () => {
 
   it('givenLobbyMessages_thenItHasBadgesCopyFeedbackLeaveAndTheHostNotice', () => {
     const lobby = messagesEn.lobby;
-    for (const key of ['title', 'leave', 'playersLabel', 'youBadge', 'botBadge', 'hostBadge', 'copy', 'copied', 'nowHost', 'optionsLabel', 'renameLabel', 'waitingForPlayer', 'playerLabel', 'seatOptionLabel'] as const) {
+    for (const key of ['title', 'leave', 'playersLabel', 'youBadge', 'botBadge', 'hostBadge', 'copy', 'copied', 'nowHost', 'renameLabel', 'waitingForPlayer', 'playerLabel', 'seatOptionLabel'] as const) {
       expect(lobby[key]).toBeTruthy();
     }
     expect(lobby.copied).toBe('Copied!');

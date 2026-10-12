@@ -29,7 +29,8 @@ export function useBullshitBootstrap(gameId: string) {
     }
     store.restore(gameId, session.seat, session.token);
     const result = await store.hydrate();
-    if (result !== 'ok') {
+    // A server that fails or cannot be reached (`unavailable`) proves nothing: keep the token and the room page.
+    if (result === 'gone' || result === 'lost') {
       // The game is gone (404) or the stored token no longer resolves (403, the seat was lost): forget the
       // token and offer a new game, saying which of the two happened.
       localStorage.removeItem(`bullshit:tokens:${gameId}`);

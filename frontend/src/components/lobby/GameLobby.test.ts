@@ -5,6 +5,7 @@ import GameLobby from './GameLobby.vue';
 import { findGame } from '../../model/games';
 import { messagesEn } from '../../locales/en';
 import type { LobbyView, OptionDescriptor } from '../../model/lobby/LobbyView';
+import lobbySource from './GameLobby.vue?raw';
 
 const ui = messagesEn.lobby;
 
@@ -42,7 +43,7 @@ function lobby(overrides: Partial<LobbyView> = {}): LobbyView {
   };
 }
 
-function mountLobby(props: Partial<{ lobby: LobbyView; error: string | null }> = {}) {
+function mountLobby(props: Partial<{ lobby: LobbyView; error: string | null; starting: boolean }> = {}) {
   return mount(GameLobby, {
     props: { game: findGame('bullshit')!, lobby: lobby(), ...props },
     global: { plugins: [PrimeVue] },
@@ -84,6 +85,18 @@ describe('GameLobby', () => {
       expect((group.get('input[value="suit"]').element as HTMLInputElement).checked).toBe(true);
       expect((group.get('input[value="rank"]').element as HTMLInputElement).checked).toBe(false);
       expect(wrapper.findAll('fieldset[data-test^="option-"]')).toHaveLength(2);
+    });
+
+    it('puts the radios back on the value the lobby holds when the server has not applied the change', async () => {
+      const wrapper = mountLobby();
+      const group = wrapper.get('[data-test="option-claimMode"]');
+      await group.get('input[value="rank"]').setValue(true);
+      expect(wrapper.emitted('set-option')).toEqual([['claimMode', 'rank']]);
+      expect((group.get('input[value="rank"]').element as HTMLInputElement).checked).toBe(false);
+      expect((group.get('input[value="suit"]').element as HTMLInputElement).checked).toBe(true);
+      // The next lobby view carries the accepted value: the radio follows it.
+      await wrapper.setProps({ lobby: lobby({ options: { claimMode: 'rank', deckSize: '32' }, lobbyVersion: 2 }) });
+      expect((group.get('input[value="rank"]').element as HTMLInputElement).checked).toBe(true);
     });
 
     it('emits set-option with the key and value when the host picks another value', async () => {
@@ -333,11 +346,36 @@ describe('GameLobby', () => {
     });
   });
 
+  describe('starting', () => {
+    it('shows a spinner, disables Start and says so while the game is being started', async () => {
+      const wrapper = mountLobby({ starting: true });
+      const start = wrapper.get('[data-test="start"]');
+      expect((start.element as HTMLButtonElement).disabled).toBe(true);
+      expect(start.attributes('aria-busy')).toBe('true');
+      expect(start.find('.p-button-loading-icon').exists()).toBe(true);
+      const status = wrapper.get('[data-test="start-status"]');
+      expect(status.attributes('aria-live')).toBe('polite');
+      expect(status.text()).toBe(ui.starting);
+    });
+
+    it('is idle otherwise: enabled Start, no spinner, an empty status', () => {
+      const wrapper = mountLobby();
+      const start = wrapper.get('[data-test="start"]');
+      expect((start.element as HTMLButtonElement).disabled).toBe(false);
+      expect(start.attributes('aria-busy')).not.toBe('true');
+      expect(start.find('.p-button-loading-icon').exists()).toBe(false);
+      expect(wrapper.get('[data-test="start-status"]').text()).toBe('');
+    });
+  });
+
   describe('leaving', () => {
-    it('offers a Leave button at the top that emits leave', async () => {
+    it('offers a Leave button in the foot of the panel, after Start, that emits leave', async () => {
       const wrapper = mountLobby();
       const button = wrapper.get('[data-test="leave-lobby"]');
       expect(button.text()).toContain(ui.leave);
+      // Not in the header, not among the seats and options: with the actions, below Start.
+      expect(wrapper.get('.actions').find('[data-test="leave-lobby"]').exists()).toBe(true);
+      expect(wrapper.get('.actions').html().indexOf('data-test="start"')).toBeLessThan(wrapper.get('.actions').html().indexOf('data-test="leave-lobby"'));
       await button.trigger('click');
       expect(wrapper.emitted('leave')).toHaveLength(1);
     });
@@ -367,6 +405,14 @@ describe('GameLobby', () => {
       expect(wrapper.get('[data-test="host-notice"]').text()).toBe(ui.nowHost);
       expect(wrapper.find('[data-test="start"]').exists()).toBe(true);
       expect(wrapper.find('fieldset[data-test="option-claimMode"]').exists()).toBe(true);
+    });
+
+    it('keeps the live region rendered while it is empty: display none would drop it from the accessibility tree', () => {
+      // Scoped styles are not applied under test, so the stylesheet itself is checked.
+      const emptyRule = lobbySource.match(/\.host-notice:empty\s*\{[^}]*\}/);
+      expect(emptyRule).not.toBeNull();
+      expect(emptyRule![0]).not.toMatch(/display\s*:\s*none/);
+      expect(emptyRule![0]).not.toMatch(/visibility\s*:\s*hidden/);
     });
 
     it('says nothing to a host who has been the host all along', async () => {

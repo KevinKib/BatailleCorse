@@ -199,11 +199,11 @@ export const messagesEn: Messages = {
     actionFailed: 'That change could not be made. Check the lobby and try again.',
     renameLabel: 'Your name',
     waitingForPlayer: 'Waiting for a player',
-    optionsLabel: 'Game options',
     inviteLabel: 'Invite players with this link',
     copy: 'Copy',
     copied: 'Copied!',
     startGame: 'Start game',
+    starting: 'Starting the game\u2026',
     waitingForPlayers: {
       one: 'Waiting for {n} more player to start\u2026',
       other: 'Waiting for {n} more players to start\u2026',

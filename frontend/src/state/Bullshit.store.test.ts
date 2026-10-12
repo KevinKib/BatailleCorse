@@ -53,15 +53,13 @@ describe('Bullshit store', () => {
     expect(store.canCallBullshit).toBe(false);
   });
 
-  it('a lobby view yields phase lobby and exposes isHost/canStart', () => {
+  it('a lobby view yields phase lobby', () => {
     const store = useBullshitStore();
     store.applyEvent({ type: 'seat-change', seat: 0 });
     store.applyEvent({ type: 'state-update', state: lobbyView({ canStart: true }) });
     expect(store.phase).toBe('lobby');
     expect(store.lobby).not.toBeNull();
     expect(store.game).toBeNull();
-    expect(store.isHost).toBe(true);
-    expect(store.canStart).toBe(true);
   });
 
   it('keeps the lobby refusal until the next lobby refresh, and clears it on a new request', () => {
@@ -102,17 +100,53 @@ describe('Bullshit store', () => {
     expect(store.lobbyError).toBeNull();
   });
 
-  it('follows the seat the server reports: the host passes to me, or leaves me', () => {
+  it('follows the seat the server reports', () => {
     const store = useBullshitStore();
     store.applyEvent({ type: 'seat-change', seat: 2 });
-    expect(store.isHost).toBe(false);
+    expect(store.mySeat).toBe(2);
     store.applyEvent({ type: 'seat-change', seat: 0 });
-    expect(store.isHost).toBe(true);
-    store.applyEvent({ type: 'seat-change', seat: 1 });
-    expect(store.isHost).toBe(false);
+    expect(store.mySeat).toBe(0);
+  });
+
+  describe('starting the game', () => {
+    it('is busy from the Start until a state or a refusal comes back, and sends the Start once', () => {
+      const store = useBullshitStore();
+      store.restore('g1', 0, 'tok');
+      store.applyEvent({ type: 'state-update', state: lobbyView({ canStart: true }) });
+      const publish = vi.spyOn(webSocketService, 'publish').mockImplementation(() => {});
+      publish.mockClear();
+      store.startGame();
+      store.startGame();
+      expect(publish.mock.calls.filter(c => c[0] === '/app/bullshit/start')).toHaveLength(1);
+      expect(store.starting).toBe(true);
+      store.applyEvent({ type: 'error', eventType: 'START', message: 'Not enough players' });
+      expect(store.starting).toBe(false);
+      store.startGame();
+      expect(store.starting).toBe(true);
+      store.applyEvent({ type: 'state-update', state: state() });
+      expect(store.starting).toBe(false);
+    });
+
+    it('is not busy when the Start could not be sent', () => {
+      const store = useBullshitStore();
+      store.restore('g1', 0, 'tok');
+      vi.spyOn(webSocketService, 'publish').mockImplementation(() => { throw new TypeError('no underlying STOMP connection'); });
+      store.startGame();
+      expect(store.starting).toBe(false);
+    });
   });
 
   describe('lobby commands', () => {
+    it('reports a Start as failed when the socket is down, without throwing', () => {
+      const store = useBullshitStore();
+      store.restore('g1', 0, 'tok');
+      vi.spyOn(webSocketService, 'publish').mockImplementation(() => { throw new TypeError('There is no underlying STOMP connection'); });
+      let sent: unknown;
+      expect(() => { sent = store.startGame(); }).not.toThrow();
+      expect(sent).toBe(false);
+      expect(store.lobbyError).not.toBeNull();
+    });
+
     it('sends option, seat option and rename changes through the shared lobby destinations', () => {
       const store = useBullshitStore();
       store.restore('g1', 0, 'tok');

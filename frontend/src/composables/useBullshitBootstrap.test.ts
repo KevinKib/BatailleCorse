@@ -82,6 +82,16 @@ describe('useBullshitBootstrap restore failures', () => {
     expect(localStorage.getItem('bullshit:tokens:g1')).toBeNull();
   });
 
+  it('givenServerFailure_thenStaysOnTheRoomAndKeepsTheToken', async () => {
+    localStorage.setItem('bullshit:tokens:g1', JSON.stringify({ 0: 'tok' }));
+    const store = useBullshitStore();
+    vi.spyOn(store, 'restore').mockImplementation(() => {});
+    vi.spyOn(store, 'hydrate').mockResolvedValue('unavailable');
+    const router = await mountAtRoom('g1');
+    expect(router.currentRoute.value.path).toBe('/games/bullshit/room/g1');
+    expect(localStorage.getItem('bullshit:tokens:g1')).not.toBeNull();
+  });
+
   it('givenStoredTokenAndGameAlive_thenStaysOnTheRoom', async () => {
     localStorage.setItem('bullshit:tokens:g1', JSON.stringify({ 0: 'tok' }));
     const store = useBullshitStore();

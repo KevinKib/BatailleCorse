@@ -31,8 +31,10 @@ describe('Game home', () => {
     });
 
     it(`${key}: a stored token for a game that no longer exists leads to the Game home with a notice`, () => {
-      const storageKey = key === 'bullshit' ? 'bullshit:tokens:gone-game' : 'tokens:gone-game';
-      cy.visit(`/games/${key}/room/gone-game`, {
+      // A well-formed id the server does not know: only a 404 means "gone" (a 500 must not pass for it).
+      const goneId = '11111111-1111-4111-8111-111111111111';
+      const storageKey = key === 'bullshit' ? `bullshit:tokens:${goneId}` : `tokens:${goneId}`;
+      cy.visit(`/games/${key}/room/${goneId}`, {
         onBeforeLoad(win) {
           win.localStorage.setItem(storageKey, JSON.stringify({ 0: '00000000-0000-4000-8000-000000000000' }));
         },

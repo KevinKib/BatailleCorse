@@ -168,7 +168,9 @@ function revertName() {
   color: rgba(255, 255, 255, 0.85);
   border: 1px solid rgba(255, 255, 255, 0.25);
 }
-.player-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+/* The seat number has a fixed column; the name starts the same distance after it whether it is a field (mine) or
+   plain text (the others, bots): both carry the same 1px border and 6px padding. */
+.player-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; box-sizing: border-box; padding: 0 6px; border: 1px solid transparent; }
 /* My own name is a field that looks like the other names until it is focused. */
 :deep(.player-name--edit.p-inputtext) {
   align-self: stretch;

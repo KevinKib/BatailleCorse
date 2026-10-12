@@ -29,6 +29,8 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
   // Last refusal of a lobby command (server message, or 'connection' when it could not be sent), cleared by the
   // next lobby refresh. Whatever the event type: a Start refusal is typed START, a Leave is typed JOIN.
   const lobbyError = ref<string | null>(null);
+  // A Start is on its way: from the click until the game state or a refusal comes back.
+  const starting = ref(false);
   // Rematch request of this client: pending while the HTTP call runs, failed when refused.
   const rematch = ref<RematchState>('idle');
   // Last seat that left (resigned or timed out), kept for the end screen after the notice is gone.
@@ -53,6 +55,7 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
       case 'state-update':
         state.value = event.state;
         lobbyError.value = null;
+        starting.value = false;
         if (event.state.started) {
           for (const p of event.state.players) roster.value = { ...roster.value, [p.id]: p };
         } else {
@@ -65,7 +68,10 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
         if (gameId.value !== event.gameId) roster.value = {};
         gameId.value = event.gameId;
         break;
-      case 'error': lobbyError.value = state.value?.started ? null : event.message; break;
+      case 'error':
+        lobbyError.value = state.value?.started ? null : event.message;
+        starting.value = false;
+        break;
       case 'seat-change': mySeat.value = event.seat; break;
       case 'event':
         if (event.eventType === 'CALL_BULLSHIT') {
@@ -89,8 +95,6 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
   const canCallBullshit = computed(() => game.value?.availableActions.includes('CALL_BULLSHIT') ?? false);
   const iWon = computed(() =>
     game.value?.outcome.status === 'FINISHED' && game.value.outcome.winnerId === String(mySeat.value));
-  const isHost = computed(() => mySeat.value === 0);
-  const canStart = computed(() => lobby.value?.canStart ?? false);
   const phase = computed<'connecting' | 'lobby' | 'playing' | 'finished'>(() => {
     if (!state.value) return 'connecting';
     if (!state.value.started) return 'lobby';
@@ -125,6 +129,13 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
     return true;
   }
 
+  // One Start at a time: the button is busy until the answer, so a second click is not sent.
+  function startGame(): boolean {
+    if (starting.value) return false;
+    starting.value = requestLobbyChange(() => session.startGame());
+    return starting.value;
+  }
+
   async function playAgain() {
     presence.reset();
     rematch.value = 'pending';
@@ -143,17 +154,17 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
   function clearSelection() { selectedCards.value = []; }
 
   return {
-    state, game, lobby, roster, lobbyError, gameId, mySeat, reveal, selectedCards, rematch, lastForfeit,
+    state, game, lobby, roster, lobbyError, starting, gameId, mySeat, reveal, selectedCards, rematch, lastForfeit,
     disconnections: presence.disconnections,
     liveDisconnections: presence.liveDisconnections,
     forfeitNotice: presence.forfeitNotice,
-    isMyTurn, canDiscard, canCallBullshit, iWon, isHost, canStart, phase,
+    isMyTurn, canDiscard, canCallBullshit, iWon, phase,
     applyEvent, toggleCard, clearSelection,
     create: (name?: string) => session.create(name),
     join: (id: string, name?: string) => session.join(id, name),
     restore: (id: string, seat: number, token: string) => session.restore(id, seat, token),
     hydrate: () => session.hydrate(),
-    startGame: () => session.startGame(),
+    startGame,
     addBot: () => requestLobbyChange(() => session.addBot()),
     removeBot: (seat: number) => requestLobbyChange(() => session.removeBot(seat)),
     setOption: (key: string, value: string) => requestLobbyChange(() => session.setOption(key, value)),

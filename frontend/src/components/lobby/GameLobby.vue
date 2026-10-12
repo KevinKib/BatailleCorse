@@ -18,6 +18,8 @@ const props = defineProps<{
   lobby: LobbyView;
   /** Set when the last command was refused or could not be sent. */
   error?: string | null;
+  /** A Start is on its way: Start shows a spinner and cannot be pressed again. */
+  starting?: boolean;
 }>();
 const emit = defineEmits<{
   start: [];
@@ -54,16 +56,6 @@ onBeforeUnmount(() => { if (noticeTimer) clearTimeout(noticeTimer); });
   <div class="titlescreen">
     <div data-test="lobby" class="title-panel">
       <TitleCardFan class="lobby-fan" />
-
-      <Button
-        class="leave-lobby"
-        data-test="leave-lobby"
-        :label="ui.leave"
-        icon="pi pi-arrow-left"
-        severity="secondary"
-        text
-        size="small"
-        @click="emit('leave')" />
 
       <div class="title-block">
         <div class="suit-row" aria-hidden="true">
@@ -109,13 +101,27 @@ onBeforeUnmount(() => { if (noticeTimer) clearTimeout(noticeTimer); });
             severity="success"
             size="large"
             rounded
-            :disabled="!lobby.canStart"
+            :loading="starting"
+            :aria-busy="starting ? 'true' : undefined"
+            :disabled="!lobby.canStart || starting"
             @click="emit('start')" />
+          <p class="sr-only" data-test="start-status" role="status" aria-live="polite">{{ starting ? ui.starting : '' }}</p>
           <p v-if="!lobby.canStart" class="hint" data-test="start-hint">
             {{ plural(ui.waitingForPlayers, playersNeeded) }}
           </p>
         </template>
         <p v-else class="hint" data-test="waiting-host">{{ ui.waitingForHost }}</p>
+
+        <!-- Its own place at the foot of the panel, on the same grid as Start and apart from the seats. -->
+        <Button
+          class="leave-lobby"
+          data-test="leave-lobby"
+          :label="ui.leave"
+          icon="pi pi-sign-out"
+          severity="secondary"
+          variant="outlined"
+          rounded
+          @click="emit('leave')" />
       </div>
     </div>
   </div>
@@ -165,7 +171,6 @@ onBeforeUnmount(() => { if (noticeTimer) clearTimeout(noticeTimer); });
   margin: auto 0;
 }
 
-.leave-lobby.p-button { align-self: flex-start; min-height: 44px; margin-left: -8px; }
 
 .title-block {
   text-align: center;
@@ -199,9 +204,11 @@ onBeforeUnmount(() => { if (noticeTimer) clearTimeout(noticeTimer); });
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.6);
 }
-/* Empty most of the time: it takes no room until it announces something. */
+/* Empty most of the time: it takes no room until it announces something. It stays rendered (display none would
+   take the live region out of the accessibility tree, and a region inserted late is often not announced), so
+   an empty one is only pulled out of the flow. */
 .host-notice { margin: 0; font-size: 0.875rem; line-height: 1.25rem; color: #4ade80; text-align: center; }
-.host-notice:empty { display: none; }
+.host-notice:empty { position: absolute; width: 1px; height: 1px; margin: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
 .panel-divider {
   display: none;
@@ -227,6 +234,8 @@ onBeforeUnmount(() => { if (noticeTimer) clearTimeout(noticeTimer); });
 
 .actions { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 16px; }
 .start-button.p-button { width: 100%; min-height: 44px; letter-spacing: 0.08em; }
+.leave-lobby.p-button { width: 100%; min-height: 44px; }
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 .hint { margin: 0; font-size: 0.875rem; line-height: 1.25rem; color: rgba(255, 255, 255, 0.6); text-align: center; }
 
 /* Roomy viewports get the full decoration and the 24 px section rhythm back. */

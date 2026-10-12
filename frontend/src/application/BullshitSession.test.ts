@@ -235,6 +235,15 @@ describe('BullshitSession', () => {
       expect(events.some(e => e.type === 'state-update')).toBe(true);
     });
 
+    it('answers unavailable, and applies nothing, when the server fails (5xx) or cannot be reached', async () => {
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce(respond({}, 500)).mockRejectedValueOnce(new TypeError('Failed to fetch')));
+      const { session, events } = makeSession();
+      session.restore('g1', 1, 'tok-1');
+      expect(await session.hydrate()).toBe('unavailable');
+      expect(await session.hydrate()).toBe('unavailable');
+      expect(events.some(e => e.type === 'state-update')).toBe(false);
+    });
+
     it('answers gone for a game the server does not know (404) and lost for a refused token (403)', async () => {
       vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce(respond({}, 404)).mockResolvedValueOnce(respond({}, 403)));
       const { session } = makeSession();
@@ -258,11 +267,35 @@ describe('BullshitSession', () => {
       expect(events.filter(e => e.type === 'state-update')).toHaveLength(2);
     });
 
-    it('lets a reopened lobby through after a game state, whatever its version', () => {
+    it('ignores a lobby view once the game has started, until the next bind', () => {
       const { session, events, fireSeat } = makeSession();
       session.restore('g1', 1, 'tok-1');
       fireSeat({ success: true, eventType: 'JOIN', eventData: {}, message: 'm', state: lobbyView({ lobbyVersion: 9 }) });
       fireSeat({ success: true, eventType: 'START', eventData: {}, message: 'm', state: sampleState({ mySeat: 1 }) });
+      fireSeat({ success: true, eventType: 'JOIN', eventData: {}, message: 'm', state: lobbyView({ lobbyVersion: 10 }) });
+      expect(events.filter(e => e.type === 'state-update')).toHaveLength(2);
+    });
+
+    it('drops a late hydration GET of the lobby that arrives after the Start frame', async () => {
+      let answer: (r: unknown) => void = () => {};
+      vi.stubGlobal('fetch', vi.fn().mockReturnValueOnce(new Promise(resolve => { answer = resolve; })));
+      const { session, events, fireSeat } = makeSession();
+      session.restore('g1', 1, 'tok-1');
+      const pending = session.hydrate();
+      fireSeat({ success: true, eventType: 'START', eventData: {}, message: 'm', state: sampleState({ mySeat: 1 }) });
+      answer(respond(lobbyView({ lobbyVersion: 3 })));
+      await pending;
+      const states = events.filter(e => e.type === 'state-update') as Extract<BullshitSessionEvent, { type: 'state-update' }>[];
+      expect(states).toHaveLength(1);
+      expect(states[0].state.started).toBe(true);
+    });
+
+    it('lets a reopened lobby through after a new bind (Play again), whatever its version', () => {
+      const { session, events, fireSeat } = makeSession();
+      session.restore('g1', 1, 'tok-1');
+      fireSeat({ success: true, eventType: 'JOIN', eventData: {}, message: 'm', state: lobbyView({ lobbyVersion: 9 }) });
+      fireSeat({ success: true, eventType: 'START', eventData: {}, message: 'm', state: sampleState({ mySeat: 1 }) });
+      session.restore('g1', 1, 'tok-2');
       fireSeat({ success: true, eventType: 'JOIN', eventData: {}, message: 'm', state: lobbyView({ lobbyVersion: 1 }) });
       expect(events.filter(e => e.type === 'state-update')).toHaveLength(3);
     });

@@ -18,6 +18,17 @@ const valueOf = (d: OptionDescriptor) => props.options[d.key] ?? d.defaultValue;
 const all = computed(() => Object.fromEntries(props.descriptors.map(d => [d.key, valueOf(d)])));
 const groupLabel = (d: OptionDescriptor) => optionGroupLabel(messages, d);
 const valueLabel = (d: OptionDescriptor, value: string) => optionLabel(messages, d, value, all.value);
+
+// The lobby is the only source of truth: ask for the value, then draw the radios back on the value the lobby holds.
+// An accepted change comes back as the next lobby view and moves the radio; a refused one leaves it where it was,
+// instead of showing a choice the server did not take (Vue would not repaint, the checked prop being unchanged).
+function pick(event: Event, d: OptionDescriptor, value: string) {
+  emit('set-option', d.key, value);
+  const group = (event.target as HTMLInputElement).closest('fieldset');
+  group?.querySelectorAll<HTMLInputElement>('input[type="radio"]').forEach((input) => {
+    input.checked = input.value === valueOf(d);
+  });
+}
 </script>
 
 <template>
@@ -33,7 +44,7 @@ const valueLabel = (d: OptionDescriptor, value: string) => optionLabel(messages,
               :value="v"
               :checked="valueOf(d) === v"
               :data-test="`option-${d.key}-${v}`"
-              @change="emit('set-option', d.key, v)" />
+              @change="pick($event, d, v)" />
             <span>{{ valueLabel(d, v) }}</span>
           </label>
         </div>
@@ -70,7 +81,9 @@ const valueLabel = (d: OptionDescriptor, value: string) => optionLabel(messages,
   border-radius: 8px;
 }
 .option-value { color: var(--gold); font-weight: 600; font-size: 0.875rem; line-height: 1.25rem; }
-.option--edit { display: flex; flex-direction: column; gap: 4px; }
+/* A block, not a flex column: a legend is not a flex item, so a gap would not apply to it. Its margin does. */
+.option--edit { display: block; }
+.option--edit .field-label { display: block; margin-bottom: var(--space-2); }
 .choices { display: flex; gap: 8px; }
 .choice {
   position: relative;
