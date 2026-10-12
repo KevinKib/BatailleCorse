@@ -27,7 +27,7 @@ change with its test.
 
 ```
 Wave 1 (parallel)   PR0 architecture test | PR1 test kit | PR2 config per game | PR3 card DTO
-Wave 2 (in order)   PR4 seat commands + lenient token  ->  PR5 typed start
+Wave 2 (in order)   PR4 seat commands  ->  PR5 typed start
 Wave 3              PR6 seat state + lifecycle broadcasters  ->  PR7 REST support | PR8 actions under the monitor
 Wave 4 (after lobby PR9)  PR9 Bataille Corse adopts the helpers
 Deferred            X1 bot coordinator skeleton, X2 lifecycle under the lock, X3 outcome DTO, X4 addBot per game
@@ -39,7 +39,7 @@ Deferred            X1 bot coordinator skeleton, X2 lifecycle under the lock, X3
 | 1 | `test: share the messaging double, STOMP client and session table` | M | - | 0, 2, 3 |
 | 2 | `refactor: one Spring configuration per game` | S | - | 0, 1, 3 |
 | 3 | `refactor: one card DTO and card label parser` | S | - | 0, 1, 2 |
-| 4 | `refactor: one seat-command handler; a malformed token resolves to nobody` | M | 1 | - |
+| 4 | `refactor: one seat-command handler` | M | 1 | - |
 | 5 | `refactor: typed startGame that checks the game type first` | S | 4 | - |
 | 6 | `refactor: generic per-seat state and lifecycle broadcasters` | M | 2, 4 | - |
 | 7 | `refactor: shared REST support for seat games` | S | 6 | 8 |
@@ -135,12 +135,12 @@ Test code only. New package `presentation/support` under the test root:
 - Observable change: none (property order of the BC JSON may change; JSON clients do not depend on
   it). Risk: low.
 
-## PR 4: `refactor: one seat-command handler; a malformed token resolves to nobody`
+## PR 4: `refactor: one seat-command handler`
 
-- Session core (rule in `sessionmanagement`, game-agnostic): `SessionService.findPlayerIdByToken`
-  returns empty for a token that is not a UUID instead of throwing (I4). Red test in
-  `sessionmanagement/core/application`. Then the REST `GET` of Bullshit, Kobo and Morris answer 403
-  for a malformed token (red tests in their REST tests first).
+- No session-core change: since #155 a malformed token is an unknown token (tolerant approach,
+  spec I4; the strict alternative, a domain exception mapped to 403, is set aside). The
+  `catch (IllegalArgumentException)` kept around token lookups only for malformed tokens become dead
+  and go with the handler; `MalformedTokenIT` must stay green unchanged.
 - `presentation/command/SeatCommands` (one SLF4J logger):
   - `void handle(String rawGameId, String token, String eventType, SeatAction action, StateOnError state)`
     where `SeatAction.run(GameId, PlayerId) throws Exception` and
@@ -157,8 +157,7 @@ Test code only. New package `presentation/support` under the test root:
   "a malformed game id on `/discard` sends nothing and throws nothing" (red today: it throws) and the
   same for `/callBullshit` and `/bullshit/start`. One `SeatCommandsTest` with `FakeGame`.
 - BC untouched (its handler is legacy, see PR9).
-- Observable change: REST 500 becomes 403 for a malformed token (Bullshit, Kobo, Morris); a malformed id
-  on Bullshit commands is now silent instead of an exception in the server log. Start error state per
+- Observable change: a malformed game id on Bullshit commands is now silent instead of an exception in the server log. Start error state per
   game is kept (`null` for Bullshit; state when a game runs for Kobo and Morris, I6, open question 3).
 - Risk: medium; messages of `ErrorResponse` are shown to players (Bullshit lobby errors), so they
   must not change: assert them in the tests.
@@ -268,7 +267,7 @@ Only after lobby PR9 (`feat: Bataille Corse adopts the shared lobby; solo is a b
 4. Parallel game work: sessions adding a game or a bot copy the pre-refactor pattern. Mitigation: merge
    wave 1 quickly; PR0 stops cross-context imports; the context map points to the shared helpers
    after PR6.
-5. Hypotheses I3, I4, I5 may be wrong: each is a red test first; if it is green, the PR records it and
+5. Hypotheses I3 and I5 may be wrong: each is a red test first; if it is green, the PR records it and
    drops the "bug fix" line.
 
 ## Open questions for the owner

@@ -5,7 +5,7 @@ Scope: the backend presentation and wiring code that four games (`bataillecorse`
 No new feature, no wire-contract change. The PR-by-PR plan is
 `docs/plans/2026-10-12-backend-mutualization-plan.md`.
 
-Every finding below was read in the code on `origin/main` at `5dba71a` and is marked **[V]**
+Every finding below was read in the code on `origin/main` at `5dba71a` (rechecked at `4dc26ca`, after #154 and #155) and is marked **[V]**
 (verified by reading) or **[H]** (inferred from the code, not reproduced by a test or a run).
 
 ## 1. Findings
@@ -37,7 +37,7 @@ Every finding below was read in the code on `origin/main` at `5dba71a` and is ma
 | I1 | Kobo and Morris run call, `touch` and broadcast under the game monitor (`KoboGameActions:87`, `ThreeMenMorrisGameActions:42`); Bullshit (`BullshitGameActions:38-66`) and BC (`BatailleCorseGameActions:35-76`) do not, so two human commands may broadcast out of order. The bot paths already hold the monitor (`BullshitBotCoordinator:213`, `BatailleCorseBotCoordinator:178`). | [V] code; ordering effect [H] |
 | I2 | Bullshit `/discard` and `/callBullshit` load the game before authenticating and parse the id outside any `try` (`BullshitWebSocketController:59-60, 83-84`; `/bullshit/start:41`): an unknown or malformed id escapes to Spring as an exception. | [V] |
 | I3 | `/bullshit/start` does not check the room's game type (`BullshitWebSocketController:47`); Kobo (`:54`), Morris (`:50`) and BC (`:88`) do. A `/bullshit/start` on another game's room would start it, then fail the cast. | [V] code; effect [H] |
-| I4 | A malformed token makes `new SessionToken(String)` throw (`UUID.fromString`). The REST `GET` of Bullshit (`:63`), Kobo (`:55`) and Morris (`:55`) does not catch it and there is no `@ControllerAdvice`: HTTP 500 instead of 403. BC catches it (`BatailleCorseRestController:86`). | [V] code; 500 [H] |
+| I4 | **Fixed by #155.** A malformed token used to make `new SessionToken(String)` throw (`UUID.fromString`), so the REST `GET` of Bullshit, Kobo and Morris answered 500. Since #155 the approach is *tolerant*: an invalid value becomes a name-based (version 3) UUID that no seat holds, so it is an unknown token everywhere (REST 403, WebSocket commands ignored), covered by `SessionTokenTest` and `MalformedTokenIT` (160 cases). The *strict* alternative (a domain exception translated to 403 at the edge) is set aside for now. Nothing left to do here; the remaining catches of `IllegalArgumentException` around token lookups become dead code, removed in PR4. | [V] |
 | I5 | `/lobby/addBot` is game-agnostic (`LobbyController:50-54`), but the Kobo and Morris broadcasters send to every seat (`KoboStateBroadcaster:35`, `ThreeMenMorrisStateBroadcaster:36`) and `sendToSeat` of a bot seat throws (`InMemorySessionRepository:48-51`, bots have no resolvable token). A Kobo or Morris room started with a bot would stop broadcasting at the bot seat, and no bot would play. | [V] code; effect [H] |
 | I6 | Error state of a refused start: Kobo and Morris attach the sender's state when a game runs, Bullshit and BC send `null` (`BullshitWebSocketController:53`, `BatailleCorseWebSocketController:96`). | [V] |
 | I7 | BC errors go to the whole game topic, including those caused by an invalid token (`BatailleCorseWebSocketController:124-137`); the others answer the sender alone. Legacy path, deleted or reshaped by lobby PR9. | [V] |
@@ -58,7 +58,7 @@ Every finding below was read in the code on `origin/main` at `5dba71a` and is ma
 ## 2. Principles
 
 1. **Wire contract frozen.** Destinations, payloads, JSON shapes, HTTP statuses and messages stay as
-   they are, except the bug fixes named in the plan (I3, I4, I5), each called out in its PR.
+   they are, except the bug fixes named in the plan (I3, I5), each called out in its PR.
 2. **Dependency rules unchanged and enforced.** `sessionmanagement` and `game` know no game and no
    presentation; a game's `domain` knows no session, transport or Spring. Shared transport code goes
    to `org.kevinkib.cardgames.presentation`, never to `sessionmanagement`. An architecture test
@@ -85,10 +85,9 @@ All new types live in `org.kevinkib.cardgames.presentation` (sub-packages named 
 | `presentation.state.GameStateListener<G extends Game>` | `BullshitStateListener`, `BatailleCorseStateListener` | all four |
 | `presentation.state.SeatStateBroadcaster<G extends Game, D>`: `stateFor(game, viewer)`, `broadcast(...)` to human seats only, then listeners. Built with `GameMessagingService`, `BotSeats`, `SeatNames` and a `SeatProjection<G, D>` (`forViewer(game, viewer, names, bots)`) | D1, I5 | Bullshit, Kobo, Morris |
 | `presentation.state.SeatLifecycleBroadcaster<G>`: implements `GameLifecycleBroadcaster` for a `Class<G>` over a `SeatStateBroadcaster` | D2 | Bullshit, Kobo, Morris |
-| `presentation.command.SeatCommands`: authenticates a seat (unknown or malformed id or token: ignored, logged at debug), runs the action, answers the sender alone with `ErrorResponse(type, message, state-or-null)`; one SLF4J logger | D4, I2, I8 | Bullshit, Kobo, Morris (BC after PR9) |
+| `presentation.command.SeatCommands`: authenticates a seat (unknown or malformed id, unknown token: ignored, logged at debug; a malformed token is already an unknown one since #155), runs the action, answers the sender alone with `ErrorResponse(type, message, state-or-null)`; one SLF4J logger | D4, I2, I8 | Bullshit, Kobo, Morris (BC after PR9) |
 | `SessionService.startGame(GameId, String token, Class<T>)` returning `T` (no cast in controllers); every `start` handler checks the room's game type **before** starting, Bullshit included | D5, I3, I10 | all four |
 | `presentation.rest.SeatGameRest`: `state(gameType, id, token, stateFor)`, `join(gameType, id, payload)`, `playAgain(gameType, id, payload)` returning `ResponseEntity`, with the lobby JOIN broadcast | D3, D9 | Bullshit, Kobo, Morris (BC join/play-again after PR9) |
-| Malformed token resolves to nobody: `SessionService.findPlayerIdByToken` returns empty (session core rule) | I4 | all |
 | `presentation.dto.CardDto` (record, null-safe) and `presentation.dto.CardLabels` (rank and suit from their published labels) | D7, D8 | BC, Bullshit, Kobo |
 | Per-game `@Configuration` classes in `config` (`BatailleCorseConfig`, `BullshitConfig`, `KoboConfig`, `ThreeMenMorrisConfig`), `GameFactories` built from every `GameFactory` bean | D11 | all four |
 | Test kit in `src/test/.../presentation/support`: `RecordingMessaging`, `StompTestClient` (with `Frames`), `SessionTable` | D12, D13, D14 | all tests |
