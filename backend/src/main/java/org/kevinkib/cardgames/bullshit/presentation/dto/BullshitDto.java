@@ -1,5 +1,6 @@
 package org.kevinkib.cardgames.bullshit.presentation.dto;
 
+import org.kevinkib.cardgames.presentation.dto.CardDto;
 import org.kevinkib.cardgames.bullshit.domain.Action;
 import org.kevinkib.cardgames.bullshit.domain.Bullshit;
 import org.kevinkib.cardgames.bullshit.domain.BullshitFactory;

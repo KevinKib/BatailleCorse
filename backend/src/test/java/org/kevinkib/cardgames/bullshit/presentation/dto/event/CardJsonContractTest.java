@@ -1,7 +1,7 @@
 package org.kevinkib.cardgames.bullshit.presentation.dto.event;
 
 import org.junit.jupiter.api.Test;
-import org.kevinkib.cardgames.bullshit.presentation.dto.CardDto;
+import org.kevinkib.cardgames.presentation.dto.CardDto;
 import org.kevinkib.cards.domain.Card;
 import org.kevinkib.cards.domain.deck.french.FrenchRank;
 import org.kevinkib.cards.domain.deck.french.FrenchSuit;

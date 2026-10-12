@@ -1,5 +1,6 @@
 package org.kevinkib.cardgames.bataillecorse.presentation.dto;
 
+import org.kevinkib.cardgames.presentation.dto.CardDto;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.kevinkib.cardgames.bataillecorse.domain.CentralPile;

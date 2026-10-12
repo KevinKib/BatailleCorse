@@ -1,5 +1,6 @@
 package org.kevinkib.cardgames.bataillecorse.presentation.dto;
 
+import org.kevinkib.cardgames.presentation.dto.CardDto;
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.bataillecorse.domain.CentralPileState;
 import org.kevinkib.cardgames.bataillecorse.domain.CentralPileFixtures;

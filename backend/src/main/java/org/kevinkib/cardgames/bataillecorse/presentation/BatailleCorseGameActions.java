@@ -7,7 +7,7 @@ import org.kevinkib.cardgames.bataillecorse.domain.FinishedGameException;
 import org.kevinkib.cardgames.bataillecorse.domain.FullCentralPileException;
 import org.kevinkib.cardgames.bataillecorse.domain.NotPlayersTurnException;
 import org.kevinkib.cardgames.bataillecorse.domain.Player;
-import org.kevinkib.cardgames.bataillecorse.presentation.dto.CardDto;
+import org.kevinkib.cardgames.presentation.dto.CardDto;
 import org.kevinkib.cardgames.bataillecorse.presentation.dto.PlayerIdDto;
 import org.kevinkib.cardgames.bataillecorse.presentation.dto.event.BatailleCorseEventType;
 import org.kevinkib.cardgames.bataillecorse.presentation.dto.event.GrabEventData;
@@ -43,7 +43,7 @@ public class BatailleCorseGameActions {
 
         broadcaster.broadcast(game, BatailleCorseEventType.SEND.toString(),
                 new SendEventData(PlayerIdDto.from(player)),
-                "Player " + player.id() + " sent " + card.getName() + ".");
+                "Player " + player.id() + " sent " + card.name() + ".");
     }
 
     /** Returns whether the slap was valid; a wrong slap costs the slapper a penalty and is broadcast too. */

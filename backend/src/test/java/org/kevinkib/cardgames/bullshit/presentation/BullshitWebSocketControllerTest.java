@@ -11,7 +11,7 @@ import org.kevinkib.cardgames.presentation.bot.ManualBotScheduler;
 import java.time.Duration;
 import org.kevinkib.cardgames.bullshit.presentation.api.BullshitDiscardPayload;
 import org.kevinkib.cardgames.bullshit.presentation.dto.BullshitDto;
-import org.kevinkib.cardgames.bullshit.presentation.dto.CardDto;
+import org.kevinkib.cardgames.presentation.dto.CardDto;
 import org.kevinkib.cardgames.bullshit.presentation.dto.event.CallBullshitEventData;
 import org.kevinkib.cardgames.bullshit.presentation.dto.event.DiscardEventData;
 import org.kevinkib.cardgames.game.GameId;

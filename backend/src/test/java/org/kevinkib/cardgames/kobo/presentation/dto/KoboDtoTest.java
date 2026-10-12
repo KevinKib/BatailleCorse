@@ -1,5 +1,6 @@
 package org.kevinkib.cardgames.kobo.presentation.dto;
 
+import org.kevinkib.cardgames.presentation.dto.CardDto;
 import org.kevinkib.cardgames.kobo.domain.turn.Phase;
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.game.GameId;

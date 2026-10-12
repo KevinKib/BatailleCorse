@@ -1,5 +1,6 @@
 package org.kevinkib.cardgames.kobo.presentation;
 
+import org.kevinkib.cardgames.presentation.dto.CardLabels;
 import org.kevinkib.cardgames.kobo.domain.tableau.SlotRef;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
@@ -114,7 +115,7 @@ public class KoboWebSocketController {
     @MessageMapping("/kobo/match")
     public void match(@Payload KoboMatchPayload p) {
         handle(p.gameId(), p.token(), KoboEventType.MATCH, (id, seat) -> actions.match(id, seat,
-                ref(p.seat(), p.slot()), p.giveSlot(), KoboRankMapper.toRank(p.expectedTopRank()),
+                ref(p.seat(), p.slot()), p.giveSlot(), CardLabels.rank(p.expectedTopRank()),
                 p.expectedRevision()));
     }
 

@@ -1,6 +1,6 @@
 package org.kevinkib.cardgames.bullshit.presentation.api;
 
-import org.kevinkib.cardgames.bullshit.presentation.dto.CardDto;
+import org.kevinkib.cardgames.presentation.dto.CardDto;
 
 import java.util.List;
 

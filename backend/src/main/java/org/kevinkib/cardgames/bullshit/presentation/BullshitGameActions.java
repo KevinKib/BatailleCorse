@@ -9,7 +9,7 @@ import org.kevinkib.cardgames.bullshit.domain.InvalidDiscardCountException;
 import org.kevinkib.cardgames.bullshit.domain.NotPlayersTurnException;
 import org.kevinkib.cardgames.bullshit.domain.claim.ClaimTarget;
 import org.kevinkib.cardgames.bullshit.domain.pile.Discard;
-import org.kevinkib.cardgames.bullshit.presentation.dto.CardDto;
+import org.kevinkib.cardgames.presentation.dto.CardDto;
 import org.kevinkib.cardgames.bullshit.presentation.dto.event.BullshitEventType;
 import org.kevinkib.cardgames.bullshit.presentation.dto.event.CallBullshitEventData;
 import org.kevinkib.cardgames.bullshit.presentation.dto.event.DiscardEventData;

@@ -1,5 +1,6 @@
 package org.kevinkib.cardgames.bullshit.presentation;
 
+import org.kevinkib.cardgames.presentation.dto.CardLabels;
 import org.kevinkib.cardgames.bullshit.domain.Bullshit;
 import org.kevinkib.cardgames.bullshit.presentation.api.BullshitDiscardPayload;
 import org.kevinkib.cardgames.bullshit.presentation.dto.event.BullshitEventType;
@@ -69,7 +70,7 @@ public class BullshitWebSocketController {
         }
 
         try {
-            List<Card> cards = BullshitCardMapper.toCards(payload.cards());
+            List<Card> cards = payload.cards().stream().map(CardLabels::card).toList();
             actions.discard(gameId, playerId, cards);
         } catch (Exception e) {
             System.err.println(e.getMessage());
