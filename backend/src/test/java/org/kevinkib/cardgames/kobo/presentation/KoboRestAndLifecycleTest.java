@@ -1,5 +1,6 @@
 package org.kevinkib.cardgames.kobo.presentation;
 
+import org.kevinkib.cardgames.presentation.state.SeatLifecycleBroadcaster;
 import org.kevinkib.cardgames.kobo.domain.turn.Phase;
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.game.GameId;
@@ -127,7 +128,7 @@ class KoboRestAndLifecycleTest {
     @Test
     void lifecycleBroadcaster_forfeitCarriesTheReason() {
         Kobo game = table.install(aKobo().withPlayers(3).build());
-        KoboLifecycleBroadcaster lifecycle = new KoboLifecycleBroadcaster(table.broadcaster);
+        SeatLifecycleBroadcaster<Kobo> lifecycle = new SeatLifecycleBroadcaster<>(Kobo.class, table.broadcaster);
 
         game.forfeit(seat(2));
         lifecycle.forfeited(game, seat(2), ForfeitReason.RESIGNED);
@@ -145,7 +146,7 @@ class KoboRestAndLifecycleTest {
     @Test
     void lifecycleBroadcaster_supportsKoboOnlyAndBroadcastsTheThreeEvents() {
         Kobo game = table.install(aKobo().withPlayers(3).build());
-        KoboLifecycleBroadcaster lifecycle = new KoboLifecycleBroadcaster(table.broadcaster);
+        SeatLifecycleBroadcaster<Kobo> lifecycle = new SeatLifecycleBroadcaster<>(Kobo.class, table.broadcaster);
         assertThat(lifecycle.supports(game), is(true));
         assertThat(lifecycle.supports(new org.kevinkib.cardgames.game.Game() {
             public GameId getId() { return null; }

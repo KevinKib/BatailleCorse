@@ -1,5 +1,8 @@
 package org.kevinkib.cardgames.threemenmorris.presentation;
 
+import org.kevinkib.cardgames.presentation.bot.BotSeats;
+import org.kevinkib.cardgames.threemenmorris.presentation.dto.ThreeMenMorrisDto;
+import org.kevinkib.cardgames.presentation.state.SeatStateBroadcaster;
 import org.kevinkib.cardgames.presentation.command.SeatCommands;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.presentation.LobbyBroadcaster;
@@ -18,8 +21,9 @@ final class ThreeMenMorrisTable {
     final InMemorySessionRepository repository = base.repository;
     final SessionService sessions = base.sessions;
     final RecordingMessaging messaging = base.messaging;
-    final ThreeMenMorrisStateBroadcaster broadcaster =
-            new ThreeMenMorrisStateBroadcaster(messaging, sessions::seatNames);
+    final SeatStateBroadcaster<ThreeMenMorris, ThreeMenMorrisDto> broadcaster =
+            new SeatStateBroadcaster<>(messaging, BotSeats.none(), sessions::seatNames,
+                    (game, viewer, names, bots) -> ThreeMenMorrisDto.forViewer(game, viewer, names));
     final ThreeMenMorrisGameActions actions = new ThreeMenMorrisGameActions(sessions, broadcaster);
     final LobbyBroadcaster lobbyBroadcaster = new LobbyBroadcaster(messaging);
     final ThreeMenMorrisWebSocketController ws =

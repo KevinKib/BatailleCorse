@@ -1,5 +1,6 @@
 package org.kevinkib.cardgames.bullshit.presentation;
 
+import org.kevinkib.cardgames.presentation.state.SeatStateBroadcaster;
 import org.kevinkib.cardgames.bullshit.domain.Bullshit;
 import org.kevinkib.cardgames.bullshit.domain.BullshitFactory;
 import org.kevinkib.cardgames.bullshit.presentation.dto.BullshitDto;
@@ -32,11 +33,11 @@ import java.util.Optional;
 public class BullshitRestController {
 
     private final SessionService sessionService;
-    private final BullshitStateBroadcaster broadcaster;
+    private final SeatStateBroadcaster<Bullshit, BullshitDto> broadcaster;
     private final LobbyBroadcaster lobbyBroadcaster;
 
     public BullshitRestController(SessionService sessionService,
-                                  BullshitStateBroadcaster broadcaster,
+                                  SeatStateBroadcaster<Bullshit, BullshitDto> broadcaster,
                                   LobbyBroadcaster lobbyBroadcaster) {
         this.sessionService = sessionService;
         this.broadcaster = broadcaster;

@@ -1,5 +1,6 @@
 package org.kevinkib.cardgames.kobo;
 
+import org.kevinkib.cardgames.presentation.state.SeatStateBroadcaster;
 import org.kevinkib.cardgames.kobo.domain.turn.Action;
 import org.kevinkib.cardgames.kobo.domain.turn.Phase;
 import org.kevinkib.cardgames.kobo.domain.tableau.Tableau;
@@ -9,7 +10,6 @@ import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.kobo.domain.Kobo;
 import org.kevinkib.cardgames.kobo.presentation.KoboGameActions;
-import org.kevinkib.cardgames.kobo.presentation.KoboStateBroadcaster;
 import org.kevinkib.cardgames.presentation.dto.CardDto;
 import org.kevinkib.cardgames.kobo.presentation.dto.KoboDto;
 import org.kevinkib.cardgames.sessionmanagement.core.application.RoomCreated;
@@ -42,7 +42,7 @@ class KoboGameIntegrationTest {
     private KoboGameActions actions;
 
     @Autowired
-    private KoboStateBroadcaster broadcaster;
+    private SeatStateBroadcaster<Kobo, KoboDto> broadcaster;
 
     @Autowired
     private GameLifecycleBroadcasters lifecycleBroadcasters;

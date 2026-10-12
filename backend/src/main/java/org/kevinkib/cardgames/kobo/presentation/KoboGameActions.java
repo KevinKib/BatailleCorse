@@ -1,5 +1,7 @@
 package org.kevinkib.cardgames.kobo.presentation;
 
+import org.kevinkib.cardgames.presentation.state.SeatStateBroadcaster;
+import org.kevinkib.cardgames.kobo.presentation.dto.KoboDto;
 import org.kevinkib.cardgames.kobo.domain.event.KoboEvent;
 import org.kevinkib.cardgames.kobo.domain.rules.KoboException;
 import org.kevinkib.cardgames.kobo.domain.turn.Phase;
@@ -25,9 +27,9 @@ public class KoboGameActions {
     }
 
     private final SessionService sessionService;
-    private final KoboStateBroadcaster broadcaster;
+    private final SeatStateBroadcaster<Kobo, KoboDto> broadcaster;
 
-    public KoboGameActions(SessionService sessionService, KoboStateBroadcaster broadcaster) {
+    public KoboGameActions(SessionService sessionService, SeatStateBroadcaster<Kobo, KoboDto> broadcaster) {
         this.sessionService = sessionService;
         this.broadcaster = broadcaster;
     }

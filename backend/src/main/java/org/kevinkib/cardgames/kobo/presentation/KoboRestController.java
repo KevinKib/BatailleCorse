@@ -1,5 +1,7 @@
 package org.kevinkib.cardgames.kobo.presentation;
 
+import org.kevinkib.cardgames.presentation.state.SeatStateBroadcaster;
+import org.kevinkib.cardgames.kobo.presentation.dto.KoboDto;
 import org.kevinkib.cardgames.game.Game;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
@@ -31,11 +33,11 @@ import java.util.Optional;
 public class KoboRestController {
 
     private final SessionService sessionService;
-    private final KoboStateBroadcaster broadcaster;
+    private final SeatStateBroadcaster<Kobo, KoboDto> broadcaster;
     private final LobbyBroadcaster lobbyBroadcaster;
 
     public KoboRestController(SessionService sessionService,
-                              KoboStateBroadcaster broadcaster,
+                              SeatStateBroadcaster<Kobo, KoboDto> broadcaster,
                               LobbyBroadcaster lobbyBroadcaster) {
         this.sessionService = sessionService;
         this.broadcaster = broadcaster;

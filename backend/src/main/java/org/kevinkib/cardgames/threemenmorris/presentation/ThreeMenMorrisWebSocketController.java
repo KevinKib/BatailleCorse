@@ -1,5 +1,7 @@
 package org.kevinkib.cardgames.threemenmorris.presentation;
 
+import org.kevinkib.cardgames.threemenmorris.presentation.dto.ThreeMenMorrisDto;
+import org.kevinkib.cardgames.presentation.state.SeatStateBroadcaster;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.presentation.api.GameActionPayload;
@@ -24,12 +26,12 @@ import org.springframework.stereotype.Controller;
 public class ThreeMenMorrisWebSocketController {
 
     private final SessionService sessionService;
-    private final ThreeMenMorrisStateBroadcaster broadcaster;
+    private final SeatStateBroadcaster<ThreeMenMorris, ThreeMenMorrisDto> broadcaster;
     private final SeatCommands seatCommands;
     private final ThreeMenMorrisGameActions actions;
 
     public ThreeMenMorrisWebSocketController(SessionService sessionService,
-                                             ThreeMenMorrisStateBroadcaster broadcaster,
+                                             SeatStateBroadcaster<ThreeMenMorris, ThreeMenMorrisDto> broadcaster,
                                              SeatCommands seatCommands,
                                              ThreeMenMorrisGameActions actions) {
         this.sessionService = sessionService;

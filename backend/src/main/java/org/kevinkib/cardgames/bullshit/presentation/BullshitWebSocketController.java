@@ -1,5 +1,7 @@
 package org.kevinkib.cardgames.bullshit.presentation;
 
+import org.kevinkib.cardgames.presentation.state.SeatStateBroadcaster;
+import org.kevinkib.cardgames.bullshit.presentation.dto.BullshitDto;
 import org.kevinkib.cardgames.presentation.dto.CardLabels;
 import org.kevinkib.cardgames.bullshit.domain.Bullshit;
 import org.kevinkib.cardgames.bullshit.domain.BullshitFactory;
@@ -22,12 +24,12 @@ import java.util.List;
 public class BullshitWebSocketController {
 
     private final SessionService sessionService;
-    private final BullshitStateBroadcaster broadcaster;
+    private final SeatStateBroadcaster<Bullshit, BullshitDto> broadcaster;
     private final SeatCommands seatCommands;
     private final BullshitGameActions actions;
 
     public BullshitWebSocketController(SessionService sessionService,
-                                       BullshitStateBroadcaster broadcaster,
+                                       SeatStateBroadcaster<Bullshit, BullshitDto> broadcaster,
                                        SeatCommands seatCommands,
                                        BullshitGameActions actions) {
         this.sessionService = sessionService;

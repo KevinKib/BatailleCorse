@@ -1,5 +1,7 @@
 package org.kevinkib.cardgames.bullshit.presentation;
 
+import org.kevinkib.cardgames.presentation.state.SeatLifecycleBroadcaster;
+import org.kevinkib.cardgames.presentation.state.SeatStateBroadcaster;
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.bullshit.domain.Bullshit;
 import org.kevinkib.cardgames.bullshit.presentation.dto.BullshitDto;
@@ -28,7 +30,7 @@ class BullshitStateBroadcasterTest {
                 .withPlayers(playerWithRanks(0, ACE), playerWithRanks(1, KING))
                 .build();
         RecordingMessaging messaging = new RecordingMessaging();
-        BullshitStateBroadcaster broadcaster = new BullshitStateBroadcaster(messaging);
+        SeatStateBroadcaster<Bullshit, BullshitDto> broadcaster = BullshitBroadcasters.state(messaging);
         List<String> notifications = new ArrayList<>();
         List<Integer> messagesAtNotification = new ArrayList<>();
         broadcaster.addListener((g, eventType, data) -> {
@@ -48,7 +50,7 @@ class BullshitStateBroadcasterTest {
         Bullshit game = aBullshit()
                 .withPlayers(playerWithRanks(0, ACE), playerWithRanks(1, KING))
                 .build();
-        BullshitStateBroadcaster broadcaster = new BullshitStateBroadcaster(new RecordingMessaging());
+        SeatStateBroadcaster<Bullshit, BullshitDto> broadcaster = BullshitBroadcasters.state(new RecordingMessaging());
         List<String> notifications = new ArrayList<>();
         broadcaster.addListener((g, eventType, data) -> {
             throw new IllegalStateException("listener bug");
@@ -66,7 +68,7 @@ class BullshitStateBroadcasterTest {
                 .withPlayers(playerWithRanks(0, ACE), playerWithRanks(1, KING), playerWithRanks(2, QUEEN))
                 .build();
         RecordingMessaging messaging = new RecordingMessaging();
-        BullshitStateBroadcaster broadcaster = new BullshitStateBroadcaster(
+        SeatStateBroadcaster<Bullshit, BullshitDto> broadcaster = BullshitBroadcasters.state(
                 messaging, gameId -> java.util.Set.of(new PlayerId(1)));
 
         broadcaster.broadcast(game, "DISCARD", new EmptyEventData(), "msg");
@@ -80,7 +82,7 @@ class BullshitStateBroadcasterTest {
                 .withPlayers(playerWithRanks(0, ACE), playerWithRanks(1, KING, QUEEN))
                 .build();
         RecordingMessaging messaging = new RecordingMessaging();
-        BullshitStateBroadcaster broadcaster = new BullshitStateBroadcaster(messaging);
+        SeatStateBroadcaster<Bullshit, BullshitDto> broadcaster = BullshitBroadcasters.state(messaging);
 
         broadcaster.broadcast(game, "DISCARD", new EmptyEventData(), "msg");
 

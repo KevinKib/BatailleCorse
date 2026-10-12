@@ -1,5 +1,6 @@
 package org.kevinkib.cardgames.bullshit.presentation;
 
+import org.kevinkib.cardgames.presentation.state.SeatLifecycleBroadcaster;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.bullshit.domain.Bullshit;
@@ -67,7 +68,7 @@ class BullshitGameActionsTest {
         repository = new InMemorySessionRepository(clock);
         sessionService = new SessionService(repository, new GameFactories(List.of(new BullshitFactory())));
         messaging = new RecordingMessaging();
-        actions = new BullshitGameActions(sessionService, new BullshitStateBroadcaster(messaging));
+        actions = new BullshitGameActions(sessionService, BullshitBroadcasters.state(messaging));
         game = (Bullshit) sessionService.createGame("bullshit", 3, GameMode.SOLO);
         id = game.getId();
     }

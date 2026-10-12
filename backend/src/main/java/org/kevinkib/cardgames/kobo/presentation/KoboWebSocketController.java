@@ -1,5 +1,7 @@
 package org.kevinkib.cardgames.kobo.presentation;
 
+import org.kevinkib.cardgames.presentation.state.SeatStateBroadcaster;
+import org.kevinkib.cardgames.kobo.presentation.dto.KoboDto;
 import org.kevinkib.cardgames.presentation.dto.CardLabels;
 import org.kevinkib.cardgames.kobo.domain.tableau.SlotRef;
 import org.kevinkib.cardgames.game.GameId;
@@ -29,12 +31,12 @@ import org.springframework.stereotype.Controller;
 public class KoboWebSocketController {
 
     private final SessionService sessionService;
-    private final KoboStateBroadcaster broadcaster;
+    private final SeatStateBroadcaster<Kobo, KoboDto> broadcaster;
     private final SeatCommands seatCommands;
     private final KoboGameActions actions;
 
     public KoboWebSocketController(SessionService sessionService,
-                                   KoboStateBroadcaster broadcaster,
+                                   SeatStateBroadcaster<Kobo, KoboDto> broadcaster,
                                    SeatCommands seatCommands,
                                    KoboGameActions actions) {
         this.sessionService = sessionService;
