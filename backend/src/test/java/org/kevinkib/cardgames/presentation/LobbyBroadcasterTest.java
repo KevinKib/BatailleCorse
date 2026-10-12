@@ -6,6 +6,7 @@ import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.presentation.api.Response;
 import org.kevinkib.cardgames.presentation.dto.event.EmptyEventData;
 import org.kevinkib.cardgames.presentation.dto.event.LifecycleEventType;
+import org.kevinkib.cardgames.presentation.support.RecordingMessaging;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameFactories;
 import org.kevinkib.cardgames.sessionmanagement.core.application.LobbyView;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
@@ -14,7 +15,6 @@ import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionGame;
 import org.kevinkib.cardgames.sessionmanagement.core.infrastructure.InMemorySessionRepository;
 
 import java.time.Clock;
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -22,17 +22,7 @@ import static org.hamcrest.Matchers.is;
 
 class LobbyBroadcasterTest {
 
-    static final class RecordingMessaging extends org.kevinkib.cardgames.presentation.TokenResolvingMessaging {
-        final List<PlayerId> seats = new ArrayList<>();
-        final List<Response> payloads = new ArrayList<>();
-        RecordingMessaging() {  }
-
-        @Override public void sendToSeat(GameId gameId, PlayerId seat, Object payload) {
-            seats.add(seat);
-            payloads.add((Response) payload);
-        }
-    }
-
+    
     @Test
     void givenAddressedViews_whenSend_thenEachGoesToItsOwnTokenOnly() {
         SessionGame lobby = SessionGame.create(
@@ -47,7 +37,7 @@ class LobbyBroadcasterTest {
                 new SessionService(repository, new GameFactories(List.of(new BullshitFactory())));
 
         RecordingMessaging messaging = new RecordingMessaging();
-        messaging.resolver = sessionService;
+        messaging.resolvingTokensWith(sessionService);
         LobbyBroadcaster broadcaster = new LobbyBroadcaster(messaging);
 
         broadcaster.send(lobby.id(), sessionService.lobbyViews(lobby.id()), LifecycleEventType.JOIN.toString(),

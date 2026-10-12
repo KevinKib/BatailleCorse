@@ -9,6 +9,7 @@ import org.kevinkib.cardgames.presentation.dto.event.EventData;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.kevinkib.cardgames.presentation.support.RecordingMessaging;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;

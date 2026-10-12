@@ -2,14 +2,12 @@ package org.kevinkib.cardgames.bullshit.presentation;
 
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.bullshit.domain.Bullshit;
-import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
-import org.kevinkib.cardgames.presentation.GameMessagingService;
 import org.kevinkib.cardgames.presentation.api.Response;
 import org.kevinkib.cardgames.presentation.dto.event.ForfeitEventData;
+import org.kevinkib.cardgames.presentation.support.RecordingMessaging;
 import org.kevinkib.cardgames.sessionmanagement.presence.port.ForfeitReason;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -23,21 +21,7 @@ import static org.kevinkib.cards.domain.deck.french.FrenchRank.QUEEN;
 
 class BullshitLifecycleBroadcasterTest {
 
-    static final class RecordingMessaging extends GameMessagingService {
-        final List<PlayerId> seats = new ArrayList<>();
-        final List<Object> payloads = new ArrayList<>();
-
-        RecordingMessaging() {
-            super(null, null);
-        }
-
-        @Override
-        public void sendToSeat(GameId gameId, PlayerId seat, Object payload) {
-            seats.add(seat);
-            payloads.add(payload);
-        }
-    }
-
+    
     @Test
     void givenBullshit_whenSupports_thenTrue() {
         Bullshit game = aBullshit().withPlayers(playerWithRanks(0, ACE), playerWithRanks(1, KING)).build();

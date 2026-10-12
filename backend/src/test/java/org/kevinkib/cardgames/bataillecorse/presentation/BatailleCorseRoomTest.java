@@ -7,12 +7,11 @@ import org.kevinkib.cardgames.bataillecorse.presentation.dto.BatailleCorseDto;
 import org.kevinkib.cardgames.bullshit.domain.BullshitFactory;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
-import org.kevinkib.cardgames.presentation.GameMessagingService;
 import org.kevinkib.cardgames.presentation.LobbyBroadcaster;
 import org.kevinkib.cardgames.presentation.api.GameActionPayload;
 import org.kevinkib.cardgames.presentation.api.JoinGamePayload;
-import org.kevinkib.cardgames.presentation.api.Response;
 import org.kevinkib.cardgames.presentation.dto.JoinResponseDto;
+import org.kevinkib.cardgames.presentation.support.RecordingMessaging;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameFactories;
 import org.kevinkib.cardgames.sessionmanagement.core.application.LobbyView;
 import org.kevinkib.cardgames.sessionmanagement.core.application.RoomCreated;
@@ -24,7 +23,6 @@ import org.springframework.http.ResponseEntity;
 
 import java.time.Clock;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -38,27 +36,12 @@ import static org.hamcrest.Matchers.is;
 /** Bataille Corse on the room model: lobby, join, start and the game-type guard, without a server. */
 class BatailleCorseRoomTest {
 
-    private static final class Recorder extends org.kevinkib.cardgames.presentation.TokenResolvingMessaging {
-        final List<PlayerId> seats = Collections.synchronizedList(new ArrayList<>());
-        final List<Response> toSeats = Collections.synchronizedList(new ArrayList<>());
-        final List<Response> toGame = Collections.synchronizedList(new ArrayList<>());
-
-        Recorder() {  }
-
-
-        @Override public void sendToSeat(GameId gameId, PlayerId seat, Object payload) {
-            seats.add(seat);
-            toSeats.add((Response) payload);
-        }
-
-        @Override public void sendToGame(String gameId, Object payload) { toGame.add((Response) payload); }
-    }
-
+    
     private final SessionService sessions = new SessionService(
             new InMemorySessionRepository(Clock.systemUTC()),
             new GameFactories(List.of(new BatailleCorseFactory(), new BullshitFactory())));
-    private final Recorder messaging = new Recorder();
-    { messaging.resolver = sessions; }
+    private final RecordingMessaging messaging = new RecordingMessaging();
+    { messaging.resolvingTokensWith(sessions); }
     private final BatailleCorseRestController rest = new BatailleCorseRestController(
             sessions, messaging, new InMemoryForfeitLog(), new LobbyBroadcaster(messaging));
     private final BatailleCorseStateBroadcaster broadcaster = new BatailleCorseStateBroadcaster(messaging);
@@ -112,7 +95,7 @@ class BatailleCorseRoomTest {
         assertThat(joined.getBody().playerId(), is(1));
         assertThat(messaging.seats, is(List.of(new PlayerId(0), new PlayerId(1))));
         assertThat(messaging.toGame, empty());
-        LobbyView hostView = (LobbyView) messaging.toSeats.get(0).getState();
+        LobbyView hostView = (LobbyView) messaging.payloads.get(0).getState();
         assertThat(hostView.canStart(), is(true));
         assertThat(hostView.players().get(1).name(), is("Bob"));
         LobbyView guestView = (LobbyView) get(room.gameId(), joined.getBody().token()).getBody();
@@ -149,11 +132,11 @@ class BatailleCorseRoomTest {
         RoomCreated room = room();
         ws.start(new GameActionPayload(room.gameId(), room.hostToken()));
         assertThat(sessions.findGame(new GameId(room.gameId())).isPresent(), is(false));
-        assertThat(messaging.toSeats.get(0).isSuccess(), is(false));
+        assertThat(messaging.payloads.get(0).isSuccess(), is(false));
         assertThat(messaging.seats.get(0), is(new PlayerId(0)));
 
         messaging.seats.clear();
-        messaging.toSeats.clear();
+        messaging.payloads.clear();
         String guestToken = sessions.joinRoom(new GameId(room.gameId()), "Bob").token();
         ws.start(new GameActionPayload(room.gameId(), guestToken));
         assertThat(sessions.findGame(new GameId(room.gameId())).isPresent(), is(false));
@@ -169,7 +152,7 @@ class BatailleCorseRoomTest {
         ws.start(new GameActionPayload(other.gameId(), other.hostToken()));
 
         assertThat(sessions.findGame(new GameId(other.gameId())).isPresent(), is(false));
-        assertThat(messaging.toSeats.get(0).isSuccess(), is(false));
+        assertThat(messaging.payloads.get(0).isSuccess(), is(false));
     }
 
     @Test

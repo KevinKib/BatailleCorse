@@ -12,6 +12,7 @@ import org.kevinkib.cardgames.presentation.api.LobbyRenamePayload;
 import org.kevinkib.cardgames.presentation.api.LobbySeatOptionPayload;
 import org.kevinkib.cardgames.presentation.api.LobbySeatPayload;
 import org.kevinkib.cardgames.presentation.api.Response;
+import org.kevinkib.cardgames.presentation.support.RecordingMessaging;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameFactories;
 import org.kevinkib.cardgames.sessionmanagement.core.application.LobbyView;
 import org.kevinkib.cardgames.sessionmanagement.core.application.RoomCreated;
@@ -36,27 +37,7 @@ import static org.hamcrest.Matchers.is;
 
 class LobbyControllerTest {
 
-    static final class RecordingMessaging extends org.kevinkib.cardgames.presentation.TokenResolvingMessaging {
-        final List<PlayerId> seats = new ArrayList<>();
-        final List<Response> payloads = new ArrayList<>();
-
-        RecordingMessaging() {
-            
-        }
-
-
-        @Override
-        public void sendToSeat(GameId gameId, PlayerId seat, Object payload) {
-            seats.add(seat);
-            payloads.add((Response) payload);
-        }
-
-        void clear() {
-            seats.clear();
-            payloads.clear();
-        }
-    }
-
+    
     /** Records the forfeits the presence service announces. */
     private static final class RecordingBroadcaster implements GameLifecycleBroadcaster {
         final List<String> events = new ArrayList<>();
@@ -79,7 +60,7 @@ class LobbyControllerTest {
                 new InMemorySessionRepository(Clock.systemUTC()),
                 new GameFactories(List.of(new BullshitFactory(), new BatailleCorseFactory(), new TieredFactory())));
         messaging = new RecordingMessaging();
-        messaging.resolver = sessionService;
+        messaging.resolvingTokensWith(sessionService);
         broadcaster = new RecordingBroadcaster();
         PresenceService presence = new PresenceService(sessionService, new InMemoryConnectionRegistry(),
                 (deadline, task) -> () -> { }, Clock.systemUTC(), new InMemoryForfeitLog(),

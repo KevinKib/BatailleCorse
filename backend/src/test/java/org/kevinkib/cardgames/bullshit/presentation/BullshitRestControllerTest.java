@@ -10,6 +10,8 @@ import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.presentation.LobbyBroadcaster;
 import org.kevinkib.cardgames.presentation.api.JoinGamePayload;
 import org.kevinkib.cardgames.presentation.dto.JoinResponseDto;
+import org.kevinkib.cardgames.presentation.api.Response;
+import org.kevinkib.cardgames.presentation.support.RecordingMessaging;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameFactories;
 import org.kevinkib.cardgames.sessionmanagement.core.application.LobbyView;
 import org.kevinkib.cardgames.sessionmanagement.core.application.RoomCreated;
@@ -35,26 +37,14 @@ class BullshitRestControllerTest {
     private BullshitRestController controller;
     private RecordingMessaging messaging;
 
-    static final class RecordingMessaging extends org.kevinkib.cardgames.presentation.TokenResolvingMessaging {
-        final java.util.List<Integer> seats = new java.util.ArrayList<>();
-        final java.util.List<String> eventTypes = new java.util.ArrayList<>();
-        RecordingMessaging() {  }
-
-        @Override
-        public void sendToSeat(org.kevinkib.cardgames.game.GameId gameId,
-                               org.kevinkib.cardgames.game.PlayerId seat, Object payload) {
-            seats.add(seat.id());
-            eventTypes.add(((org.kevinkib.cardgames.presentation.api.Response) payload).getEventType());
-        }
-    }
-
+    
     @BeforeEach
     void setUp() {
         sessionService = new SessionService(
                 new InMemorySessionRepository(Clock.systemUTC()),
                 new GameFactories(List.of(new BullshitFactory())));
         messaging = new RecordingMessaging();
-        messaging.resolver = sessionService;
+        messaging.resolvingTokensWith(sessionService);
         controller = new BullshitRestController(
                 sessionService,
                 new BullshitStateBroadcaster(messaging, sessionService::botSeats, sessionService::seatNames),
@@ -112,7 +102,7 @@ class BullshitRestControllerTest {
         assertThat(response.getBody().playerId(), is(1));
         assertThat(response.getBody().token(), is(notNullValue()));
         assertThat(messaging.seats.size(), is(2));
-        assertThat(messaging.eventTypes, everyItem(is("JOIN")));
+        assertThat(messaging.payloads.stream().map(Response::getEventType).toList(), everyItem(is("JOIN")));
     }
 
     @Test
