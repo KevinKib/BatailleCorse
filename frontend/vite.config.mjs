@@ -11,6 +11,14 @@ export default defineConfig({
   server: {
     host: true,
     port: 5173,
+    // Specs and Cypress files are not part of the app's module graph, but Vite still
+    // reloads the page for them and the polling watcher (CHOKIDAR_USEPOLLING in the dev
+    // container) stats every file on a bind mount several times a second. Keep them out so
+    // editing a test does not reload a game in progress and the idle dev server stays cheap.
+    // Skipped under Vitest, whose watch mode relies on the same watcher to re-run tests.
+    watch: process.env.VITEST ? undefined : {
+      ignored: ['**/*.test.ts', '**/*.cy.ts', '**/cypress/**', '**/dist/**'],
+    },
     hmr: {
       host: 'localhost',
       // Port the browser uses for the hot-reload socket. Override it when the stack

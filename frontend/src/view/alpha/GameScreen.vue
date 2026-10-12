@@ -107,7 +107,7 @@
       :src="ghost.src"
       :class="['slap-ghost', { transitioning: ghost.transitioning }]"
       :style="{
-        transform: `translate(${ghost.x}px, ${ghost.y}px)`,
+        transform: `translate(${ghost.x}px, ${ghost.y}px) scale(${ghost.scaleX}, ${ghost.scaleY})`,
         width: ghost.width + 'px',
         height: ghost.height + 'px',
         '--slap-duration': ghost.duration + 'ms',
@@ -120,7 +120,7 @@
     :src="ghostCard.src"
     :class="['ghost-card', { transitioning: ghostCard.transitioning }]"
     :style="{
-      transform: `translate(${ghostCard.x}px, ${ghostCard.y}px)`,
+      transform: `translate(${ghostCard.x}px, ${ghostCard.y}px) scale(${ghostCard.scaleX}, ${ghostCard.scaleY})`,
       width: ghostCard.width + 'px',
       height: ghostCard.height + 'px',
       '--ghost-duration': ghostCard.duration + 'ms',
@@ -582,6 +582,8 @@ onBeforeUnmount(() => {
   position: fixed;
   top: 0;
   left: 0;
+  transform-origin: 0 0;
+  will-change: transform;
   pointer-events: none;
   z-index: 1000;
   border: 1px solid black;
@@ -591,15 +593,15 @@ onBeforeUnmount(() => {
 }
 
 .slap-ghost.transitioning {
-  transition: transform var(--slap-duration, 280ms) ease-in-out,
-              width var(--slap-duration, 280ms) ease-in-out,
-              height var(--slap-duration, 280ms) ease-in-out;
+  transition: transform var(--slap-duration, 280ms) ease-in-out;
 }
 
 .ghost-card {
   position: fixed;
   top: 0;
   left: 0;
+  transform-origin: 0 0;
+  will-change: transform;
   pointer-events: none;
   z-index: 1000;
   border: 1px solid black;
@@ -609,9 +611,7 @@ onBeforeUnmount(() => {
 }
 
 .ghost-card.transitioning {
-  transition: transform var(--ghost-duration, 100ms) ease-in,
-              width var(--ghost-duration, 100ms) ease-in,
-              height var(--ghost-duration, 100ms) ease-in;
+  transition: transform var(--ghost-duration, 100ms) ease-in;
 }
 
 @keyframes card-delta-float {
