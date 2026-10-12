@@ -39,6 +39,10 @@ public class GameFactories {
         factoryFor(gameType).validateSeatOption(key, value);
     }
 
+    public boolean supportsBots(String gameType) {
+        return factoryFor(gameType).supportsBots();
+    }
+
     public int minPlayers(String gameType) {
         return factoryFor(gameType).minPlayers();
     }

@@ -17,6 +17,11 @@ public interface GameFactory {
 
     Game create(GameId id, int nbPlayers);
 
+    /** Whether a computer player can take a seat of this game. Games with a bot override it; none by default. */
+    default boolean supportsBots() {
+        return false;
+    }
+
     /** Creates the game with host-selected options. Games that ignore options inherit this default. */
     default Game create(GameId id, int nbPlayers, GameOptions options) {
         return create(id, nbPlayers);

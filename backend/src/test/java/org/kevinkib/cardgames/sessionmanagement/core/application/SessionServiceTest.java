@@ -9,6 +9,7 @@ import org.kevinkib.cardgames.bullshit.domain.Bullshit;
 import org.kevinkib.cardgames.bullshit.domain.BullshitFactory;
 import org.kevinkib.cardgames.bullshit.domain.claim.RankTarget;
 import org.kevinkib.cardgames.bullshit.domain.claim.SuitTarget;
+import org.kevinkib.cardgames.game.FakeGameFactory;
 import org.kevinkib.cardgames.game.Game;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.GameOptions;
@@ -38,6 +39,54 @@ class SessionServiceTest {
     @BeforeEach
     void setUp() {
         service = new SessionService(new InMemorySessionRepository(java.time.Clock.systemUTC()), new GameFactories(java.util.List.of(new BatailleCorseFactory())));
+    }
+
+    @Nested
+    class AddBotTest {
+
+        /** A fake game that has no computer player. */
+        class FakeGameWithoutBot extends FakeGameFactory {
+            @Override public boolean supportsBots() { return false; }
+        }
+
+        private SessionService serviceWith(org.kevinkib.cardgames.game.GameFactory... factories) {
+            return new SessionService(new InMemorySessionRepository(Clock.systemUTC()),
+                    new GameFactories(List.of(factories)));
+        }
+
+        @Test
+        void givenGameWithoutBot_whenAddBot_thenRefusedAndNoBotSeat() {
+            SessionService sessions = serviceWith(new FakeGameWithoutBot());
+            RoomCreated room = sessions.createRoom(FakeGameFactory.GAME_TYPE, "Alice");
+            GameId id = new GameId(room.gameId());
+
+            assertThrows(BotsNotSupportedException.class, () -> sessions.addBot(id, room.hostToken()));
+            assertThrows(BotsNotSupportedException.class, () -> sessions.addBotViews(id, room.hostToken()));
+
+            assertThat(sessions.botSeats(id).isEmpty(), is(true));
+            assertThat(sessions.seats(id).get(1).joined(), is(false));
+        }
+
+        @Test
+        void givenGameWithoutBot_whenNonHostAddsBot_thenStillNotHost() {
+            SessionService sessions = serviceWith(new FakeGameWithoutBot());
+            RoomCreated room = sessions.createRoom(FakeGameFactory.GAME_TYPE, "Alice");
+            GameId id = new GameId(room.gameId());
+            String bob = sessions.joinRoom(id, "Bob").token();
+
+            assertThrows(NotHostException.class, () -> sessions.addBot(id, bob));
+        }
+
+        @Test
+        void givenGameWithBots_whenAddBot_thenBotSeated() {
+            SessionService sessions = serviceWith(new FakeGameFactory());
+            RoomCreated room = sessions.createRoom(FakeGameFactory.GAME_TYPE, "Alice");
+            GameId id = new GameId(room.gameId());
+
+            sessions.addBot(id, room.hostToken());
+
+            assertThat(sessions.botSeats(id).size(), is(1));
+        }
     }
 
     @Nested

@@ -10,6 +10,11 @@ public class FakeGameFactory implements GameFactory {
     }
 
     @Override
+    public boolean supportsBots() {
+        return true;
+    }
+
+    @Override
     public int minPlayers() {
         return 2;
     }

@@ -16,6 +16,11 @@ public class BatailleCorseFactory implements GameFactory {
     public static final String TIER_KEY = "tier";
 
     @Override
+    public boolean supportsBots() {
+        return true;
+    }
+
+    @Override
     public String gameType() {
         return GAME_TYPE;
     }

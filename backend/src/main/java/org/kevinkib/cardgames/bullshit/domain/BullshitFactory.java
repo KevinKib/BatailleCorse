@@ -31,6 +31,11 @@ public class BullshitFactory implements GameFactory {
     }
 
     @Override
+    public boolean supportsBots() {
+        return true;
+    }
+
+    @Override
     public String gameType() {
         return GAME_TYPE;
     }
