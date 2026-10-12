@@ -74,7 +74,7 @@
           </div>
         </div>
         <div class="action_buttons">
-          <Button :class="['action_button', { 'action_button--my-turn': showMyTurn }]" icon="pi pi-arrow-up" severity="success" label="Send" rounded
+          <Button class="action_button" icon="pi pi-arrow-up" severity="success" label="Send" rounded
             @click="send(myPlayerIndex)" :disabled="isButtonDisabled(myPlayerIndex, 'send')"/>
           <Button class="action_button" icon="pi pi-hammer" severity="warn" label="Slap" rounded
             @click="slap(myPlayerIndex)" :disabled="isButtonDisabled(myPlayerIndex, 'slap')"/>
@@ -686,11 +686,6 @@ onBeforeUnmount(() => {
   height: var(--turn-dot-size);
   border-radius: 50%;
   background: var(--gold);
-}
-
-/* Your turn: the Send button carries the same crisp 1px accent ring as the tag. */
-.action_button--my-turn {
-  box-shadow: var(--turn-ring);
 }
 
 .turn-fade-enter-active,

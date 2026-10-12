@@ -27,7 +27,7 @@ import GameScreen from './GameScreen.vue';
 import DisconnectOverlay from '../../components/DisconnectOverlay.vue';
 import HotkeySettings from '../../components/HotkeySettings.vue';
 import { useBatailleCorseStore } from '../../state/BatailleCorse.store';
-import { buildGame } from '../../model/fixtures';
+import { buildGame, buildPlayer } from '../../model/fixtures';
 
 async function mountGameScreen() {
   const wrapper = shallowMount(GameScreen, {
@@ -42,6 +42,22 @@ describe('GameScreen', () => {
     setActivePinia(createPinia());
     const wrapper = await mountGameScreen();
     expect(wrapper.get('.back_button').attributes('to')).toBe('/games');
+  });
+
+  describe('Send button on my turn', () => {
+    it('carries no extra turn ring: the turn is shown by the tag and the turn indicator', async () => {
+      const wrapper = await mountGameScreen();
+      const store = useBatailleCorseStore();
+      store.mode = 'multiplayer';
+      store.myPlayerIndex = 0;
+      store.state = buildGame({ players: [buildPlayer({ id: '0', availableActions: ['SEND'] }), buildPlayer({ id: '1' })] });
+      await nextTick();
+      expect(store.state.canSend(0)).toBe(true);
+      expect(wrapper.find('.player_tag--active').exists()).toBe(true);
+      const buttons = wrapper.findAll('.action_buttons > *');
+      expect(buttons).toHaveLength(2);
+      buttons.forEach((b) => expect(b.classes()).toEqual(['action_button']));
+    });
   });
 
   describe('keyboard shortcuts gear', () => {
