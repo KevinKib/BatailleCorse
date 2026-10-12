@@ -35,43 +35,49 @@ public class BatailleCorseGameActions {
     public void send(GameId gameId, PlayerId playerId)
             throws NotPlayersTurnException, FullCentralPileException, FinishedGameException {
         BatailleCorse game = sessionService.getGame(gameId, BatailleCorse.class);
-        Player player = game.getPlayerByIndex(playerId.id());
+        synchronized (game) {
+            Player player = game.getPlayerByIndex(playerId.id());
 
-        CardDto card = CardDto.from(player.getCardOnTop());
-        game.send(player);
-        sessionService.touch(gameId);
+            CardDto card = CardDto.from(player.getCardOnTop());
+            game.send(player);
+            sessionService.touch(gameId);
 
-        broadcaster.broadcast(game, BatailleCorseEventType.SEND.toString(),
-                new SendEventData(PlayerIdDto.from(player)),
-                "Player " + player.id() + " sent " + card.name() + ".");
+            broadcaster.broadcast(game, BatailleCorseEventType.SEND.toString(),
+                    new SendEventData(PlayerIdDto.from(player)),
+                    "Player " + player.id() + " sent " + card.name() + ".");
+        }
     }
 
     /** Returns whether the slap was valid; a wrong slap costs the slapper a penalty and is broadcast too. */
     public boolean slap(GameId gameId, PlayerId playerId)
             throws CannotSlapIfNoCardsInPileException, FinishedGameException {
         BatailleCorse game = sessionService.getGame(gameId, BatailleCorse.class);
-        Player player = game.getPlayerByIndex(playerId.id());
+        synchronized (game) {
+            Player player = game.getPlayerByIndex(playerId.id());
 
-        boolean successful = game.slap(player);
-        sessionService.touch(gameId);
+            boolean successful = game.slap(player);
+            sessionService.touch(gameId);
 
-        String message = successful
-                ? "Player " + player.id() + " slapped and won."
-                : "Player " + player.id() + " slapped, lost, and received a penality.";
-        broadcaster.broadcast(game, BatailleCorseEventType.SLAP.toString(),
-                new SlapEventData(successful, PlayerIdDto.from(player)), message);
-        return successful;
+            String message = successful
+                    ? "Player " + player.id() + " slapped and won."
+                    : "Player " + player.id() + " slapped, lost, and received a penality.";
+            broadcaster.broadcast(game, BatailleCorseEventType.SLAP.toString(),
+                    new SlapEventData(successful, PlayerIdDto.from(player)), message);
+            return successful;
+        }
     }
 
     public void grab(GameId gameId, PlayerId playerId) throws CannotGrabException, FinishedGameException {
         BatailleCorse game = sessionService.getGame(gameId, BatailleCorse.class);
-        Player player = game.getPlayerByIndex(playerId.id());
+        synchronized (game) {
+            Player player = game.getPlayerByIndex(playerId.id());
 
-        game.grab(player);
-        sessionService.touch(gameId);
+            game.grab(player);
+            sessionService.touch(gameId);
 
-        broadcaster.broadcast(game, BatailleCorseEventType.GRAB.toString(),
-                new GrabEventData(PlayerIdDto.from(player)),
-                "Player " + player.id() + " grabbed the pile. ");
+            broadcaster.broadcast(game, BatailleCorseEventType.GRAB.toString(),
+                    new GrabEventData(PlayerIdDto.from(player)),
+                    "Player " + player.id() + " grabbed the pile. ");
+        }
     }
 }

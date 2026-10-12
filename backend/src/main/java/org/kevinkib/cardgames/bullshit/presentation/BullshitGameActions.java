@@ -25,7 +25,9 @@ import java.util.List;
 /**
  * The discard and call-Bullshit use cases, shared by the WebSocket controller (a human acting
  * through a token) and the bot coordinator (a bot acting for its seat): domain call, session touch,
- * then one broadcast. Authentication stays with the caller; domain exceptions propagate to it.
+ * then one broadcast, all under the monitor of the game (lock order: game, then session) so two seats
+ * events leave in the order the state changed. Authentication stays with the caller; domain exceptions
+ * propagate to it.
  */
 public class BullshitGameActions {
 
@@ -40,30 +42,34 @@ public class BullshitGameActions {
     public void discard(GameId gameId, PlayerId playerId, List<Card> cards)
             throws FinishedGameException, NotPlayersTurnException, InvalidDiscardCountException, CardsNotInHandException {
         Bullshit game = sessionService.getGame(gameId, Bullshit.class);
-        ClaimTarget claimed = game.getCurrentTarget();
-        game.discard(playerId, cards);
-        sessionService.touch(gameId);
-        broadcaster.broadcast(game,
-                BullshitEventType.DISCARD.toString(),
-                new DiscardEventData(playerId.id(), claimed.label(), cards.size()),
-                "Player " + playerId.id() + " played " + cards.size() + " card(s) as " + claimed.label() + ".");
+        synchronized (game) {
+            ClaimTarget claimed = game.getCurrentTarget();
+            game.discard(playerId, cards);
+            sessionService.touch(gameId);
+            broadcaster.broadcast(game,
+                    BullshitEventType.DISCARD.toString(),
+                    new DiscardEventData(playerId.id(), claimed.label(), cards.size()),
+                    "Player " + playerId.id() + " played " + cards.size() + " card(s) as " + claimed.label() + ".");
+        }
     }
 
     public void callBullshit(GameId gameId, PlayerId callerId)
             throws FinishedGameException, CannotCallBullshitException {
         Bullshit game = sessionService.getGame(gameId, Bullshit.class);
-        Discard challenged = game.getLastDiscard()
-                .orElseThrow(() -> new CannotCallBullshitException(callerId));
-        List<CardDto> revealed = challenged.actualCards().stream().map(CardDto::from).toList();
-        int claimantSeat = challenged.claimant().id();
+        synchronized (game) {
+            Discard challenged = game.getLastDiscard()
+                    .orElseThrow(() -> new CannotCallBullshitException(callerId));
+            List<CardDto> revealed = challenged.actualCards().stream().map(CardDto::from).toList();
+            int claimantSeat = challenged.claimant().id();
 
-        CallBullshitOutcome outcome = game.callBullshit(callerId);
-        sessionService.touch(gameId);
+            CallBullshitOutcome outcome = game.callBullshit(callerId);
+            sessionService.touch(gameId);
 
-        broadcaster.broadcast(game,
-                BullshitEventType.CALL_BULLSHIT.toString(),
-                new CallBullshitEventData(callerId.id(), claimantSeat,
-                        outcome.claimWasTruthful(), outcome.pilePicker().id(), revealed),
-                "Player " + callerId.id() + " called bullshit on player " + claimantSeat + ".");
+            broadcaster.broadcast(game,
+                    BullshitEventType.CALL_BULLSHIT.toString(),
+                    new CallBullshitEventData(callerId.id(), claimantSeat,
+                            outcome.claimWasTruthful(), outcome.pilePicker().id(), revealed),
+                    "Player " + callerId.id() + " called bullshit on player " + claimantSeat + ".");
+        }
     }
 }
