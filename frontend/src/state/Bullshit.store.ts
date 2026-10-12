@@ -53,6 +53,7 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
   function applyEvent(event: BullshitSessionEvent) {
     switch (event.type) {
       case 'state-update':
+        reconcileSelection(state.value, event.state);
         state.value = event.state;
         lobbyError.value = null;
         starting.value = false;
@@ -89,6 +90,18 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
     }
   }
 
+  // A selection belongs to one deal: drop it when the room is not in a running game, when a game starts (after a
+  // lobby or a finished game) or another game is loaded; otherwise keep only the cards still in my hand.
+  function reconcileSelection(previous: BullshitView | null, next: BullshitView) {
+    if (selectedCards.value.length === 0) return;
+    if (!next.started) { selectedCards.value = []; return; }
+    const sameRunningGame = previous?.started === true && previous.outcome.status !== 'FINISHED'
+      && previous.id === next.id;
+    if (!sameRunningGame) { selectedCards.value = []; return; }
+    const hand = new Set(next.myHand.map(c => c.name));
+    selectedCards.value = selectedCards.value.filter(c => hand.has(c.name));
+  }
+
   const me = computed(() => game.value?.players.find(p => p.id === String(mySeat.value)) ?? null);
   const isMyTurn = computed(() => me.value?.isCurrentPlayer ?? false);
   const canDiscard = computed(() => game.value?.availableActions.includes('DISCARD') ?? false);
@@ -123,6 +136,7 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
   function leave(): boolean {
     if (!requestLobbyChange(() => session.leave())) return false;
     state.value = null;
+    clearSelection();
     gameId.value = null;
     roster.value = {};
     lobbyError.value = null;
@@ -138,6 +152,7 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
 
   async function playAgain() {
     presence.reset();
+    clearSelection();
     rematch.value = 'pending';
     try {
       await session.playAgain();
