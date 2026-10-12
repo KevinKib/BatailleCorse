@@ -7,6 +7,26 @@
 **Spec:** `docs/specs/2026-10-12-backend-mutualization-design.md` (findings D1-D15 and I1-I13, target,
 what we do not do). **Plan written by:** Claude Opus 5.5.
 
+## Owner decisions (2026-10-12)
+
+These replace the open questions of the first draft.
+
+1. **ArchUnit** (`com.tngtech.archunit:archunit-junit5`, test scope) is added for the architecture test in
+   PR0. No home-made scan of `import` lines.
+2. **`/lobby/addBot` is refused for a game that has no bot.** X4 leaves the deferred list and becomes
+   planned work: PR6a (below), red test first, the refusal goes to the sender alone. Consequence for I5:
+   a bot can no longer be added to a Kobo or Morris room, so the broadcast no longer meets a bot seat
+   there. The defensive fix of `sendToSeat` is kept only if PR6a's red test shows another path to a bot
+   seat; otherwise it is dropped.
+3. **The sender's state is attached to the error reply everywhere when a game runs** (as Kobo and Morris
+   do today). It is a deliberate observable change for Bullshit and Bataille Corse, made in PR4 (which
+   introduces `SeatCommands`) with a contract test that pins the before and after, and with a check that
+   their frontend clients accept an enriched error reply (PR4, "Frontend client check"). Bataille Corse
+   itself adopts `SeatCommands` in PR9; its client check is done in PR4 so PR9 knows what to change.
+4. **One `OutcomeDto` is postponed** (X3): reconsider when the Kobo (#149) and Three Men's Morris (#147)
+   frontends are planned.
+5. **After lobby PR9, Bataille Corse errors go to the sender alone** (PR9).
+
 **Goal:** remove the presentation and wiring code copied between Bataille Corse, Bullshit, Kobo and
 Three Men's Morris, and align the behaviours that differ for no product reason, without touching the
 wire contract or the dependency rules of `docs/architecture/context-map.md`.
@@ -28,9 +48,9 @@ change with its test.
 ```
 Wave 1 (parallel)   PR0 architecture test | PR1 test kit | PR2 config per game | PR3 card DTO
 Wave 2 (in order)   PR4 seat commands  ->  PR5 typed start
-Wave 3              PR6 seat state + lifecycle broadcasters  ->  PR7 REST support | PR8 actions under the monitor
+Wave 3              PR6a addBot refused without a bot | PR6 seat state + lifecycle broadcasters  ->  PR7 REST support | PR8 actions under the monitor
 Wave 4 (after lobby PR9)  PR9 Bataille Corse adopts the helpers
-Deferred            X1 bot coordinator skeleton, X2 lifecycle under the lock, X3 outcome DTO, X4 addBot per game
+Deferred            X1 bot coordinator skeleton, X2 lifecycle under the lock, X3 outcome DTO (postponed)
 ```
 
 | PR | Title | Cost | Depends on | Parallel with |
@@ -41,7 +61,8 @@ Deferred            X1 bot coordinator skeleton, X2 lifecycle under the lock, X3
 | 3 | `refactor: one card DTO and card label parser` | S | - | 0, 1, 2 |
 | 4 | `refactor: one seat-command handler` | M | 1 | - |
 | 5 | `refactor: typed startGame that checks the game type first` | S | 4 | - |
-| 6 | `refactor: generic per-seat state and lifecycle broadcasters` | M | 2, 4 | - |
+| 6a | `fix: refuse /lobby/addBot for a game without a bot` | S | 4 | 6 |
+| 6 | `refactor: generic per-seat state and lifecycle broadcasters` | M | 2, 4 | 6a |
 | 7 | `refactor: shared REST support for seat games` | S | 6 | 8 |
 | 8 | `refactor: Bullshit and Bataille Corse broadcast under the game monitor` | M | 6 | 7 |
 | 9 | `refactor: Bataille Corse adopts the shared seat helpers` | M | 4-7 and lobby PR9 | - |
@@ -69,7 +90,7 @@ and, from wave 3, use `SeatStateBroadcaster` instead of copying `KoboStateBroadc
 
 ## PR 0: `test: lock the context-map dependency rules`
 
-- Add ArchUnit (`com.tngtech.archunit:archunit-junit5`, test scope; open question 1) and
+- Add ArchUnit (`com.tngtech.archunit:archunit-junit5`, test scope; owner decision 1, no home-made scan) and
   `ArchitectureTest` in the test root package, with the rules of the context map:
   - `..sessionmanagement..` and `..game..` depend on no `..bataillecorse..`, `..bullshit..`,
     `..kobo..`, `..threemenmorris..`, `..presentation..`, `..config..`;
@@ -148,7 +169,9 @@ Test code only. New package `presentation/support` under the test root:
   - unknown or malformed id, unknown token: nothing sent, logged at debug;
   - refused command: `ErrorResponse(eventType, e.getMessage(), state)` to the sender alone, logged
     at debug for domain exceptions and at warn for unexpected ones (`RuntimeException` other than
-    `IllegalArgumentException`/`IllegalStateException`).
+    `IllegalArgumentException`/`IllegalStateException`);
+  - the state is attached whenever a game runs, for every game (owner decision 3); `null` only when no
+    game runs yet (refused start of a lobby).
 - Adopt in `KoboWebSocketController`, `ThreeMenMorrisWebSocketController`,
   `BullshitWebSocketController` (I2: authenticate before loading the game). Each controller keeps its
   mappings and its `required(...)` checks. `LifecycleController` and `LobbyController` replace
@@ -156,9 +179,33 @@ Test code only. New package `presentation/support` under the test root:
 - Tests first: the existing controller tests of the three games stay green; add for Bullshit
   "a malformed game id on `/discard` sends nothing and throws nothing" (red today: it throws) and the
   same for `/callBullshit` and `/bullshit/start`. One `SeatCommandsTest` with `FakeGame`.
-- BC untouched (its handler is legacy, see PR9).
-- Observable change: a malformed game id on Bullshit commands is now silent instead of an exception in the server log. Start error state per
-  game is kept (`null` for Bullshit; state when a game runs for Kobo and Morris, I6, open question 3).
+- Contract test (red first): per game, pin the `ErrorResponse` of a refused command before the change
+  (Bullshit: `state` is `null`; Kobo and Morris: the sender's state) and after (the sender's state for
+  all, when a game runs). The Bullshit test is red today; the Kobo and Morris ones stay green.
+- Frontend client check (verification task, no frontend change planned in this PR; code read on
+  `origin/main`, to be redone when the PR starts):
+  - `frontend/src/application/BullshitSession.ts` `onResponse` already handles `success === false`: it
+    applies `response.state` when present, then emits the `error` event. An error reply carrying the
+    sender's state is therefore accepted as is (the comment there already describes this case). Add a
+    Vitest case in `BullshitSession.test.ts` if none covers "refused with a state" so the contract is
+    locked on the client side.
+  - `frontend/src/application/GameSession.ts` (Bataille Corse) `processEvent` does not look at
+    `success`: it always builds `BatailleCorse.fromJSON(response.state)` and emits `state-update`. A
+    reply with an enriched state is processed as a normal state update (harmless: BC state is public
+    and current), and a `null` state would fail in `fromJSON`. So the enriched reply is safe, but BC
+    shows no error to the player. Not changed here (BC is untouched until PR9); PR9 decides whether
+    `GameSession` gains a `success === false` branch that surfaces the error and skips the
+    state-update.
+  - `frontend/src/service/WebSocketService.ts` subscribes to `/topic/game` and to the seat queue and
+    only does `JSON.parse(message.body)` before delegating to the stores; it does not inspect `state`,
+    so it needs no change.
+  - Verdict to write in the PR: Bullshit client accepts the enriched reply without change; Bataille
+    Corse client needs no change for the enrichment, and a possible error branch is a PR9 item.
+- BC untouched in this PR (its handler is legacy, see PR9).
+- Observable change (deliberate, owner decision 3): a refused Bullshit command (and, from PR9, a refused
+  Bataille Corse command) now carries the sender's state in its `ErrorResponse`, as Kobo and Morris
+  already do. A malformed game id on Bullshit commands is now silent instead of an exception in the
+  server log.
 - Risk: medium; messages of `ErrorResponse` are shown to players (Bullshit lobby errors), so they
   must not change: assert them in the tests.
 
@@ -175,6 +222,32 @@ Test code only. New package `presentation/support` under the test root:
   existing "not a Kobo game" tests stay green.
 - Observable change: `/bullshit/start` on a room of another game is refused without starting it (bug fix).
 - Risk: low.
+
+## PR 6a: `fix: refuse /lobby/addBot for a game without a bot`
+
+Planned work (was X4; owner decision 2). Independent of PR6 but merged before it, so PR6 no longer needs
+a bot-seat case for Kobo and Morris.
+
+- Kernel: `GameFactory.supportsBots()` (default `false`); `BatailleCorseGameFactory` and
+  `BullshitGameFactory` return `true`, Kobo and Morris keep the default. `SessionService.addBot` /
+  `addBotViews` refuse the call for a room whose factory does not support bots, with a domain exception
+  of the session core (for example `BotsNotSupportedException`); `sessionmanagement` still knows no
+  concrete game.
+- `LobbyController.addBot` catches it and sends an `ErrorResponse` to the sender alone (through the
+  lobby error path / `SeatCommands`, no broadcast to the other seats); message in English, asserted in
+  the test.
+- Red first: `SessionServiceTest` with `FakeGame` whose factory has no bots ("addBot on such a room
+  throws and adds no seat"), `LobbyControllerTest` ("the refusal goes to the sender only, the other seats
+  receive nothing"), and a Kobo and a Morris case. The Bataille Corse and Bullshit add-bot tests stay
+  green unchanged. Also a test that `supportsBots()` is `true` exactly for those two factories.
+- Consequence for I5: the Kobo or Morris room can no longer hold a bot seat, so the broadcast no longer
+  hits `sendToSeat` of a bot. The defensive change of `sendToSeat` (do not throw on a bot seat) is kept
+  only if a test finds another way to reach a bot seat (for example a seat converted to a bot by
+  presence forfeit); otherwise it is not made.
+- Frontend: check that Kobo/Morris UI does not offer an "add bot" button (they have no frontend yet,
+  #149 and #147); nothing to change.
+- Observable change (deliberate): `/lobby/addBot` on a Kobo or Morris room is refused instead of adding
+  a seat nobody plays. Risk: low.
 
 ## PR 6: `refactor: generic per-seat state and lifecycle broadcasters`
 
@@ -197,10 +270,9 @@ Test code only. New package `presentation/support` under the test root:
   broadcaster; it only implements `GameStateListener<BatailleCorse>`.
 - Tests first: generic tests with `FakeGame` (human seats only, listener failure isolated, lifecycle
   messages). The existing per-game broadcaster and lifecycle tests are moved onto the generic classes
-  and must stay green with the same assertions. Red test for I5: "a Kobo room with a bot seat starts
-  and each human receives START" (and Morris), red today **[H]**.
-- Observable change: Kobo and Morris no longer fail on a bot seat (bug fix; the bot still does not play,
-  see open question 2).
+  and must stay green with the same assertions. No Kobo or Morris bot-seat test: after PR6a such a room
+  cannot hold a bot (I5 is handled there). The generic broadcaster still skips bot seats, for Bullshit.
+- Observable change: none.
 - Risk: medium (generic Spring beans: check that each injection point names its full generic type).
 
 ## PR 7: `refactor: shared REST support for seat games`
@@ -239,12 +311,15 @@ Only after lobby PR9 (`feat: Bataille Corse adopts the shared lobby; solo is a b
 `/create`, `/rematch`, the seat-1 join, the tokenless `GET`, `SessionRestController` and `GameMode`.
 
 - `BatailleCorseWebSocketController`: `/bataillecorse/start`, `/send`, `/slap`, `/grab` through
-  `SeatCommands`; errors to the sender alone if the owner agrees (open question 5), otherwise keep the
-  game-topic error with a `StateOnError` that broadcasts.
+  `SeatCommands`; errors go to the sender alone (owner decision 5), no longer to the game topic, and
+  carry the sender's state (owner decision 3). Apply the finding of PR4's frontend check: give
+  `GameSession.processEvent` a `success === false` branch that surfaces the error and skips the
+  `state-update`, with a Vitest case, if the client must show the error; the frontend also has to stop
+  relying on the game-topic error, which is a frontend change in this PR.
 - `BatailleCorseRestController`: `join` and `play-again` through `SeatGameRest`.
 - `BatailleCorseLifecycleBroadcaster` stays (forfeit reasons in the public DTO; `rematchStarted`
   goes if the in-place rematch is deleted by lobby PR9).
-- Observable change: decided by open question 5. Risk: medium; needs the BC e2e run of lobby PR9 as a
+- Observable change (deliberate): BC errors reach the sender alone, with the sender's state. Risk: medium; needs the BC e2e run of lobby PR9 as a
   baseline.
 
 ## Deferred (not planned, with their trigger)
@@ -254,8 +329,9 @@ Only after lobby PR9 (`feat: Bataille Corse adopts the shared lobby; solo is a b
 - **X2 Lifecycle broadcasts under the game lock** (I13): needs an ordering decision for disconnect and
   forfeit events; not a refactor.
 - **X3 One outcome DTO** (`winners`, `reason`): wire change, frontend work, product decision.
-- **X4 `/lobby/addBot` refused for a game that has no bot driver**: a session rule fed by the game
-  (`GameFactory.supportsBots()` in the kernel); open question 2.
+  Postponed by the owner (decision 4); reconsider when the Kobo (#149) and Three Men's Morris (#147)
+  frontends are planned.
+- X4 (`/lobby/addBot` refused without a bot) is no longer deferred: see PR6a.
 
 ## Risks
 
@@ -269,14 +345,9 @@ Only after lobby PR9 (`feat: Bataille Corse adopts the shared lobby; solo is a b
    after PR6.
 5. Hypotheses I3 and I5 may be wrong: each is a red test first; if it is green, the PR records it and
    drops the "bug fix" line.
+6. Enriched error replies (decision 3) reach clients that may not expect a state: mitigated by the
+   frontend client check of PR4 and the before/after contract test.
 
 ## Open questions for the owner
 
-1. ArchUnit as a test dependency (PR0), or a plain JUnit scan of `import` lines (no dependency)?
-2. Bots in Kobo and Morris rooms: refuse `/lobby/addBot` for games without a bot driver (X4), or only
-   skip bot seats (PR6) and accept a table that waits on a seat nobody plays?
-3. Error replies to a refused start: always attach the sender's state when a game runs (Kobo, Morris)
-   or never (Bullshit, BC)? The plan keeps each game's current behaviour.
-4. One outcome DTO across games (X3): worth a frontend change later?
-5. After lobby PR9, should Bataille Corse errors go to the sender alone (like the other games) instead
-   of the whole game topic?
+None left: the five questions of the first draft are answered in "Owner decisions (2026-10-12)".
