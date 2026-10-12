@@ -523,6 +523,7 @@ describe('BullshitGameScreen', () => {
     it('shows the default keys in the hint, tooltips and aria-keyshortcuts', () => {
       const wrapper = mountPlaying();
       expect(wrapper.get('[data-test="keys-hint"]').text()).toContain('D discard');
+      expect(wrapper.get('[data-test="keys-hint"]').text()).not.toMatch(/[0-9]/);
       expect(wrapper.get('[data-test="discard"]').attributes('aria-keyshortcuts')).toBe('d');
       expect(wrapper.get('[data-test="call"]').attributes('title')).toContain('B');
       expect(wrapper.find('[data-test="hotkeys-button"]').exists()).toBe(true);

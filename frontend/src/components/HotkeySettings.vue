@@ -5,7 +5,7 @@ import { useI18n } from '../composables/useI18n';
 import { format } from '../locales/format';
 import type { HotkeyPanelApi, HotkeyRejection } from '../composables/useHotkeySettings';
 
-const props = defineProps<{ settings: HotkeyPanelApi; labels: Record<string, string>; note?: string }>();
+const props = defineProps<{ settings: HotkeyPanelApi; labels: Record<string, string> }>();
 const ui = useI18n().hotkeys;
 
 const open = ref(false);
@@ -90,7 +90,6 @@ const keyOf = (id: string) => (props.settings.actions.find((a) => a.id === id)?.
             :aria-label="format(ui.changeAria, { action: labels[action.id] })"
             @click="startCapture(action.id)" />
         </div>
-        <p v-if="note" class="note">{{ note }}</p>
         <p v-if="error" class="error" data-test="hotkeys-error" role="alert">{{ ui.errors[error] }}</p>
         <Button
           data-test="hotkeys-reset"
@@ -134,6 +133,5 @@ const keyOf = (id: string) => (props.settings.actions.find((a) => a.id === id)?.
   border: 1px solid rgba(255, 255, 255, 0.4);
   font-family: inherit;
 }
-.note { margin: 0; font-size: 0.75rem; color: rgba(255, 255, 255, 0.6); }
 .error { margin: 0; font-size: 0.8rem; color: #ffb4a8; }
 </style>

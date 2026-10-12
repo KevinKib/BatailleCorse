@@ -20,12 +20,16 @@ function startTwoPlayerGame() {
       startTwoPlayerGame();
     });
 
-    it('picks cards with digits, discards with D, and never scrolls', () => {
+    it('has no digit shortcut, discards the clicked cards with D, and never scrolls', () => {
       cy.get('[data-test="hand-card-0"]').should('have.attr', 'aria-pressed', 'false');
-      cy.get('body').type('12');
+      cy.get('body').type('120');
+      cy.get('[data-test="hand-card-0"]').should('have.attr', 'aria-pressed', 'false');
+      cy.get('[data-test="hand-card-1"]').should('have.attr', 'aria-pressed', 'false');
+      cy.get('[data-test="hand-card-0"]').click({ force: true });
+      cy.get('[data-test="hand-card-1"]').click({ force: true });
       cy.get('[data-test="hand-card-0"]').should('have.attr', 'aria-pressed', 'true');
       cy.get('[data-test="hand-card-1"]').should('have.attr', 'aria-pressed', 'true');
-      cy.get('body').type('2');
+      cy.get('[data-test="hand-card-1"]').click({ force: true });
       cy.get('[data-test="hand-card-1"]').should('have.attr', 'aria-pressed', 'false');
       cy.get('[data-test="discard"]').should('have.attr', 'aria-keyshortcuts', 'd').and('not.be.disabled');
       cy.get('body').type('d');
@@ -44,7 +48,8 @@ function startTwoPlayerGame() {
 
     it('documents the shortcuts discreetly where a keyboard is likely', () => {
       cy.get('[data-test="call"]').should('have.attr', 'aria-keyshortcuts', 'b');
-      cy.get('[data-test="keys-hint"]').should('contain.text', 'D discard').and('contain.text', 'B call Bullshit');
+      cy.get('[data-test="keys-hint"]').should('contain.text', 'D discard').and('contain.text', 'B call Bullshit')
+        .and('not.contain.text', '1');
     });
 
     it('flies the pile to the player who takes it once the verdict is gone', () => {

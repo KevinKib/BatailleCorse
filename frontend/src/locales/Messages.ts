@@ -73,8 +73,7 @@ export interface HotkeyMessages {
   changeAria: string;                  // '{action}': accessible name of that button
   listening: string;                   // shown on the button while it waits for a key
   reset: string;
-  bullshitNote: string;                // Bullshit: digits are fixed
-  errors: { reserved: string; digit: string; duplicate: string };
+  errors: { reserved: string; duplicate: string };
 }
 
 // Screen text of the Bullshit game. Placeholders use `{name}` and are filled by
@@ -100,7 +99,7 @@ export interface BullshitUiMessages {
     yourTurn: string;                  // visible cue next to my tag on my turn
     verdictAnnouncement: string;       // '{verdict}', '{caption}': what a screen reader hears after a call
     shortcut: string;                  // '{key}': tooltip of a button that has a keyboard shortcut
-    keysHint: string;                  // '{discard}', '{call}': discreet reminder of the shortcuts (digits pick cards)
+    keysHint: string;                  // '{discard}', '{call}': discreet reminder of the shortcuts
     offline: string;                   // my own connection is down; the socket retries by itself
   };
   end: {

@@ -24,7 +24,6 @@ import { cardSound } from '../../composables/useCardSound';
 import { useBullshitHotkeys } from '../../composables/useBullshitHotkeys';
 import { useHotkeySettings } from '../../composables/useHotkeySettings';
 import HotkeySettings from '../../components/HotkeySettings.vue';
-import { sortHand } from '../../model/bullshit/sortHand';
 import { useSoundPreference } from '../../composables/useSoundPreference';
 import { useConnectionStatus } from '../../composables/useConnectionStatus';
 import { format, plural } from '../../locales/format';
@@ -180,19 +179,13 @@ const canDiscardNow = computed(() =>
   store.canDiscard && store.isMyTurn && store.selectedCards.length > 0 && online.value);
 const canCallNow = computed(() => store.canCallBullshit && online.value);
 
-// Keyboard shortcuts mirror the buttons and the hand (digits follow the displayed, sorted order).
+// Keyboard shortcuts mirror the two action buttons.
 const hotkeys = useHotkeySettings();
 useBullshitHotkeys({
   canDiscard: () => store.phase === 'playing' && canDiscardNow.value,
   canCall: () => store.phase === 'playing' && canCallNow.value,
-  // Cards are only picked to be played: on my turn, with DISCARD allowed, connected.
-  handSize: () => (store.phase === 'playing' && store.isMyTurn && store.canDiscard && online.value ? myCardCount.value : 0),
   discard,
   call: () => store.callBullshit(),
-  toggleCard: (i) => {
-    const card = sortHand(store.game?.myHand ?? [], handSortMode.value)[i];
-    if (card) store.toggleCard(card);
-  },
 }, { enabled: () => hotkeys.enabled.value, discardKey: () => hotkeys.discardKey.value, callKey: () => hotkeys.callKey.value });
 const keysHint = computed(() =>
   format(ui.table.keysHint, { discard: hotkeys.discardKey.value.toUpperCase(), call: hotkeys.callKey.value.toUpperCase() }));
@@ -417,7 +410,7 @@ function leaveLobby() {
           <Button severity="secondary" :label="ui.back" icon="pi pi-undo" variant="text" rounded />
         </RouterLink>
         <p v-if="hotkeys.enabled.value" class="keys-hint" data-test="keys-hint">{{ keysHint }}</p>
-        <HotkeySettings class="footer-hotkeys" :settings="hotkeys" :labels="messages.hotkeys.actions" :note="messages.hotkeys.bullshitNote" />
+        <HotkeySettings class="footer-hotkeys" :settings="hotkeys" :labels="messages.hotkeys.actions" />
       </div>
     </template>
   </div>

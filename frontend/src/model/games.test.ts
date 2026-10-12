@@ -30,9 +30,8 @@ describe('game registry', () => {
     expect(new Set(all).size).toBe(all.length);
   });
 
-  it('givenBullshit_thenItsDigitsAreFixedAndSaid', () => {
-    expect(findGame('bullshit')?.hotkeys.fixedDigits).toBe(true);
-    expect(findGame('bataillecorse')?.hotkeys.fixedDigits).toBe(false);
+  it('givenAnyGame_thenItsHotkeysAreOnlyRemappableActions', () => {
+    GAMES.forEach(g => expect(Object.keys(g.hotkeys).sort()).toEqual(['actions', 'storageKeys']));
   });
 
   it('givenUnknownKey_thenFindGameReturnsUndefined', () => {

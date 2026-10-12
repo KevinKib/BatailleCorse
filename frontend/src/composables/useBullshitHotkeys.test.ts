@@ -5,8 +5,8 @@ import { useBullshitHotkeys } from './useBullshitHotkeys';
 
 function setup(over: Partial<Parameters<typeof useBullshitHotkeys>[0]> = {}, keys?: Parameters<typeof useBullshitHotkeys>[1]) {
   const actions = {
-    canDiscard: () => true, canCall: () => true, handSize: () => 4,
-    discard: vi.fn(), call: vi.fn(), toggleCard: vi.fn(), ...over,
+    canDiscard: () => true, canCall: () => true,
+    discard: vi.fn(), call: vi.fn(), ...over,
   };
   const wrapper = mount(defineComponent({
     setup() { useBullshitHotkeys(actions, keys); return () => h('div'); },
@@ -38,25 +38,13 @@ describe('useBullshitHotkeys', () => {
     wrapper.unmount();
   });
 
-  it('digits toggle the displayed card at that position, 0 being the tenth', () => {
-    const { actions, wrapper } = setup({ handSize: () => 10 });
-    press('1'); press('9'); press('0');
-    expect(actions.toggleCard.mock.calls.map(c => c[0])).toEqual([0, 8, 9]);
-    wrapper.unmount();
-  });
-
-  it('picks cards on an AZERTY keyboard, where the digit row types symbols', () => {
-    const { actions, wrapper } = setup({ handSize: () => 10 });
-    press('&', { code: 'Digit1' }); press('é', { code: 'Digit2' }); press('à', { code: 'Digit0' });
-    press('7', { code: 'Numpad7' });
-    expect(actions.toggleCard.mock.calls.map(c => c[0])).toEqual([0, 1, 9, 6]);
-    wrapper.unmount();
-  });
-
-  it('ignores digits beyond the hand size', () => {
-    const { actions, wrapper } = setup({ handSize: () => 2 });
-    press('3');
-    expect(actions.toggleCard).not.toHaveBeenCalled();
+  it('has no card shortcut: digits, on any layout, do nothing', () => {
+    const { actions, wrapper } = setup();
+    expect(() => {
+      press('1'); press('0'); press('&', { code: 'Digit1' }); press('7', { code: 'Numpad7' });
+    }).not.toThrow();
+    expect(actions.discard).not.toHaveBeenCalled();
+    expect(actions.call).not.toHaveBeenCalled();
     wrapper.unmount();
   });
 
@@ -87,12 +75,11 @@ describe('useBullshitHotkeys', () => {
     wrapper.unmount();
   });
 
-  it('turns every shortcut off, digits included, when disabled', () => {
-    const { actions, wrapper } = setup({ handSize: () => 4 }, { enabled: () => false, discardKey: () => 'd', callKey: () => 'b' });
-    press('d'); press('b'); press('1');
+  it('turns every shortcut off when disabled', () => {
+    const { actions, wrapper } = setup({}, { enabled: () => false, discardKey: () => 'd', callKey: () => 'b' });
+    press('d'); press('b');
     expect(actions.discard).not.toHaveBeenCalled();
     expect(actions.call).not.toHaveBeenCalled();
-    expect(actions.toggleCard).not.toHaveBeenCalled();
     wrapper.unmount();
   });
 

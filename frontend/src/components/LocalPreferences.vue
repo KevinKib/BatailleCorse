@@ -12,12 +12,11 @@ const props = defineProps<{ game: GameDefinition }>();
 const messages = useI18n();
 const settings = useGameHotkeySettings(props.game.key);
 const labels = computed(() => messages.hotkeys.actions);
-const note = computed(() => (props.game.hotkeys.fixedDigits ? messages.hotkeys.bullshitNote : undefined));
 </script>
 
 <template>
   <div class="local-preferences">
-    <HotkeySettings :settings="settings" :labels="labels" :note="note" />
+    <HotkeySettings :settings="settings" :labels="labels" />
   </div>
 </template>
 

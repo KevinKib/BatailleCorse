@@ -43,10 +43,19 @@ const noScroll = () => cy.window().then((w) => {
       cy.get('[data-test="hotkeys-button"]').click();
       cy.get('[data-test="discard"]').should('have.attr', 'aria-keyshortcuts', 'x');
       cy.get('[data-test="keys-hint"]').should('contain.text', 'X discard');
-      cy.get('body').type('1d');
+      cy.get('[data-test="hand-card-0"]').click({ force: true });
+      cy.get('body').type('d');
       cy.get('[data-test="last-play"]').should('not.exist');
       cy.get('body').type('x');
       cy.get('[data-test="last-play"]').should('exist');
+    });
+
+    it('accepts a digit as a shortcut now that digits pick nothing', () => {
+      cy.get('[data-test="hotkeys-button"]').click();
+      cy.get('[data-test="hotkey-discard-change"]').click();
+      cy.get('body').type('5');
+      cy.get('[data-test="hotkey-discard-key"]').should('have.text', '5');
+      cy.get('[data-test="hotkeys-error"]').should('not.exist');
     });
 
     it('refuses a duplicate key', () => {
@@ -57,14 +66,15 @@ const noScroll = () => cy.window().then((w) => {
       cy.get('[data-test="hotkey-discard-key"]').should('have.text', 'D');
     });
 
-    it('turns every shortcut off, digits included, and remembers it after a reload', () => {
+    it('turns every shortcut off and remembers it after a reload', () => {
       cy.get('[data-test="hotkeys-button"]').click();
       cy.get('[data-test="hotkeys-enabled"]').click();
       cy.get('[data-test="hotkeys-button"]').click();
       cy.get('[data-test="keys-hint"]').should('not.exist');
       cy.get('[data-test="discard"]').should('not.have.attr', 'aria-keyshortcuts');
-      cy.get('body').type('1');
-      cy.get('[data-test="hand-card-0"]').should('have.attr', 'aria-pressed', 'false');
+      cy.get('[data-test="hand-card-0"]').click({ force: true });
+      cy.get('body').type('d');
+      cy.get('[data-test="last-play"]').should('not.exist');
       cy.reload();
       cy.get('[data-test="hand-card-0"]', { timeout: 10000 }).should('exist');
       cy.get('[data-test="keys-hint"]').should('not.exist');

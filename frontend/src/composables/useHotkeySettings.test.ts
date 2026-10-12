@@ -21,8 +21,10 @@ describe('hotkey settings storage', () => {
   it('falls back to defaults on corrupt or invalid stored data', () => {
     localStorage.setItem(HOTKEY_STORAGE_KEY, '{not json');
     expect(loadHotkeySettings()).toEqual(DEFAULT_HOTKEYS);
-    localStorage.setItem(HOTKEY_STORAGE_KEY, JSON.stringify({ enabled: false, discard: '5', call: '5' }));
+    localStorage.setItem(HOTKEY_STORAGE_KEY, JSON.stringify({ enabled: false, discard: 'x', call: 'x' }));
     expect(loadHotkeySettings()).toEqual({ enabled: false, discard: 'd', call: 'b' });
+    localStorage.setItem(HOTKEY_STORAGE_KEY, JSON.stringify({ enabled: true, discard: '5', call: 'b' }));
+    expect(loadHotkeySettings()).toEqual({ enabled: true, discard: '5', call: 'b' });
   });
 
   it('falls back to defaults when storage throws on read', () => {
@@ -46,10 +48,10 @@ describe('validateHotkey', () => {
       expect(validateHotkey(ev(key), 'b')).toEqual({ ok: false, reason: 'reserved' });
     });
 
-  it('rejects digits, which pick cards, on any layout', () => {
-    expect(validateHotkey(ev('5', 'Digit5'), 'b')).toEqual({ ok: false, reason: 'digit' });
-    expect(validateHotkey(ev('&', 'Digit1'), 'b')).toEqual({ ok: false, reason: 'digit' });
-    expect(validateHotkey(ev('7', 'Numpad7'), 'b')).toEqual({ ok: false, reason: 'digit' });
+  it('accepts digits, which no longer pick cards', () => {
+    expect(validateHotkey(ev('5', 'Digit5'), 'b')).toEqual({ ok: true, key: '5' });
+    expect(validateHotkey(ev('&', 'Digit1'), 'b')).toEqual({ ok: true, key: '&' });
+    expect(validateHotkey(ev('7', 'Numpad7'), 'b')).toEqual({ ok: true, key: '7' });
   });
 
   it('rejects the key already used by the other action', () => {

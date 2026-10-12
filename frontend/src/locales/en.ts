@@ -95,12 +95,10 @@ export const messagesEn: Messages = {
     actions: { discard: 'Discard', call: 'Call Bullshit', send: 'Send card', slap: 'Slap pile' },
     change: 'Change',
     changeAria: 'Change the key for {action}',
-    listening: 'Press a key�',
+    listening: 'Press a key�',
     reset: 'Reset to defaults',
-    bullshitNote: 'Keys 1�0 pick cards and cannot be changed.',
     errors: {
       reserved: 'Use a single letter or symbol key (not Tab, Enter, Space, Esc, arrows or modifiers).',
-      digit: 'Digits are not allowed as shortcuts.',
       duplicate: 'That key is already used by the other action.',
     },
   },
@@ -128,7 +126,7 @@ export const messagesEn: Messages = {
       yourTurn: 'Your turn',
       verdictAnnouncement: '{verdict}. {caption}',
       shortcut: 'Shortcut: {key}',
-      keysHint: 'Keys: 1–0 first 10 cards · {discard} discard · {call} call Bullshit',
+      keysHint: 'Keys: {discard} discard · {call} call Bullshit',
       offline: 'Connection lost. Reconnecting…',
     },
     end: {

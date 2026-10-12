@@ -1,15 +1,13 @@
 export type GameKey = 'bataillecorse' | 'bullshit';
 
 /**
- * The local preferences (per device) a game declares: the remappable keyboard actions, the localStorage
- * entries they live in (one set per game) and whether the card digits are fixed. Action ids are the keys
- * of `hotkeys.actions` in the locale messages.
+ * The local preferences (per device) a game declares: the remappable keyboard actions and the
+ * localStorage entries they live in (one set per game). Action ids are the keys of `hotkeys.actions`
+ * in the locale messages.
  */
 export interface GameHotkeys {
   actions: readonly string[];
   storageKeys: readonly string[];
-  /** Digits pick cards and cannot be changed: the settings panel says so. */
-  fixedDigits: boolean;
 }
 
 /**
@@ -44,8 +42,8 @@ function define(key: GameKey, hasCreatePage: boolean, hotkeys: GameHotkeys): Gam
 
 export const GAMES: readonly GameDefinition[] = [
   // Bataille Corse keeps the keys it has always stored, one entry per action.
-  define('bataillecorse', true, { actions: ['send', 'slap'], storageKeys: ['bc_sendKey', 'bc_slapKey'], fixedDigits: false }),
-  define('bullshit', false, { actions: ['discard', 'call'], storageKeys: ['bullshit.hotkeys'], fixedDigits: true }),
+  define('bataillecorse', true, { actions: ['send', 'slap'], storageKeys: ['bc_sendKey', 'bc_slapKey'] }),
+  define('bullshit', false, { actions: ['discard', 'call'], storageKeys: ['bullshit.hotkeys'] }),
 ];
 
 export function findGame(key: unknown): GameDefinition | undefined {
