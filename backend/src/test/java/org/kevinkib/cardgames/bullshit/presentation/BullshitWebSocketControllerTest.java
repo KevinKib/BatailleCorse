@@ -47,7 +47,7 @@ class BullshitWebSocketControllerTest {
     void setUp() {
         sessionService = new SessionService(
                 new InMemorySessionRepository(Clock.systemUTC()),
-                new GameFactories(List.of(new BullshitFactory())));
+                new GameFactories(List.of(new BullshitFactory(), new org.kevinkib.cardgames.kobo.domain.KoboFactory())));
         messaging = new RecordingMessaging();
         BullshitStateBroadcaster broadcaster = new BullshitStateBroadcaster(messaging, sessionService::botSeats);
         BullshitGameActions actions = new BullshitGameActions(sessionService, broadcaster);
@@ -209,6 +209,22 @@ class BullshitWebSocketControllerTest {
         assertThat(error.getEventType(), is("CALL_BULLSHIT"));
         assertThat(error.getMessage(), is(notNullValue()));
         assertThat(error.getState(), instanceOf(BullshitDto.class));
+    }
+
+    @Test
+    void aStartOnARoomOfAnotherGame_isRefusedWithoutStartingIt() {
+        RoomCreated room = sessionService.createRoom(org.kevinkib.cardgames.kobo.domain.KoboFactory.GAME_TYPE, "Alice");
+        GameId id = new GameId(room.gameId());
+        sessionService.joinRoom(id, "Bob");
+
+        controller.start(new GameActionPayload(room.gameId(), room.hostToken()));
+
+        assertThat(messaging.seats, is(List.of(new PlayerId(0))));
+        Response error = messaging.payloads.get(0);
+        assertThat(error.isSuccess(), is(false));
+        assertThat(error.getEventType(), is("START"));
+        assertThat(error.getMessage(), is("This room is not a Bullshit game"));
+        assertThat(sessionService.findGame(id).isPresent(), is(false));
     }
 
     @Test

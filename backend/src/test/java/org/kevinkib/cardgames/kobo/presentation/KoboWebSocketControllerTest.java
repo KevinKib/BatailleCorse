@@ -59,6 +59,21 @@ class KoboWebSocketControllerTest {
     }
 
     @Test
+    void start_onARoomOfAnotherGame_isRefusedWithoutStartingIt() {
+        RoomCreated room = table.sessions.createRoom("bullshit", "Alice");
+        GameId id = new GameId(room.gameId());
+        table.sessions.joinRoom(id, "Bob");
+
+        table.ws.start(new GameActionPayload(room.gameId(), room.hostToken()));
+
+        assertThat(table.messaging.payloads, hasSize(1));
+        assertThat(table.messaging.payloads.get(0).isSuccess(), is(false));
+        assertThat(table.messaging.payloads.get(0).getMessage(), is("This room is not a Kobo game"));
+        assertThat(table.messaging.seats.get(0), is(seat(0)));
+        assertThat(table.sessions.findGame(id).isPresent(), is(false));
+    }
+
+    @Test
     void start_withTooFewPlayersOrByANonHost_repliesAnErrorToTheSenderOnly() {
         RoomCreated room = createRoom();
         table.ws.start(new GameActionPayload(room.gameId(), room.hostToken()));

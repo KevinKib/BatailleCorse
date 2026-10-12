@@ -12,7 +12,7 @@ import org.kevinkib.cardgames.sessionmanagement.core.infrastructure.InMemorySess
 /** The Kobo application layer wired over a real session core and a recording messaging double. */
 final class KoboTable {
 
-    private final SessionTable base = new SessionTable(new KoboFactory());
+    private final SessionTable base = new SessionTable(new KoboFactory(), new org.kevinkib.cardgames.bullshit.domain.BullshitFactory());
 
     final InMemorySessionRepository repository = base.repository;
     final SessionService sessions = base.sessions;

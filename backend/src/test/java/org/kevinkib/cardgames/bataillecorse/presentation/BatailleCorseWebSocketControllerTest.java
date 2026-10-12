@@ -29,7 +29,7 @@ class BatailleCorseWebSocketControllerTest {
 
     @BeforeEach
     void setUp() {
-        sessionService = new SessionService(new InMemorySessionRepository(java.time.Clock.systemUTC()), new org.kevinkib.cardgames.sessionmanagement.core.application.GameFactories(java.util.List.of(new org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseFactory())));
+        sessionService = new SessionService(new InMemorySessionRepository(java.time.Clock.systemUTC()), new org.kevinkib.cardgames.sessionmanagement.core.application.GameFactories(java.util.List.of(new org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseFactory(), new org.kevinkib.cardgames.bullshit.domain.BullshitFactory())));
         template = mock(SimpMessagingTemplate.class);
         GameMessagingService messaging = new GameMessagingService(template, null);
         BatailleCorseStateBroadcaster broadcaster = new BatailleCorseStateBroadcaster(messaging);
