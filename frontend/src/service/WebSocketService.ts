@@ -14,8 +14,14 @@ class WebSocketService {
   private currentPresence: string | null = null;
   private seatSubscription: { gameId: string; seat: number; token: string; onMessage: (r: any) => void } | null = null;
   private currentSeatSub: { unsubscribe: () => void } | null = null;
+  // Commands sent before the first connection came up. A lobby is shown from REST data, so a player can act
+  // while SockJS is still connecting: those commands wait for the connection instead of failing.
+  private everConnected = false;
+  private pending: Array<{ destination: string; body?: any }> = [];
 
   public init() {
+    this.everConnected = false;
+    this.pending = [];
     this.log("Creating SockJS...");
     const factory = () => {
       this.log("Creating SockJS connection to " + this.connectUrl);
@@ -29,6 +35,7 @@ class WebSocketService {
       onConnect: (frame) => {
         this.log('[STOMP] Connected:', frame);
         setConnectionOnline(true);
+        this.everConnected = true;
 
         // Re-subscribe to per-game channel after reconnect.
         if (this.currentGameId) {
@@ -44,6 +51,10 @@ class WebSocketService {
         if (this.currentPresence) {
           this.publish('/app/presence', this.currentPresence);
         }
+
+        const waiting = this.pending;
+        this.pending = [];
+        waiting.forEach(({ destination, body }) => this.publish(destination, body));
       },
       onWebSocketClose: () => {
         // Fires on every close, including a failed reconnect attempt: we are offline until onConnect.
@@ -103,6 +114,10 @@ class WebSocketService {
   }
 
   public publish(destination: string, body?: any) {
+    if (!this.everConnected && !this.client.connected) {
+      this.pending.push({ destination, body });
+      return;
+    }
     this.client.publish({ destination, body });
   }
 
