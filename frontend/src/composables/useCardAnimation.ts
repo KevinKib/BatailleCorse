@@ -32,7 +32,7 @@ function getCardUrl(rank: string, suit: string): string {
 }
 
 function startTransition(
-  ghost: { transitioning: boolean; x: number; y: number; width: number; height: number },
+  ghost: { transitioning: boolean; x: number; y: number; width: number; height: number; scaleX: number; scaleY: number },
   destRect: DOMRect,
 ) {
   nextTick(() => {
@@ -42,8 +42,11 @@ function startTransition(
     ghost.transitioning = true;
     ghost.x = destRect.left;
     ghost.y = destRect.top;
-    ghost.width = destRect.width;
-    ghost.height = destRect.height;
+    // The layout box (width/height) stays at the source size and the size change is a
+    // scale factor: animating width/height re-lays-out and repaints on every frame,
+    // while translate + scale stays on the compositor.
+    ghost.scaleX = ghost.width > 0 ? destRect.width / ghost.width : 1;
+    ghost.scaleY = ghost.height > 0 ? destRect.height / ghost.height : 1;
   });
 }
 
@@ -56,7 +59,7 @@ export function useCardAnimation(
   const ghostCard = reactive({
     visible: false,
     transitioning: false,
-    x: 0, y: 0, width: 0, height: 0,
+    x: 0, y: 0, width: 0, height: 0, scaleX: 1, scaleY: 1,
     duration: 100,
     src: cardBackUrl,
   });
@@ -66,7 +69,7 @@ export function useCardAnimation(
   const frozenPileCard = reactive({ rank: '', suit: '' });
 
   const slapGhosts = SLAP_OFFSETS.map(() =>
-    reactive({ visible: false, transitioning: false, x: 0, y: 0, width: 0, height: 0, src: cardBackUrl, duration: SLAP_DURATION })
+    reactive({ visible: false, transitioning: false, x: 0, y: 0, width: 0, height: 0, scaleX: 1, scaleY: 1, src: cardBackUrl, duration: SLAP_DURATION })
   );
 
   const cardDeltaIndicator = reactive({ visible: false, delta: 0, x: 0, y: 0 });
@@ -108,6 +111,8 @@ export function useCardAnimation(
     ghostCard.y = srcRect.top;
     ghostCard.width = srcRect.width;
     ghostCard.height = srcRect.height;
+    ghostCard.scaleX = 1;
+    ghostCard.scaleY = 1;
     ghostCard.duration = duration;
     ghostCard.visible = true;
 
@@ -136,6 +141,8 @@ export function useCardAnimation(
         ghost.y = srcRect.top + offset.y;
         ghost.width = srcRect.width;
         ghost.height = srcRect.height;
+        ghost.scaleX = 1;
+        ghost.scaleY = 1;
         ghost.visible = true;
 
         startTransition(ghost, destRect);
@@ -218,6 +225,8 @@ export function useCardAnimation(
           ghost.y = srcRect.top;
           ghost.width = srcRect.width;
           ghost.height = srcRect.height;
+        ghost.scaleX = 1;
+        ghost.scaleY = 1;
           ghost.visible = true;
 
           startTransition(ghost, destRect);
