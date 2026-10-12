@@ -19,10 +19,13 @@ These replace the open questions of the first draft.
    there. The defensive fix of `sendToSeat` is kept only if PR6a's red test shows another path to a bot
    seat; otherwise it is dropped.
 3. **The sender's state is attached to the error reply everywhere when a game runs** (as Kobo and Morris
-   do today). It is a deliberate observable change for Bullshit and Bataille Corse, made in PR4 (which
-   introduces `SeatCommands`) with a contract test that pins the before and after, and with a check that
-   their frontend clients accept an enriched error reply (PR4, "Frontend client check"). Bataille Corse
-   itself adopts `SeatCommands` in PR9; its client check is done in PR4 so PR9 knows what to change.
+   do today), made in PR4 (which introduces `SeatCommands`) with a contract test that pins the before and
+   after, and with a check that the frontend clients accept an enriched error reply (PR4, "Frontend client
+   check"). **Reality verified by PR4 (#163):** `BullshitWebSocketController` already joined the sender's
+   state to the `ErrorResponse` of `/discard` and `/callBullshit`; the only gap was `/bullshit/start`
+   refused while the game runs (`null` before, the sender's state after). A start refused on a lobby stays
+   without state. Bataille Corse still sends `null` until it adopts `SeatCommands` in PR9; its client check
+   was done in PR4 so PR9 knows what to change.
 4. **One `OutcomeDto` is postponed** (X3): reconsider when the Kobo (#149) and Three Men's Morris (#147)
    frontends are planned.
 5. **After lobby PR9, Bataille Corse errors go to the sender alone** (PR9).
@@ -42,6 +45,20 @@ wire contract or the dependency rules of `docs/architecture/context-map.md`.
 `backend/src/test/java/org/kevinkib/cardgames/`). Branches `refactor/...` or `test/...`, titles
 `refactor: ...`. Every PR description lists the classes deleted and, when there is one, the observable
 change with its test.
+
+## Status (2026-10-12)
+
+| PR | State |
+|----|-------|
+| 0 | [x] merged, #159 |
+| 1 | [x] merged, #162 |
+| 2 | [x] merged, #160 |
+| 3 | [x] merged, #161 |
+| 4 | [x] merged, #163 |
+| 5 | [x] merged, #164 |
+| 6a | [ ] in progress, draft PR #168 |
+| 6, 7, 8 | [ ] to do |
+| 9 | [ ] to do (waits for lobby PR9) |
 
 ## Overview and waves
 
@@ -202,10 +219,10 @@ Test code only. New package `presentation/support` under the test root:
   - Verdict to write in the PR: Bullshit client accepts the enriched reply without change; Bataille
     Corse client needs no change for the enrichment, and a possible error branch is a PR9 item.
 - BC untouched in this PR (its handler is legacy, see PR9).
-- Observable change (deliberate, owner decision 3): a refused Bullshit command (and, from PR9, a refused
-  Bataille Corse command) now carries the sender's state in its `ErrorResponse`, as Kobo and Morris
-  already do. A malformed game id on Bullshit commands is now silent instead of an exception in the
-  server log.
+- Observable change (as merged in #163): a `/bullshit/start` refused while the game runs now carries the
+  sender's state in its `ErrorResponse` (it was `null`); `/discard` and `/callBullshit` already did, as
+  Kobo and Morris. From PR9, a refused Bataille Corse command will too. A malformed game id on Bullshit
+  commands is now silent instead of an exception in the server log.
 - Risk: medium; messages of `ErrorResponse` are shown to players (Bullshit lobby errors), so they
   must not change: assert them in the tests.
 
@@ -218,12 +235,14 @@ Test code only. New package `presentation/support` under the test root:
   ("This room is not a Kobo game", "... a Three Men's Morris game", "... a Bataille Corse game"), so no
   player-visible text moves into the session core. Bullshit gains the same check
   ("This room is not a Bullshit game", I3). The four casts go.
-- Red tests: "a `/bullshit/start` on a Kobo room does not start it" (red today **[H]**), and the
+- Red tests: "a `/bullshit/start` on a Kobo room does not start it" (was red), and the
   existing "not a Kobo game" tests stay green.
-- Observable change: `/bullshit/start` on a room of another game is refused without starting it (bug fix).
+- Observable change (merged, #164): `/bullshit/start` on a room of another game is refused with "This room
+  is not a Bullshit game" without starting it. I3 was a real bug: the call started the other game, then
+  failed on the cast.
 - Risk: low.
 
-## PR 6a: `fix: refuse /lobby/addBot for a game without a bot`
+## PR 6a: `fix: refuse /lobby/addBot for a game without a bot` (in progress, draft #168)
 
 Planned work (was X4; owner decision 2). Independent of PR6 but merged before it, so PR6 no longer needs
 a bot-seat case for Kobo and Morris.
