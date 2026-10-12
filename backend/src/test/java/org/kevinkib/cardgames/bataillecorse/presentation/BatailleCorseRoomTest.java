@@ -43,7 +43,7 @@ class BatailleCorseRoomTest {
     private final RecordingMessaging messaging = new RecordingMessaging();
     { messaging.resolvingTokensWith(sessions); }
     private final BatailleCorseRestController rest = new BatailleCorseRestController(
-            sessions, messaging, new InMemoryForfeitLog(), new LobbyBroadcaster(messaging));
+            sessions, new InMemoryForfeitLog(), new LobbyBroadcaster(messaging));
     private final BatailleCorseStateBroadcaster broadcaster = new BatailleCorseStateBroadcaster(messaging);
     private final BatailleCorseWebSocketController ws = new BatailleCorseWebSocketController(
             sessions, messaging, new BatailleCorseGameActions(sessions, broadcaster), broadcaster);
@@ -53,7 +53,7 @@ class BatailleCorseRoomTest {
     }
 
     private ResponseEntity<?> get(String id, String token) {
-        return rest.getGameForSeat(id, token);
+        return rest.getGame(id, token);
     }
 
     @Test
@@ -165,12 +165,46 @@ class BatailleCorseRoomTest {
     }
 
     @Test
-    void legacyGetWithoutToken_onAnotherGameTypesId_is404() {
-        RoomCreated other = sessions.createRoom(BullshitFactory.GAME_TYPE, "Bob");
-        sessions.joinRoom(new GameId(other.gameId()), "Carol");
-        sessions.startGame(new GameId(other.gameId()), other.hostToken());
+    void getWithoutToken_isForbidden_evenOnceStarted() {
+        RoomCreated room = room();
+        sessions.addBot(new GameId(room.gameId()), room.hostToken());
+        assertThat(get(room.gameId(), null).getStatusCode(), is(HttpStatus.FORBIDDEN));
 
-        assertThat(rest.getGame(other.gameId()).getStatusCode(), is(HttpStatus.NOT_FOUND));
+        ws.start(new GameActionPayload(room.gameId(), room.hostToken()));
+
+        assertThat(get(room.gameId(), null).getStatusCode(), is(HttpStatus.FORBIDDEN));
+    }
+
+    @Test
+    void playAgain_afterAGameAgainstABot_reopensTheLobbyWithTheBotAndItsTier() {
+        RoomCreated room = room();
+        GameId id = new GameId(room.gameId());
+        sessions.addBot(id, room.hostToken());
+        sessions.setSeatOption(id, room.hostToken(), 1, BatailleCorseFactory.TIER_KEY, "5");
+        ws.start(new GameActionPayload(room.gameId(), room.hostToken()));
+        sessions.getGame(id, BatailleCorse.class).forfeit(new PlayerId(1));
+        messaging.seats.clear();
+        messaging.payloads.clear();
+
+        ResponseEntity<JoinResponseDto> again = rest.playAgain(room.gameId(), new JoinGamePayload("Alice"));
+
+        assertThat(again.getStatusCode(), is(HttpStatus.OK));
+        assertThat(again.getBody().playerId(), is(0));
+        assertThat(sessions.findGame(id).isPresent(), is(false));
+        LobbyView view = (LobbyView) get(room.gameId(), again.getBody().token()).getBody();
+        assertThat(view.players().get(0).name(), is("Alice"));
+        assertThat(view.players().get(1).bot(), is(true));
+        assertThat(view.players().get(1).seatOptions().get(BatailleCorseFactory.TIER_KEY), is("5"));
+        assertThat(view.canStart(), is(true));
+        assertThat(messaging.seats, is(List.of(new PlayerId(0))));
+    }
+
+    @Test
+    void playAgain_onAnotherGameTypesIdOrAnUnknownId_is404() {
+        RoomCreated other = sessions.createRoom(BullshitFactory.GAME_TYPE, "Bob");
+
+        assertThat(rest.playAgain(other.gameId(), null).getStatusCode(), is(HttpStatus.NOT_FOUND));
+        assertThat(rest.playAgain("unknown-id", null).getStatusCode(), is(HttpStatus.NOT_FOUND));
     }
 
     @Test

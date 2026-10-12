@@ -1,6 +1,7 @@
 package org.kevinkib.cardgames.presentation;
 
 import org.kevinkib.cardgames.game.GameId;
+import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.core.application.InvalidGameIdException;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SeatView;
@@ -28,7 +29,8 @@ public class SessionRestController {
         try {
             GameId gameId = new GameId(id);
             List<SeatView> seats = sessionService.seats(gameId);
-            return ResponseEntity.ok(SessionViewDto.from(seats));
+            return ResponseEntity.ok(SessionViewDto.from(seats,
+                    seat -> sessionService.seatOptions(gameId, new PlayerId(seat))));
         } catch (InvalidGameIdException | IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
         }

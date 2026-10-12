@@ -37,6 +37,14 @@ class BatailleCorseWebSocketControllerTest {
                 new BatailleCorseGameActions(sessionService, broadcaster), broadcaster);
     }
 
+    /** A Bataille Corse room with two humans seated, started by its host. */
+    private BatailleCorse twoHumanGame() {
+        var room = sessionService.createRoom("bataille-corse", "Alice");
+        GameId id = new GameId(room.gameId());
+        sessionService.joinRoom(id, "Bob");
+        return sessionService.startGame(id, room.hostToken(), BatailleCorse.class);
+    }
+
     @Test
     void givenARoomOfAnotherGame_whenStart_thenRefusedToTheSenderAndNotStarted() {
         var room = sessionService.createRoom("bullshit", "Alice");
@@ -57,7 +65,7 @@ class BatailleCorseWebSocketControllerTest {
 
         @Test
         void givenValidToken_whenSend_thenBroadcastsSuccessResponse() {
-            var game = sessionService.createGame("bataille-corse", 2);
+            var game = twoHumanGame();
             String gameId = game.getId().uuid().toString();
             String token = sessionService.tokenForSeat(game.getId(), new PlayerId(0));
 
@@ -71,7 +79,7 @@ class BatailleCorseWebSocketControllerTest {
 
         @Test
         void givenInvalidToken_whenSend_thenBroadcastsErrorResponse() {
-            var game = sessionService.createGame("bataille-corse", 2);
+            var game = twoHumanGame();
             String gameId = game.getId().uuid().toString();
 
             controller.send(new GameActionPayload(gameId, SessionToken.generate().uuid().toString()));
@@ -88,7 +96,7 @@ class BatailleCorseWebSocketControllerTest {
 
         @Test
         void givenValidToken_whenSlap_thenBroadcastsSuccessResponse() {
-            var game = sessionService.createGame("bataille-corse", 2);
+            var game = twoHumanGame();
             String gameId = game.getId().uuid().toString();
             String token0 = sessionService.tokenForSeat(game.getId(), new PlayerId(0));
             String token1 = sessionService.tokenForSeat(game.getId(), new PlayerId(1));
@@ -107,7 +115,7 @@ class BatailleCorseWebSocketControllerTest {
 
         @Test
         void givenInvalidToken_whenSlap_thenBroadcastsErrorResponse() {
-            var game = sessionService.createGame("bataille-corse", 2);
+            var game = twoHumanGame();
             String gameId = game.getId().uuid().toString();
 
             controller.slap(new GameActionPayload(gameId, SessionToken.generate().uuid().toString()));
@@ -124,7 +132,7 @@ class BatailleCorseWebSocketControllerTest {
 
         @Test
         void givenValidToken_whenGrab_thenBroadcastsSuccessResponse() {
-            var game = sessionService.createGame("bataille-corse", 2);
+            var game = twoHumanGame();
             String gameId = game.getId().uuid().toString();
             GameId batailleCorseId = game.getId();
             String token0 = sessionService.tokenForSeat(batailleCorseId, new PlayerId(0));
@@ -155,7 +163,7 @@ class BatailleCorseWebSocketControllerTest {
 
         @Test
         void givenInvalidToken_whenGrab_thenBroadcastsErrorResponse() {
-            var game = sessionService.createGame("bataille-corse", 2);
+            var game = twoHumanGame();
             String gameId = game.getId().uuid().toString();
 
             controller.grab(new GameActionPayload(gameId, SessionToken.generate().uuid().toString()));
@@ -164,60 +172,6 @@ class BatailleCorseWebSocketControllerTest {
                     eq("/topic/game/" + gameId),
                     (Object) argThat(r -> !((Response) r).isSuccess())
             );
-        }
-    }
-
-    @Nested
-    class RematchTest {
-
-        @Test
-        void givenSoloBothSeatsRequest_whenSecondRematch_thenBroadcastsStarted() {
-            var game = sessionService.createGame("bataille-corse", 2, org.kevinkib.cardgames.sessionmanagement.core.application.GameMode.SOLO);
-            String gameId = game.getId().uuid().toString();
-            String token0 = sessionService.tokenForSeat(game.getId(), new PlayerId(0));
-            String token1 = sessionService.tokenForSeat(game.getId(), new PlayerId(1));
-
-            controller.rematch(new GameActionPayload(gameId, token0)); // PENDING
-            clearInvocations(template);
-
-            controller.rematch(new GameActionPayload(gameId, token1)); // STARTED
-
-            verify(template).convertAndSend(
-                    eq("/topic/game/" + gameId),
-                    (Object) argThat(r -> ((Response) r).isSuccess()
-                            && ((org.kevinkib.cardgames.bataillecorse.presentation.dto.event.RematchEventData)
-                                    ((Response) r).getEventData()).status()
-                               == org.kevinkib.cardgames.presentation.dto.event.RematchStatus.STARTED)
-            );
-        }
-
-        @Test
-        void givenMultiplayerSingleRequest_whenRematch_thenBroadcastsPending() {
-            var game = sessionService.createGame("bataille-corse", 2, org.kevinkib.cardgames.sessionmanagement.core.application.GameMode.MULTIPLAYER);
-            sessionService.joinGame(game.getId()); // claim seat 1 so the game has two humans
-            String gameId = game.getId().uuid().toString();
-            String token0 = sessionService.tokenForSeat(game.getId(), new PlayerId(0));
-
-            controller.rematch(new GameActionPayload(gameId, token0));
-
-            verify(template).convertAndSend(
-                    eq("/topic/game/" + gameId),
-                    (Object) argThat(r -> ((Response) r).isSuccess()
-                            && ((org.kevinkib.cardgames.bataillecorse.presentation.dto.event.RematchEventData)
-                                    ((Response) r).getEventData()).status()
-                               == org.kevinkib.cardgames.presentation.dto.event.RematchStatus.PENDING)
-            );
-        }
-
-        @Test
-        void givenInvalidToken_whenRematch_thenDoesNotBroadcast() {
-            var game = sessionService.createGame("bataille-corse", 2);
-            String gameId = game.getId().uuid().toString();
-
-            controller.rematch(new GameActionPayload(gameId, SessionToken.generate().uuid().toString()));
-
-            verify(template, org.mockito.Mockito.never()).convertAndSend(
-                    eq("/topic/game/" + gameId), (Object) org.mockito.ArgumentMatchers.any());
         }
     }
 }
