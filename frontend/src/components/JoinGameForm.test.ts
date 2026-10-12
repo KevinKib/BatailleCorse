@@ -7,6 +7,7 @@ import JoinGameForm from './JoinGameForm.vue';
 import { createAppRouter } from '../router';
 import { findGame } from '../model/games';
 import { messagesEn } from '../locales/en';
+import { HttpError } from '../model/HttpError';
 
 async function mountForm(key: 'bataillecorse' | 'bullshit', join: (id: string, name?: string) => Promise<void>, path = `/games/${key}/join`) {
   setActivePinia(createPinia());
@@ -65,6 +66,23 @@ describe('JoinGameForm', () => {
     expect(wrapper.get('[data-test="join-error"]').text()).toBe(messagesEn.join.failed);
     expect(wrapper.get('[data-test="join-error"]').attributes('role')).toBe('alert');
     expect(router.currentRoute.value.path).toBe('/games/bataillecorse/join/abc');
+  });
+
+  it('givenInviteToADeletedLobby_thenTheFormSaysTheGameNoLongerExists', async () => {
+    const join = vi.fn().mockRejectedValue(new HttpError('Join failed: 404', 404));
+    const { wrapper, router } = await mountForm('bullshit', join, '/games/bullshit/join/abc');
+    await wrapper.get('form').trigger('submit');
+    await flushPromises();
+    expect(wrapper.get('[data-test="join-error"]').text()).toBe(messagesEn.join.notFound);
+    expect(router.currentRoute.value.path).toBe('/games/bullshit/join/abc');
+  });
+
+  it('givenAFullGame_thenTheFormKeepsTheGenericLine', async () => {
+    const join = vi.fn().mockRejectedValue(new HttpError('Join failed: 409', 409));
+    const { wrapper } = await mountForm('bullshit', join, '/games/bullshit/join/abc');
+    await wrapper.get('form').trigger('submit');
+    await flushPromises();
+    expect(wrapper.get('[data-test="join-error"]').text()).toBe(messagesEn.join.failed);
   });
 
   it('givenBack_thenLeadsToTheGameHome', async () => {

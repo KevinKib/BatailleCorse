@@ -9,11 +9,9 @@ import org.kevinkib.cardgames.bullshit.presentation.bot.BullshitBotCoordinator;
 import org.kevinkib.cardgames.presentation.bot.FixedThinkingDelay;
 import org.kevinkib.cardgames.presentation.bot.ManualBotScheduler;
 import java.time.Duration;
-import org.kevinkib.cardgames.bullshit.presentation.api.BullshitCreatePayload;
 import org.kevinkib.cardgames.bullshit.presentation.api.BullshitDiscardPayload;
 import org.kevinkib.cardgames.bullshit.presentation.dto.BullshitDto;
 import org.kevinkib.cardgames.bullshit.presentation.dto.CardDto;
-import org.kevinkib.cardgames.bullshit.presentation.dto.event.BullshitCreateEventData;
 import org.kevinkib.cardgames.bullshit.presentation.dto.event.CallBullshitEventData;
 import org.kevinkib.cardgames.bullshit.presentation.dto.event.DiscardEventData;
 import org.kevinkib.cardgames.game.GameId;
@@ -22,6 +20,7 @@ import org.kevinkib.cardgames.presentation.GameMessagingService;
 import org.kevinkib.cardgames.presentation.api.GameActionPayload;
 import org.kevinkib.cardgames.presentation.api.Response;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameFactories;
+import org.kevinkib.cardgames.sessionmanagement.core.application.RoomCreated;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameMode;
 import org.kevinkib.cardgames.sessionmanagement.core.infrastructure.InMemorySessionRepository;
@@ -78,15 +77,14 @@ class BullshitWebSocketControllerTest {
         controller = new BullshitWebSocketController(sessionService, broadcaster, messaging, actions);
     }
 
-    private BullshitCreateEventData createRoom() {
-        Response create = controller.createGame(new BullshitCreatePayload("Alice", null, null));
-        return (BullshitCreateEventData) create.getEventData();
+    private RoomCreated createRoom() {
+        return sessionService.createRoom(BullshitFactory.GAME_TYPE, "Alice");
     }
 
     @Test
     void givenHostAndOneBot_whenStartThenHostPlays_thenTheBotGetsATaskAndNoMessage() {
-        BullshitCreateEventData room = createRoom();
-        String hostToken = room.tokens().get(0);
+        RoomCreated room = createRoom();
+        String hostToken = room.hostToken();
         sessionService.addBot(new GameId(room.gameId()), hostToken);
         GameId id = new GameId(room.gameId());
 
@@ -104,25 +102,24 @@ class BullshitWebSocketControllerTest {
     }
 
     @Test
-    void givenCreate_whenCreate_thenRoomAckWithHostTokenNoState() {
-        Response response = controller.createGame(new BullshitCreatePayload("Alice", null, null));
-
-        assertThat(response.isSuccess(), is(true));
-        assertThat(response.getEventType(), is("CREATE"));
-        assertThat(response.getState(), is(nullValue()));
-        BullshitCreateEventData data = (BullshitCreateEventData) response.getEventData();
-        assertThat(data.gameType(), is("bullshit"));
-        assertThat(data.tokens().size(), is(1));
-        assertThat(data.tokens().containsKey(0), is(true));
+    void givenController_thenNoHandlerCreatesALobbyOverTheSharedTopic() {
+        // Lobbies are created over POST /api/lobby: a /bullshit/create answer on /topic/game leaked host tokens.
+        for (java.lang.reflect.Method method : BullshitWebSocketController.class.getDeclaredMethods()) {
+            org.springframework.messaging.handler.annotation.MessageMapping mapping =
+                    method.getAnnotation(org.springframework.messaging.handler.annotation.MessageMapping.class);
+            if (mapping != null) {
+                assertThat(java.util.Arrays.asList(mapping.value()).contains("/bullshit/create"), is(false));
+            }
+            assertThat(method.getAnnotation(org.springframework.messaging.handler.annotation.SendTo.class), is(nullValue()));
+        }
     }
 
     @Test
     void givenHostStartsWithEnoughPlayers_whenStart_thenBroadcastsGameToAllSeats() {
-        Response create = controller.createGame(new BullshitCreatePayload("Alice", null, null));
-        BullshitCreateEventData data = (BullshitCreateEventData) create.getEventData();
+        RoomCreated data = createRoom();
         GameId id = new GameId(data.gameId());
         sessionService.joinRoom(id, "Bob");
-        String hostToken = data.tokens().get(0);
+        String hostToken = data.hostToken();
 
         controller.start(new GameActionPayload(data.gameId(), hostToken));
 
@@ -134,8 +131,7 @@ class BullshitWebSocketControllerTest {
 
     @Test
     void givenNonHostStart_whenStart_thenErrorToActingSeatOnly() {
-        Response create = controller.createGame(new BullshitCreatePayload("Alice", null, null));
-        BullshitCreateEventData data = (BullshitCreateEventData) create.getEventData();
+        RoomCreated data = createRoom();
         GameId id = new GameId(data.gameId());
         var bob = sessionService.joinRoom(id, "Bob");
 

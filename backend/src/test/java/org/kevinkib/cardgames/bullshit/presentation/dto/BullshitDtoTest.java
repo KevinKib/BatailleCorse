@@ -31,6 +31,16 @@ class BullshitDtoTest {
     }
 
     @Test
+    void givenViewer_whenForViewer_thenMySeatIsTheViewersSeat() {
+        Bullshit game = aBullshit()
+                .withPlayers(playerWithRanks(0, ACE), playerWithRanks(1, TWO))
+                .build();
+
+        assertThat(BullshitDto.forViewer(game, new PlayerId(0)).mySeat(), is(0));
+        assertThat(BullshitDto.forViewer(game, new PlayerId(1)).mySeat(), is(1));
+    }
+
+    @Test
     void givenGame_whenForViewer_thenDeckSizeIsExposed() {
         Bullshit full = aBullshit().withPlayers(playerWithRanks(0, ACE), playerWithRanks(1, TWO)).build();
         Bullshit shortDeck = new Bullshit(GameId.generate(), 2, new AscendingRankClaimMode(DeckSize.SHORT), DeckSize.SHORT);

@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { flushPromises, mount } from '@vue/test-utils';
+import { vi } from 'vitest';
 import { setActivePinia, createPinia } from 'pinia';
 import { createMemoryHistory } from 'vue-router';
 import PrimeVue from 'primevue/config';
@@ -9,12 +10,12 @@ import { findGame } from '../model/games';
 import { useSettingsStore } from '../state/Settings.store';
 import { messagesEn } from '../locales/en';
 
-async function mountHome(key: 'bataillecorse' | 'bullshit', query = '') {
+async function mountHome(key: 'bataillecorse' | 'bullshit', query = '', createLobby?: (name?: string) => Promise<string>) {
   const router = createAppRouter(createMemoryHistory());
   await router.push(`/games/${key}${query}`);
   await router.isReady();
   const wrapper = mount(GameHome, {
-    props: { game: findGame(key)! },
+    props: { game: findGame(key)!, ...(createLobby ? { createLobby } : {}) },
     global: { plugins: [router, PrimeVue] },
   });
   return { wrapper, router };
@@ -34,12 +35,14 @@ describe('GameHome', () => {
       expect(wrapper.get('[data-test="back"]').text()).toBe(messagesEn.home.back);
     });
 
-    it(`given_${key}_whenNewGame_thenLeadsToItsNewGamePage`, async () => {
-      const { wrapper, router } = await mountHome(key);
-      await wrapper.get('[data-test="new-game"]').trigger('click');
-      await flushPromises();
-      expect(router.currentRoute.value.path).toBe(`/games/${key}/new`);
-    });
+    if (key === 'bataillecorse') {
+      it('given_bataillecorse_whenNewGame_thenLeadsToItsNewGamePage', async () => {
+        const { wrapper, router } = await mountHome(key);
+        await wrapper.get('[data-test="new-game"]').trigger('click');
+        await flushPromises();
+        expect(router.currentRoute.value.path).toBe('/games/bataillecorse/new');
+      });
+    }
 
     it(`given_${key}_whenJoinGame_thenLeadsToItsJoinForm`, async () => {
       const { wrapper, router } = await mountHome(key);
@@ -64,6 +67,58 @@ describe('GameHome', () => {
     expect((input.element as HTMLInputElement).value).toBe('Alice');
     await input.setValue('Bob');
     expect(useSettingsStore().playerName).toBe('Bob');
+  });
+
+  it('givenBullshit_whenNewGame_thenCreatesTheLobbyWithTheNameAndEntersIt', async () => {
+    localStorage.setItem('bc_playerName', 'Alice');
+    setActivePinia(createPinia());
+    const createLobby = vi.fn().mockResolvedValue('g42');
+    const { wrapper, router } = await mountHome('bullshit', '', createLobby);
+    await wrapper.get('[data-test="new-game"]').trigger('click');
+    await flushPromises();
+    expect(createLobby).toHaveBeenCalledWith('Alice');
+    expect(router.currentRoute.value.path).toBe('/games/bullshit/room/g42');
+  });
+
+  it('givenBlankName_whenNewGame_thenCreatesTheLobbyWithoutName', async () => {
+    const createLobby = vi.fn().mockResolvedValue('g42');
+    const { wrapper } = await mountHome('bullshit', '', createLobby);
+    await wrapper.get('[data-test="new-game"]').trigger('click');
+    await flushPromises();
+    expect(createLobby).toHaveBeenCalledWith(undefined);
+  });
+
+  it('givenSlowCreation_thenNewGameIsDisabledUntilItAnswers', async () => {
+    let resolve!: (id: string) => void;
+    const createLobby = vi.fn().mockReturnValue(new Promise<string>((r) => { resolve = r; }));
+    const { wrapper } = await mountHome('bullshit', '', createLobby);
+    await wrapper.get('[data-test="new-game"]').trigger('click');
+    const button = wrapper.get('[data-test="new-game"]');
+    expect((button.element as HTMLButtonElement).disabled).toBe(true);
+    expect(button.text()).toBe(messagesEn.home.creating);
+    await button.trigger('click');
+    expect(createLobby).toHaveBeenCalledTimes(1);
+    resolve('g1');
+    await flushPromises();
+  });
+
+  it('givenFailedCreation_thenStaysOnTheGameHomeWithAnAlert', async () => {
+    const createLobby = vi.fn().mockRejectedValue(new Error('Create failed: 500'));
+    const { wrapper, router } = await mountHome('bullshit', '', createLobby);
+    await wrapper.get('[data-test="new-game"]').trigger('click');
+    await flushPromises();
+    const alert = wrapper.get('[data-test="create-error"]');
+    expect(alert.text()).toBe(messagesEn.home.createFailed);
+    expect(alert.attributes('role')).toBe('alert');
+    expect(router.currentRoute.value.path).toBe('/games/bullshit');
+    expect((wrapper.get('[data-test="new-game"]').element as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it('givenLostSeatNotice_thenItIsAnnounced', async () => {
+    const { wrapper } = await mountHome('bullshit', '?lost=1');
+    expect(wrapper.get('[data-test="lost-notice"]').text()).toBe(messagesEn.home.seatLost);
+    expect(wrapper.get('[data-test="lost-notice"]').attributes('role')).toBe('status');
+    expect(wrapper.find('[data-test="gone-notice"]').exists()).toBe(false);
   });
 
   it('givenGoneNotice_thenItIsAnnounced', async () => {

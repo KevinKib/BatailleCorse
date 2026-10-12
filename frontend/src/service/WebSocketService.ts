@@ -14,7 +14,6 @@ class WebSocketService {
   private currentPresence: string | null = null;
   private seatSubscription: { gameId: string; seat: number; token: string; onMessage: (r: any) => void } | null = null;
   private currentSeatSub: { unsubscribe: () => void } | null = null;
-  private lobbyListener: ((response: any) => void) | null = null;
 
   public init() {
     this.log("Creating SockJS...");
@@ -31,11 +30,10 @@ class WebSocketService {
         this.log('[STOMP] Connected:', frame);
         setConnectionOnline(true);
 
-        // Generic channel: receives CREATE events so the client learns the game ID.
+        // Generic channel: still carries Bataille Corse's CREATE answer until it adopts the shared lobby.
         stompClient.subscribe('/topic/game', message => {
           const response = JSON.parse(message.body);
           useBatailleCorseStore().onResponse(response);
-          this.lobbyListener?.(response);
         });
 
         // Re-subscribe to per-game channel after reconnect.
@@ -70,10 +68,6 @@ class WebSocketService {
     stompClient.activate();
 
     this.client = stompClient;
-  }
-
-  public setLobbyListener(fn: ((response: any) => void) | null) {
-    this.lobbyListener = fn;
   }
 
   public subscribeToSeat(gameId: string, seat: number, token: string, onMessage: (response: any) => void) {

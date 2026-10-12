@@ -1,0 +1,58 @@
+import { Client, type IMessage } from '@stomp/stompjs';
+
+/**
+ * A second player driven from the spec: it holds a seat token, listens on its seat channel and sends lobby
+ * commands over a raw STOMP socket. The browser under test is the other player, so one Cypress run covers two
+ * clients without a second browser.
+ */
+export interface ScriptedPlayer {
+  /** Every frame received on the seat channel, oldest first. */
+  frames: Array<{ eventType: string; state?: any; success?: boolean; message?: string }>;
+  /** The latest lobby (or game) state this player was sent. */
+  lastState(): any;
+  publish(destination: string, body: Record<string, unknown>): void;
+  disconnect(): void;
+}
+
+export function joinAsScriptedPlayer(gameId: string, name: string): Cypress.Chainable<ScriptedPlayer & { token: string; seat: number }> {
+  return cy.request('POST', `/api/bullshit/game/${gameId}/join`, { name }).then((res) => {
+    const { playerId, token } = res.body as { playerId: number; token: string };
+    return connectScriptedPlayer(gameId, token, playerId);
+  });
+}
+
+/**
+ * Connects and subscribes to the seat channel. It resolves once the server has answered a probe command on that
+ * channel (an options change with nothing in it: a success for the host, a refusal for anybody else), which proves
+ * the subscription is live: a frame sent before that would be lost, and no fixed wait is needed.
+ */
+export function connectScriptedPlayer(gameId: string, token: string, seat: number) {
+  const base = (Cypress.config('baseUrl') as string).replace(/^http/, 'ws');
+  return cy.wrap(new Promise<ScriptedPlayer & { token: string; seat: number }>((resolve, reject) => {
+    const frames: ScriptedPlayer['frames'] = [];
+    const client = new Client({ brokerURL: `${base}/connect/websocket`, reconnectDelay: 0 });
+    const player = {
+      token,
+      seat,
+      frames,
+      lastState: () => frames.map((f) => f.state).filter(Boolean).pop(),
+      publish: (destination: string, body: Record<string, unknown>) =>
+        client.publish({ destination, body: JSON.stringify({ gameId, token, ...body }) }),
+      disconnect: () => { void client.deactivate(); },
+    };
+    client.onStompError = (frame) => reject(new Error(frame.headers['message']));
+    client.onWebSocketError = () => reject(new Error('scripted player: websocket error'));
+    client.onConnect = () => {
+      client.subscribe(`/topic/game/${gameId}/seat/${token}`, (message: IMessage) => {
+        frames.push(JSON.parse(message.body));
+        if (frames.length === 1) resolve(player);
+      }, { token });
+      // The probe is repeated until the first frame comes back, whenever the subscription became active.
+      const probe = setInterval(() => {
+        if (frames.length > 0 || !client.connected) { clearInterval(probe); return; }
+        player.publish('/app/lobby/setOptions', { values: {} });
+      }, 200);
+    };
+    client.activate();
+  }), { timeout: 10000 });
+}

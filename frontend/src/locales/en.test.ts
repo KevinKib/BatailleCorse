@@ -81,26 +81,28 @@ describe('English messages', () => {
   });
 
   it('givenBullshitUiMessages_thenPluralFormsExistForPlayersAndCards', () => {
-    expect(messagesEn.bullshitUi.lobby.waitingForPlayers.one).toContain('{n}');
-    expect(messagesEn.bullshitUi.lobby.waitingForPlayers.other).toContain('{n}');
+    expect(messagesEn.lobby.waitingForPlayers.one).toContain('{n}');
+    expect(messagesEn.lobby.waitingForPlayers.other).toContain('{n}');
     expect(messagesEn.bullshitUi.table.myCards.one).toContain('{n}');
     expect(messagesEn.bullshitUi.table.myCards.other).toContain('{n}');
     expect(messagesEn.bullshitUi.table.playedFaceDown.one).toContain('{n}');
     expect(messagesEn.bullshitUi.table.playedFaceDown.other).toContain('{n}');
   });
 
-  it('givenBullshitUiMessages_thenLobbyHasBadgesCopyFeedbackAndClaimModeLabel', () => {
-    const lobby = messagesEn.bullshitUi.lobby;
-    for (const key of ['playersLabel', 'youBadge', 'botBadge', 'hostBadge', 'claimModeLabel', 'deckSizeLabel', 'copy', 'copied'] as const) {
+  it('givenLobbyMessages_thenItHasBadgesCopyFeedbackLeaveAndTheHostNotice', () => {
+    const lobby = messagesEn.lobby;
+    for (const key of ['title', 'leave', 'playersLabel', 'youBadge', 'botBadge', 'hostBadge', 'copy', 'copied', 'nowHost', 'renameLabel', 'waitingForPlayer', 'playerLabel', 'seatOptionLabel'] as const) {
       expect(lobby[key]).toBeTruthy();
     }
     expect(lobby.copied).toBe('Copied!');
+    expect(lobby.nowHost).toBe('You are now the host.');
   });
 
-  it('givenBullshitUiMessages_thenStartScreenHasCreateError', () => {
-    const start = messagesEn.bullshitUi.start;
-    expect(start.errors.createFailed).toBeTruthy();
-    expect(start.namePlaceholder).toBeTruthy();
+  it('givenHomeAndJoinMessages_thenTheLobbyCreationAndLostSeatCasesAreWorded', () => {
+    expect(messagesEn.home.createFailed).toBeTruthy();
+    expect(messagesEn.home.creating).toBeTruthy();
+    expect(messagesEn.home.seatLost).toBeTruthy();
+    expect(messagesEn.join.notFound).toBeTruthy();
   });
 
   it('givenBullshitUiMessages_thenHandCardsHaveAnAccessibleLabelTemplate', () => {
@@ -108,14 +110,13 @@ describe('English messages', () => {
     expect(messagesEn.bullshitUi.table.cardLabel).toContain('{suit}');
   });
 
-  it('givenBullshitUiMessages_thenClaimModesCoverRankAndSuit', () => {
-    expect(messagesEn.bullshitUi.start.claimModes.rank).toBeTruthy();
-    expect(messagesEn.bullshitUi.start.claimModes.suit).toBeTruthy();
-    expect(messagesEn.bullshitUi.start.deckSizeLegend).toBeTruthy();
-    expect(messagesEn.bullshitUi.start.deckSizes['32']).toBeTruthy();
-    expect(messagesEn.bullshitUi.start.deckSizes['52']).toBeTruthy();
-    expect(messagesEn.bullshitUi.start.rankRanges['32']).toBeTruthy();
-    expect(messagesEn.bullshitUi.start.rankRanges['52']).toBeTruthy();
+  it('givenOptionMessages_thenBullshitOptionsAreLabelledForEveryValue', () => {
+    const o = messagesEn.options.bullshit;
+    for (const text of [o.claimMode.label, o.claimMode.rank, o.claimMode.suit, o.deckSize.label, o.deckSize['32'], o.deckSize['52']]) {
+      expect(text).toBeTruthy();
+    }
+    expect(o.vars.range.deckSize['32']).toBeTruthy();
+    expect(o.vars.range.deckSize['52']).toBeTruthy();
   });
 
   it('givenGamePickerMessages_thenEveryLeafStringIsNonEmpty', () => {

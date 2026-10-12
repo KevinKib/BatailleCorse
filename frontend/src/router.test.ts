@@ -50,9 +50,12 @@ describe('app router', () => {
     expect((await resolveAt('/games/bullshit/create')).fullPath).toBe('/games/bullshit');
   });
 
-  it('givenNewGamePages_thenEachGameKeepsItsCreateScreen', async () => {
+  it('givenBatailleCorseNewGamePage_thenItKeepsItsCreateScreen', async () => {
     expect((await resolveAt('/games/bataillecorse/new')).name).toBe('create');
-    expect((await resolveAt('/games/bullshit/new')).name).toBe('bullshit-create');
+  });
+
+  it('givenTheRemovedBullshitCreatePage_thenLeadsToTheGameHome', async () => {
+    expect((await resolveAt('/games/bullshit/new')).fullPath).toBe('/games/bullshit');
   });
 
   it('givenAGameAbsentFromTheRegistry_thenRedirectsToTheGameSelection', async () => {

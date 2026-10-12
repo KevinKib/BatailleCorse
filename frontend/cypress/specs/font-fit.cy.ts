@@ -9,11 +9,6 @@ function createBullshitGame(name: string) {
   cy.get('[data-test="play-bullshit"]').click();
   cy.get('[data-test="name"]').type(name);
   cy.get('[data-test="new-game"]').click();
-  cy.url().should('include', '/games/bullshit/new');
-  // Deliberate fixed wait: no "connected" signal is exposed and a create sent before the
-  // WebSocket handshake ends is reported to the player as an error.
-  cy.wait(1500);
-  cy.get('[data-test="submit"]').click();
   cy.url({ timeout: 10000 }).should('match', /\/games\/bullshit\/room\/.+/);
 }
 
@@ -55,8 +50,8 @@ describe('Atkinson Hyperlegible fit', () => {
     describe(`${width}x${height}`, () => {
       beforeEach(() => cy.viewport(width, height));
 
-      it('keeps the create screen and a lobby with long names inside the screen', () => {
-        cy.visit('/games/bullshit/new');
+      it('keeps the Game home and a lobby with long names inside the screen', () => {
+        cy.visit('/games/bullshit');
         cy.get('[data-test="name"]').type(LONG_NAME);
         expectNoOverflow('#app', width);
         createBullshitGame(LONG_NAME);

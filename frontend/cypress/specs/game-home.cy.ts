@@ -1,11 +1,12 @@
 // The shared Game home: Join game for both games, and the room links that cannot be restored.
 const GAMES = [
-  { key: 'bataillecorse', title: 'Bataille Corse' },
-  { key: 'bullshit', title: 'Bullshit' },
+  { key: 'bataillecorse', title: 'Bataille Corse', joinError: 'Could not join this game' },
+  // Bullshit words a missing game (404) apart from a refusal (full, already started).
+  { key: 'bullshit', title: 'Bullshit', joinError: 'No game found' },
 ];
 
 describe('Game home', () => {
-  GAMES.forEach(({ key, title }) => {
+  GAMES.forEach(({ key, title, joinError }) => {
     it(`${key}: Join game opens the form, a refused join stays on it with its error, Back returns to the home`, () => {
       cy.visit(`/games/${key}`);
       cy.contains('h1', title).should('be.visible');
@@ -16,7 +17,7 @@ describe('Game home', () => {
       cy.get('[data-test="submit"]').click();
       cy.get('[data-test="join-error"]', { timeout: 10000 })
         .should('be.visible')
-        .and('contain.text', 'Could not join this game');
+        .and('contain.text', joinError);
       cy.location('pathname').should('eq', `/games/${key}/join`);
       // The previous view is still fading out for a moment: wait until only this one is left.
       cy.get('[data-test="back"]').should('have.length', 1).click();
@@ -30,16 +31,46 @@ describe('Game home', () => {
     });
 
     it(`${key}: a stored token for a game that no longer exists leads to the Game home with a notice`, () => {
-      const storageKey = key === 'bullshit' ? 'bullshit:tokens:gone-game' : 'tokens:gone-game';
-      cy.visit(`/games/${key}/room/gone-game`, {
+      // A well-formed id the server does not know: only a 404 means "gone" (a 500 must not pass for it).
+      const goneId = '11111111-1111-4111-8111-111111111111';
+      const storageKey = key === 'bullshit' ? `bullshit:tokens:${goneId}` : `tokens:${goneId}`;
+      cy.visit(`/games/${key}/room/${goneId}`, {
         onBeforeLoad(win) {
-          win.localStorage.setItem(storageKey, JSON.stringify({ 0: 'stale-token' }));
+          win.localStorage.setItem(storageKey, JSON.stringify({ 0: '00000000-0000-4000-8000-000000000000' }));
         },
       });
       cy.location('pathname', { timeout: 10000 }).should('eq', `/games/${key}`);
       cy.get('[data-test="gone-notice"]').should('be.visible').and('contain.text', 'This game no longer exists');
       cy.get('[data-test="new-game"]').should('be.visible');
       cy.get('[data-test="join-game"]').should('be.visible');
+    });
+  });
+});
+
+describe('Game home creates a Bullshit lobby directly', () => {
+  it('New game lands in the lobby with the typed name, without any create page', () => {
+    cy.visit('/games/bullshit');
+    cy.get('[data-test="name"]').type('Alice');
+    cy.get('[data-test="new-game"]').click();
+    cy.location('pathname', { timeout: 10000 }).should('match', /^\/games\/bullshit\/room\/.+/);
+    cy.get('[data-test="lobby"]').should('be.visible');
+    cy.get('input[data-test="rename"]').should('have.value', 'Alice');
+  });
+
+  it('a stored token the server refuses leads to the Game home with the lost-seat notice', () => {
+    cy.visit('/games/bullshit');
+    cy.get('[data-test="name"]').type('Alice');
+    cy.get('[data-test="new-game"]').click();
+    cy.location('pathname', { timeout: 10000 }).should('match', /^\/games\/bullshit\/room\/.+/);
+    cy.get('[data-test="lobby"]').should('be.visible');
+    cy.location('pathname').then((path) => {
+      const id = path.split('/room/')[1];
+      // The game is alive but the token no longer resolves to a seat.
+      cy.window().then((win) => win.localStorage.setItem(`bullshit:tokens:${id}`, JSON.stringify({ 0: '00000000-0000-4000-8000-000000000000' })));
+      cy.visit(path);
+      cy.location('pathname', { timeout: 10000 }).should('eq', '/games/bullshit');
+      cy.get('[data-test="lost-notice"]').should('be.visible').and('contain.text', 'Your seat in that game was lost');
+      cy.get('[data-test="gone-notice"]').should('not.exist');
     });
   });
 });

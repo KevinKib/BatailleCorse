@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { Button, InputText } from 'primevue';
@@ -9,7 +9,11 @@ import { useSettingsStore } from '../state/Settings.store';
 import { useI18n } from '../composables/useI18n';
 import { preloadAllCards } from '../composables/useCardAnimation';
 
-const props = defineProps<{ game: GameDefinition }>();
+const props = defineProps<{
+  game: GameDefinition;
+  /** Creates a lobby for a game without a create page and resolves with its id. */
+  createLobby?: (name?: string) => Promise<string>;
+}>();
 
 const ui = useI18n().home;
 const gameName = computed(() => useI18n().gamePicker[props.game.key].name);
@@ -17,8 +21,32 @@ const route = useRoute();
 const router = useRouter();
 const { playerName } = storeToRefs(useSettingsStore());
 
-// Set by a room link that could not be restored (spec 4.0).
+// Set by a room link that could not be restored: the game is gone, or the stored seat no longer resolves.
 const gone = computed(() => route.query.gone === '1');
+const lost = computed(() => route.query.lost === '1');
+
+const creating = ref(false);
+const createError = ref(false);
+
+async function newGame() {
+  if (creating.value) return;
+  const { newGameRoute } = props.game;
+  const { createLobby } = props;
+  if (!createLobby) {
+    if (newGameRoute) router.push(newGameRoute);
+    return;
+  }
+  creating.value = true;
+  createError.value = false;
+  try {
+    const id = await createLobby(playerName.value || undefined);
+    router.push(props.game.roomRoute(id));
+  } catch {
+    createError.value = true;
+  } finally {
+    creating.value = false;
+  }
+}
 
 onMounted(() => preloadAllCards());
 </script>
@@ -26,6 +54,7 @@ onMounted(() => preloadAllCards());
 <template>
   <TitlePanel :title="gameName">
     <p v-if="gone" class="notice" role="status" data-test="gone-notice">{{ ui.gameGone }}</p>
+    <p v-else-if="lost" class="notice" role="status" data-test="lost-notice">{{ ui.seatLost }}</p>
     <div class="field-group">
       <label class="field-label" for="home-name">{{ ui.yourName }}</label>
       <InputText
@@ -41,12 +70,14 @@ onMounted(() => preloadAllCards());
     <Button
       data-test="new-game"
       class="start-button"
-      :label="ui.newGame"
-      icon="pi pi-plus"
+      :label="creating ? ui.creating : ui.newGame"
+      :icon="creating ? 'pi pi-spin pi-spinner' : 'pi pi-plus'"
       severity="success"
       size="large"
       rounded
-      @click="router.push(game.newGameRoute)" />
+      :disabled="creating"
+      @click="newGame" />
+    <p v-if="createError" class="error" role="alert" data-test="create-error">{{ ui.createFailed }}</p>
     <Button
       data-test="join-game"
       class="start-button"

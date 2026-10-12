@@ -8,7 +8,8 @@ import EndGameOverlay from '../../components/EndGameOverlay.vue';
 import OpponentSeat from '../../components/bullshit/OpponentSeat.vue';
 import { useBullshitStore } from '../../state/Bullshit.store';
 import type { BullshitState } from '../../model/bullshit/BullshitState';
-import type { LobbyView } from '../../model/bullshit/LobbyView';
+import type { LobbyView } from '../../model/lobby/LobbyView';
+import webSocketService from '../../service/WebSocketService';
 import { setConnectionOnline } from '../../composables/useConnectionStatus';
 
 function playingState(overrides: Partial<BullshitState> = {}): BullshitState {
@@ -184,7 +185,37 @@ describe('BullshitGameScreen', () => {
     expect(wrapper.find('[data-test="lobby"]').exists()).toBe(true);
     const items = wrapper.findAll('[data-test="lobby"] .players li');
     expect(items).toHaveLength(2);
-    expect(items[0].text()).toContain('Alice');
+    // My own row holds my name in an editable field.
+    expect((items[0].get('input').element as HTMLInputElement).value).toBe('Alice');
+    expect(items[1].text()).toContain('Bob');
+  });
+
+  it('hands the starting state to the lobby so Start shows its spinner', async () => {
+    const store = useBullshitStore();
+    store.applyEvent({ type: 'seat-change', seat: 0 });
+    store.applyEvent({ type: 'state-update', state: lobbyView({ canStart: true }) });
+    vi.spyOn(webSocketService, 'publish').mockImplementation(() => {});
+    const wrapper = mount(BullshitGameScreen, { props: { gameId: 'g1' }, global: { plugins: [router, PrimeVue] } });
+
+    await wrapper.get('[data-test="start"]').trigger('click');
+
+    expect((wrapper.get('[data-test="start"]').element as HTMLButtonElement).disabled).toBe(true);
+    expect(wrapper.get('[data-test="start"]').attributes('aria-busy')).toBe('true');
+  });
+
+  it('leaving the lobby replaces the room entry in the history with the Game selection', async () => {
+    const store = useBullshitStore();
+    store.applyEvent({ type: 'seat-change', seat: 1 });
+    store.applyEvent({ type: 'state-update', state: lobbyView({ mySeat: 1 }) });
+    vi.spyOn(store, 'leave').mockReturnValue(true);
+    const replace = vi.spyOn(router, 'replace');
+    const push = vi.spyOn(router, 'push');
+    const wrapper = mount(BullshitGameScreen, { props: { gameId: 'g1' }, global: { plugins: [router, PrimeVue] } });
+
+    await wrapper.get('[data-test="leave-lobby"]').trigger('click');
+
+    expect(replace).toHaveBeenCalledWith({ name: 'games' });
+    expect(push).not.toHaveBeenCalled();
   });
 
   it('shows the player count and how many more players are needed when the host cannot start yet', () => {

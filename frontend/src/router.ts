@@ -5,7 +5,6 @@ import GameJoinView from './view/GameJoinView.vue';
 import GameScreen from './view/alpha/GameScreen.vue';
 import StartGame from './view/alpha/StartGame.vue';
 import BullshitGameScreen from './view/bullshit/BullshitGameScreen.vue';
-import BullshitStartGame from './view/bullshit/BullshitStartGame.vue';
 import { findGame } from './model/games';
 
 const BASE = '/games/bataillecorse';
@@ -20,12 +19,12 @@ export const routes = [
   { path: '/games', name: 'games', component: GamePickerView },
   { path: '/games/:game', name: 'game-home', component: GameHomeView, beforeEnter: knownGame },
   { path: '/games/:game/join/:id?', name: 'game-join', component: GameJoinView, beforeEnter: knownGame },
-  // The create pages of the two games live under /new until the shared lobby creates games
-  // straight away; the former /create paths lead to the Game home.
+  // Bataille Corse still has its create page under /new until it adopts the shared lobby; Bullshit creates its
+  // lobby straight from the Game home. The former /create and /new paths lead to the Game home.
   { path: `${BASE}/new`, name: 'create', component: StartGame },
   { path: `${BASE}/create`, redirect: BASE },
   { path: `${BASE}/room/:id`, name: 'room', component: GameScreen },
-  { path: '/games/bullshit/new', name: 'bullshit-create', component: BullshitStartGame },
+  { path: '/games/bullshit/new', redirect: '/games/bullshit' },
   { path: '/games/bullshit/create', redirect: '/games/bullshit' },
   { path: '/games/bullshit/room/:id', name: 'bullshit-room', component: BullshitGameScreen, props: (route: { params: Record<string, unknown> }) => ({ gameId: route.params.id }) },
   { path: '/:pathMatch(.*)*', redirect: { name: 'games' } },

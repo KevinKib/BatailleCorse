@@ -1,5 +1,5 @@
 import type Card from '../Card';
-import type { LobbyView } from './LobbyView';
+import type { LobbyView } from '../lobby/LobbyView';
 
 export interface BullshitPlayer {
   id: string;
@@ -35,6 +35,8 @@ export interface BullshitState {
   table: TableView;
   pendingWinner: PendingWinnerView;
   outcome: OutcomeView;
+  /** The viewer own seat, reported by the server. */
+  mySeat?: number;
 }
 
 export type BullshitView = LobbyView | BullshitState;

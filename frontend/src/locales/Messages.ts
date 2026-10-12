@@ -86,40 +86,6 @@ export interface BullshitUiMessages {
   back: string;
   sound: { mute: string; unmute: string }; // accessible names of the sound toggle (the action it performs)
   connecting: string;                  // shown while the first server state is on its way
-  start: {
-    title: string;
-    yourName: string;
-    claimModeLegend: string;
-    claimModes: { rank: string; suit: string };
-    rankRanges: { '32': string; '52': string };
-    deckSizeLegend: string;
-    deckSizes: { '32': string; '52': string };
-    createGame: string;
-    namePlaceholder: string;
-    errors: {
-      createFailed: string;
-    };
-  };
-  lobby: {
-    title: string;
-    playerCount: string;               // '{joined}', '{max}'
-    playersLabel: string;
-    youBadge: string;
-    botBadge: string;
-    botName: string;                   // '{n}' = 1-based bot number
-    addBot: string;
-    removeBot: string;                 // '{name}': accessible name of the remove button
-    botActionFailed: string;
-    hostBadge: string;
-    claimModeLabel: string;
-    deckSizeLabel: string;
-    inviteLabel: string;
-    copy: string;
-    copied: string;
-    startGame: string;
-    waitingForPlayers: PluralForms;    // '{n}' = players still needed
-    waitingForHost: string;
-  };
   table: {
     claim: string;
     myCards: PluralForms;               // '{n}' = cards in my hand (accessible name of my counter)
@@ -174,6 +140,9 @@ export interface GameHomeMessages {
   namePlaceholder: string;
   back: string;            // towards the Game selection
   gameGone: string;        // notice after a room link that could not be restored
+  seatLost: string;        // notice when the stored seat no longer resolves (the game is still there)
+  creating: string;        // New game while the lobby is being created
+  createFailed: string;    // the lobby could not be created; the player stays on the Game home
 }
 
 // Join form (`/games/<game>/join/<id?>`).
@@ -186,7 +155,48 @@ export interface JoinGameMessages {
   submit: string;
   joining: string;
   failed: string;          // a refused join stays on the form with this line
+  notFound: string;        // the invite link points to a game that no longer exists (404)
   back: string;            // towards the Game home
+}
+
+// Shared lobby (`GameLobby`), the same for every game.
+export interface LobbyMessages {
+  title: string;
+  leave: string;
+  playerCount: string;               // '{joined}', '{max}'
+  playersLabel: string;
+  youBadge: string;
+  botBadge: string;
+  hostBadge: string;
+  playerLabel: string;               // '{n}' = 1-based seat number, for a player without a name
+  botName: string;                   // '{n}' = 1-based bot number
+  seatOptionLabel: string;           // '{option}', '{name}': accessible name of a computer seat's option selector
+  addBot: string;
+  removeBot: string;                 // '{name}': accessible name of the remove button
+  actionFailed: string;              // a lobby command was refused or could not be sent
+  renameLabel: string;               // accessible name of the field holding my own name
+  waitingForPlayer: string;          // free seat, shown to guests
+  inviteLabel: string;
+  copy: string;
+  copied: string;
+  startGame: string;
+  starting: string;                  // announced while the Start is on its way
+  waitingForPlayers: PluralForms;    // '{n}' = players still needed
+  waitingForHost: string;
+  nowHost: string;                   // announced when the host seat passes to me
+}
+
+// Texts of the game options a lobby renders from the backend descriptors. A descriptor's `labelKey`
+// ("options.bullshit.claimMode") names a group: `label` is its title, every other entry the text of a
+// value. `vars` feeds the placeholders of a value text from another option (the rank mode quotes the
+// range of the deck in play): var name, then the option it depends on, then that option's value.
+export type OptionTexts = Record<string, string>;
+export interface OptionsMessages {
+  bullshit: {
+    claimMode: OptionTexts;
+    deckSize: OptionTexts;
+    vars: Record<string, Record<string, Record<string, string>>>;
+  };
 }
 
 // Whole-app message tree. Each game owns a rules namespace; future namespaces
@@ -199,4 +209,6 @@ export interface Messages {
   gamePicker: GamePickerMessages; // Game choice page
   home: GameHomeMessages;   // Game home
   join: JoinGameMessages;   // Join form
+  lobby: LobbyMessages;     // Shared lobby
+  options: OptionsMessages; // Game options shown in the lobby
 }

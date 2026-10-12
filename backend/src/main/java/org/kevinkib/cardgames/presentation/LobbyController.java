@@ -13,6 +13,8 @@ import org.kevinkib.cardgames.presentation.dto.event.EmptyEventData;
 import org.kevinkib.cardgames.presentation.dto.event.LifecycleEventType;
 import org.kevinkib.cardgames.sessionmanagement.core.application.AddressedLobbyView;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
+import org.kevinkib.cardgames.sessionmanagement.presence.application.PresenceService;
+import org.kevinkib.cardgames.sessionmanagement.presence.port.ForfeitReason;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Controller;
@@ -30,10 +32,12 @@ public class LobbyController {
 
     private final SessionService sessionService;
     private final GameMessagingService messaging;
+    private final PresenceService presenceService;
 
-    public LobbyController(SessionService sessionService, GameMessagingService messaging) {
+    public LobbyController(SessionService sessionService, GameMessagingService messaging, PresenceService presenceService) {
         this.sessionService = sessionService;
         this.messaging = messaging;
+        this.presenceService = presenceService;
     }
 
     @MessageMapping("/lobby/setOptions")
@@ -57,9 +61,15 @@ public class LobbyController {
     /**
      * The sender leaves the lobby; the remaining humans receive their new view. Nothing goes to the leaver (their
      * token no longer resolves) and nothing at all when the lobby disappears because no human is left.
+     * When the game has started in the meantime the leaver has already torn its client down and nobody could
+     * tell it so: the seat resigns through the presence path (the others see the forfeit) instead of staying
+     * seated for the table to wait on.
      */
     @MessageMapping("/lobby/leave")
     public void leave(@Payload GameActionPayload payload) {
+        if (resignIfStarted(payload)) {
+            return;
+        }
         handle(payload.gameId(), payload.token(), "A player left.",
                 gameId -> sessionService.leaveLobby(gameId, payload.token()).views());
     }
@@ -103,6 +113,21 @@ public class LobbyController {
             System.err.println(e.getMessage());
             messaging.sendToToken(gameId, token,
                     new ErrorResponse(LifecycleEventType.JOIN.toString(), e.getMessage(), null));
+        }
+    }
+
+    private boolean resignIfStarted(GameActionPayload payload) {
+        try {
+            GameId gameId = new GameId(payload.gameId());
+            if (sessionService.findGame(gameId).isEmpty()) {
+                return false;
+            }
+            sessionService.findPlayerIdByToken(gameId, payload.token())
+                    .ifPresent(seat -> presenceService.forfeit(gameId, seat, ForfeitReason.RESIGNED));
+            return true;
+        } catch (IllegalArgumentException e) {
+            // unknown lobby: let the regular path ignore it
+            return false;
         }
     }
 }
