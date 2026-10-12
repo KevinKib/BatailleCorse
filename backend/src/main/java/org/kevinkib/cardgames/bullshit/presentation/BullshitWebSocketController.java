@@ -6,11 +6,9 @@ import org.kevinkib.cardgames.bullshit.presentation.api.BullshitDiscardPayload;
 import org.kevinkib.cardgames.bullshit.presentation.dto.event.BullshitEventType;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
-import org.kevinkib.cardgames.presentation.GameMessagingService;
-import org.kevinkib.cardgames.presentation.api.ErrorResponse;
 import org.kevinkib.cardgames.presentation.api.GameActionPayload;
+import org.kevinkib.cardgames.presentation.command.SeatCommands;
 import org.kevinkib.cardgames.presentation.dto.event.EmptyEventData;
-import org.kevinkib.cardgames.sessionmanagement.core.application.InvalidTokenException;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
 import org.kevinkib.cards.domain.Card;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -24,81 +22,44 @@ public class BullshitWebSocketController {
 
     private final SessionService sessionService;
     private final BullshitStateBroadcaster broadcaster;
-    private final GameMessagingService messaging;
+    private final SeatCommands seatCommands;
     private final BullshitGameActions actions;
 
     public BullshitWebSocketController(SessionService sessionService,
                                        BullshitStateBroadcaster broadcaster,
-                                       GameMessagingService messaging,
+                                       SeatCommands seatCommands,
                                        BullshitGameActions actions) {
         this.sessionService = sessionService;
         this.broadcaster = broadcaster;
-        this.messaging = messaging;
+        this.seatCommands = seatCommands;
         this.actions = actions;
     }
 
     @MessageMapping("/bullshit/start")
     public void start(@Payload GameActionPayload payload) {
-        GameId gameId = new GameId(payload.gameId());
-        PlayerId actor = sessionService.findPlayerIdByToken(gameId, payload.token()).orElse(null);
-        if (actor == null) {
-            return;
-        }
-        try {
+        seatCommands.handle(payload.gameId(), payload.token(), BullshitEventType.START.toString(), (gameId, seat) -> {
             Bullshit game = (Bullshit) sessionService.startGame(gameId, payload.token());
             sessionService.touch(gameId);
             broadcaster.broadcast(game, BullshitEventType.START.toString(), new EmptyEventData(), "Game started.");
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
-            messaging.sendToSeat(gameId, actor, new ErrorResponse(
-                    BullshitEventType.START.toString(), e.getMessage(), null));
-        }
+        }, this::stateFor);
     }
 
     @MessageMapping("/discard")
     public void discard(@Payload BullshitDiscardPayload payload) {
-        GameId gameId = new GameId(payload.gameId());
-        Bullshit game = sessionService.getGame(gameId, Bullshit.class);
-
-        PlayerId playerId;
-        try {
-            playerId = sessionService.findPlayerIdByToken(gameId, payload.token())
-                    .orElseThrow(InvalidTokenException::new);
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
-            return;
-        }
-
-        try {
+        seatCommands.handle(payload.gameId(), payload.token(), BullshitEventType.DISCARD.toString(), (gameId, seat) -> {
             List<Card> cards = payload.cards().stream().map(CardLabels::card).toList();
-            actions.discard(gameId, playerId, cards);
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
-            messaging.sendToSeat(gameId, playerId, new ErrorResponse(
-                    BullshitEventType.DISCARD.toString(), e.getMessage(), broadcaster.stateFor(game, playerId)));
-        }
+            actions.discard(gameId, seat, cards);
+        }, this::stateFor);
     }
 
     @MessageMapping("/callBullshit")
     public void callBullshit(@Payload GameActionPayload payload) {
-        GameId gameId = new GameId(payload.gameId());
-        Bullshit game = sessionService.getGame(gameId, Bullshit.class);
+        seatCommands.handle(payload.gameId(), payload.token(), BullshitEventType.CALL_BULLSHIT.toString(),
+                (gameId, seat) -> actions.callBullshit(gameId, seat), this::stateFor);
+    }
 
-        PlayerId callerId;
-        try {
-            callerId = sessionService.findPlayerIdByToken(gameId, payload.token())
-                    .orElseThrow(InvalidTokenException::new);
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
-            return;
-        }
-
-        try {
-            actions.callBullshit(gameId, callerId);
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
-            messaging.sendToSeat(gameId, callerId, new ErrorResponse(
-                    BullshitEventType.CALL_BULLSHIT.toString(), e.getMessage(), broadcaster.stateFor(game, callerId)));
-        }
+    /** The sender's state; throws while no game runs yet, in which case the error carries none. */
+    private Object stateFor(GameId gameId, PlayerId seat) {
+        return broadcaster.stateFor(sessionService.getGame(gameId, Bullshit.class), seat);
     }
 }

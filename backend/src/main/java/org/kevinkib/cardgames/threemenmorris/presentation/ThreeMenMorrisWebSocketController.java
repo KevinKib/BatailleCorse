@@ -2,9 +2,8 @@ package org.kevinkib.cardgames.threemenmorris.presentation;
 
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
-import org.kevinkib.cardgames.presentation.GameMessagingService;
-import org.kevinkib.cardgames.presentation.api.ErrorResponse;
 import org.kevinkib.cardgames.presentation.api.GameActionPayload;
+import org.kevinkib.cardgames.presentation.command.SeatCommands;
 import org.kevinkib.cardgames.presentation.dto.event.EmptyEventData;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
 import org.kevinkib.cardgames.threemenmorris.domain.ThreeMenMorris;
@@ -24,23 +23,18 @@ import org.springframework.stereotype.Controller;
 @Controller
 public class ThreeMenMorrisWebSocketController {
 
-    @FunctionalInterface
-    private interface Action {
-        void run(GameId gameId, PlayerId seat) throws Exception;
-    }
-
     private final SessionService sessionService;
     private final ThreeMenMorrisStateBroadcaster broadcaster;
-    private final GameMessagingService messaging;
+    private final SeatCommands seatCommands;
     private final ThreeMenMorrisGameActions actions;
 
     public ThreeMenMorrisWebSocketController(SessionService sessionService,
                                              ThreeMenMorrisStateBroadcaster broadcaster,
-                                             GameMessagingService messaging,
+                                             SeatCommands seatCommands,
                                              ThreeMenMorrisGameActions actions) {
         this.sessionService = sessionService;
         this.broadcaster = broadcaster;
-        this.messaging = messaging;
+        this.seatCommands = seatCommands;
         this.actions = actions;
     }
 
@@ -76,30 +70,8 @@ public class ThreeMenMorrisWebSocketController {
         return value;
     }
 
-    private void handle(String rawGameId, String token, ThreeMenMorrisEventType type, Action action) {
-        GameId gameId;
-        PlayerId seat;
-        try {
-            gameId = new GameId(rawGameId);
-            seat = sessionService.findPlayerIdByToken(gameId, token).orElse(null);
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
-            return;
-        }
-        if (seat == null) {
-            return;
-        }
-        try {
-            action.run(gameId, seat);
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
-            Object state = null;
-            try {
-                state = broadcaster.stateFor(sessionService.getGame(gameId, ThreeMenMorris.class), seat);
-            } catch (Exception ignored) {
-                // no running game yet: the error carries no state
-            }
-            messaging.sendToSeat(gameId, seat, new ErrorResponse(type.toString(), e.getMessage(), state));
-        }
+    private void handle(String rawGameId, String token, ThreeMenMorrisEventType type, SeatCommands.SeatAction action) {
+        seatCommands.handle(rawGameId, token, type.toString(), action,
+                (gameId, seat) -> broadcaster.stateFor(sessionService.getGame(gameId, ThreeMenMorris.class), seat));
     }
 }

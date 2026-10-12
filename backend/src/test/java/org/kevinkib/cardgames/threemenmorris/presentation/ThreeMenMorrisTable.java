@@ -1,5 +1,6 @@
 package org.kevinkib.cardgames.threemenmorris.presentation;
 
+import org.kevinkib.cardgames.presentation.command.SeatCommands;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.presentation.LobbyBroadcaster;
 import org.kevinkib.cardgames.presentation.support.RecordingMessaging;
@@ -22,7 +23,7 @@ final class ThreeMenMorrisTable {
     final ThreeMenMorrisGameActions actions = new ThreeMenMorrisGameActions(sessions, broadcaster);
     final LobbyBroadcaster lobbyBroadcaster = new LobbyBroadcaster(messaging);
     final ThreeMenMorrisWebSocketController ws =
-            new ThreeMenMorrisWebSocketController(sessions, broadcaster, messaging, actions);
+            new ThreeMenMorrisWebSocketController(sessions, broadcaster, new SeatCommands(sessions, messaging), actions);
     final ThreeMenMorrisRestController rest =
             new ThreeMenMorrisRestController(sessions, broadcaster, lobbyBroadcaster);
 

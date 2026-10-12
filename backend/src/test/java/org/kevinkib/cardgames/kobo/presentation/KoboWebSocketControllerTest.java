@@ -80,7 +80,8 @@ class KoboWebSocketControllerTest {
                         new org.kevinkib.cardgames.sessionmanagement.core.application.GameFactories(List.of(
                                 new org.kevinkib.cardgames.kobo.domain.KoboFactory(),
                                 new org.kevinkib.cardgames.bullshit.domain.BullshitFactory())));
-        KoboWebSocketController ws = new KoboWebSocketController(both, table.broadcaster, table.messaging,
+        KoboWebSocketController ws = new KoboWebSocketController(both, table.broadcaster,
+                new org.kevinkib.cardgames.presentation.command.SeatCommands(both, table.messaging),
                 new KoboGameActions(both, table.broadcaster));
         org.kevinkib.cardgames.sessionmanagement.core.application.RoomCreated room =
                 both.createRoom(org.kevinkib.cardgames.bullshit.domain.BullshitFactory.GAME_TYPE, "Alice");
@@ -279,5 +280,25 @@ class KoboWebSocketControllerTest {
                 .lastRound(), notNullValue());
         assertThat(table.messaging.payloads.get(table.messaging.payloads.size() - 1).getEventType(), is("ROUND_END"));
         assertThat(((KoboDto) table.messaging.payloads.get(0).getState()).lastRound(), nullValue());
+    }
+
+    @Test
+    void aRefusedStartOfALobby_carriesNoState() {
+        RoomCreated room = createRoom();
+
+        table.ws.start(new GameActionPayload(room.gameId(), room.hostToken()));
+
+        assertThat(table.messaging.seats, is(List.of(seat(0))));
+        assertThat(table.messaging.payloads.get(0).getState(), is(nullValue()));
+    }
+
+    @Test
+    void aMalformedOrUnknownGameId_isIgnoredWithoutAnyException() {
+        for (String rawId : new String[]{"not-a-uuid", "", java.util.UUID.randomUUID().toString()}) {
+            table.ws.draw(new GameActionPayload(rawId, "token"));
+            table.ws.start(new GameActionPayload(rawId, "token"));
+        }
+
+        assertThat(table.messaging.payloads.isEmpty(), is(true));
     }
 }

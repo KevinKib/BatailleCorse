@@ -12,9 +12,8 @@ import org.kevinkib.cardgames.kobo.presentation.api.KoboSlotPayload;
 import org.kevinkib.cardgames.kobo.presentation.api.KoboSwapPayload;
 import org.kevinkib.cardgames.kobo.presentation.api.KoboTargetPayload;
 import org.kevinkib.cardgames.kobo.presentation.dto.event.KoboEventType;
-import org.kevinkib.cardgames.presentation.GameMessagingService;
-import org.kevinkib.cardgames.presentation.api.ErrorResponse;
 import org.kevinkib.cardgames.presentation.api.GameActionPayload;
+import org.kevinkib.cardgames.presentation.command.SeatCommands;
 import org.kevinkib.cardgames.presentation.dto.event.EmptyEventData;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -29,23 +28,18 @@ import org.springframework.stereotype.Controller;
 @Controller
 public class KoboWebSocketController {
 
-    @FunctionalInterface
-    private interface Action {
-        void run(GameId gameId, PlayerId seat) throws Exception;
-    }
-
     private final SessionService sessionService;
     private final KoboStateBroadcaster broadcaster;
-    private final GameMessagingService messaging;
+    private final SeatCommands seatCommands;
     private final KoboGameActions actions;
 
     public KoboWebSocketController(SessionService sessionService,
                                    KoboStateBroadcaster broadcaster,
-                                   GameMessagingService messaging,
+                                   SeatCommands seatCommands,
                                    KoboGameActions actions) {
         this.sessionService = sessionService;
         this.broadcaster = broadcaster;
-        this.messaging = messaging;
+        this.seatCommands = seatCommands;
         this.actions = actions;
     }
 
@@ -136,30 +130,8 @@ public class KoboWebSocketController {
         return new SlotRef(new PlayerId(required(seat, "seat")), required(slot, "slot"));
     }
 
-    private void handle(String rawGameId, String token, KoboEventType type, Action action) {
-        GameId gameId;
-        PlayerId seat;
-        try {
-            gameId = new GameId(rawGameId);
-            seat = sessionService.findPlayerIdByToken(gameId, token).orElse(null);
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
-            return;
-        }
-        if (seat == null) {
-            return;
-        }
-        try {
-            action.run(gameId, seat);
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
-            Object state = null;
-            try {
-                state = broadcaster.stateFor(sessionService.getGame(gameId, Kobo.class), seat);
-            } catch (Exception ignored) {
-                // no running game yet: the error carries no state
-            }
-            messaging.sendToSeat(gameId, seat, new ErrorResponse(type.toString(), e.getMessage(), state));
-        }
+    private void handle(String rawGameId, String token, KoboEventType type, SeatCommands.SeatAction action) {
+        seatCommands.handle(rawGameId, token, type.toString(), action,
+                (gameId, seat) -> broadcaster.stateFor(sessionService.getGame(gameId, Kobo.class), seat));
     }
 }
