@@ -1,9 +1,12 @@
 package org.kevinkib.cardgames.config;
 
+import org.kevinkib.cardgames.presentation.state.SeatStateBroadcaster;
+import org.kevinkib.cardgames.kobo.presentation.dto.KoboDto;
+import org.kevinkib.cardgames.kobo.domain.Kobo;
 import org.kevinkib.cardgames.kobo.domain.KoboFactory;
 import org.kevinkib.cardgames.kobo.presentation.KoboGameActions;
-import org.kevinkib.cardgames.kobo.presentation.KoboLifecycleBroadcaster;
-import org.kevinkib.cardgames.kobo.presentation.KoboStateBroadcaster;
+import org.kevinkib.cardgames.presentation.bot.BotSeats;
+import org.kevinkib.cardgames.presentation.state.SeatLifecycleBroadcaster;
 import org.kevinkib.cardgames.presentation.GameMessagingService;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
 import org.kevinkib.cardgames.sessionmanagement.presence.port.GameLifecycleBroadcaster;
@@ -20,19 +23,20 @@ public class KoboConfig {
     }
 
     @Bean
-    public KoboStateBroadcaster koboStateBroadcaster(GameMessagingService gameMessagingService,
+    public SeatStateBroadcaster<Kobo, KoboDto> koboStateBroadcaster(GameMessagingService gameMessagingService,
                                                      SessionService sessionService) {
-        return new KoboStateBroadcaster(gameMessagingService, sessionService::seatNames);
+        return new SeatStateBroadcaster<>(gameMessagingService, BotSeats.none(), sessionService::seatNames,
+                (game, viewer, names, bots) -> KoboDto.forViewer(game, viewer, names));
     }
 
     @Bean
     public KoboGameActions koboGameActions(SessionService sessionService,
-                                           KoboStateBroadcaster koboStateBroadcaster) {
+                                           SeatStateBroadcaster<Kobo, KoboDto> koboStateBroadcaster) {
         return new KoboGameActions(sessionService, koboStateBroadcaster);
     }
 
     @Bean
-    public GameLifecycleBroadcaster koboLifecycleBroadcaster(KoboStateBroadcaster koboStateBroadcaster) {
-        return new KoboLifecycleBroadcaster(koboStateBroadcaster);
+    public GameLifecycleBroadcaster koboLifecycleBroadcaster(SeatStateBroadcaster<Kobo, KoboDto> koboStateBroadcaster) {
+        return new SeatLifecycleBroadcaster<>(Kobo.class, koboStateBroadcaster);
     }
 }

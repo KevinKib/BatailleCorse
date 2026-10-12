@@ -64,7 +64,7 @@ graph TB
     subgraph Pres["🌐 bullshit.presentation"]
         CTRL["BullshitWebSocketController<br/>(discard, call, addBot, removeBot)"]
         ACT["BullshitGameActions<br/>(shared use cases)"]
-        BCAST["BullshitStateBroadcaster<br/>(skips bot seats, notifies listeners)"]
+        BCAST["SeatStateBroadcaster<Bullshit, BullshitDto><br/>(skips bot seats, notifies listeners)"]
         COORD["bot.BullshitBotCoordinator<br/>(thinks after a delay, drops stale tasks)"]
         SCHED["bot.BotScheduler / ThinkingDelay /<br/>BotSeats (ports)"]
         CTRL & COORD --> ACT --> BCAST
@@ -109,8 +109,8 @@ graph TB
         KWS["KoboWebSocketController (/kobo/...)"]
         KREST["KoboRestController (/api/kobo)"]
         KACT["KoboGameActions<br/>(call + touch + broadcast under the game monitor)"]
-        KBC["KoboStateBroadcaster<br/>(one KoboDto per seat)"]
-        KLC["KoboLifecycleBroadcaster"]
+        KBC["SeatStateBroadcaster<Kobo, KoboDto><br/>(one KoboDto per seat)"]
+        KLC["SeatLifecycleBroadcaster<Kobo>"]
         KWS --> KACT --> KBC
         KREST --> KBC
         KLC --> KBC

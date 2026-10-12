@@ -1,5 +1,9 @@
 package org.kevinkib.cardgames.bullshit;
 
+import org.kevinkib.cardgames.presentation.state.SeatLifecycleBroadcaster;
+import org.kevinkib.cardgames.bullshit.presentation.BullshitBroadcasters;
+import org.kevinkib.cardgames.presentation.state.SeatStateBroadcaster;
+import org.kevinkib.cardgames.bullshit.presentation.dto.BullshitDto;
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.bullshit.domain.Bullshit;
 import org.kevinkib.cardgames.bullshit.domain.BullshitFactory;
@@ -8,7 +12,6 @@ import org.kevinkib.cardgames.bullshit.domain.bot.ProbabilisticBotStrategy;
 import org.kevinkib.cardgames.bullshit.domain.claim.ClaimModeOption;
 import org.kevinkib.cardgames.bullshit.domain.player.Player;
 import org.kevinkib.cardgames.bullshit.presentation.BullshitGameActions;
-import org.kevinkib.cardgames.bullshit.presentation.BullshitStateBroadcaster;
 import org.kevinkib.cardgames.bullshit.presentation.bot.BullshitBotCoordinator;
 import org.kevinkib.cardgames.presentation.bot.FixedThinkingDelay;
 import org.kevinkib.cardgames.presentation.bot.ManualBotScheduler;
@@ -67,7 +70,7 @@ class BotGameIntegrationTest {
                 }
             };
             humanMessages = messaging.payloads;
-            BullshitStateBroadcaster broadcaster = new BullshitStateBroadcaster(messaging, sessions::botSeats);
+            SeatStateBroadcaster<Bullshit, BullshitDto> broadcaster = BullshitBroadcasters.state(messaging, sessions::botSeats);
             actions = new BullshitGameActions(sessions, broadcaster);
             Random random = new Random(seed);
             coordinator = new BullshitBotCoordinator(sessions::botSeats, actions, scheduler,

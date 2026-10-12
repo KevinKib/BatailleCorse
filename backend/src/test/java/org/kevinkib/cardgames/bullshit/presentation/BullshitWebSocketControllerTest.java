@@ -1,5 +1,7 @@
 package org.kevinkib.cardgames.bullshit.presentation;
 
+import org.kevinkib.cardgames.presentation.state.SeatLifecycleBroadcaster;
+import org.kevinkib.cardgames.presentation.state.SeatStateBroadcaster;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.bullshit.domain.Bullshit;
@@ -49,7 +51,7 @@ class BullshitWebSocketControllerTest {
                 new InMemorySessionRepository(Clock.systemUTC()),
                 new GameFactories(List.of(new BullshitFactory(), new org.kevinkib.cardgames.kobo.domain.KoboFactory())));
         messaging = new RecordingMessaging();
-        BullshitStateBroadcaster broadcaster = new BullshitStateBroadcaster(messaging, sessionService::botSeats);
+        SeatStateBroadcaster<Bullshit, BullshitDto> broadcaster = BullshitBroadcasters.state(messaging, sessionService::botSeats);
         BullshitGameActions actions = new BullshitGameActions(sessionService, broadcaster);
         botScheduler = new ManualBotScheduler();
         broadcaster.addListener(new BullshitBotCoordinator(

@@ -1,5 +1,7 @@
 package org.kevinkib.cardgames.threemenmorris.presentation;
 
+import org.kevinkib.cardgames.threemenmorris.presentation.dto.ThreeMenMorrisDto;
+import org.kevinkib.cardgames.presentation.state.SeatStateBroadcaster;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
@@ -22,9 +24,9 @@ public class ThreeMenMorrisGameActions {
     }
 
     private final SessionService sessionService;
-    private final ThreeMenMorrisStateBroadcaster broadcaster;
+    private final SeatStateBroadcaster<ThreeMenMorris, ThreeMenMorrisDto> broadcaster;
 
-    public ThreeMenMorrisGameActions(SessionService sessionService, ThreeMenMorrisStateBroadcaster broadcaster) {
+    public ThreeMenMorrisGameActions(SessionService sessionService, SeatStateBroadcaster<ThreeMenMorris, ThreeMenMorrisDto> broadcaster) {
         this.sessionService = sessionService;
         this.broadcaster = broadcaster;
     }

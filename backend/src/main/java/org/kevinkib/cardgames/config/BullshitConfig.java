@@ -1,11 +1,13 @@
 package org.kevinkib.cardgames.config;
 
+import org.kevinkib.cardgames.presentation.state.SeatStateBroadcaster;
+import org.kevinkib.cardgames.bullshit.presentation.dto.BullshitDto;
+import org.kevinkib.cardgames.bullshit.domain.Bullshit;
 import org.kevinkib.cardgames.bullshit.domain.BullshitFactory;
 import org.kevinkib.cardgames.bullshit.domain.bot.BotTuning;
 import org.kevinkib.cardgames.bullshit.domain.bot.ProbabilisticBotStrategy;
 import org.kevinkib.cardgames.bullshit.presentation.BullshitGameActions;
-import org.kevinkib.cardgames.bullshit.presentation.BullshitLifecycleBroadcaster;
-import org.kevinkib.cardgames.bullshit.presentation.BullshitStateBroadcaster;
+import org.kevinkib.cardgames.presentation.state.SeatLifecycleBroadcaster;
 import org.kevinkib.cardgames.bullshit.presentation.bot.BullshitBotCoordinator;
 import org.kevinkib.cardgames.bullshit.presentation.bot.CallDecisionDelay;
 import org.kevinkib.cardgames.presentation.GameMessagingService;
@@ -31,21 +33,21 @@ public class BullshitConfig {
     }
 
     @Bean
-    public BullshitStateBroadcaster bullshitStateBroadcaster(GameMessagingService gameMessagingService,
+    public SeatStateBroadcaster<Bullshit, BullshitDto> bullshitStateBroadcaster(GameMessagingService gameMessagingService,
                                                              SessionService sessionService) {
-        return new BullshitStateBroadcaster(gameMessagingService, sessionService::botSeats,
-                sessionService::seatNames);
+        return new SeatStateBroadcaster<>(gameMessagingService, sessionService::botSeats, sessionService::seatNames,
+                BullshitDto::forViewer);
     }
 
     @Bean
     public BullshitGameActions bullshitGameActions(SessionService sessionService,
-                                                   BullshitStateBroadcaster bullshitStateBroadcaster) {
+                                                   SeatStateBroadcaster<Bullshit, BullshitDto> bullshitStateBroadcaster) {
         return new BullshitGameActions(sessionService, bullshitStateBroadcaster);
     }
 
     @Bean
-    public GameLifecycleBroadcaster bullshitLifecycleBroadcaster(BullshitStateBroadcaster bullshitStateBroadcaster) {
-        return new BullshitLifecycleBroadcaster(bullshitStateBroadcaster);
+    public GameLifecycleBroadcaster bullshitLifecycleBroadcaster(SeatStateBroadcaster<Bullshit, BullshitDto> bullshitStateBroadcaster) {
+        return new SeatLifecycleBroadcaster<>(Bullshit.class, bullshitStateBroadcaster);
     }
 
     /**
@@ -71,7 +73,7 @@ public class BullshitConfig {
     @Bean
     public BullshitBotCoordinator bullshitBotCoordinator(SessionService sessionService,
                                                          BullshitGameActions actions,
-                                                         BullshitStateBroadcaster broadcaster,
+                                                         SeatStateBroadcaster<Bullshit, BullshitDto> broadcaster,
                                                          BotScheduler botScheduler,
                                                          ThinkingDelay botThinkingDelay,
                                                          CallDecisionDelay callDecisionDelay) {

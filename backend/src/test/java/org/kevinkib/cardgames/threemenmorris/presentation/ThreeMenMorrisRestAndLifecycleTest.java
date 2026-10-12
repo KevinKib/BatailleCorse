@@ -1,5 +1,6 @@
 package org.kevinkib.cardgames.threemenmorris.presentation;
 
+import org.kevinkib.cardgames.presentation.state.SeatLifecycleBroadcaster;
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.game.Game;
 import org.kevinkib.cardgames.game.GameId;
@@ -127,7 +128,8 @@ class ThreeMenMorrisRestAndLifecycleTest {
     @Test
     void lifecycleBroadcaster_supportsTheGameOnlyAndBroadcastsTheThreeEvents() {
         ThreeMenMorris game = table.newGame();
-        ThreeMenMorrisLifecycleBroadcaster lifecycle = new ThreeMenMorrisLifecycleBroadcaster(table.broadcaster);
+        SeatLifecycleBroadcaster<ThreeMenMorris> lifecycle =
+                new SeatLifecycleBroadcaster<>(ThreeMenMorris.class, table.broadcaster);
         assertThat(lifecycle.supports(game), is(true));
         assertThat(lifecycle.supports(new Game() {
             public GameId getId() { return null; }

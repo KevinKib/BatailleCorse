@@ -1,5 +1,9 @@
 package org.kevinkib.cardgames.bullshit.presentation.bot;
 
+import org.kevinkib.cardgames.presentation.state.SeatLifecycleBroadcaster;
+import org.kevinkib.cardgames.bullshit.presentation.BullshitBroadcasters;
+import org.kevinkib.cardgames.presentation.state.SeatStateBroadcaster;
+import org.kevinkib.cardgames.bullshit.presentation.dto.BullshitDto;
 import org.kevinkib.cardgames.presentation.bot.FixedThinkingDelay;
 import org.kevinkib.cardgames.presentation.bot.ManualBotScheduler;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,7 +16,6 @@ import org.kevinkib.cardgames.bullshit.domain.bot.BotObservation;
 import org.kevinkib.cardgames.bullshit.domain.bot.BotStrategy;
 import org.kevinkib.cardgames.bullshit.domain.claim.RankTarget;
 import org.kevinkib.cardgames.bullshit.presentation.BullshitGameActions;
-import org.kevinkib.cardgames.bullshit.presentation.BullshitStateBroadcaster;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.presentation.dto.event.EmptyEventData;
@@ -54,7 +57,7 @@ class BullshitBotCoordinatorTest {
     private InMemorySessionRepository repository;
     private SessionService sessionService;
     private RecordingMessaging messaging;
-    private BullshitStateBroadcaster broadcaster;
+    private SeatStateBroadcaster<Bullshit, BullshitDto> broadcaster;
     private BullshitGameActions actions;
     private ManualBotScheduler scheduler;
     private Function<BotObservation, BotDecision> script;
@@ -67,7 +70,7 @@ class BullshitBotCoordinatorTest {
         repository = new InMemorySessionRepository(Clock.systemUTC());
         sessionService = new SessionService(repository, new GameFactories(List.of(new BullshitFactory())));
         messaging = new RecordingMessaging();
-        broadcaster = new BullshitStateBroadcaster(messaging, sessionService::botSeats);
+        broadcaster = BullshitBroadcasters.state(messaging, sessionService::botSeats);
         actions = new BullshitGameActions(sessionService, broadcaster);
         scheduler = new ManualBotScheduler();
         script = observation -> new BotDecision.Pass();

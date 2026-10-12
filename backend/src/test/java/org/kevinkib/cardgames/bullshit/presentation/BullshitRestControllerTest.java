@@ -1,5 +1,6 @@
 package org.kevinkib.cardgames.bullshit.presentation;
 
+import org.kevinkib.cardgames.presentation.state.SeatLifecycleBroadcaster;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.bullshit.domain.Bullshit;
@@ -47,7 +48,7 @@ class BullshitRestControllerTest {
         messaging.resolvingTokensWith(sessionService);
         controller = new BullshitRestController(
                 sessionService,
-                new BullshitStateBroadcaster(messaging, sessionService::botSeats, sessionService::seatNames),
+                BullshitBroadcasters.state(messaging, sessionService::botSeats, sessionService::seatNames),
                 new LobbyBroadcaster(messaging));
     }
 

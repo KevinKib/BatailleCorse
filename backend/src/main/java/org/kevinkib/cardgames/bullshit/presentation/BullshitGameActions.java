@@ -1,5 +1,7 @@
 package org.kevinkib.cardgames.bullshit.presentation;
 
+import org.kevinkib.cardgames.presentation.state.SeatStateBroadcaster;
+import org.kevinkib.cardgames.bullshit.presentation.dto.BullshitDto;
 import org.kevinkib.cardgames.bullshit.domain.Bullshit;
 import org.kevinkib.cardgames.bullshit.domain.CallBullshitOutcome;
 import org.kevinkib.cardgames.bullshit.domain.CannotCallBullshitException;
@@ -28,9 +30,9 @@ import java.util.List;
 public class BullshitGameActions {
 
     private final SessionService sessionService;
-    private final BullshitStateBroadcaster broadcaster;
+    private final SeatStateBroadcaster<Bullshit, BullshitDto> broadcaster;
 
-    public BullshitGameActions(SessionService sessionService, BullshitStateBroadcaster broadcaster) {
+    public BullshitGameActions(SessionService sessionService, SeatStateBroadcaster<Bullshit, BullshitDto> broadcaster) {
         this.sessionService = sessionService;
         this.broadcaster = broadcaster;
     }

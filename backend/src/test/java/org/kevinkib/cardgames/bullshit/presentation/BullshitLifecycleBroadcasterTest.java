@@ -1,5 +1,6 @@
 package org.kevinkib.cardgames.bullshit.presentation;
 
+import org.kevinkib.cardgames.presentation.state.SeatLifecycleBroadcaster;
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.bullshit.domain.Bullshit;
 import org.kevinkib.cardgames.game.PlayerId;
@@ -25,8 +26,8 @@ class BullshitLifecycleBroadcasterTest {
     @Test
     void givenBullshit_whenSupports_thenTrue() {
         Bullshit game = aBullshit().withPlayers(playerWithRanks(0, ACE), playerWithRanks(1, KING)).build();
-        BullshitLifecycleBroadcaster broadcaster =
-                new BullshitLifecycleBroadcaster(new BullshitStateBroadcaster(new RecordingMessaging()));
+        SeatLifecycleBroadcaster<Bullshit> broadcaster =
+                BullshitBroadcasters.lifecycle(BullshitBroadcasters.state(new RecordingMessaging()));
 
         assertThat(broadcaster.supports(game), is(true));
     }
@@ -38,8 +39,8 @@ class BullshitLifecycleBroadcasterTest {
                 .build();
         game.forfeit(new PlayerId(1));
         RecordingMessaging messaging = new RecordingMessaging();
-        BullshitLifecycleBroadcaster broadcaster =
-                new BullshitLifecycleBroadcaster(new BullshitStateBroadcaster(messaging));
+        SeatLifecycleBroadcaster<Bullshit> broadcaster =
+                BullshitBroadcasters.lifecycle(BullshitBroadcasters.state(messaging));
 
         broadcaster.forfeited(game, new PlayerId(1), ForfeitReason.DISCONNECTED);
 
@@ -54,8 +55,8 @@ class BullshitLifecycleBroadcasterTest {
                 .build();
         game.forfeit(new PlayerId(1));
         RecordingMessaging messaging = new RecordingMessaging();
-        BullshitLifecycleBroadcaster broadcaster =
-                new BullshitLifecycleBroadcaster(new BullshitStateBroadcaster(messaging));
+        SeatLifecycleBroadcaster<Bullshit> broadcaster =
+                BullshitBroadcasters.lifecycle(BullshitBroadcasters.state(messaging));
 
         broadcaster.forfeited(game, new PlayerId(1), ForfeitReason.RESIGNED);
 

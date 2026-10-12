@@ -1,5 +1,6 @@
 package org.kevinkib.cardgames.bullshit.presentation.bot;
 
+import org.kevinkib.cardgames.presentation.state.GameStateListener;
 import org.kevinkib.cardgames.presentation.dto.CardLabels;
 import org.kevinkib.cardgames.presentation.bot.ThinkingDelay;
 import org.kevinkib.cardgames.presentation.bot.BotSeats;
@@ -11,7 +12,6 @@ import org.kevinkib.cardgames.bullshit.domain.bot.BotMemory;
 import org.kevinkib.cardgames.bullshit.domain.bot.BotObservation;
 import org.kevinkib.cardgames.bullshit.domain.bot.BotStrategy;
 import org.kevinkib.cardgames.bullshit.presentation.BullshitGameActions;
-import org.kevinkib.cardgames.bullshit.presentation.BullshitStateListener;
 import org.kevinkib.cardgames.bullshit.presentation.dto.event.BullshitEventType;
 import org.kevinkib.cardgames.bullshit.presentation.dto.event.CallBullshitEventData;
 import org.kevinkib.cardgames.bullshit.presentation.dto.event.DiscardEventData;
@@ -50,7 +50,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * the idle eviction. A bot that fails (strategy or rules exception) falls back to discarding its
  * lowest card so the table does not stall.
  */
-public class BullshitBotCoordinator implements BullshitStateListener, GameEvictionListener {
+public class BullshitBotCoordinator implements GameStateListener<Bullshit>, GameEvictionListener {
 
     private static final Logger log = LoggerFactory.getLogger(BullshitBotCoordinator.class);
 
