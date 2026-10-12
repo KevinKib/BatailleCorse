@@ -5,6 +5,8 @@ function startTwoPlayerGame() {
   cy.get('[data-test="name"]').type('Alice');
   cy.get('[data-test="new-game"]').click();
   cy.url({ timeout: 10000 }).should('match', /\/games\/bullshit\/room\/.+/);
+  // The Game home fades out while the room fades in: continue once the room is alone.
+  cy.get('[data-test="start-panel"]').should('not.exist');
   cy.url().then((url) => cy.request('POST', `/api/bullshit/game/${url.split('/room/')[1]}/join`, { name: 'Bob' }));
   cy.get('[data-test="start"]', { timeout: 10000 }).should('not.be.disabled').click();
   cy.get('[data-test="hand-card-0"]', { timeout: 10000 }).should('exist');

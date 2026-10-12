@@ -7,11 +7,13 @@ import { useEndScreen } from '../../composables/useEndScreen';
 import { useBullshitBootstrap } from '../../composables/useBullshitBootstrap';
 import { useSeatDisconnectCountdown } from '../../composables/useSeatDisconnectCountdown';
 import { useLeaveGuard } from '../../composables/useLeaveGuard';
+import { useGameDuration } from '../../composables/useGameDuration';
 import PlayingCard from '../../components/PlayingCard.vue';
 import CardCounter from '../../components/CardCounter.vue';
 import EndGameOverlay from '../../components/EndGameOverlay.vue';
 import ForfeitBanner from '../../components/ForfeitBanner.vue';
 import RulesPanel from '../../components/RulesPanel.vue';
+import GameTimer from '../../components/GameTimer.vue';
 import OpponentSeat from '../../components/bullshit/OpponentSeat.vue';
 import BullshitHand from '../../components/bullshit/BullshitHand.vue';
 import GameLobby from '../../components/lobby/GameLobby.vue';
@@ -48,6 +50,12 @@ const countdown = useSeatDisconnectCountdown({
   isGameOver: () => store.phase === 'finished',
 });
 onBeforeUnmount(() => countdown.cancel());
+
+// Cosmetic game-duration chip, the same composable and component as Bataille Corse: it starts when the
+// table is playing and freezes at game over.
+const { formattedDuration, cancel: cancelGameDuration } =
+  useGameDuration(() => store.phase === 'playing', () => store.phase === 'finished');
+onBeforeUnmount(() => cancelGameDuration());
 
 // Leaving an in-progress game forfeits (opponents win the seat), same as BatailleCorse.
 // Reuses the shared leave guard: navigating away (Back button / browser back) prompts,
@@ -269,12 +277,11 @@ function leaveLobby() {
     </div>
 
     <template v-else>
+      <GameTimer :time="formattedDuration" />
+
       <RulesPanel :rules="messages.bullshit" />
 
       <div class="top-bar">
-        <RouterLink :to="{ name: 'games' }" class="leave-button" data-test="leave">
-          <Button severity="secondary" :label="ui.back" icon="pi pi-undo" variant="text" rounded />
-        </RouterLink>
         <Button
           data-test="sound-toggle"
           class="sound-toggle"
@@ -285,7 +292,6 @@ function leaveLobby() {
           :aria-label="soundEnabled ? ui.sound.mute : ui.sound.unmute"
           :aria-pressed="soundEnabled"
           @click="toggleSound" />
-        <HotkeySettings :settings="hotkeys" :labels="messages.hotkeys.actions" :note="messages.hotkeys.bullshitNote" />
       </div>
 
       <Transition name="forfeit-fade">
@@ -403,7 +409,15 @@ function leaveLobby() {
             :aria-keyshortcuts="hotkeys.enabled.value ? hotkeys.callKey.value : undefined"
             @click="store.callBullshit()" />
         </div>
+      </div>
+
+      <!-- Back at the bottom left and the settings gear at the bottom right, as on the Bataille Corse table. -->
+      <div class="table-footer" data-test="table-footer">
+        <RouterLink :to="{ name: 'games' }" class="leave-button" data-test="leave">
+          <Button severity="secondary" :label="ui.back" icon="pi pi-undo" variant="text" rounded />
+        </RouterLink>
         <p v-if="hotkeys.enabled.value" class="keys-hint" data-test="keys-hint">{{ keysHint }}</p>
+        <HotkeySettings class="footer-hotkeys" :settings="hotkeys" :labels="messages.hotkeys.actions" :note="messages.hotkeys.bullshitNote" />
       </div>
     </template>
   </div>
@@ -459,11 +473,27 @@ function leaveLobby() {
   display: flex;
   align-items: center;
   min-height: 48px;
-  /* Leaves the corner free for the rules toggle. */
+  /* Leaves the corners free: the duration chip on the left, the rules toggle on the right. */
+  padding-left: 88px;
   padding-right: 120px;
 }
 .leave-button { text-decoration: none; }
-.sound-toggle { margin-left: var(--space-1); }
+
+/* Bottom row of the screen: Back left, the settings gear right (the panel opens upwards from it). */
+.table-footer {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.footer-hotkeys { margin: 0; }
+.footer-hotkeys :deep(.panel) {
+  top: auto;
+  left: auto;
+  right: 8px;
+  bottom: 56px;
+}
 
 .table-frame {
   position: relative;
@@ -724,8 +754,10 @@ function leaveLobby() {
 /* Discreet reminder of the keyboard shortcuts; useless (and noisy) on touch-only devices. */
 .keys-hint {
   margin: 0;
-  max-width: 100%;
-  padding: 2px var(--space-1) var(--space-1);
+  flex: 1 1 0;
+  min-width: 0;
+  text-align: center;
+  padding: 2px var(--space-1);
   font-size: 0.7rem;
   line-height: 1.2;
   color: rgba(255, 255, 255, 0.5);
