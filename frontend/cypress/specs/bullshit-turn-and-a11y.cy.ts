@@ -45,8 +45,9 @@ function startTwoPlayerGame() {
     });
 
     it('says how the opponent left on the winner end screen', () => {
-      // Deliberate wait: the end screen now shows after a short beat, so the server's own state pushes after the start must have settled or they would overwrite the injected state.
-      cy.wait(2000);
+      // The start state is applied in one push; "Your turn" is derived from its last field, so the server has
+      // finished pushing and nothing can overwrite the injected state afterwards.
+      cy.get('[data-test="turn-hint"]').should('have.text', 'Your turn');
       cy.window().then((w) => {
         const pinia = (w.document.querySelector('#app') as any).__vue_app__.config.globalProperties.$pinia;
         const store = pinia._s.get('bullshit-store');

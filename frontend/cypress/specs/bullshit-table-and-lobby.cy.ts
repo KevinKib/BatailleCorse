@@ -234,9 +234,9 @@ function startTwoPlayerGame() {
   gameIdFromUrl().then((id) => cy.request('POST', `/api/bullshit/game/${id}/join`, { name: 'Bob' }));
   cy.get('[data-test="start"]', { timeout: 10000 }).should('not.be.disabled').click();
   cy.get('[data-test="hand-card-0"]', { timeout: 10000 }).should('exist');
-  // Deliberate fixed wait: let the last server pushes land so they cannot overwrite the
-  // state the matrix rewrites afterwards.
-  cy.wait(1000);
+  // The start state is applied in one push; "Your turn" is derived from its last field, so the server has
+  // finished pushing and nothing can overwrite the state the matrix rewrites afterwards.
+  cy.get('[data-test="turn-hint"]').should('have.text', 'Your turn');
 }
 
 describe('Bullshit hand / actions spacing matrix', () => {
@@ -296,8 +296,10 @@ describe('Bullshit hand / actions spacing matrix', () => {
         setTable(p, h);
         cy.get('[data-test^="hand-card-"]').should('have.length', h);
         cy.get('.hand-card.selected').should('have.length', 1);
-        // Deliberate fixed wait: the raised card finishes its 0.12s transform transition.
-        cy.wait(250);
+        // The raised card finishes its transform transition: no animation left on any card.
+        cy.get('.hand-card').should(($cards) => {
+          $cards.each((_, card) => expect(card.getAnimations(), 'running transitions').to.have.length(0));
+        });
         measure(vw, vh, h,`${vw}x${vh} ${p}p ${h}c`);
       }));
     });
