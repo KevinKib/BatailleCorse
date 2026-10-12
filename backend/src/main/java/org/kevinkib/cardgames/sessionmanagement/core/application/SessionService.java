@@ -129,6 +129,9 @@ public class SessionService implements GameDirectory {
     /** Host-only: fills the lowest free seat of a not-yet-started room with a computer player. */
     public synchronized PlayerId addBot(GameId id, String hostToken) {
         SessionGame lobby = openLobbyOwnedBy(id, hostToken);
+        if (!gameFactories.supportsBots(lobby.gameType())) {
+            throw new BotsNotSupportedException(id, lobby.gameType());
+        }
         try {
             PlayerId bot = lobby.claimBot(null).id();
             lobby.bumpVersion();

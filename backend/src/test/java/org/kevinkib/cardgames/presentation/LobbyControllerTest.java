@@ -6,6 +6,8 @@ import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseFactory;
 import org.kevinkib.cardgames.bullshit.domain.BullshitFactory;
 import org.kevinkib.cardgames.game.Game;
 import org.kevinkib.cardgames.game.GameId;
+import org.kevinkib.cardgames.kobo.domain.KoboFactory;
+import org.kevinkib.cardgames.threemenmorris.domain.ThreeMenMorrisFactory;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.presentation.api.GameActionPayload;
 import org.kevinkib.cardgames.presentation.api.LobbyRenamePayload;
@@ -58,7 +60,8 @@ class LobbyControllerTest {
     void setUp() {
         sessionService = new SessionService(
                 new InMemorySessionRepository(Clock.systemUTC()),
-                new GameFactories(List.of(new BullshitFactory(), new BatailleCorseFactory(), new TieredFactory())));
+                new GameFactories(List.of(new BullshitFactory(), new BatailleCorseFactory(), new TieredFactory(),
+                        new KoboFactory(), new ThreeMenMorrisFactory())));
         messaging = new RecordingMessaging();
         messaging.resolvingTokensWith(sessionService);
         broadcaster = new RecordingBroadcaster();
@@ -98,6 +101,37 @@ class LobbyControllerTest {
 
         assertThat(messaging.seats, is(List.of(new PlayerId(0))));
         assertThat(lobbyOf(messaging.payloads.get(0)).players().get(1).bot(), is(true));
+    }
+
+    @Test
+    void givenKoboRoom_whenAddBot_thenRefusedToTheSenderAloneAndNoBotSeat() {
+        assertAddBotRefused(KoboFactory.GAME_TYPE);
+    }
+
+    @Test
+    void givenThreeMenMorrisRoom_whenAddBot_thenRefusedToTheSenderAloneAndNoBotSeat() {
+        assertAddBotRefused(ThreeMenMorrisFactory.GAME_TYPE);
+    }
+
+    private void assertAddBotRefused(String gameType) {
+        RoomCreated room = sessionService.createRoom(gameType, "Alice");
+        GameId id = new GameId(room.gameId());
+        String bobToken = sessionService.joinRoom(id, "Bob").token();
+        messaging.clear();
+
+        controller.addBot(new GameActionPayload(room.gameId(), room.hostToken()));
+
+        assertThat(messaging.seats, is(List.of(new PlayerId(0))));
+        Response response = messaging.payloads.get(0);
+        assertThat(response.isSuccess(), is(false));
+        assertThat(response.getEventType(), is("JOIN"));
+        assertThat(response.getMessage().contains(gameType), is(true));
+        assertThat(sessionService.botSeats(id).isEmpty(), is(true));
+        assertThat(sessionService.seats(id).size(), is(sessionService.maxPlayers(gameType)));
+
+        // the room still starts and has no bot seat to break a broadcast
+        sessionService.startGame(id, room.hostToken());
+        assertThat(sessionService.botSeats(id).isEmpty(), is(true));
     }
 
     @Test
