@@ -102,6 +102,9 @@ export const messagesEn: Messages = {
       duplicate: 'That key is already used by the other action.',
     },
   },
+  turn: {
+    yourTurn: 'Your turn',
+  },
   bullshitUi: {
     playerLabel: 'Player {n}',
     botLabel: 'Bot {n}',
@@ -123,7 +126,6 @@ export const messagesEn: Messages = {
         other: '{player} played {n} cards face-down',
       },
       forfeited: '{player} forfeited',
-      yourTurn: 'Your turn',
       verdictAnnouncement: '{verdict}. {caption}',
       shortcut: 'Shortcut: {key}',
       keysHint: 'Keys: {discard} discard · {call} call Bullshit',

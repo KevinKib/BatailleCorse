@@ -17,7 +17,7 @@ describe('Visual direction (C bis)', () => {
     cy.contains('button', 'Send').should('be.visible');
     cy.contains('button', 'Slap').should('be.visible');
     cy.contains('button', 'Back').should('be.visible');
-    cy.get('[data-cy="turn-hint"]').should('be.visible').and('contain.text', 'YOUR TURN');
+    cy.get('[data-test="turn-hint"]').should('be.visible').and('contain.text', 'Your turn');
   });
 
   it('uses Atkinson Hyperlegible for titles and the interface, in 400 and 700 only', () => {

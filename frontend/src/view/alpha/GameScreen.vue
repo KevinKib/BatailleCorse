@@ -54,11 +54,7 @@
 
       <div class="middle_side">
         <div class="player_tag_wrap">
-          <Transition name="turn-fade">
-            <div v-if="showFirstTurnHint" class="turn-hint" data-cy="turn-hint">
-              <span class="turn-hint__dot"></span>{{ YOUR_TURN_LABEL }}
-            </div>
-          </Transition>
+          <YourTurnIndicator class="turn-slot" :active="showFirstTurnHint" />
           <h1 :class="['player_tag', { 'player_tag--active': showMyTurn }]">{{ myName || settingsStore.playerName || 'You' }}</h1>
         </div>
         <div class="card stacked">
@@ -144,6 +140,7 @@ import CardCounter from '../../components/CardCounter.vue';
 import RulesPanel from '../../components/RulesPanel.vue';
 import HotkeySettings from '../../components/HotkeySettings.vue';
 import GameTimer from '../../components/GameTimer.vue';
+import YourTurnIndicator from '../../components/YourTurnIndicator.vue';
 import WaitingOverlay from '../../components/WaitingOverlay.vue';
 import DisconnectOverlay from '../../components/DisconnectOverlay.vue';
 import EndGameOverlay from '../../components/EndGameOverlay.vue';
@@ -267,7 +264,7 @@ useLeaveGuard({
   forfeit: () => batailleCorseStore.forfeit(myPlayerIndex.value),
 });
 
-const { showMyTurn, showOpponentTurn, showFirstTurnHint, YOUR_TURN_LABEL, cancel: cancelTurnIndicator } = useTurnIndicator({
+const { showMyTurn, showOpponentTurn, showFirstTurnHint, cancel: cancelTurnIndicator } = useTurnIndicator({
   state: () => batailleCorse.value,
   myPlayerIndex: () => myPlayerIndex.value,
   opponentIndex: () => opponentIndex.value,
@@ -664,38 +661,13 @@ onBeforeUnmount(() => {
   justify-content: center;
 }
 
-.turn-hint {
+/* Where the shared "Your turn" cue sits: just above the name tag, out of the flow. */
+.turn-slot {
   position: absolute;
   bottom: 100%;
   left: 50%;
   transform: translateX(-50%);
   margin-bottom: 6px;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  white-space: nowrap;
-  font-family: var(--font-title);
-  font-size: 0.82rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  color: rgb(var(--accent-active-rgb));
-}
-
-.turn-hint__dot {
-  width: var(--turn-dot-size);
-  height: var(--turn-dot-size);
-  border-radius: 50%;
-  background: var(--gold);
-}
-
-.turn-fade-enter-active,
-.turn-fade-leave-active {
-  transition: opacity 0.25s ease;
-}
-
-.turn-fade-enter-from,
-.turn-fade-leave-to {
-  opacity: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {

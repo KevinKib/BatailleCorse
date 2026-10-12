@@ -14,6 +14,7 @@ import EndGameOverlay from '../../components/EndGameOverlay.vue';
 import ForfeitBanner from '../../components/ForfeitBanner.vue';
 import RulesPanel from '../../components/RulesPanel.vue';
 import GameTimer from '../../components/GameTimer.vue';
+import YourTurnIndicator from '../../components/YourTurnIndicator.vue';
 import OpponentSeat from '../../components/bullshit/OpponentSeat.vue';
 import BullshitHand from '../../components/bullshit/BullshitHand.vue';
 import GameLobby from '../../components/lobby/GameLobby.vue';
@@ -371,7 +372,7 @@ function leaveLobby() {
           <span :class="['my-tag', { 'my-tag--active': store.isMyTurn }]">{{ ui.you }}</span>
           <span class="my-count" data-test="my-count" role="img"
                 :aria-label="plural(ui.table.myCards, myCardCount)">{{ myCardCount }}</span>
-          <span v-if="store.isMyTurn" class="turn-hint" data-test="turn-hint">{{ ui.table.yourTurn }}</span>
+          <YourTurnIndicator class="turn-slot" :active="store.isMyTurn" />
         </div>
         <BullshitHand
           :cards="store.game?.myHand ?? []"
@@ -795,6 +796,7 @@ function leaveLobby() {
 .my-tag { position: relative; }
 /* "You" and my card count form one row; the gap to the hand is carried by the row. */
 .my-id {
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--space-2);
@@ -813,12 +815,14 @@ function leaveLobby() {
   min-width: 2ch;
   text-align: center;
 }
-/* Words for the turn: the glow on "You" is easy to miss and says nothing to a screen reader. */
-.turn-hint {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--gold);
-  white-space: nowrap;
+/* The shared "Your turn" cue (words for the turn: the glow on "You" says nothing to a screen reader).
+   Out of the flow, right after the count, so the row does not move when the turn changes. */
+.turn-slot {
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-left: var(--space-2);
 }
 /* Discard breathes while it is the thing to press (my turn, cards picked). */
 .discard--pulse { animation: discard-pulse 1.6s ease-in-out infinite; }

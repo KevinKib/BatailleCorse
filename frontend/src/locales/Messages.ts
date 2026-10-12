@@ -96,7 +96,6 @@ export interface BullshitUiMessages {
     revealCaption: string;             // '{caller}', '{claimant}', '{picker}'
     playedFaceDown: PluralForms;       // '{player}', '{n}' = number of cards
     forfeited: string;                 // '{player}'
-    yourTurn: string;                  // visible cue next to my tag on my turn
     verdictAnnouncement: string;       // '{verdict}', '{caption}': what a screen reader hears after a call
     shortcut: string;                  // '{key}': tooltip of a button that has a keyboard shortcut
     keysHint: string;                  // '{discard}', '{call}': discreet reminder of the shortcuts
@@ -198,12 +197,18 @@ export interface OptionsMessages {
   };
 }
 
+// Texts shared by several game tables.
+export interface TurnMessages {
+  yourTurn: string;                    // the cue shown (and announced) when it is my turn
+}
+
 // Whole-app message tree. Each game owns a rules namespace; future namespaces
 // (game, lobby, ...) are added here additively.
 export interface Messages {
   rules: RulesMessages;     // BatailleCorse
   bullshit: RulesMessages;  // Bullshit
   hotkeys: HotkeyMessages; // keyboard shortcut settings
+  turn: TurnMessages;      // turn cue shared by the tables
   bullshitUi: BullshitUiMessages; // Bullshit screens
   gamePicker: GamePickerMessages; // Game choice page
   home: GameHomeMessages;   // Game home
