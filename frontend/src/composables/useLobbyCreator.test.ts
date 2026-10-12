@@ -3,6 +3,7 @@ import { setActivePinia, createPinia } from 'pinia';
 import { useLobbyCreator } from './useLobbyCreator';
 import { findGame } from '../model/games';
 import { useBullshitStore } from '../state/Bullshit.store';
+import { useBatailleCorseStore } from '../state/BatailleCorse.store';
 
 describe('useLobbyCreator', () => {
   beforeEach(() => { setActivePinia(createPinia()); });
@@ -15,7 +16,10 @@ describe('useLobbyCreator', () => {
     expect(create).toHaveBeenCalledWith('Alice');
   });
 
-  it('gives none to a game that still has its own create page', () => {
-    expect(useLobbyCreator()(findGame('bataillecorse')!)).toBeUndefined();
+  it('gives Bataille Corse a creator that opens the lobby through its store', async () => {
+    const create = vi.spyOn(useBatailleCorseStore(), 'create').mockResolvedValue('g2');
+    const creator = useLobbyCreator()(findGame('bataillecorse')!);
+    expect(await creator('Alice')).toBe('g2');
+    expect(create).toHaveBeenCalledWith('Alice');
   });
 });

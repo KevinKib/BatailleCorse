@@ -190,11 +190,26 @@ export interface LobbyMessages {
 // range of the deck in play): var name, then the option it depends on, then that option's value.
 export type OptionTexts = Record<string, string>;
 export interface OptionsMessages {
+  bataillecorse: {
+    tier: OptionTexts;                 // a bot seat's tier: `label`, then '0' (Training) to '8' (Legend)
+  };
   bullshit: {
     claimMode: OptionTexts;
     deckSize: OptionTexts;
     vars: Record<string, Record<string, Record<string, string>>>;
   };
+}
+
+// Bataille Corse table (`GameScreen`): texts added with the shared lobby.
+export interface BatailleCorseUiMessages {
+  connecting: string;                  // before the first lobby view or game state
+  opponent: string;                    // the opponent before the seats are known
+  playerLabel: string;                 // '{n}' = 1-based seat number, for a player without a name
+  botLabel: string;                    // '{n}' = 1-based bot number
+  botWithTier: string;                 // '{bot}', '{tier}': the opponent label of a bot
+  playAgain: string;
+  rematchPending: string;              // my Play again request is in flight
+  rematchFailed: string;               // the server refused it
 }
 
 // Texts shared by several game tables.
@@ -210,6 +225,7 @@ export interface Messages {
   hotkeys: HotkeyMessages; // keyboard shortcut settings
   turn: TurnMessages;      // turn cue shared by the tables
   bullshitUi: BullshitUiMessages; // Bullshit screens
+  batailleCorseUi: BatailleCorseUiMessages; // Bataille Corse table
   gamePicker: GamePickerMessages; // Game choice page
   home: GameHomeMessages;   // Game home
   join: JoinGameMessages;   // Join form

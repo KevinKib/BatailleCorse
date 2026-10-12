@@ -1,75 +1,87 @@
 import { defineStore } from "pinia";
-import { ref } from "vue";
+import { computed, ref } from "vue";
 
 import webSocketService from '../service/WebSocketService';
-import BatailleCorse from "../model/BatailleCorse";
+import type BatailleCorse from "../model/BatailleCorse";
 import type Card from "../model/Card";
 import type Response from "../model/Response";
-import AI from "../model/ai/AI";
-import { useSettingsStore } from './Settings.store';
-import { DIFFICULTY } from '../model/Difficulty';
+import type SessionSeat from '../model/SessionSeat';
+import type { LobbyView } from '../model/lobby/LobbyView';
 import GameSession from '../application/GameSession';
 import type { GameEvent } from '../application/GameEvent';
 import { useSeatPresence } from '../composables/useSeatPresence';
 
+/** Where my own Play again request stands. */
+export type RematchState = 'idle' | 'pending' | 'failed';
+
 export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
 
   const state = ref<BatailleCorse>();
+  const lobby = ref<LobbyView | null>(null);
   const gameId = ref<string | null>(null);
+  const myPlayerIndex = ref<number>(0);
+  // Every seat of the room: names, bots and their tiers (from the lobby, or the session view after a reload).
+  const seats = ref<SessionSeat[]>([]);
+  // Last refusal of a lobby command (server message, or 'connection' when it could not be sent), cleared by the
+  // next lobby view. A refused move at the table is not shown: the state it carries says enough.
+  const lobbyError = ref<string | null>(null);
+  // A Start is on its way: from the click until the game state or a refusal comes back.
+  const starting = ref(false);
+  const rematch = ref<RematchState>('idle');
+
   const lastSend = ref<{ playerIndex: number; seq: number; topCard: Card | undefined } | null>(null);
   const lastGrab = ref<{ winnerPlayerIndex: number; seq: number; pileCards: Card[] } | null>(null);
   const lastSlap = ref<{ seq: number } | null>(null);
   const lastSuccessfulSlap = ref<{ winnerPlayerIndex: number; seq: number; pileCards: Card[] } | null>(null);
   const lastErroneousSlap = ref<{ playerIndex: number; seq: number } | null>(null);
 
-  // Multiplayer perspective, mirrored from GameSession via events.
-  const mode = ref<'solo' | 'multiplayer'>('solo');
-  const myPlayerIndex = ref<number>(0);
-  const waiting = ref<boolean>(false);
-  const myName = ref<string | null>(null);
-  const opponentName = ref<string | null>(null);
-  const rematchState = ref<'idle' | 'requested-by-me' | 'requested-by-opponent'>('idle');
-
   let animationResolve: (() => void) | null = null;
   // slapSeq lives in the store because the slap flash animation fires optimistically
   // at the moment the user presses the button, before the server responds.
   let slapSeq = 0;
 
-  const settingsStore = useSettingsStore();
-
-  // BC has exactly one opponent. Express that as the brick's seat map: in multiplayer
-  // the only "present" seat that can disconnect is the opponent (1 - myPlayerIndex);
-  // in solo there is none. This single narrowing folds the old is-me and
-  // is-multiplayer guards into useSeatPresence's liveDisconnections filter.
+  // BC has exactly one opponent: the only seat whose disconnection matters is the other one.
   const presence = useSeatPresence({
-    presentSeats: () => (mode.value === 'multiplayer' ? [1 - myPlayerIndex.value] : []),
+    presentSeats: () => [1 - myPlayerIndex.value],
   });
+
+  const phase = computed<'connecting' | 'lobby' | 'playing' | 'finished'>(() => {
+    if (state.value) return state.value.isOver() ? 'finished' : 'playing';
+    return lobby.value ? 'lobby' : 'connecting';
+  });
+
+  const mySeatInfo = computed(() => seats.value.find(s => s.id === myPlayerIndex.value) ?? null);
+  const opponentSeat = computed(() => seats.value.find(s => s.id !== myPlayerIndex.value) ?? null);
 
   function applyEvent(event: GameEvent) {
     switch (event.type) {
-      case 'state-update':    state.value = event.state; break;
+      case 'state-update':
+        state.value = event.state;
+        lobby.value = null;
+        lobbyError.value = null;
+        starting.value = false;
+        break;
+      case 'lobby-update':
+        lobby.value = event.lobby;
+        state.value = undefined;
+        lobbyError.value = null;
+        starting.value = false;
+        rematch.value = 'idle';
+        presence.reset();
+        break;
+      case 'seats-change':    seats.value = event.seats; break;
       case 'game-id-change':  gameId.value = event.gameId; break;
+      case 'my-index-change': myPlayerIndex.value = event.playerIndex; break;
+      case 'error':
+        lobbyError.value = state.value ? null : event.message;
+        starting.value = false;
+        break;
       case 'send':            lastSend.value = event; break;
       case 'grab':            lastGrab.value = event; break;
       case 'slap':            lastSlap.value = { seq: ++slapSeq }; break;
       case 'successful-slap': lastSuccessfulSlap.value = event; break;
       case 'erroneous-slap':  lastErroneousSlap.value = event; break;
-      case 'mode-change':          mode.value = event.mode; break;
-      case 'my-index-change':      myPlayerIndex.value = event.playerIndex; break;
-      case 'waiting-change':       waiting.value = event.waiting; break;
-      case 'my-name-change':       myName.value = event.name; break;
-      case 'opponent-name-change': opponentName.value = event.name; break;
-      case 'presence-event':       presence.applyPresenceEvent(event.eventType, event.eventData); break;
-      case 'rematch':
-        if (event.status === 'started') {
-          rematchState.value = 'idle';
-          presence.reset();
-        } else {
-          rematchState.value = event.requestedBy === myPlayerIndex.value
-            ? 'requested-by-me'
-            : 'requested-by-opponent';
-        }
-        break;
+      case 'presence-event':  presence.applyPresenceEvent(event.eventType, event.eventData); break;
     }
   }
 
@@ -79,7 +91,6 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
       onEvent: applyEvent,
       awaitAnimation: () => new Promise<void>(resolve => { animationResolve = resolve; }),
     },
-    () => new AI(1, DIFFICULTY[settingsStore.difficulty].reactionTime),
   );
 
   function notifyAnimationComplete() {
@@ -87,36 +98,95 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
     animationResolve = null;
   }
 
+  // Publishing throws while the socket is down (reconnecting): report it like a server refusal.
+  // Returns whether the command was sent.
+  function requestLobbyChange(send: () => void): boolean {
+    lobbyError.value = null;
+    try {
+      send();
+      return true;
+    } catch {
+      lobbyError.value = 'connection';
+      return false;
+    }
+  }
+
+  // One Start at a time: the button is busy until the answer, so a second click is not sent.
+  function startGame(): boolean {
+    if (starting.value) return false;
+    starting.value = requestLobbyChange(() => session.startGame());
+    return starting.value;
+  }
+
+  // Leaves the lobby and forgets everything about it, so the next room starts from a clean store.
+  // Returns whether the lobby was left: false when the command could not be sent (the player is still seated).
+  function leave(): boolean {
+    if (!requestLobbyChange(() => session.leave())) return false;
+    lobby.value = null;
+    state.value = undefined;
+    gameId.value = null;
+    seats.value = [];
+    lobbyError.value = null;
+    return true;
+  }
+
+  async function playAgain(name?: string) {
+    presence.reset();
+    rematch.value = 'pending';
+    try {
+      await session.playAgain(name);
+    } catch {
+      rematch.value = 'failed';
+    }
+  }
+
+  function reset() {
+    state.value = undefined;
+    lobby.value = null;
+    seats.value = [];
+    lobbyError.value = null;
+    starting.value = false;
+    rematch.value = 'idle';
+    presence.reset();
+  }
+
   return {
     state,
+    lobby,
     gameId,
-    mode,
     myPlayerIndex,
-    waiting,
-    myName,
-    opponentName,
+    seats,
+    mySeatInfo,
+    opponentSeat,
+    lobbyError,
+    starting,
+    rematch,
+    phase,
     lastSend,
     lastGrab,
     lastSlap,
     lastSuccessfulSlap,
     lastErroneousSlap,
-    rematchState,
     liveDisconnections: presence.liveDisconnections,
     applyEvent,
-    create:               (gameMode: 'solo' | 'multiplayer', name?: string) => { rematchState.value = 'idle'; presence.reset(); session.create(gameMode, name); },
-    join:                 (id: string, name?: string) => { presence.reset(); return session.join(id, name); },
-    loadSessionView:      (id: string) => session.loadSessionView(id),
-    hydrate:              (id: string, s: BatailleCorse) => session.hydrate(id, s),
-    restoreTokens:        (tokens: Record<number, string>) => session.restoreTokens(tokens),
-    restoreSession:       (tokens: Record<number, string>) => session.restoreSession(tokens),
-    send:                 (playerIndex: number) => session.send(playerIndex),
-    slap:                 (playerIndex: number) => session.slap(playerIndex),
-    grab:                 (playerIndex: number) => session.grab(playerIndex),
-    forfeit:              (playerIndex: number) => session.forfeit(playerIndex),
-    rematch:              () => session.rematch(),
-    onResponse:           (r: Response) => { session.onResponse(r); },
+    create:          (name?: string) => { reset(); return session.create(name); },
+    join:            (id: string, name?: string) => { reset(); return session.join(id, name); },
+    restore:         (id: string, seat: number, token: string) => { reset(); session.restore(id, seat, token); },
+    hydrate:         () => session.hydrate(),
+    startGame,
+    addBot:          () => requestLobbyChange(() => session.addBot()),
+    removeBot:       (seat: number) => requestLobbyChange(() => session.removeBot(seat)),
+    setOption:       (key: string, value: string) => requestLobbyChange(() => session.setOption(key, value)),
+    setSeatOption:   (seat: number, key: string, value: string) => requestLobbyChange(() => session.setSeatOption(seat, key, value)),
+    rename:          (name: string) => requestLobbyChange(() => session.rename(name)),
+    leave,
+    playAgain,
+    send:            () => session.send(),
+    slap:            () => session.slap(),
+    forfeit:         () => session.forfeit(),
+    onResponse:      (r: Response) => { session.onResponse(r); },
     notifyAnimationComplete,
-    cancelAutoGrab:       () => session.cancelAll(),
+    cancelAutoGrab:  () => session.cancelAll(),
   };
 
 });

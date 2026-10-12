@@ -12,12 +12,8 @@ describe('game registry', () => {
     }
   });
 
-  it('givenBatailleCorse_thenNewGameStillLeadsToItsCreatePage', () => {
-    expect(findGame('bataillecorse')?.newGameRoute).toBe('/games/bataillecorse/new');
-  });
-
-  it('givenBullshit_thenNewGameCreatesTheLobbyDirectlyWithoutACreatePage', () => {
-    expect(findGame('bullshit')?.newGameRoute).toBeUndefined();
+  it('givenEveryGame_thenNewGameCreatesTheLobbyDirectlyWithoutACreatePage', () => {
+    GAMES.forEach(g => expect(Object.keys(g)).not.toContain('newGameRoute'));
   });
 
   it('givenEachGame_thenItDeclaresItsLocalHotkeyActionsAndItsOwnStorageKeys', () => {

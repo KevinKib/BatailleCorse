@@ -63,7 +63,6 @@ onBeforeUnmount(() => cancelGameDuration());
 // disconnect grace timer (now that presence is registered).
 useLeaveGuard({
   isInProgress: () => store.phase === 'playing',
-  mode: () => 'multiplayer',
   forfeit: () => store.forfeit(),
 });
 

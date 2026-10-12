@@ -12,8 +12,8 @@ import { preloadAllCards } from '../composables/useCardAnimation';
 
 const props = defineProps<{
   game: GameDefinition;
-  /** Creates a lobby for a game without a create page and resolves with its id. */
-  createLobby?: (name?: string) => Promise<string>;
+  /** Creates the game's lobby and resolves with its id. */
+  createLobby: (name?: string) => Promise<string>;
 }>();
 
 const ui = useI18n().home;
@@ -31,16 +31,10 @@ const createError = ref(false);
 
 async function newGame() {
   if (creating.value) return;
-  const { newGameRoute } = props.game;
-  const { createLobby } = props;
-  if (!createLobby) {
-    if (newGameRoute) router.push(newGameRoute);
-    return;
-  }
   creating.value = true;
   createError.value = false;
   try {
-    const id = await createLobby(playerName.value || undefined);
+    const id = await props.createLobby(playerName.value || undefined);
     router.push(props.game.roomRoute(id));
   } catch {
     createError.value = true;

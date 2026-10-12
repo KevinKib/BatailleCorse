@@ -10,7 +10,17 @@ const unknown: OptionDescriptor = {
   key: 'speed', type: 'CHOICE', values: ['fast'], defaultValue: 'fast', labelKey: 'options.somegame.speed',
 };
 
+const tier: OptionDescriptor = {
+  key: 'tier', type: 'CHOICE', values: ['0', '1', '2', '3', '4', '5', '6', '7', '8'], defaultValue: '1',
+  labelKey: 'options.bataillecorse.tier',
+};
+
 describe('optionLabel', () => {
+  it('names a Bataille Corse bot tier, and the tier group', () => {
+    expect(optionLabel(messagesEn, tier, '3', {})).toBe('Gold');
+    expect(optionGroupLabel(messagesEn, tier)).toBe(messagesEn.options.bataillecorse.tier.label);
+  });
+
   it('resolves the text of a value from the descriptor label key', () => {
     expect(optionLabel(messagesEn, claimMode, 'suit', { claimMode: 'suit', deckSize: '32' })).toBe(messagesEn.options.bullshit.claimMode.suit);
   });

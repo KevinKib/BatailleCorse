@@ -9,7 +9,6 @@ interface UseTurnIndicatorOptions {
   state: () => TurnState | undefined;
   myPlayerIndex: () => number;
   opponentIndex: () => number;
-  isWaiting: () => boolean;
   showEndOverlay: () => boolean;
 }
 
@@ -21,9 +20,9 @@ interface UseTurnIndicatorOptions {
  * overlay owns the screen. The caller wires `cancel()` into onBeforeUnmount.
  */
 export function useTurnIndicator(options: UseTurnIndicatorOptions) {
-  const { state, myPlayerIndex, opponentIndex, isWaiting, showEndOverlay } = options;
+  const { state, myPlayerIndex, opponentIndex, showEndOverlay } = options;
 
-  const showTurnCues = computed(() => !isWaiting() && !showEndOverlay());
+  const showTurnCues = computed(() => !showEndOverlay());
   const showMyTurn = computed(() =>
     showTurnCues.value && (state()?.canSend(myPlayerIndex()) ?? false));
   const showOpponentTurn = computed(() =>
