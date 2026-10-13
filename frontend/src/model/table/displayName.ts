@@ -1,4 +1,11 @@
-import type { BullshitPlayer } from './BullshitState';
+/** Anything seated at a table: a game's own player type fits. */
+export interface SeatedPlayer {
+  id: string;
+  /** Name the player typed; absent or empty when none. */
+  name?: string | null;
+  /** Computer player: labelled "Bot N" whatever `name` says. */
+  bot?: boolean;
+}
 
 export interface SeatLabels {
   /** Fallback for a human without a name; '{n}' = 1-based seat number. */
@@ -14,7 +21,7 @@ const fill = (template: string, n: number) => template.replace('{n}', String(n))
  * player, "Player N" when there is no name (or the seat is unknown). Names are user input: callers
  * must render the result as text, never as HTML.
  */
-export function seatDisplayName(players: BullshitPlayer[], seat: number, labels: SeatLabels): string {
+export function seatDisplayName(players: SeatedPlayer[], seat: number, labels: SeatLabels): string {
   const player = players.find(p => p.id === String(seat));
   if (player?.bot) {
     const botNumber = players.filter(p => p.bot && Number(p.id) <= seat).length;

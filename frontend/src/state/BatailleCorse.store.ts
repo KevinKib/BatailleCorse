@@ -10,9 +10,7 @@ import type { LobbyView } from '../model/lobby/LobbyView';
 import GameSession from '../application/GameSession';
 import type { GameEvent } from '../application/GameEvent';
 import { useSeatPresence } from '../composables/useSeatPresence';
-
-/** Where my own Play again request stands. */
-export type RematchState = 'idle' | 'pending' | 'failed';
+import type { RematchState } from '../model/RematchButton';
 
 export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
 
