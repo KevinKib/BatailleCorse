@@ -166,7 +166,8 @@ describe('English messages', () => {
     }
     expect(messagesEn.koboUi.connecting).toBeTruthy();
     expect(messagesEn.koboUi.back).toBeTruthy();
-    expect(messagesEn.koboUi.provisional).toBeTruthy();
+    expect(messagesEn.koboUi.table.round).toContain('{n}');
+    expect(Object.keys(messagesEn.koboUi.phase.mine)).toEqual(Object.keys(messagesEn.koboUi.phase.other));
   });
 });
 

@@ -233,12 +233,47 @@ export interface OptionsMessages {
   };
 }
 
-// Kobo screens (`KoboGameScreen`): the table texts arrive with its layout.
+// Kobo screens (`KoboGameScreen`): the lobby wiring and the table (read only for now, the actions come next).
 export interface KoboUiMessages {
   connecting: string;                  // before the first lobby view or game state
   back: string;
-  provisional: string;                 // placeholder shown while the game is running, until the table exists
+  you: string;                         // my own tag
+  playerLabel: string;                 // '{n}' = 1-based seat number, for a player without a name
+  table: {
+    round: string;                     // '{n}'
+    total: string;                     // '{n}' = the player's total points
+    cards: PluralForms;                // '{n}' = cards in a tableau
+    yourCards: string;                 // name of my grid
+    cardsOf: string;                   // '{player}': name of an opponent's grid
+    ownerYour: string;                 // owner part of a slot name, for my own cards
+    ownerOf: string;                   // '{player}': owner part of a slot name, for another player's
+    slotDown: string;                  // '{owner}', '{n}' = 1-based slot number: a face-down card
+    slotUp: string;                    // '{owner}', '{n}', '{card}': a face-up card
+    cardName: string;                  // '{rank}', '{suit}'
+    drawPile: PluralForms;             // '{n}' = cards left
+    discardPile: string;               // '{card}', '{n}': top card face up
+    discardEmpty: string;
+    drawnYours: string;                // '{card}'
+    drawnOther: string;                // '{player}': a drawn card the viewer cannot see
+    drawnNone: string;
+    drawLabel: string;                 // visible captions of the piles
+    discardLabel: string;
+    drawnLabel: string;
+    current: string;                   // seat marker, also its accessible text
+    ready: string;
+    announcer: string;                 // the player who called Kobo
+    finalTurn: string;                 // still has a last turn to play
+    forfeited: string;                 // '{player}'
+    offline: string;
+  };
+  phase: {
+    mine: Record<KoboPhaseKey, string>;
+    other: Record<KoboPhaseKey, string>;   // '{player}' = the player the table waits for
+  };
 }
+
+export type KoboPhaseKey =
+  | 'MEMORISING' | 'DRAW' | 'DECISION' | 'POWER' | 'KING_DECISION' | 'TURN_END' | 'GIFT' | 'ROUND_OVER' | 'FINISHED';
 
 // Bataille Corse table (`GameScreen`): texts added with the shared lobby.
 export interface BatailleCorseUiMessages {
