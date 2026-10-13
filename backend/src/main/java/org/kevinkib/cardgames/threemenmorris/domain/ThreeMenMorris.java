@@ -112,6 +112,9 @@ public class ThreeMenMorris implements Game {
         if (board[point] != null) {
             throw new PointOccupiedException(point);
         }
+        if (isLocked(point)) {
+            throw new PointLockedException(point);
+        }
         board[point] = seat;
         inHand[seat.id()]--;
         version++;
@@ -241,7 +244,7 @@ public class ThreeMenMorris implements Game {
         }
         List<Integer> points = new ArrayList<>();
         for (int point = 0; point < board.length; point++) {
-            if (board[point] == null) {
+            if (board[point] == null && !isLocked(point)) {
                 points.add(point);
             }
         }
@@ -286,6 +289,13 @@ public class ThreeMenMorris implements Game {
         if (!geometry.isPoint(point)) {
             throw new InvalidPointException(point);
         }
+    }
+
+    /** Whether the placement rule closes this point now: Picaria's centre until both players have placed. */
+    private boolean isLocked(int point) {
+        return rules.placement() == MorrisRules.PlacementRule.CENTRE_AFTER_FIRST_PIECES
+                && point == MorrisRules.CENTRE
+                && (inHand[0] == rules.piecesPerPlayer() || inHand[1] == rules.piecesPerPlayer());
     }
 
     private static PlayerId other(PlayerId seat) {

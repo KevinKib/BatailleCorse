@@ -67,12 +67,11 @@ class ThreeMenMorrisInvariantsTest {
     }
 
     @Test
-    void recordsCarryingAPointRefuseOutOfRangeValues() {
+    void recordsCarryingAPointRefuseNegativeValuesAndTheAggregateRefusesPointsOffItsBoard() {
         assertThrows(IllegalArgumentException.class, () -> new Move(-1, 2));
-        assertThrows(IllegalArgumentException.class, () -> new Move(0, 9));
-        assertThrows(IllegalArgumentException.class, () -> new MorrisEvent.Placed(WHITE, 9));
         assertThrows(IllegalArgumentException.class, () -> new MorrisEvent.Moved(WHITE, -1, 0));
-        assertThrows(IllegalArgumentException.class, () -> new MorrisEvent.Moved(WHITE, 0, 9));
+        ThreeMenMorris game = new ThreeMenMorris(GameId.generate());
+        assertThrows(InvalidPointException.class, () -> game.place(WHITE, 9));
         assertThat(new Move(0, 8).to(), is(8));
     }
 }

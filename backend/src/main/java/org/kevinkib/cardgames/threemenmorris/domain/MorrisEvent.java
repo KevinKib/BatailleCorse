@@ -8,15 +8,15 @@ public sealed interface MorrisEvent {
     record Placed(PlayerId seat, int point) implements MorrisEvent {
 
         public Placed {
-            Board.requireInRange(point);
+            Move.requireNotNegative(point);
         }
     }
 
     record Moved(PlayerId seat, int from, int to) implements MorrisEvent {
 
         public Moved {
-            Board.requireInRange(from);
-            Board.requireInRange(to);
+            Move.requireNotNegative(from);
+            Move.requireNotNegative(to);
         }
     }
 }
