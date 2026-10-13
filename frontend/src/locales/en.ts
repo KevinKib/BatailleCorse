@@ -105,6 +105,21 @@ export const messagesEn: Messages = {
   turn: {
     yourTurn: 'Your turn',
   },
+  morrisBoard: {
+    boardLabel: "Three Men's Morris board",
+    pointNames: [
+      'Top left', 'Top middle', 'Top right',
+      'Middle left', 'Centre', 'Middle right',
+      'Bottom left', 'Bottom middle', 'Bottom right',
+    ],
+    white: 'White piece',
+    black: 'Black piece',
+    free: 'free',
+    canMove: 'can move',
+    canPlace: 'can place here',
+    selected: 'selected',
+    pointLabel: '{point}: {state}',
+  },
   bullshitUi: {
     playerLabel: 'Player {n}',
     botLabel: 'Bot {n}',
