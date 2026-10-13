@@ -58,7 +58,7 @@ change with its test.
 | 5 | [x] merged, #164 |
 | 6a | [ ] in progress, draft PR #168 |
 | 6, 7, 8 | [ ] to do |
-| 9 | [ ] to do (waits for lobby PR9) |
+| 9 | [ ] done in draft PR #175 (BC keeps its public-topic state and lifecycle broadcasters; dead solo and rematch code removed) |
 
 ## Overview and waves
 
