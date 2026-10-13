@@ -73,11 +73,6 @@ public record SessionGame(GameId id, String gameType, GameOptions options, Map<P
         return claimSeat(HOST_SEAT, name);
     }
 
-    /** Claims every seat (used when a single owner controls all players, e.g. solo mode). */
-    public void claimAllSeats() {
-        players.values().forEach(seat -> seat.claim(null));
-    }
-
     /** Claims the lowest-numbered free seat and returns it; the room is full if none remain. */
     public SessionPlayer claimNextFreeSeat(String name) {
         SessionPlayer free = players.values().stream()
@@ -301,60 +296,6 @@ public record SessionGame(GameId id, String gameType, GameOptions options, Map<P
 
     public int claimedCount() {
         return (int) players.values().stream().filter(SessionPlayer::isClaimed).count();
-    }
-
-    public void requestRematch(PlayerId playerId) {
-        seatOrThrow(playerId).requestRematch();
-    }
-
-    /**
-     * Every expected player has asked for the rematch. Expected players are the human seats that
-     * took part and have not left for good: bots never click, and an unclaimed seat has nobody to
-     * wait for.
-     */
-    public boolean isRematchUnanimous() {
-        List<SessionPlayer> expected = players.values().stream()
-                .filter(seat -> seat.isClaimed() && !seat.isBot() && !seat.hasLeftRematch())
-                .toList();
-        return !expected.isEmpty() && expected.stream().allMatch(SessionPlayer::hasRequestedRematch);
-    }
-
-    /** The player will not take part in the rematch any more; the remaining players stop waiting. */
-    public void leaveRematch(PlayerId playerId) {
-        SessionPlayer seat = seatOrThrow(playerId);
-        if (seat.isClaimed() && !seat.isBot()) {
-            seat.leaveRematch();
-        }
-    }
-
-    /**
-     * A rematch deals one game to seats 0..k-1 (seat id = player index), so it can start only if at
-     * least {@code minPlayers} seats remain and the departed ones sit after all the others.
-     */
-    public boolean isRematchPlayable(int minPlayers) {
-        int remaining = 0;
-        boolean gap = false;
-        for (SessionPlayer seat : seats()) {
-            boolean stays = seat.isClaimed() && !seat.hasLeftRematch();
-            if (stays && gap) {
-                return false;
-            }
-            if (stays) {
-                remaining++;
-            } else {
-                gap = true;
-            }
-        }
-        return remaining >= minPlayers;
-    }
-
-    /** Frees the seats of players who left, so the rematch is dealt to those who stay. */
-    public void releaseDepartedSeats() {
-        players.values().stream().filter(SessionPlayer::hasLeftRematch).forEach(SessionPlayer::release);
-    }
-
-    public void clearRematch() {
-        players.values().forEach(SessionPlayer::clearRematch);
     }
 
     private SessionPlayer seatOrThrow(PlayerId playerId) {

@@ -5,6 +5,7 @@ import org.kevinkib.cardgames.bataillecorse.presentation.dto.BatailleCorseDto;
 import org.kevinkib.cardgames.presentation.GameMessagingService;
 import org.kevinkib.cardgames.presentation.api.SuccessResponse;
 import org.kevinkib.cardgames.presentation.dto.event.EventData;
+import org.kevinkib.cardgames.presentation.state.GameStateListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,13 +21,13 @@ public class BatailleCorseStateBroadcaster {
     private static final Logger log = LoggerFactory.getLogger(BatailleCorseStateBroadcaster.class);
 
     private final GameMessagingService messaging;
-    private final List<BatailleCorseStateListener> listeners = new CopyOnWriteArrayList<>();
+    private final List<GameStateListener<BatailleCorse>> listeners = new CopyOnWriteArrayList<>();
 
     public BatailleCorseStateBroadcaster(GameMessagingService messaging) {
         this.messaging = messaging;
     }
 
-    public void addListener(BatailleCorseStateListener listener) {
+    public void addListener(GameStateListener<BatailleCorse> listener) {
         listeners.add(listener);
     }
 
@@ -38,7 +39,7 @@ public class BatailleCorseStateBroadcaster {
     public void broadcast(BatailleCorse game, String eventType, EventData eventData, String message,
                           BatailleCorseDto state) {
         messaging.sendToGame(game.getId().uuid().toString(), new SuccessResponse(eventType, eventData, message, state));
-        for (BatailleCorseStateListener listener : listeners) {
+        for (GameStateListener<BatailleCorse> listener : listeners) {
             try {
                 listener.onBroadcast(game, eventType, eventData);
             } catch (RuntimeException e) {

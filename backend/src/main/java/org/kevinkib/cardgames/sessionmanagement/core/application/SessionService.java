@@ -6,9 +6,7 @@ import org.kevinkib.cardgames.game.GameOptions;
 import org.kevinkib.cardgames.game.OptionDescriptor;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.core.application.port.SessionRepository;
-import org.kevinkib.cardgames.sessionmanagement.core.application.GameMode;
 import org.kevinkib.cardgames.sessionmanagement.core.domain.NoFreeSeatException;
-import org.kevinkib.cardgames.sessionmanagement.core.domain.SeatTakenException;
 import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionGame;
 import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionPlayer;
 import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionToken;
@@ -28,8 +26,6 @@ import java.util.function.Consumer;
  */
 public class SessionService implements GameDirectory {
 
-    private static final PlayerId JOINER_SEAT = new PlayerId(1);
-
     private final SessionRepository repository;
     private final GameFactories gameFactories;
     private volatile Consumer<GameId> lobbyRemovalListener = removed -> { };
@@ -37,45 +33,6 @@ public class SessionService implements GameDirectory {
     public SessionService(SessionRepository repository, GameFactories gameFactories) {
         this.repository = repository;
         this.gameFactories = gameFactories;
-    }
-
-    public Game createGame(String gameType, int nbPlayers) {
-        return createGame(gameType, nbPlayers, GameMode.SOLO, null);
-    }
-
-    public Game createGame(String gameType, int nbPlayers, GameMode mode) {
-        return createGame(gameType, nbPlayers, mode, null);
-    }
-
-    public Game createGame(String gameType, int nbPlayers, GameMode mode, String creatorName) {
-        GameId id = GameId.generate();
-        Game game = gameFactories.factoryFor(gameType).create(id, nbPlayers);
-
-        SessionGame sessionGame = SessionGame.create(id, game.getPlayerIds(), gameType);
-
-        if (mode == GameMode.SOLO) {
-            sessionGame.claimAllSeats();
-        } else {
-            sessionGame.claimHost(creatorName);
-        }
-
-        repository.save(game, sessionGame);
-
-        return game;
-    }
-
-    public JoinResult joinGame(GameId gameId) {
-        return joinGame(gameId, null);
-    }
-
-    public synchronized JoinResult joinGame(GameId gameId, String name) {
-        SessionGame sessionGame = repository.loadSessionGame(gameId);
-        try {
-            SessionPlayer claimed = sessionGame.claimSeat(JOINER_SEAT, name);
-            return new JoinResult(claimed.id(), claimed.token().uuid().toString());
-        } catch (SeatTakenException e) {
-            throw new SeatUnavailableException(JOINER_SEAT);
-        }
     }
 
     public synchronized JoinResult joinRoom(GameId id, String name) {
@@ -335,52 +292,6 @@ public class SessionService implements GameDirectory {
 
     public int maxPlayers(String gameType) {
         return gameFactories.maxPlayers(gameType);
-    }
-
-    /**
-     * Records this seat's rematch request; returns true when every expected player has requested
-     * and enough of them remain to play (see {@link SessionGame#isRematchUnanimous}).
-     */
-    public synchronized boolean requestRematch(GameId id, PlayerId playerId) {
-        SessionGame session = repository.loadSessionGame(id);
-        session.requestRematch(playerId);
-        return isRematchReady(session);
-    }
-
-    /**
-     * A player leaves the rematch for good (grace delay over, or explicit quit). Nobody waits for
-     * them any more: if every other expected player had already asked, the rematch starts now and
-     * the fresh game is returned. Empty when the game is not over, or when the rematch is still
-     * waiting for someone, or cannot be played any more (too few players left).
-     */
-    public Optional<Game> leaveRematch(GameId id, PlayerId playerId) {
-        // Lock order: the game's own lock is never taken under this monitor (a Kobo action holds its game lock and
-        // then calls the service), so the game is inspected before entering the monitor. A finished game stays finished.
-        if (repository.findGame(id).filter(Game::isFinished).isEmpty()) {
-            return Optional.empty();
-        }
-        return leaveRematchUnderLock(id, playerId);
-    }
-
-    private synchronized Optional<Game> leaveRematchUnderLock(GameId id, PlayerId playerId) {
-        SessionGame session = repository.loadSessionGame(id);
-        session.leaveRematch(playerId);
-        return isRematchReady(session) ? Optional.of(rematch(id)) : Optional.empty();
-    }
-
-    private boolean isRematchReady(SessionGame session) {
-        return session.isRematchUnanimous()
-                && session.isRematchPlayable(gameFactories.minPlayers(session.gameType()));
-    }
-
-    public synchronized Game rematch(GameId id) {
-        SessionGame session = repository.loadSessionGame(id);
-        session.releaseDepartedSeats();
-        // Deal the rematch to the players who actually joined, not every room seat (matches startGame).
-        Game fresh = gameFactories.factoryFor(session.gameType()).create(id, session.claimedCount(), session.options());
-        session.clearRematch();
-        repository.save(fresh, session);
-        return fresh;
     }
 
     public synchronized List<SeatView> seats(GameId gameId) {

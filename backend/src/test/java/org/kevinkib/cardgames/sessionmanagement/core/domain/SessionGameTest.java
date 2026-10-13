@@ -20,6 +20,11 @@ class SessionGameTest {
         return IntStream.range(0, count).mapToObj(PlayerId::new).toList();
     }
 
+    /** Seats a human on every seat. */
+    private static void claimAll(SessionGame sessionGame) {
+        sessionGame.players().keySet().forEach(seat -> sessionGame.claimNextFreeSeat(null));
+    }
+
     @Nested
     class CreateTest {
 
@@ -28,7 +33,7 @@ class SessionGameTest {
             var players = playerIds(2);
 
             var sessionGame = SessionGame.create(GameId.generate(), players, "bataille-corse");
-            sessionGame.claimAllSeats();
+            claimAll(sessionGame);
 
             assertThat(sessionGame.findTokenByPlayer(new PlayerId(0)).isPresent(), is(true));
             assertThat(sessionGame.findTokenByPlayer(new PlayerId(1)).isPresent(), is(true));
@@ -39,7 +44,7 @@ class SessionGameTest {
             var players = playerIds(2);
 
             var sessionGame = SessionGame.create(GameId.generate(), players, "bataille-corse");
-            sessionGame.claimAllSeats();
+            claimAll(sessionGame);
 
             var token0 = sessionGame.findTokenByPlayer(new PlayerId(0)).orElseThrow();
             var token1 = sessionGame.findTokenByPlayer(new PlayerId(1)).orElseThrow();
@@ -126,17 +131,6 @@ class SessionGameTest {
         }
 
         @Test
-        public void givenSeats_whenClaimAllSeats_thenEverySeatClaimedAndCounted() {
-            var sessionGame = SessionGame.create(GameId.generate(), playerIds(3), "bullshit");
-
-            sessionGame.claimAllSeats();
-
-            assertThat(sessionGame.claimedCount(), is(3));
-            assertThat(sessionGame.isClaimed(new PlayerId(0)), is(true));
-            assertThat(sessionGame.isClaimed(new PlayerId(2)), is(true));
-        }
-
-        @Test
         public void givenSomeClaimed_whenClaimedCount_thenReflectsClaims() {
             var sessionGame = SessionGame.create(GameId.generate(), playerIds(4), "bullshit");
             sessionGame.claimSeat(new PlayerId(0), "Host");
@@ -161,7 +155,7 @@ class SessionGameTest {
         public void givenSessionGame_withToken_whenLookingUp_thenReturnPlayerId() {
             var players = playerIds(2);
             var sessionGame = SessionGame.create(GameId.generate(), players, "bataille-corse");
-            sessionGame.claimAllSeats();
+            claimAll(sessionGame);
             var tokenForPlayer0 = sessionGame.findTokenByPlayer(new PlayerId(0)).orElseThrow();
 
             Optional<PlayerId> result = sessionGame.findPlayerByToken(tokenForPlayer0);
@@ -178,145 +172,6 @@ class SessionGameTest {
 
             assertThat(result, is(Optional.empty()));
         }
-    }
-
-    @Nested
-    class RematchTest {
-
-        private SessionGame newSession() {
-            var session = SessionGame.create(GameId.generate(), playerIds(2), "bataille-corse");
-            session.claimAllSeats();
-            return session;
-        }
-
-        private SessionGame threeHumans() {
-            var session = SessionGame.create(GameId.generate(), playerIds(4), "fake");
-            session.claimHost("A");
-            session.claimNextFreeSeat("B");
-            session.claimNextFreeSeat("C");
-            return session;
-        }
-
-        @Test
-        void givenUnclaimedSeat_whenAllClaimedSeatsRequested_thenUnanimous() {
-            var session = threeHumans();
-            session.requestRematch(new PlayerId(0));
-            session.requestRematch(new PlayerId(1));
-            session.requestRematch(new PlayerId(2));
-
-            assertThat(session.isRematchUnanimous(), is(true));
-        }
-
-        @Test
-        void givenBotSeat_whenHumansRequested_thenBotDoesNotBlock() {
-            var session = threeHumans();
-            session.claimBot(null);
-            session.requestRematch(new PlayerId(0));
-            session.requestRematch(new PlayerId(1));
-            session.requestRematch(new PlayerId(2));
-
-            assertThat(session.isRematchUnanimous(), is(true));
-        }
-
-        @Test
-        void givenOthersRequested_whenLastPlayerLeaves_thenUnanimousWithoutNewRequest() {
-            var session = threeHumans();
-            session.requestRematch(new PlayerId(0));
-            session.requestRematch(new PlayerId(1));
-            assertThat(session.isRematchUnanimous(), is(false));
-
-            session.leaveRematch(new PlayerId(2));
-
-            assertThat(session.isRematchUnanimous(), is(true));
-        }
-
-        @Test
-        void givenEveryoneLeft_thenNeverUnanimous() {
-            var session = threeHumans();
-            session.leaveRematch(new PlayerId(0));
-            session.leaveRematch(new PlayerId(1));
-            session.leaveRematch(new PlayerId(2));
-
-            assertThat(session.isRematchUnanimous(), is(false));
-        }
-
-        @Test
-        void givenDepartedPlayer_whenHeRequestsAgain_thenExpectedAgain() {
-            var session = threeHumans();
-            session.requestRematch(new PlayerId(0));
-            session.requestRematch(new PlayerId(1));
-            session.leaveRematch(new PlayerId(2));
-
-            session.requestRematch(new PlayerId(2));
-
-            assertThat(session.isRematchUnanimous(), is(true));
-            assertThat(session.isRematchPlayable(3), is(true));
-        }
-
-        @Test
-        void givenTailDeparture_thenPlayableWhenEnoughRemain() {
-            var session = threeHumans();
-            session.leaveRematch(new PlayerId(2));
-
-            assertThat(session.isRematchPlayable(2), is(true));
-            assertThat(session.isRematchPlayable(3), is(false));
-        }
-
-        @Test
-        void givenMiddleDeparture_thenNotPlayableBecauseSeatsWouldHaveAGap() {
-            var session = threeHumans();
-            session.leaveRematch(new PlayerId(1));
-
-            assertThat(session.isRematchPlayable(2), is(false));
-        }
-
-        @Test
-        void givenDepartedSeat_whenReleased_thenNotCountedAsClaimed() {
-            var session = threeHumans();
-            session.leaveRematch(new PlayerId(2));
-
-            session.releaseDepartedSeats();
-
-            assertThat(session.claimedCount(), is(2));
-        }
-
-        @Test
-        void givenNoSeatRequested_whenIsRematchUnanimous_thenFalse() {
-            var session = newSession();
-
-            assertThat(session.isRematchUnanimous(), is(false));
-        }
-
-        @Test
-        void givenOneOfTwoSeatsRequested_whenIsRematchUnanimous_thenFalse() {
-            var session = newSession();
-
-            session.requestRematch(new PlayerId(0));
-
-            assertThat(session.isRematchUnanimous(), is(false));
-        }
-
-        @Test
-        void givenAllSeatsRequested_whenIsRematchUnanimous_thenTrue() {
-            var session = newSession();
-
-            session.requestRematch(new PlayerId(0));
-            session.requestRematch(new PlayerId(1));
-
-            assertThat(session.isRematchUnanimous(), is(true));
-        }
-
-        @Test
-        void givenUnanimousRematch_whenClearRematch_thenNoLongerUnanimous() {
-            var session = newSession();
-            session.requestRematch(new PlayerId(0));
-            session.requestRematch(new PlayerId(1));
-
-            session.clearRematch();
-
-            assertThat(session.isRematchUnanimous(), is(false));
-        }
-
     }
 
     @Test

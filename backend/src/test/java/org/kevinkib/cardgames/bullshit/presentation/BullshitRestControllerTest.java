@@ -1,5 +1,6 @@
 package org.kevinkib.cardgames.bullshit.presentation;
 
+import org.kevinkib.cardgames.presentation.support.StartedRooms;
 import org.kevinkib.cardgames.presentation.state.SeatLifecycleBroadcaster;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,7 +18,6 @@ import org.kevinkib.cardgames.sessionmanagement.core.application.GameFactories;
 import org.kevinkib.cardgames.sessionmanagement.core.application.LobbyView;
 import org.kevinkib.cardgames.sessionmanagement.core.application.RoomCreated;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
-import org.kevinkib.cardgames.sessionmanagement.core.application.GameMode;
 import org.kevinkib.cardgames.sessionmanagement.core.infrastructure.InMemorySessionRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -54,7 +54,7 @@ class BullshitRestControllerTest {
 
     @Test
     void givenStartedGameAndSeatToken_whenGetGame_thenReturnsGameView() {
-        Bullshit game = (Bullshit) sessionService.createGame("bullshit", 2, GameMode.SOLO);
+        Bullshit game = (Bullshit) StartedRooms.start(sessionService, "bullshit", 2);
         GameId id = game.getId();
         String t0 = sessionService.tokenForSeat(id, new PlayerId(0));
 

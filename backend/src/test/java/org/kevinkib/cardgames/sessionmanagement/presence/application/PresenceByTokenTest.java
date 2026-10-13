@@ -45,7 +45,6 @@ class PresenceByTokenTest {
 
         @Override public Optional<Game> findGame(GameId id) { return real.findGame(id); }
         @Override public void touch(GameId id) { real.touch(id); }
-        @Override public Optional<Game> leaveRematch(GameId id, PlayerId p) { return real.leaveRematch(id, p); }
 
         @Override
         public Optional<PlayerId> findPlayerIdByToken(GameId id, String token) {
@@ -75,7 +74,6 @@ class PresenceByTokenTest {
         @Override public void disconnected(Game game, PlayerId player, long deadlineEpochMs) { events.add("disconnected " + player.id()); }
         @Override public void reconnected(Game game, PlayerId player) { events.add("reconnected " + player.id()); }
         @Override public void forfeited(Game game, PlayerId player, ForfeitReason reason) { events.add("forfeited " + player.id()); }
-        @Override public void rematchStarted(Game fresh, PlayerId triggeredBy) { events.add("rematch " + triggeredBy.id()); }
     }
 
     private SessionService sessions;

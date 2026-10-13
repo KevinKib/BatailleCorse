@@ -123,8 +123,7 @@ public class PresenceService {
 
     /**
      * Terminal path shared by the timer (DISCONNECTED) and explicit /app/forfeit (RESIGNED). On a
-     * finished game there is nothing to concede: the player leaves the rematch instead, which may
-     * complete it for the others.
+     * finished game there is nothing to concede.
      */
     public void forfeit(GameId gameId, PlayerId playerId, ForfeitReason reason) {
         Seat seat = new Seat(gameId, playerId);
@@ -135,10 +134,6 @@ public class PresenceService {
             return;
         }
         if (game.isFinished()) {
-            games.leaveRematch(gameId, playerId).ifPresent(fresh -> {
-                games.touch(gameId);
-                broadcasters.broadcasterFor(fresh).rematchStarted(fresh, playerId);
-            });
             return;
         }
         game.forfeit(playerId);

@@ -30,7 +30,7 @@ public final class SessionTable {
     /** Registers an already built game with every seat claimed (one token per seat). */
     public <G extends Game> G install(G game, String gameType) {
         SessionGame session = SessionGame.create(game.getId(), game.getPlayerIds(), gameType);
-        session.claimAllSeats();
+        game.getPlayerIds().forEach(seat -> session.claimNextFreeSeat(null));
         repository.save(game, session);
         return game;
     }

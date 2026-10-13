@@ -1,4 +1,5 @@
 package org.kevinkib.cardgames.sessionmanagement.presence.application;
+import org.kevinkib.cardgames.presentation.support.StartedRooms;
 import org.kevinkib.cardgames.bataillecorse.presentation.BatailleCorseLifecycleBroadcaster;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -7,7 +8,6 @@ import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorse;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
-import org.kevinkib.cardgames.sessionmanagement.core.application.GameMode;
 import org.kevinkib.cardgames.sessionmanagement.core.infrastructure.InMemorySessionRepository;
 import org.kevinkib.cardgames.presentation.api.Response;
 import org.kevinkib.cardgames.sessionmanagement.presence.infrastructure.InMemoryConnectionRegistry;
@@ -80,9 +80,8 @@ class PresenceServiceTest {
         var broadcasters = new GameLifecycleBroadcasters(List.of(broadcaster));
         service = new PresenceService(sessionService, registry, scheduler, clock, forfeitLog, broadcasters);
 
-        BatailleCorse game = (BatailleCorse) sessionService.createGame("bataille-corse", 2, GameMode.MULTIPLAYER);
+        BatailleCorse game = (BatailleCorse) StartedRooms.start(sessionService, "bataille-corse", 2);
         gameId = game.getId();
-        sessionService.joinGame(gameId);
     }
 
     private String tokenOf(int seat) {

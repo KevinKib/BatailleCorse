@@ -6,7 +6,7 @@ import org.kevinkib.cardgames.bataillecorse.domain.bot.BatailleCorseBotStrategy;
 import org.kevinkib.cardgames.bataillecorse.domain.bot.BatailleCorseBotStrategy.Move;
 import org.kevinkib.cardgames.bataillecorse.domain.bot.BatailleCorseBotTier;
 import org.kevinkib.cardgames.bataillecorse.presentation.BatailleCorseGameActions;
-import org.kevinkib.cardgames.bataillecorse.presentation.BatailleCorseStateListener;
+import org.kevinkib.cardgames.presentation.state.GameStateListener;
 import org.kevinkib.cardgames.game.Game;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
@@ -47,7 +47,7 @@ import java.util.stream.Collectors;
  * (the {@link ThinkingDelay} supplies a value in {@code [0, 2 * JITTER_MS)} added to the tier time minus
  * the jitter bound), plus an optional extra delay.
  */
-public class BatailleCorseBotCoordinator implements BatailleCorseStateListener, GameEvictionListener {
+public class BatailleCorseBotCoordinator implements GameStateListener<BatailleCorse>, GameEvictionListener {
 
     /** How long a won pile waits before the bot collects it, as the client used to wait. */
     public static final Duration AUTO_GRAB_DELAY = Duration.ofMillis(1500);

@@ -55,8 +55,7 @@ class BatailleCorseLifecycleBroadcasterTest {
         broadcaster.disconnected(game, new PlayerId(0), 123L);
         broadcaster.reconnected(game, new PlayerId(0));
         broadcaster.forfeited(game, new PlayerId(0), ForfeitReason.RESIGNED);
-        broadcaster.rematchStarted(game, new PlayerId(1));
 
-        assertThat(events, is(java.util.List.of("OPPONENT_DISCONNECTED", "OPPONENT_RECONNECTED", "FORFEIT", "REMATCH")));
+        assertThat(events, is(java.util.List.of("OPPONENT_DISCONNECTED", "OPPONENT_RECONNECTED", "FORFEIT")));
     }
 }

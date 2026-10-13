@@ -184,19 +184,6 @@ class SessionGameVacateTest {
     }
 
     @Test
-    void givenRematchFlags_whenAGuestLeaves_thenTheyFollowTheirOccupant() {
-        human("Alice");
-        human("Bob");
-        human("Carol");
-        lobby.requestRematch(seat(2));
-
-        lobby.vacate(seat(1));
-
-        assertThat(lobby.players().get(seat(1)).hasRequestedRematch(), is(true));
-        assertThat(lobby.players().get(seat(0)).hasRequestedRematch(), is(false));
-    }
-
-    @Test
     void givenOnlyBotsWouldRemain_whenHostLeaves_thenNoHumanIsLeft() {
         human("Alice");
         lobby.claimBot(null);

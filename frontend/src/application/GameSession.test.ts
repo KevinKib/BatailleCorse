@@ -333,13 +333,25 @@ describe('GameSession', () => {
 
   // --- Game topic ------------------------------------------------------------
 
-  describe('refused action on the game topic', () => {
-    it('keeps the state it carries and reports the error, without any animation', async () => {
-      const { session, events } = playing(0);
+  describe('refused command on the seat channel', () => {
+    it('keeps the game state it carries and reports the error, without any lobby update', () => {
+      const { events, fireSeat } = playing(1);
 
-      await session.onResponse({ ...buildResponse({ eventType: 'SLAP', state: buildGame() }), success: false, message: 'nope' });
+      fireSeat({ success: false, eventType: 'SEND', eventData: {}, message: 'Not your turn', state: gameJson() });
 
       expect(events.map(e => e.type)).toEqual(['state-update', 'error']);
+      expect(events).toContainEqual({ type: 'error', eventType: 'SEND', message: 'Not your turn' });
+    });
+
+    it('never mistakes the game state of a refusal for a lobby, even before the first game state came in', () => {
+      const { session, events, fireSeat } = makeSession();
+      session.restore('game-1', 0, 'tok-0');
+
+      fireSeat({ success: false, eventType: 'SLAP', eventData: {}, message: 'Nothing to slap', state: gameJson() });
+
+      expect(events.find(e => e.type === 'lobby-update')).toBeUndefined();
+      expect(events.find(e => e.type === 'seats-change')).toBeUndefined();
+      expect(events).toContainEqual({ type: 'error', eventType: 'SLAP', message: 'Nothing to slap' });
     });
   });
 

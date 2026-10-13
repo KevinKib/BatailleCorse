@@ -1,4 +1,5 @@
 package org.kevinkib.cardgames.bataillecorse.presentation;
+import org.kevinkib.cardgames.presentation.command.SeatCommands;
 import org.kevinkib.cardgames.presentation.*;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -20,6 +21,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 class BatailleCorseWebSocketControllerTest {
 
@@ -33,7 +35,7 @@ class BatailleCorseWebSocketControllerTest {
         template = mock(SimpMessagingTemplate.class);
         GameMessagingService messaging = new GameMessagingService(template, sessionService);
         BatailleCorseStateBroadcaster broadcaster = new BatailleCorseStateBroadcaster(messaging);
-        controller = new BatailleCorseWebSocketController(sessionService, messaging,
+        controller = new BatailleCorseWebSocketController(sessionService, new SeatCommands(sessionService, messaging),
                 new BatailleCorseGameActions(sessionService, broadcaster), broadcaster);
     }
 
@@ -78,16 +80,14 @@ class BatailleCorseWebSocketControllerTest {
         }
 
         @Test
-        void givenInvalidToken_whenSend_thenBroadcastsErrorResponse() {
+        void givenInvalidToken_whenSend_thenNothingIsSent() {
             var game = twoHumanGame();
             String gameId = game.getId().uuid().toString();
+            clearInvocations(template);
 
             controller.send(new GameActionPayload(gameId, SessionToken.generate().uuid().toString()));
 
-            verify(template).convertAndSend(
-                    eq("/topic/game/" + gameId),
-                    (Object) argThat(r -> !((Response) r).isSuccess())
-            );
+            verifyNoInteractions(template);
         }
     }
 
@@ -114,16 +114,14 @@ class BatailleCorseWebSocketControllerTest {
         }
 
         @Test
-        void givenInvalidToken_whenSlap_thenBroadcastsErrorResponse() {
+        void givenInvalidToken_whenSlap_thenNothingIsSent() {
             var game = twoHumanGame();
             String gameId = game.getId().uuid().toString();
+            clearInvocations(template);
 
             controller.slap(new GameActionPayload(gameId, SessionToken.generate().uuid().toString()));
 
-            verify(template).convertAndSend(
-                    eq("/topic/game/" + gameId),
-                    (Object) argThat(r -> !((Response) r).isSuccess())
-            );
+            verifyNoInteractions(template);
         }
     }
 
@@ -162,16 +160,14 @@ class BatailleCorseWebSocketControllerTest {
         }
 
         @Test
-        void givenInvalidToken_whenGrab_thenBroadcastsErrorResponse() {
+        void givenInvalidToken_whenGrab_thenNothingIsSent() {
             var game = twoHumanGame();
             String gameId = game.getId().uuid().toString();
+            clearInvocations(template);
 
             controller.grab(new GameActionPayload(gameId, SessionToken.generate().uuid().toString()));
 
-            verify(template).convertAndSend(
-                    eq("/topic/game/" + gameId),
-                    (Object) argThat(r -> !((Response) r).isSuccess())
-            );
+            verifyNoInteractions(template);
         }
     }
 }

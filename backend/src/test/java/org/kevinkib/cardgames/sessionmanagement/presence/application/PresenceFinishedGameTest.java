@@ -25,17 +25,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 
 /**
- * A rematch needs every expected player to ask for it. When one of them leaves for good after the
- * others have already asked, the departure itself must re-evaluate the rematch: nobody clicks again.
+ * Presence on a finished game: there is nothing to concede and nothing to announce, whatever a player does.
  * Pure session + presence, no real time: the scheduler is captured and fired by hand.
  */
-class PresenceRematchTest {
+class PresenceFinishedGameTest {
 
     private static final class CapturingScheduler implements ForfeitScheduler {
         final List<Runnable> tasks = new ArrayList<>();
@@ -57,7 +54,6 @@ class PresenceRematchTest {
         @Override public void disconnected(Game game, PlayerId player, long deadlineEpochMs) { events.add("disconnected " + player.id()); }
         @Override public void reconnected(Game game, PlayerId player) { events.add("reconnected " + player.id()); }
         @Override public void forfeited(Game game, PlayerId player, ForfeitReason reason) { events.add("forfeited " + player.id()); }
-        @Override public void rematchStarted(Game fresh, PlayerId triggeredBy) { events.add("rematch " + triggeredBy.id()); }
     }
 
     private SessionService sessions;
@@ -94,92 +90,34 @@ class PresenceRematchTest {
     }
 
     @Test
-    void givenOthersAskedForRematch_whenLastExpectedPlayerLeavesForGood_thenRematchStartsForTheRemaining() {
+    void givenFinishedGame_whenAPlayerLeavesForGoodAfterTheGrace_thenNothingIsConcededOrBroadcast() {
         finishedGameWithThreeHumans();
-        sessions.requestRematch(id, new PlayerId(0));
-        sessions.requestRematch(id, new PlayerId(1));
 
         presence.onDisconnect("conn-2");
-        scheduler.tasks.get(0).run(); // grace over: Carol is gone for good
-
-        assertThat(currentGame().isFinished(), is(false));
-        assertThat(currentGame().getPlayerIds(), hasSize(2));
-        assertThat(broadcaster.events, contains("rematch 2"));
-    }
-
-    @Test
-    void givenOthersAskedForRematch_whenExpectedPlayerOnlyDisconnected_thenRematchWaitsForTheGraceDelay() {
-        finishedGameWithThreeHumans();
-        sessions.requestRematch(id, new PlayerId(0));
-        sessions.requestRematch(id, new PlayerId(1));
-
-        presence.onDisconnect("conn-2"); // grace period still running
+        scheduler.tasks.get(0).run(); // grace over
 
         assertThat(currentGame().isFinished(), is(true));
         assertThat(broadcaster.events, is(empty()));
     }
 
     @Test
-    void givenDisconnectedExpectedPlayer_whenReconnectsWithinGrace_thenTimerCancelledAndRematchStillNeedsHisRequest() {
+    void givenFinishedGame_whenAPlayerResigns_thenNothingIsConcededOrBroadcast() {
         finishedGameWithThreeHumans();
-        sessions.requestRematch(id, new PlayerId(0));
-        sessions.requestRematch(id, new PlayerId(1));
+
+        presence.forfeit(id, new PlayerId(2), ForfeitReason.RESIGNED);
+
+        assertThat(currentGame().isFinished(), is(true));
+        assertThat(broadcaster.events, is(empty()));
+    }
+
+    @Test
+    void givenFinishedGame_whenADisconnectedPlayerReconnectsWithinGrace_thenTheTimerIsCancelledWithoutNoise() {
+        finishedGameWithThreeHumans();
         presence.onDisconnect("conn-2");
 
         presence.onPresence("conn-2b", id, sessions.tokenForSeat(id, new PlayerId(2)));
 
         assertThat(scheduler.cancelled.get(0), is(true));
         assertThat(broadcaster.events, is(empty())); // no "reconnected" noise on a finished game
-        assertThat(sessions.requestRematch(id, new PlayerId(2)), is(true));
-    }
-
-    @Test
-    void givenExpectedPlayerLeavesBeforeOthersAsk_whenTheyAskAfterwards_thenRematchIsUnanimousAtTheLastRequest() {
-        finishedGameWithThreeHumans();
-        presence.onDisconnect("conn-2");
-        scheduler.tasks.get(0).run();
-
-        assertThat(sessions.requestRematch(id, new PlayerId(0)), is(false));
-        assertThat(sessions.requestRematch(id, new PlayerId(1)), is(true));
-    }
-
-    @Test
-    void givenExplicitLeaveOnFinishedGame_whenOthersAlreadyAsked_thenRematchStartsWithoutWaiting() {
-        finishedGameWithThreeHumans();
-        sessions.requestRematch(id, new PlayerId(0));
-        sessions.requestRematch(id, new PlayerId(1));
-
-        presence.forfeit(id, new PlayerId(2), ForfeitReason.RESIGNED);
-
-        assertThat(currentGame().isFinished(), is(false));
-        assertThat(broadcaster.events, contains("rematch 2"));
-    }
-
-    @Test
-    void givenBotSeat_whenHumansAsked_thenBotNeverBlocksTheRematch() {
-        RoomCreated room = sessions.createRoom("fake", "Alice");
-        id = new GameId(room.gameId());
-        sessions.joinRoom(id, "Bob");
-        sessions.addBot(id, room.hostToken());
-        ((FakeGame) sessions.startGame(id, room.hostToken())).finish();
-
-        assertThat(sessions.requestRematch(id, new PlayerId(0)), is(false));
-        assertThat(sessions.requestRematch(id, new PlayerId(1)), is(true));
-    }
-
-    @Test
-    void givenTwoPlayersOneAskedAndTheOtherLeaves_thenNoRematchCanStart() {
-        RoomCreated room = sessions.createRoom("fake", "Alice");
-        id = new GameId(room.gameId());
-        sessions.joinRoom(id, "Bob");
-        ((FakeGame) sessions.startGame(id, room.hostToken())).finish();
-        presence.onPresence("conn-1", id, sessions.tokenForSeat(id, new PlayerId(1)));
-        sessions.requestRematch(id, new PlayerId(0));
-
-        presence.onDisconnect("conn-1");
-        scheduler.tasks.get(0).run();
-
-        assertThat(currentGame().isFinished(), is(true)); // a lone player cannot play a rematch
-        assertThat(broadcaster.events, is(empty()));
     }
 }

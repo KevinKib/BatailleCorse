@@ -1,5 +1,6 @@
 package org.kevinkib.cardgames.bataillecorse.presentation.bot;
 
+import org.kevinkib.cardgames.presentation.command.SeatCommands;
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorse;
 import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseFactory;
@@ -43,7 +44,7 @@ class BatailleCorseBotGameIT {
     private final BatailleCorseStateBroadcaster broadcaster = new BatailleCorseStateBroadcaster(messaging);
     private final BatailleCorseGameActions actions = new BatailleCorseGameActions(sessions, broadcaster);
     private final BatailleCorseWebSocketController ws =
-            new BatailleCorseWebSocketController(sessions, messaging, actions, broadcaster);
+            new BatailleCorseWebSocketController(sessions, new SeatCommands(sessions, messaging), actions, broadcaster);
     private final ManualBotScheduler scheduler = new ManualBotScheduler();
 
     @Test

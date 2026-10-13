@@ -105,7 +105,7 @@ class ThreeMenMorrisRestAndLifecycleTest {
     // ---- session core hosts the game
 
     @Test
-    void sessionCore_startsAndRematchesTheGameLikeAnyOther() {
+    void sessionCore_startsTheGameLikeAnyOther() {
         RoomCreated room = table.sessions.createRoom(ThreeMenMorrisFactory.GAME_TYPE, "Alice");
         GameId id = new GameId(room.gameId());
         table.sessions.joinRoom(id, "Bob");
@@ -115,12 +115,6 @@ class ThreeMenMorrisRestAndLifecycleTest {
         assertThat(game.getPlayerIds().size(), is(2));
         assertThat(table.sessions.minPlayers(ThreeMenMorrisFactory.GAME_TYPE), is(2));
         assertThat(table.sessions.maxPlayers(ThreeMenMorrisFactory.GAME_TYPE), is(2));
-
-        game.forfeit(BLACK);
-        assertThat(table.sessions.requestRematch(id, WHITE), is(false));
-        assertThat(table.sessions.requestRematch(id, BLACK), is(true));
-        ThreeMenMorris fresh = (ThreeMenMorris) table.sessions.rematch(id);
-        assertThat(fresh.isFinished(), is(false));
     }
 
     // ---- lifecycle

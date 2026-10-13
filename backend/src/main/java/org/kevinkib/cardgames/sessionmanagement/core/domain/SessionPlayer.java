@@ -12,8 +12,6 @@ public class SessionPlayer {
     private boolean claimed;
     private boolean bot;
     private String name;
-    private boolean rematchRequested;
-    private boolean rematchDeparted;
     private boolean disconnected;
     private final Map<String, String> options = new LinkedHashMap<>();
 
@@ -23,7 +21,6 @@ public class SessionPlayer {
         this.claimed = false;
         this.bot = false;
         this.name = null;
-        this.rematchRequested = false;
     }
 
     public void claim(String name) {
@@ -48,20 +45,16 @@ public class SessionPlayer {
         this.bot = false;
         this.name = null;
         this.options.clear();
-        this.rematchRequested = false;
-        this.rematchDeparted = false;
         this.disconnected = false;
         this.token = SessionToken.generate();
     }
 
-    /** The same occupant on another seat: token, name, bot flag, options and rematch flags move with it. */
+    /** The same occupant on another seat: token, name, bot flag and options move with it. */
     SessionPlayer movedTo(PlayerId newId) {
         SessionPlayer moved = new SessionPlayer(newId, token);
         moved.claimed = claimed;
         moved.bot = bot;
         moved.name = name;
-        moved.rematchRequested = rematchRequested;
-        moved.rematchDeparted = rematchDeparted;
         moved.disconnected = disconnected;
         moved.options.putAll(options);
         return moved;
@@ -87,31 +80,6 @@ public class SessionPlayer {
 
     public String defaultName() {
         return "Player " + (id.id() + 1);
-    }
-
-    /** Asking for a rematch also cancels an earlier departure: the player is back and wants to play. */
-    public void requestRematch() {
-        this.rematchRequested = true;
-        this.rematchDeparted = false;
-    }
-
-    public void clearRematch() {
-        this.rematchRequested = false;
-        this.rematchDeparted = false;
-    }
-
-    /** The player left for good (grace delay over, or quit): the others stop waiting for them. */
-    void leaveRematch() {
-        this.rematchDeparted = true;
-        this.rematchRequested = false;
-    }
-
-    public boolean hasLeftRematch() {
-        return rematchDeparted;
-    }
-
-    public boolean hasRequestedRematch() {
-        return rematchRequested;
     }
 
     /** True while the human's connection is known to be down in a lobby (the host may remove the seat). */

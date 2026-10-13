@@ -1,5 +1,6 @@
 package org.kevinkib.cardgames.presentation;
 
+import org.kevinkib.cardgames.presentation.support.StartedRooms;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseFactory;
@@ -20,7 +21,6 @@ import org.kevinkib.cardgames.presentation.api.LobbyRenamePayload;
 import org.kevinkib.cardgames.presentation.api.LobbySeatOptionPayload;
 import org.kevinkib.cardgames.presentation.api.LobbySeatPayload;
 import org.kevinkib.cardgames.presentation.api.PresencePayload;
-import org.kevinkib.cardgames.sessionmanagement.core.application.GameMode;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
 import org.kevinkib.cardgames.threemenmorris.domain.ThreeMenMorrisFactory;
 import org.kevinkib.cardgames.threemenmorris.presentation.ThreeMenMorrisWebSocketController;
@@ -91,7 +91,7 @@ class MalformedTokenIT {
     }
 
     private Stream<DynamicTest> restViewAnswers403(String prefix, String gameType) {
-        String started = sessions.createGame(gameType, 2, GameMode.SOLO).getId().uuid().toString();
+        String started = StartedRooms.start(sessions, gameType, 2).getId().uuid().toString();
         String room = sessions.createRoom(gameType, "Alice").gameId();
         return Stream.of(started, room).flatMap(id ->
                 forEachBadToken("GET " + prefix + " " + (id.equals(room) ? "lobby" : "started"),
@@ -120,7 +120,7 @@ class MalformedTokenIT {
 
     @TestFactory
     Stream<DynamicTest> batailleCorseWebSocket() {
-        String id = sessions.createGame(BatailleCorseFactory.GAME_TYPE, 2, GameMode.SOLO).getId().uuid().toString();
+        String id = StartedRooms.start(sessions, BatailleCorseFactory.GAME_TYPE, 2).getId().uuid().toString();
         String room = sessions.createRoom(BatailleCorseFactory.GAME_TYPE, "Alice").gameId();
         return Stream.of(
                 forEachBadToken("bc start", t -> assertDoesNotThrow(() -> batailleCorse.start(new GameActionPayload(room, t)))),
@@ -132,7 +132,7 @@ class MalformedTokenIT {
 
     @TestFactory
     Stream<DynamicTest> bullshitWebSocket() {
-        String id = sessions.createGame(BullshitFactory.GAME_TYPE, 2, GameMode.SOLO).getId().uuid().toString();
+        String id = StartedRooms.start(sessions, BullshitFactory.GAME_TYPE, 2).getId().uuid().toString();
         String room = sessions.createRoom(BullshitFactory.GAME_TYPE, "Alice").gameId();
         return Stream.of(
                 forEachBadToken("bullshit start", t -> assertDoesNotThrow(() -> bullshit.start(new GameActionPayload(room, t)))),
@@ -143,7 +143,7 @@ class MalformedTokenIT {
 
     @TestFactory
     Stream<DynamicTest> koboWebSocket() {
-        String id = sessions.createGame(KoboFactory.GAME_TYPE, 2, GameMode.SOLO).getId().uuid().toString();
+        String id = StartedRooms.start(sessions, KoboFactory.GAME_TYPE, 2).getId().uuid().toString();
         String room = sessions.createRoom(KoboFactory.GAME_TYPE, "Alice").gameId();
         return Stream.of(
                 forEachBadToken("kobo start", t -> assertDoesNotThrow(() -> kobo.start(new GameActionPayload(room, t)))),
@@ -164,7 +164,7 @@ class MalformedTokenIT {
 
     @TestFactory
     Stream<DynamicTest> threeMenMorrisWebSocket() {
-        String id = sessions.createGame(ThreeMenMorrisFactory.GAME_TYPE, 2, GameMode.SOLO).getId().uuid().toString();
+        String id = StartedRooms.start(sessions, ThreeMenMorrisFactory.GAME_TYPE, 2).getId().uuid().toString();
         String room = sessions.createRoom(ThreeMenMorrisFactory.GAME_TYPE, "Alice").gameId();
         return Stream.of(
                 forEachBadToken("tmm start", t -> assertDoesNotThrow(() -> threeMenMorris.start(new GameActionPayload(room, t)))),
@@ -188,7 +188,7 @@ class MalformedTokenIT {
 
     @TestFactory
     Stream<DynamicTest> lifecycleWebSocket() {
-        String id = sessions.createGame(BullshitFactory.GAME_TYPE, 2, GameMode.SOLO).getId().uuid().toString();
+        String id = StartedRooms.start(sessions, BullshitFactory.GAME_TYPE, 2).getId().uuid().toString();
         return Stream.of(
                 forEachBadToken("presence", t -> assertDoesNotThrow(() ->
                         lifecycle.presence(new PresencePayload(id, t), SimpMessageHeaderAccessor.create()))),
