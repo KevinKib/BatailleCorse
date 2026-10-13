@@ -12,14 +12,32 @@ import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
 import org.kevinkib.cardgames.sessionmanagement.presence.port.GameLifecycleBroadcaster;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
+import org.kevinkib.cardgames.kobo.domain.DeckSource;
+import org.kevinkib.cardgames.kobo.domain.RandomDeckSource;
+import org.kevinkib.cardgames.kobo.domain.ScriptedDeckSource;
 
 /** The beans of the Kobo context: factory, broadcasters and actions. */
 @Configuration
 public class KoboConfig {
 
+    /** Production: a random deal. */
     @Bean
-    public KoboFactory koboFactory() {
-        return new KoboFactory();
+    @Profile("!test")
+    public DeckSource koboDeckSource() {
+        return new RandomDeckSource();
+    }
+
+    /** End-to-end tests (profile {@code test}): random unless a test fixes the deal, see KoboTestDealController. */
+    @Bean
+    @Profile("test")
+    public ScriptedDeckSource koboScriptedDeckSource() {
+        return new ScriptedDeckSource(new RandomDeckSource());
+    }
+
+    @Bean
+    public KoboFactory koboFactory(DeckSource deckSource) {
+        return new KoboFactory(deckSource);
     }
 
     @Bean
