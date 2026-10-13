@@ -29,8 +29,9 @@ import HotkeySettings from '../../components/HotkeySettings.vue';
 import { useSoundPreference } from '../../composables/useSoundPreference';
 import { useConnectionStatus } from '../../composables/useConnectionStatus';
 import { format, plural } from '../../locales/format';
-import { seatDisplayName } from '../../model/bullshit/displayName';
-import { opponentsInPlayOrder } from '../../model/bullshit/opponentOrder';
+import { seatDisplayName } from '../../model/table/displayName';
+import { opponentsInPlayOrder } from '../../model/table/opponentOrder';
+import { seatPositions as ringPositions } from '../../model/table/seatRing';
 import { claimSuit } from '../../model/bullshit/claimSuit';
 import { CLAIM_MODE_RANK, CLAIM_MODE_SUIT, type ClaimMode } from '../../model/bullshit/claimMode';
 
@@ -79,27 +80,9 @@ function seatSecondsRemaining(seat: number): number | null {
 const opponents = computed(() => opponentsInPlayOrder(store.game?.players ?? [], store.mySeat)
   .filter(p => p.id !== String(store.mySeat)));
 
-// Angles (degrees) around the table for K opponents, skipping the bottom (my zone).
-// 0 = right, 90 = top, 180 = left. Single opp sits at top; pairs sit up on the
-// top corners; 3+ spread evenly from left, over the top, to the right.
+// Where each opponent sits on the table ellipse (percent of the frame), skipping my zone at the bottom.
 // (Wide screens only: on narrow screens the seats flow in a row above the pile.)
-function seatAngles(count: number): number[] {
-  if (count <= 0) return [];
-  if (count === 1) return [90];
-  if (count === 2) return [135, 45];
-  return Array.from({ length: count }, (_, i) => 180 - i * (180 / (count - 1)));
-}
-
-// Map each opponent to a point on the table ellipse (percent of the frame).
-const RX = 44; // horizontal radius (%)
-const RY = 36; // vertical radius (%): keeps the top seat inside the oval
-const seatPositions = computed(() => {
-  const angles = seatAngles(opponents.value.length);
-  return angles.map(deg => {
-    const r = (deg * Math.PI) / 180;
-    return { left: 50 + RX * Math.cos(r), top: 50 - RY * Math.sin(r) };
-  });
-});
+const seatPositions = computed(() => ringPositions(opponents.value.length));
 
 // Suit claims get their symbol next to the word (rank claims: null).
 const targetSuit = computed(() => claimSuit(store.game?.currentTarget.label));

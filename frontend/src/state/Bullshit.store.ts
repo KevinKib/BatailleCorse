@@ -8,11 +8,8 @@ import type { LobbyView } from '../model/lobby/LobbyView';
 import type { CallBullshitEventData } from '../model/bullshit/BullshitEvents';
 import type Card from '../model/Card';
 import { useSeatPresence, FORFEIT_NOTICE_HOLD_MS } from '../composables/useSeatPresence';
-import type { ForfeitReason } from '../model/ForfeitReason';
+import { useSeatRoom } from '../composables/useSeatRoom';
 import type { ForfeitEventData } from '../model/SeatLifecycleEvents';
-
-/** Where my own play-again request stands (the others may click at their own pace). */
-export type RematchState = 'idle' | 'pending' | 'failed';
 
 export const REVEAL_HOLD_MS = 3000;
 export { FORFEIT_NOTICE_HOLD_MS };
@@ -26,23 +23,20 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
   // Every seat seen in this game, kept after it leaves the table (a forfeited player drops out of
   // `players`, yet "Bob forfeited" must still name him). Cleared when the room goes back to a lobby.
   const roster = ref<Record<string, BullshitPlayer>>({});
-  // Last refusal of a lobby command (server message, or 'connection' when it could not be sent), cleared by the
-  // next lobby refresh. Whatever the event type: a Start refusal is typed START, a Leave is typed JOIN.
-  const lobbyError = ref<string | null>(null);
-  // A Start is on its way: from the click until the game state or a refusal comes back.
-  const starting = ref(false);
-  // Rematch request of this client: pending while the HTTP call runs, failed when refused.
-  const rematch = ref<RematchState>('idle');
-  // The host removed me from the lobby: the screen leads to the Game selection with a notice.
-  const removedByHost = ref(false);
-  // Last seat that left (resigned or timed out), kept for the end screen after the notice is gone.
-  const lastForfeit = ref<{ seat: number; reason: ForfeitReason | null } | null>(null);
   let revealTimer: ReturnType<typeof setTimeout> | null = null;
 
   const game = computed<BullshitState | null>(() =>
     state.value && state.value.started ? state.value : null);
   const lobby = computed<LobbyView | null>(() =>
     state.value && !state.value.started ? state.value : null);
+
+  // Lobby error, Start, rematch, removed-by-host and last forfeit are the shared part of every seat game.
+  const room = useSeatRoom({
+    startGame: () => session.startGame(),
+    leave: () => session.leave(),
+    playAgain: (name) => session.playAgain(name),
+  });
+  const { lobbyError, starting, rematch, removedByHost, lastForfeit, requestLobbyChange } = room;
 
   const presence = useSeatPresence({
     presentSeats: () => (game.value?.players ?? []).map(p => Number(p.id)),
@@ -57,14 +51,11 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
       case 'state-update':
         reconcileSelection(state.value, event.state);
         state.value = event.state;
-        lobbyError.value = null;
-        starting.value = false;
+        room.onStateUpdate(event.state.started);
         if (event.state.started) {
           for (const p of event.state.players) roster.value = { ...roster.value, [p.id]: p };
         } else {
           roster.value = {};
-          lastForfeit.value = null;
-          rematch.value = 'idle';
         }
         break;
       case 'game-id-change':
@@ -72,17 +63,14 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
         gameId.value = event.gameId;
         break;
       case 'error':
-        lobbyError.value = state.value?.started ? null : event.message;
-        starting.value = false;
+        room.onError(state.value?.started === true, event.message);
         break;
       case 'removed':
         state.value = null;
         clearSelection();
         gameId.value = null;
         roster.value = {};
-        lobbyError.value = null;
-        starting.value = false;
-        removedByHost.value = true;
+        room.onRemoved();
         break;
       case 'seat-change': mySeat.value = event.seat; break;
       case 'event':
@@ -92,8 +80,7 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
           revealTimer = setTimeout(() => { reveal.value = null; revealTimer = null; }, REVEAL_HOLD_MS);
         } else {
           if (event.eventType === 'FORFEIT') {
-            const { loserSeat, reason } = event.eventData as ForfeitEventData;
-            lastForfeit.value = { seat: loserSeat, reason: reason ?? null };
+            room.onForfeit(event.eventData as ForfeitEventData);
           }
           presence.applyPresenceEvent(event.eventType, event.eventData);
         }
@@ -129,48 +116,15 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
   // A reopened room lands back in the lobby; drop any presence from the finished game.
   watch(phase, (p) => { if (p === 'lobby') presence.reset(); });
 
-  // Publishing throws while the socket is down (reconnecting): report it like a server refusal.
-  // Returns whether the command was sent.
-  function requestLobbyChange(send: () => void): boolean {
-    lobbyError.value = null;
-    try {
-      send();
-      return true;
-    } catch {
-      lobbyError.value = 'connection';
-      return false;
-    }
-  }
-
   // Leaves the lobby and forgets everything about it, so the next room starts from a clean store.
-  // Returns whether the lobby was left: false when the command could not be sent (the player is still seated).
-  function leave(): boolean {
-    if (!requestLobbyChange(() => session.leave())) return false;
+  const leave = () => room.leave(() => {
     state.value = null;
     clearSelection();
     gameId.value = null;
     roster.value = {};
-    lobbyError.value = null;
-    return true;
-  }
+  });
 
-  // One Start at a time: the button is busy until the answer, so a second click is not sent.
-  function startGame(): boolean {
-    if (starting.value) return false;
-    starting.value = requestLobbyChange(() => session.startGame());
-    return starting.value;
-  }
-
-  async function playAgain() {
-    presence.reset();
-    clearSelection();
-    rematch.value = 'pending';
-    try {
-      await session.playAgain();
-    } catch {
-      rematch.value = 'failed';
-    }
-  }
+  const playAgain = () => room.playAgain(() => { presence.reset(); clearSelection(); });
 
   function toggleCard(card: Card) {
     const i = selectedCards.value.findIndex(c => c.name === card.name);
@@ -190,7 +144,7 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
     join: (id: string, name?: string) => session.join(id, name),
     restore: (id: string, seat: number, token: string) => session.restore(id, seat, token),
     hydrate: () => session.hydrate(),
-    startGame,
+    startGame: room.startGame,
     addBot: () => requestLobbyChange(() => session.addBot()),
     removeBot: (seat: number) => requestLobbyChange(() => session.removeBot(seat)),
     removeSeat: (seat: number) => requestLobbyChange(() => session.removeSeat(seat)),

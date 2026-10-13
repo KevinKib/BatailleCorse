@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { seatDisplayName } from './displayName';
-import type { BullshitPlayer } from './BullshitState';
+import type { BullshitPlayer } from '../bullshit/BullshitState';
 
 const labels = { player: 'Player {n}', bot: 'Bot {n}' };
 const p = (id: number, extra: Partial<BullshitPlayer> = {}): BullshitPlayer =>
