@@ -1,60 +1,35 @@
 package org.kevinkib.cardgames.threemenmorris.domain;
 
 import java.util.List;
-import java.util.stream.IntStream;
 
 /**
- * The geometry of board B of the rules: nine points numbered row by row (0 1 2 / 3 4 5 / 6 7 8, the
- * centre is 4), the lines of the square and the two diagonals through the centre. The centre is
- * adjacent to the eight other points, a corner to its two orthogonal neighbours and to the centre,
- * a side middle to its two corners and to the centre. Board A (without diagonals) is not played.
+ * The geometry of Tapatan (board B of the rules), kept as a thin view of {@link Geometry#TAPATAN}
+ * for the records that validate a point without knowing the game ({@link Move}, {@link MorrisEvent})
+ * and for the v1 tests. The engine itself reads the geometry of its {@link MorrisRules}.
  */
 final class Board {
 
-    static final int POINTS = 9;
-    static final int CENTRE = 4;
+    static final int POINTS = Geometry.TAPATAN.points();
 
     /** The eight winning lines, each in ascending point order. */
-    static final List<List<Integer>> LINES = List.of(
-            List.of(0, 1, 2), List.of(3, 4, 5), List.of(6, 7, 8),
-            List.of(0, 3, 6), List.of(1, 4, 7), List.of(2, 5, 8),
-            List.of(0, 4, 8), List.of(2, 4, 6));
-
-    private static final List<List<Integer>> NEIGHBOURS = IntStream.range(0, POINTS)
-            .mapToObj(Board::computeNeighbours)
-            .toList();
+    static final List<List<Integer>> LINES = Geometry.TAPATAN.lines();
 
     private Board() {
     }
 
     static boolean isPoint(int point) {
-        return point >= 0 && point < POINTS;
+        return Geometry.TAPATAN.isPoint(point);
     }
 
     static void requireInRange(int point) {
-        if (!isPoint(point)) {
-            throw new IllegalArgumentException("No such point: " + point);
-        }
+        Geometry.TAPATAN.requireInRange(point);
     }
 
     static List<Integer> neighbours(int point) {
-        return NEIGHBOURS.get(point);
+        return Geometry.TAPATAN.neighbours(point);
     }
 
     static boolean areAdjacent(int a, int b) {
-        return neighbours(a).contains(b);
-    }
-
-    /** Orthogonal neighbours, plus the centre, which every other point reaches along a line or a diagonal. */
-    private static List<Integer> computeNeighbours(int point) {
-        return IntStream.range(0, POINTS)
-                .filter(other -> other != point)
-                .filter(other -> orthogonal(point, other) || point == CENTRE || other == CENTRE)
-                .boxed()
-                .toList();
-    }
-
-    private static boolean orthogonal(int a, int b) {
-        return Math.abs(a / 3 - b / 3) + Math.abs(a % 3 - b % 3) == 1;
+        return Geometry.TAPATAN.areAdjacent(a, b);
     }
 }
