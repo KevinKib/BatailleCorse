@@ -211,3 +211,58 @@ describe('shared screen messages', () => {
     expect(messagesEn.leaveGuard.confirm).toBe('Leave the game? You will forfeit and your opponent wins.');
   });
 });
+
+describe("Three Men's Morris messages", () => {
+  const emptyLeaves = (root: unknown, name: string): string[] => {
+    const empty: string[] = [];
+    const visit = (node: unknown, path: string) => {
+      if (typeof node === 'string') {
+        if (!node.trim()) empty.push(path);
+      } else if (node && typeof node === 'object') {
+        for (const [key, value] of Object.entries(node)) visit(value, `${path}.${key}`);
+      }
+    };
+    visit(root, name);
+    return empty;
+  };
+
+  it('givenThePicker_thenMorrisIsNamedWithAShortPitchAndItsTwoPlayers', () => {
+    expect(messagesEn.gamePicker.games['three-men-morris']).toEqual({
+      name: "Three Men's Morris",
+      description: 'Line up your three pieces. Place, then slide.',
+      players: '2 players',
+      play: 'Play',
+    });
+  });
+
+  it('givenTheRules_thenTheyCoverGoalBoardPlacementMovementBlockedAndForfeit', () => {
+    const rules = messagesEn.threeMenMorris;
+    expect(rules.toggleLabel).toBeTruthy();
+    expect(rules.panelTitle).toBeTruthy();
+    expect(rules.closeLabel).toBeTruthy();
+    expect(rules.sections.map(s => s.kind)).toEqual(Array(rules.sections.length).fill('text'));
+    const text = rules.sections.map(s => [s.title, ...(s.kind === 'text' ? s.body : [])].join(' ')).join(' ').toLowerCase();
+    for (const topic of ['goal', 'board', 'placement', 'movement', 'blocked', 'forfeit']) {
+      expect(rules.sections.some(s => s.title.toLowerCase().includes(topic)), topic).toBe(true);
+    }
+    expect(text).toContain('cannot move');
+    expect(text).toContain('white');
+  });
+
+  it('givenTheTableMessages_thenEveryLeafStringIsNonEmpty', () => {
+    expect(emptyLeaves(messagesEn.threeMenMorrisUi, 'threeMenMorrisUi')).toEqual([]);
+    expect(emptyLeaves(messagesEn.threeMenMorris, 'threeMenMorris')).toEqual([]);
+  });
+
+  it('givenTheTableMessages_thenColoursPhaseHintsAndEndReasonsAreWorded', () => {
+    const ui = messagesEn.threeMenMorrisUi;
+    expect([ui.white, ui.black]).toEqual(['White', 'Black']);
+    expect(ui.table.hintPlace).toBe('Place a piece');
+    expect(ui.table.hintMove).toBe('Move a piece');
+    expect(ui.table.piecesLeft.one).toContain('{n}');
+    expect(ui.table.piecesLeft.other).toContain('{n}');
+    expect(ui.end.blockedWon).toContain('{player}');
+    expect(ui.end.blockedLost).toContain('{player}');
+    expect(ui.end.winner).toBe('Winner: {player}');
+  });
+});

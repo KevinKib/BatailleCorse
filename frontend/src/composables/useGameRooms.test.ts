@@ -4,6 +4,7 @@ import { useGameRooms } from './useGameRooms';
 import { GAMES, findGame, type GameDefinition } from '../model/games';
 import { useBullshitStore } from '../state/Bullshit.store';
 import { useKoboStore } from '../state/Kobo.store';
+import { useThreeMenMorrisStore } from '../state/ThreeMenMorris.store';
 import { useBatailleCorseStore } from '../state/BatailleCorse.store';
 
 describe('useGameRooms', () => {
@@ -49,8 +50,19 @@ describe('useGameRooms', () => {
     expect(join).toHaveBeenCalledWith('g3', 'Bob');
   });
 
+  it('givenThreeMenMorris_thenCreateAndJoinGoThroughItsStore', async () => {
+    const store = useThreeMenMorrisStore();
+    const create = vi.spyOn(store, 'create').mockResolvedValue('g4');
+    const join = vi.spyOn(store, 'join').mockResolvedValue();
+    const room = useGameRooms()(findGame('three-men-morris')!);
+    expect(await room.create('Alice')).toBe('g4');
+    await room.join('g4', 'Bob');
+    expect(create).toHaveBeenCalledWith('Alice');
+    expect(join).toHaveBeenCalledWith('g4', 'Bob');
+  });
+
   it('givenAGameWithNoRoomClient_thenItFailsLoudlyInsteadOfJoiningAnotherGame', () => {
-    const unwired = { ...findGame('bullshit')!, key: 'three-men-morris' } as GameDefinition;
-    expect(() => useGameRooms()(unwired)).toThrow(/three-men-morris/);
+    const unwired = { ...findGame('bullshit')!, key: 'chess' } as unknown as GameDefinition;
+    expect(() => useGameRooms()(unwired)).toThrow(/chess/);
   });
 });

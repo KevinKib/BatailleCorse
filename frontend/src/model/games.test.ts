@@ -3,7 +3,7 @@ import { GAMES, findGame, type GameDefinition, type GameKey } from './games';
 
 describe('game registry', () => {
   it('givenEveryGame_thenEachDeclaresItsRoutesUnderGamesKey', () => {
-    expect(GAMES.map(g => g.key)).toEqual(['bataillecorse', 'bullshit', 'kobo']);
+    expect(GAMES.map(g => g.key)).toEqual(['bataillecorse', 'bullshit', 'kobo', 'three-men-morris']);
     for (const g of GAMES) {
       expect(g.gameHomeRoute).toBe(`/games/${g.key}`);
       expect(g.joinRoute()).toBe(`/games/${g.key}/join`);
@@ -46,8 +46,15 @@ describe('game registry', () => {
     expect(findGame('kobo')?.picker).toEqual({ icon: 'pi pi-star', severity: 'info' });
   });
 
-  it('givenTheGameKeyIsOpen_thenThreeMenMorrisIsAKeyButNotRegisteredYet', () => {
-    const upcoming: GameKey[] = ['three-men-morris'];
+  it('givenThreeMenMorris_thenItIsRegisteredWithoutBotsNorShortcutsAndItsOwnPickerStyle', () => {
+    const morris = findGame('three-men-morris');
+    expect(morris?.supportsBots).toBe(false);
+    expect(morris?.hotkeys).toBeUndefined();
+    expect(morris?.picker).toEqual({ icon: 'pi pi-th-large', severity: 'info' });
+  });
+
+  it('givenTheGameKeyIsOpen_thenAnUnknownKeyIsNotRegistered', () => {
+    const upcoming = ['chess'] as unknown as GameKey[];
     upcoming.forEach(k => expect(findGame(k)).toBeUndefined());
   });
 

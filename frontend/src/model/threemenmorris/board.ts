@@ -89,3 +89,6 @@ export function onPoint(state: MorrisState, mySeat: number, selected: number | n
   if (clickable.includes(point)) return { kind: 'select', point };
   return selected !== null ? { kind: 'clear' } : { kind: 'none' };
 }
+
+/** How long the winning line stays on the board before the end screen takes over (the end screen adds its own beat). */
+export const WINNING_LINE_HOLD_MS = 600;

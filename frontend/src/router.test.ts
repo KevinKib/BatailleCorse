@@ -25,7 +25,7 @@ describe('app router', () => {
   });
 
   it('givenAGameHome_thenStaysUnderItsOwnPathForBothGames', async () => {
-    for (const key of ['bataillecorse', 'bullshit', 'kobo']) {
+    for (const key of ['bataillecorse', 'bullshit', 'kobo', 'three-men-morris']) {
       const route = await resolveAt(`/games/${key}`);
       expect(route.fullPath).toBe(`/games/${key}`);
       expect(route.name).toBe('game-home');
@@ -34,7 +34,7 @@ describe('app router', () => {
   });
 
   it('givenInviteLinks_thenTheyAreNotRedirected', async () => {
-    for (const key of ['bataillecorse', 'bullshit', 'kobo']) {
+    for (const key of ['bataillecorse', 'bullshit', 'kobo', 'three-men-morris']) {
       const join = await resolveAt(`/games/${key}/join/abc`);
       expect(join.fullPath).toBe(`/games/${key}/join/abc`);
       expect(join.name).toBe('game-join');
@@ -44,20 +44,23 @@ describe('app router', () => {
     expect((await resolveAt('/games/bullshit/room/abc')).name).toBe('bullshit-room');
     expect((await resolveAt('/games/bataillecorse/room/abc')).name).toBe('room');
     expect((await resolveAt('/games/kobo/room/abc')).name).toBe('kobo-room');
+    expect((await resolveAt('/games/three-men-morris/room/abc')).name).toBe('three-men-morris-room');
   });
 
   it('givenLegacyCreatePaths_thenRedirectToTheGameHome', async () => {
     expect((await resolveAt('/games/bataillecorse/create')).fullPath).toBe('/games/bataillecorse');
     expect((await resolveAt('/games/bullshit/create')).fullPath).toBe('/games/bullshit');
+    expect((await resolveAt('/games/three-men-morris/create')).fullPath).toBe('/games/three-men-morris');
   });
 
   it('givenTheRemovedCreatePages_thenLeadToTheGameHome', async () => {
     expect((await resolveAt('/games/bataillecorse/new')).fullPath).toBe('/games/bataillecorse');
     expect((await resolveAt('/games/bullshit/new')).fullPath).toBe('/games/bullshit');
+    expect((await resolveAt('/games/three-men-morris/new')).fullPath).toBe('/games/three-men-morris');
   });
 
   it('givenAGameAbsentFromTheRegistry_thenRedirectsToTheGameSelection', async () => {
-    expect((await resolveAt('/games/three-men-morris')).fullPath).toBe('/games');
-    expect((await resolveAt('/games/three-men-morris/join/abc')).fullPath).toBe('/games');
+    expect((await resolveAt('/games/chess')).fullPath).toBe('/games');
+    expect((await resolveAt('/games/chess/join/abc')).fullPath).toBe('/games');
   });
 });

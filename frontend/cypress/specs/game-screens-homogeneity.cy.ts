@@ -166,6 +166,45 @@ describe('Bataille Corse table chrome', () => {
   });
 });
 
+describe("Three Men's Morris table chrome", () => {
+  VIEWPORTS.forEach(([vw, vh]) => {
+    it(`${vw}x${vh}: Back bottom left, timer top left, rules top right, no gear, nothing overlaps or scrolls`, () => {
+      cy.viewport(vw, vh);
+      cy.clearLocalStorage();
+      cy.visit('/games/three-men-morris');
+      cy.get('[data-test="name"]').type('Alice');
+      cy.get('[data-test="new-game"]').click();
+      cy.url({ timeout: 10000 }).should('match', /\/games\/three-men-morris\/room\/.+/);
+      cy.get('[data-test="lobby"]', { timeout: 10000 }).should('be.visible');
+      // No gear on the lobby either: the game has no remappable shortcut.
+      cy.get('[data-test="hotkeys-button"]').should('not.exist');
+      cy.url().then((url) => cy.request('POST', `/api/three-men-morris/game/${url.split('/room/')[1]}/join`, { name: 'Bob' }));
+      cy.get('[data-test="start"]', { timeout: 10000 }).should('not.be.disabled').click();
+      cy.get('[data-test="morris-board"]', { timeout: 10000 }).should('be.visible');
+      cy.get('[data-test="lobby"]').should('not.exist');
+      cy.get('[data-cy="game-timer"]').should('be.visible');
+      cy.get('[data-test="hotkeys-button"]').should('not.exist');
+      noScroll();
+      cy.document().then((doc) => {
+        const boxes = boxesOf(doc, {
+          timer: '[data-cy="game-timer"]',
+          rules: '[data-cy="rules-toggle"]',
+          back: '[data-test="leave"]',
+          board: '[data-test="morris-board"]',
+          tag: '[data-test="player-tag"]',
+        });
+        expectNoOverlap(boxes, vw, vh);
+        const by = (prefix: string) => boxes.find((b) => b.name.startsWith(prefix + '#'))!.r;
+        expect(by('timer').left, 'timer on the left').to.be.lessThan(vw / 3);
+        expect(by('timer').top, 'timer at the top').to.be.lessThan(vh / 6);
+        expect(by('rules').right, 'rules on the right').to.be.greaterThan(vw * 2 / 3);
+        expect(by('back').left, 'Back on the left').to.be.lessThan(vw / 3);
+        expect(by('back').top, 'Back at the bottom').to.be.greaterThan(vh * 0.8);
+      });
+    });
+  });
+});
+
 describe('Local preferences gear on the Game home and in the lobby', () => {
   const gearOffsets: Record<string, { fromRight: number; fromTop: number }> = {};
 

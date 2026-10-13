@@ -68,6 +68,11 @@ export const GAMES: readonly GameDefinition[] = [
     supportsBots: false,
     picker: { icon: 'pi pi-star', severity: 'info' },
   }),
+  // The board is operated with Tab, arrows, Enter and Escape: no remappable shortcut, so no gear.
+  define('three-men-morris', {
+    supportsBots: false,
+    picker: { icon: 'pi pi-th-large', severity: 'info' },
+  }),
 ];
 
 export function findGame(key: unknown): GameDefinition | undefined {
