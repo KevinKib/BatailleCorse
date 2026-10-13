@@ -23,7 +23,7 @@ import { findGame } from '../../model/games';
 import { opponentsInPlayOrder } from '../../model/table/opponentOrder';
 import { seatPositions } from '../../model/table/seatRing';
 import { opponentColumns } from '../../model/kobo/faces';
-import { eventHighlights } from '../../model/kobo/eventLog';
+import { eventHighlights, headlineEvent } from '../../model/kobo/eventLog';
 import { useEscapeKey } from '../../composables/useEscapeKey';
 import { useI18n } from '../../composables/useI18n';
 import { format } from '../../locales/format';
@@ -92,8 +92,8 @@ const clickable = computed<Record<string, boolean>>(() => {
   if (store.busy) return {};
   return Object.fromEntries(Object.keys(store.interaction.intents).map(key => [key, true]));
 });
-// The slots named by the newest event (the next one replaces them: state, not a timer).
-const highlighted = computed(() => eventHighlights(store.events[0] ?? null));
+// The slots named by the event the log line says (the next notable one replaces them: state, not a timer).
+const highlighted = computed(() => eventHighlights(headlineEvent(store.events)));
 const selectedOwnSlot = computed(() => store.pending.kind === 'blind-own' ? store.pending.ownSlot : null);
 useEscapeKey(() => store.cancelPending());
 const me = computed(() => store.game?.players.find(p => p.seat === store.mySeat) ?? null);

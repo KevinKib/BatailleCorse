@@ -491,6 +491,15 @@ describe('KoboGameScreen', () => {
         expect(wrapper.get('[data-test="event-log"]').attributes('data-outcome')).toBe('bad');
       });
 
+      it('givenAnEndOfTurnAfterAPeek_thenTheHighlightStaysWithTheLineThatStillSaysIt', async () => {
+        const { wrapper, store } = await matchable();
+        store.applyEvent({ type: 'event', eventType: 'PEEK', message: '', eventData: eventData({ seat: 1, action: 'PEEK', targetSeat: 0, targetSlot: 1 }) });
+        store.applyEvent({ type: 'event', eventType: 'END_TURN', message: '', eventData: eventData({ seat: 1, action: 'END_TURN' }) });
+        await flushPromises();
+        expect(wrapper.get('[data-test="event-log-line"]').text()).toBe('Player 1 looked at your card 2');
+        expect(wrapper.get('[data-test="slot-0-1"]').attributes('data-highlighted')).toBe('true');
+      });
+
       it('givenTheNextEvent_thenItReplacesTheHighlight', async () => {
         const { wrapper, store } = await matchable();
         store.applyEvent({ type: 'event', eventType: 'PEEK', message: '', eventData: eventData({ seat: 1, action: 'PEEK', targetSeat: 0, targetSlot: 1 }) });
