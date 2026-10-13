@@ -250,6 +250,19 @@ export interface TurnMessages {
   yourTurn: string;                    // the cue shown (and announced) when it is my turn
 }
 
+// Three Men's Morris board: every word of its accessible names (no visible text on the board itself).
+export interface MorrisBoardMessages {
+  boardLabel: string;                  // name of the board group
+  pointNames: string[];                // the nine points, row by row (0 1 2 / 3 4 5 / 6 7 8)
+  white: string;                       // a White piece is on the point
+  black: string;                       // a Black piece is on the point
+  free: string;                        // the point is empty
+  canMove: string;                     // I may select this piece
+  canPlace: string;                    // I may put a piece on this free point
+  selected: string;                    // this piece is the selected one
+  pointLabel: string;                  // {point} then the state words, e.g. "Centre, White piece, can move"
+}
+
 // Whole-app message tree. Each game owns a rules namespace; future namespaces
 // (game, lobby, ...) are added here additively.
 export interface Messages {
@@ -257,6 +270,7 @@ export interface Messages {
   bullshit: RulesMessages;  // Bullshit
   hotkeys: HotkeyMessages; // keyboard shortcut settings
   turn: TurnMessages;      // turn cue shared by the tables
+  morrisBoard: MorrisBoardMessages; // Three Men's Morris board
   bullshitUi: BullshitUiMessages; // Bullshit screens
   batailleCorseUi: BatailleCorseUiMessages; // Bataille Corse table
   gamePicker: GamePickerMessages; // Game choice page
