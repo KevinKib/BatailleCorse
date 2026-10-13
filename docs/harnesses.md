@@ -47,6 +47,15 @@ Evolution of the user's global harness. The rule was added to the user's global 
 | Architecture specs and plans were written on the default (Sonnet) model | Model rule: the session uses Opus to orchestrate and to write or review specs and plans (plan mode when it is the session itself, `model: "opus"` on subagents that write or review specs, plans and architecture reviews); implementation (TDD, bounded fixes) may stay on the default model; the session states which model produced a plan when presenting it | Global `~/.claude/CLAUDE.md` |
 | Planned PRs were tracked under plan labels (PR0, PR1…), which the owner had to map to GitHub numbers by hand | Draft-PR rule: for planned work, the subagent pushes an empty commit and opens a draft PR as soon as it starts (GitHub refuses a PR with no diff), fills it in and marks it ready at the end; reports cite `#<number>`. Kept out of the global `CLAUDE.md` on purpose (it only matters when orchestrating multi-PR plans, so it should not be loaded in every session) | User skill `roadmap-orchestrator` (Phase 2, steps 1 and 5) |
 
+## 2026-10-14: game conventions and "Add a game" checklist
+
+Actions R1 and R2 of `docs/architecture/new-game-retrospective-three-men-morris.md`.
+
+| Friction | Fix | Where |
+|---|---|---|
+| Each plan invented its own names for the same things (F5); one game had four identifiers | One kebab-case game id and its derived forms (`<pkg>`, `<Pascal>`, `<camel>`) for every layer, legacy names listed, choices to confirm listed | `docs/architecture/game-conventions.md` |
+| Shared extension points forgotten silently (F6) and `context-map.md` / `CLAUDE.md` behind (F9) | Executable checklist: PR order with one entry PR, every shared file with "fails if forgotten" or "silent", tests, determinism seam, TDD commit order, docs; context map and game list refreshed; one pointer line in `CLAUDE.md` | `docs/architecture/add-a-game.md`, `docs/architecture/context-map.md`, `CLAUDE.md` |
+
 ## Inventory (versioned in this project)
 
 | Item | Role |
@@ -54,6 +63,7 @@ Evolution of the user's global harness. The rule was added to the user's global 
 | `CLAUDE.md` | Language, domain architecture rules, tracking, test suites, e2e rule, dev environment and offset-ports model |
 | `frontend/vite.config.mjs` | `VITE_HMR_CLIENT_PORT`: hot reload follows the published port |
 | `docs/harnesses.md` | This document |
+| `docs/architecture/add-a-game.md`, `docs/architecture/game-conventions.md` | Checklist and naming rules an agent follows to add a game |
 | `.github/workflows/ci.yml` | GitHub Actions: backend tests and frontend tests + build on push to `main` and on pull requests (no e2e yet) |
 
 ## Known limits
