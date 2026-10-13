@@ -14,14 +14,15 @@ import GameLobby from '../../components/lobby/GameLobby.vue';
 import ForfeitBanner from '../../components/ForfeitBanner.vue';
 import RulesPanel from '../../components/RulesPanel.vue';
 import GameTimer from '../../components/GameTimer.vue';
-import YourTurnIndicator from '../../components/YourTurnIndicator.vue';
+import KoboActionBar from '../../components/kobo/KoboActionBar.vue';
 import KoboSeat from '../../components/kobo/KoboSeat.vue';
 import KoboTableau from '../../components/kobo/KoboTableau.vue';
 import KoboPiles from '../../components/kobo/KoboPiles.vue';
 import { findGame } from '../../model/games';
 import { opponentsInPlayOrder } from '../../model/table/opponentOrder';
 import { seatPositions } from '../../model/table/seatRing';
-import { opponentColumns, visibleFaces } from '../../model/kobo/faces';
+import { opponentColumns } from '../../model/kobo/faces';
+import { useEscapeKey } from '../../composables/useEscapeKey';
 import { useI18n } from '../../composables/useI18n';
 import { format } from '../../locales/format';
 
@@ -82,7 +83,15 @@ const compactOpponents = computed(() => narrow.value || opponents.value.length >
 const ring = computed(() => seatPositions(opponents.value.length));
 const columns = computed(() => opponentColumns(opponents.value.length));
 
-const faces = computed(() => store.game ? visibleFaces(store.game, store.mySeat) : {});
+// What I may see comes from the server (and my "Hide"); what I may click comes from `koboInteraction`, and is
+// frozen while a command is on its way.
+const faces = computed(() => store.faces);
+const clickable = computed<Record<string, boolean>>(() => {
+  if (store.busy) return {};
+  return Object.fromEntries(Object.keys(store.interaction.intents).map(key => [key, true]));
+});
+const selectedOwnSlot = computed(() => store.pending.kind === 'blind-own' ? store.pending.ownSlot : null);
+useEscapeKey(() => store.cancelPending());
 const me = computed(() => store.game?.players.find(p => p.seat === store.mySeat) ?? null);
 const isReady = (seat: number) => store.game?.readySeats.includes(seat) ?? false;
 const isFinalTurn = (seat: number) => store.game?.finalTurnsRemaining.includes(seat) ?? false;
@@ -172,7 +181,9 @@ const currentName = computed(() => displayName(store.game?.currentSeat ?? 0));
               :owner="format(ui.table.ownerOf, { player: displayName(opponent.seat) })"
               :group-label="format(ui.table.cardsOf, { player: displayName(opponent.seat) })"
               :faces="faces"
-              :compact="compactOpponents" />
+              :clickable="clickable"
+              :compact="compactOpponents"
+              @pick="(seat: number, slot: number) => store.pickSlot(seat, slot)" />
           </div>
         </div>
       </div>
@@ -191,12 +202,27 @@ const currentName = computed(() => displayName(store.game?.currentSeat ?? 0));
           :player="me"
           :owner="ui.table.ownerYour"
           :group-label="ui.table.yourCards"
-          :faces="faces" />
-        <!-- Where the action bar of the next step goes: the prompt line and the turn cue stay in place. -->
-        <div class="kobo-actions" data-test="kobo-actions">
-          <YourTurnIndicator :active="yourTurn" />
-          <p class="phase" data-test="phase" aria-live="polite">{{ phaseText }}</p>
-        </div>
+          :faces="faces"
+          :clickable="clickable"
+          :selected="selectedOwnSlot"
+          @pick="(seat: number, slot: number) => store.pickSlot(seat, slot)" />
+        <KoboActionBar
+          :game="store.game"
+          :prompt="store.interaction.prompt"
+          :phase-text="phaseText"
+          :your-turn="yourTurn"
+          :pending="store.pending"
+          :busy="store.busy"
+          :notice="store.notice"
+          :can-hide="store.canHidePeek"
+          @ready="store.ready()"
+          @draw="store.draw()"
+          @discard="store.discardDrawn()"
+          @skip="store.skipPower()"
+          @end-turn="store.endTurn()"
+          @announce="store.announce()"
+          @cancel="store.cancelPending()"
+          @hide="store.hidePeek()" />
       </div>
 
       <div class="table-footer" data-test="table-footer">
@@ -332,20 +358,6 @@ const currentName = computed(() => displayName(store.game?.currentSeat ?? 0));
   --kobo-gap: 6px;
 }
 .my-zone :deep(.seat-label) { font-size: 0.8rem; padding: 4px 14px; }
-.kobo-actions {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  min-height: 44px;
-  width: 100%;
-}
-.phase {
-  margin: 0;
-  font-size: 0.8rem;
-  text-align: center;
-  color: rgba(255, 255, 255, 0.85);
-}
 
 .table-footer { flex: none; display: flex; align-items: center; }
 

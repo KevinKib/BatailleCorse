@@ -281,6 +281,39 @@ describe('Kobo store', () => {
     });
   });
 
+  describe('hiding the peeked card', () => {
+    const peeked = (revision = 0, overrides: Partial<KoboState> = {}) => game(['END_TURN'], {
+      phase: 'TURN_END', reveal: { seat: 1, slot: 0, revision, card: buildKoboCard('KING', 'HEART') }, ...overrides,
+    });
+
+    it('showsThePeekUntilHideIsPressed_thenTurnsItFaceDown', () => {
+      const store = boot();
+      store.applyEvent({ type: 'seat-change', seat: 0 });
+      store.applyEvent({ type: 'state-update', state: peeked() });
+      expect(store.faces[slotKey(1, 0)]).toBeDefined();
+      expect(store.canHidePeek).toBe(true);
+      store.hidePeek();
+      expect(store.faces).toEqual({});
+      expect(store.canHidePeek).toBe(false);
+    });
+
+    it('showsTheNextPeekAgainOnceTheServerDroppedTheHiddenOne', () => {
+      const store = boot();
+      store.applyEvent({ type: 'seat-change', seat: 0 });
+      store.applyEvent({ type: 'state-update', state: peeked() });
+      store.hidePeek();
+      store.applyEvent({ type: 'state-update', state: game(['DRAW'], { version: 2, phase: 'DRAW' }) });
+      store.applyEvent({ type: 'state-update', state: peeked(0, { version: 3 }) });
+      expect(store.faces[slotKey(1, 0)]).toBeDefined();
+    });
+
+    it('doesNotOfferHideWithoutAPeek', () => {
+      const store = boot();
+      store.applyEvent({ type: 'state-update', state: game([]) });
+      expect(store.canHidePeek).toBe(false);
+    });
+  });
+
   describe('event log', () => {
     const entry = (eventType: string, seat = 0) => ({
       type: 'event' as const, eventType, message: '',

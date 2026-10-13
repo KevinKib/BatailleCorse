@@ -1,4 +1,5 @@
 import type { GameKey } from '../model/games';
+import type { KoboPromptKey } from '../model/kobo/interaction';
 
 export interface TextSection {
   kind: 'text';
@@ -270,7 +271,22 @@ export interface KoboUiMessages {
     mine: Record<KoboPhaseKey, string>;
     other: Record<KoboPhaseKey, string>;   // '{player}' = the player the table waits for
   };
+  actions: {                           // buttons of the action bar
+    ready: string;                     // "I have memorised"
+    draw: string;
+    discard: string;                   // the drawn card
+    skip: string;                      // a power
+    endTurn: string;
+    announce: string;                  // Kobo!
+    cancel: string;                    // drops a half-made selection
+    hide: string;                      // turns the peeked card face down
+    match: string;                     // reserved for the matching discard
+  };
+  prompt: Record<KoboPromptKey, string>;   // one-line instruction while a click on a card is expected
+  notice: Record<KoboNoticeKey, string>;   // why my last command did not go through
 }
+
+export type KoboNoticeKey = 'matchTooLate' | 'moveImpossible' | 'connection';
 
 export type KoboPhaseKey =
   | 'MEMORISING' | 'DRAW' | 'DECISION' | 'POWER' | 'KING_DECISION' | 'TURN_END' | 'GIFT' | 'ROUND_OVER' | 'FINISHED';

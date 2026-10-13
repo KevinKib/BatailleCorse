@@ -21,7 +21,9 @@ const props = withDefaults(defineProps<{
   faces: Record<string, Card>;
   clickable?: Record<string, boolean>;
   compact?: boolean;
-}>(), { clickable: () => ({}), compact: false });
+  /** The slot the player already picked in a two-click action (the first card of a blind swap). */
+  selected?: number | null;
+}>(), { clickable: () => ({}), compact: false, selected: null });
 const emit = defineEmits<{ pick: [seat: number, slot: number] }>();
 
 const ui = useI18n().koboUi.table;
@@ -51,6 +53,8 @@ const slotLabel = (slot: number): string => {
         v-if="cell.occupied"
         type="button"
         class="slot"
+        :class="{ 'slot--selected': selected === cell.slot }"
+        :aria-pressed="selected === cell.slot ? 'true' : undefined"
         :data-test="`slot-${player.seat}-${cell.slot}`"
         :style="cellStyle(cell)"
         :aria-label="slotLabel(cell.slot)"
@@ -97,6 +101,7 @@ const slotLabel = (slot: number): string => {
 /* A disabled button greys its content by default: the card must stay readable. */
 .slot:disabled { opacity: 1; }
 .slot:not(:disabled) { cursor: pointer; border-color: rgba(var(--accent-active-rgb), 0.7); }
+.slot.slot--selected { border-color: var(--gold); background: rgba(255, 255, 255, 0.12); }
 .slot:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .slot-empty { border: 1px dashed rgba(255, 255, 255, 0.25); }
 

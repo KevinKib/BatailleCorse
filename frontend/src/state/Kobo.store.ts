@@ -8,6 +8,7 @@ import type { KoboEventData, KoboLogEntry } from '../model/kobo/KoboEvents';
 import type { LobbyView } from '../model/lobby/LobbyView';
 import { koboInteraction, type KoboPending, type KoboSlotCommand } from '../model/kobo/interaction';
 import { reconcilePending } from '../model/kobo/pending';
+import { revealToken, visibleFaces } from '../model/kobo/faces';
 import { useSeatPresence, FORFEIT_NOTICE_HOLD_MS } from '../composables/useSeatPresence';
 import { useSeatRoom } from '../composables/useSeatRoom';
 import type { ForfeitEventData } from '../model/SeatLifecycleEvents';
@@ -37,6 +38,8 @@ export const useKoboStore = defineStore('kobo-store', () => {
   const busy = ref(false);
   const events = ref<KoboLogEntry[]>([]);
   const notice = ref<KoboNotice | null>(null);
+  // The peek the player chose to turn face down ("Hide"): a display choice only, forgotten with the peek.
+  const hiddenPeek = ref<string | null>(null);
 
   const game = computed<KoboState | null>(() =>
     state.value && state.value.started ? state.value : null);
@@ -67,6 +70,7 @@ export const useKoboStore = defineStore('kobo-store', () => {
         pending.value = reconcilePending(pending.value, game.value, nextGame, mySeat.value);
         if (nextGame && game.value && nextGame.round !== game.value.round) events.value = [];
         state.value = next;
+        if (!nextGame?.reveal) hiddenPeek.value = null;
         busy.value = false;
         room.onStateUpdate(next.started);
         if (nextGame) {
@@ -118,6 +122,7 @@ export const useKoboStore = defineStore('kobo-store', () => {
     busy.value = false;
     events.value = [];
     notice.value = null;
+    hiddenPeek.value = null;
     gameId.value = null;
     roster.value = {};
   }
@@ -127,6 +132,11 @@ export const useKoboStore = defineStore('kobo-store', () => {
   const can = (action: KoboAction) => game.value?.availableActions.includes(action) ?? false;
   const interaction = computed(() =>
     game.value ? koboInteraction(game.value, mySeat.value, pending.value) : { prompt: null, intents: {} });
+  // Every card the viewer may see, by `slotKey` (see `visibleFaces`).
+  const faces = computed(() =>
+    game.value ? visibleFaces(game.value, mySeat.value, hiddenPeek.value) : {});
+  const canHidePeek = computed(() =>
+    !!game.value?.reveal && revealToken(game.value) !== hiddenPeek.value);
   const screen = computed<'connecting' | 'lobby' | 'playing' | 'finished'>(() => {
     if (!state.value) return 'connecting';
     if (!state.value.started) return 'lobby';
@@ -185,6 +195,11 @@ export const useKoboStore = defineStore('kobo-store', () => {
 
   function cancelPending() { pending.value = NO_PENDING; }
 
+  /** Turns the peeked card face down at once, without waiting for the server to drop it. */
+  function hidePeek() {
+    if (game.value) hiddenPeek.value = revealToken(game.value);
+  }
+
   // Leaves the lobby and forgets everything about it, so the next room starts from a clean store.
   const leave = () => room.leave(clear);
 
@@ -196,8 +211,8 @@ export const useKoboStore = defineStore('kobo-store', () => {
     liveDisconnections: presence.liveDisconnections,
     forfeitNotice: presence.forfeitNotice,
     pending, busy, events, notice,
-    me, isMyTurn, can, interaction, screen,
-    applyEvent, armMatch, cancelPending, pickSlot,
+    me, isMyTurn, can, interaction, screen, faces, canHidePeek,
+    applyEvent, armMatch, cancelPending, pickSlot, hidePeek,
     create: (name?: string) => session.create(name),
     join: (id: string, name?: string) => session.join(id, name),
     restore: (id: string, seat: number, token: string) => session.restore(id, seat, token),
