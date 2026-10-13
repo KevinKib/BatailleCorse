@@ -9,6 +9,16 @@ public class KoboFactory implements GameFactory {
 
     public static final String GAME_TYPE = "kobo";
 
+    private final DeckSource deckSource;
+
+    public KoboFactory() {
+        this(new RandomDeckSource());
+    }
+
+    public KoboFactory(DeckSource deckSource) {
+        this.deckSource = deckSource;
+    }
+
     @Override
     public String gameType() {
         return GAME_TYPE;
@@ -26,6 +36,6 @@ public class KoboFactory implements GameFactory {
 
     @Override
     public Game create(GameId id, int nbPlayers) {
-        return new Kobo(id, nbPlayers);
+        return new Kobo(id, nbPlayers, new java.util.Random().nextLong(), deckSource);
     }
 }
