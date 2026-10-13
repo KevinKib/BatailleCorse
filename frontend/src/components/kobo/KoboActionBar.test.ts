@@ -102,6 +102,50 @@ describe('KoboActionBar', () => {
     expect(mountBar('DRAW', ['DRAW']).find('[data-test="notice"]').exists()).toBe(false);
   });
 
+  describe('matching discard', () => {
+    it('givenMatchListed_thenMatchIsAToggleButtonEmittingItsEvent', async () => {
+      const wrapper = mountBar('DRAW', ['DRAW', 'MATCH_DISCARD']);
+      const match = button(wrapper, 'match');
+      expect(match.text()).toBe(ui.actions.match);
+      expect(match.attributes('aria-pressed')).toBe('false');
+      await match.trigger('click');
+      expect(wrapper.emitted('match')).toHaveLength(1);
+    });
+
+    it.each([
+      [{ kind: 'match-armed' }],
+      [{ kind: 'match-give', target: { seat: 1, slot: 0 }, expectedTopRank: '7', expectedRevision: 0 }],
+    ])('givenTheModeIsArmed%j_thenMatchIsPressedAndCancelIsOffered', (pending) => {
+      const wrapper = mountBar('DRAW', ['DRAW', 'MATCH_DISCARD'], { pending });
+      expect(button(wrapper, 'match').attributes('aria-pressed')).toBe('true');
+      expect(wrapper.find('[data-test="action-cancel"]').exists()).toBe(true);
+    });
+
+    it('givenAnotherSelection_thenMatchIsNotPressed', () => {
+      const wrapper = mountBar('POWER', ['BLIND_SWAP', 'MATCH_DISCARD'], { pending: { kind: 'blind-own', ownSlot: 1 } });
+      expect(button(wrapper, 'match').attributes('aria-pressed')).toBe('false');
+    });
+
+    it('givenACommandInFlight_thenMatchStaysEnabled_itIsARace', () => {
+      const wrapper = mountBar('TURN_END', ['END_TURN', 'MATCH_DISCARD'], { busy: true });
+      expect(button(wrapper, 'endTurn').attributes('disabled')).toBeDefined();
+      expect(button(wrapper, 'match').attributes('disabled')).toBeUndefined();
+    });
+  });
+
+  it('givenALogSlot_thenItIsRenderedAboveTheButtons', () => {
+    const wrapper = mount(KoboActionBar, {
+      global: { plugins: [PrimeVue] },
+      slots: { log: '<p data-test="slotted-log">Bob matched</p>' },
+      props: {
+        game: buildKoboState({ phase: 'DRAW', availableActions: ['DRAW'] }),
+        prompt: null, phaseText: 'Phase line', yourTurn: false, pending: { kind: 'none' }, busy: false,
+        notice: null, canHide: false,
+      },
+    });
+    expect(wrapper.get('[data-test="slotted-log"]').text()).toBe('Bob matched');
+  });
+
   it('keepsItsZoneAndTheTurnCueAlwaysInThePage', () => {
     const wrapper = mountBar('DRAW', []);
     expect(wrapper.attributes('data-test')).toBe('kobo-actions');

@@ -23,7 +23,9 @@ const props = withDefaults(defineProps<{
   compact?: boolean;
   /** The slot the player already picked in a two-click action (the first card of a blind swap). */
   selected?: number | null;
-}>(), { clickable: () => ({}), compact: false, selected: null });
+  /** Slots (by `slotKey`) named by the last event: marked until the next event replaces them. */
+  highlighted?: string[];
+}>(), { clickable: () => ({}), compact: false, selected: null, highlighted: () => [] });
 const emit = defineEmits<{ pick: [seat: number, slot: number] }>();
 
 const ui = useI18n().koboUi.table;
@@ -36,6 +38,8 @@ const cellStyle = (cell: { row: number; col: number }) => ({
   gridRow: String(cell.row + 1),
   gridColumn: String(cell.col + 1),
 });
+const isHighlighted = (slot: number): true | undefined =>
+  props.highlighted.includes(slotKey(props.player.seat, slot)) ? true : undefined;
 const faceOf = (slot: number): Card | null => props.faces[slotKey(props.player.seat, slot)] ?? null;
 const slotLabel = (slot: number): string => {
   const face = faceOf(slot);
@@ -53,7 +57,8 @@ const slotLabel = (slot: number): string => {
         v-if="cell.occupied"
         type="button"
         class="slot"
-        :class="{ 'slot--selected': selected === cell.slot }"
+        :class="{ 'slot--selected': selected === cell.slot, 'slot--event': isHighlighted(cell.slot) }"
+        :data-highlighted="isHighlighted(cell.slot)"
         :aria-pressed="selected === cell.slot ? 'true' : undefined"
         :data-test="`slot-${player.seat}-${cell.slot}`"
         :style="cellStyle(cell)"
@@ -65,7 +70,8 @@ const slotLabel = (slot: number): string => {
           :rank="faceOf(cell.slot)?.rank ?? 'ace'"
           :suit="faceOf(cell.slot)?.suit ?? 'spade'" />
       </button>
-      <span v-else class="slot-empty" aria-hidden="true"
+      <span v-else class="slot-empty" :class="{ 'slot--event': isHighlighted(cell.slot) }" aria-hidden="true"
+            :data-highlighted="isHighlighted(cell.slot)"
             :data-test="`slot-empty-${player.seat}-${cell.slot}`" :style="cellStyle(cell)"></span>
     </template>
   </div>
@@ -104,6 +110,8 @@ const slotLabel = (slot: number): string => {
 .slot.slot--selected { border-color: var(--gold); background: rgba(255, 255, 255, 0.12); }
 .slot:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .slot-empty { border: 1px dashed rgba(255, 255, 255, 0.25); }
+/* The slot the last event touched: a ring, replaced by the next event (state, not a timer). */
+.slot--event { box-shadow: 0 0 0 2px var(--gold), 0 0 10px 1px rgba(255, 255, 255, 0.35); }
 
 .slot :deep(.playing_card) {
   width: var(--card-w);

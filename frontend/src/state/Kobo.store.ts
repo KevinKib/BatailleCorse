@@ -40,6 +40,8 @@ export const useKoboStore = defineStore('kobo-store', () => {
   const notice = ref<KoboNotice | null>(null);
   // The peek the player chose to turn face down ("Hide"): a display choice only, forgotten with the peek.
   const hiddenPeek = ref<string | null>(null);
+  // The state version whose own event must keep the "too late" notice raised by that same state.
+  let staleNoticeVersion: number | null = null;
 
   const game = computed<KoboState | null>(() =>
     state.value && state.value.started ? state.value : null);
@@ -67,7 +69,14 @@ export const useKoboStore = defineStore('kobo-store', () => {
       case 'state-update': {
         const next = event.state;
         const nextGame = next.started ? next : null;
-        pending.value = reconcilePending(pending.value, game.value, nextGame, mySeat.value);
+        const reconciled = reconcilePending(pending.value, game.value, nextGame, mySeat.value);
+        // A card picked for a match changed under my hand (somebody moved first): say so, the prompt just vanished.
+        if (pending.value.kind === 'match-give' && reconciled.kind === 'none' && game.value && nextGame
+          && nextGame.round === game.value.round && nextGame.availableActions.includes('MATCH_DISCARD')) {
+          notice.value = 'matchTooLate';
+          staleNoticeVersion = nextGame.version;
+        }
+        pending.value = reconciled;
         if (nextGame && game.value && nextGame.round !== game.value.round) events.value = [];
         state.value = next;
         if (!nextGame?.reveal) hiddenPeek.value = null;
@@ -101,7 +110,8 @@ export const useKoboStore = defineStore('kobo-store', () => {
         if (NOT_TABLE_EVENTS.has(event.eventType)) {
           presence.applyPresenceEvent(event.eventType, event.eventData);
         } else {
-          notice.value = null;
+          // The event that comes with the state that dropped my selection must not wipe the notice about it.
+          if (!(notice.value === 'matchTooLate' && game.value?.version === staleNoticeVersion)) notice.value = null;
           logEvent(event.eventType, event.eventData as KoboEventData | null);
         }
         break;

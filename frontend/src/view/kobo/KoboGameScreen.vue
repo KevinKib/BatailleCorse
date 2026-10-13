@@ -18,10 +18,12 @@ import KoboActionBar from '../../components/kobo/KoboActionBar.vue';
 import KoboSeat from '../../components/kobo/KoboSeat.vue';
 import KoboTableau from '../../components/kobo/KoboTableau.vue';
 import KoboPiles from '../../components/kobo/KoboPiles.vue';
+import KoboEventLog from '../../components/kobo/KoboEventLog.vue';
 import { findGame } from '../../model/games';
 import { opponentsInPlayOrder } from '../../model/table/opponentOrder';
 import { seatPositions } from '../../model/table/seatRing';
 import { opponentColumns } from '../../model/kobo/faces';
+import { eventHighlights } from '../../model/kobo/eventLog';
 import { useEscapeKey } from '../../composables/useEscapeKey';
 import { useI18n } from '../../composables/useI18n';
 import { format } from '../../locales/format';
@@ -90,6 +92,8 @@ const clickable = computed<Record<string, boolean>>(() => {
   if (store.busy) return {};
   return Object.fromEntries(Object.keys(store.interaction.intents).map(key => [key, true]));
 });
+// The slots named by the newest event (the next one replaces them: state, not a timer).
+const highlighted = computed(() => eventHighlights(store.events[0] ?? null));
 const selectedOwnSlot = computed(() => store.pending.kind === 'blind-own' ? store.pending.ownSlot : null);
 useEscapeKey(() => store.cancelPending());
 const me = computed(() => store.game?.players.find(p => p.seat === store.mySeat) ?? null);
@@ -182,6 +186,7 @@ const currentName = computed(() => displayName(store.game?.currentSeat ?? 0));
               :group-label="format(ui.table.cardsOf, { player: displayName(opponent.seat) })"
               :faces="faces"
               :clickable="clickable"
+              :highlighted="highlighted"
               :compact="compactOpponents"
               @pick="(seat: number, slot: number) => store.pickSlot(seat, slot)" />
           </div>
@@ -204,6 +209,7 @@ const currentName = computed(() => displayName(store.game?.currentSeat ?? 0));
           :group-label="ui.table.yourCards"
           :faces="faces"
           :clickable="clickable"
+          :highlighted="highlighted"
           :selected="selectedOwnSlot"
           @pick="(seat: number, slot: number) => store.pickSlot(seat, slot)" />
         <KoboActionBar
@@ -221,8 +227,13 @@ const currentName = computed(() => displayName(store.game?.currentSeat ?? 0));
           @skip="store.skipPower()"
           @end-turn="store.endTurn()"
           @announce="store.announce()"
+          @match="store.armMatch()"
           @cancel="store.cancelPending()"
-          @hide="store.hidePeek()" />
+          @hide="store.hidePeek()">
+          <template #log>
+            <KoboEventLog :events="store.events" :my-seat="store.mySeat" :name-of="displayName" />
+          </template>
+        </KoboActionBar>
       </div>
 
       <div class="table-footer" data-test="table-footer">

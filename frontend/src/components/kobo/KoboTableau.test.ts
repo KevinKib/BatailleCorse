@@ -75,4 +75,22 @@ describe('KoboTableau', () => {
     expect(wrapper.get('[data-test="slot-1-2"]').classes()).toContain('slot--selected');
     expect(wrapper.get('[data-test="slot-1-1"]').attributes('aria-pressed')).toBeUndefined();
   });
+
+  describe('slots named by the last event', () => {
+    it('givenHighlightedKeys_thenOnlyThoseSlotsAreMarked', () => {
+      const wrapper = mountTableau({ highlighted: [slotKey(1, 2)] });
+      expect(wrapper.get('[data-test="slot-1-2"]').attributes('data-highlighted')).toBe('true');
+      expect(wrapper.get('[data-test="slot-1-0"]').attributes('data-highlighted')).toBeUndefined();
+    });
+
+    it('givenAHighlightedEmptySlot_thenItsPlaceholderIsMarkedToo', () => {
+      const slots = [buildKoboSlot(0), buildKoboSlot(1, { occupied: false })];
+      const wrapper = mountTableau({ player: buildKoboPlayer(1, { slots, handSize: 1 }), highlighted: [slotKey(1, 1)] });
+      expect(wrapper.get('[data-test="slot-empty-1-1"]').attributes('data-highlighted')).toBe('true');
+    });
+
+    it('givenNoHighlight_thenNothingIsMarked', () => {
+      expect(mountTableau().findAll('[data-highlighted]')).toHaveLength(0);
+    });
+  });
 });

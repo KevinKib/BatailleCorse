@@ -23,23 +23,28 @@ const props = defineProps<{
   canHide: boolean;
 }>();
 const emit = defineEmits<{
-  ready: []; draw: []; discard: []; skip: []; 'end-turn': []; announce: []; cancel: []; hide: [];
+  ready: []; draw: []; discard: []; skip: []; 'end-turn': []; announce: []; match: []; cancel: []; hide: [];
 }>();
 
 const ui = useI18n().koboUi;
 const buttons = computed(() => barButtons(props.game));
 
-const EVENT: Record<KoboBarButton, 'ready' | 'draw' | 'discard' | 'skip' | 'end-turn' | 'announce'> = {
+const EVENT: Record<KoboBarButton, 'ready' | 'draw' | 'discard' | 'skip' | 'end-turn' | 'announce' | 'match'> = {
   ready: 'ready', draw: 'draw', discard: 'discard', skip: 'skip', endTurn: 'end-turn', announce: 'announce',
+  match: 'match',
 };
 const SEVERITY: Record<KoboBarButton, 'success' | 'secondary' | 'warn' | 'danger'> = {
   ready: 'success', draw: 'success', discard: 'secondary', skip: 'secondary', endTurn: 'success', announce: 'danger',
+  match: 'warn',
 };
+// The matching discard is a race against the other players, so a turn command in flight never disables it.
+const armed = computed(() => props.pending.kind === 'match-armed' || props.pending.kind === 'match-give');
 </script>
 
 <template>
   <div class="kobo-actions" data-test="kobo-actions">
     <p v-if="notice" class="notice" data-test="notice" role="alert">{{ ui.notice[notice] }}</p>
+    <slot name="log" />
     <div class="actions-row">
       <div class="actions-text">
         <YourTurnIndicator :active="yourTurn" />
@@ -55,7 +60,8 @@ const SEVERITY: Record<KoboBarButton, 'success' | 'secondary' | 'warn' | 'danger
           :label="ui.actions[id]"
           :severity="SEVERITY[id]"
           rounded
-          :disabled="busy"
+          :disabled="busy && id !== 'match'"
+          :aria-pressed="id === 'match' ? String(armed) : undefined"
           @click="emit(EVENT[id])" />
         <Button
           v-if="pending.kind !== 'none'"

@@ -242,6 +242,42 @@ describe('Kobo store', () => {
       expect(store.pending).toEqual({ kind: 'none' });
     });
 
+    it('says "too late" when the card chosen for a match changed before the card to give was picked', () => {
+      const store = armedWithTarget();
+      store.applyEvent({
+        type: 'state-update',
+        state: game(['MATCH_DISCARD'], {
+          version: 2, discardTop: buildKoboCard('9'),
+          players: [buildKoboPlayer(0, { current: true }), buildKoboPlayer(1, { slots: [0, 1, 2, 3].map(i => buildKoboSlot(i, { revision: i === 2 ? 1 : 0 })) })],
+        }),
+      });
+      expect(store.notice).toBe('matchTooLate');
+      // The event of the same broadcast arrives right after the state: it must not wipe the notice.
+      store.applyEvent({ type: 'event', eventType: 'SWAP', eventData: null, message: '' });
+      expect(store.notice).toBe('matchTooLate');
+      // The next event of a later state does.
+      store.applyEvent({ type: 'state-update', state: game(['MATCH_DISCARD'], { version: 3, discardTop: buildKoboCard('9') }) });
+      store.applyEvent({ type: 'event', eventType: 'DRAW', eventData: null, message: '' });
+      expect(store.notice).toBeNull();
+    });
+
+    it('says nothing when the selection goes because the round moved on or I cancelled', () => {
+      const store = armedWithTarget();
+      store.applyEvent({ type: 'state-update', state: game(['MATCH_DISCARD'], { version: 2, round: 2, discardTop: buildKoboCard('9') }) });
+      expect(store.notice).toBeNull();
+      const other = armedWithTarget();
+      other.cancelPending();
+      expect(other.notice).toBeNull();
+    });
+
+    it('says nothing when only the arming is lost (the discard emptied)', () => {
+      const store = boot();
+      store.applyEvent({ type: 'state-update', state: game(['MATCH_DISCARD']) });
+      store.armMatch();
+      store.applyEvent({ type: 'state-update', state: game([], { version: 2 }) });
+      expect(store.notice).toBeNull();
+    });
+
     it('is cleared when the target slot is emptied', () => {
       const store = armedWithTarget();
       store.applyEvent({
