@@ -95,4 +95,10 @@ defineEmits<{ play: [] }>();
   .choice-description { font-size: 0.85rem; line-height: 1.3; }
   .choice-play { margin-top: 4px; }
 }
+
+/* Short phones (375x667): three cards must fit without scrolling the picker. */
+@media (max-width: 640px) and (max-height: 700px) {
+  .game-choice { gap: 2px; padding: 10px 16px; }
+  .choice-play { margin-top: 2px; }
+}
 </style>

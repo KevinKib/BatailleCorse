@@ -1,8 +1,9 @@
-// The shared Game home: Join game for both games, and the room links that cannot be restored.
+// The shared Game home: Join game for every game, and the room links that cannot be restored.
 const GAMES = [
   // Both games word a missing game (404) apart from a refusal (full, already started).
   { key: 'bataillecorse', title: 'Bataille Corse', joinError: 'No game found' },
   { key: 'bullshit', title: 'Bullshit', joinError: 'No game found' },
+  { key: 'kobo', title: 'Kobo', joinError: 'No game found' },
 ];
 
 describe('Game home', () => {
@@ -33,7 +34,7 @@ describe('Game home', () => {
     it(`${key}: a stored token for a game that no longer exists leads to the Game home with a notice`, () => {
       // A well-formed id the server does not know: only a 404 means "gone" (a 500 must not pass for it).
       const goneId = '11111111-1111-4111-8111-111111111111';
-      const storageKey = key === 'bullshit' ? `bullshit:tokens:${goneId}` : `tokens:${goneId}`;
+      const storageKey = key === 'bataillecorse' ? `tokens:${goneId}` : `${key}:tokens:${goneId}`;
       cy.visit(`/games/${key}/room/${goneId}`, {
         onBeforeLoad(win) {
           win.localStorage.setItem(storageKey, JSON.stringify({ 0: '00000000-0000-4000-8000-000000000000' }));

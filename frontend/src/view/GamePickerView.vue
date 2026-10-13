@@ -140,4 +140,10 @@ onMounted(() => preloadAllCards());
   .game-title { font-size: 2rem; }
   .choices { grid-template-columns: minmax(0, 1fr); gap: 8px; }
 }
+/* Short phones (375x667): three cards must fit without scrolling the picker. */
+@media (max-width: 640px) and (max-height: 700px) {
+  .titlescreen { padding-top: 76px; padding-bottom: 12px; }
+  .title-panel { gap: 8px; padding-bottom: 12px; }
+  .choices { gap: 6px; }
+}
 </style>
