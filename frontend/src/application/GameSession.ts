@@ -32,15 +32,18 @@ export interface GameSessionCallbacks {
  */
 export type HydrateResult = 'ok' | 'gone' | 'lost' | 'unavailable';
 
-/** A message of the seat channel: a lobby view, or a refused command (`success: false`). */
+type GameJson = Parameters<typeof BatailleCorse.fromJSON>[0];
+
+/**
+ * A message of the seat channel: a lobby view, or a refused command (`success: false`) carrying the sender's
+ * current state, the lobby while the room has not started and the game afterwards.
+ */
 interface SeatResponse {
   success: boolean;
   eventType: string;
   message: string;
-  state: LobbyView | null;
+  state: LobbyView | GameJson | null;
 }
-
-type GameJson = Parameters<typeof BatailleCorse.fromJSON>[0];
 
 const GAME_TYPE = 'bataille-corse';
 const tokenKey = (gameId: string) => `tokens:${gameId}`;
@@ -241,21 +244,23 @@ export default class GameSession {
     this.callbacks.onEvent({ type: 'lobby-update', lobby: view });
   }
 
-  /** The seat channel: lobby views, and the refusals of my own commands. */
+  /** The seat channel: lobby views, and the refusals of my own commands (lobby or game). */
   onSeatResponse(response: SeatResponse): void {
     if (this.left) return;
     if (response.eventType === 'REMOVED') {
       this.removedByHost();
       return;
     }
+    const lobby = response.state && (response.state as LobbyView).started === false
+      ? response.state as LobbyView : null;
     if (response.success === false) {
-      if (response.state) this.applyLobby(response.state);
+      // Nothing moved: the state it carries is the unchanged lobby or game, so nothing animates.
+      if (lobby) this.applyLobby(lobby);
+      else if (response.state) this.applyState(response.state as unknown as BatailleCorse);
       this.callbacks.onEvent({ type: 'error', eventType: response.eventType, message: response.message });
       return;
     }
-    if (response.state && (response.state as LobbyView).started === false) {
-      this.applyLobby(response.state);
-    }
+    if (lobby) this.applyLobby(lobby);
   }
 
   startGame(): void {
@@ -373,13 +378,6 @@ export default class GameSession {
   }
 
   private async processEvent(response: Response): Promise<void> {
-    if (response.success === false) {
-      // Refused action: the state it carries is the unchanged game; nothing moved, so nothing animates.
-      if (response.state) this.applyState(response.state);
-      this.callbacks.onEvent({ type: 'error', eventType: response.eventType, message: response.message });
-      return;
-    }
-
     const skipAnimation = this.eventQueue.length >= this.CATCHUP_THRESHOLD;
     let needsAnimationWait = false;
 

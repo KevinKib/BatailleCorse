@@ -118,16 +118,20 @@ class BatailleCorseWebSocketControllerIT {
 
     @Test
     @SuppressWarnings("unchecked")
-    void givenGameAndOtherSeatToken_whenSendOutOfTurn_thenGameTopicReceivesErrorAndStateIsUnchanged() throws Exception {
+    void givenGameAndOtherSeatToken_whenSendOutOfTurn_thenOnlyTheSenderReceivesTheErrorWithTheUnchangedState() throws Exception {
         Started started = startGame();
         started.start();
         String gameId = started.gameId();
         String tokenOfSecondPlayer = started.guestToken();
-        Frames events = subscribeToGame(gameId);
+        Frames topic = subscribeToGame(gameId);
+        Frames guest = client.subscribeSeat(stompSession, gameId, tokenOfSecondPlayer);
+        Frames host = client.subscribeSeat(stompSession, gameId, started.hostToken());
 
         client.send(stompSession, "/app/send", body(gameId, tokenOfSecondPlayer));
 
-        Map<String, Object> event = events.await(f -> true);
+        Map<String, Object> event = guest.await(f -> "SEND".equals(f.get("eventType")));
+        assertThat(topic.all, empty());
+        assertThat(host.all, empty());
         assertThat(event.get("success"), is(false));
         assertThat(event.get("eventType"), is("SEND"));
         Map<String, Object> state = (Map<String, Object>) event.get("state");
@@ -135,31 +139,38 @@ class BatailleCorseWebSocketControllerIT {
     }
 
     @Test
-    void givenGame_whenSendWithUnknownToken_thenGameTopicReceivesErrorResponse() throws Exception {
+    void givenGame_whenSendWithUnknownToken_thenNothingIsSentToAnyone() throws Exception {
         Started started = startGame();
         started.start();
         String gameId = started.gameId();
-        Frames events = subscribeToGame(gameId);
+        Frames topic = subscribeToGame(gameId);
+        Frames host = client.subscribeSeat(stompSession, gameId, started.hostToken());
 
         client.send(stompSession, "/app/send", body(gameId, UUID.randomUUID().toString()));
+        // A later legitimate command proves the first one was processed (and answered with nothing).
+        client.send(stompSession, "/app/send", body(gameId, started.hostToken()));
 
-        Map<String, Object> event = events.await(f -> true);
-        assertThat(event.get("success"), is(false));
-        assertThat(event.get("eventType"), is("SEND"));
+        Map<String, Object> event = topic.await(f -> true);
+        assertThat(event.get("success"), is(true));
+        assertThat(topic.all, hasSize(1));
+        assertThat(host.all, empty());
     }
 
     @Test
-    void givenEmptyPile_whenSlap_thenGameTopicReceivesSlapEvent() throws Exception {
+    @SuppressWarnings("unchecked")
+    void givenEmptyPile_whenSlap_thenOnlyTheSenderReceivesTheRefusalWithItsState() throws Exception {
         Started started = startGame();
         started.start();
         String gameId = started.gameId();
-        Frames events = subscribeToGame(gameId);
+        Frames topic = subscribeToGame(gameId);
+        Frames host = client.subscribeSeat(stompSession, gameId, started.hostToken());
 
         client.send(stompSession, "/app/slap", body(gameId, started.hostToken()));
 
-        Map<String, Object> event = events.await(f -> true);
-        assertThat(event.get("eventType"), is("SLAP"));
+        Map<String, Object> event = host.await(f -> "SLAP".equals(f.get("eventType")));
+        assertThat(event.get("success"), is(false));
         assertThat(event.get("state"), notNullValue());
+        assertThat(topic.all, empty());
     }
 
     // ---- helpers ----

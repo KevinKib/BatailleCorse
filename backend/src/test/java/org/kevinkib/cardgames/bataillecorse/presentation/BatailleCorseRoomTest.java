@@ -1,5 +1,6 @@
 package org.kevinkib.cardgames.bataillecorse.presentation;
 
+import org.kevinkib.cardgames.presentation.command.SeatCommands;
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorse;
 import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseFactory;
@@ -46,7 +47,7 @@ class BatailleCorseRoomTest {
             sessions, new InMemoryForfeitLog(), new LobbyBroadcaster(messaging));
     private final BatailleCorseStateBroadcaster broadcaster = new BatailleCorseStateBroadcaster(messaging);
     private final BatailleCorseWebSocketController ws = new BatailleCorseWebSocketController(
-            sessions, messaging, new BatailleCorseGameActions(sessions, broadcaster), broadcaster);
+            sessions, new SeatCommands(sessions, messaging), new BatailleCorseGameActions(sessions, broadcaster), broadcaster);
 
     private RoomCreated room() {
         return sessions.createRoom(BatailleCorseFactory.GAME_TYPE, "Alice");
