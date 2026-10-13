@@ -3,7 +3,7 @@ import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import PrimeVue from 'primevue/config';
 import LocalPreferences from './LocalPreferences.vue';
-import { findGame, type GameKey } from '../model/games';
+import { findGame, type GameDefinition, type GameKey } from '../model/games';
 import { messagesEn } from '../locales/en';
 
 function mountFor(key: GameKey) {
@@ -32,6 +32,14 @@ describe('LocalPreferences', () => {
     expect(wrapper.get('[data-test="hotkey-slap-key"]').text()).toBe('D');
     expect(wrapper.find('[data-test="hotkey-discard-key"]').exists()).toBe(false);
     wrapper.unmount();
+  });
+
+  it('givenAGameWithoutHotkeys_thenNoGearAndNoPanelAreRendered', () => {
+    const quiet: GameDefinition = { ...findGame('bullshit')!, key: 'kobo', hotkeys: undefined };
+    const wrapper = mount(LocalPreferences, { props: { game: quiet }, global: { plugins: [PrimeVue] } });
+    expect(wrapper.find('[data-test="hotkeys-button"]').exists()).toBe(false);
+    expect(wrapper.find('.local-preferences').exists()).toBe(false);
+    expect(wrapper.text()).toBe('');
   });
 
   it('givenAKeyChangedOnBullshit_thenItIsStoredUnderBullshitsOwnKeyOnly', async () => {

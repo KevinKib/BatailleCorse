@@ -1,5 +1,5 @@
 <template>
-  <img :src="url" v-show="valid" :width="width" :height="height" class="playing_card" ref="rootCard"/>
+  <img :src="url" :alt="alt" v-show="valid" :width="width" :height="height" class="playing_card" ref="rootCard"/>
 </template>
 
 <script setup lang="ts">
@@ -20,7 +20,12 @@ const nonReactiveProps = defineProps({
   suit: {
     default: "",
     type: String,
-  }
+  },
+  // Decorative by default: a card inside a labelled button is already named by that button.
+  alt: {
+    default: "",
+    type: String,
+  },
 })
 
 const props = toRefs(nonReactiveProps);

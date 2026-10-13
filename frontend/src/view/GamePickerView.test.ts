@@ -32,7 +32,7 @@ describe('GamePickerView', () => {
     const text = wrapper.text();
     const p = messagesEn.gamePicker;
     expect(wrapper.get('h1').text()).toBe(p.title);
-    for (const game of [p.bataillecorse, p.bullshit]) {
+    for (const game of [p.games.bataillecorse!, p.games.bullshit!]) {
       expect(text).toContain(game.name);
       expect(text).toContain(game.description);
       expect(text).toContain(game.players);

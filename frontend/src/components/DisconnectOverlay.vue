@@ -1,22 +1,26 @@
 <template>
   <div class="disconnect-overlay" data-cy="disconnect-overlay">
     <div class="disconnect-card">
-      <h2 class="disconnect-title">{{ opponentLabel }} disconnected</h2>
-      <p class="disconnect-sub">Waiting for them to return…</p>
+      <h2 class="disconnect-title">{{ format(ui.title, { player: opponentLabel }) }}</h2>
+      <p class="disconnect-sub">{{ ui.waiting }}</p>
       <p class="disconnect-countdown" data-cy="disconnect-countdown">
-        You win in {{ secondsRemaining }}s
+        {{ format(ui.countdown, { n: secondsRemaining }) }}
       </p>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { useI18n } from '../composables/useI18n';
+import { format } from '../locales/format';
+
 interface Props {
   opponentLabel: string;
   secondsRemaining: number;
 }
 
 defineProps<Props>();
+const ui = useI18n().disconnect;
 </script>
 
 <style scoped>

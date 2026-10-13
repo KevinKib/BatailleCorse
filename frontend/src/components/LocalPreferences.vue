@@ -10,12 +10,12 @@ import { useI18n } from '../composables/useI18n';
 // The settings are read once; a table mounted later reads the same storage.
 const props = defineProps<{ game: GameDefinition }>();
 const messages = useI18n();
-const settings = useGameHotkeySettings(props.game.key);
+const settings = useGameHotkeySettings(props.game);
 const labels = computed(() => messages.hotkeys.actions);
 </script>
 
 <template>
-  <div class="local-preferences">
+  <div v-if="settings" class="local-preferences">
     <HotkeySettings :settings="settings" :labels="labels" />
   </div>
 </template>

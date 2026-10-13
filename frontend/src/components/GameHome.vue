@@ -8,6 +8,7 @@ import LocalPreferences from './LocalPreferences.vue';
 import type { GameDefinition } from '../model/games';
 import { useSettingsStore } from '../state/Settings.store';
 import { useI18n } from '../composables/useI18n';
+import { gameChoice } from '../locales/gameChoice';
 import { preloadAllCards } from '../composables/useCardAnimation';
 
 const props = defineProps<{
@@ -17,7 +18,7 @@ const props = defineProps<{
 }>();
 
 const ui = useI18n().home;
-const gameName = computed(() => useI18n().gamePicker[props.game.key].name);
+const gameName = computed(() => gameChoice(useI18n(), props.game.key).name);
 const route = useRoute();
 const router = useRouter();
 const { playerName } = storeToRefs(useSettingsStore());

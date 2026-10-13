@@ -1,4 +1,14 @@
-export type GameKey = 'bataillecorse' | 'bullshit';
+/**
+ * Every game the app knows by key. Keys are opened ahead of their game: a game only appears on the Game
+ * selection once its own change registers it in `GAMES`.
+ */
+export type GameKey = 'bataillecorse' | 'bullshit' | 'kobo' | 'three-men-morris';
+
+/** How a game's card looks on the Game selection (PrimeVue button icon and severity). */
+export interface GamePickerStyle {
+  icon: string;
+  severity: 'success' | 'warn' | 'info' | 'secondary' | 'danger' | 'help' | 'contrast';
+}
 
 /**
  * The local preferences (per device) a game declares: the remappable keyboard actions and the
@@ -21,24 +31,38 @@ export interface GameDefinition {
   gameHomeRoute: string;
   joinRoute: (id?: string) => string;
   roomRoute: (id: string) => string;
-  hotkeys: GameHotkeys;
+  /** Whether the lobby offers "Add bot" (the server refuses bots for the games that have none). */
+  supportsBots: boolean;
+  picker: GamePickerStyle;
+  /** Absent for a game without remappable shortcuts: it then has no gear on its home and lobby. */
+  hotkeys?: GameHotkeys;
 }
 
-function define(key: GameKey, hotkeys: GameHotkeys): GameDefinition {
+type GameTraits = Pick<GameDefinition, 'supportsBots' | 'picker' | 'hotkeys'>;
+
+function define(key: GameKey, traits: GameTraits): GameDefinition {
   const base = `/games/${key}`;
   return {
     key,
     gameHomeRoute: base,
     joinRoute: (id) => (id ? `${base}/join/${id}` : `${base}/join`),
     roomRoute: (id) => `${base}/room/${id}`,
-    hotkeys,
+    ...traits,
   };
 }
 
 export const GAMES: readonly GameDefinition[] = [
   // Bataille Corse keeps the keys it has always stored, one entry per action.
-  define('bataillecorse', { actions: ['send', 'slap'], storageKeys: ['bc_sendKey', 'bc_slapKey'] }),
-  define('bullshit', { actions: ['discard', 'call'], storageKeys: ['bullshit.hotkeys'] }),
+  define('bataillecorse', {
+    supportsBots: true,
+    picker: { icon: 'pi pi-play', severity: 'success' },
+    hotkeys: { actions: ['send', 'slap'], storageKeys: ['bc_sendKey', 'bc_slapKey'] },
+  }),
+  define('bullshit', {
+    supportsBots: true,
+    picker: { icon: 'pi pi-bolt', severity: 'warn' },
+    hotkeys: { actions: ['discard', 'call'], storageKeys: ['bullshit.hotkeys'] },
+  }),
 ];
 
 export function findGame(key: unknown): GameDefinition | undefined {

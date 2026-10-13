@@ -7,6 +7,7 @@ import LobbyGameOptions from './LobbyGameOptions.vue';
 import LobbyInvite from './LobbyInvite.vue';
 import LocalPreferences from '../LocalPreferences.vue';
 import { useI18n } from '../../composables/useI18n';
+import { gameChoice } from '../../locales/gameChoice';
 import { plural } from '../../locales/format';
 import type { GameDefinition } from '../../model/games';
 import type { LobbyView } from '../../model/lobby/LobbyView';
@@ -35,7 +36,7 @@ const emit = defineEmits<{
 
 const messages = useI18n();
 const ui = messages.lobby;
-const gameName = computed(() => messages.gamePicker[props.game.key].name);
+const gameName = computed(() => gameChoice(messages, props.game.key).name);
 const isHost = computed(() => props.lobby.mySeat === props.lobby.hostSeat);
 const joinLink = computed(() => `${location.origin}${props.game.joinRoute(props.lobby.gameId)}`);
 const descriptors = computed(() => props.lobby.optionDescriptors ?? []);
@@ -77,6 +78,7 @@ onBeforeUnmount(() => { if (noticeTimer) clearTimeout(noticeTimer); });
 
       <LobbySeats
         :lobby="lobby"
+        :supports-bots="game.supportsBots"
         @add-bot="emit('add-bot')"
         @remove-bot="seat => emit('remove-bot', seat)"
         @remove-seat="seat => emit('remove-seat', seat)"

@@ -8,6 +8,7 @@ import type { GameDefinition } from '../model/games';
 import { extractGameId } from '../model/extractGameId';
 import { useSettingsStore } from '../state/Settings.store';
 import { useI18n } from '../composables/useI18n';
+import { gameChoice } from '../locales/gameChoice';
 import { HttpError } from '../model/HttpError';
 
 const props = defineProps<{
@@ -19,7 +20,7 @@ const props = defineProps<{
 }>();
 
 const ui = useI18n().join;
-const gameName = computed(() => useI18n().gamePicker[props.game.key].name);
+const gameName = computed(() => gameChoice(useI18n(), props.game.key).name);
 const router = useRouter();
 const { playerName } = storeToRefs(useSettingsStore());
 

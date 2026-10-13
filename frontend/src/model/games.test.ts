@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { GAMES, findGame } from './games';
+import { GAMES, findGame, type GameDefinition, type GameKey } from './games';
 
 describe('game registry', () => {
   it('givenBothGames_thenEachDeclaresItsRoutesUnderGamesKey', () => {
@@ -26,8 +26,31 @@ describe('game registry', () => {
     expect(new Set(all).size).toBe(all.length);
   });
 
-  it('givenAnyGame_thenItsHotkeysAreOnlyRemappableActions', () => {
-    GAMES.forEach(g => expect(Object.keys(g.hotkeys).sort()).toEqual(['actions', 'storageKeys']));
+  it('givenAnyGameWithHotkeys_thenItsHotkeysAreOnlyRemappableActions', () => {
+    GAMES.forEach(g => expect(Object.keys(g.hotkeys!).sort()).toEqual(['actions', 'storageKeys']));
+  });
+
+  it('givenBatailleCorseAndBullshit_thenBothOfferBots', () => {
+    expect(findGame('bataillecorse')?.supportsBots).toBe(true);
+    expect(findGame('bullshit')?.supportsBots).toBe(true);
+  });
+
+  it('givenEachGame_thenItDeclaresItsPickerIconAndSeverity', () => {
+    expect(findGame('bataillecorse')?.picker).toEqual({ icon: 'pi pi-play', severity: 'success' });
+    expect(findGame('bullshit')?.picker).toEqual({ icon: 'pi pi-bolt', severity: 'warn' });
+  });
+
+  it('givenTheGameKeyIsOpen_thenKoboAndThreeMenMorrisAreKeysButNotRegisteredYet', () => {
+    const upcoming: GameKey[] = ['kobo', 'three-men-morris'];
+    upcoming.forEach(k => expect(findGame(k)).toBeUndefined());
+  });
+
+  it('givenAGameWithoutShortcuts_thenItsDefinitionNeedsNoHotkeys', () => {
+    const quiet: GameDefinition = {
+      key: 'kobo', gameHomeRoute: '/games/kobo', joinRoute: () => '/', roomRoute: () => '/',
+      supportsBots: false, picker: { icon: 'pi pi-star', severity: 'info' },
+    };
+    expect(quiet.hotkeys).toBeUndefined();
   });
 
   it('givenUnknownKey_thenFindGameReturnsUndefined', () => {

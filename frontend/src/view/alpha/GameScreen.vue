@@ -265,6 +265,7 @@ const endSubtitle = computed(() =>
     didIWin.value,
     opponentLabel.value,
     batailleCorse.value?.opponentForfeitReason(myPlayerIndex.value) ?? null,
+    messages.endGame,
   ));
 
 const rematchButton = computed(() =>

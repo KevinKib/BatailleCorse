@@ -2,9 +2,11 @@
   <div class="end-overlay" data-cy="end-overlay">
     <div :class="['end-card', didIWin ? 'end-card--victory' : 'end-card--defeat']">
       <div v-if="didIWin" class="end-trophy" data-cy="victory-flourish">🏆</div>
-      <h1 class="end-title">{{ didIWin ? 'VICTORY' : 'DEFEAT' }}</h1>
+      <h1 class="end-title">{{ didIWin ? ui.victory : ui.defeat }}</h1>
       <p v-if="winnerLine" class="end-winner" data-test="end-winner">{{ winnerLine }}</p>
       <p class="end-sub">{{ subtitle }}</p>
+      <!-- Extra content under the subtitle (a game's scores); nothing is rendered without it. -->
+      <div v-if="$slots.default" class="end-extra" data-test="end-extra"><slot /></div>
       <p v-if="error" class="end-error" data-test="rematch-error" role="alert">{{ error }}</p>
       <div class="end-actions">
         <Button
@@ -18,7 +20,7 @@
           @click="emit('playAgain')"
         />
         <RouterLink to="/games" class="end-home-button">
-          <Button label="Back to home" icon="pi pi-home" rounded />
+          <Button :label="ui.backToHome" icon="pi pi-home" rounded />
         </RouterLink>
       </div>
     </div>
@@ -28,6 +30,7 @@
 <script setup lang="ts">
 import { Button } from 'primevue';
 import type { RematchButton } from '../model/RematchButton';
+import { useI18n } from '../composables/useI18n';
 
 interface Props {
   didIWin: boolean;
@@ -44,6 +47,7 @@ interface Emits {
 }
 
 defineProps<Props>();
+const ui = useI18n().endScreen;
 const emit = defineEmits<Emits>();
 </script>
 
@@ -94,6 +98,9 @@ const emit = defineEmits<Emits>();
   margin: 0;
 }
 
+.end-extra {
+  width: 100%;
+}
 .end-error {
   font-size: 0.85rem;
   color: #ffb4b4;

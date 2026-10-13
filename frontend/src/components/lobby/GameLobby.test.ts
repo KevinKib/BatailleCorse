@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
 import PrimeVue from 'primevue/config';
 import GameLobby from './GameLobby.vue';
-import { findGame } from '../../model/games';
+import { findGame, type GameDefinition } from '../../model/games';
 import { messagesEn } from '../../locales/en';
 import type { LobbyView, OptionDescriptor } from '../../model/lobby/LobbyView';
 import lobbySource from './GameLobby.vue?raw';
@@ -43,7 +43,7 @@ function lobby(overrides: Partial<LobbyView> = {}): LobbyView {
   };
 }
 
-function mountLobby(props: Partial<{ lobby: LobbyView; error: string | null; starting: boolean }> = {}) {
+function mountLobby(props: Partial<{ game: GameDefinition; lobby: LobbyView; error: string | null; starting: boolean }> = {}) {
   return mount(GameLobby, {
     props: { game: findGame('bullshit')!, lobby: lobby(), ...props },
     global: { plugins: [PrimeVue] },
@@ -238,6 +238,16 @@ describe('GameLobby', () => {
       const guest = mountLobby({ lobby: lobby({ mySeat: 1, canEditOptions: false }) });
       expect(guest.find('[data-test="add-bot"]').exists()).toBe(false);
       expect(guest.get('[data-test="waiting-for-player"]').text()).toBe(ui.waitingForPlayer);
+    });
+
+    it('givenAGameWithoutBots_thenTheHostSeesNoAddBotAndIsToldTheLobbyWaitsForAPlayer', () => {
+      const noBots = { ...findGame('bullshit')!, supportsBots: false };
+      const host = mountLobby({ game: noBots });
+      expect(host.find('[data-test="add-bot"]').exists()).toBe(false);
+      expect(host.get('[data-test="waiting-for-player"]').text()).toBe(ui.waitingForPlayer);
+
+      const full = mountLobby({ game: noBots, lobby: lobby({ maxPlayers: 2 }) });
+      expect(full.find('[data-test="waiting-for-player"]').exists()).toBe(false);
     });
 
     it('says nothing about a free seat once the lobby is full', () => {

@@ -1,5 +1,5 @@
 // Bataille Corse on the shared lobby: a bot at a chosen tier, a guest through the invite link, Leave, Play again.
-import { connectScriptedPlayer } from '../support/stompPlayer';
+import { connectScriptedPlayer, joinAsScriptedPlayer, waitForFrame } from '../support/stompPlayer';
 
 const storedToken = (gameId: string) =>
   cy.window().then((win) => Object.values(JSON.parse(win.localStorage.getItem(`tokens:${gameId}`)!))[0] as string);
@@ -35,6 +35,19 @@ describe('Bataille Corse lobby', () => {
         cy.get('.player_tag').first().should('have.text', 'Hosty');
         cy.get('.player_tag').last().should('have.text', 'Zoe');
         cy.then(() => host.disconnect());
+      });
+    });
+  });
+
+  it('seats a scripted player through the shared helper typed for Bataille Corse, and waits on its lobby frame', () => {
+    cy.openBatailleCorseLobby('Hosty').then((gameId) => {
+      joinAsScriptedPlayer(gameId, 'Bob', 'bataille-corse').then((bob) => {
+        cy.get('[data-test="player-count"]').should('contain.text', '2 /');
+        cy.then(() => bob.publish('/app/lobby/rename', { name: 'Bobby' }));
+        cy.get('[data-test="lobby"]').should('contain.text', 'Bobby');
+        waitForFrame(bob, (frame) => frame.state?.players?.some((p: { name: string }) => p.name === 'Bobby'))
+          .then((frame) => expect(frame.state.mySeat, 'the scripted player sits on seat 1').to.eq(1));
+        cy.then(() => bob.disconnect());
       });
     });
   });
