@@ -14,11 +14,43 @@ export interface ScriptedPlayer {
   disconnect(): void;
 }
 
-export function joinAsScriptedPlayer(gameId: string, name: string): Cypress.Chainable<ScriptedPlayer & { token: string; seat: number }> {
-  return cy.request('POST', `/api/bullshit/game/${gameId}/join`, { name }).then((res) => {
+/** The game types a scripted player can join, as the server names them (`/api/lobby`'s `gameType`). */
+export type ScriptedGameType = 'bataille-corse' | 'bullshit' | 'kobo' | 'three-men-morris';
+
+/** Where a guest claims a seat: Bataille Corse keeps the historical unprefixed REST base. */
+const joinPath = (gameType: ScriptedGameType, gameId: string) =>
+  gameType === 'bataille-corse' ? `/api/game/${gameId}/join` : `/api/${gameType}/game/${gameId}/join`;
+
+/**
+ * Joins the lobby `gameId` as a guest named `name` and connects. `gameType` defaults to Bullshit, what the
+ * first specs used, so those calls stay as they are.
+ */
+export function joinAsScriptedPlayer(
+  gameId: string,
+  name: string,
+  gameType: ScriptedGameType = 'bullshit',
+): Cypress.Chainable<ScriptedPlayer & { token: string; seat: number }> {
+  return cy.request('POST', joinPath(gameType, gameId), { name }).then((res) => {
     const { playerId, token } = res.body as { playerId: number; token: string };
     return connectScriptedPlayer(gameId, token, playerId);
   });
+}
+
+/**
+ * Waits, without a fixed delay, until the scripted player has received a frame matching `predicate`, then
+ * yields that frame. It retries until the Cypress timeout, so a spec reads "wait for the state I need"
+ * instead of sleeping.
+ */
+export function waitForFrame(
+  player: Pick<ScriptedPlayer, 'frames'>,
+  predicate: (frame: ScriptedPlayer['frames'][number]) => boolean,
+  options: { timeout?: number } = {},
+): Cypress.Chainable<ScriptedPlayer['frames'][number]> {
+  return cy.wrap(player.frames, { timeout: options.timeout ?? 10000 })
+    .should((frames) => {
+      expect(frames.some(predicate), 'a received frame matches the expected state').to.eq(true);
+    })
+    .then((frames) => frames.find(predicate)!);
 }
 
 /**

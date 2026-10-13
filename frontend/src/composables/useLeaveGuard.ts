@@ -1,5 +1,6 @@
 import { onBeforeUnmount, onMounted } from 'vue';
 import { onBeforeRouteLeave } from 'vue-router';
+import { useI18n } from './useI18n';
 
 interface UseLeaveGuardOptions {
   isInProgress: () => boolean;
@@ -13,10 +14,11 @@ interface UseLeaveGuardOptions {
  */
 export function useLeaveGuard(options: UseLeaveGuardOptions) {
   const { isInProgress, forfeit } = options;
+  const ui = useI18n().leaveGuard;
 
   onBeforeRouteLeave(() => {
     if (!isInProgress()) return true;
-    const confirmed = window.confirm('Leave the game? You will forfeit and your opponent wins.');
+    const confirmed = window.confirm(ui.confirm);
     if (!confirmed) return false;
     forfeit();
     return true;

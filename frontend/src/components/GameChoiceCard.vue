@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { Button } from 'primevue';
 import type { GameChoiceMessages } from '../locales/Messages';
+import type { GamePickerStyle } from '../model/games';
 
 // One game offered on the picker page: name, short pitch, player count and a Play button.
 // Props down, event up: the page decides where "play" leads.
 defineProps<{
   choice: GameChoiceMessages;
   icon: string;
-  severity: 'success' | 'warn';
+  severity: GamePickerStyle['severity'];
   gameKey: string;
 }>();
 

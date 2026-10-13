@@ -1,4 +1,6 @@
 import type { ForfeitReason } from './ForfeitReason';
+import type { EndGameMessages } from '../locales/Messages';
+import { format } from '../locales/format';
 
 /**
  * End-screen subtitle. Winner-perspective only: when the opponent forfeited we
@@ -9,16 +11,18 @@ export function endGameMessage(
   didIWin: boolean,
   opponentLabel: string,
   opponentForfeitReason: ForfeitReason | null,
+  texts: EndGameMessages,
 ): string {
+  const vars = { opponent: opponentLabel };
   if (!didIWin) {
-    return `${opponentLabel} won.`;
+    return format(texts.won, vars);
   }
   switch (opponentForfeitReason) {
     case 'RESIGNED':
-      return `${opponentLabel} resigned.`;
+      return format(texts.resigned, vars);
     case 'DISCONNECTED':
-      return `${opponentLabel} disconnected.`;
+      return format(texts.disconnected, vars);
     default:
-      return `You beat ${opponentLabel}!`;
+      return format(texts.beat, vars);
   }
 }

@@ -7,8 +7,12 @@ import { format } from '../../locales/format';
 import type { LobbyPlayer, LobbyView } from '../../model/lobby/LobbyView';
 
 // Who is in the lobby: one row per joined seat (my own name is editable), the host's bot controls, and the
-// free-seat line (Add bot for the host, "Waiting for a player" for the others).
-const props = defineProps<{ lobby: LobbyView }>();
+// free-seat line (Add bot for the host when the game has bots, "Waiting for a player" otherwise).
+const props = defineProps<{
+  lobby: LobbyView;
+  /** Whether the game offers bots (`GameDefinition.supportsBots`): without them there is no Add bot, for anybody. */
+  supportsBots: boolean;
+}>();
 const emit = defineEmits<{
   'add-bot': [];
   'remove-bot': [seat: number];
@@ -123,7 +127,7 @@ function revertName() {
       </li>
     </ul>
     <Button
-      v-if="isHost"
+      v-if="isHost && supportsBots"
       class="add-bot"
       data-test="add-bot"
       type="button"

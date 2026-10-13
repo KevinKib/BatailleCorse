@@ -1,3 +1,5 @@
+import type { GameKey } from '../model/games';
+
 export interface TextSection {
   kind: 'text';
   title: string;
@@ -126,8 +128,34 @@ export interface GamePickerMessages {
   title: string;
   choose: string;          // accessible name of the list of games
   back: string;            // back link of a game menu, towards the picker
-  bataillecorse: GameChoiceMessages;
-  bullshit: GameChoiceMessages;
+  /** One entry per game, by registry key; a registered game must have its entry (see `gameChoice`). */
+  games: { [K in GameKey]?: GameChoiceMessages };
+}
+
+// End screen shared by the tables (`EndGameOverlay`).
+export interface EndScreenMessages {
+  victory: string;
+  defeat: string;
+  backToHome: string;
+}
+
+// End-screen subtitle of a duel. Placeholder: `{opponent}`.
+export interface EndGameMessages {
+  won: string;             // I lost: the opponent won
+  resigned: string;        // I won: the opponent resigned
+  disconnected: string;    // I won: the opponent disconnected
+  beat: string;            // I won on the cards
+}
+
+// Overlay shown while an opponent's seat waits out the disconnect grace period.
+export interface DisconnectMessages {
+  title: string;           // '{player}'
+  waiting: string;
+  countdown: string;       // '{n}' = seconds left
+}
+
+export interface LeaveGuardMessages {
+  confirm: string;         // native confirmation before leaving a game in progress
 }
 
 // Game home (`/games/<game>`): the front door of every game.
@@ -232,6 +260,10 @@ export interface Messages {
   bullshitUi: BullshitUiMessages; // Bullshit screens
   batailleCorseUi: BatailleCorseUiMessages; // Bataille Corse table
   gamePicker: GamePickerMessages; // Game choice page
+  endScreen: EndScreenMessages;   // End overlay shared by the tables
+  endGame: EndGameMessages;       // End-screen subtitle of a duel
+  disconnect: DisconnectMessages; // Opponent disconnected overlay
+  leaveGuard: LeaveGuardMessages; // Confirmation before forfeiting by leaving
   home: GameHomeMessages;   // Game home
   join: JoinGameMessages;   // Join form
   lobby: LobbyMessages;     // Shared lobby

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { messagesEn } from './en';
 import { SLAP_EXAMPLES } from '../components/slapExamples';
+import { GAMES } from '../model/games';
 
 describe('English messages', () => {
   it('givenEnglishMessages_thenRulesHasToggleTitleAndCloseLabel', () => {
@@ -146,9 +147,9 @@ describe('English messages', () => {
   });
 
   it('givenGamePickerMessages_thenBothGamesAreDescribedWithTheirPlayerCount', () => {
-    expect(messagesEn.gamePicker.bataillecorse.players).toBe('2 players');
-    expect(messagesEn.gamePicker.bullshit.players).toBe('2–6 players');
-    expect(messagesEn.gamePicker.bullshit.description).not.toMatch(/bot/i);
+    expect(messagesEn.gamePicker.games.bataillecorse!.players).toBe('2 players');
+    expect(messagesEn.gamePicker.games.bullshit!.players).toBe('2–6 players');
+    expect(messagesEn.gamePicker.games.bullshit!.description).not.toMatch(/bot/i);
   });
 });
 
@@ -165,5 +166,31 @@ describe('game home and join messages', () => {
     visit(messagesEn.home, 'home');
     visit(messagesEn.join, 'join');
     expect(empty).toEqual([]);
+  });
+});
+
+describe('shared screen messages', () => {
+  it('givenEveryRegisteredGame_thenThePickerHasItsChoiceTexts', () => {
+    for (const g of GAMES) {
+      const choice = messagesEn.gamePicker.games[g.key];
+      expect(choice, g.key).toBeDefined();
+      for (const text of Object.values(choice!)) expect(text.trim()).not.toBe('');
+    }
+  });
+
+  it('givenTheEndAndDisconnectScreens_thenTheirEnglishWordingIsTheOneTheyAlwaysHad', () => {
+    expect(messagesEn.endScreen).toEqual({ victory: 'VICTORY', defeat: 'DEFEAT', backToHome: 'Back to home' });
+    expect(messagesEn.endGame).toEqual({
+      won: '{opponent} won.',
+      resigned: '{opponent} resigned.',
+      disconnected: '{opponent} disconnected.',
+      beat: 'You beat {opponent}!',
+    });
+    expect(messagesEn.disconnect).toEqual({
+      title: '{player} disconnected',
+      waiting: 'Waiting for them to return…',
+      countdown: 'You win in {n}s',
+    });
+    expect(messagesEn.leaveGuard.confirm).toBe('Leave the game? You will forfeit and your opponent wins.');
   });
 });

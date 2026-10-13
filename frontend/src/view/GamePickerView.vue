@@ -5,10 +5,14 @@ import TitleCardFan from '../components/TitleCardFan.vue';
 import GameChoiceCard from '../components/GameChoiceCard.vue';
 import { preloadAllCards } from '../composables/useCardAnimation';
 import { useI18n } from '../composables/useI18n';
+import { gameChoice } from '../locales/gameChoice';
+import { GAMES } from '../model/games';
 
 const router = useRouter();
 const route = useRoute();
-const { gamePicker, lobby } = useI18n();
+const messages = useI18n();
+const { gamePicker, lobby } = messages;
+const choices = GAMES.map(game => ({ game, choice: gameChoice(messages, game.key) }));
 // Set when the host removed this player from a lobby.
 const removed = computed(() => route.query.removed === '1');
 
@@ -36,18 +40,13 @@ onMounted(() => preloadAllCards());
 
       <section class="choices" :aria-label="gamePicker.choose">
         <GameChoiceCard
-          game-key="bataillecorse"
-          :choice="gamePicker.bataillecorse"
-          icon="pi pi-play"
-          severity="success"
-          @play="router.push('/games/bataillecorse')"
-        />
-        <GameChoiceCard
-          game-key="bullshit"
-          :choice="gamePicker.bullshit"
-          icon="pi pi-bolt"
-          severity="warn"
-          @play="router.push('/games/bullshit')"
+          v-for="{ game, choice } in choices"
+          :key="game.key"
+          :game-key="game.key"
+          :choice="choice"
+          :icon="game.picker.icon"
+          :severity="game.picker.severity"
+          @play="router.push(game.gameHomeRoute)"
         />
       </section>
     </main>
@@ -131,7 +130,7 @@ onMounted(() => preloadAllCards());
 .choices {
   width: 100%;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
   gap: 16px;
 }
 
