@@ -339,6 +339,10 @@ function leaveLobby() {
   gap: var(--space-2);
 }
 .leave-button { text-decoration: none; }
+/* A touch target of 44 px, like the board points. */
+.leave-button :deep(.p-button) { min-height: 44px; }
+/* A touch target of 44 px, like the board points. */
+.leave-button :deep(.p-button) { min-height: 44px; }
 
 .forfeit-notice {
   position: absolute;

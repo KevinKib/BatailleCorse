@@ -90,10 +90,11 @@ defineEmits<{ play: [] }>();
 }
 
 @media (max-width: 640px) {
-  .game-choice { gap: 4px; padding: 12px 16px; }
+  /* Three cards must fit a 375x667 phone without scrolling the picker. */
+  .game-choice { gap: 4px; padding: 8px 16px; }
   .choice-name { font-size: 1.15rem; }
   .choice-description { font-size: 0.85rem; line-height: 1.3; }
-  .choice-play { margin-top: 4px; }
+  .choice-play { margin-top: 0; }
 }
 
 /* Short phones (375x667): three cards must fit without scrolling the picker. */

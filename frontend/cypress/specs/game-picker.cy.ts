@@ -32,6 +32,22 @@ describe('Game picker', () => {
       cy.contains('2–6 players');
       cy.contains('button', 'Play');
     });
+    cy.get('[data-test="choice-three-men-morris"]').within(() => {
+      cy.contains('h2', "Three Men's Morris");
+      cy.contains('Line up your three pieces. Place, then slide.');
+      cy.contains('2 players');
+      cy.contains('button', 'Play');
+    });
+  });
+
+  it("plays Three Men's Morris: Game home with New game and Join game, Back returns to the picker", () => {
+    cy.visit('/games');
+    cy.get('[data-test="play-three-men-morris"]').click();
+    cy.location('pathname').should('eq', '/games/three-men-morris');
+    cy.contains('button', 'New game').should('be.visible');
+    cy.contains('button', 'Join game').should('be.visible');
+    cy.get('[data-test="back"]').click();
+    cy.location('pathname').should('eq', '/games');
   });
 
   it('plays Bataille Corse: Game home without any Bullshit button, Back returns to the picker', () => {
@@ -82,6 +98,7 @@ describe('Game picker', () => {
       cy.get('[data-test="play-bataillecorse"]').should('be.visible');
       cy.get('[data-test="play-bullshit"]').should('be.visible');
       cy.get('[data-test="play-kobo"]').should('be.visible');
+      cy.get('[data-test="play-three-men-morris"]').should('be.visible');
       cy.window().then((win) => {
         const doc = win.document.documentElement;
         expect(doc.scrollHeight, 'page height').to.be.at.most(win.innerHeight);
