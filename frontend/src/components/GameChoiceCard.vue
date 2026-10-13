@@ -89,16 +89,13 @@ defineEmits<{ play: [] }>();
   letter-spacing: 0.08em;
 }
 
+/* Phones: cards sit two per row (about 150px wide), so the head stacks and the type shrinks a little. */
 @media (max-width: 640px) {
-  .game-choice { gap: 4px; padding: 12px 16px; }
-  .choice-name { font-size: 1.15rem; }
-  .choice-description { font-size: 0.85rem; line-height: 1.3; }
-  .choice-play { margin-top: 4px; }
-}
-
-/* Short phones (375x667): three cards must fit without scrolling the picker. */
-@media (max-width: 640px) and (max-height: 700px) {
-  .game-choice { gap: 2px; padding: 10px 16px; }
+  .game-choice { gap: 6px; padding: 12px 10px; }
+  .choice-head { flex-direction: column; align-items: flex-start; gap: 2px; }
+  .choice-name { font-size: 1rem; line-height: 1.15; letter-spacing: 0.03em; overflow-wrap: anywhere; }
+  .choice-players { font-size: 0.68rem; letter-spacing: 0.08em; }
+  .choice-description { font-size: 0.8rem; line-height: 1.35; overflow-wrap: anywhere; }
   .choice-play { margin-top: 2px; }
 }
 </style>
