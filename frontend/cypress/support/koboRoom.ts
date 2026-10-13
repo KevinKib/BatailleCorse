@@ -108,3 +108,31 @@ export function startKoboTableAsGuest(players: number, deal: string[] = []) {
     });
   });
 }
+
+/**
+ * Waits, without a fixed delay, until the latest state a scripted player holds satisfies `predicate`. Unlike
+ * `waitForFrame` it looks at the newest state only, so an earlier turn's state can never satisfy it.
+ */
+export function awaitState(
+  player: Pick<ScriptedPlayer, 'lastState'>,
+  label: string,
+  predicate: (state: any) => boolean,
+) {
+  return cy.wrap(player, { log: false, timeout: 10000 }).should((p) => {
+    const state = p.lastState();
+    expect(Boolean(state && state.started && predicate(state)), label).to.eq(true);
+  });
+}
+
+/**
+ * One whole turn of a scripted player that draws, discards a card without a power and ends its turn. It waits
+ * for its own state at every step (its turn, the drawn card, the end step), so it never races the browser.
+ */
+export function scriptedDiscardTurn(player: ScriptedPlayer & { seat: number }) {
+  awaitState(player, 'my draw step', (s) => s.currentSeat === player.seat && s.phase === 'DRAW');
+  cy.then(() => player.publish('/app/kobo/draw', {}));
+  awaitState(player, 'the drawn card', (s) => s.phase === 'DECISION' && s.drawnCard !== null);
+  cy.then(() => player.publish('/app/kobo/discardDrawn', {}));
+  awaitState(player, 'the end of my turn', (s) => s.phase === 'TURN_END');
+  cy.then(() => player.publish('/app/kobo/endTurn', {}));
+}
