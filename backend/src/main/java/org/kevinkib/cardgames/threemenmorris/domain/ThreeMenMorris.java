@@ -9,44 +9,62 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Three Men's Morris for two players, on board B (3x3 plus the two diagonals through the centre).
- * Seat 0 is white and starts, seat 1 is black. Each player has three pieces: they are placed one
- * per turn (PLACEMENT), then moved one step per turn along a line to a free neighbouring point
- * (MOVEMENT). The first to align their three pieces wins, in either phase. A player with no legal
- * move loses. Every mutating method is synchronized, validates, mutates, bumps the version and
- * returns what happened; a rejected command changes nothing.
+ * Three Men's Morris for two players, played by the rules it is given ({@link MorrisRules}: the
+ * geometry, the pieces per player, the placement restriction); the variant of v1 is Tapatan, board B
+ * (3x3 plus the two diagonals through the centre). The white seat starts (seat 0 by default), the
+ * other seat is black. Each player has the rules' number of pieces: they are placed one per turn
+ * (PLACEMENT), then moved one step per turn along a line to a free neighbouring point (MOVEMENT).
+ * The first to align their pieces on a line wins, in either phase. A player with no legal move
+ * loses. Every mutating method is synchronized, validates, mutates, bumps the version and returns
+ * what happened; a rejected command changes nothing.
  */
 public class ThreeMenMorris implements Game {
 
     static final int PLAYERS = 2;
-    static final int PIECES = 3;
 
-    private static final PlayerId WHITE = new PlayerId(0);
-    private static final PlayerId BLACK = new PlayerId(1);
+    private static final PlayerId SEAT_0 = new PlayerId(0);
+    private static final PlayerId SEAT_1 = new PlayerId(1);
 
     private final GameId id;
-    private final PlayerId[] board = new PlayerId[Board.POINTS];
+    private final MorrisRules rules;
+    private final Geometry geometry;
+    private final PlayerId whiteSeat;
+    private final PlayerId[] board;
     private final int[] inHand = new int[PLAYERS];
-    private PlayerId current = WHITE;
+    private PlayerId current;
     private Phase phase = Phase.PLACEMENT;
     private MorrisResult result = MorrisResult.ONGOING;
     private List<Integer> winningLine = List.of();
     private int version;
 
+    /** A game of Tapatan, seat 0 white. */
     public ThreeMenMorris(GameId id) {
+        this(id, MorrisRules.TAPATAN, SEAT_0);
+    }
+
+    public ThreeMenMorris(GameId id, MorrisRules rules, PlayerId whiteSeat) {
+        if (!SEAT_0.equals(whiteSeat) && !SEAT_1.equals(whiteSeat)) {
+            throw new IllegalArgumentException("No such seat: " + whiteSeat);
+        }
         this.id = id;
-        inHand[0] = PIECES;
-        inHand[1] = PIECES;
+        this.rules = rules;
+        this.geometry = rules.geometry();
+        this.whiteSeat = whiteSeat;
+        this.board = new PlayerId[geometry.points()];
+        this.current = whiteSeat;
+        inHand[0] = rules.piecesPerPlayer();
+        inHand[1] = rules.piecesPerPlayer();
     }
 
     /**
-     * Test constructor: a board written row by row (nine characters, W white, B black, anything else
-     * empty), the pieces still in hand and the seat to play. No win is looked for in the layout.
-     * Each player must hold three pieces, on the board and in hand together.
+     * Test constructor: a Tapatan board written row by row (nine characters, W seat 0, B seat 1,
+     * anything else empty), the pieces still in hand and the seat to play. No win is looked for in the
+     * layout. Each player must hold three pieces, on the board and in hand together.
      */
     static ThreeMenMorris fromLayout(GameId id, String layout, int whiteInHand, int blackInHand,
                                      PlayerId current) {
-        return fromLayout(id, layout, whiteInHand, blackInHand, PIECES, PIECES, current);
+        return fromLayout(id, layout, whiteInHand, blackInHand, MorrisRules.TAPATAN.piecesPerPlayer(),
+                MorrisRules.TAPATAN.piecesPerPlayer(), current);
     }
 
     /**
@@ -56,17 +74,18 @@ public class ThreeMenMorris implements Game {
      */
     static ThreeMenMorris fromLayout(GameId id, String layout, int whiteInHand, int blackInHand,
                                      int whitePieces, int blackPieces, PlayerId current) {
-        if (layout == null || layout.length() != Board.POINTS) {
-            throw new IllegalArgumentException("A layout has exactly " + Board.POINTS + " characters");
+        ThreeMenMorris game = new ThreeMenMorris(id);
+        int points = game.geometry.points();
+        if (layout == null || layout.length() != points) {
+            throw new IllegalArgumentException("A layout has exactly " + points + " characters");
         }
-        if (!WHITE.equals(current) && !BLACK.equals(current)) {
+        if (!SEAT_0.equals(current) && !SEAT_1.equals(current)) {
             throw new IllegalArgumentException("No such seat: " + current);
         }
-        ThreeMenMorris game = new ThreeMenMorris(id);
         int[] onBoard = new int[PLAYERS];
-        for (int point = 0; point < Board.POINTS; point++) {
+        for (int point = 0; point < points; point++) {
             char c = layout.charAt(point);
-            game.board[point] = c == 'W' ? WHITE : c == 'B' ? BLACK : null;
+            game.board[point] = c == 'W' ? SEAT_0 : c == 'B' ? SEAT_1 : null;
             if (game.board[point] != null) {
                 onBoard[game.board[point].id()]++;
             }
@@ -119,7 +138,7 @@ public class ThreeMenMorris implements Game {
         if (board[to] != null) {
             throw new PointOccupiedException(to);
         }
-        if (!Board.areAdjacent(from, to)) {
+        if (!geometry.areAdjacent(from, to)) {
             throw new NotAdjacentException(from, to);
         }
         board[from] = null;
@@ -134,7 +153,7 @@ public class ThreeMenMorris implements Game {
 
     @Override
     public synchronized void forfeit(PlayerId loser) {
-        if (isFinished() || !WHITE.equals(loser) && !BLACK.equals(loser)) {
+        if (isFinished() || !SEAT_0.equals(loser) && !SEAT_1.equals(loser)) {
             return;
         }
         version++;
@@ -156,7 +175,7 @@ public class ThreeMenMorris implements Game {
     /** Both seats, always: a forfeit finishes the game but does not remove anybody. */
     @Override
     public List<PlayerId> getPlayerIds() {
-        return List.of(WHITE, BLACK);
+        return List.of(SEAT_0, SEAT_1);
     }
 
     public synchronized Phase phase() {
@@ -173,7 +192,7 @@ public class ThreeMenMorris implements Game {
 
     /** The owner of the piece on the point, null when the point is free. */
     public synchronized PlayerId owner(int point) {
-        if (!Board.isPoint(point)) {
+        if (!geometry.isPoint(point)) {
             throw new InvalidQueryException("No such point: " + point);
         }
         return board[point];
@@ -198,6 +217,43 @@ public class ThreeMenMorris implements Game {
     /** The three aligned points of the winning player, empty when the game did not end on a line. */
     public synchronized List<Integer> winningLine() {
         return winningLine;
+    }
+
+    public MorrisRules rules() {
+        return rules;
+    }
+
+    public PlayerId whiteSeat() {
+        return whiteSeat;
+    }
+
+    public Colour colourOf(PlayerId seat) {
+        if (!SEAT_0.equals(seat) && !SEAT_1.equals(seat)) {
+            throw new InvalidQueryException("No such seat: " + seat);
+        }
+        return whiteSeat.equals(seat) ? Colour.WHITE : Colour.BLACK;
+    }
+
+    /** The free points the seat may place on now: none outside its turn or outside the placement phase. */
+    public synchronized List<Integer> legalPlacements(PlayerId seat) {
+        if (phase != Phase.PLACEMENT || !seat.equals(current)) {
+            return List.of();
+        }
+        List<Integer> points = new ArrayList<>();
+        for (int point = 0; point < board.length; point++) {
+            if (board[point] == null) {
+                points.add(point);
+            }
+        }
+        return points;
+    }
+
+    /** An immutable snapshot of the game for comparisons and bots. */
+    public synchronized MorrisPosition position() {
+        return new MorrisPosition(rules,
+                Arrays.stream(board).map(owner -> owner == null ? null : owner.id()).toList(),
+                List.of(inHand[0], inHand[1]),
+                current.id());
     }
 
     /** The moves the seat may play now: none outside its turn or outside the movement phase. */
@@ -226,21 +282,21 @@ public class ThreeMenMorris implements Game {
         }
     }
 
-    private static void requirePoint(int point) throws InvalidPointException {
-        if (!Board.isPoint(point)) {
+    private void requirePoint(int point) throws InvalidPointException {
+        if (!geometry.isPoint(point)) {
             throw new InvalidPointException(point);
         }
     }
 
     private static PlayerId other(PlayerId seat) {
-        return WHITE.equals(seat) ? BLACK : WHITE;
+        return SEAT_0.equals(seat) ? SEAT_1 : SEAT_0;
     }
 
     private List<Move> movesOf(PlayerId seat) {
         List<Move> moves = new ArrayList<>();
-        for (int from = 0; from < Board.POINTS; from++) {
+        for (int from = 0; from < geometry.points(); from++) {
             if (seat.equals(board[from])) {
-                for (int to : Board.neighbours(from)) {
+                for (int to : geometry.neighbours(from)) {
                     if (board[to] == null) {
                         moves.add(new Move(from, to));
                     }
@@ -251,7 +307,7 @@ public class ThreeMenMorris implements Game {
     }
 
     private boolean finishIfLine(PlayerId seat) {
-        for (List<Integer> line : Board.LINES) {
+        for (List<Integer> line : geometry.lines()) {
             if (line.stream().allMatch(p -> seat.equals(board[p]))) {
                 finish(seat, MorrisResult.Reason.LINE, line);
                 return true;
