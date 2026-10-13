@@ -12,6 +12,7 @@ const props = defineProps<{ lobby: LobbyView }>();
 const emit = defineEmits<{
   'add-bot': [];
   'remove-bot': [seat: number];
+  'remove-seat': [seat: number];
   rename: [name: string];
   'set-seat-option': [seat: number, key: string, value: string];
 }>();
@@ -90,6 +91,7 @@ function revertName() {
           <i class="pi pi-microchip" aria-hidden="true" />{{ ui.botBadge }}
         </span>
         <span v-if="p.seat === lobby.hostSeat" class="chip chip--host">{{ ui.hostBadge }}</span>
+        <span v-if="p.disconnected" class="chip chip--offline" data-test="badge-offline">{{ ui.offlineBadge }}</span>
         <LobbySeatOptions
           v-if="isHost && p.bot && seatOptionDescriptors.length"
           :seat="p.seat"
@@ -108,6 +110,16 @@ function revertName() {
           :aria-label="format(ui.removeBot, { name: rowName(p) })"
           :disabled="!canRemove(p.seat)"
           @click="emit('remove-bot', p.seat)" />
+        <Button
+          v-if="isHost && !p.bot && p.seat !== lobby.hostSeat"
+          class="remove-bot remove-seat"
+          :data-test="`remove-seat-${p.seat}`"
+          icon="pi pi-times"
+          severity="secondary"
+          text
+          rounded
+          :aria-label="format(ui.removeSeat, { name: rowName(p) })"
+          @click="emit('remove-seat', p.seat)" />
       </li>
     </ul>
     <Button
@@ -212,6 +224,7 @@ function revertName() {
 .chip--you { color: #1b1400; background: var(--gold); border-color: var(--gold); }
 .chip--bot { color: rgb(var(--accent-positive-rgb)); border-color: rgba(var(--accent-positive-rgb), 0.5); }
 .chip--bot .pi { font-size: 0.75rem; }
+.chip--offline { color: rgba(255, 255, 255, 0.6); border-style: dashed; }
 
 .remove-bot.p-button { flex: none; width: 44px; height: 44px; padding: 0; }
 .add-bot.p-button { width: 100%; min-height: 44px; }

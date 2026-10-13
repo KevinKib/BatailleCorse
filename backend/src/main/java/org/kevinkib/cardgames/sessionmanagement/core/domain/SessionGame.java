@@ -179,6 +179,40 @@ public record SessionGame(GameId id, String gameType, GameOptions options, Map<P
         renumberDefaultHumanNames();
     }
 
+    /**
+     * The host removes another human from the lobby. Same effect as that human leaving ({@link #vacate}): later
+     * seats shift down and the freed seat gets a fresh token. Returns the token the removed human held.
+     * Refused for the host seat (it leaves through Leave) and for a seat held by a bot or nobody.
+     */
+    public SessionToken removeHuman(PlayerId target) {
+        SessionPlayer seat = seatOrThrow(target);
+        if (!seat.isClaimed() || seat.isBot()) {
+            throw new NotAHumanSeatException(target);
+        }
+        if (isHost(target)) {
+            throw new CannotRemoveHostException();
+        }
+        SessionToken removed = seat.token();
+        vacate(target);
+        return removed;
+    }
+
+    /**
+     * Records whether the human holding this token is connected; returns true when that changed the lobby.
+     * An unknown token, a bot seat or an unchanged flag change nothing.
+     */
+    public boolean markConnection(SessionToken token, boolean connected) {
+        return players.values().stream()
+                .filter(seat -> seat.isClaimed() && !seat.isBot() && seat.token().equals(token))
+                .findFirst()
+                .filter(seat -> seat.isDisconnected() == connected)
+                .map(seat -> {
+                    seat.setDisconnected(!connected);
+                    return true;
+                })
+                .orElse(false);
+    }
+
     private void renumberDefaultHumanNames() {
         for (SessionPlayer seat : seats()) {
             if (seat.isClaimed() && !seat.isBot() && seat.name() != null && seat.name().matches("Player \\d+")) {

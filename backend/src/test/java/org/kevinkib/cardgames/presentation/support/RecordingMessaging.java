@@ -29,6 +29,10 @@ public class RecordingMessaging extends GameMessagingService {
     public final List<Response> payloads = Collections.synchronizedList(new ArrayList<>());
     public final List<Response> toGame = Collections.synchronizedList(new ArrayList<>());
 
+    /** Messages sent to a token that no longer resolves to a seat (a removed player's channel), by token. */
+    public final List<String> detachedTokens = Collections.synchronizedList(new ArrayList<>());
+    public final List<Response> detachedPayloads = Collections.synchronizedList(new ArrayList<>());
+
     private SessionService resolver;
 
     public RecordingMessaging() {
@@ -62,7 +66,13 @@ public class RecordingMessaging extends GameMessagingService {
         if (resolver == null) {
             throw new IllegalStateException("sendToToken needs a SessionService: call resolvingTokensWith first");
         }
-        sendToSeat(gameId, resolver.findPlayerIdByToken(gameId, token).orElseThrow(), payload);
+        var seat = resolver.findPlayerIdByToken(gameId, token);
+        if (seat.isEmpty()) {
+            detachedTokens.add(token);
+            detachedPayloads.add((Response) payload);
+            return;
+        }
+        sendToSeat(gameId, seat.get(), payload);
     }
 
     /** The last message sent to the game topic. */
@@ -87,5 +97,7 @@ public class RecordingMessaging extends GameMessagingService {
         seats.clear();
         payloads.clear();
         toGame.clear();
+        detachedTokens.clear();
+        detachedPayloads.clear();
     }
 }

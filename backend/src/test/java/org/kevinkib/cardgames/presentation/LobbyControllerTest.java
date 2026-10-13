@@ -305,6 +305,51 @@ class LobbyControllerTest {
     }
 
     @Test
+    void givenHost_whenRemoveSeat_thenRemainingSeatsGetTheViewAndTheRemovedGetsAClearNotice() {
+        RoomCreated room = sessionService.createRoom("bullshit", "Alice");
+        String bobToken = sessionService.joinRoom(new GameId(room.gameId()), "Bob").token();
+        sessionService.joinRoom(new GameId(room.gameId()), "Carol");
+        messaging.clear();
+
+        controller.removeSeat(new LobbySeatPayload(room.gameId(), room.hostToken(), 1));
+
+        assertThat(messaging.seats, is(List.of(new PlayerId(0), new PlayerId(1))));
+        assertThat(lobbyOf(messaging.payloads.get(1)).players().get(1).name(), is("Carol"));
+        assertThat(messaging.detachedTokens, is(List.of(bobToken)));
+        Response notice = messaging.detachedPayloads.get(0);
+        assertThat(notice.getEventType(), is("REMOVED"));
+        assertThat(notice.isSuccess(), is(true));
+        assertThat(notice.getMessage(), is("You were removed from the lobby by the host"));
+    }
+
+    @Test
+    void givenGuest_whenRemoveSeat_thenOnlyTheSenderIsRefusedAndNobodyIsRemoved() {
+        RoomCreated room = sessionService.createRoom("bullshit", "Alice");
+        String bobToken = sessionService.joinRoom(new GameId(room.gameId()), "Bob").token();
+        sessionService.joinRoom(new GameId(room.gameId()), "Carol");
+        messaging.clear();
+
+        controller.removeSeat(new LobbySeatPayload(room.gameId(), bobToken, 2));
+
+        assertThat(messaging.seats, is(List.of(new PlayerId(1))));
+        assertThat(messaging.payloads.get(0).isSuccess(), is(false));
+        assertThat(messaging.detachedTokens.isEmpty(), is(true));
+        assertThat(sessionService.lobbyView(new GameId(room.gameId()), room.hostToken()).players().get(2).joined(), is(true));
+    }
+
+    @Test
+    void givenHost_whenRemoveOwnSeat_thenRefusedToTheHostAlone() {
+        RoomCreated room = sessionService.createRoom("bullshit", "Alice");
+        sessionService.joinRoom(new GameId(room.gameId()), "Bob");
+        messaging.clear();
+
+        controller.removeSeat(new LobbySeatPayload(room.gameId(), room.hostToken(), 0));
+
+        assertThat(messaging.seats, is(List.of(new PlayerId(0))));
+        assertThat(messaging.payloads.get(0).isSuccess(), is(false));
+    }
+
+    @Test
     void givenUnknownToken_whenLeave_thenIgnored() {
         RoomCreated room = sessionService.createRoom("bullshit", "Alice");
         String bobToken = sessionService.joinRoom(new GameId(room.gameId()), "Bob").token();

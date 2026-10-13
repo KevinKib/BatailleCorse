@@ -114,6 +114,20 @@ class SeatGameRestTest {
     }
 
     @Test
+    void joinConflictSaysWhetherTheRoomIsFullOrStarted() {
+        RoomCreated full = table.sessions.createRoom(TYPE, "Alice");
+        for (int i = 1; i < 4; i++) {
+            rest.join(TYPE, full.gameId(), null);
+        }
+        assertThat(rest.join(TYPE, full.gameId(), null).getHeaders().getFirst("X-Join-Refusal"), is("full"));
+
+        RoomCreated started = table.sessions.createRoom(TYPE, "Alice");
+        rest.join(TYPE, started.gameId(), null);
+        table.sessions.startGame(new GameId(started.gameId()), started.hostToken());
+        assertThat(rest.join(TYPE, started.gameId(), null).getHeaders().getFirst("X-Join-Refusal"), is("started"));
+    }
+
+    @Test
     void playAgainReopensAFinishedGameWithTheCallerAsHostAndBroadcasts() {
         RoomCreated room = table.sessions.createRoom(TYPE, "Alice");
         rest.join(TYPE, room.gameId(), new JoinGamePayload("Bob"));

@@ -18,7 +18,8 @@ import java.util.Map;
  * (defaults filled for missing keys) and {@code canEditOptions} is true for the host when the game
  * declares at least one option. {@code seatOptionDescriptors} are the options of a computer seat; each bot
  * player carries its {@code seatOptions} (defaults filled), a human none. {@code lobbyVersion} increases with
- * every mutation of the lobby: a client ignores a view older than the one it holds.
+ * every mutation of the lobby: a client ignores a view older than the one it holds. A player carries
+ * {@code disconnected} while its connection is known to be down, so the host can see whom to remove.
  */
 public record LobbyView(
         boolean started,
@@ -36,7 +37,8 @@ public record LobbyView(
         List<Integer> removableBotSeats,
         long lobbyVersion) {
 
-    public record LobbyPlayer(int seat, String name, boolean joined, boolean bot, Map<String, String> seatOptions) {
+    public record LobbyPlayer(int seat, String name, boolean joined, boolean bot, Map<String, String> seatOptions,
+                       boolean disconnected) {
     }
 
     static LobbyView forViewer(SessionGame lobby, int minPlayers, int maxPlayers,
@@ -49,7 +51,7 @@ public record LobbyView(
                                List<OptionDescriptor> seatOptionDescriptors, PlayerId viewer) {
         List<LobbyPlayer> players = lobby.seats().stream()
                 .map(seat -> new LobbyPlayer(seat.id().id(), seat.name(), seat.isClaimed(), seat.isBot(),
-                        seatOptionsOf(seat, seatOptionDescriptors)))
+                        seatOptionsOf(seat, seatOptionDescriptors), seat.isClaimed() && seat.isDisconnected()))
                 .toList();
 
         boolean host = lobby.isHost(viewer);

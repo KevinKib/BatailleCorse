@@ -18,6 +18,7 @@ export type BullshitSessionEvent =
   | { type: 'game-id-change'; gameId: string }
   | { type: 'seat-change'; seat: number }
   | { type: 'error'; eventType: string; message: string }
+  | { type: 'removed' }
   | { type: 'event'; eventType: string; eventData: unknown; message: string };
 
 export interface BullshitSessionCallbacks {
@@ -78,7 +79,7 @@ export default class BullshitSession {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: name ?? null }),
     });
-    if (!res.ok) throw new HttpError(`Join failed: ${res.status}`, res.status);
+    if (!res.ok) throw HttpError.fromResponse(res, 'Join failed');
     const body = await res.json() as { playerId: number; token: string };
     this.bind(gameId, body.playerId, body.token);
     localStorage.setItem(tokenKey(gameId), JSON.stringify({ [body.playerId]: body.token }));
@@ -175,6 +176,9 @@ export default class BullshitSession {
   /** Host only: free the bot seat (the server refuses when a human sits above it). */
   removeBot(seat: number): void { this.lobby.removeBot(seat); }
 
+  /** Host only: remove another human from the lobby, connected or not. */
+  removeSeat(seat: number): void { this.lobby.removeSeat(seat); }
+
   /** Host only: change one game option; the answer is the next lobby view. */
   setOption(key: string, value: string): void { this.lobby.setOption(key, value); }
 
@@ -208,6 +212,22 @@ export default class BullshitSession {
     this.started = false;
   }
 
+  /** The host removed this seat: the server already freed it, so tear down without a Leave command. */
+  private removedByHost(): void {
+    const gameId = this.gameId;
+    this.left = true;
+    this.webSocket.unsubscribeFromSeat();
+    this.webSocket.unsubscribeFromGame();
+    this.webSocket.clearPresence();
+    if (gameId) localStorage.removeItem(tokenKey(gameId));
+    this.gameId = null;
+    this.myToken = null;
+    this.mySeat = null;
+    this.lobbyVersion = null;
+    this.started = false;
+    this.callbacks.onEvent({ type: 'removed' });
+  }
+
   async playAgain(name?: string): Promise<void> {
     if (!this.gameId) return;
     if (name !== undefined) this.myName = name;
@@ -225,6 +245,10 @@ export default class BullshitSession {
 
   onResponse(response: BullshitResponse): void {
     if (this.left) return;
+    if (response.eventType === 'REMOVED') {
+      this.removedByHost();
+      return;
+    }
     if (response.success === false) {
       // Refused action (e.g. a bot change the server rejected): keep the state it carries, if any, and surface the error.
       if (response.state) this.applyView(response.state);

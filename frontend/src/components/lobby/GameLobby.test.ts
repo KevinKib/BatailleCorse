@@ -306,6 +306,42 @@ describe('GameLobby', () => {
       expect(wrapper.find('[data-test^="remove-bot-"]').exists()).toBe(false);
     });
 
+    describe('removing a human seat', () => {
+      const withGuests = (overrides: Partial<LobbyView> = {}) => lobby({
+        players: [
+          { seat: 0, name: 'Alice', joined: true, bot: false },
+          { seat: 1, name: 'Bob', joined: true, bot: false },
+          { seat: 2, name: 'Carol', joined: true, bot: false, disconnected: true },
+        ],
+        ...overrides,
+      });
+
+      it('gives the host a Remove button on every other human seat, and none on the host seat', async () => {
+        const wrapper = mountLobby({ lobby: withGuests() });
+        expect(wrapper.find('[data-test="remove-seat-0"]').exists()).toBe(false);
+        const button = wrapper.get('[data-test="remove-seat-1"]');
+        expect(button.attributes('aria-label')).toBe('Remove Bob');
+        expect((button.element as HTMLButtonElement).disabled).toBe(false);
+        await button.trigger('click');
+        expect(wrapper.emitted('remove-seat')).toEqual([[1]]);
+        expect(wrapper.find('[data-test="remove-seat-2"]').exists()).toBe(true);
+      });
+
+      it('gives a guest no remove control at all', () => {
+        const wrapper = mountLobby({ lobby: withGuests({ mySeat: 1 }) });
+        expect(wrapper.find('[data-test^="remove-seat-"]').exists()).toBe(false);
+      });
+
+      it('marks a player whose connection dropped, for the host and the others alike', () => {
+        for (const mySeat of [0, 1]) {
+          const wrapper = mountLobby({ lobby: withGuests({ mySeat }) });
+          const rows = wrapper.findAll('.players li');
+          expect(rows[2].find('[data-test="badge-offline"]').text()).toBe(ui.offlineBadge);
+          expect(rows[1].find('[data-test="badge-offline"]').exists()).toBe(false);
+        }
+      });
+    });
+
     it('shows a visible error when the server refused a change', () => {
       const wrapper = mountLobby({ error: 'Room is full' });
       const alert = wrapper.get('[data-test="lobby-error"]');

@@ -15,6 +15,18 @@ async function mountPicker() {
 }
 
 describe('GamePickerView', () => {
+  it('givenRemovedByTheHost_thenShowsTheNoticeOnlyThen', async () => {
+    const router = createAppRouter(createMemoryHistory());
+    await router.push('/games?removed=1');
+    await router.isReady();
+    const removed = mount(GamePickerView, { global: { plugins: [router, PrimeVue] } });
+    expect(removed.get('[data-test="removed-notice"]').text()).toBe(messagesEn.lobby.removedByHost);
+    expect(removed.get('[data-test="removed-notice"]').attributes('role')).toBe('status');
+
+    const { wrapper } = await mountPicker();
+    expect(wrapper.find('[data-test="removed-notice"]').exists()).toBe(false);
+  });
+
   it('givenPicker_thenShowsTitleAndBothGamesWithDescriptionAndPlayerCount', async () => {
     const { wrapper } = await mountPicker();
     const text = wrapper.text();

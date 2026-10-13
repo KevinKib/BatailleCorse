@@ -20,6 +20,7 @@ export function useLobbyActions(ctx: LobbyActionsContext) {
     rename: (name: string) => send('rename', { name }),
     addBot: () => send('addBot'),
     removeBot: (seat: number) => send('removeBot', { seat }),
+    removeSeat: (seat: number) => send('removeSeat', { seat }),
     leave: () => send('leave'),
   };
 }

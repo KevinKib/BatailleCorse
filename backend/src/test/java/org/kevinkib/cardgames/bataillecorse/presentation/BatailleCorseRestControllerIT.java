@@ -80,6 +80,7 @@ class BatailleCorseRestControllerIT {
         HttpClientErrorException e = assertThrows(HttpClientErrorException.Conflict.class,
                 () -> restTemplate.postForEntity(url("/api/game/" + gameId + "/join"), jsonBody("{}"), JoinResponseDto.class));
         assertThat(e.getStatusCode(), is(HttpStatus.CONFLICT));
+        assertThat(e.getResponseHeaders().getFirst("X-Join-Refusal"), is("full"));
     }
 
     @Test

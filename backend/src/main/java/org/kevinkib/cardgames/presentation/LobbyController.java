@@ -8,6 +8,8 @@ import org.kevinkib.cardgames.presentation.api.LobbyOptionsPayload;
 import org.kevinkib.cardgames.presentation.api.LobbyRenamePayload;
 import org.kevinkib.cardgames.presentation.api.LobbySeatOptionPayload;
 import org.kevinkib.cardgames.presentation.api.LobbySeatPayload;
+import org.kevinkib.cardgames.presentation.api.SuccessResponse;
+import org.kevinkib.cardgames.sessionmanagement.core.application.SeatRemoval;
 import org.kevinkib.cardgames.presentation.dto.event.EmptyEventData;
 import org.kevinkib.cardgames.presentation.dto.event.LifecycleEventType;
 import org.kevinkib.cardgames.sessionmanagement.core.application.AddressedLobbyView;
@@ -22,6 +24,7 @@ import org.springframework.stereotype.Controller;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
 /**
@@ -61,6 +64,26 @@ public class LobbyController {
     @MessageMapping("/lobby/removeBot")
     public void removeBot(@Payload LobbySeatPayload payload) {
         handle(payload.gameId(), payload.token(), "Bot removed from seat " + payload.seat() + ".", gameId -> sessionService.removeBotViews(gameId, payload.token(), payload.seat()));
+    }
+
+    /**
+     * The host removes another human from the lobby, connected or not. The remaining humans receive their new view;
+     * the removed one, if still listening on its (now unresolvable) channel, is told it was removed. A refusal
+     * (not the host, host seat, bot or free seat, game started) goes to the sender alone.
+     */
+    @MessageMapping("/lobby/removeSeat")
+    public void removeSeat(@Payload LobbySeatPayload payload) {
+        AtomicReference<String> removedToken = new AtomicReference<>();
+        handle(payload.gameId(), payload.token(), "A player was removed from seat " + payload.seat() + ".", gameId -> {
+            SeatRemoval removal = sessionService.removeSeat(gameId, payload.token(), payload.seat());
+            removedToken.set(removal.removedToken());
+            return removal.views();
+        });
+        if (removedToken.get() != null) {
+            messaging.sendToToken(new GameId(payload.gameId()), removedToken.get(),
+                    new SuccessResponse(LifecycleEventType.REMOVED.toString(), new EmptyEventData(),
+                            "You were removed from the lobby by the host", null));
+        }
     }
 
     /**

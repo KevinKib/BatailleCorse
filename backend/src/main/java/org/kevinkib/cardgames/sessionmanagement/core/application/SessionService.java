@@ -153,6 +153,17 @@ public class SessionService implements GameDirectory {
         return lobbyViews(id);
     }
 
+    /**
+     * Host-only: removes another human from a not-yet-started room, connected or not (see
+     * {@link SessionGame#removeHuman}). Returns the removed player's token and the remaining humans' views.
+     */
+    public synchronized SeatRemoval removeSeat(GameId id, String hostToken, int seat) {
+        SessionGame lobby = openLobbyOwnedBy(id, hostToken);
+        SessionToken removed = lobby.removeHuman(new PlayerId(seat));
+        lobby.bumpVersion();
+        return new SeatRemoval(removed.uuid().toString(), lobbyViews(id));
+    }
+
     /** Host-only: frees a bot seat of a not-yet-started room (see {@link SessionGame#removeBot}). */
     public synchronized void removeBot(GameId id, String hostToken, int seat) {
         SessionGame lobby = openLobbyOwnedBy(id, hostToken);
@@ -260,6 +271,28 @@ public class SessionService implements GameDirectory {
         }
         lobby.bumpVersion();
         return new LeaveResult(false, lobbyViews(id));
+    }
+
+    /**
+     * Records that the human holding {@code token} lost or regained its connection in a not-yet-started lobby.
+     * Returns the views to publish; empty when nothing changed (same state, unknown token, or the game started).
+     */
+    @Override
+    public synchronized List<AddressedLobbyView> markSeatConnection(GameId id, String token, boolean connected) {
+        if (repository.findGame(id).isPresent()) {
+            return List.of();
+        }
+        SessionGame lobby;
+        try {
+            lobby = repository.loadSessionGame(id);
+        } catch (IllegalArgumentException unknownLobby) {
+            return List.of();
+        }
+        if (!lobby.markConnection(new SessionToken(token), connected)) {
+            return List.of();
+        }
+        lobby.bumpVersion();
+        return lobbyViews(id);
     }
 
     public String gameType(GameId id) {

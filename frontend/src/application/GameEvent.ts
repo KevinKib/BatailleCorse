@@ -11,6 +11,7 @@ export type GameEvent =
   | { type: 'game-id-change'; gameId: string }
   | { type: 'my-index-change'; playerIndex: number }
   | { type: 'error'; eventType: string; message: string }
+  | { type: 'removed' }
   | { type: 'send'; playerIndex: number; seq: number; topCard: Card | undefined }
   | { type: 'grab'; winnerPlayerIndex: number; seq: number; pileCards: Card[] }
   | { type: 'slap' }

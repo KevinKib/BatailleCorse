@@ -3,6 +3,7 @@ package org.kevinkib.cardgames.sessionmanagement.presence.application;
 import org.kevinkib.cardgames.game.Game;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
+import org.kevinkib.cardgames.sessionmanagement.core.application.AddressedLobbyView;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameDirectory;
 import org.kevinkib.cardgames.sessionmanagement.presence.domain.Seat;
 import org.kevinkib.cardgames.sessionmanagement.presence.domain.SeatClaim;
@@ -15,9 +16,11 @@ import org.kevinkib.cardgames.sessionmanagement.presence.port.ScheduledForfeit;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiConsumer;
 
 /**
  * Detects multiplayer disconnects and runs the 60s auto-loss timer, plus the
@@ -38,6 +41,15 @@ public class PresenceService {
     private final GameLifecycleBroadcasters broadcasters;
 
     private final Map<Seat, ScheduledForfeit> pendingForfeits = new ConcurrentHashMap<>();
+    private volatile BiConsumer<GameId, List<AddressedLobbyView>> lobbyPresenceListener = (id, views) -> { };
+
+    /**
+     * Called with the lobby views to publish when a human's connection to a not-yet-started lobby drops or
+     * returns. A dropped lobby connection starts no timer and frees no seat: the host decides.
+     */
+    public void setLobbyPresenceListener(BiConsumer<GameId, List<AddressedLobbyView>> listener) {
+        this.lobbyPresenceListener = listener;
+    }
 
     public PresenceService(GameDirectory games,
                            ConnectionRegistry registry,
@@ -63,6 +75,7 @@ public class PresenceService {
             return;
         }
         registry.bind(connectionId, new SeatClaim(gameId, token));
+        publishLobbyConnection(gameId, token, true);
 
         Seat seat = new Seat(gameId, playerId.get());
         ScheduledForfeit pending = pendingForfeits.remove(seat);
@@ -95,6 +108,7 @@ public class PresenceService {
 
         Game game = findGame(seat.gameId());
         if (game == null) {
+            publishLobbyConnection(seat.gameId(), claim.get().token(), false);
             return;
         }
 
@@ -131,6 +145,13 @@ public class PresenceService {
         forfeitLog.record(seat, reason);
         games.touch(gameId); // start the finished-grace clock
         broadcasters.broadcasterFor(game).forfeited(game, playerId, reason);
+    }
+
+    private void publishLobbyConnection(GameId gameId, String token, boolean connected) {
+        List<AddressedLobbyView> views = games.markSeatConnection(gameId, token, connected);
+        if (!views.isEmpty()) {
+            lobbyPresenceListener.accept(gameId, views);
+        }
     }
 
     private Optional<PlayerId> resolve(GameId gameId, String token) {

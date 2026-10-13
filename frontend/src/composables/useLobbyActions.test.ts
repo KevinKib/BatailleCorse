@@ -29,6 +29,12 @@ describe('useLobbyActions', () => {
     expect(published).toEqual([{ dest: '/app/lobby/rename', body: JSON.stringify({ gameId: 'g1', token: 'tok', name: 'Alice' }) }]);
   });
 
+  it('removeSeat names the seat to /app/lobby/removeSeat', () => {
+    const { actions, published } = setup();
+    actions.removeSeat(2);
+    expect(published).toEqual([{ dest: '/app/lobby/removeSeat', body: JSON.stringify({ gameId: 'g1', token: 'tok', seat: 2 }) }]);
+  });
+
   it('addBot, removeBot and leave use the /app/lobby destinations', () => {
     const { actions, published } = setup();
     actions.addBot();
