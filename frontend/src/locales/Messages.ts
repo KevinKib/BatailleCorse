@@ -233,6 +233,13 @@ export interface OptionsMessages {
   };
 }
 
+// Kobo screens (`KoboGameScreen`): the table texts arrive with its layout.
+export interface KoboUiMessages {
+  connecting: string;                  // before the first lobby view or game state
+  back: string;
+  provisional: string;                 // placeholder shown while the game is running, until the table exists
+}
+
 // Bataille Corse table (`GameScreen`): texts added with the shared lobby.
 export interface BatailleCorseUiMessages {
   connecting: string;                  // before the first lobby view or game state
@@ -268,10 +275,12 @@ export interface MorrisBoardMessages {
 export interface Messages {
   rules: RulesMessages;     // BatailleCorse
   bullshit: RulesMessages;  // Bullshit
+  kobo: RulesMessages;      // Kobo
   hotkeys: HotkeyMessages; // keyboard shortcut settings
   turn: TurnMessages;      // turn cue shared by the tables
   morrisBoard: MorrisBoardMessages; // Three Men's Morris board
   bullshitUi: BullshitUiMessages; // Bullshit screens
+  koboUi: KoboUiMessages;   // Kobo screens
   batailleCorseUi: BatailleCorseUiMessages; // Bataille Corse table
   gamePicker: GamePickerMessages; // Game choice page
   endScreen: EndScreenMessages;   // End overlay shared by the tables

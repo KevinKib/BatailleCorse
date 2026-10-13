@@ -150,6 +150,23 @@ describe('English messages', () => {
     expect(messagesEn.gamePicker.games.bataillecorse!.players).toBe('2 players');
     expect(messagesEn.gamePicker.games.bullshit!.players).toBe('2–6 players');
     expect(messagesEn.gamePicker.games.bullshit!.description).not.toMatch(/bot/i);
+    expect(messagesEn.gamePicker.games.kobo!.name).toBe('Kobo');
+    expect(messagesEn.gamePicker.games.kobo!.players).toBe('2–6 players');
+    expect(messagesEn.gamePicker.games.kobo!.description).toBe('Remember your hidden cards and end the round with the fewest points.');
+  });
+
+  it('givenKoboMessages_thenRulesHaveATitleAndBodyPerSectionAndTheScreenTextsExist', () => {
+    expect(messagesEn.kobo.toggleLabel).toBeTruthy();
+    expect(messagesEn.kobo.panelTitle).toBeTruthy();
+    expect(messagesEn.kobo.closeLabel).toBeTruthy();
+    expect(messagesEn.kobo.sections.length).toBeGreaterThan(0);
+    for (const section of messagesEn.kobo.sections) {
+      expect(section.title).toBeTruthy();
+      if (section.kind === 'text') expect(section.body.length).toBeGreaterThan(0);
+    }
+    expect(messagesEn.koboUi.connecting).toBeTruthy();
+    expect(messagesEn.koboUi.back).toBeTruthy();
+    expect(messagesEn.koboUi.provisional).toBeTruthy();
   });
 });
 

@@ -63,6 +63,11 @@ export const GAMES: readonly GameDefinition[] = [
     picker: { icon: 'pi pi-bolt', severity: 'warn' },
     hotkeys: { actions: ['discard', 'call'], storageKeys: ['bullshit.hotkeys'] },
   }),
+  // No bots and no remappable shortcuts (Tab, Enter, Escape and arrows only): no gear on its home and lobby.
+  define('kobo', {
+    supportsBots: false,
+    picker: { icon: 'pi pi-star', severity: 'info' },
+  }),
 ];
 
 export function findGame(key: unknown): GameDefinition | undefined {

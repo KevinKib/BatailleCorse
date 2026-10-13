@@ -4,6 +4,7 @@ import GameHomeView from './view/GameHomeView.vue';
 import GameJoinView from './view/GameJoinView.vue';
 import GameScreen from './view/alpha/GameScreen.vue';
 import BullshitGameScreen from './view/bullshit/BullshitGameScreen.vue';
+import KoboGameScreen from './view/kobo/KoboGameScreen.vue';
 import { findGame } from './model/games';
 
 const BASE = '/games/bataillecorse';
@@ -25,6 +26,7 @@ export const routes = [
   { path: '/games/bullshit/new', redirect: '/games/bullshit' },
   { path: '/games/bullshit/create', redirect: '/games/bullshit' },
   { path: '/games/bullshit/room/:id', name: 'bullshit-room', component: BullshitGameScreen, props: (route: { params: Record<string, unknown> }) => ({ gameId: route.params.id }) },
+  { path: '/games/kobo/room/:id', name: 'kobo-room', component: KoboGameScreen, props: (route: { params: Record<string, unknown> }) => ({ gameId: route.params.id }) },
   { path: '/:pathMatch(.*)*', redirect: { name: 'games' } },
 ];
 
