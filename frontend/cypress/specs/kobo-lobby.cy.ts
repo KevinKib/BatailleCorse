@@ -1,47 +1,7 @@
 // Kobo on the shared lobby (2 to 6 players, no bots, no options): the browser under test is the host, scripted
-// STOMP clients are the other players. The table itself is not built yet: Start leads to a provisional screen.
-import { joinAsScriptedPlayer, type ScriptedPlayer } from '../support/stompPlayer';
-
-type Guest = ScriptedPlayer & { token: string; seat: number };
-
-function hostLobby(name: string) {
-  cy.visit('/games/kobo');
-  cy.get('[data-test="name"]').type(name);
-  cy.get('[data-test="new-game"]').click();
-  cy.url({ timeout: 10000 }).should('match', /\/games\/kobo\/room\/.+/);
-  cy.get('[data-test="lobby"]', { timeout: 10000 }).should('be.visible');
-  return cy.location('pathname').then((path) => path.split('/room/')[1]);
-}
-
-/**
- * A view sent between the browser's first load and its seat subscription is lost, and the lobby carries no
- * other signal that the channel is live. So `publish` (a repeatable change that shows up in the lobby, such as a
- * rename) is replayed with a fresh label until the browser displays it: from then on the channel is live.
- */
-function untilBrowserSees(publish: (label: string) => void) {
-  return cy.window({ log: false }).then((win) => new Promise<void>((resolve, reject) => {
-    let attempt = 0;
-    const next = () => {
-      if (attempt >= 12) { reject(new Error('the browser never received the lobby update')); return; }
-      const label = `Nudge${++attempt}`;
-      publish(label);
-      const deadline = Date.now() + 1500;
-      const look = () => {
-        if (win.document.querySelector('.players')?.textContent?.includes(label)) { resolve(); return; }
-        if (Date.now() > deadline) { next(); return; }
-        setTimeout(look, 50);
-      };
-      look();
-    };
-    next();
-  }));
-}
-
-function noHorizontalScroll() {
-  cy.document().then((doc) => {
-    expect(doc.documentElement.scrollWidth, 'page width').to.be.at.most(doc.documentElement.clientWidth);
-  });
-}
+// STOMP clients are the other players. Start leads to the table (its layout is covered by kobo-table.cy.ts).
+import { joinAsScriptedPlayer } from '../support/stompPlayer';
+import { hostLobby, noHorizontalScroll, untilBrowserSees, type Guest } from '../support/koboRoom';
 
 describe('Kobo lobby', () => {
   [375, 1280].forEach((width) => {
@@ -65,9 +25,9 @@ describe('Kobo lobby', () => {
           cy.get('[data-test="start-hint"]').should('not.exist');
           noHorizontalScroll();
           cy.get('[data-test="start"]').click();
-          cy.get('[data-test="kobo-provisional"]', { timeout: 10000 }).should('be.visible');
+          cy.get('[data-test="kobo-table"]', { timeout: 10000 }).should('be.visible');
           cy.get('[data-test="lobby"]').should('not.exist');
-          cy.contains('Game in progress').should('be.visible');
+          cy.get('[data-test="opponent-seat"]').should('have.length', 1);
           noHorizontalScroll();
         });
       });

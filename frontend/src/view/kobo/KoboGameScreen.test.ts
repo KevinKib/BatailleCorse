@@ -7,7 +7,8 @@ import PrimeVue from 'primevue/config';
 import { createAppRouter } from '../../router';
 import { useKoboStore } from '../../state/Kobo.store';
 import type { LobbyView } from '../../model/lobby/LobbyView';
-import { buildKoboState } from '../../model/fixtures/kobo';
+import { buildKoboCard, buildKoboPlayer, buildKoboSlot, buildKoboState } from '../../model/fixtures/kobo';
+import { setConnectionOnline } from '../../composables/useConnectionStatus';
 import { messagesEn } from '../../locales/en';
 
 function lobby(joined: number, mySeat = 0): LobbyView {
@@ -74,19 +75,153 @@ describe('KoboGameScreen', () => {
     expect(router.currentRoute.value.name).toBe('games');
   });
 
-  it('givenAStartedGame_thenShowsTheProvisionalScreenWithBackAndNoLobby', async () => {
-    const { wrapper, router, store } = await mountRoom(s => {
-      s.applyEvent({ type: 'seat-change', seat: 0 });
-      s.applyEvent({ type: 'state-update', state: buildKoboState({ round: 2 }) });
+  describe('table', () => {
+    const seatsOf = (wrapper: ReturnType<typeof mount>) =>
+      wrapper.findAll('[data-test="opponent-seat"]').map(w => Number(w.attributes('data-seat')));
+
+    function started(overrides = {}, count = 2, mySeat = 0) {
+      return mountRoom(s => {
+        s.applyEvent({ type: 'seat-change', seat: mySeat });
+        s.applyEvent({
+          type: 'state-update',
+          state: buildKoboState({
+            players: Array.from({ length: count }, (_, seat) => buildKoboPlayer(seat, { current: seat === 0 })),
+            ...overrides,
+          }),
+        });
+      });
+    }
+
+    it('givenAStartedGame_thenShowsTheTableAndNeitherTheLobbyNorAPlaceholder', async () => {
+      const { wrapper } = await started();
+      expect(wrapper.find('[data-test="kobo-table"]').exists()).toBe(true);
+      expect(wrapper.find('[data-test="kobo-provisional"]').exists()).toBe(false);
+      expect(wrapper.find('[data-test="lobby"]').exists()).toBe(false);
+      expect(wrapper.find('[data-test="connecting"]').exists()).toBe(false);
     });
-    expect(wrapper.get('[data-test="kobo-provisional"]').text()).toContain(messagesEn.koboUi.provisional);
-    expect(wrapper.find('[data-test="lobby"]').exists()).toBe(false);
-    expect(wrapper.find('[data-test="connecting"]').exists()).toBe(false);
-    window.confirm = () => true;
-    vi.spyOn(store, 'forfeit').mockImplementation(() => {});
-    await wrapper.get('[data-test="back"]').trigger('click');
-    await flushPromises();
-    expect(router.currentRoute.value.name).toBe('games');
+
+    it.each([2, 3, 4, 5, 6])('given%iPlayers_thenEverySeatIsOnTheTableInPlayOrderAfterMe', async (count) => {
+      const { wrapper } = await started({}, count, 1);
+      const others = [...Array(count).keys()].filter(seat => seat !== 1);
+      const rotated = [...others.filter(s => s > 1), ...others.filter(s => s < 1)];
+      expect(seatsOf(wrapper)).toEqual(rotated);
+      expect(wrapper.findAll('[data-test="opponent-seat"] button')).toHaveLength((count - 1) * 4);
+      expect(wrapper.findAll('[data-test="my-zone"] button')).toHaveLength(4);
+    });
+
+    it('givenNamesAndNoName_thenTheLabelsFollowTheSharedRule', async () => {
+      const { wrapper } = await started({
+        players: [buildKoboPlayer(0, { name: 'Alice' }), buildKoboPlayer(1, { name: '  ' }), buildKoboPlayer(2, { name: 'Cleo' })],
+      });
+      const labels = wrapper.findAll('[data-test="opponent-seat"] [data-test="seat-label"]').map(w => w.text());
+      expect(labels).toEqual(['Player 2', 'Cleo']);
+      expect(wrapper.get('[data-test="my-zone"] [data-test="seat-label"]').text()).toBe('You');
+    });
+
+    it('givenMemorising_thenOnlyMyStartingCardsAreFaceUpAndTheOthersFaceDown', async () => {
+      const { wrapper } = await started({
+        phase: 'MEMORISING', readySeats: [1],
+        startingCards: [{ slot: 2, card: buildKoboCard('KING', 'HEART') }, { slot: 3, card: buildKoboCard('4', 'CLUB') }],
+      });
+      const mine = wrapper.findAll('[data-test="my-zone"] button').map(b => b.attributes('aria-label'));
+      expect(mine).toEqual([
+        'Your card 1, face down', 'Your card 2, face down', 'Your card 3: king of heart', 'Your card 4: 4 of club',
+      ]);
+      expect(wrapper.findAll('[data-test="opponent-seat"] button')
+        .every(b => b.attributes('aria-label')!.endsWith('face down'))).toBe(true);
+      expect(wrapper.get('[data-test="phase"]').text()).toBe('Memorise your two cards');
+    });
+
+    it('givenIAmReady_thenMyStartingCardsAreFaceDownAndMyReadyMarkShows', async () => {
+      const { wrapper } = await started({
+        phase: 'MEMORISING', readySeats: [0],
+        startingCards: [{ slot: 2, card: buildKoboCard('KING', 'HEART') }],
+      });
+      expect(wrapper.findAll('[data-test="my-zone"] button').every(b => b.attributes('aria-label')!.endsWith('face down'))).toBe(true);
+      expect(wrapper.find('[data-test="my-zone"] [data-test="seat-ready"]').exists()).toBe(true);
+    });
+
+    it('givenARevealedRound_thenEverySlotIsFaceUpFromTheState', async () => {
+      const card = buildKoboCard('9', 'DIAMOND');
+      const slots = [0, 1, 2, 3].map(i => buildKoboSlot(i, { card }));
+      const { wrapper } = await started({
+        phase: 'ROUND_OVER', revealed: true,
+        players: [buildKoboPlayer(0, { slots }), buildKoboPlayer(1, { slots })],
+      });
+      const slotButtons = wrapper.findAll('button[data-test^="slot-"]');
+      expect(slotButtons).toHaveLength(8);
+      expect(slotButtons.every(b => b.attributes('aria-label')!.includes('9 of diamond'))).toBe(true);
+    });
+
+    it('showsTheDiscardTopTheCountsTheRoundAndThePhase', async () => {
+      const { wrapper } = await started({ round: 3, drawPileSize: 22, discardSize: 5, discardTop: buildKoboCard('QUEEN', 'SPADE') });
+      expect(wrapper.get('[data-test="round"]').text()).toBe('Round 3');
+      expect(wrapper.get('[data-test="draw-count"]').text()).toBe('22');
+      expect(wrapper.get('[data-test="discard-count"]').text()).toBe('5');
+      expect(wrapper.get('[data-test="discard-pile"]').attributes('aria-label')).toContain('queen of spade');
+      expect(wrapper.get('[data-test="phase"]').text()).toBe('Your turn: draw a card');
+    });
+
+    it('givenItIsNotMyTurn_thenThePhaseNamesThePlayerAndNoYourTurnCueShows', async () => {
+      const { wrapper } = await started({
+        currentSeat: 1,
+        players: [buildKoboPlayer(0), buildKoboPlayer(1, { name: 'Bob', current: true })],
+      });
+      expect(wrapper.get('[data-test="phase"]').text()).toBe('Bob is drawing');
+      expect(wrapper.find('[data-test="turn-hint"]').exists()).toBe(false);
+      expect(wrapper.find('[data-test="turn-indicator"]').exists()).toBe(true);
+    });
+
+    it('givenItIsMyTurn_thenTheYourTurnCueShows', async () => {
+      const { wrapper } = await started();
+      expect(wrapper.get('[data-test="turn-hint"]').text()).toContain('Your turn');
+    });
+
+    it('givenAnActionTheTableOnlyShows_thenNoSlotIsEnabled', async () => {
+      const { wrapper } = await started({
+        phase: 'DECISION', hasDrawn: true, drawnCard: buildKoboCard('3', 'CLUB'), availableActions: ['SWAP_DRAWN', 'DISCARD_DRAWN'],
+      });
+      expect(wrapper.findAll('button[data-test^="slot-"]').every(b => b.attributes('disabled') !== undefined)).toBe(true);
+      expect(wrapper.get('[data-test="drawn-zone"]').attributes('aria-label')).toBe('Your drawn card: 3 of club');
+    });
+
+    it('givenTheMarkersOfTheState_thenTheSeatsShowThem', async () => {
+      const { wrapper } = await started({ announcer: 1, finalTurnsRemaining: [0] });
+      expect(wrapper.find('[data-test="opponent-seat"] [data-test="seat-announcer"]').exists()).toBe(true);
+      expect(wrapper.find('[data-test="my-zone"] [data-test="seat-final-turn"]').exists()).toBe(true);
+    });
+
+    it('givenADisconnectedOpponent_thenItsSeatShowsTheBadge', async () => {
+      const { wrapper, store } = await started();
+      store.applyEvent({ type: 'event', eventType: 'OPPONENT_DISCONNECTED', eventData: { disconnectedSeat: 1, deadlineEpochMs: Date.now() + 30000 } });
+      await flushPromises();
+      expect(wrapper.find('[data-test="opponent-seat"] [data-test="seat-disconnect-badge"]').exists()).toBe(true);
+    });
+
+    it('givenTheConnectionIsDown_thenTheOfflineNoticeShows', async () => {
+      const { wrapper } = await started();
+      expect(wrapper.find('[data-test="offline"]').exists()).toBe(false);
+      setConnectionOnline(false);
+      await flushPromises();
+      expect(wrapper.get('[data-test="offline"]').text()).toContain('Connection lost');
+      setConnectionOnline(true);
+    });
+
+    it('hasTheRulesTheTimerAndBack', async () => {
+      const { wrapper, router, store } = await started();
+      expect(wrapper.find('[data-cy="rules-toggle"]').exists()).toBe(true);
+      expect(wrapper.find('[data-cy="game-timer"]').exists()).toBe(true);
+      window.confirm = () => true;
+      vi.spyOn(store, 'forfeit').mockImplementation(() => {});
+      await wrapper.get('[data-test="back"]').trigger('click');
+      await flushPromises();
+      expect(router.currentRoute.value.name).toBe('games');
+    });
+
+    it('keepsAZoneForTheActionsOfTheNextStep', async () => {
+      const { wrapper } = await started();
+      expect(wrapper.find('[data-test="kobo-actions"]').exists()).toBe(true);
+    });
   });
 
   it('givenTheHostRemovedMe_thenLeadsToTheGameSelectionWithTheNotice', async () => {
