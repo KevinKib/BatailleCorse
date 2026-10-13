@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { visibleFaces, opponentColumns } from './faces';
+import { visibleFaces, opponentColumns, revealToken } from './faces';
 import { slotKey } from './interaction';
 import { buildKoboCard, buildKoboPlayer, buildKoboSlot, buildKoboState } from '../fixtures/kobo';
 
@@ -53,6 +53,35 @@ describe('visibleFaces', () => {
     expect(visibleFaces(game, 0)).toEqual({
       [slotKey(0, 0)]: KING, [slotKey(0, 1)]: SEVEN, [slotKey(1, 0)]: SEVEN,
     });
+  });
+});
+
+describe('hiding the peeked card', () => {
+  const game = buildKoboState({
+    phase: 'TURN_END',
+    players: [buildKoboPlayer(0), buildKoboPlayer(1, { slots: [buildKoboSlot(0, { revision: 3 }), buildKoboSlot(1)] })],
+    reveal: { seat: 1, slot: 0, revision: 3, card: KING },
+  });
+
+  it('givenAPeek_thenItsTokenNamesTheSeatSlotAndRevision', () => {
+    expect(revealToken(game)).toBe('1:0:3');
+    expect(revealToken(buildKoboState())).toBeNull();
+  });
+
+  it('givenThePeekIsHidden_thenTheCardGoesFaceDown', () => {
+    expect(visibleFaces(game, 0, '1:0:3')).toEqual({});
+  });
+
+  it('givenAnotherPeekWasHidden_thenThisOneStaysFaceUp', () => {
+    expect(visibleFaces(game, 0, '1:1:3')).toEqual({ [slotKey(1, 0)]: KING });
+  });
+
+  it('givenTheHiddenPeekOnlyAffectsThePeek_thenARevealedRoundStillShowsEverything', () => {
+    const over = buildKoboState({
+      phase: 'ROUND_OVER', revealed: true, reveal: game.reveal,
+      players: [buildKoboPlayer(0), buildKoboPlayer(1, { slots: [buildKoboSlot(0, { revision: 3, card: KING })] })],
+    });
+    expect(visibleFaces(over, 0, '1:0:3')).toEqual({ [slotKey(1, 0)]: KING });
   });
 });
 

@@ -2,12 +2,20 @@ import type Card from '../Card';
 import type { KoboState } from './KoboState';
 import { slotKey } from './interaction';
 
+/** Names the peek currently held (seat, slot, revision), so "Hide" can turn exactly that card face down. */
+export function revealToken(game: KoboState): string | null {
+  const reveal = game.reveal;
+  return reveal ? `${reveal.seat}:${reveal.slot}:${reveal.revision}` : null;
+}
+
 /**
  * The cards the viewer may see, by `slotKey`. Pure memory: a card appears only when the server hands it over
  * (a revealed round, the peek of the moment, my starting cards until I say I have memorised them); nothing
- * is remembered here. Every other slot is drawn face down.
+ * is remembered here. Every other slot is drawn face down. A peek the viewer chose to hide (`hiddenReveal`, see `revealToken`) is face down too.
  */
-export function visibleFaces(game: KoboState, mySeat: number): Record<string, Card> {
+export function visibleFaces(
+  game: KoboState, mySeat: number, hiddenReveal: string | null = null,
+): Record<string, Card> {
   const faces: Record<string, Card> = {};
 
   for (const player of game.players) {
@@ -21,7 +29,7 @@ export function visibleFaces(game: KoboState, mySeat: number): Record<string, Ca
     for (const { slot, card } of game.startingCards) faces[slotKey(mySeat, slot)] = card;
   }
 
-  if (game.reveal) {
+  if (game.reveal && revealToken(game) !== hiddenReveal) {
     const { seat, slot, revision, card } = game.reveal;
     const target = game.players.find(p => p.seat === seat)?.slots.find(s => s.slot === slot);
     // A card that changed since the peek is not the one that was seen.

@@ -68,4 +68,11 @@ describe('KoboTableau', () => {
   it('givenTheCompactFlag_thenTheTableauCarriesIt', () => {
     expect(mountTableau({ compact: true }).get('.tableau').classes()).toContain('tableau--compact');
   });
+
+  it('givenASelectedSlot_thenOnlyThatSlotIsMarkedPressed', () => {
+    const wrapper = mountTableau({ selected: 2, clickable: { [slotKey(1, 2)]: true } });
+    expect(wrapper.get('[data-test="slot-1-2"]').attributes('aria-pressed')).toBe('true');
+    expect(wrapper.get('[data-test="slot-1-2"]').classes()).toContain('slot--selected');
+    expect(wrapper.get('[data-test="slot-1-1"]').attributes('aria-pressed')).toBeUndefined();
+  });
 });

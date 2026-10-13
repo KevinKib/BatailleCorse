@@ -177,9 +177,9 @@ describe('KoboGameScreen', () => {
       expect(wrapper.get('[data-test="turn-hint"]').text()).toContain('Your turn');
     });
 
-    it('givenAnActionTheTableOnlyShows_thenNoSlotIsEnabled', async () => {
+    it('givenNoActionOnACard_thenNoSlotIsEnabledAndTheDrawnCardIsStillNamed', async () => {
       const { wrapper } = await started({
-        phase: 'DECISION', hasDrawn: true, drawnCard: buildKoboCard('3', 'CLUB'), availableActions: ['SWAP_DRAWN', 'DISCARD_DRAWN'],
+        phase: 'TURN_END', hasDrawn: true, drawnCard: buildKoboCard('3', 'CLUB'), availableActions: ['END_TURN'],
       });
       expect(wrapper.findAll('button[data-test^="slot-"]').every(b => b.attributes('disabled') !== undefined)).toBe(true);
       expect(wrapper.get('[data-test="drawn-zone"]').attributes('aria-label')).toBe('Your drawn card: 3 of club');
@@ -218,9 +218,173 @@ describe('KoboGameScreen', () => {
       expect(router.currentRoute.value.name).toBe('games');
     });
 
-    it('keepsAZoneForTheActionsOfTheNextStep', async () => {
+    it('keepsTheActionZoneUnderMyCards', async () => {
       const { wrapper } = await started();
-      expect(wrapper.find('[data-test="kobo-actions"]').exists()).toBe(true);
+      expect(wrapper.find('[data-test="my-zone"] [data-test="kobo-actions"]').exists()).toBe(true);
+    });
+  });
+
+  describe('memorisation and turn actions', () => {
+    const KING = buildKoboCard('KING', 'HEART');
+    const SEVEN = buildKoboCard('7', 'CLUB');
+
+    function playing(overrides = {}, count = 2, mySeat = 0) {
+      return mountRoom(s => {
+        s.applyEvent({ type: 'seat-change', seat: mySeat });
+        s.applyEvent({
+          type: 'state-update',
+          state: buildKoboState({
+            players: Array.from({ length: count }, (_, seat) => buildKoboPlayer(seat, { current: seat === 0 })),
+            ...overrides,
+          }),
+        });
+      });
+    }
+    const enabledSlots = (wrapper: ReturnType<typeof mount>) =>
+      wrapper.findAll('button[data-test^="slot-"]').filter(b => b.attributes('disabled') === undefined)
+        .map(b => b.attributes('data-test'));
+    const press = async (wrapper: ReturnType<typeof mount>, id: string) => {
+      await wrapper.get(`[data-test="action-${id}"]`).trigger('click');
+    };
+
+    it('givenMemorising_thenMyTwoStartingCardsAreFaceUpAndIHaveMemorisedSendsReady', async () => {
+      const { wrapper, store } = await playing({
+        phase: 'MEMORISING', availableActions: ['READY'],
+        startingCards: [{ slot: 2, card: KING }, { slot: 3, card: SEVEN }],
+      });
+      const mine = wrapper.findAll('[data-test="my-zone"] button[data-test^="slot-"]').map(b => b.attributes('aria-label'));
+      expect(mine).toEqual([
+        'Your card 1, face down', 'Your card 2, face down', 'Your card 3: king of heart', 'Your card 4: 7 of club',
+      ]);
+      expect(wrapper.find('[data-test="opponent-seat"] [aria-label$="king of heart"]').exists()).toBe(false);
+      const ready = vi.spyOn(store, 'ready').mockReturnValue(true);
+      await press(wrapper, 'ready');
+      expect(ready).toHaveBeenCalledTimes(1);
+    });
+
+    it('givenIHaveMemorised_thenTheCardsAreFaceDownAndNoButtonIsLeft', async () => {
+      const { wrapper } = await playing({
+        phase: 'MEMORISING', readySeats: [0], availableActions: [],
+        startingCards: [{ slot: 2, card: KING }, { slot: 3, card: SEVEN }],
+      });
+      const mine = wrapper.findAll('[data-test="my-zone"] button[data-test^="slot-"]');
+      expect(mine.every(b => b.attributes('aria-label')!.endsWith('face down'))).toBe(true);
+      expect(wrapper.find('[data-test="action-ready"]').exists()).toBe(false);
+    });
+
+    it('givenMyDrawStep_thenDrawIsTheButtonAndNoCardIsClickable', async () => {
+      const { wrapper, store } = await playing({ phase: 'DRAW', availableActions: ['DRAW', 'MATCH_DISCARD'] });
+      expect(enabledSlots(wrapper)).toEqual([]);
+      expect(wrapper.find('[data-test="action-match"]').exists()).toBe(false);
+      const draw = vi.spyOn(store, 'draw').mockReturnValue(true);
+      await press(wrapper, 'draw');
+      expect(draw).toHaveBeenCalledTimes(1);
+    });
+
+    it('givenTheDrawnCard_thenOnlyMyCardsAreClickableAndAClickPicksTheSlot', async () => {
+      const { wrapper, store } = await playing({
+        phase: 'DECISION', hasDrawn: true, drawnCard: KING, availableActions: ['SWAP_DRAWN', 'DISCARD_DRAWN'],
+      });
+      expect(enabledSlots(wrapper)).toEqual(['slot-0-0', 'slot-0-1', 'slot-0-2', 'slot-0-3']);
+      expect(wrapper.get('[data-test="prompt"]').text()).toBe(messagesEn.koboUi.prompt.swapDrawn);
+      const pick = vi.spyOn(store, 'pickSlot').mockImplementation(() => {});
+      await wrapper.get('[data-test="slot-0-1"]').trigger('click');
+      expect(pick).toHaveBeenCalledWith(0, 1);
+      const discard = vi.spyOn(store, 'discardDrawn').mockReturnValue(true);
+      await press(wrapper, 'discard');
+      expect(discard).toHaveBeenCalledTimes(1);
+    });
+
+    it('givenAPeekOtherPower_thenOnlyTheOthersCardsAreClickableAndSkipIsOffered', async () => {
+      const { wrapper, store } = await playing({
+        phase: 'POWER', pendingPower: 'PEEK_OTHER', availableActions: ['PEEK', 'SKIP_POWER'],
+      });
+      expect(enabledSlots(wrapper)).toEqual(['slot-1-0', 'slot-1-1', 'slot-1-2', 'slot-1-3']);
+      expect(wrapper.get('[data-test="prompt"]').text()).toBe(messagesEn.koboUi.prompt.peekOther);
+      const skip = vi.spyOn(store, 'skipPower').mockReturnValue(true);
+      await press(wrapper, 'skip');
+      expect(skip).toHaveBeenCalledTimes(1);
+    });
+
+    it('givenTheTurnEnd_thenEndTurnAndKoboAreButtons', async () => {
+      const { wrapper, store } = await playing({ phase: 'TURN_END', availableActions: ['END_TURN', 'ANNOUNCE_KOBO'] });
+      const end = vi.spyOn(store, 'endTurn').mockReturnValue(true);
+      const announce = vi.spyOn(store, 'announce').mockReturnValue(true);
+      await press(wrapper, 'endTurn');
+      await press(wrapper, 'announce');
+      expect(end).toHaveBeenCalledTimes(1);
+      expect(announce).toHaveBeenCalledTimes(1);
+    });
+
+    it('givenNotMyTurn_thenNoButtonAndNoClickableCard', async () => {
+      const { wrapper } = await playing({ phase: 'DRAW', currentSeat: 1, availableActions: [] }, 2, 0);
+      expect(wrapper.findAll('[data-test="kobo-actions"] button')).toHaveLength(0);
+      expect(enabledSlots(wrapper)).toEqual([]);
+    });
+
+    it('givenABlindSwapFirstClick_thenMySlotIsMarkedCancelIsOfferedAndEscapeDropsIt', async () => {
+      const { wrapper, store } = await playing({
+        phase: 'POWER', pendingPower: 'BLIND_SWAP', availableActions: ['BLIND_SWAP', 'SKIP_POWER'],
+      });
+      expect(wrapper.get('[data-test="prompt"]').text()).toBe(messagesEn.koboUi.prompt.blindOwn);
+      await wrapper.get('[data-test="slot-0-2"]').trigger('click');
+      expect(store.pending).toEqual({ kind: 'blind-own', ownSlot: 2 });
+      expect(wrapper.get('[data-test="slot-0-2"]').attributes('aria-pressed')).toBe('true');
+      expect(wrapper.get('[data-test="prompt"]').text()).toBe(messagesEn.koboUi.prompt.blindTarget);
+      expect(enabledSlots(wrapper)).toEqual(['slot-1-0', 'slot-1-1', 'slot-1-2', 'slot-1-3']);
+      expect(wrapper.find('[data-test="action-cancel"]').exists()).toBe(true);
+
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+      await flushPromises();
+      expect(store.pending).toEqual({ kind: 'none' });
+      expect(wrapper.find('[data-test="action-cancel"]').exists()).toBe(false);
+    });
+
+    it('givenCancelIsPressed_thenTheSelectionIsDropped', async () => {
+      const { wrapper, store } = await playing({
+        phase: 'POWER', pendingPower: 'BLIND_SWAP', availableActions: ['BLIND_SWAP', 'SKIP_POWER'],
+      });
+      await wrapper.get('[data-test="slot-0-0"]').trigger('click');
+      await press(wrapper, 'cancel');
+      expect(store.pending).toEqual({ kind: 'none' });
+    });
+
+    it('givenACommandInFlight_thenButtonsAndCardsAreDisabled', async () => {
+      const { wrapper, store } = await playing({
+        phase: 'DECISION', hasDrawn: true, drawnCard: KING, availableActions: ['SWAP_DRAWN', 'DISCARD_DRAWN'],
+      });
+      store.busy = true;
+      await flushPromises();
+      expect(enabledSlots(wrapper)).toEqual([]);
+      expect(wrapper.get('[data-test="action-discard"]').attributes('disabled')).toBeDefined();
+    });
+
+    it('givenARefusedCommand_thenTheNoticeShowsAndTheBarIsEnabledAgain', async () => {
+      const { wrapper, store } = await playing({ phase: 'DRAW', availableActions: ['DRAW'] });
+      store.busy = true;
+      store.applyEvent({ type: 'error', eventType: 'DRAW', message: 'nope' });
+      await flushPromises();
+      expect(wrapper.get('[data-test="notice"]').text()).toBe(messagesEn.koboUi.notice.moveImpossible);
+      expect(wrapper.get('[data-test="action-draw"]').attributes('disabled')).toBeUndefined();
+    });
+
+    it('givenAPeekedCard_thenItIsFaceUpUntilHideIsPressed', async () => {
+      const { wrapper } = await playing({
+        phase: 'TURN_END', availableActions: ['END_TURN'],
+        reveal: { seat: 1, slot: 0, revision: 0, card: KING },
+      });
+      expect(wrapper.get('[data-test="slot-1-0"]').attributes('aria-label')).toContain('king of heart');
+      await press(wrapper, 'hide');
+      expect(wrapper.get('[data-test="slot-1-0"]').attributes('aria-label')).toContain('face down');
+      expect(wrapper.find('[data-test="action-hide"]').exists()).toBe(false);
+    });
+
+    it('stopsListeningToEscapeOnceTheScreenIsGone', async () => {
+      const { wrapper, store } = await playing({ phase: 'DRAW', availableActions: ['DRAW'] });
+      const cancel = vi.spyOn(store, 'cancelPending');
+      wrapper.unmount();
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+      expect(cancel).not.toHaveBeenCalled();
     });
   });
 

@@ -51,3 +51,70 @@ export function tableDoesNotScrollSideways() {
   });
   noHorizontalScroll();
 }
+
+export interface TableMetrics {
+  label: string;
+  viewport: string;
+  /** Height of the felt frame that holds the piles and the opponents (the part that scrolls on a phone). */
+  frameHeight: number;
+  frameScrollHeight: number;
+  barHeight: number;
+  barBottom: number;
+  myZoneHeight: number;
+  footerHeight: number;
+  /** Opponent seats whose whole tableau is inside the frame without scrolling. */
+  opponentsFullyVisible: number;
+  opponents: number;
+  smallestButton: number;
+}
+
+/**
+ * What the table shows at this moment, for the space budget of a viewport. When the run is given
+ * `KOBO_METRICS_FILE` the numbers are appended there (one JSON per line), so a report can quote them.
+ */
+export function measureTable(label: string) {
+  return cy.document().then((doc) => {
+    const win = doc.defaultView!;
+    const rect = (sel: string) => doc.querySelector(sel)!.getBoundingClientRect();
+    const frameEl = doc.querySelector('[data-test="kobo-table"]') as HTMLElement;
+    const frame = frameEl.getBoundingClientRect();
+    const seats = Array.from(doc.querySelectorAll('[data-test="opponent-seat"]'));
+    const inside = seats.filter((el) => {
+      const r = el.getBoundingClientRect();
+      return r.top >= frame.top - 1 && r.bottom <= frame.bottom + 1 && r.left >= frame.left - 1 && r.right <= frame.right + 1;
+    });
+    const buttons = Array.from(doc.querySelectorAll('[data-test="kobo-actions"] button'));
+    const metrics: TableMetrics = {
+      label,
+      viewport: `${win.innerWidth}x${win.innerHeight}`,
+      frameHeight: Math.round(frame.height),
+      frameScrollHeight: frameEl.scrollHeight,
+      barHeight: Math.round(rect('[data-test="kobo-actions"]').height),
+      barBottom: Math.round(rect('[data-test="kobo-actions"]').bottom),
+      myZoneHeight: Math.round(rect('[data-test="my-zone"]').height),
+      footerHeight: Math.round(rect('[data-test="table-footer"]').height),
+      opponentsFullyVisible: inside.length,
+      opponents: seats.length,
+      smallestButton: buttons.length ? Math.round(Math.min(...buttons.map((b) => b.getBoundingClientRect().height))) : 0,
+    };
+    const file = Cypress.env('KOBO_METRICS_FILE') as string | undefined;
+    if (file) return cy.writeFile(file, JSON.stringify(metrics) + '\n', { flag: 'a+' }).then(() => metrics);
+    return metrics;
+  });
+}
+
+/** The action bar is entirely on screen, above the footer, and every button of it is a 44 px target. */
+export function actionBarIsReachable() {
+  cy.window().then((win) => {
+    const bar = win.document.querySelector('[data-test="kobo-actions"]')!.getBoundingClientRect();
+    const footer = win.document.querySelector('[data-test="table-footer"]')!.getBoundingClientRect();
+    expect(bar.top, 'bar top').to.be.at.least(0);
+    expect(bar.bottom, 'bar bottom').to.be.at.most(win.innerHeight);
+    expect(bar.bottom, 'bar above the footer').to.be.at.most(footer.top + 1);
+  });
+  cy.get('[data-test="kobo-actions"] button').each(($b) => {
+    const r = $b[0].getBoundingClientRect();
+    expect(Math.round(r.height), 'button height').to.be.at.least(44);
+    expect(Math.round(r.width), 'button width').to.be.at.least(44);
+  });
+}
