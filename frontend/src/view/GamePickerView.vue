@@ -138,12 +138,12 @@ onMounted(() => preloadAllCards());
   .titlescreen { padding: 88px 12px 16px; }
   .title-panel { padding: 44px 16px 16px; gap: 12px; }
   .game-title { font-size: 2rem; }
-  .choices { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  /* Two columns: four games fit a 375x667 phone with no scrolling, nothing hidden. */
+  .choices { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 }
-/* Short phones (375x667): three cards must fit without scrolling the picker. */
+/* Short phones (375x667): the fan above the panel takes less room. */
 @media (max-width: 640px) and (max-height: 700px) {
   .titlescreen { padding-top: 76px; padding-bottom: 12px; }
   .title-panel { gap: 8px; padding-bottom: 12px; }
-  .choices { gap: 6px; }
 }
 </style>

@@ -1,6 +1,9 @@
 // The entry point (/ and /games) is a page that offers every game; no game's menu
 // advertises another one, and Back always leads to the picker.
-const VIEWPORTS: Array<[number, number]> = [[375, 667], [1280, 720]];
+import { GAMES } from '../../src/model/games';
+
+// Phones first: every game must fit without any scrolling, however many GAMES the app registers.
+const VIEWPORTS: Array<[number, number]> = [[375, 667], [360, 640], [390, 844], [768, 1024], [1280, 720]];
 
 describe('Game picker', () => {
   it('redirects / and unknown routes to /games', () => {
@@ -92,25 +95,37 @@ describe('Game picker', () => {
   });
 
   VIEWPORTS.forEach(([width, height]) => {
-    it(`needs no page scroll and reaches every Play button at ${width}x${height}`, () => {
+    it(`fits every game with no scrolling at ${width}x${height}`, () => {
       cy.viewport(width, height);
       cy.visit('/games');
-      // Four games no longer fit a 375x667 phone: the picker then scrolls inside its own screen (the page does
-      // not), so each button is brought into view before it is checked.
-      ['bataillecorse', 'bullshit', 'kobo', 'three-men-morris'].forEach((key) => {
-        cy.get(`[data-test="play-${key}"]`).scrollIntoView().should('be.visible');
+      cy.get('[data-test^="choice-"]').should('have.length', GAMES.length);
+      GAMES.forEach(({ key }) => {
+        cy.get(`[data-test="play-${key}"]`).should('be.visible').then(($el) => {
+          const box = $el[0].getBoundingClientRect();
+          expect(box.height, `${key} Play height`).to.be.at.least(44);
+          expect(box.bottom, `${key} Play bottom`).to.be.at.most(height);
+          expect(box.right, `${key} Play right`).to.be.at.most(width);
+        });
+        // Nothing is clipped: the title, pitch and player count of each card stay inside it.
+        cy.get(`[data-test="choice-${key}"]`).then(($card) => {
+          const card = $card[0];
+          expect(card.scrollWidth, `${key} card overflow x`).to.be.at.most(card.clientWidth);
+          expect(card.scrollHeight, `${key} card overflow y`).to.be.at.most(card.clientHeight);
+          const outer = card.getBoundingClientRect();
+          card.querySelectorAll('h2, p, span, button').forEach((el) => {
+            const box = el.getBoundingClientRect();
+            expect(box.left, `${key} ${el.tagName} left`).to.be.at.least(outer.left - 0.5);
+            expect(box.right, `${key} ${el.tagName} right`).to.be.at.most(outer.right + 0.5);
+          });
+        });
       });
       cy.window().then((win) => {
         const doc = win.document.documentElement;
         expect(doc.scrollHeight, 'page height').to.be.at.most(win.innerHeight);
         expect(doc.scrollWidth, 'page width').to.be.at.most(win.innerWidth);
-        if (height >= 800) {
-          const screen = win.document.querySelector('.titlescreen') as HTMLElement;
-          expect(screen.scrollHeight, 'picker screen height').to.be.at.most(screen.clientHeight);
-        }
-      });
-      cy.get('[data-test="play-bullshit"]').then(($el) => {
-        expect($el[0].getBoundingClientRect().height).to.be.at.least(44);
+        const screen = win.document.querySelector('.titlescreen') as HTMLElement;
+        expect(screen.scrollHeight, 'picker screen height').to.be.at.most(screen.clientHeight);
+        expect(screen.scrollWidth, 'picker screen width').to.be.at.most(screen.clientWidth);
       });
     });
   });
