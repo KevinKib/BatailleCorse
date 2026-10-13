@@ -6,6 +6,7 @@ import PrimeVue from 'primevue/config';
 import GameJoinView from './GameJoinView.vue';
 import { createAppRouter } from '../router';
 import { useBullshitStore } from '../state/Bullshit.store';
+import { useKoboStore } from '../state/Kobo.store';
 import { useBatailleCorseStore } from '../state/BatailleCorse.store';
 import * as rooms from '../composables/useGameRooms';
 
@@ -39,6 +40,16 @@ describe('GameJoinView', () => {
     await wrapper.get('form').trigger('submit');
     await flushPromises();
     expect(bataille).toHaveBeenCalledWith('xyz', undefined);
+    expect(bullshit).not.toHaveBeenCalled();
+  });
+
+  it('givenAKoboInviteLink_thenJoinsThroughTheKoboStore', async () => {
+    const kobo = vi.spyOn(useKoboStore(), 'join').mockResolvedValue();
+    const bullshit = vi.spyOn(useBullshitStore(), 'join').mockResolvedValue();
+    const { wrapper } = await mountJoin('/games/kobo/join/k1');
+    await wrapper.get('form').trigger('submit');
+    await flushPromises();
+    expect(kobo).toHaveBeenCalledWith('k1', undefined);
     expect(bullshit).not.toHaveBeenCalled();
   });
 

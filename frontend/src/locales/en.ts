@@ -88,6 +88,65 @@ export const messagesEn: Messages = {
       },
     ],
   },
+  kobo: {
+    toggleLabel: 'Rules',
+    panelTitle: 'How to play',
+    closeLabel: 'Close',
+    sections: [
+      {
+        kind: 'text',
+        title: 'Goal',
+        body: ['Finish with the fewest points. Play rounds until a total goes above 100: the lowest total wins.'],
+      },
+      {
+        kind: 'text',
+        title: 'The deal',
+        body: [
+          'Everyone gets 4 face-down cards in a square. You may look at the two cards of the top row once, then remember them.',
+          'Play starts when everyone says they have memorised their cards.',
+        ],
+      },
+      {
+        kind: 'text',
+        title: 'Your turn',
+        body: [
+          'Draw a card, then either swap it with one of your cards (the old card goes face up on the discard pile) or discard it.',
+          'A discarded 7 to King may give you a power, which you can always skip. Then end your turn.',
+        ],
+      },
+      {
+        kind: 'text',
+        title: 'Powers',
+        body: [
+          '7, 8: look at one of your own cards.',
+          '9, 10: look at one card of another player.',
+          'Jack, Queen: swap one of your cards with a card of another player, without looking.',
+          'King: look at a card of another player, then swap it with one of yours if you want.',
+        ],
+      },
+      {
+        kind: 'text',
+        title: 'Matching discard',
+        body: ['At any time, even out of turn, you may discard a card of yours that has the same rank as the top of the discard pile. If you are wrong, you take a penalty card.'],
+      },
+      {
+        kind: 'text',
+        title: 'Announcing Kobo',
+        body: [
+          'After your turn, if you think you have the fewest points, announce Kobo instead of ending your turn. Every other player then plays one last turn and all cards are revealed.',
+          'If you were right you score 0 and give 10 points to another player. If not, you score your hand plus 20.',
+        ],
+      },
+      {
+        kind: 'text',
+        title: 'Points',
+        body: [
+          'Ace is worth 1, 2 to 10 their number, Jack 11, Queen 12, a black King 13 and a red King 0.',
+          'A total of exactly 75 or 100 drops to 50. The game ends when a total goes above 100.',
+        ],
+      },
+    ],
+  },
   hotkeys: {
     open: 'Keyboard shortcuts',
     title: 'Keyboard shortcuts',
@@ -168,6 +227,11 @@ export const messagesEn: Messages = {
     rematchPending: 'Joining the new table…',
     rematchFailed: 'Could not start a new game. Try again.',
   },
+  koboUi: {
+    connecting: 'Joining the table…',
+    back: 'Back',
+    provisional: 'Game in progress. The Kobo table is not available yet.',
+  },
   gamePicker: {
     title: 'Card Games',
     choose: 'Choose a game',
@@ -182,6 +246,12 @@ export const messagesEn: Messages = {
       bullshit: {
         name: 'Bullshit',
         description: 'Bluff your way to an empty hand. Call out the liars.',
+        players: '2–6 players',
+        play: 'Play',
+      },
+      kobo: {
+        name: 'Kobo',
+        description: 'Remember your hidden cards and end the round with the fewest points.',
         players: '2–6 players',
         play: 'Play',
       },

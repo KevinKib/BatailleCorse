@@ -27,25 +27,26 @@ describe('GamePickerView', () => {
     expect(wrapper.find('[data-test="removed-notice"]').exists()).toBe(false);
   });
 
-  it('givenPicker_thenShowsTitleAndBothGamesWithDescriptionAndPlayerCount', async () => {
+  it('givenPicker_thenShowsTitleAndEveryGameWithDescriptionAndPlayerCount', async () => {
     const { wrapper } = await mountPicker();
     const text = wrapper.text();
     const p = messagesEn.gamePicker;
     expect(wrapper.get('h1').text()).toBe(p.title);
-    for (const game of [p.games.bataillecorse!, p.games.bullshit!]) {
+    for (const game of [p.games.bataillecorse!, p.games.bullshit!, p.games.kobo!]) {
       expect(text).toContain(game.name);
       expect(text).toContain(game.description);
       expect(text).toContain(game.players);
     }
-    expect(wrapper.findAll('article')).toHaveLength(2);
+    expect(wrapper.findAll('article')).toHaveLength(3);
   });
 
   it('givenPicker_thenEachCardHasAKeyboardReachablePlayButtonNamedAfterItsGame', async () => {
     const { wrapper } = await mountPicker();
     const buttons = wrapper.findAll('button');
-    expect(buttons).toHaveLength(2);
+    expect(buttons).toHaveLength(3);
     expect(buttons[0].attributes('aria-label')).toBe('Play Bataille Corse');
     expect(buttons[1].attributes('aria-label')).toBe('Play Bullshit');
+    expect(buttons[2].attributes('aria-label')).toBe('Play Kobo');
   });
 
   it('givenPlayOnBatailleCorse_thenGoesToItsGameHome', async () => {
@@ -60,5 +61,12 @@ describe('GamePickerView', () => {
     await wrapper.get('[data-test="play-bullshit"]').trigger('click');
     await flushPromises();
     expect(router.currentRoute.value.fullPath).toBe('/games/bullshit');
+  });
+
+  it('givenPlayOnKobo_thenGoesToItsGameHome', async () => {
+    const { wrapper, router } = await mountPicker();
+    await wrapper.get('[data-test="play-kobo"]').trigger('click');
+    await flushPromises();
+    expect(router.currentRoute.value.fullPath).toBe('/games/kobo');
   });
 });

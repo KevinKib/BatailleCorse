@@ -25,7 +25,7 @@ describe('app router', () => {
   });
 
   it('givenAGameHome_thenStaysUnderItsOwnPathForBothGames', async () => {
-    for (const key of ['bataillecorse', 'bullshit']) {
+    for (const key of ['bataillecorse', 'bullshit', 'kobo']) {
       const route = await resolveAt(`/games/${key}`);
       expect(route.fullPath).toBe(`/games/${key}`);
       expect(route.name).toBe('game-home');
@@ -34,7 +34,7 @@ describe('app router', () => {
   });
 
   it('givenInviteLinks_thenTheyAreNotRedirected', async () => {
-    for (const key of ['bataillecorse', 'bullshit']) {
+    for (const key of ['bataillecorse', 'bullshit', 'kobo']) {
       const join = await resolveAt(`/games/${key}/join/abc`);
       expect(join.fullPath).toBe(`/games/${key}/join/abc`);
       expect(join.name).toBe('game-join');
@@ -43,6 +43,7 @@ describe('app router', () => {
     }
     expect((await resolveAt('/games/bullshit/room/abc')).name).toBe('bullshit-room');
     expect((await resolveAt('/games/bataillecorse/room/abc')).name).toBe('room');
+    expect((await resolveAt('/games/kobo/room/abc')).name).toBe('kobo-room');
   });
 
   it('givenLegacyCreatePaths_thenRedirectToTheGameHome', async () => {
@@ -56,7 +57,7 @@ describe('app router', () => {
   });
 
   it('givenAGameAbsentFromTheRegistry_thenRedirectsToTheGameSelection', async () => {
-    expect((await resolveAt('/games/kobo')).fullPath).toBe('/games');
-    expect((await resolveAt('/games/kobo/join/abc')).fullPath).toBe('/games');
+    expect((await resolveAt('/games/three-men-morris')).fullPath).toBe('/games');
+    expect((await resolveAt('/games/three-men-morris/join/abc')).fullPath).toBe('/games');
   });
 });
