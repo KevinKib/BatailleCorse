@@ -22,13 +22,8 @@ import org.kevinkib.cardgames.kobo.domain.turn.WrongPhaseException;
 import org.kevinkib.cardgames.game.Game;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
-import org.kevinkib.cards.CardsService;
 import org.kevinkib.cards.domain.Card;
 import org.kevinkib.cards.domain.Rank;
-import org.kevinkib.cards.domain.Visibility;
-import org.kevinkib.cards.domain.deck.Deck;
-import org.kevinkib.cards.domain.deck.DeckCreationOptions;
-import org.kevinkib.cards.domain.deck.DeckType;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -67,6 +62,7 @@ public class Kobo implements Game {
 
     private final GameId id;
     private final Random random;
+    private final DeckSource deckSource;
     private final List<KoboPlayer> players = new ArrayList<>();
     private final Deque<Card> drawPile = new ArrayDeque<>();
     private final Deque<Card> discard = new ArrayDeque<>();
@@ -95,11 +91,16 @@ public class Kobo implements Game {
     }
 
     public Kobo(GameId id, int nbPlayers, long seed) {
+        this(id, nbPlayers, seed, new RandomDeckSource());
+    }
+
+    public Kobo(GameId id, int nbPlayers, long seed, DeckSource deckSource) {
         if (nbPlayers < KoboRules.MIN_PLAYERS || nbPlayers > KoboRules.MAX_PLAYERS) {
             throw new IllegalArgumentException("Kobo is played by 2 to 6 players, not " + nbPlayers);
         }
         this.id = id;
         this.random = new Random(seed);
+        this.deckSource = deckSource;
         for (int i = 0; i < nbPlayers; i++) {
             players.add(new KoboPlayer(new PlayerId(i), new Tableau(List.of())));
         }
@@ -112,6 +113,7 @@ public class Kobo implements Game {
          List<Card> discardTopFirst, Phase phase, PlayerId currentSeat) {
         this.id = id;
         this.random = new Random(seed);
+        this.deckSource = new RandomDeckSource();
         for (int i = 0; i < tableaux.size(); i++) {
             players.add(new KoboPlayer(new PlayerId(i), new Tableau(tableaux.get(i))));
         }
@@ -126,13 +128,9 @@ public class Kobo implements Game {
     // ---------------------------------------------------------------- set-up
 
     private void deal() {
-        Deck deck = new CardsService().createDeck(DeckType.FRENCH,
-                new DeckCreationOptions(Visibility.HIDDEN, random.nextLong()));
         drawPile.clear();
         discard.clear();
-        while (deck.getSize() > 0) {
-            drawPile.addLast(deck.draw());
-        }
+        drawPile.addAll(deckSource.deck(id, round, random.nextLong()));
         for (KoboPlayer player : players) {
             List<Card> hand = new ArrayList<>();
             for (int i = 0; i < KoboRules.CARDS_PER_PLAYER; i++) {
