@@ -80,7 +80,7 @@ class KoboWebSocketControllerIT {
 
     private Kobo install(Kobo game) {
         SessionGame session = SessionGame.create(game.getId(), game.getPlayerIds(), KoboFactory.GAME_TYPE);
-        session.claimAllSeats();
+        game.getPlayerIds().forEach(seat -> session.claimNextFreeSeat(null));
         repository.save(game, session);
         return game;
     }

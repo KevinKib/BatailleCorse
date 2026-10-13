@@ -1,5 +1,6 @@
 package org.kevinkib.cardgames.presentation;
 
+import org.kevinkib.cardgames.presentation.support.StartedRooms;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.bullshit.domain.BullshitFactory;
@@ -7,7 +8,6 @@ import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameFactories;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
-import org.kevinkib.cardgames.sessionmanagement.core.application.GameMode;
 import org.kevinkib.cardgames.sessionmanagement.core.infrastructure.InMemorySessionRepository;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.simp.stomp.StompCommand;
@@ -37,7 +37,7 @@ class SeatSubscriptionInterceptorTest {
                 new InMemorySessionRepository(Clock.systemUTC()),
                 new GameFactories(List.of(new BullshitFactory())));
         interceptor = new SeatSubscriptionInterceptor(sessionService);
-        gameId = sessionService.createGame("bullshit", 2, GameMode.SOLO).getId();
+        gameId = StartedRooms.start(sessionService, "bullshit", 2).getId();
         seat0Token = sessionService.tokenForSeat(gameId, new PlayerId(0));
         seat1Token = sessionService.tokenForSeat(gameId, new PlayerId(1));
     }

@@ -1,10 +1,10 @@
 package org.kevinkib.cardgames.sessionmanagement.core.application;
 
+import org.kevinkib.cardgames.presentation.support.StartedRooms;
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.game.FakeGameFactory;
 import org.kevinkib.cardgames.game.Game;
 import org.kevinkib.cardgames.game.PlayerId;
-import org.kevinkib.cardgames.sessionmanagement.core.application.GameMode;
 import org.kevinkib.cardgames.sessionmanagement.core.infrastructure.InMemorySessionRepository;
 
 import java.time.Clock;
@@ -20,7 +20,7 @@ class SessionServiceGenericGameTest {
 
     @Test
     void givenFakeGame_whenCreateAndLoad_thenWorksWithoutKnowingConcreteType() {
-        Game created = sessionService.createGame("fake", 2, GameMode.SOLO, null);
+        Game created = StartedRooms.start(sessionService, "fake", 2);
 
         Game loaded = sessionService.getGame(created.getId());
         assertThat(loaded.getId(), is(created.getId()));
@@ -28,10 +28,10 @@ class SessionServiceGenericGameTest {
     }
 
     @Test
-    void givenFakeGame_whenCreateSolo_thenSeatsBuiltFromGamesPlayerIds() {
-        Game created = sessionService.createGame("fake", 2, GameMode.SOLO, null);
+    void givenFakeGame_whenStarted_thenSeatsHeldByTheHumansWhoJoined() {
+        Game created = StartedRooms.start(sessionService, "fake", 2);
 
-        assertThat(sessionService.seats(created.getId()), hasSize(2));
+        assertThat(sessionService.isSeatClaimed(created.getId(), new PlayerId(1)), is(true));
         assertThat(sessionService.isSeatClaimed(created.getId(), new PlayerId(0)), is(true));
     }
 }

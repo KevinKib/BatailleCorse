@@ -1,12 +1,12 @@
 package org.kevinkib.cardgames.sessionmanagement.core.application;
 
+import org.kevinkib.cardgames.presentation.support.StartedRooms;
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorse;
 import org.kevinkib.cardgames.bataillecorse.domain.BatailleCorseFactory;
 import org.kevinkib.cardgames.bullshit.domain.Bullshit;
 import org.kevinkib.cardgames.bullshit.domain.BullshitFactory;
 import org.kevinkib.cardgames.game.Game;
-import org.kevinkib.cardgames.sessionmanagement.core.application.GameMode;
 import org.kevinkib.cardgames.sessionmanagement.core.infrastructure.InMemorySessionRepository;
 
 import java.time.Clock;
@@ -23,7 +23,7 @@ class SessionServiceGameSelectionTest {
 
     @Test
     void givenBullshitSlug_whenCreateGame_thenHostsABullshit() {
-        Game game = service.createGame("bullshit", 3, GameMode.SOLO);
+        Game game = StartedRooms.start(service, "bullshit", 3);
 
         assertThat(game, instanceOf(Bullshit.class));
         assertThat(service.getGame(game.getId()), instanceOf(Bullshit.class));
@@ -31,17 +31,8 @@ class SessionServiceGameSelectionTest {
 
     @Test
     void givenBatailleCorseSlug_whenCreateGame_thenHostsABatailleCorse() {
-        Game game = service.createGame("bataille-corse", 2, GameMode.SOLO);
+        Game game = StartedRooms.start(service, "bataille-corse", 2);
 
         assertThat(game, instanceOf(BatailleCorse.class));
-    }
-
-    @Test
-    void givenBullshitSession_whenRematch_thenStaysABullshit() {
-        Game game = service.createGame("bullshit", 3, GameMode.SOLO);
-
-        Game fresh = service.rematch(game.getId());
-
-        assertThat(fresh, instanceOf(Bullshit.class));
     }
 }

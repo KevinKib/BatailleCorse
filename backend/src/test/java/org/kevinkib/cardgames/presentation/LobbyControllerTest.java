@@ -48,7 +48,6 @@ class LobbyControllerTest {
         @Override public void disconnected(Game game, PlayerId player, long deadlineEpochMs) { }
         @Override public void reconnected(Game game, PlayerId player) { }
         @Override public void forfeited(Game game, PlayerId player, ForfeitReason reason) { events.add(reason + " " + player.id()); }
-        @Override public void rematchStarted(Game fresh, PlayerId triggeredBy) { }
     }
 
     private SessionService sessionService;

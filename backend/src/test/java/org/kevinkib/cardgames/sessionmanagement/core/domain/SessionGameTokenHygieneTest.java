@@ -45,17 +45,4 @@ class SessionGameTokenHygieneTest {
         assertThat(newcomer.token(), is(not(botToken)));
         assertThat(lobby.findPlayerByToken(botToken).isPresent(), is(false));
     }
-
-    @Test
-    void givenADepartedSeatReleasedForARematch_whenANewcomerClaimsIt_thenTheTokenIsFresh() {
-        SessionPlayer bob = lobby.claimNextFreeSeat("Bob");
-        SessionToken oldToken = bob.token();
-        lobby.leaveRematch(new PlayerId(1));
-        lobby.releaseDepartedSeats();
-
-        SessionPlayer newcomer = lobby.claimNextFreeSeat("Carol");
-
-        assertThat(newcomer.token(), is(not(oldToken)));
-        assertThat(lobby.findPlayerByToken(oldToken).isPresent(), is(false));
-    }
 }

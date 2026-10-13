@@ -1,5 +1,6 @@
 package org.kevinkib.cardgames.bullshit.presentation;
 
+import org.kevinkib.cardgames.presentation.support.StartedRooms;
 import org.kevinkib.cardgames.presentation.state.SeatLifecycleBroadcaster;
 import org.kevinkib.cardgames.presentation.state.SeatStateBroadcaster;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,7 +25,6 @@ import org.kevinkib.cardgames.presentation.support.RecordingMessaging;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameFactories;
 import org.kevinkib.cardgames.sessionmanagement.core.application.RoomCreated;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
-import org.kevinkib.cardgames.sessionmanagement.core.application.GameMode;
 import org.kevinkib.cardgames.sessionmanagement.core.infrastructure.InMemorySessionRepository;
 import org.kevinkib.cards.domain.Card;
 
@@ -129,7 +129,7 @@ class BullshitWebSocketControllerTest {
 
     @Test
     void givenValidDiscard_whenDiscard_thenBroadcastsDiscardToAllSeats() {
-        Bullshit game = (Bullshit) sessionService.createGame("bullshit", 2, GameMode.SOLO);
+        Bullshit game = (Bullshit) StartedRooms.start(sessionService, "bullshit", 2);
         GameId id = game.getId();
         String t0 = sessionService.tokenForSeat(id, new PlayerId(0));
         Card card = game.getPlayers().get(0).getCards().get(0);
@@ -146,7 +146,7 @@ class BullshitWebSocketControllerTest {
 
     @Test
     void givenNotYourTurn_whenDiscard_thenErrorToActingSeatOnly() {
-        Bullshit game = (Bullshit) sessionService.createGame("bullshit", 2, GameMode.SOLO);
+        Bullshit game = (Bullshit) StartedRooms.start(sessionService, "bullshit", 2);
         GameId id = game.getId();
         String t1 = sessionService.tokenForSeat(id, new PlayerId(1));
         Card card = game.getPlayers().get(1).getCards().get(0);
@@ -161,7 +161,7 @@ class BullshitWebSocketControllerTest {
 
     @Test
     void givenClaimOnTable_whenCallBullshit_thenBroadcastsRevealWithCards() {
-        Bullshit game = (Bullshit) sessionService.createGame("bullshit", 2, GameMode.SOLO);
+        Bullshit game = (Bullshit) StartedRooms.start(sessionService, "bullshit", 2);
         GameId id = game.getId();
         String t0 = sessionService.tokenForSeat(id, new PlayerId(0));
         Card c0 = game.getPlayers().get(0).getCards().get(0);
@@ -182,7 +182,7 @@ class BullshitWebSocketControllerTest {
 
     @Test
     void aRefusedDiscard_repliesToTheSenderAloneWithTheMessageAndItsState() {
-        Bullshit game = (Bullshit) sessionService.createGame("bullshit", 2, GameMode.SOLO);
+        Bullshit game = (Bullshit) StartedRooms.start(sessionService, "bullshit", 2);
         GameId id = game.getId();
         String t1 = sessionService.tokenForSeat(id, new PlayerId(1));
         Card card = game.getPlayers().get(1).getCards().get(0);
@@ -199,7 +199,7 @@ class BullshitWebSocketControllerTest {
 
     @Test
     void aRefusedCallBullshit_repliesToTheSenderAloneWithTheMessageAndItsState() {
-        Bullshit game = (Bullshit) sessionService.createGame("bullshit", 2, GameMode.SOLO);
+        Bullshit game = (Bullshit) StartedRooms.start(sessionService, "bullshit", 2);
         GameId id = game.getId();
         String t1 = sessionService.tokenForSeat(id, new PlayerId(1));
 
@@ -261,7 +261,7 @@ class BullshitWebSocketControllerTest {
 
     @Test
     void anUnknownTokenIsIgnored() {
-        Bullshit game = (Bullshit) sessionService.createGame("bullshit", 2, GameMode.SOLO);
+        Bullshit game = (Bullshit) StartedRooms.start(sessionService, "bullshit", 2);
         String id = game.getId().uuid().toString();
 
         controller.discard(new BullshitDiscardPayload(id, "not-a-token", List.of()));

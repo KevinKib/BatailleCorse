@@ -16,12 +16,6 @@ public interface GameDirectory {
     Optional<PlayerId> findPlayerIdByToken(GameId id, String token);
 
     /**
-     * A player leaves a finished game's rematch for good; returns the fresh game when that
-     * departure completes the rematch (every other expected player had already asked).
-     */
-    Optional<Game> leaveRematch(GameId id, PlayerId playerId);
-
-    /**
      * A human's connection to a not-yet-started lobby dropped or came back; returns the lobby views to publish,
      * empty when nothing changed. The default knows no lobby.
      */

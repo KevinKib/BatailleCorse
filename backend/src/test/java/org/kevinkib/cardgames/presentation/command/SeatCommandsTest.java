@@ -7,6 +7,7 @@ import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.presentation.api.Response;
 import org.kevinkib.cardgames.presentation.support.SessionTable;
+import org.kevinkib.cardgames.presentation.support.StartedRooms;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -21,8 +22,7 @@ class SeatCommandsTest {
 
     private final SessionTable table = new SessionTable(new FakeGameFactory());
     private final SeatCommands commands = new SeatCommands(table.sessions, table.messaging);
-    private final Game game = table.install(table.sessions.createGame("fake", 2,
-            org.kevinkib.cardgames.sessionmanagement.core.application.GameMode.SOLO, null), "fake");
+    private final Game game = StartedRooms.start(table.sessions, "fake", 2);
     private final String rawId = game.getId().uuid().toString();
     private final List<PlayerId> ran = new ArrayList<>();
 

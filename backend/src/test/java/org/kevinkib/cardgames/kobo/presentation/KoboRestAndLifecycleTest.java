@@ -103,7 +103,7 @@ class KoboRestAndLifecycleTest {
     // ---- session core hosts Kobo
 
     @Test
-    void sessionCore_startsAndRematchesKoboLikeAnyGame() {
+    void sessionCore_startsKoboLikeAnyGame() {
         RoomCreated room = table.sessions.createRoom("kobo", "Alice");
         GameId id = new GameId(room.gameId());
         String bob = table.sessions.joinRoom(id, "Bob").token();
@@ -114,13 +114,6 @@ class KoboRestAndLifecycleTest {
         assertThat(table.sessions.minPlayers("kobo"), is(2));
         assertThat(table.sessions.maxPlayers("kobo"), is(6));
         assertThat(bob, notNullValue());
-
-        game.forfeit(seat(1));
-        assertThat(table.sessions.requestRematch(id, seat(0)), is(false));
-        assertThat(table.sessions.requestRematch(id, seat(1)), is(true));
-        Kobo fresh = (Kobo) table.sessions.rematch(id);
-        assertThat(fresh.isFinished(), is(false));
-        assertThat(fresh.getPlayerIds().size(), is(2));
     }
 
     // ---- lifecycle

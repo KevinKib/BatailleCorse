@@ -1,5 +1,6 @@
 package org.kevinkib.cardgames.bullshit.presentation;
 
+import org.kevinkib.cardgames.presentation.support.StartedRooms;
 import org.kevinkib.cardgames.presentation.state.SeatLifecycleBroadcaster;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,7 +16,6 @@ import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.presentation.api.Response;
 import org.kevinkib.cardgames.presentation.support.RecordingMessaging;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameFactories;
-import org.kevinkib.cardgames.sessionmanagement.core.application.GameMode;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
 import org.kevinkib.cardgames.sessionmanagement.core.infrastructure.InMemorySessionRepository;
 import org.kevinkib.cards.domain.Card;
@@ -69,7 +69,7 @@ class BullshitGameActionsTest {
         sessionService = new SessionService(repository, new GameFactories(List.of(new BullshitFactory())));
         messaging = new RecordingMessaging();
         actions = new BullshitGameActions(sessionService, BullshitBroadcasters.state(messaging));
-        game = (Bullshit) sessionService.createGame("bullshit", 3, GameMode.SOLO);
+        game = (Bullshit) StartedRooms.start(sessionService, "bullshit", 3);
         id = game.getId();
     }
 
@@ -87,7 +87,7 @@ class BullshitGameActionsTest {
         DiscardEventData data = (DiscardEventData) response.getEventData();
         assertThat(data.count(), is(1));
         assertThat(data.claimantSeat(), is(0));
-        assertThat(data.claimedTargetLabel(), is("ACE"));
+        assertThat(data.claimedTargetLabel(), is("7"));
     }
 
     @Test
