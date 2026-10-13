@@ -270,6 +270,42 @@ export interface MorrisBoardMessages {
   pointLabel: string;                  // {point} then the state words, e.g. "Centre, White piece, can move"
 }
 
+// Screen text of the Three Men's Morris table. Placeholders use `{name}` and are filled by `format()` / `plural()`.
+export interface ThreeMenMorrisUiMessages {
+  white: string;                       // colour of seat 0, who always starts
+  black: string;                       // colour of seat 1
+  you: string;
+  playerLabel: string;                 // '{n}' = 1-based seat number, for a player without a name
+  back: string;
+  connecting: string;                  // shown while the first server state is on its way
+  table: {
+    youPlay: string;                   // '{colour}': shown before the first piece, with who starts
+    hintPlace: string;                 // my turn, placement phase
+    hintMove: string;                  // my turn, movement phase
+    waitingFor: string;                // '{player}': not my turn
+    piecesLeft: PluralForms;           // '{n}' = pieces still to place (accessible name of the discs)
+    colourTag: string;                 // '{name}', '{colour}': accessible name of a player tag
+    placed: string;                    // '{player}', '{point}': live region after a placement
+    moved: string;                     // '{player}', '{from}', '{to}': live region after a move
+    forfeited: string;                 // '{player}'
+    offline: string;                   // my own connection is down; the socket retries by itself
+  };
+  end: {
+    winner: string;                    // '{player}': names the winner on the end screen
+    youWonLine: string;
+    youLostLine: string;               // '{player}' lined up three
+    blockedWon: string;                // '{player}' (the loser) cannot move
+    blockedLost: string;               // '{player}' (the winner)
+    youWonResigned: string;            // '{player}'
+    youWonDisconnected: string;        // '{player}'
+    youWonForfeit: string;             // the opponent left, reason unknown (event missed after a reload)
+    youLostForfeit: string;            // I left (resigned or timed out) and see the finished game again
+    playAgain: string;
+    rematchPending: string;
+    rematchFailed: string;
+  };
+}
+
 // Whole-app message tree. Each game owns a rules namespace; future namespaces
 // (game, lobby, ...) are added here additively.
 export interface Messages {
@@ -278,7 +314,9 @@ export interface Messages {
   kobo: RulesMessages;      // Kobo
   hotkeys: HotkeyMessages; // keyboard shortcut settings
   turn: TurnMessages;      // turn cue shared by the tables
+  threeMenMorris: RulesMessages;    // Three Men's Morris
   morrisBoard: MorrisBoardMessages; // Three Men's Morris board
+  threeMenMorrisUi: ThreeMenMorrisUiMessages; // Three Men's Morris screens
   bullshitUi: BullshitUiMessages; // Bullshit screens
   koboUi: KoboUiMessages;   // Kobo screens
   batailleCorseUi: BatailleCorseUiMessages; // Bataille Corse table

@@ -32,21 +32,22 @@ describe('GamePickerView', () => {
     const text = wrapper.text();
     const p = messagesEn.gamePicker;
     expect(wrapper.get('h1').text()).toBe(p.title);
-    for (const game of [p.games.bataillecorse!, p.games.bullshit!, p.games.kobo!]) {
+    for (const game of [p.games.bataillecorse!, p.games.bullshit!, p.games.kobo!, p.games['three-men-morris']!]) {
       expect(text).toContain(game.name);
       expect(text).toContain(game.description);
       expect(text).toContain(game.players);
     }
-    expect(wrapper.findAll('article')).toHaveLength(3);
+    expect(wrapper.findAll('article')).toHaveLength(4);
   });
 
   it('givenPicker_thenEachCardHasAKeyboardReachablePlayButtonNamedAfterItsGame', async () => {
     const { wrapper } = await mountPicker();
     const buttons = wrapper.findAll('button');
-    expect(buttons).toHaveLength(3);
+    expect(buttons).toHaveLength(4);
     expect(buttons[0].attributes('aria-label')).toBe('Play Bataille Corse');
     expect(buttons[1].attributes('aria-label')).toBe('Play Bullshit');
     expect(buttons[2].attributes('aria-label')).toBe('Play Kobo');
+    expect(buttons[3].attributes('aria-label')).toBe("Play Three Men's Morris");
   });
 
   it('givenPlayOnBatailleCorse_thenGoesToItsGameHome', async () => {
@@ -54,6 +55,13 @@ describe('GamePickerView', () => {
     await wrapper.get('[data-test="play-bataillecorse"]').trigger('click');
     await flushPromises();
     expect(router.currentRoute.value.fullPath).toBe('/games/bataillecorse');
+  });
+
+  it('givenPlayOnThreeMenMorris_thenGoesToItsGameHome', async () => {
+    const { wrapper, router } = await mountPicker();
+    await wrapper.get('[data-test="play-three-men-morris"]').trigger('click');
+    await flushPromises();
+    expect(router.currentRoute.value.fullPath).toBe('/games/three-men-morris');
   });
 
   it('givenPlayOnBullshit_thenGoesToItsGameHome', async () => {
