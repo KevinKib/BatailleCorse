@@ -402,6 +402,18 @@ describe('BullshitSession', () => {
       expect(localStorage.getItem('bullshit:tokens:g1')).not.toBeNull();
     });
 
+    it('does not report a seat as lost when the answer of a hydration sent before the departure arrives after it', async () => {
+      const { session } = makeSession();
+      let answer!: (r: unknown) => void;
+      vi.stubGlobal('fetch', vi.fn().mockReturnValueOnce(new Promise((resolve) => { answer = resolve; })));
+      session.restore('g1', 1, 'tok-1');
+      const hydration = session.hydrate();
+      session.leave();
+      // The server freed the seat when it handled the leave: the token no longer resolves.
+      answer(respond({}, 403));
+      expect(await hydration).toBe('ok');
+    });
+
     it('does nothing before the player holds a seat', () => {
       const { session, published, teardown } = makeSession();
       session.leave();

@@ -7,6 +7,8 @@ function startTwoPlayerGame() {
   cy.get('[data-test="name"]').type('Alice');
   cy.get('[data-test="new-game"]').click();
   cy.url({ timeout: 10000 }).should('match', /\/games\/bullshit\/room\/.+/);
+  // The Game home fades out while the room fades in (800 ms): continue once the room is alone on the page.
+  cy.get('[data-test="start-panel"]').should('not.exist');
   cy.url().then((url) => cy.request('POST', `/api/bullshit/game/${url.split('/room/')[1]}/join`, { name: 'Bob' }));
   cy.get('[data-test="start"]', { timeout: 10000 }).should('not.be.disabled').click();
   cy.get('[data-test="hand-card-0"]', { timeout: 10000 }).should('exist');
@@ -20,8 +22,9 @@ function startTwoPlayerGame() {
     });
 
     it('lets the winning verdict play out, then names the winner, without scrolling', () => {
-      // Deliberate wait: let the server's own state pushes after the start settle, or they would overwrite the injected state.
-      cy.wait(2000);
+      // The start state is applied in one push; "Your turn" is derived from its last field, so the server has
+      // finished pushing and nothing can overwrite the injected state afterwards.
+      cy.get('[data-test="turn-hint"]').should('have.text', 'Your turn');
       cy.window().then((w) => {
         const pinia = (w.document.querySelector('#app') as any).__vue_app__.config.globalProperties.$pinia;
         const store = pinia._s.get('bullshit-store');

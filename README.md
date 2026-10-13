@@ -67,6 +67,10 @@ the Compose network.
 Specs live in `frontend/cypress/specs/`. When done, stop the stack with
 `docker compose -f docker-compose.e2e.yml down`.
 
+On Windows, `cypress run` keeps the machine out of standby while it runs
+(`frontend/cypress/keepAwake.ts`): a run caught by the idle standby never resumes
+after wake-up and only ends when killed.
+
 ## Production
 
 Runs at https://kevinkib.com behind the shared gateway

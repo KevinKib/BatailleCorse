@@ -112,12 +112,17 @@ export default class BullshitSession {
    */
   async hydrate(): Promise<HydrateResult> {
     if (!this.gameId || this.myToken === null) return 'ok';
+    const gameId = this.gameId;
+    const token = this.myToken;
     let res: Response;
     try {
-      res = await fetch(`/api/bullshit/game/${this.gameId}?token=${this.myToken}`);
+      res = await fetch(`/api/bullshit/game/${gameId}?token=${token}`);
     } catch {
       return 'unavailable';
     }
+    // The player left (or took another seat) while the answer was on its way: it no longer concerns this client,
+    // and a refusal is only the server having freed the seat we just gave up.
+    if (this.gameId !== gameId || this.myToken !== token) return 'ok';
     if (res.status === 404) return 'gone';
     if (res.status === 403) return 'lost';
     if (!res.ok) return 'unavailable';

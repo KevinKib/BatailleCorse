@@ -8,6 +8,7 @@ function hostLobby(name: string) {
   cy.get('[data-test="name"]').type(name);
   cy.get('[data-test="new-game"]').click();
   cy.url({ timeout: 10000 }).should('match', /\/games\/bullshit\/room\/.+/);
+  cy.get('[data-test="start-panel"]').should('not.exist');
   cy.get('[data-test="lobby"]').should('be.visible');
 }
 

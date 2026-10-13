@@ -14,6 +14,16 @@ export interface ScriptedPlayer {
   disconnect(): void;
 }
 
+// Every scripted socket opened in the current test. The spec iframe lives for the whole spec file, so a socket
+// left open would outlive its test (and keep its seat connected on the server): they are all closed after each test.
+const openClients = new Set<Client>();
+
+export function disconnectAllScriptedPlayers(): Promise<void> {
+  const closing = [...openClients].map((client) => client.deactivate());
+  openClients.clear();
+  return Promise.all(closing).then(() => undefined);
+}
+
 /** The game types a scripted player can join, as the server names them (`/api/lobby`'s `gameType`). */
 export type ScriptedGameType = 'bataille-corse' | 'bullshit' | 'kobo' | 'three-men-morris';
 
@@ -63,6 +73,7 @@ export function connectScriptedPlayer(gameId: string, token: string, seat: numbe
   return cy.wrap(new Promise<ScriptedPlayer & { token: string; seat: number }>((resolve, reject) => {
     const frames: ScriptedPlayer['frames'] = [];
     const client = new Client({ brokerURL: `${base}/connect/websocket`, reconnectDelay: 0 });
+    openClients.add(client);
     const player = {
       token,
       seat,
@@ -70,7 +81,7 @@ export function connectScriptedPlayer(gameId: string, token: string, seat: numbe
       lastState: () => frames.map((f) => f.state).filter(Boolean).pop(),
       publish: (destination: string, body: Record<string, unknown>) =>
         client.publish({ destination, body: JSON.stringify({ gameId, token, ...body }) }),
-      disconnect: () => { void client.deactivate(); },
+      disconnect: () => { openClients.delete(client); void client.deactivate(); },
     };
     client.onStompError = (frame) => reject(new Error(frame.headers['message']));
     client.onWebSocketError = () => reject(new Error('scripted player: websocket error'));
