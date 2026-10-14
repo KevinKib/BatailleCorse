@@ -30,7 +30,7 @@ text through `locales/Messages.ts` and `locales/en.ts`. Backend paths relative t
 
 | PR | Title | Cost | Needs | State |
 |----|-------|------|-------|-------|
-| B1 | `feat: Kobo bot strategy and memory` | M-L | - | [ ] to do |
+| B1 | `feat: Kobo bot strategy and memory` | M-L | - | [x] done (PR #208) |
 | B2 | `feat: Kobo bots at the table` | M-L | B1 | [ ] to do |
 | B3 | `feat: play Kobo against bots` | S-M | B2, #206 | [ ] to do |
 
