@@ -418,6 +418,7 @@ export const messagesEn: Messages = {
     back: 'Back',
     you: 'You',
     playerLabel: 'Player {n}',
+    botLabel: 'Bot {n}',
     table: {
       round: 'Round {n}',
       total: 'Total {n}',
@@ -692,6 +693,9 @@ export const messagesEn: Messages = {
       variant: { label: 'Variant', tapatan: 'Tapatan', achi: 'Achi', picaria: 'Picaria' },
       hostColour: { label: 'Host plays', white: 'White', black: 'Black', random: 'Random' },
       level: { label: 'Level', random: 'Easy', greedy: 'Medium', perfect: 'Expert' },
+    },
+    kobo: {
+      level: { label: 'Level', easy: 'Easy', medium: 'Medium', hard: 'Hard' },
     },
   },
 };

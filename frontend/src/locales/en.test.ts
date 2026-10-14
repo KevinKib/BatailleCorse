@@ -133,6 +133,12 @@ describe('English messages', () => {
     expect(['random', 'greedy', 'perfect'].map(v => level[v])).toEqual(['Easy', 'Medium', 'Expert']);
   });
 
+  it('givenKoboBotLevel_thenTheThreeLevelsAreNamedEasyMediumHard', () => {
+    const level = messagesEn.options.kobo.level;
+    expect(level.label).toBe('Level');
+    expect(['easy', 'medium', 'hard'].map(v => level[v])).toEqual(['Easy', 'Medium', 'Hard']);
+  });
+
   it('givenBatailleCorseTableMessages_thenEveryLeafStringIsNonEmptyAndTheBotNameQuotesItsTier', () => {
     for (const text of Object.values(messagesEn.batailleCorseUi)) expect(text).toBeTruthy();
     expect(messagesEn.batailleCorseUi.botWithTier).toContain('{bot}');

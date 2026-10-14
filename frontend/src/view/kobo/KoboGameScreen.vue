@@ -29,6 +29,7 @@ import type { KoboLogEntry } from '../../model/kobo/KoboEvents';
 import { liveAnnouncement } from '../../model/kobo/announcement';
 import { useKoboSound } from '../../composables/useKoboSound';
 import { findGame } from '../../model/games';
+import { seatDisplayName } from '../../model/table/displayName';
 import { opponentsInPlayOrder } from '../../model/table/opponentOrder';
 import { seatPositions } from '../../model/table/seatRing';
 import { opponentColumns } from '../../model/kobo/faces';
@@ -49,9 +50,12 @@ const game = findGame('kobo')!;
 useKoboBootstrap(props.gameId);
 
 // The roster outlives a forfeit (the player leaves `players`, the banner still names him).
-// Names are user input: only ever rendered as text. A player without a typed name is "Player N" (from 1).
+// Names are user input: only ever rendered as text. A player without a typed name is "Player N" (from 1);
+// a computer player is "Bot N" whatever its name (shared rule). The log, the score sheet and the end screen
+// all name seats through this.
 const displayName = (seat: number): string =>
-  store.roster[seat]?.name?.trim() || format(ui.playerLabel, { n: seat + 1 });
+  seatDisplayName(Object.values(store.roster).map(p => ({ ...p, id: String(p.seat) })), seat,
+    { player: ui.playerLabel, bot: ui.botLabel });
 
 // Leaving a running game forfeits (the others carry on), same guard as the other games.
 useLeaveGuard({
@@ -284,7 +288,10 @@ watch(() => [store.game?.round, store.game?.phase, store.game?.currentSeat, live
       :starting="store.starting"
       @start="store.startGame()"
       @leave="leaveLobby"
+      @add-bot="store.addBot()"
+      @remove-bot="seat => store.removeBot(seat)"
       @remove-seat="seat => store.removeSeat(seat)"
+      @set-seat-option="(seat, key, value) => store.setSeatOption(seat, key, value)"
       @rename="name => store.rename(name)" />
 
     <EndGameOverlay

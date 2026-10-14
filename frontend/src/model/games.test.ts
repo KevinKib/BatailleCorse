@@ -33,7 +33,7 @@ describe('game registry', () => {
   it('givenBatailleCorseAndBullshit_thenBothOfferBotsAndKoboDoesNot', () => {
     expect(findGame('bataillecorse')?.supportsBots).toBe(true);
     expect(findGame('bullshit')?.supportsBots).toBe(true);
-    expect(findGame('kobo')?.supportsBots).toBe(false);
+    expect(findGame('kobo')?.supportsBots).toBe(true);
   });
 
   it('givenKobo_thenItHasNoShortcutsSoNoGear', () => {

@@ -497,9 +497,14 @@ describe('Kobo store', () => {
       expect(store.starting).toBe(true);
     });
 
-    it('Add bot is refused by the server for Kobo: the store does not offer it', () => {
-      const store = boot() as unknown as Record<string, unknown>;
-      expect(store.addBot).toBeUndefined();
+    it('Add bot, Remove bot and a bot level go through the shared lobby commands', () => {
+      const store = boot();
+      store.applyEvent({ type: 'state-update', state: lobbyView() });
+      store.addBot();
+      store.setSeatOption(1, 'level', 'hard');
+      store.removeBot(1);
+      expect(sent().map(m => m.dest)).toEqual(['/app/lobby/addBot', '/app/lobby/setSeatOption', '/app/lobby/removeBot']);
+      expect(sent()[1].body).toMatchObject({ gameId: 'g1', seat: 1, key: 'level', value: 'hard' });
     });
 
     it('leave forgets the game', () => {
