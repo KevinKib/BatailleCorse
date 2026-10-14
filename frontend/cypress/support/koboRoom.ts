@@ -13,30 +13,6 @@ export function hostLobby(name: string) {
   return cy.location('pathname').then((path) => path.split('/room/')[1]);
 }
 
-/**
- * A view sent between the browser's first load and its seat subscription is lost, and the lobby carries no
- * other signal that the channel is live. So `publish` (a repeatable change that shows up in the lobby, such as a
- * rename) is replayed with a fresh label until the browser displays it: from then on the channel is live.
- */
-export function untilBrowserSees(publish: (label: string) => void) {
-  return cy.window({ log: false }).then({ timeout: 25000 }, (win) => new Promise<void>((resolve, reject) => {
-    let attempt = 0;
-    const next = () => {
-      if (attempt >= 12) { reject(new Error('the browser never received the lobby update')); return; }
-      const label = `Nudge${++attempt}`;
-      publish(label);
-      const deadline = Date.now() + 1500;
-      const look = () => {
-        if (win.document.querySelector('.players')?.textContent?.includes(label)) { resolve(); return; }
-        if (Date.now() > deadline) { next(); return; }
-        setTimeout(look, 50);
-      };
-      look();
-    };
-    next();
-  }));
-}
-
 export function noHorizontalScroll() {
   cy.document().then((doc) => {
     expect(doc.documentElement.scrollWidth, 'page width').to.be.at.most(doc.documentElement.clientWidth);
@@ -60,7 +36,6 @@ export function startKoboTable(players: number, deal: string[] = []) {
     for (let i = 0; i < players - 1; i++) {
       joinAsScriptedPlayer(id, names[i], 'kobo').then((guest) => { guests.push(guest); });
     }
-    cy.then({ timeout: 25000 }, () => untilBrowserSees((label) => guests[guests.length - 1].publish('/app/lobby/rename', { name: label })));
     cy.get('[data-test="player-count"]').should('contain.text', `${players} / 6`);
     if (deal.length > 0) cy.request('PUT', `/api/test/kobo/${id}/deal`, { round: 1, cards: deal });
     cy.get('[data-test="start"]').should('not.be.disabled').click();
@@ -97,7 +72,6 @@ export function startKoboTableAsGuest(players: number, deal: string[] = []) {
           joinAsScriptedPlayer(gameId, names[i], 'kobo').then((guest) => { guests.push(guest); });
         }
         return connectScriptedPlayer(gameId, token, 0).then((host) => {
-          cy.then({ timeout: 25000 }, () => untilBrowserSees((label) => host.publish('/app/lobby/rename', { name: label })));
           cy.get('[data-test="player-count"]').should('contain.text', `${players} / 6`);
           if (deal.length > 0) cy.request('PUT', `/api/test/kobo/${gameId}/deal`, { round: 1, cards: deal });
           cy.then(() => host.publish('/app/kobo/start', {}));

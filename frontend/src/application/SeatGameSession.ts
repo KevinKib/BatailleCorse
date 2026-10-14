@@ -3,7 +3,9 @@ import { useLobbyActions } from '../composables/useLobbyActions';
 
 export interface SeatGameWebSocketPort {
   publish(destination: string, body?: string): void;
-  subscribeToSeat(gameId: string, seat: number, token: string, onMessage: (response: any) => void): void;
+  subscribeToSeat(
+    gameId: string, seat: number, token: string, onMessage: (response: any) => void, onConnected?: () => void,
+  ): void;
   setPresence(body: string): void;
   unsubscribeFromSeat(): void;
   unsubscribeFromGame(): void;
@@ -14,6 +16,8 @@ export interface SeatGameWebSocketPort {
 export interface SeatGameView {
   started: boolean;
   lobbyVersion?: number;
+  /** Version of a running game's state, when the game carries one (Kobo, Three Men's Morris). */
+  version?: number;
   mySeat?: number;
 }
 
@@ -69,6 +73,8 @@ export default class SeatGameSession<
   private mySeat: number | null = null;
   // Highest lobby version applied; null when none is held (a fresh bind, or a game state came in).
   private lobbyVersion: number | null = null;
+  // Highest started-state version applied; null when none is held (a fresh bind, or a lobby view came in).
+  private gameVersion: number | null = null;
   // Set once a game state came in: a lobby view is then stale (a late hydration GET, a reordered frame) until the
   // next bind, which Play again always goes through.
   private started = false;
@@ -130,15 +136,28 @@ export default class SeatGameSession<
     this.myToken = token;
     this.mySeat = seat;
     this.lobbyVersion = null;
+    this.gameVersion = null;
     this.started = false;
     this.left = false;
-    this.webSocket.subscribeToSeat(gameId, seat, token, r => this.onResponse(r));
+    // A view broadcast before the seat channel was live (between the REST load and the first connection, or
+    // while offline) is lost for good: reload once it is, after every connection. The version guards in
+    // `applyView` (and Kobo's) keep an older answer from overwriting a newer frame.
+    this.webSocket.subscribeToSeat(gameId, seat, token, r => this.onResponse(r), () => { void this.onConnected(); });
     // Tell the server which seat this connection occupies, so a socket drop is
     // attributable to this seat (drives the disconnect grace timer + forfeit).
     // The WebSocketService re-asserts presence on reconnect.
     this.webSocket.setPresence(JSON.stringify({ gameId, token }));
     this.callbacks.onEvent({ type: 'game-id-change', gameId });
     this.callbacks.onEvent({ type: 'seat-change', seat });
+  }
+
+  /**
+   * The seat channel is live: reload what was broadcast before it was. A refusal (403) or a missing game (404)
+   * means the removal of this seat was among the lost frames: tear down as for a REMOVED frame.
+   */
+  private async onConnected(): Promise<void> {
+    const result = await this.hydrate();
+    if ((result === 'lost' || result === 'gone') && !this.left) this.removedByHost();
   }
 
   /**
@@ -179,6 +198,11 @@ export default class SeatGameSession<
         this.lobbyVersion = incoming;
       }
     } else {
+      // A started state older than the one held is a late hydration answer overtaken by a broadcast.
+      if (view.version !== undefined) {
+        if (this.gameVersion !== null && view.version < this.gameVersion) return;
+        this.gameVersion = view.version;
+      }
       this.started = true;
       this.lobbyVersion = null;
     }

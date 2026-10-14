@@ -4,6 +4,7 @@ import { useBatailleCorseStore } from '../state/BatailleCorse.store';
 import webSocketService from '../service/WebSocketService';
 import { findGame } from '../model/games';
 import { readStoredTokens } from './readStoredTokens';
+import { hydrateWithRetry } from './hydrateWithRetry';
 
 interface UseGameBootstrapOptions {
   /** From useEndScreen — reveal the end overlay synchronously if reloading into a finished game. */
@@ -37,6 +38,7 @@ export function useGameBootstrap(options: UseGameBootstrapOptions) {
   const route = useRoute();
   const router = useRouter();
   const game = findGame('bataillecorse')!;
+  let unmounted = false;
 
   onMounted(async () => {
     const gameId = route.params.id as string;
@@ -49,8 +51,8 @@ export function useGameBootstrap(options: UseGameBootstrapOptions) {
     }
 
     store.restore(gameId, stored.seat, stored.token);
-    const result = await store.hydrate();
-    // A server that fails or cannot be reached (`unavailable`) proves nothing: keep the token and the room page.
+    const result = await hydrateWithRetry(() => store.hydrate(), () => unmounted);
+    // A server that fails or cannot be reached (`unavailable`, after a few tries) proves nothing: keep the token and the room page.
     if (result === 'gone' || result === 'lost') {
       localStorage.removeItem(`tokens:${gameId}`);
       router.replace({ path: game.gameHomeRoute, query: result === 'lost' ? { lost: '1' } : { gone: '1' } });
@@ -60,6 +62,7 @@ export function useGameBootstrap(options: UseGameBootstrapOptions) {
   });
 
   onBeforeUnmount(() => {
+    unmounted = true;
     store.cancelAutoGrab();
     webSocketService.unsubscribeFromGame();
     webSocketService.unsubscribeFromSeat();

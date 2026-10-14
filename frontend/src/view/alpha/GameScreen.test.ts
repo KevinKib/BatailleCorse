@@ -54,10 +54,14 @@ function playing(seat = 0, state = buildGame()) {
   return store;
 }
 
+// Unmounted after each test: a screen still mounted would go on retrying its load (fetch answers 502) into later tests.
+const mounted: Array<{ unmount(): void }> = [];
+
 async function mountGameScreen() {
   const wrapper = shallowMount(GameScreen, {
     global: { stubs: { RouterLink: true } },
   });
+  mounted.push(wrapper);
   await flushPromises(); // let onMounted settle (fetch is stubbed to fail -> nothing loaded)
   return wrapper;
 }
@@ -72,6 +76,7 @@ describe('GameScreen', () => {
   });
 
   afterEach(() => {
+    mounted.splice(0).forEach(w => w.unmount());
     vi.unstubAllGlobals();
     localStorage.clear();
   });

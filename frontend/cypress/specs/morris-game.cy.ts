@@ -42,23 +42,6 @@ function asBlack(): Cypress.Chainable<{ id: string; white: Scripted }> {
       });
       cy.get('[data-test="lobby"]', { timeout: 10000 }).should('be.visible');
       return connectScriptedPlayer(gameId, token, 0).then((white) => {
-        // A view sent before the browser's seat subscription is live is lost: replay a rename until it shows.
-        cy.window({ log: false }).then((win) => new Promise<void>((resolve, reject) => {
-          let attempt = 0;
-          const next = () => {
-            if (attempt >= 12) { reject(new Error('the browser never received the lobby update')); return; }
-            const label = `Zed${++attempt}`;
-            white.publish('/app/lobby/rename', { name: label });
-            const deadline = Date.now() + 1500;
-            const look = () => {
-              if (win.document.querySelector('.players')?.textContent?.includes(label)) { resolve(); return; }
-              if (Date.now() > deadline) { next(); return; }
-              setTimeout(look, 50);
-            };
-            look();
-          };
-          next();
-        }));
         cy.then(() => white.publish('/app/three-men-morris/start', {}));
         cy.get('[data-test="morris-board"]', { timeout: 10000 }).should('be.visible');
         return cy.wrap({ id: gameId, white });
@@ -193,8 +176,7 @@ describe("Three Men's Morris game", () => {
         cy.then(() => white.publish('/app/forfeit', {}));
         cy.get('[data-test="end"]', { timeout: 10000 }).should('be.visible');
         cy.get('.end-title').should('have.text', 'VICTORY');
-        // The scripted host renamed itself while the browser waited for the lobby (Zed1, Zed2...).
-        cy.get('.end-sub').invoke('text').should('match', /^Zed\d+ resigned\.$/);
+        cy.get('.end-sub').invoke('text').should('match', /^Alice resigned\.$/);
       });
     });
 
@@ -219,7 +201,7 @@ describe("Three Men's Morris game", () => {
         cy.get('[data-cy="disconnect-overlay"]', { timeout: 15000 }).should('be.visible');
         cy.get('[data-test="end"]', { timeout: 90000 }).should('be.visible');
         cy.get('.end-title').should('have.text', 'VICTORY');
-        cy.get('.end-sub').invoke('text').should('match', /^Zed\d+ disconnected\.$/);
+        cy.get('.end-sub').invoke('text').should('match', /^Alice disconnected\.$/);
       });
     });
   });
