@@ -31,7 +31,7 @@ text through `locales/Messages.ts` and `locales/en.ts`. Backend paths relative t
 | PR | Title | Cost | Needs | State |
 |----|-------|------|-------|-------|
 | B1 | `feat: Kobo bot strategy and memory` | M-L | - | [x] done (PR #208) |
-| B2 | `feat: Kobo bots at the table` | M-L | B1 | [ ] to do |
+| B2 | `feat: Kobo bots at the table` | M-L | B1 | [x] done (PR #209) |
 | B3 | `feat: play Kobo against bots` | S-M | B2, #206 | [ ] to do |
 
 Total about 4 to 5 days of work. B1 may be split in two PRs (B1a view and memory, B1b strategy and self-play)

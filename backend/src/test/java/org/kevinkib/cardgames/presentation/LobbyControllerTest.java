@@ -103,8 +103,15 @@ class LobbyControllerTest {
     }
 
     @Test
-    void givenKoboRoom_whenAddBot_thenRefusedToTheSenderAloneAndNoBotSeat() {
-        assertAddBotRefused(KoboFactory.GAME_TYPE);
+    void givenHostOfKobo_whenAddBot_thenTheLobbyHasTheBotWithItsLevelOption() {
+        RoomCreated room = sessionService.createRoom(KoboFactory.GAME_TYPE, "Alice");
+        messaging.clear();
+
+        controller.addBot(new GameActionPayload(room.gameId(), room.hostToken()));
+
+        assertThat(messaging.seats, is(List.of(new PlayerId(0))));
+        assertThat(lobbyOf(messaging.payloads.get(0)).players().get(1).bot(), is(true));
+        assertThat(sessionService.botSeats(new GameId(room.gameId())), is(java.util.Set.of(new PlayerId(1))));
     }
 
     @Test
@@ -116,27 +123,6 @@ class LobbyControllerTest {
 
         assertThat(messaging.seats, is(List.of(new PlayerId(0))));
         assertThat(lobbyOf(messaging.payloads.get(0)).players().get(1).bot(), is(true));
-    }
-
-    private void assertAddBotRefused(String gameType) {
-        RoomCreated room = sessionService.createRoom(gameType, "Alice");
-        GameId id = new GameId(room.gameId());
-        String bobToken = sessionService.joinRoom(id, "Bob").token();
-        messaging.clear();
-
-        controller.addBot(new GameActionPayload(room.gameId(), room.hostToken()));
-
-        assertThat(messaging.seats, is(List.of(new PlayerId(0))));
-        Response response = messaging.payloads.get(0);
-        assertThat(response.isSuccess(), is(false));
-        assertThat(response.getEventType(), is("JOIN"));
-        assertThat(response.getMessage().contains(gameType), is(true));
-        assertThat(sessionService.botSeats(id).isEmpty(), is(true));
-        assertThat(sessionService.seats(id).size(), is(sessionService.maxPlayers(gameType)));
-
-        // the room still starts and has no bot seat to break a broadcast
-        sessionService.startGame(id, room.hostToken());
-        assertThat(sessionService.botSeats(id).isEmpty(), is(true));
     }
 
     @Test
