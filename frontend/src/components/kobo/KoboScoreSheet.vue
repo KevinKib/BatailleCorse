@@ -111,7 +111,7 @@ const hasActions = computed(() => receivers.value.length > 0 || canNextRound.val
   border-radius: 18px 18px 0 0;
   box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.5);
   color: #fff;
-  animation: sheet-rise 0.28s ease-out;
+  animation: sheet-rise 0.25s cubic-bezier(.2, .8, .2, 1) backwards;
 }
 /* Verdict and scores scroll when a crowded table needs more than the room; the action zone below never does. */
 .sheet-body {
@@ -160,7 +160,7 @@ const hasActions = computed(() => receivers.value.length > 0 || canNextRound.val
 .wait { margin: 0; align-self: center; font-size: 0.85rem; color: rgba(255, 255, 255, 0.8); text-align: center; }
 
 @keyframes sheet-rise {
-  from { transform: translateY(24px); opacity: 0; }
+  from { transform: translateY(16px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
 }
 @media (prefers-reduced-motion: reduce) {

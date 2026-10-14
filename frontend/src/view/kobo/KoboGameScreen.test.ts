@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { mount, flushPromises } from '@vue/test-utils';
 import { setActivePinia, createPinia } from 'pinia';
 import { createMemoryHistory, RouterView } from 'vue-router';
@@ -10,6 +10,7 @@ import type { LobbyView } from '../../model/lobby/LobbyView';
 import { buildKoboCard, buildKoboPlayer, buildKoboSlot, buildKoboState } from '../../model/fixtures/kobo';
 import { setConnectionOnline } from '../../composables/useConnectionStatus';
 import { messagesEn } from '../../locales/en';
+import { useKoboSound } from '../../composables/useKoboSound';
 
 function lobby(joined: number, mySeat = 0): LobbyView {
   return {
@@ -552,6 +553,109 @@ describe('KoboGameScreen', () => {
       wrapper.unmount();
       document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
       expect(cancel).not.toHaveBeenCalled();
+    });
+
+    describe('motion, sound and announcements', () => {
+      const data = (overrides: Record<string, unknown>) => ({
+        seat: 1, action: 'DRAW', slot: null, targetSeat: null, targetSlot: null, card: null,
+        givenSlot: null, success: null, barrierOpened: null, ...overrides,
+      });
+      const event = (store: ReturnType<typeof useKoboStore>, eventType: string, overrides: Record<string, unknown>) =>
+        store.applyEvent({ type: 'event', eventType, message: '', eventData: data({ action: eventType, ...overrides }) });
+      const original = { animate: Element.prototype.animate, rect: Element.prototype.getBoundingClientRect, media: window.matchMedia };
+      const cards = (wrapper: ReturnType<typeof mount>) => wrapper.findAll('[data-test="motion-card"]');
+
+      beforeEach(() => {
+        Element.prototype.animate = (() => ({ finished: new Promise(() => {}), cancel() {} })) as unknown as typeof Element.prototype.animate;
+        Element.prototype.getBoundingClientRect = () => ({ left: 10, top: 20, width: 40, height: 58, right: 50, bottom: 78, x: 10, y: 20, toJSON() {} });
+        window.matchMedia = ((q: string) => ({ matches: false, media: q, addEventListener() {}, removeEventListener() {} })) as typeof window.matchMedia;
+        useKoboSound().enabled.value = false;
+      });
+      afterEach(() => {
+        Element.prototype.animate = original.animate;
+        Element.prototype.getBoundingClientRect = original.rect;
+        window.matchMedia = original.media;
+      });
+
+      it('givenAnOpponentDraws_thenACardTravelsOverTheTableAndTheTableIsUntouched', async () => {
+        const { wrapper, store } = await playing({ phase: 'DRAW', currentSeat: 1 });
+        expect(cards(wrapper)).toHaveLength(0);
+        event(store, 'DRAW', {});
+        await flushPromises();
+        expect(cards(wrapper).length).toBeGreaterThan(0);
+        expect(wrapper.get('[data-test="motion-layer"]').attributes('aria-hidden')).toBe('true');
+      });
+
+      it('givenEventsAlreadyInTheLogAtMount_thenTheyAreNotPlayedAgain', async () => {
+        const { wrapper } = await mountRoom(s => {
+          s.applyEvent({ type: 'seat-change', seat: 0 });
+          s.applyEvent({ type: 'state-update', state: buildKoboState() });
+          event(s, 'DRAW', {});
+        });
+        await flushPromises();
+        expect(cards(wrapper)).toHaveLength(0);
+      });
+
+      it('givenReducedMotion_thenNoCardMovesAndTheStateIsShownAtOnce', async () => {
+        window.matchMedia = ((q: string) => ({ matches: q.includes('reduce'), media: q, addEventListener() {}, removeEventListener() {} })) as typeof window.matchMedia;
+        const { wrapper, store } = await playing({ phase: 'DRAW', currentSeat: 1 });
+        event(store, 'DRAW', {});
+        event(store, 'DISCARD_DRAWN', { card: buildKoboCard('4', 'CLUB') });
+        await flushPromises();
+        expect(cards(wrapper)).toHaveLength(0);
+        expect(wrapper.find('[data-test="motion-arrow"]').exists()).toBe(false);
+      });
+
+      it('givenAMovementInFlight_thenAClickOnACardIsNotHeldBack', async () => {
+        const { wrapper, store } = await playing({
+          phase: 'DRAW', currentSeat: 1, availableActions: ['MATCH_DISCARD'], discardTop: buildKoboCard('9', 'SPADE'),
+        });
+        const pick = vi.spyOn(store, 'pickSlot');
+        event(store, 'DRAW', {});
+        await flushPromises();
+        expect(cards(wrapper).length).toBeGreaterThan(0);
+        await wrapper.get('[data-test="slot-0-2"]').trigger('click');
+        expect(pick).toHaveBeenCalledWith(0, 2);
+        expect(wrapper.get('[data-test="slot-0-2"]').attributes('disabled')).toBeUndefined();
+      });
+
+      it('givenAMovementWhoseSourceIsNotOnTheTable_thenItIsSkippedWithoutError', async () => {
+        const { wrapper, store } = await playing({ phase: 'DRAW', currentSeat: 1 });
+        event(store, 'PEEK', { seat: 1, targetSeat: 9, targetSlot: 0 });
+        await flushPromises();
+        expect(cards(wrapper)).toHaveLength(0);
+      });
+
+      it('hasASoundButtonThatIsOffByDefaultAndRemembersTheChoice', async () => {
+        const { wrapper } = await playing({ phase: 'DRAW' });
+        const button = wrapper.get('[data-test="top-bar"] [data-test="sound-toggle"]');
+        expect(button.attributes('aria-pressed')).toBe('false');
+        await button.trigger('click');
+        expect(button.attributes('aria-pressed')).toBe('true');
+        expect(localStorage.getItem('kobo.sound')).toBe('on');
+        await button.trigger('click');
+        expect(localStorage.getItem('kobo.sound')).toBe('off');
+      });
+
+      it('givenMyDecision_thenTheLiveRegionSaysWhatToDoAndThePhaseLineIsNotLiveItself', async () => {
+        const { wrapper } = await playing({ phase: 'DECISION', hasDrawn: true, drawnCard: buildKoboCard('3', 'SPADE'), availableActions: ['SWAP_DRAWN', 'DISCARD_DRAWN'] });
+        const live = wrapper.get('[data-test="kobo-live"]');
+        expect(live.attributes('role')).toBe('status');
+        expect(live.attributes('aria-live')).toBe('polite');
+        expect(live.text()).toBe(messagesEn.koboUi.prompt.swapDrawn);
+        expect(wrapper.get('[data-test="prompt"]').attributes('aria-live')).toBeUndefined();
+      });
+
+      it('givenAnotherPlayersTurn_thenTheLiveRegionIsSilentSoTheLogIsNotDoubled', async () => {
+        const { wrapper } = await playing({ phase: 'DRAW', currentSeat: 1 });
+        expect(wrapper.get('[data-test="kobo-live"]').text()).toBe('');
+      });
+
+      it('namesTheTwoLandmarksOfTheTable', async () => {
+        const { wrapper } = await playing({ phase: 'DRAW' });
+        expect(wrapper.get('[data-test="kobo-table"]').attributes('aria-label')).toBe(messagesEn.koboUi.regions.table);
+        expect(wrapper.get('[data-test="my-zone"]').attributes('aria-label')).toBe(messagesEn.koboUi.regions.yours);
+      });
     });
   });
 

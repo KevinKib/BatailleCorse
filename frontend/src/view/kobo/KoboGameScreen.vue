@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, toRef, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, ref, toRef, watch } from 'vue';
 import { Button } from 'primevue';
 import { useRouter } from 'vue-router';
 import { useKoboStore } from '../../state/Kobo.store';
@@ -22,6 +22,12 @@ import KoboPiles from '../../components/kobo/KoboPiles.vue';
 import KoboEventLog from '../../components/kobo/KoboEventLog.vue';
 import KoboScoreSheet from '../../components/kobo/KoboScoreSheet.vue';
 import KoboFinalTotals from '../../components/kobo/KoboFinalTotals.vue';
+import KoboMotionLayer, { type MotionRect, type MotionTarget } from '../../components/kobo/KoboMotionLayer.vue';
+import KoboSoundToggle from '../../components/kobo/KoboSoundToggle.vue';
+import { planMovements, type MotionAnchor, type Movement } from '../../model/kobo/motion';
+import type { KoboLogEntry } from '../../model/kobo/KoboEvents';
+import { liveAnnouncement } from '../../model/kobo/announcement';
+import { useKoboSound } from '../../composables/useKoboSound';
 import { findGame } from '../../model/games';
 import { opponentsInPlayOrder } from '../../model/table/opponentOrder';
 import { seatPositions } from '../../model/table/seatRing';
@@ -150,10 +156,126 @@ const rematchButton = computed(() => ({
   label: store.rematch === 'pending' ? ui.end.rematchPending : ui.end.playAgain,
   disabled: store.rematch === 'pending',
 }));
+
+// --- Sound ---------------------------------------------------------------------------------------------------
+// Off until the player turns it on; a short beep when the turn becomes mine.
+const sound = useKoboSound();
+watch(yourTurn, (mine, was) => { if (mine && !was) sound.play('turn'); });
+
+// --- Cards that travel -----------------------------------------------------------------------------------------
+// Purely visual: each new event of the log is played over the table as flying copies of the cards it moved. The
+// state, the clicks and the one-click match never wait for it (nothing here is read back), and a place that cannot
+// be found just skips the picture.
+const screenEl = ref<HTMLElement | null>(null);
+const motionLayer = ref<InstanceType<typeof KoboMotionLayer> | null>(null);
+const CARD_RATIO = 243.1375 / 167.575;
+const SEAT_CARD_W = 34;
+
+const visibleRect = (el: Element): MotionRect | null => {
+  const r = el.getBoundingClientRect();
+  return r.width > 0 && r.height > 0 ? { left: r.left, top: r.top, width: r.width, height: r.height } : null;
+};
+const find = (selector: string) => screenEl.value?.querySelector<HTMLElement>(selector) ?? null;
+
+/** The card inside a place (its picture, or a card-sized rectangle in the middle of an empty place). */
+function cardIn(host: Element | null): MotionTarget | null {
+  if (!host) return null;
+  const card = host.querySelector<HTMLElement>('.playing_card');
+  const rect = card ? visibleRect(card) : null;
+  if (card && rect) return { rect, cards: [card] };
+  const box = visibleRect(host);
+  if (!box) return null;
+  const width = Math.min(box.width, SEAT_CARD_W + 10);
+  const height = width * CARD_RATIO;
+  return { rect: { left: box.left + (box.width - width) / 2, top: box.top + (box.height - height) / 2, width, height }, cards: [] };
+}
+
+function resolveAnchor(anchor: MotionAnchor): MotionTarget | null {
+  switch (anchor.kind) {
+    case 'draw': return cardIn(find('[data-test="draw-pile"]'));
+    case 'discard': return cardIn(find('[data-test="discard-pile"]'));
+    case 'hand': return cardIn(find('[data-test="drawn-zone"]'));
+    case 'slot':
+      return cardIn(find(`[data-test="slot-${anchor.seat}-${anchor.slot}"]`)
+        ?? find(`[data-test="slot-empty-${anchor.seat}-${anchor.slot}"]`));
+    case 'newSlot': {
+      const prefix = `slot-${anchor.seat}-`;
+      const slots = [...(screenEl.value?.querySelectorAll<HTMLElement>(`button[data-test^="${prefix}"]`) ?? [])];
+      const number = (el: HTMLElement) => Number(el.dataset.test?.slice(prefix.length));
+      const last = slots.reduce<HTMLElement | null>((best, el) => (!best || number(el) > number(best) ? el : best), null);
+      return cardIn(last);
+    }
+    case 'seat': {
+      const host = anchor.seat === store.mySeat ? find('[data-test="my-zone"]') : find(`.seat-slot[data-seat="${anchor.seat}"]`);
+      const box = host ? visibleRect(host) : null;
+      if (!box) return null;
+      return { rect: { left: box.left + (box.width - SEAT_CARD_W) / 2, top: box.top, width: SEAT_CARD_W, height: SEAT_CARD_W * CARD_RATIO }, cards: [] };
+    }
+    case 'table': {
+      const cards = [...(screenEl.value?.querySelectorAll<HTMLElement>('button[data-test^="slot-"] .playing_card') ?? [])]
+        .filter(card => visibleRect(card) !== null);
+      return cards.length > 0 ? { rect: { left: 0, top: 0, width: 1, height: 1 }, cards } : null;
+    }
+  }
+}
+
+const nextFrame = () => new Promise<void>(resolve => {
+  if (typeof requestAnimationFrame === 'function') requestAnimationFrame(() => resolve());
+  else setTimeout(resolve, 16);
+});
+
+async function playEvent(entry: KoboLogEntry) {
+  const data = entry.data;
+  if (data?.action === 'MATCH' && data.success === false) sound.play('miss');
+  const moves = planMovements(entry, store.mySeat);
+  if (moves.length === 0) return;
+  if (moves.some(m => m.kind !== 'reveal') && !(data?.action === 'MATCH' && data.success === false)) sound.play('card');
+  await nextTick();
+  // The face of the card I draw comes with the state, which may land a moment after the event: wait one frame for it.
+  const flipsWithoutFace = (list: Movement[]) => list.some(m => m.flip && !m.card);
+  const withFace = (list: Movement[]) => list.map(m => (m.flip && !m.card ? { ...m, card: store.game?.drawnCard ?? null } : m));
+  let ready = withFace(moves);
+  if (flipsWithoutFace(ready)) { await nextFrame(); ready = withFace(moves); }
+  motionLayer.value?.play(ready);
+}
+
+// The log is newest first: what is new is what comes before the head I already knew.
+watch(() => store.events, (events, previous) => {
+  const known = previous?.[0] ?? null;
+  const fresh: KoboLogEntry[] = [];
+  for (const entry of events) {
+    if (entry === known) break;
+    fresh.push(entry);
+  }
+  fresh.reverse().forEach(entry => { void playEvent(entry); });
+});
+
+// --- Announcements ---------------------------------------------------------------------------------------------
+// One polite region, always in the page, for what the event log does not say (see `liveAnnouncement`). The text is
+// cleared and set again when the situation changes so that the same sentence twice in a row is read twice.
+const liveText = computed(() => {
+  const g = store.game;
+  if (!g) return '';
+  return liveAnnouncement({
+    phase: g.phase,
+    actor: g.phase === 'GIFT' ? g.announcer : g.currentSeat,
+    mySeat: store.mySeat,
+    promptText: store.interaction.prompt ? ui.prompt[store.interaction.prompt] : null,
+    phaseText: phaseText.value,
+    roundText: format(ui.live.round, { n: g.round }),
+  });
+});
+const liveSpoken = ref(liveText.value);
+watch(() => [store.game?.round, store.game?.phase, store.game?.currentSeat, liveText.value].join('|'), async () => {
+  liveSpoken.value = '';
+  if (!liveText.value) return;
+  await nextTick();
+  liveSpoken.value = liveText.value;
+});
 </script>
 
 <template>
-  <div class="kobo-screen" :class="{ 'kobo-screen--lobby': store.screen === 'lobby' }">
+  <div ref="screenEl" class="kobo-screen" :class="{ 'kobo-screen--lobby': store.screen === 'lobby' }">
     <GameLobby
       v-if="store.screen === 'lobby' && store.lobby"
       :game="game"
@@ -187,10 +309,15 @@ const rematchButton = computed(() => ({
     <template v-else-if="store.game">
       <RulesPanel :rules="messages.kobo" />
 
-      <div class="top-bar">
+      <div class="top-bar" data-test="top-bar">
         <GameTimer :time="formattedDuration" inline />
         <span class="round-chip" data-test="round">{{ format(ui.table.round, { n: store.game.round }) }}</span>
+        <KoboSoundToggle :enabled="sound.enabled.value" @toggle="sound.toggle()" />
       </div>
+
+      <!-- The cards that travel (a picture only, hidden from assistive technology), and the one live region. -->
+      <KoboMotionLayer ref="motionLayer" :resolve="resolveAnchor" />
+      <p class="sr-only" role="status" aria-live="polite" aria-atomic="true" data-test="kobo-live">{{ liveSpoken }}</p>
 
       <Transition name="forfeit-fade">
         <ForfeitBanner
@@ -205,7 +332,7 @@ const rematchButton = computed(() => ({
       </div>
 
       <!-- The table. On a phone it scrolls vertically inside its frame (never sideways, never the page). -->
-      <div class="table-frame" data-test="kobo-table"
+      <div class="table-frame" data-test="kobo-table" role="region" :aria-label="ui.regions.table"
            :class="{ 'table-frame--compact': compactOpponents, 'table-frame--round-end': sheetOpen }"
            :style="{ '--opponent-columns': columns }">
         <div class="table-center">
@@ -257,7 +384,7 @@ const rematchButton = computed(() => ({
           @next-round="store.ready()" />
       </div>
 
-      <div v-if="!sheetOpen" class="my-zone" data-test="my-zone">
+      <div v-if="!sheetOpen" class="my-zone" data-test="my-zone" role="region" :aria-label="ui.regions.yours">
         <KoboSeat
           v-if="me"
           :player="me"

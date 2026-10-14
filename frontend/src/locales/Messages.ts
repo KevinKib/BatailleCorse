@@ -295,6 +295,9 @@ export interface KoboUiMessages {
   notice: Record<KoboNoticeKey, string>;   // why my last command did not go through
   log: KoboLogMessages;                    // the one-line event log
   youObject: string;                       // "you", as the object of a sentence
+  sound: { label: string; on: string; off: string };   // the sound button: its name, then its tooltip by state
+  regions: { table: string; yours: string };           // names of the two landmarks of the table
+  live: { round: string };                             // '{n}': said when a new round starts
   sheet: KoboSheetMessages;                // the score sheet of the round end
   end: KoboEndMessages;                    // the end screen
 }
