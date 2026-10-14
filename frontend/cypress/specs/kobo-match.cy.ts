@@ -32,7 +32,9 @@ describe('Kobo matching discard', () => {
       cy.get('[data-test="discard-pile"] img').should('have.attr', 'alt', '3 of spade');
       // Anyone may match at any time the server lists it, my own turn included.
       cy.get('[data-test="action-match"]').should('be.visible').and('have.attr', 'aria-pressed', 'false');
-      cy.get('button[data-test^="slot-"]:not([disabled])').should('not.exist');
+      // Nothing else wants a click on a card: each is a one-click match (cypress/specs/kobo-click-actions.cy.ts).
+      cy.get('button[data-test^="slot-"]:not([disabled])').should('have.length', 8);
+      cy.get('[data-test="prompt"]').should('not.exist');
 
       // Arm the mode: every card of every player can be picked, and Cancel is offered.
       cy.get('[data-test="action-match"]').click();
@@ -45,7 +47,8 @@ describe('Kobo matching discard', () => {
       // Escape disarms it; Cancel too.
       cy.get('body').type('{esc}');
       cy.get('[data-test="action-match"]').should('have.attr', 'aria-pressed', 'false');
-      cy.get('button[data-test^="slot-"]:not([disabled])').should('not.exist');
+      cy.get('[data-test="prompt"]').should('not.exist');
+      cy.get(slot(0, 1)).should('have.attr', 'data-match', 'true');
       cy.get('[data-test="action-match"]').click();
       cy.get('[data-test="action-cancel"]').click();
       cy.get('[data-test="action-match"]').should('have.attr', 'aria-pressed', 'false');

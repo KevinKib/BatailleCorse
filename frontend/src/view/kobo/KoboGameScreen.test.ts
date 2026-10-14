@@ -272,13 +272,35 @@ describe('KoboGameScreen', () => {
       expect(wrapper.find('[data-test="action-ready"]').exists()).toBe(false);
     });
 
-    it('givenMyDrawStep_thenDrawIsTheButtonAndNoCardIsClickable', async () => {
+    it('givenMyDrawStep_thenDrawIsTheButtonAndTheDrawPileAndEverySlotIsAOneClickMatch', async () => {
       const { wrapper, store } = await playing({ phase: 'DRAW', availableActions: ['DRAW', 'MATCH_DISCARD'] });
-      expect(enabledSlots(wrapper)).toEqual([]);
+      expect(enabledSlots(wrapper)).toHaveLength(8);
+      expect(wrapper.get('[data-test="slot-0-1"]').attributes('aria-label')).toBe('Your card 2, face down: match this card');
+      expect(wrapper.get('[data-test="slot-1-1"]').attributes('title')).toBe('Match this card');
       expect(wrapper.find('[data-test="action-match"]').exists()).toBe(true);
       const draw = vi.spyOn(store, 'draw').mockReturnValue(true);
       await press(wrapper, 'draw');
       expect(draw).toHaveBeenCalledTimes(1);
+    });
+
+    it('givenICanDraw_thenAClickOnTheDrawPileDrawsAndTheDiscardPileIsNotAButton', async () => {
+      const { wrapper, store } = await playing({ phase: 'DRAW', availableActions: ['DRAW'] });
+      expect(wrapper.find('button[data-test="discard-pile"]').exists()).toBe(false);
+      const pile = vi.spyOn(store, 'pickPile').mockImplementation(() => {});
+      await wrapper.get('button[data-test="draw-pile"]').trigger('click');
+      expect(pile).toHaveBeenCalledWith('draw');
+    });
+
+    it('givenIHoldTheDrawnCard_thenAClickOnTheDiscardPileDiscardsAndMySlotsSwapNotMatch', async () => {
+      const { wrapper, store } = await playing({
+        phase: 'DECISION', hasDrawn: true, drawnCard: KING, availableActions: ['SWAP_DRAWN', 'DISCARD_DRAWN', 'MATCH_DISCARD'],
+      });
+      expect(wrapper.find('button[data-test="draw-pile"]').exists()).toBe(false);
+      expect(wrapper.get('[data-test="slot-0-1"]').attributes('aria-label')).toBe('Your card 2, face down');
+      expect(wrapper.get('[data-test="slot-0-1"]').attributes('data-match')).toBeUndefined();
+      const pile = vi.spyOn(store, 'pickPile').mockImplementation(() => {});
+      await wrapper.get('button[data-test="discard-pile"]').trigger('click');
+      expect(pile).toHaveBeenCalledWith('discard');
     });
 
     it('givenTheDrawnCard_thenOnlyMyCardsAreClickableAndAClickPicksTheSlot', async () => {
@@ -389,11 +411,22 @@ describe('KoboGameScreen', () => {
         givenSlot: null, success: null, barrierOpened: null, ...overrides,
       });
 
-      it('givenMatchIsListedDuringAnotherPlayersTurn_thenTheMatchButtonIsThereAndNoCardIsClickableYet', async () => {
-        const { wrapper } = await matchable();
+      it('givenMatchIsListedDuringAnotherPlayersTurn_thenTheButtonIsThereAndEverySlotIsAOneClickMatch', async () => {
+        const { wrapper, store } = await matchable();
         expect(wrapper.get('[data-test="action-match"]').text()).toBe(messagesEn.koboUi.actions.match);
         expect(wrapper.get('[data-test="action-match"]').attributes('aria-pressed')).toBe('false');
-        expect(enabledSlots(wrapper)).toEqual([]);
+        expect(enabledSlots(wrapper)).toHaveLength(8);
+        const pick = vi.spyOn(store, 'pickSlot');
+        await wrapper.get('[data-test="slot-0-2"]').trigger('click');
+        expect(pick).toHaveBeenCalledWith(0, 2);
+      });
+
+      it('givenAPowerOfMineIsPending_thenNoSlotIsAMatchAndNoneSaysSo', async () => {
+        const { wrapper } = await matchable({
+          phase: 'POWER', currentSeat: 0, pendingPower: 'PEEK_OWN', availableActions: ['PEEK', 'SKIP_POWER', 'MATCH_DISCARD'],
+        });
+        expect(enabledSlots(wrapper)).toEqual(['slot-0-0', 'slot-0-1', 'slot-0-2', 'slot-0-3']);
+        expect(wrapper.findAll('[data-match]')).toHaveLength(0);
       });
 
       it('givenMatchIsNotListed_thenNoMatchButton', async () => {
@@ -415,7 +448,8 @@ describe('KoboGameScreen', () => {
         await press(wrapper, 'match');
         await press(wrapper, 'match');
         expect(store.pending).toEqual({ kind: 'none' });
-        expect(enabledSlots(wrapper)).toEqual([]);
+        // Back to the plain state: one click on a card is a match again.
+        expect(wrapper.get('[data-test="slot-0-0"]').attributes('data-match')).toBe('true');
       });
 
       it('givenAnotherPlayersCardIsPicked_thenOnlyMyCardsCanBePickedToGive', async () => {

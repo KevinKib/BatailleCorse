@@ -93,4 +93,37 @@ describe('KoboTableau', () => {
       expect(mountTableau().findAll('[data-highlighted]')).toHaveLength(0);
     });
   });
+
+  describe('one-click match mode', () => {
+    const clickable = { [slotKey(1, 0)]: true, [slotKey(1, 1)]: true };
+
+    it('givenMatchMode_thenClickableSlotsSayTheyMatchAndAreMarkedLightly', () => {
+      const wrapper = mountTableau({ clickable, matchMode: true });
+      const slot = wrapper.get('[data-test="slot-1-0"]');
+      expect(slot.attributes('aria-label')).toBe("Bob's card 1, face down: match this card");
+      expect(slot.attributes('title')).toBe('Match this card');
+      expect(slot.attributes('data-match')).toBe('true');
+      expect(slot.classes()).toContain('slot--match');
+    });
+
+    it('givenMatchMode_thenASlotThatIsNotClickableKeepsItsPlainName', () => {
+      const wrapper = mountTableau({ clickable, matchMode: true });
+      const slot = wrapper.get('[data-test="slot-1-3"]');
+      expect(slot.attributes('aria-label')).toBe("Bob's card 4, face down");
+      expect(slot.attributes('data-match')).toBeUndefined();
+      expect(slot.attributes('title')).toBeUndefined();
+    });
+
+    it('givenNoMatchMode_thenClickableSlotsAreNamedAsBefore', () => {
+      const slot = mountTableau({ clickable }).get('[data-test="slot-1-0"]');
+      expect(slot.attributes('aria-label')).toBe("Bob's card 1, face down");
+      expect(slot.attributes('data-match')).toBeUndefined();
+    });
+
+    it('givenMatchMode_thenAFaceUpSlotKeepsItsCardInTheName', () => {
+      const faces = { [slotKey(1, 0)]: buildKoboCard('KING', 'HEART') };
+      const slot = mountTableau({ clickable, matchMode: true, faces }).get('[data-test="slot-1-0"]');
+      expect(slot.attributes('aria-label')).toBe("Bob's card 1: king of heart: match this card");
+    });
+  });
 });
