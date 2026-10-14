@@ -1,5 +1,6 @@
 package org.kevinkib.cardgames.kobo.presentation.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.kevinkib.cardgames.presentation.dto.CardDto;
 import org.kevinkib.cardgames.kobo.domain.turn.Action;
 import org.kevinkib.cardgames.kobo.domain.turn.Phase;
@@ -13,6 +14,7 @@ import org.kevinkib.cards.domain.Card;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * One player's view of a Kobo game, the only projection of the aggregate. Public information is the
@@ -51,7 +53,9 @@ public record KoboDto(
     public record SlotCardDto(int slot, CardDto card) {
     }
 
-    public record PlayerDto(int seat, String name, boolean current, int total, int handSize, List<SlotDto> slots) {
+    /** {@code bot} is true for a computer seat and omitted from the JSON otherwise (additive field). */
+    public record PlayerDto(int seat, String name, boolean current, int total, int handSize, List<SlotDto> slots,
+                            @JsonInclude(JsonInclude.Include.NON_DEFAULT) boolean bot) {
     }
 
     public record RevealDto(int seat, int slot, int revision, CardDto card) {
@@ -81,12 +85,16 @@ public record KoboDto(
     }
 
     public static KoboDto forViewer(Kobo game, PlayerId viewer, Map<PlayerId, String> names) {
+        return forViewer(game, viewer, names, Set.of());
+    }
+
+    public static KoboDto forViewer(Kobo game, PlayerId viewer, Map<PlayerId, String> names, Set<PlayerId> bots) {
         synchronized (game) {
             Phase phase = game.phase();
             boolean showCards = game.isRevealed();
             List<PlayerDto> players = game.getPlayerIds().stream()
                     .map(p -> new PlayerDto(p.id(), names.get(p), p.equals(game.currentSeat()), game.total(p),
-                            game.handSize(p), slotsOf(game, p, showCards)))
+                            game.handSize(p), slotsOf(game, p, showCards), bots.contains(p)))
                     .toList();
             List<SlotCardDto> starting = game.startingCards(viewer).entrySet().stream()
                     .map(e -> new SlotCardDto(e.getKey(), CardDto.from(e.getValue())))

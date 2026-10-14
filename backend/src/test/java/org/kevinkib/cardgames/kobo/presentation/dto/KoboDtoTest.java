@@ -219,6 +219,31 @@ class KoboDtoTest {
     }
 
     @Test
+    void theBotFlagIsSetForBotSeatsOnlyAndOmittedFromTheJsonAtItsDefault() {
+        Kobo kobo = aKobo().withPlayers(3).inPhase(Phase.DRAW).build();
+
+        KoboDto dto = KoboDto.forViewer(kobo, seat(0), Map.of(), java.util.Set.of(seat(2)));
+
+        assertThat(dto.players().get(0).bot(), is(false));
+        assertThat(dto.players().get(1).bot(), is(false));
+        assertThat(dto.players().get(2).bot(), is(true));
+        String json = json(dto);
+        assertThat(json.split("\"bot\":true", -1).length - 1, is(1));
+        assertThat(json, not(containsString("\"bot\":false")));
+    }
+
+    @Test
+    void theOverloadsWithoutBotsDeclareNoBotAndKeepTheJsonUnchanged() {
+        Kobo kobo = aKobo().withPlayers(2).inPhase(Phase.DRAW).build();
+
+        KoboDto dto = KoboDto.forViewer(kobo, seat(0), Map.of());
+
+        assertThat(dto.players().stream().anyMatch(KoboDto.PlayerDto::bot), is(false));
+        assertThat(json(dto), not(containsString("\"bot\"")));
+        assertThat(json(KoboDto.forViewer(kobo, seat(0))), not(containsString("\"bot\"")));
+    }
+
+    @Test
     void cardsInDtoHelperHandlesNull() {
         Card none = null;
         assertThat(CardDto.from(none), nullValue());
