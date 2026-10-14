@@ -72,6 +72,14 @@ describe('KoboPiles', () => {
       expect(wrapper.emitted('discard')).toHaveLength(1);
     });
 
+    it('givenTheDiscardPileIsEmpty_thenItIsStillTheButtonToDiscardTheDrawnCard', async () => {
+      const wrapper = mountPiles({ discardTop: null, discardSize: 0 }, 0, 'Bob', { canDiscard: true });
+      const pile = wrapper.get('button[data-test="discard-pile"]');
+      expect(pile.attributes('aria-label')).toBe('Discard the drawn card. Pile is empty');
+      await pile.trigger('click');
+      expect(wrapper.emitted('discard')).toHaveLength(1);
+    });
+
     it('givenTheScreenIsBusy_thenTheActionablePileIsDisabled', () => {
       const wrapper = mountPiles({}, 0, 'Bob', { canDraw: true, busy: true });
       expect(wrapper.get('button[data-test="draw-pile"]').attributes('disabled')).toBeDefined();

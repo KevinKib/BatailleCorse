@@ -21,7 +21,7 @@ const cardName = useKoboCardName();
 
 const discardLabel = computed(() => {
   const top = props.game.discardTop;
-  if (!top) return ui.discardEmpty;
+  if (!top) return props.canDiscard ? ui.discardActionEmpty : ui.discardEmpty;
   const values = { card: cardName(top), n: props.game.discardSize };
   return format(props.canDiscard ? ui.discardAction : ui.discardPile, values);
 });

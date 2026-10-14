@@ -253,6 +253,7 @@ export interface KoboUiMessages {
     cardName: string;                  // '{rank}', '{suit}'
     drawPile: PluralForms;             // '{n}' = cards left
     drawAction: PluralForms;           // '{n}' = cards left: the draw pile when a click draws
+    discardActionEmpty: string;        // the same while the pile is empty
     discardAction: string;             // '{card}', '{n}': the discard pile when a click discards my drawn card
     slotMatch: string;                 // '{label}' = the slot name: a click on it is a match
     slotMatchHint: string;             // tooltip of such a slot

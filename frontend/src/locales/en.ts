@@ -317,6 +317,7 @@ export const messagesEn: Messages = {
       drawPile: { one: 'Draw pile, {n} card left', other: 'Draw pile, {n} cards left' },
       drawAction: { one: 'Draw a card, {n} card left', other: 'Draw a card, {n} cards left' },
       discardPile: 'Discard pile, top card {card}, {n} in the pile',
+      discardActionEmpty: 'Discard the drawn card. Pile is empty',
       discardAction: 'Discard the drawn card. Pile, top card {card}, {n} in the pile',
       slotMatch: '{label}: match this card',
       slotMatchHint: 'Match this card',
