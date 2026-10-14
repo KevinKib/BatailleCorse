@@ -7,6 +7,7 @@ import org.kevinkib.cardgames.game.GameOptions;
 import org.kevinkib.cardgames.game.OptionDescriptor;
 import org.kevinkib.cardgames.game.OptionType;
 import org.kevinkib.cardgames.game.PlayerId;
+import org.kevinkib.cardgames.threemenmorris.domain.bot.MorrisBotLevel;
 
 import java.util.Arrays;
 import java.util.List;
@@ -17,6 +18,7 @@ public class ThreeMenMorrisFactory implements GameFactory {
     public static final String GAME_TYPE = "three-men-morris";
     public static final String VARIANT_KEY = "variant";
     public static final String HOST_COLOUR_KEY = "hostColour";
+    public static final String LEVEL_KEY = "level";
 
     private static final PlayerId HOST = new PlayerId(0);
     private static final PlayerId GUEST = new PlayerId(1);
@@ -30,6 +32,11 @@ public class ThreeMenMorrisFactory implements GameFactory {
     /** The generator is drawn once per game, and only when the host colour is {@code random}. */
     public ThreeMenMorrisFactory(RandomGenerator random) {
         this.random = random;
+    }
+
+    @Override
+    public boolean supportsBots() {
+        return true;
     }
 
     @Override
@@ -80,5 +87,13 @@ public class ThreeMenMorrisFactory implements GameFactory {
                 new OptionDescriptor(HOST_COLOUR_KEY, OptionType.CHOICE,
                         Arrays.stream(HostColour.values()).map(HostColour::key).toList(),
                         HostColour.DEFAULT.key(), "options.threeMenMorris.hostColour"));
+    }
+
+    /** A computer seat plays at one of three levels, greedy unless the host picks another. */
+    @Override
+    public List<OptionDescriptor> seatOptionDescriptors() {
+        return List.of(new OptionDescriptor(LEVEL_KEY, OptionType.CHOICE,
+                Arrays.stream(MorrisBotLevel.values()).map(MorrisBotLevel::key).toList(),
+                MorrisBotLevel.DEFAULT.key(), "options.threeMenMorris.level"));
     }
 }

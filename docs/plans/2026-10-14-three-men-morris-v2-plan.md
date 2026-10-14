@@ -35,7 +35,7 @@ frontend paths relative to `frontend/src/`.
 | M2 | `feat: Achi and Picaria variants of Three Men's Morris` | M | M1 | [x] done (#194) |
 | M3 | `feat: host colour option for Three Men's Morris` | S | M2 | [x] done (#198) |
 | M4 | `feat: draw offers and threefold repetition in Three Men's Morris` | M | M3 | [x] done (#199) |
-| M5 | `feat: Three Men's Morris bots with three levels` | L | M4 | [ ] to do |
+| M5 | `feat: Three Men's Morris bots with three levels` | L | M4 | [x] done, PR #202 (review pending) |
 | F1 | `feat: Three Men's Morris variants and colours on screen` | M | M2, M3, #186 | [ ] to do |
 | F2 | `feat: Three Men's Morris draw offer and draw end screen` | M | M4, F1 | [ ] to do |
 | F3 | `feat: play Three Men's Morris against a bot` | S-M | M5, F1 | [ ] to do |
@@ -138,8 +138,8 @@ No behaviour, wire or test change for v1: every existing test passes unchanged.
 - `config/ThreeMenMorrisConfig.java`: broadcaster with `sessionService::botSeats`; `ThinkingDelay` from
   `threemenmorris.bots.delay-min-ms` (700) / `delay-max-ms` (1300); the coordinator bean registered on the
   broadcaster. `resources/application-test.properties`: both delays 0.
-- Tests first: `MorrisSolverTest` (Tapatan and Achi are White wins, Picaria a draw, about 5,400 positions
-  each, computed under 1 s), `GreedyBotTest` (takes a line, blocks one), `PerfectBotTest` (never loses a
+- Tests first: `MorrisSolverTest` (Tapatan and Achi are White wins, Picaria with the locked centre is a White win
+  in 7 plies (the draw was the old rule), 3,602 / 4,512 / 2,545 positions, each solved under 1 s), `GreedyBotTest` (takes a line, blocks one), `PerfectBotTest` (never loses a
   solved draw; wins a solved win; with the constant generator its first moves are fixed), `RandomBotTest`
   (always legal), `MorrisBotCoordinatorTest` with a manual scheduler (acts after the delay; drops a stale task;
   answers a draw offer; stops on finish; a new game after Play again gets a new table; no action while the

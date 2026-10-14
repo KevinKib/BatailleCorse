@@ -9,7 +9,8 @@ Morris are **not** built here: this spec only says what v2 must leave room for, 
 Legend: **[V]** verified by reading the code on `origin/main` at `a61377e` (2026-10-14), with `file:line`
 (backend paths relative to `backend/src/main/java/org/kevinkib/cardgames/`, frontend paths relative to
 `frontend/src/`); **[C]** computed by a throwaway retrograde analysis of the three variants (not committed;
-the solver's unit tests in plan PR M5 re-check it); **[H]** hypothesis to confirm in the PR that relies on it;
+the solver's unit tests in plan PR M5 re-check it; **corrected in M5**: the first draft computed Picaria with the
+centre open from the first placement, see the Picaria row); **[H]** hypothesis to confirm in the PR that relies on it;
 **[Q]** product question, listed at the end with a recommendation.
 
 ## Key decisions
@@ -30,7 +31,8 @@ the solver's unit tests in plan PR M5 re-check it); **[H]** hypothesis to confir
    Corse's `tier`, and a `MorrisBotCoordinator` follows the pattern of the two existing coordinators (listen
    to the state broadcaster, schedule after a delay, drop the task if the version moved, act through the same
    `ThreeMenMorrisGameActions` as a human). The perfect level reads a solved table: each variant has about
-   5,400 reachable positions **[C]**, so a full retrograde analysis takes milliseconds and is cached.
+   2,500 to 4,500 reachable positions (counted from the seat to move, M5) so a full retrograde analysis takes
+   milliseconds and is cached.
 4. **Draws end a game with no winner.** A player may offer a draw (one pending offer at a time, cancelled by
    the next piece played, accepted or declined by the opponent); the third occurrence of the same position
    with the same player to move ends the game automatically. The outcome keeps its shape
@@ -99,7 +101,7 @@ sources: White starts, as in v1.
 | Winning lines | the 8 | the 8 | the 8 (the short diagonals join only two points, so they never make a line) |
 | Placement restriction | none | none | **no piece may be placed on the centre (owner decision, whatdowedoallday.com/picaria); it is reached by a move** |
 | Blocked player | practically unreachable (0 reachable blocked positions **[C]**) | **reachable** (12 reachable blocked positions **[C]**): the `BLOCKED` reason becomes a real ending | unreachable **[C]** |
-| Perfect play from the start | **White wins [C]** | **White wins [C]** | **draw [C]** |
+| Perfect play from the start | **White wins in 9 plies [C]** | **White wins in 11 plies [C]** | **White wins in 7 plies [C, corrected in M5]** (the first draft said draw: it was computed with the centre open from the first placement, which is a draw) |
 | Source | v1 source (Locus Ludi PDF, board B) | Wikipedia "Achi (game)", which cites Claudia Zaslavsky, *Tic Tac Toe and Other Three-in-a-Row Games* (1982) **[H: book not read]** | Wikipedia "Picaria", citing Merilyn Simonds Mohr, *The Games Treasury* (1993), p. 28 **[H: book not read]** |
 
 Details and choices:
@@ -112,8 +114,11 @@ Details and choices:
 - **Picaria.** Played on a 9-point or a 13-point board; v2 plays the 9-point board (same numbering, so the
   board, the DTO and the bot keep 9 points). The source calls "a player cannot move" a draw *or* a loss by
   house rule; it is unreachable here **[C]**, so v2 keeps "blocked loses" for one rule everywhere. The
-  centre lock is the rule that removes White's forced win of Tapatan (Picaria without it is still a draw
-  **[C]**, thanks to the extra short diagonals; the lock is kept because the source states it).
+  centre lock does not remove a forced win here, it creates one (**corrected in M5**): with the centre
+  closed for the whole placement phase White wins in 7 plies, the first move into the centre completing a
+  diameter; with the centre open from the first placement Picaria is a draw **[C]** (extra short diagonals).
+  The lock follows the owner's decision (#194); that it makes the variant a White win is a consequence the
+  owner may want to know before keeping it **[Q11]**.
 - **Names.** The game card stays "Three Men's Morris"; the variant picker says "Tapatan (3 pieces)",
   "Achi (4 pieces)", "Picaria (3 pieces, more diagonals)" **[Q1]**.
 
@@ -163,8 +168,8 @@ Package `threemenmorris/domain` (pure, ArchUnit unchanged).
     on the missing point, or in the movement phase a move that leaves the opponent no line next turn when one
     exists), else random.
   - `PerfectBot`: reads `MorrisSolver`: a retrograde analysis per `MorrisRules` (win / loss / draw for every
-    reachable position, with distance to the end), cached once per variant (about 5,400 positions per
-    variant **[C]**; the computation runs in a few milliseconds, lazily on first use, thread-safe). It plays
+    reachable position, with distance to the end), cached once per variant (2,545 to 4,512 positions per
+    variant, from the seat to move **[C]**; the computation runs in a few milliseconds, lazily on first use, thread-safe). It plays
     the fastest win, else a drawing move, else the slowest loss. A plain minimax would not terminate (the
     movement phase has cycles); the retrograde analysis handles them, and its draws match the threefold
     rule (a won position can always be won without repeating).
@@ -335,7 +340,7 @@ no extraction of a shared bot driver; no change to Kobo's in-flight frontend (PR
 - **Kobo K3 (#186, open) on the same shared frontend files** (`EndGameOverlay.vue`, `locales/en.ts`,
   `locales/Messages.ts`, maybe `cypress/support/stompPlayer.ts`). Mitigation: the backend PRs go first; the
   frontend PRs start after #186 merges or rebase on it; the end-screen change is a single optional prop.
-- **Perfect bot as White is unbeatable in Tapatan and Achi [C].** That is the game, but it may feel unfair;
+- **Perfect bot as White is unbeatable in all three variants [C].** That is the game, but it may feel unfair;
   the level names and the colour option let the player choose (see [Q2]).
 - **Draw races** (an offer and a move at the same time): every command runs under the game monitor and bumps
   the version; the losing command gets an `ErrorResponse` with the current state.
@@ -351,7 +356,7 @@ no extraction of a shared bot driver; no change to Kobo's in-flight frontend (PR
 - **Q1 Variant names in the picker.** Recommend "Tapatan (3 pieces)", "Achi (4 pieces)", "Picaria (3 pieces,
   more diagonals)", with one sentence each in the rules panel; the game card keeps "Three Men's Morris".
 - **Q2 Level names.** Recommend "Easy" (random), "Medium" (greedy, default), "Expert" (perfect), with a
-  rules-panel note that White wins Tapatan and Achi with perfect play, and that Picaria is a draw.
+  rules-panel note that White wins every variant with perfect play (Picaria with the centre locked: in 7 plies).
 - **Q3 Achi without diagonals.** Recommend not now (a fourth option for a rarely played variant).
 - **Q4 When can a draw be offered?** Recommend from the movement phase only (placement lasts at most 8 plies
   and offering before any move is meaningless), once between two of one's own moves.
@@ -366,3 +371,6 @@ no extraction of a shared bot driver; no change to Kobo's in-flight frontend (PR
   movement phase only (the placement phase cannot repeat), with a warning at two.
 - **Q10 Show the colour on lobby seats?** Recommend no: colours exist only after the start (and `random` has
   none before); the option line says who plays what when it is fixed.
+- **Q11 Picaria with the centre locked is a forced White win (M5).** Recommend asking the owner whether the lock
+  (#194) should stay: with it, Picaria is the shortest and most lopsided variant (the first move into the centre
+  wins); the old rule (centre open) gives a draw. Domain data only: a different `PlacementRule` would change it.
