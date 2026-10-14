@@ -49,8 +49,9 @@ const armed = computed(() => props.pending.kind === 'match-armed' || props.pendi
     <div class="actions-row">
       <div class="actions-text">
         <YourTurnIndicator :active="yourTurn" />
-        <p v-if="prompt" class="line prompt" data-test="prompt" aria-live="polite">{{ ui.prompt[prompt] }}</p>
-        <p v-else class="line" data-test="phase" aria-live="polite">{{ phaseText }}</p>
+        <!-- Not live themselves: the screen's one live region says what I am to do (no sentence twice). -->
+        <p v-if="prompt" class="line prompt" data-test="prompt">{{ ui.prompt[prompt] }}</p>
+        <p v-else class="line" data-test="phase">{{ phaseText }}</p>
         <!-- Under the phase line, in the room the text column leaves free in the first row of the bar. -->
         <slot name="log" />
       </div>

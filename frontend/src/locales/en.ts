@@ -406,6 +406,9 @@ export const messagesEn: Messages = {
       giveTen: '{actor} gave 10 points to {owner}',
     },
     youObject: 'you',
+    sound: { label: 'Sound effects', on: 'Sound is on', off: 'Sound is off' },
+    regions: { table: 'Table', yours: 'Your cards and actions' },
+    live: { round: 'Round {n}' },
     sheet: {
       label: 'Scores of round {n}',
       badge: 'Kobo!',

@@ -142,3 +142,23 @@ describe('KoboScoreSheet round over', () => {
     expect(mountSheet().find('[data-test^="ready-"]').exists()).toBe(false);
   });
 });
+
+// happy-dom does not apply scoped CSS, so the motion contract is read from the stylesheet itself (the real
+// computed values are checked in Cypress, kobo-animations).
+describe('KoboScoreSheet appearance animation', () => {
+  const style = async () => {
+    const source = (await import('./KoboScoreSheet.vue?raw')).default as string;
+    return source.slice(source.indexOf('<style'));
+  };
+
+  it('risesFromBelowWithASoftFadeInAboutAQuarterOfASecond', async () => {
+    const css = await style();
+    expect(css.match(/\.sheet \{[^}]*\}/)![0])
+      .toMatch(/animation:\s*sheet-rise 0\.25s cubic-bezier\(\.2, ?\.8, ?\.2, ?1\) backwards/);
+    expect(css).toMatch(/@keyframes sheet-rise \{\s*from \{ transform: translateY\(16px\); opacity: 0; \}/);
+  });
+
+  it('isCutByReducedMotion', async () => {
+    expect(await style()).toMatch(/@media \(prefers-reduced-motion: reduce\) \{\s*\.sheet \{ animation: none; \}/);
+  });
+});
