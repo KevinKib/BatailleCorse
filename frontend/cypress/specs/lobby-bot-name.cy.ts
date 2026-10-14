@@ -23,6 +23,9 @@ describe('Lobby seat row with a bot', () => {
       it(`${label}: keeps the bot name readable and every control at ${width}x${height}`, () => {
         cy.viewport(width, height);
         lobbyWithBot(path);
+        // Documentation shots: `--env shots=before` (or `after`) saves the lobby as <shots>-<game>-<size>.png.
+        const shots = Cypress.env('shots');
+        if (shots) cy.screenshot(`${shots}-${path.split('/').pop()}-${width}x${height}`, { capture: 'viewport' });
         const row = () => cy.get('.players li').eq(1);
 
         // The name is shown in full, not cut by an ellipsis.
