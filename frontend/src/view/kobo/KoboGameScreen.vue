@@ -11,6 +11,7 @@ import { useGameDuration } from '../../composables/useGameDuration';
 import { useConnectionStatus } from '../../composables/useConnectionStatus';
 import { useNarrowScreen } from '../../composables/useNarrowScreen';
 import GameLobby from '../../components/lobby/GameLobby.vue';
+import EndGameOverlay from '../../components/EndGameOverlay.vue';
 import ForfeitBanner from '../../components/ForfeitBanner.vue';
 import RulesPanel from '../../components/RulesPanel.vue';
 import GameTimer from '../../components/GameTimer.vue';
@@ -19,14 +20,19 @@ import KoboSeat from '../../components/kobo/KoboSeat.vue';
 import KoboTableau from '../../components/kobo/KoboTableau.vue';
 import KoboPiles from '../../components/kobo/KoboPiles.vue';
 import KoboEventLog from '../../components/kobo/KoboEventLog.vue';
+import KoboScoreSheet from '../../components/kobo/KoboScoreSheet.vue';
+import KoboFinalTotals from '../../components/kobo/KoboFinalTotals.vue';
 import { findGame } from '../../model/games';
 import { opponentsInPlayOrder } from '../../model/table/opponentOrder';
 import { seatPositions } from '../../model/table/seatRing';
 import { opponentColumns } from '../../model/kobo/faces';
 import { eventHighlights, headlineEvent } from '../../model/kobo/eventLog';
+import { endSummary } from '../../model/kobo/endSummary';
+import { finalStandings } from '../../model/kobo/roundScores';
+import { useEndScreen } from '../../composables/useEndScreen';
 import { useEscapeKey } from '../../composables/useEscapeKey';
 import { useI18n } from '../../composables/useI18n';
-import { format } from '../../locales/format';
+import { format, plural } from '../../locales/format';
 
 const props = defineProps<{ gameId: string }>();
 const messages = useI18n();
@@ -114,6 +120,36 @@ const phaseText = computed(() => {
 const yourTurn = computed(() =>
   store.isMyTurn && !!store.game && !WAITING_PHASES.includes(store.game.phase));
 const currentName = computed(() => displayName(store.game?.currentSeat ?? 0));
+
+// The gift and the end of a round share one score sheet under the table; the table stays on screen above it.
+const sheetOpen = computed(() => (store.game?.phase === 'GIFT' || store.game?.phase === 'ROUND_OVER') && !!store.game.lastRound);
+
+// End screen: shown a beat after the game is over (no animation to wait for); reloading into a finished game
+// shows it at once. The final totals go in the overlay's slot.
+const endScreen = useEndScreen(() => store.screen === 'finished', () => false);
+endScreen.revealImmediatelyIfOver();
+onBeforeUnmount(() => endScreen.cancel());
+const summary = computed(() => (store.game ? endSummary(store.game, store.mySeat) : null));
+const standings = computed(() => finalStandings(store.game?.players ?? []));
+const winnerLine = computed(() => {
+  const winners = summary.value?.winners ?? [];
+  if (winners.length === 0) return undefined;
+  const players = winners.map(displayName).join(', ');
+  return format(winners.length > 1 ? ui.end.winners : ui.end.winner, { players });
+});
+const endSubtitle = computed(() => {
+  const s = summary.value;
+  if (!s) return '';
+  if (!s.byForfeit) return s.lowestTotal === null ? '' : plural(ui.end.lowestTotal, s.lowestTotal);
+  const left = store.lastForfeit;
+  if (left?.reason === 'RESIGNED') return format(ui.end.youWonResigned, { player: displayName(left.seat) });
+  if (left?.reason === 'DISCONNECTED') return format(ui.end.youWonDisconnected, { player: displayName(left.seat) });
+  return ui.end.youWonOthersLeft;
+});
+const rematchButton = computed(() => ({
+  label: store.rematch === 'pending' ? ui.end.rematchPending : ui.end.playAgain,
+  disabled: store.rematch === 'pending',
+}));
 </script>
 
 <template>
@@ -128,6 +164,18 @@ const currentName = computed(() => displayName(store.game?.currentSeat ?? 0));
       @leave="leaveLobby"
       @remove-seat="seat => store.removeSeat(seat)"
       @rename="name => store.rename(name)" />
+
+    <EndGameOverlay
+      v-else-if="store.screen === 'finished' && endScreen.showEndOverlay.value && summary"
+      data-test="end"
+      :did-i-win="summary.iWon"
+      :winner-line="winnerLine"
+      :subtitle="endSubtitle"
+      :rematch-button="rematchButton"
+      :error="store.rematch === 'failed' ? ui.end.rematchFailed : undefined"
+      @play-again="store.playAgain()">
+      <KoboFinalTotals :rows="standings" :name-of="displayName" :my-seat="store.mySeat" />
+    </EndGameOverlay>
 
     <!-- First server state not here yet (e.g. arriving through an invite link): a neutral felt screen. -->
     <div v-else-if="store.screen === 'connecting'" class="connecting" data-test="connecting"
@@ -158,7 +206,7 @@ const currentName = computed(() => displayName(store.game?.currentSeat ?? 0));
 
       <!-- The table. On a phone it scrolls vertically inside its frame (never sideways, never the page). -->
       <div class="table-frame" data-test="kobo-table"
-           :class="{ 'table-frame--compact': compactOpponents }"
+           :class="{ 'table-frame--compact': compactOpponents, 'table-frame--round-end': sheetOpen }"
            :style="{ '--opponent-columns': columns }">
         <div class="table-center">
           <KoboPiles :game="store.game" :my-seat="store.mySeat" :current-name="currentName" />
@@ -193,7 +241,19 @@ const currentName = computed(() => displayName(store.game?.currentSeat ?? 0));
         </div>
       </div>
 
-      <div class="my-zone" data-test="my-zone">
+      <!-- The gift and the end of a round: the scores rise under the table, which stays above them. -->
+      <div v-if="sheetOpen" class="sheet-slot" data-test="sheet-slot">
+        <KoboScoreSheet
+          :game="store.game"
+          :my-seat="store.mySeat"
+          :name-of="displayName"
+          :busy="store.busy"
+          :notice="store.notice"
+          @give="seat => store.giveTen(seat)"
+          @next-round="store.ready()" />
+      </div>
+
+      <div v-if="!sheetOpen" class="my-zone" data-test="my-zone">
         <KoboSeat
           v-if="me"
           :player="me"
@@ -371,6 +431,20 @@ const currentName = computed(() => displayName(store.game?.currentSeat ?? 0));
 .my-zone :deep(.seat-label) { font-size: 0.8rem; padding: 4px 14px; }
 
 .table-footer { flex: none; display: flex; align-items: center; }
+
+/* The score sheet takes the place of my zone: its room is its content, up to a share of the screen, and it scrolls
+   inside itself beyond that. The table above gives way. */
+.sheet-slot {
+  flex: none;
+  display: flex;
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  max-height: min(420px, 62%);
+}
+/* The piles say nothing at the round end and the sheet leaves the table little room: the opponents' cards (all
+   face up now) get all of it. */
+.table-frame--round-end .table-center { display: none; }
 
 .sr-only {
   position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;

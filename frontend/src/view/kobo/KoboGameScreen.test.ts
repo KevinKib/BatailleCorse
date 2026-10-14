@@ -521,6 +521,154 @@ describe('KoboGameScreen', () => {
     });
   });
 
+  describe('round end and end screen', () => {
+    const NAMED = [
+      buildKoboPlayer(0, { name: 'Alice', total: 10 }),
+      buildKoboPlayer(1, { name: 'Bob', total: 35 }),
+      buildKoboPlayer(2, { name: 'Cleo', total: 20 }),
+    ];
+    const round = (overrides = {}) => ({
+      players: [
+        { seat: 0, handValue: 2, roundPoints: 0, totalBefore: 10, totalAfter: 10, reset: false },
+        { seat: 1, handValue: 30, roundPoints: 30, totalBefore: 5, totalAfter: 35, reset: false },
+        { seat: 2, handValue: 20, roundPoints: 20, totalBefore: 0, totalAfter: 20, reset: false },
+      ],
+      announcer: 0, announcerWon: true, giftTo: null, ...overrides,
+    });
+
+    function at(overrides = {}, mySeat = 0) {
+      return mountRoom(s => {
+        s.applyEvent({ type: 'seat-change', seat: mySeat });
+        s.applyEvent({
+          type: 'state-update',
+          state: buildKoboState({ players: NAMED, revealed: true, lastRound: round(), ...overrides }),
+        });
+      });
+    }
+
+    it('givenAGameInPlay_thenNoScoreSheet', async () => {
+      const { wrapper } = await at({ phase: 'DRAW', revealed: false, lastRound: null });
+      expect(wrapper.find('[data-test="score-sheet"]').exists()).toBe(false);
+    });
+
+    it('givenTheGift_thenTheSheetRisesUnderTheTableWhichStaysThere', async () => {
+      const { wrapper } = await at({ phase: 'GIFT', announcer: 0, availableActions: ['GIVE_TEN'] });
+      expect(wrapper.get('[data-test="score-sheet"]').exists()).toBe(true);
+      expect(wrapper.find('[data-test="kobo-table"]').exists()).toBe(true);
+      expect(wrapper.findAll('[data-test="opponent-seat"]')).toHaveLength(2);
+      expect(wrapper.findAll('[data-test^="give-"]').map(b => b.text())).toEqual(['Give 10 to Bob', 'Give 10 to Cleo']);
+    });
+
+    it('givenAGiveButton_thenTheStoreGivesTheTenToThatSeat', async () => {
+      const { wrapper, store } = await at({ phase: 'GIFT', announcer: 0, availableActions: ['GIVE_TEN'] });
+      const give = vi.spyOn(store, 'giveTen').mockReturnValue(true);
+      await wrapper.get('[data-test="give-2"]').trigger('click');
+      expect(give).toHaveBeenCalledWith(2);
+    });
+
+    it('givenRoundOver_thenNextRoundIsReadyAndTheReadySeatsAreTicked', async () => {
+      const { wrapper, store } = await at({ phase: 'ROUND_OVER', availableActions: ['READY'], readySeats: [2] });
+      expect(wrapper.find('[data-test="ready-2"]').exists()).toBe(true);
+      const ready = vi.spyOn(store, 'ready').mockReturnValue(true);
+      await wrapper.get('[data-test="action-next-round"]').trigger('click');
+      expect(ready).toHaveBeenCalled();
+    });
+
+    it('givenTheNextRoundStarts_thenTheSheetIsGone', async () => {
+      const { wrapper, store } = await at({ phase: 'ROUND_OVER', availableActions: ['READY'] });
+      store.applyEvent({
+        type: 'state-update',
+        state: buildKoboState({ players: NAMED, phase: 'MEMORISING', round: 2, availableActions: ['READY'], lastRound: round() }),
+      });
+      await flushPromises();
+      expect(wrapper.find('[data-test="score-sheet"]').exists()).toBe(false);
+      expect(wrapper.find('[data-test="action-ready"]').exists()).toBe(true);
+    });
+
+    describe('finished', () => {
+      const done = (winners: number[], reason = 'SCORE', overrides = {}, mySeat = 0) => at({
+        phase: 'FINISHED', availableActions: [], outcome: { status: 'FINISHED', winners, reason }, ...overrides,
+      }, mySeat);
+
+      it('givenAReloadIntoAFinishedGame_thenTheEndScreenShowsAtOnceWithoutTheSheet', async () => {
+        const { wrapper } = await done([0]);
+        expect(wrapper.find('[data-cy="end-overlay"]').exists()).toBe(true);
+        expect(wrapper.find('[data-test="score-sheet"]').exists()).toBe(false);
+      });
+
+      it('givenAWinByScore_thenTheWinnerTheLowestTotalAndTheFinalTotalsShow', async () => {
+        const { wrapper } = await done([0]);
+        expect(wrapper.get('.end-title').text()).toBe(messagesEn.endScreen.victory);
+        expect(wrapper.get('[data-test="end-winner"]').text()).toBe('Winner: Alice');
+        expect(wrapper.get('.end-sub').text()).toBe('Lowest total: 10 points');
+        const ranks = wrapper.findAll('[data-test^="final-row-"]').map(r => r.attributes('data-test'));
+        expect(ranks).toEqual(['final-row-0', 'final-row-2', 'final-row-1']);
+      });
+
+      it('givenSeveralWinners_thenTheyAreAllNamed', async () => {
+        const players = [
+          buildKoboPlayer(0, { name: 'Alice', total: 40 }),
+          buildKoboPlayer(1, { name: 'Bob', total: 40 }),
+          buildKoboPlayer(2, { name: 'Cleo', total: 101 }),
+        ];
+        const { wrapper } = await done([0, 1], 'SCORE', { players }, 1);
+        expect(wrapper.get('[data-test="end-winner"]').text()).toBe('Winners: Alice, Bob');
+        expect(wrapper.get('.end-title').text()).toBe(messagesEn.endScreen.victory);
+        expect(wrapper.get('[data-test="final-row-2"] [data-test="pill-over"]').text()).toBe('over 100');
+        expect(wrapper.findAll('[data-test="pill-over"]')).toHaveLength(1);
+      });
+
+      it('givenIDidNotWin_thenTheScreenIsADefeatWithTheWinnersName', async () => {
+        const { wrapper } = await done([2], 'SCORE', {}, 0);
+        expect(wrapper.get('.end-title').text()).toBe(messagesEn.endScreen.defeat);
+        expect(wrapper.get('[data-test="end-winner"]').text()).toBe('Winner: Cleo');
+      });
+
+      it('givenAForfeit_thenTheSubtitleSaysHowTheOtherLeft', async () => {
+        const { wrapper, store } = await done([0], 'FORFEIT');
+        // Bob leaves the table (the roster keeps his name).
+        store.applyEvent({
+          type: 'state-update',
+          state: buildKoboState({
+            phase: 'FINISHED', players: [NAMED[0], NAMED[2]], revealed: true,
+            outcome: { status: 'FINISHED', winners: [0], reason: 'FORFEIT' },
+          }),
+        });
+        store.applyEvent({ type: 'event', eventType: 'FORFEIT', eventData: { loserSeat: 1, reason: 'DISCONNECTED' }, message: '' });
+        await flushPromises();
+        expect(wrapper.get('.end-sub').text()).toBe('Bob disconnected.');
+      });
+
+      it('givenAForfeitWithoutKnownReason_thenTheOthersLeft', async () => {
+        const { wrapper } = await done([0], 'FORFEIT', { players: [NAMED[0]] });
+        expect(wrapper.get('.end-sub').text()).toBe('The other players left the game.');
+      });
+
+      it('givenPlayAgain_thenTheStoreAsksForARematch', async () => {
+        const { wrapper, store } = await done([0]);
+        const again = vi.spyOn(store, 'playAgain').mockImplementation(() => {});
+        await wrapper.get('[data-cy="play-again"]').trigger('click');
+        expect(again).toHaveBeenCalled();
+      });
+
+      it('givenTheRematchIsPending_thenTheButtonSaysSoAndIsDisabled', async () => {
+        const { wrapper, store } = await done([0]);
+        store.rematch = 'pending';
+        await flushPromises();
+        const button = wrapper.get('[data-cy="play-again"]');
+        expect(button.text()).toBe(messagesEn.koboUi.end.rematchPending);
+        expect(button.attributes('disabled')).toBeDefined();
+      });
+
+      it('givenTheRematchFailed_thenTheErrorShows', async () => {
+        const { wrapper, store } = await done([0]);
+        store.rematch = 'failed';
+        await flushPromises();
+        expect(wrapper.get('[data-test="rematch-error"]').text()).toBe(messagesEn.koboUi.end.rematchFailed);
+      });
+    });
+  });
+
   it('givenTheHostRemovedMe_thenLeadsToTheGameSelectionWithTheNotice', async () => {
     const { store, router } = await mountRoom(s => {
       s.applyEvent({ type: 'seat-change', seat: 1 });
