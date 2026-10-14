@@ -81,7 +81,7 @@ The ceiling sits at ~32 WebSockets held by the browser at once (31 scripted + th
 per-proxy socket limit of Chromium (32), which applies because Electron goes through the Cypress proxy; the
 limit itself is inferred from the measured threshold and the Chromium defaults, not read from Electron.
 
-### 2.3 The server handles one client's STOMP frames out of order (proven, not fixed)
+### 2.3 The server handles one client's STOMP frames out of order (proven, fixed in PR #203)
 
 Black-box probe, one client, raw `/ws` endpoint, test profile, during e2e runs (VM load ~12-20):
 
@@ -93,7 +93,7 @@ Black-box probe, one client, raw `/ws` endpoint, test profile, during e2e runs (
 `WebSocketConfiguration` sets neither `StompEndpointRegistry.setPreserveReceiveOrder(true)` nor
 `MessageBrokerRegistry.setPreservePublishOrder(true)` (Spring 7.0.6): inbound frames of one session run in
 parallel on the `clientInboundChannel` pool and outbound frames to one session are not ordered either. The
-specs already work around it: `botTierIs` in `support/commands.ts` ("the two commands travel on separate
+specs worked around it (removed in PR #203 once the order is preserved): `botTierIs` in `support/commands.ts` ("the two commands travel on separate
 broker threads"); the client drops stale lobby views by `lobbyVersion` and stale Kobo states by `version`.
 
 ### 2.4 An update sent before the first STOMP connection is lost (reproduced in Vitest, not fixed)

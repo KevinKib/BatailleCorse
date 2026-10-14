@@ -26,10 +26,15 @@ public class WebSocketConfiguration implements WebSocketMessageBrokerConfigurer 
     public void configureMessageBroker(MessageBrokerRegistry config) {
         config.enableSimpleBroker("/topic");
         config.setApplicationDestinationPrefixes("/app");
+        // Frames of one client are published to it in the order they were produced.
+        config.setPreservePublishOrder(true);
     }
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
+        // Frames of one client are handled in the order it sent them (one burst of commands, one outcome).
+        registry.setPreserveReceiveOrder(true);
+
         registry.addEndpoint("/connect")
                 .setAllowedOriginPatterns("*")
                 .withSockJS();
