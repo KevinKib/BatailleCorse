@@ -46,9 +46,9 @@ describe('game registry', () => {
     expect(findGame('kobo')?.picker).toEqual({ icon: 'pi pi-star', severity: 'info' });
   });
 
-  it('givenThreeMenMorris_thenItIsRegisteredWithoutBotsNorShortcutsAndItsOwnPickerStyle', () => {
+  it('givenThreeMenMorris_thenItIsRegisteredWithBotsButNoShortcutsAndItsOwnPickerStyle', () => {
     const morris = findGame('three-men-morris');
-    expect(morris?.supportsBots).toBe(false);
+    expect(morris?.supportsBots).toBe(true);
     expect(morris?.hotkeys).toBeUndefined();
     expect(morris?.picker).toEqual({ icon: 'pi pi-th-large', severity: 'info' });
   });
