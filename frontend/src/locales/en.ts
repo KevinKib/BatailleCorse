@@ -691,6 +691,7 @@ export const messagesEn: Messages = {
     threeMenMorris: {
       variant: { label: 'Variant', tapatan: 'Tapatan', achi: 'Achi', picaria: 'Picaria' },
       hostColour: { label: 'Host plays', white: 'White', black: 'Black', random: 'Random' },
+      level: { label: 'Level', random: 'Easy', greedy: 'Medium', perfect: 'Expert' },
     },
   },
 };

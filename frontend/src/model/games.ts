@@ -69,8 +69,9 @@ export const GAMES: readonly GameDefinition[] = [
     picker: { icon: 'pi pi-star', severity: 'info' },
   }),
   // The board is operated with Tab, arrows, Enter and Escape: no remappable shortcut, so no gear.
+  // Bots play at three levels (a seat option).
   define('three-men-morris', {
-    supportsBots: false,
+    supportsBots: true,
     picker: { icon: 'pi pi-th-large', severity: 'info' },
   }),
 ];

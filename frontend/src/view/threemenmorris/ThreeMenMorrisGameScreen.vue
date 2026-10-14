@@ -182,7 +182,10 @@ function leaveLobby() {
       :starting="store.starting"
       @start="store.startGame()"
       @leave="leaveLobby"
+      @add-bot="store.addBot()"
+      @remove-bot="seat => store.removeBot(seat)"
       @remove-seat="seat => store.removeSeat(seat)"
+      @set-seat-option="(seat, key, value) => store.setSeatOption(seat, key, value)"
       @rename="name => store.rename(name)"
       @set-option="(key, value) => store.setOption(key, value)">
       <template #options="{ descriptors, options, editable, setOption }">

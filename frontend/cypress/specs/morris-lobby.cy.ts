@@ -1,5 +1,5 @@
 // Three Men's Morris lobby: the shared two-player lobby on the Morris store. The second player is a scripted
-// STOMP client; there is no "Add bot" because the game has no bot.
+// STOMP client (the bot lobby is in morris-bot.cy.ts).
 import { joinAsScriptedPlayer } from '../support/stompPlayer';
 
 const SIZES: Array<[number, number]> = [[375, 667], [1280, 800]];
@@ -16,17 +16,17 @@ function hostLobby(name = 'Alice') {
 }
 
 describe("Three Men's Morris lobby", () => {
-  it('opens a two-seat lobby with no Add bot, Start disabled until the second player joins', () => {
+  it('opens a two-seat lobby with Add bot, Start disabled until the second player joins', () => {
     hostLobby().then((id) => {
       cy.get('[data-test="lobby"]').should('contain.text', "Three Men's Morris");
-      cy.get('[data-test="add-bot"]').should('not.exist');
+      cy.get('[data-test="add-bot"]').should('be.visible');
       cy.get('[data-test="start"]').should('be.disabled');
       cy.get('[data-test="player-count"]').should('contain.text', '1 / 2');
       joinAsScriptedPlayer(id, 'Bob', 'three-men-morris').then(() => {
         cy.get('[data-test="player-count"]').should('contain.text', '2 / 2');
         cy.get('.players li').should('have.length', 2);
         cy.get('[data-test="start"]').should('not.be.disabled');
-        cy.get('[data-test="add-bot"]').should('not.exist');
+        cy.get('[data-test="add-bot"]').should('be.disabled'); // the table is full
       });
     });
   });

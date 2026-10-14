@@ -127,6 +127,12 @@ describe('English messages', () => {
       ['Training', 'Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Champion', 'Challenger', 'Legend']);
   });
 
+  it('givenMorrisBotLevel_thenTheThreeLevelsAreNamedEasyMediumExpert', () => {
+    const level = messagesEn.options.threeMenMorris.level;
+    expect(level.label).toBe('Level');
+    expect(['random', 'greedy', 'perfect'].map(v => level[v])).toEqual(['Easy', 'Medium', 'Expert']);
+  });
+
   it('givenBatailleCorseTableMessages_thenEveryLeafStringIsNonEmptyAndTheBotNameQuotesItsTier', () => {
     for (const text of Object.values(messagesEn.batailleCorseUi)) expect(text).toBeTruthy();
     expect(messagesEn.batailleCorseUi.botWithTier).toContain('{bot}');

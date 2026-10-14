@@ -236,6 +236,7 @@ export interface OptionsMessages {
   threeMenMorris: {
     variant: OptionTexts;              // `label`, then `tapatan` / `achi` / `picaria`
     hostColour: OptionTexts;           // `label`, then `white` / `black` / `random`
+    level: OptionTexts;                // a bot seat's level: `label`, then `random` (Easy) / `greedy` (Medium) / `perfect` (Expert)
   };
 }
 
