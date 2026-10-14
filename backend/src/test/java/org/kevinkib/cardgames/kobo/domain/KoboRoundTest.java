@@ -13,6 +13,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.kevinkib.cardgames.kobo.domain.KoboBuilder.aKobo;
 import static org.kevinkib.cardgames.kobo.domain.KoboBuilder.ref;
@@ -132,6 +133,24 @@ class KoboRoundTest {
         assertThat(kobo.totals().get(seat(1)), is(33));
         assertThat(kobo.totals().get(seat(2)), is(32));
         assertThat(kobo.lastRoundResult().get().giftTo(), is(seat(2)));
+    }
+
+    @Test
+    void whileTheAnnouncerChoosesTheGift_theProvisionalScoresAreThere() throws Exception {
+        Kobo kobo = atTurnEnd().build();
+        kobo.announceKobo(seat(0));
+        playQuickTurn(kobo, 1);
+        playQuickTurn(kobo, 2);
+
+        assertThat(kobo.phase(), is(Phase.GIFT));
+        var provisional = kobo.lastRoundResult().get();
+        assertThat(provisional.announcer(), is(seat(0)));
+        assertThat(provisional.announcerWon(), is(true));
+        assertThat(provisional.giftTo(), nullValue());
+        assertThat(provisional.handValues().get(seat(1)), is(33));
+        assertThat(provisional.roundPoints().get(seat(0)), is(0));
+        // Nothing is scored yet: the totals the table holds are untouched.
+        assertThat(kobo.totals().get(seat(1)), is(0));
     }
 
     @Test

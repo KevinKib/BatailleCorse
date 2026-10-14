@@ -22,6 +22,24 @@ public final class RoundScoring {
                 .allMatch(e -> e.getValue() >= mine);
     }
 
+    /**
+     * The round as scored before a winning announcer has chosen who takes the 10 points: the hand values and the
+     * round points, the totals as they stand plus those points, no gift and no reset yet. The final {@link #score}
+     * replaces it once the gift is given.
+     */
+    public static RoundResult provisional(Map<PlayerId, Integer> handValues, PlayerId announcer,
+                                          Map<PlayerId, Integer> totalsBefore) {
+        Map<PlayerId, Integer> roundPoints = new LinkedHashMap<>();
+        Map<PlayerId, Integer> totals = new LinkedHashMap<>();
+        for (Map.Entry<PlayerId, Integer> hand : handValues.entrySet()) {
+            int points = hand.getKey().equals(announcer) ? 0 : hand.getValue();
+            roundPoints.put(hand.getKey(), points);
+            totals.put(hand.getKey(), totalsBefore.get(hand.getKey()) + points);
+        }
+        return new RoundResult(Map.copyOf(handValues), roundPoints, Map.copyOf(totalsBefore), totals,
+                announcer, announcerWins(handValues, announcer), null, Set.of());
+    }
+
     public static RoundResult score(Map<PlayerId, Integer> handValues, PlayerId announcer, PlayerId giftTo,
                                     Map<PlayerId, Integer> totalsBefore) {
         boolean won = announcer != null && announcerWins(handValues, announcer);

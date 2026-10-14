@@ -177,6 +177,12 @@ class KoboDtoTest {
         }
         assertThat(dto.availableActions().contains("GIVE_TEN"), is(false));
         assertThat(KoboDto.forViewer(kobo, seat(0)).availableActions(), contains("GIVE_TEN"));
+        // The scores are shown while the gift is chosen: provisional, with nobody receiving yet.
+        assertThat(dto.lastRound(), notNullValue());
+        assertThat(dto.lastRound().announcer(), is(0));
+        assertThat(dto.lastRound().announcerWon(), is(true));
+        assertThat(dto.lastRound().giftTo(), nullValue());
+        assertThat(dto.lastRound().players(), hasSize(3));
 
         kobo.giveTen(seat(0), seat(1));
         KoboDto over = KoboDto.forViewer(kobo, seat(1));
