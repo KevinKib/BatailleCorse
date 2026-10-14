@@ -202,7 +202,7 @@ describe('shared screen messages', () => {
   });
 
   it('givenTheEndAndDisconnectScreens_thenTheirEnglishWordingIsTheOneTheyAlwaysHad', () => {
-    expect(messagesEn.endScreen).toEqual({ victory: 'VICTORY', defeat: 'DEFEAT', backToHome: 'Back to home' });
+    expect(messagesEn.endScreen).toEqual({ victory: 'VICTORY', defeat: 'DEFEAT', draw: 'DRAW', backToHome: 'Back to home' });
     expect(messagesEn.endGame).toEqual({
       won: '{opponent} won.',
       resigned: '{opponent} resigned.',
@@ -270,5 +270,19 @@ describe("Three Men's Morris messages", () => {
     expect(ui.end.blockedWon).toContain('{player}');
     expect(ui.end.blockedLost).toContain('{player}');
     expect(ui.end.winner).toBe('Winner: {player}');
+  });
+
+  it('givenTheDrawMessages_thenOfferAnswersRepetitionAndEndReasonsAreWorded', () => {
+    const draw = messagesEn.threeMenMorrisUi.draw;
+    expect(draw.offer).toBe('Offer a draw');
+    expect(draw.offered).toBe('Draw offered');
+    expect(draw.incoming).toBe('{player} offers a draw');
+    expect(draw.accept).toBe('Accept draw');
+    expect(draw.decline).toBe('Decline');
+    expect(draw.repetition).toBe('This position has now appeared twice. A third time is a draw.');
+    expect(draw.offeredBy).toContain('{player}');
+    expect(draw.declinedBy).toContain('{player}');
+    expect(draw.agreed).toBe('Draw agreed.');
+    expect(draw.byRepetition).toBe('Draw by repetition: the same position occurred three times.');
   });
 });

@@ -137,6 +137,7 @@ export interface GamePickerMessages {
 export interface EndScreenMessages {
   victory: string;
   defeat: string;
+  draw: string;                        // title of a game that ends with no winner
   backToHome: string;
 }
 
@@ -440,6 +441,19 @@ export interface ThreeMenMorrisUiMessages {
     moved: string;                     // '{player}', '{from}', '{to}': live region after a move
     forfeited: string;                 // '{player}'
     offline: string;                   // my own connection is down; the socket retries by itself
+  };
+  draw: {
+    offer: string;                     // button: I propose a draw
+    offered: string;                   // the same button, disabled, while my offer waits for an answer
+    incoming: string;                  // '{player}': title of the banner of an offer made to me
+    incomingHint: string;
+    accept: string;
+    decline: string;
+    repetition: string;                // the position has occurred twice
+    offeredBy: string;                 // '{player}': live region
+    declinedBy: string;                // '{player}': live region
+    agreed: string;                    // end screen subtitle
+    byRepetition: string;              // end screen subtitle
   };
   end: {
     winner: string;                    // '{player}': names the winner on the end screen

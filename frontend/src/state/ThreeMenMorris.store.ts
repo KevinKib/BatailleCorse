@@ -3,7 +3,7 @@ import { ref, computed, watch } from 'vue';
 
 import webSocketService from '../service/WebSocketService';
 import MorrisSession, { type MorrisSessionEvent } from '../application/threemenmorris/MorrisSession';
-import type { MorrisColour, MorrisEventData, MorrisPhase, MorrisState, MorrisVariantKey, MorrisView } from '../model/threemenmorris/MorrisState';
+import type { MorrisColour, MorrisDrawEventData, MorrisEventData, MorrisPhase, MorrisState, MorrisVariantKey, MorrisView } from '../model/threemenmorris/MorrisState';
 import type { LobbyView } from '../model/lobby/LobbyView';
 import { colourOf as colourOfSeat, onPoint, selectable, targets } from '../model/threemenmorris/board';
 import { geometryOf, variantKeyOf, type MorrisGeometry } from '../model/threemenmorris/geometries';
@@ -20,6 +20,17 @@ function isMoveData(data: unknown): data is MorrisEventData {
   return action === 'PLACE' || action === 'MOVE';
 }
 
+function isDrawData(data: unknown): data is MorrisDrawEventData {
+  const action = (data as { action?: unknown } | null)?.action;
+  return action === 'OFFER_DRAW' || action === 'DECLINE_DRAW';
+}
+
+/** What the live region says about a draw: an offer, or the refusal of one. */
+export interface MorrisDrawNotice {
+  kind: 'offered' | 'declined';
+  seat: number;
+}
+
 export const useThreeMenMorrisStore = defineStore('three-men-morris-store', () => {
   const state = ref<MorrisView | null>(null);
   const gameId = ref<string | null>(null);
@@ -28,6 +39,8 @@ export const useThreeMenMorrisStore = defineStore('three-men-morris-store', () =
   const selected = ref<number | null>(null);
   // What the last PLACE / MOVE (or the GAME_OVER it caused) did, for the live region and the board.
   const lastMove = ref<MorrisEventData | null>(null);
+  // The last draw offer or refusal, until the next move (which ends any offer) or a new game.
+  const drawNotice = ref<MorrisDrawNotice | null>(null);
 
   const game = computed<MorrisState | null>(() =>
     state.value && state.value.started ? state.value : null);
@@ -56,7 +69,7 @@ export const useThreeMenMorrisStore = defineStore('three-men-morris-store', () =
         selected.value = null;
         state.value = event.state;
         room.onStateUpdate(event.state.started);
-        if (!event.state.started) lastMove.value = null;
+        if (!event.state.started) { lastMove.value = null; drawNotice.value = null; }
         break;
       case 'game-id-change': gameId.value = event.gameId; break;
       case 'error':
@@ -66,6 +79,7 @@ export const useThreeMenMorrisStore = defineStore('three-men-morris-store', () =
         state.value = null;
         selected.value = null;
         lastMove.value = null;
+        drawNotice.value = null;
         gameId.value = null;
         room.onRemoved();
         break;
@@ -73,6 +87,12 @@ export const useThreeMenMorrisStore = defineStore('three-men-morris-store', () =
       case 'event':
         if (isMoveData(event.eventData)) {
           lastMove.value = event.eventData;
+          drawNotice.value = null;
+        } else if (isDrawData(event.eventData)) {
+          drawNotice.value = {
+            kind: event.eventData.action === 'OFFER_DRAW' ? 'offered' : 'declined',
+            seat: event.eventData.seat,
+          };
         } else {
           if (event.eventType === 'FORFEIT') room.onForfeit(event.eventData as ForfeitEventData);
           presence.applyPresenceEvent(event.eventType, event.eventData);
@@ -85,6 +105,11 @@ export const useThreeMenMorrisStore = defineStore('three-men-morris-store', () =
   const isOver = computed(() => game.value?.outcome.status === 'FINISHED');
   const isMyTurn = computed(() =>
     game.value !== null && !isOver.value && game.value.currentSeat === mySeat.value);
+  // A finished game with no winner: agreed, or the same position three times.
+  const isDraw = computed(() => {
+    const outcome = game.value?.outcome;
+    return outcome?.status === 'FINISHED' && outcome.winner === null;
+  });
   const iWon = computed(() => {
     const outcome = game.value?.outcome;
     return outcome?.status === 'FINISHED' && outcome.winner === mySeat.value;
@@ -102,6 +127,19 @@ export const useThreeMenMorrisStore = defineStore('three-men-morris-store', () =
     if (move.action === 'PLACE') return move.point !== null ? [move.point] : [];
     return move.from !== null && move.to !== null ? [move.from, move.to] : [];
   });
+  // The draw commands I may send. Absent means OFFER_DRAW in the movement phase (the server writes only the rest).
+  const drawActions = computed<string[]>(() => {
+    const current = game.value;
+    if (!current || isOver.value) return [];
+    return current.drawActions ?? (current.phase === 'MOVEMENT' ? ['OFFER_DRAW'] : []);
+  });
+  const canOfferDraw = computed(() => drawActions.value.includes('OFFER_DRAW'));
+  const canAnswerDraw = computed(() => drawActions.value.includes('ACCEPT_DRAW'));
+  const drawOfferedBy = computed<number | null>(() => game.value?.drawOffer?.seat ?? null);
+  const myDrawOfferPending = computed(() => drawOfferedBy.value !== null && drawOfferedBy.value === mySeat.value);
+  const incomingDrawOffer = computed(() => drawOfferedBy.value !== null && drawOfferedBy.value !== mySeat.value && !isOver.value);
+  // The server writes the count only from 2: a position seen twice is one move away from a draw.
+  const repeatedTwice = computed(() => !isOver.value && game.value?.repetitions === 2);
   const phase = computed<'connecting' | 'lobby' | 'playing' | 'finished'>(() => {
     if (!state.value) return 'connecting';
     if (!state.value.started) return 'lobby';
@@ -119,10 +157,17 @@ export const useThreeMenMorrisStore = defineStore('three-men-morris-store', () =
     state.value = null;
     selected.value = null;
     lastMove.value = null;
+    drawNotice.value = null;
     gameId.value = null;
   });
 
   const playAgain = () => room.playAgain(() => { presence.reset(); selected.value = null; });
+
+  // A draw command the socket cannot carry is dropped: the screen shows the lost connection, and the buttons stay.
+  const sendDraw = (send: () => void) => () => { try { send(); } catch { /* socket down */ } };
+  const offerDraw = sendDraw(() => session.offerDraw());
+  const acceptDraw = sendDraw(() => session.acceptDraw());
+  const declineDraw = sendDraw(() => session.declineDraw());
 
   function clearSelection() { selected.value = null; }
 
@@ -148,10 +193,12 @@ export const useThreeMenMorrisStore = defineStore('three-men-morris-store', () =
 
   return {
     state, game, lobby, lobbyError, removedByHost, starting, gameId, mySeat, rematch, lastForfeit,
-    selected, lastMove, gamePhase,
+    selected, lastMove, drawNotice, gamePhase,
     disconnections: presence.disconnections,
     liveDisconnections: presence.liveDisconnections,
     forfeitNotice: presence.forfeitNotice,
+    isDraw, drawActions, canOfferDraw, canAnswerDraw, drawOfferedBy, myDrawOfferPending, incomingDrawOffer, repeatedTwice,
+    offerDraw, acceptDraw, declineDraw,
     isMyTurn, iWon, myColour, colourOf, variant, geometry, opponentLastMove, phase, selectablePoints, targetPoints,
     applyEvent, pointClicked, clearSelection,
     create: (name?: string) => session.create(name),

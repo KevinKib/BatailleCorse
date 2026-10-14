@@ -203,6 +203,19 @@ export const messagesEn: Messages = {
       forfeited: '{player} forfeited',
       offline: 'Connection lost. Reconnecting…',
     },
+    draw: {
+      offer: 'Offer a draw',
+      offered: 'Draw offered',
+      incoming: '{player} offers a draw',
+      incomingHint: 'Accept to end the game as a draw, or keep playing.',
+      accept: 'Accept draw',
+      decline: 'Decline',
+      repetition: 'This position has now appeared twice. A third time is a draw.',
+      offeredBy: '{player} offers a draw.',
+      declinedBy: '{player} declined the draw.',
+      agreed: 'Draw agreed.',
+      byRepetition: 'Draw by repetition: the same position occurred three times.',
+    },
     end: {
       winner: 'Winner: {player}',
       youWonLine: 'You lined up three.',
@@ -589,6 +602,7 @@ export const messagesEn: Messages = {
   endScreen: {
     victory: 'VICTORY',
     defeat: 'DEFEAT',
+    draw: 'DRAW',
     backToHome: 'Back to home',
   },
   endGame: {

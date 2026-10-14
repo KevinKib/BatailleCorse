@@ -1,8 +1,8 @@
 <template>
   <div class="end-overlay" data-cy="end-overlay">
-    <div :class="['end-card', didIWin ? 'end-card--victory' : 'end-card--defeat']">
-      <div v-if="didIWin" class="end-trophy" data-cy="victory-flourish">🏆</div>
-      <h1 class="end-title">{{ didIWin ? ui.victory : ui.defeat }}</h1>
+    <div :class="['end-card', `end-card--${outcome}`]">
+      <div v-if="outcome === 'victory'" class="end-trophy" data-cy="victory-flourish">🏆</div>
+      <h1 class="end-title">{{ ui[outcome] }}</h1>
       <p v-if="winnerLine" class="end-winner" data-test="end-winner">{{ winnerLine }}</p>
       <p class="end-sub">{{ subtitle }}</p>
       <!-- Extra content under the subtitle (a game's scores); nothing is rendered without it. -->
@@ -28,12 +28,15 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import { Button } from 'primevue';
 import type { RematchButton } from '../model/RematchButton';
 import { useI18n } from '../composables/useI18n';
 
 interface Props {
   didIWin: boolean;
+  /** How the game ended for me; defaults to victory or defeat from `didIWin`. A draw has no winner. */
+  result?: 'victory' | 'defeat' | 'draw';
   subtitle: string;
   /** Names who won ("Winner: Alice"); omitted by games that do not need it. */
   winnerLine?: string;
@@ -46,7 +49,8 @@ interface Emits {
   playAgain: [];
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
+const outcome = computed(() => props.result ?? (props.didIWin ? 'victory' : 'defeat'));
 const ui = useI18n().endScreen;
 const emit = defineEmits<Emits>();
 </script>
@@ -148,6 +152,11 @@ const emit = defineEmits<Emits>();
 
 .end-card--defeat .end-title {
   color: #cbd5d1;
+}
+
+/* Draw: neutral, no flourish and no win or loss colour. */
+.end-card--draw .end-title {
+  color: #d9dedb;
 }
 
 @media (prefers-reduced-motion: reduce) {
