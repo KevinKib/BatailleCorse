@@ -54,11 +54,14 @@ function makeSession(awaitAnimation: () => Promise<void> = () => Promise.resolve
   const presence: string[] = [];
   const teardown: string[] = [];
   let seatFn: ((r: any) => void) | null = null;
+  let connectedFn: (() => void) | null = null;
 
   const webSocket: WebSocketPort = {
     publish: (dest, body) => published.push({ dest, body }),
     subscribeToGame: (id) => subscribed.push(id),
-    subscribeToSeat: (gameId, seat, token, onMessage) => { seatSubs.push({ gameId, seat, token }); seatFn = onMessage; },
+    subscribeToSeat: (gameId, seat, token, onMessage, onConnected) => {
+      seatSubs.push({ gameId, seat, token }); seatFn = onMessage; connectedFn = onConnected ?? null;
+    },
     unsubscribeFromSeat: () => { teardown.push('seat'); seatFn = null; },
     unsubscribeFromGame: () => { teardown.push('game'); },
     setPresence: (body) => presence.push(body),
@@ -75,6 +78,7 @@ function makeSession(awaitAnimation: () => Promise<void> = () => Promise.resolve
   return {
     session, events, published, subscribed, seatSubs, presence, teardown,
     fireSeat: (r: any) => seatFn?.(r),
+    connect: () => connectedFn?.(),
   };
 }
 
@@ -520,5 +524,43 @@ describe('GameSession', () => {
       await session.onResponse(buildResponse({ eventType, eventData }));
       expect(events).toContainEqual({ type: 'presence-event', eventType, eventData });
     });
+  });
+});
+
+describe('GameSession re-hydrates once the seat subscription is live', () => {
+  beforeEach(() => { localStorage.clear(); });
+  afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks(); });
+
+  it('picks up a lobby view broadcast before the first connection', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(respond(lobbyView({ lobbyVersion: 1 })))
+      .mockResolvedValueOnce(respond(lobbyView({ lobbyVersion: 2, canStart: false })));
+    vi.stubGlobal('fetch', fetchMock);
+    const { session, events, connect } = makeSession();
+    session.restore('game-1', 0, 'tok-0');
+    await session.hydrate();
+    connect();
+    await vi.waitFor(() => expect(events.filter(e => e.type === 'lobby-update')).toHaveLength(2));
+  });
+
+  it('reloads a running game after a reconnection', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(respond(gameJson()))
+      .mockResolvedValue(respond({ players: [] }));
+    vi.stubGlobal('fetch', fetchMock);
+    const { session, events, connect } = makeSession();
+    session.restore('game-1', 0, 'tok-0');
+    connect();
+    await vi.waitFor(() => expect(events.filter(e => e.type === 'state-update')).toHaveLength(1));
+  });
+
+  it('does nothing once the player has left', () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    const { session, connect } = makeSession();
+    session.restore('game-1', 0, 'tok-0');
+    session.leave();
+    connect();
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

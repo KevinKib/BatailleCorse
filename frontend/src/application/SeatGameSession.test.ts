@@ -3,7 +3,7 @@ import SeatGameSession, {
   type SeatGameSessionConfig, type SeatGameSessionEvent, type SeatGameWebSocketPort,
 } from './SeatGameSession';
 
-interface FakeView { started: boolean; mySeat?: number; lobbyVersion?: number }
+interface FakeView { started: boolean; mySeat?: number; lobbyVersion?: number; version?: number }
 interface FakeResponse { eventType: string; success?: boolean; message: string; eventData?: unknown; state?: FakeView }
 
 // A game that is none of the real ones: every URL, destination and storage key comes from this config.
@@ -30,16 +30,21 @@ function make() {
   const published: { dest: string; body?: string }[] = [];
   const teardown: string[] = [];
   let seatFn: ((r: FakeResponse) => void) | null = null;
+  let connectedFn: (() => void) | null = null;
   const webSocket: SeatGameWebSocketPort = {
     publish: (dest, body) => published.push({ dest, body }),
-    subscribeToSeat: (_gameId, _seat, _token, onMessage) => { seatFn = onMessage; },
+    subscribeToSeat: (_gameId, _seat, _token, onMessage, onConnected) => { seatFn = onMessage; connectedFn = onConnected ?? null; },
     setPresence: () => {},
     unsubscribeFromSeat: () => { teardown.push('seat'); },
     unsubscribeFromGame: () => { teardown.push('game'); },
     clearPresence: () => { teardown.push('presence'); },
   };
   const session = new FakeSession(webSocket, e => events.push(e));
-  return { session, events, published, teardown, fireSeat: (r: FakeResponse) => seatFn?.(r) };
+  return {
+    session, events, published, teardown, fireSeat: (r: FakeResponse) => seatFn?.(r),
+    // The broker accepted the seat subscription (every connection, the first included).
+    connect: () => connectedFn?.(),
+  };
 }
 
 describe('SeatGameSession built from a configuration', () => {
@@ -118,5 +123,65 @@ describe('SeatGameSession built from a configuration', () => {
     expect(published).toHaveLength(1);
     expect(teardown).toEqual(['seat', 'game', 'presence']);
     expect(localStorage.getItem('fake:tokens:g1')).toBeNull();
+  });
+});
+
+
+describe('SeatGameSession re-hydrates once the seat subscription is live', () => {
+  beforeEach(() => { localStorage.clear(); });
+  afterEach(() => { vi.restoreAllMocks(); });
+
+  const lobby = (lobbyVersion: number): FakeView => ({ started: false, mySeat: 0, lobbyVersion });
+  const stateUpdates = (events: SeatGameSessionEvent<FakeView>[]) =>
+    events.filter(e => e.type === 'state-update').map(e => (e as { state: FakeView }).state.lobbyVersion);
+
+  it('picks up a view broadcast between the REST hydrate and the first connection (v2 was lost)', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(respond(lobby(1)))
+      .mockResolvedValueOnce(respond(lobby(2)));
+    vi.stubGlobal('fetch', fetchMock);
+    const { session, events, connect } = make();
+    session.restore('g1', 0, 'tok');
+    await session.hydrate();
+    expect(stateUpdates(events)).toEqual([1]);
+
+    // The server broadcast v2 while SockJS was connecting; nobody was subscribed to hear it.
+    connect();
+    await vi.waitFor(() => expect(stateUpdates(events)).toEqual([1, 2]));
+  });
+
+  it('does not overwrite a newer view with the older answer of the connection hydrate', async () => {
+    let answer!: (r: unknown) => void;
+    const fetchMock = vi.fn().mockImplementationOnce(() => new Promise(r => { answer = r; }));
+    vi.stubGlobal('fetch', fetchMock);
+    const { session, events, connect, fireSeat } = make();
+    session.restore('g1', 0, 'tok');
+    connect();
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    fireSeat({ eventType: 'LOBBY', message: '', state: lobby(3) });
+    answer(respond(lobby(2)));
+    await new Promise(r => setTimeout(r, 0));
+    expect(stateUpdates(events)).toEqual([3]);
+  });
+
+  it('does nothing once the player has left', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    const { session, connect } = make();
+    session.restore('g1', 0, 'tok');
+    session.leave();
+    connect();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('drops a started state older than the one held, and accepts the same version', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(respond({ started: true, mySeat: 0, version: 4 })));
+    const { session, events, fireSeat } = make();
+    session.restore('g1', 0, 'tok');
+    fireSeat({ eventType: 'MOVE', message: '', state: { started: true, mySeat: 0, version: 5 } });
+    await session.hydrate();
+    expect(events.filter(e => e.type === 'state-update')).toHaveLength(1);
+    fireSeat({ eventType: 'MOVE', message: '', state: { started: true, mySeat: 0, version: 5 } });
+    expect(events.filter(e => e.type === 'state-update')).toHaveLength(2);
   });
 });

@@ -14,7 +14,9 @@ import { useLobbyActions } from '../composables/useLobbyActions';
 export interface WebSocketPort {
   publish(destination: string, body?: string): void;
   subscribeToGame(gameId: string): void;
-  subscribeToSeat(gameId: string, seat: number, token: string, onMessage: (response: any) => void): void;
+  subscribeToSeat(
+    gameId: string, seat: number, token: string, onMessage: (response: any) => void, onConnected?: () => void,
+  ): void;
   unsubscribeFromSeat(): void;
   unsubscribeFromGame(): void;
   setPresence(body: string): void;
@@ -157,13 +159,24 @@ export default class GameSession {
     this.started = false;
     this.over = false;
     this.left = false;
-    this.webSocket.subscribeToSeat(gameId, seat, token, r => this.onSeatResponse(r));
+    this.webSocket.subscribeToSeat(gameId, seat, token, r => this.onSeatResponse(r), () => this.onConnected());
     this.webSocket.subscribeToGame(gameId);
     // Tell the server which seat this connection occupies, so a socket drop is attributable to it
     // (disconnect grace timer, then forfeit). The WebSocketService re-asserts presence on reconnect.
     this.webSocket.setPresence(JSON.stringify({ gameId, token }));
     this.callbacks.onEvent({ type: 'game-id-change', gameId });
     this.callbacks.onEvent({ type: 'my-index-change', playerIndex: seat });
+  }
+
+  /**
+   * The seat channel is live (after every connection, the first included): reload what was broadcast before
+   * it was. A lobby view is version-guarded. A running game has no version, so it is not reloaded over events
+   * still animating (that would replace the state under them); the next event brings it up to date.
+   */
+  private onConnected(): void {
+    if (this.left) return;
+    if (this.started && (this.isProcessingQueue || this.eventQueue.length > 0)) return;
+    void this.hydrate();
   }
 
   private identity(): { gameId: string; token: string } | null {

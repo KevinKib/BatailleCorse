@@ -1,8 +1,9 @@
-import { onMounted } from 'vue';
+import { onBeforeUnmount, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import type { GameDefinition } from '../model/games';
 import type { HydrateResult } from '../application/SeatGameSession';
 import { readStoredTokens } from './readStoredTokens';
+import { hydrateWithRetry } from './hydrateWithRetry';
 
 /** The two store calls the bootstrap needs. */
 export interface SeatGameBootstrapStore {
@@ -28,6 +29,8 @@ export function useSeatGameBootstrap(
   store: SeatGameBootstrapStore,
 ) {
   const router = useRouter();
+  let unmounted = false;
+  onBeforeUnmount(() => { unmounted = true; });
 
   onMounted(async () => {
     const session = resolveSeatSession(tokenKeyPrefix, gameId);
@@ -37,8 +40,8 @@ export function useSeatGameBootstrap(
       return;
     }
     store.restore(gameId, session.seat, session.token);
-    const result = await store.hydrate();
-    // A server that fails or cannot be reached (`unavailable`) proves nothing: keep the token and the room page.
+    const result = await hydrateWithRetry(() => store.hydrate(), () => unmounted);
+    // A server that fails or cannot be reached (`unavailable`, after a few tries) proves nothing: keep the token and the room page.
     if (result === 'gone' || result === 'lost') {
       // The game is gone (404) or the stored token no longer resolves (403, the seat was lost): forget the
       // token and offer a new game, saying which of the two happened.

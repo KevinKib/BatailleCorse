@@ -12,7 +12,7 @@ class WebSocketService {
   private currentGameId: string | null = null;
   private currentGameSubscription: { unsubscribe: () => void } | null = null;
   private currentPresence: string | null = null;
-  private seatSubscription: { gameId: string; seat: number; token: string; onMessage: (r: any) => void } | null = null;
+  private seatSubscription: { gameId: string; seat: number; token: string; onMessage: (r: any) => void; onConnected?: () => void } | null = null;
   private currentSeatSub: { unsubscribe: () => void } | null = null;
   // Commands sent before the first connection came up. A lobby is shown from REST data, so a player can act
   // while SockJS is still connecting: those commands wait for the connection instead of failing.
@@ -55,6 +55,10 @@ class WebSocketService {
         const waiting = this.pending;
         this.pending = [];
         waiting.forEach(({ destination, body }) => this.publish(destination, body));
+
+        // Whatever was broadcast before this subscription existed (the first connection, or an offline spell)
+        // is lost: let the owner of the seat reload its state now that the channel is live.
+        this.seatSubscription?.onConnected?.();
       },
       onWebSocketClose: () => {
         // Fires on every close, including a failed reconnect attempt: we are offline until onConnect.
@@ -75,8 +79,14 @@ class WebSocketService {
     this.client = stompClient;
   }
 
-  public subscribeToSeat(gameId: string, seat: number, token: string, onMessage: (response: any) => void) {
-    this.seatSubscription = { gameId, seat, token, onMessage };
+  /**
+   * `onConnected` is called after every STOMP connection once the seat channel is subscribed, the first one
+   * included (not when subscribing on an already live connection).
+   */
+  public subscribeToSeat(
+    gameId: string, seat: number, token: string, onMessage: (response: any) => void, onConnected?: () => void,
+  ) {
+    this.seatSubscription = { gameId, seat, token, onMessage, onConnected };
     if (this.client?.connected) {
       this.doSubscribeToSeat();
     }

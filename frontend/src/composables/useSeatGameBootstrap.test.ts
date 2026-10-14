@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import type { HydrateResult } from '../application/SeatGameSession';
 import { flushPromises, mount } from '@vue/test-utils';
 import { defineComponent, h } from 'vue';
 import { createMemoryHistory } from 'vue-router';
@@ -79,10 +80,38 @@ describe('useSeatGameBootstrap', () => {
       expect(localStorage.getItem('fake:tokens:g1')).toBeNull();
     });
 
-  it('on unavailable keeps the token and the room page', async () => {
-    localStorage.setItem('fake:tokens:g1', JSON.stringify({ 0: 'tok' }));
-    const router = await mountAtRoom('g1', fakeStore(async () => 'unavailable'));
-    expect(router.currentRoute.value.path).toBe('/games/bullshit/room/g1');
-    expect(localStorage.getItem('fake:tokens:g1')).not.toBeNull();
+  describe('on unavailable', () => {
+    beforeEach(() => { vi.useFakeTimers(); });
+    afterEach(() => { vi.useRealTimers(); });
+
+    it('tries again and lands on the room once the server answers', async () => {
+      localStorage.setItem('fake:tokens:g1', JSON.stringify({ 0: 'tok' }));
+      const answers: HydrateResult[] = ['unavailable', 'unavailable', 'ok'];
+      const store = fakeStore(async () => answers.shift() ?? 'ok');
+      const router = await mountAtRoom('g1', store);
+      expect(store.hydrate).toHaveBeenCalledTimes(1);
+      await vi.advanceTimersByTimeAsync(3000);
+      expect(store.hydrate).toHaveBeenCalledTimes(3);
+      expect(router.currentRoute.value.path).toBe('/games/bullshit/room/g1');
+    });
+
+    it('gives up after four attempts, keeping the token and the room page', async () => {
+      localStorage.setItem('fake:tokens:g1', JSON.stringify({ 0: 'tok' }));
+      const store = fakeStore(async () => 'unavailable');
+      const router = await mountAtRoom('g1', store);
+      await vi.advanceTimersByTimeAsync(60_000);
+      expect(store.hydrate).toHaveBeenCalledTimes(4);
+      expect(router.currentRoute.value.path).toBe('/games/bullshit/room/g1');
+      expect(localStorage.getItem('fake:tokens:g1')).not.toBeNull();
+    });
+
+    it('still leaves for the game home when a retry learns the game is gone', async () => {
+      localStorage.setItem('fake:tokens:g1', JSON.stringify({ 0: 'tok' }));
+      const answers: HydrateResult[] = ['unavailable', 'gone'];
+      const router = await mountAtRoom('g1', fakeStore(async () => answers.shift() ?? 'gone'));
+      await vi.advanceTimersByTimeAsync(1000);
+      expect(router.currentRoute.value.query.gone).toBe('1');
+      expect(localStorage.getItem('fake:tokens:g1')).toBeNull();
+    });
   });
 });
