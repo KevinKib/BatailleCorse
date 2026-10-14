@@ -75,6 +75,84 @@ describe('ThreeMenMorris store', () => {
     expect(store.myColour).toBe('BLACK');
   });
 
+  describe('colours and variant', () => {
+    const hostBlack = (overrides: Partial<MorrisState> = {}) => morrisState({
+      whiteSeat: 1,
+      currentSeat: 1,
+      players: [
+        { seat: 0, name: 'Alice', current: false, piecesToPlace: 3, colour: 'BLACK' },
+        { seat: 1, name: 'Bob', current: true, piecesToPlace: 3, colour: 'WHITE' },
+      ],
+      ...overrides,
+    });
+
+    it('myColour is Black for the host when the host plays Black, and White for the guest', () => {
+      const store = seated(0);
+      store.applyEvent({ type: 'state-update', state: hostBlack() });
+      expect(store.myColour).toBe('BLACK');
+      expect(store.colourOf(0)).toBe('BLACK');
+      expect(store.colourOf(1)).toBe('WHITE');
+      store.applyEvent({ type: 'seat-change', seat: 1 });
+      expect(store.myColour).toBe('WHITE');
+      expect(store.isMyTurn).toBe(true);
+    });
+
+    it('keeps seat 0 White when the server leaves the colour fields out', () => {
+      const store = seated(0);
+      store.applyEvent({ type: 'state-update', state: morrisState() });
+      expect(store.colourOf(0)).toBe('WHITE');
+      expect(store.colourOf(1)).toBe('BLACK');
+    });
+
+    it('reads an absent variant as Tapatan and exposes the variant of the game', () => {
+      const store = seated(0);
+      store.applyEvent({ type: 'state-update', state: morrisState() });
+      expect(store.variant).toBe('tapatan');
+      store.applyEvent({ type: 'state-update', state: morrisState({ variant: 'achi' }) });
+      expect(store.variant).toBe('achi');
+    });
+
+    it('offers the points of legalPlacements: the Picaria centre is never proposed while placing', () => {
+      const store = seated(0);
+      store.applyEvent({
+        type: 'state-update',
+        state: morrisState({ variant: 'picaria', legalPlacements: [0, 1, 2, 3, 5, 6, 7, 8] }),
+      });
+      expect(store.selectablePoints).not.toContain(4);
+      expect(store.selectablePoints).toHaveLength(8);
+    });
+  });
+
+  it('setOption sends the lobby option to the server, nothing is changed locally', () => {
+    const store = seated(0);
+    store.restore('g1', 0, 'tok-0');
+    store.applyEvent({ type: 'state-update', state: lobbyView({ options: { variant: 'tapatan' } }) });
+    const publish = vi.spyOn(webSocketService, 'publish').mockImplementation(() => {});
+    store.setOption('variant', 'achi');
+    expect(publish).toHaveBeenCalledWith('/app/lobby/setOptions',
+      JSON.stringify({ gameId: 'g1', token: 'tok-0', values: { variant: 'achi' } }));
+    expect(store.lobby!.options).toEqual({ variant: 'tapatan' });
+  });
+
+  describe('last opponent move', () => {
+    it('marks the opponent placement, then drops it when I play', () => {
+      const store = seated(0);
+      store.applyEvent({ type: 'state-update', state: morrisState() });
+      expect(store.opponentLastMove).toEqual([]);
+      store.applyEvent({ type: 'event', eventType: 'PLACE', eventData: { seat: 1, action: 'PLACE', point: 3, from: null, to: null } });
+      expect(store.opponentLastMove).toEqual([3]);
+      store.applyEvent({ type: 'event', eventType: 'PLACE', eventData: { seat: 0, action: 'PLACE', point: 4, from: null, to: null } });
+      expect(store.opponentLastMove).toEqual([]);
+    });
+
+    it('marks both ends of an opponent move', () => {
+      const store = seated(0);
+      store.applyEvent({ type: 'state-update', state: movementState() });
+      store.applyEvent({ type: 'event', eventType: 'MOVE', eventData: { seat: 1, action: 'MOVE', point: null, from: 5, to: 2 } });
+      expect(store.opponentLastMove).toEqual([5, 2]);
+    });
+  });
+
   it('is not my turn once the game is over', () => {
     const store = seated(0);
     store.applyEvent({

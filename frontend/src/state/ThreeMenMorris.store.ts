@@ -3,16 +3,17 @@ import { ref, computed, watch } from 'vue';
 
 import webSocketService from '../service/WebSocketService';
 import MorrisSession, { type MorrisSessionEvent } from '../application/threemenmorris/MorrisSession';
-import type { MorrisEventData, MorrisPhase, MorrisState, MorrisView } from '../model/threemenmorris/MorrisState';
+import type { MorrisColour, MorrisEventData, MorrisPhase, MorrisState, MorrisVariantKey, MorrisView } from '../model/threemenmorris/MorrisState';
 import type { LobbyView } from '../model/lobby/LobbyView';
-import { onPoint, selectable, targets } from '../model/threemenmorris/board';
+import { colourOf as colourOfSeat, onPoint, selectable, targets } from '../model/threemenmorris/board';
+import { geometryOf, variantKeyOf, type MorrisGeometry } from '../model/threemenmorris/geometries';
 import { useSeatPresence, FORFEIT_NOTICE_HOLD_MS } from '../composables/useSeatPresence';
 import { useSeatRoom } from '../composables/useSeatRoom';
 import type { ForfeitEventData } from '../model/SeatLifecycleEvents';
 
 export { FORFEIT_NOTICE_HOLD_MS };
 
-export type MorrisColour = 'WHITE' | 'BLACK';
+export type { MorrisColour };
 
 function isMoveData(data: unknown): data is MorrisEventData {
   const action = (data as { action?: unknown } | null)?.action;
@@ -88,8 +89,19 @@ export const useThreeMenMorrisStore = defineStore('three-men-morris-store', () =
     const outcome = game.value?.outcome;
     return outcome?.status === 'FINISHED' && outcome.winner === mySeat.value;
   });
-  // Seat 0 is White and always starts, seat 1 is Black.
-  const myColour = computed<MorrisColour>(() => (mySeat.value === 0 ? 'WHITE' : 'BLACK'));
+  // The colour of each seat comes from the state: the host may play Black. White always starts.
+  const colourOf = (seat: number): MorrisColour =>
+    game.value ? colourOfSeat(game.value, seat) : seat === 0 ? 'WHITE' : 'BLACK';
+  const myColour = computed<MorrisColour>(() => colourOf(mySeat.value));
+  const variant = computed<MorrisVariantKey>(() => variantKeyOf(game.value));
+  const geometry = computed<MorrisGeometry>(() => geometryOf(game.value));
+  // The points of the opponent's last move, until my own move or the next game replaces it.
+  const opponentLastMove = computed<number[]>(() => {
+    const move = lastMove.value;
+    if (!move || move.seat === mySeat.value) return [];
+    if (move.action === 'PLACE') return move.point !== null ? [move.point] : [];
+    return move.from !== null && move.to !== null ? [move.from, move.to] : [];
+  });
   const phase = computed<'connecting' | 'lobby' | 'playing' | 'finished'>(() => {
     if (!state.value) return 'connecting';
     if (!state.value.started) return 'lobby';
@@ -140,7 +152,7 @@ export const useThreeMenMorrisStore = defineStore('three-men-morris-store', () =
     disconnections: presence.disconnections,
     liveDisconnections: presence.liveDisconnections,
     forfeitNotice: presence.forfeitNotice,
-    isMyTurn, iWon, myColour, phase, selectablePoints, targetPoints,
+    isMyTurn, iWon, myColour, colourOf, variant, geometry, opponentLastMove, phase, selectablePoints, targetPoints,
     applyEvent, pointClicked, clearSelection,
     create: (name?: string) => session.create(name),
     join: (id: string, name?: string) => session.join(id, name),
@@ -149,6 +161,7 @@ export const useThreeMenMorrisStore = defineStore('three-men-morris-store', () =
     startGame: room.startGame,
     removeSeat: (seat: number) => requestLobbyChange(() => session.removeSeat(seat)),
     rename: (name: string) => requestLobbyChange(() => session.rename(name)),
+    setOption: (key: string, value: string) => requestLobbyChange(() => session.setOption(key, value)),
     leave,
     forfeit: () => session.forfeit(),
     playAgain,

@@ -76,6 +76,16 @@ onBeforeUnmount(() => { if (noticeTimer) clearTimeout(noticeTimer); });
 
       <div class="panel-divider" />
 
+      <!-- A game with its own options screen puts it before the seats, through this slot. -->
+      <div v-if="$slots.options && descriptors.length" class="field-group field-group--first">
+        <slot
+          name="options"
+          :descriptors="descriptors"
+          :options="lobby.options ?? {}"
+          :editable="isHost && (lobby.canEditOptions ?? false)"
+          :set-option="(key: string, value: string) => emit('set-option', key, value)" />
+      </div>
+
       <LobbySeats
         :lobby="lobby"
         :supports-bots="game.supportsBots"
@@ -87,7 +97,7 @@ onBeforeUnmount(() => { if (noticeTimer) clearTimeout(noticeTimer); });
 
       <p v-if="error" class="error" role="alert" data-test="lobby-error">{{ ui.actionFailed }}</p>
 
-      <div v-if="descriptors.length" class="field-group">
+      <div v-if="!$slots.options && descriptors.length" class="field-group">
         <LobbyGameOptions
           :descriptors="descriptors"
           :options="lobby.options ?? {}"

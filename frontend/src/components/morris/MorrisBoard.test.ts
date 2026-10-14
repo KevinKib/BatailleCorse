@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
 import MorrisBoard from './MorrisBoard.vue';
 import { messagesEn } from '../../locales/en';
+import { GEOMETRIES } from '../../model/threemenmorris/geometries';
 
 type Cell = 'white' | 'black' | null;
 const ui = messagesEn.morrisBoard;
@@ -208,5 +209,49 @@ describe('MorrisBoard pieces', () => {
     next[4] = 'black';
     await w.setProps({ cells: next });
     expect(point(w, 4).find('[data-test="piece"]').exists()).toBe(true);
+  });
+});
+
+describe('MorrisBoard geometry', () => {
+  it('draws the eight lines of Tapatan by default, with no short diagonal', () => {
+    const w = board();
+    expect(w.findAll('[data-line]')).toHaveLength(8);
+    expect(w.find('[data-line="1-3"]').exists()).toBe(false);
+  });
+
+  it('draws the diamond of short diagonals for Picaria, on top of the eight lines', () => {
+    const w = board({ geometry: GEOMETRIES.picaria });
+    expect(w.findAll('[data-line]')).toHaveLength(12);
+    for (const diagonal of ['1-3', '3-7', '7-5', '5-1']) {
+      expect(w.find(`[data-line="${diagonal}"]`).exists(), diagonal).toBe(true);
+    }
+  });
+
+  it('draws Achi like Tapatan', () => {
+    expect(board({ geometry: GEOMETRIES.achi }).findAll('[data-line]')).toHaveLength(8);
+  });
+
+  it('places each point from its coordinates', () => {
+    const w = board({ geometry: GEOMETRIES.picaria });
+    expect(point(w, 4).attributes('style')).toContain('left: 50%');
+    expect(point(w, 4).attributes('style')).toContain('top: 50%');
+    expect(point(w, 2).attributes('style')).toContain('left: 83.33');
+    expect(point(w, 2).attributes('style')).toContain('top: 16.67');
+  });
+
+  it('marks the points of the last opponent move', async () => {
+    const w = board({ lastMove: [1, 5] });
+    expect(point(w, 1).attributes('data-last')).toBe('true');
+    expect(point(w, 5).attributes('data-last')).toBe('true');
+    expect(point(w, 0).attributes('data-last')).toBeUndefined();
+    await w.setProps({ lastMove: [] });
+    expect(point(w, 1).attributes('data-last')).toBeUndefined();
+  });
+
+  it('moves focus by the geometry, not by a grid, with the arrows', async () => {
+    const w = mount(MorrisBoard, { props: { cells: empty(), geometry: GEOMETRIES.picaria }, attachTo: document.body });
+    await point(w, 4).trigger('keydown', { key: 'ArrowRight' });
+    expect(document.activeElement).toBe(point(w, 5).element);
+    w.unmount();
   });
 });
