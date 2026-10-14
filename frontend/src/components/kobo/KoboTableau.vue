@@ -107,11 +107,16 @@ const slotLabel = (slot: number): string => {
 /* A disabled button greys its content by default: the card must stay readable. */
 .slot:disabled { opacity: 1; }
 .slot:not(:disabled) { cursor: pointer; border-color: rgba(var(--accent-active-rgb), 0.7); }
+/* The slot the last event touched: the slot's own 1 px border turns soft gold over a faint tint, replaced by the
+   next event (state, not a timer). No second ring and no glow, so it never doubles the border of a slot that can
+   be clicked. */
+.slot.slot--event, .slot-empty.slot--event {
+  border: 1px solid color-mix(in srgb, var(--gold) 75%, transparent);
+  background: color-mix(in srgb, var(--gold) 10%, transparent);
+}
 .slot.slot--selected { border-color: var(--gold); background: rgba(255, 255, 255, 0.12); }
 .slot:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .slot-empty { border: 1px dashed rgba(255, 255, 255, 0.25); }
-/* The slot the last event touched: a ring, replaced by the next event (state, not a timer). */
-.slot--event { box-shadow: 0 0 0 2px var(--gold), 0 0 10px 1px rgba(255, 255, 255, 0.35); }
 
 .slot :deep(.playing_card) {
   width: var(--card-w);
