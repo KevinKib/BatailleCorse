@@ -65,6 +65,21 @@ public class ThreeMenMorrisWebSocketController {
                 (id, seat) -> actions.move(id, seat, required(p.from(), "from"), required(p.to(), "to")));
     }
 
+    @MessageMapping("/three-men-morris/offerDraw")
+    public void offerDraw(@Payload GameActionPayload p) {
+        handle(p.gameId(), p.token(), ThreeMenMorrisEventType.DRAW_OFFERED, (id, seat) -> actions.offerDraw(id, seat));
+    }
+
+    @MessageMapping("/three-men-morris/acceptDraw")
+    public void acceptDraw(@Payload GameActionPayload p) {
+        handle(p.gameId(), p.token(), ThreeMenMorrisEventType.GAME_OVER, (id, seat) -> actions.acceptDraw(id, seat));
+    }
+
+    @MessageMapping("/three-men-morris/declineDraw")
+    public void declineDraw(@Payload GameActionPayload p) {
+        handle(p.gameId(), p.token(), ThreeMenMorrisEventType.DRAW_DECLINED, (id, seat) -> actions.declineDraw(id, seat));
+    }
+
     private static int required(Integer value, String field) {
         if (value == null) {
             throw new IllegalArgumentException("Missing field: " + field);

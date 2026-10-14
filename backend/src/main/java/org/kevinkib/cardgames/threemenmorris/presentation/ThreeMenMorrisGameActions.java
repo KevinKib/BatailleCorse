@@ -39,6 +39,18 @@ public class ThreeMenMorrisGameActions {
         run(id, g -> g.move(seat, from, to), "Player " + seat + " moved a piece.");
     }
 
+    public void offerDraw(GameId id, PlayerId seat) throws ThreeMenMorrisException {
+        run(id, g -> g.offerDraw(seat), "Player " + seat + " offered a draw.");
+    }
+
+    public void acceptDraw(GameId id, PlayerId seat) throws ThreeMenMorrisException {
+        run(id, g -> g.acceptDraw(seat), "Player " + seat + " accepted the draw.");
+    }
+
+    public void declineDraw(GameId id, PlayerId seat) throws ThreeMenMorrisException {
+        run(id, g -> g.declineDraw(seat), "Player " + seat + " declined the draw.");
+    }
+
     private void run(GameId gameId, Command command, String message) throws ThreeMenMorrisException {
         ThreeMenMorris game = sessionService.getGame(gameId, ThreeMenMorris.class);
         synchronized (game) {

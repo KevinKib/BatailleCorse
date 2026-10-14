@@ -12,6 +12,15 @@ public sealed interface MorrisEvent {
         }
     }
 
+    record DrawOffered(PlayerId seat) implements MorrisEvent {
+    }
+
+    record DrawDeclined(PlayerId seat) implements MorrisEvent {
+    }
+
+    record DrawAccepted(PlayerId seat) implements MorrisEvent {
+    }
+
     record Moved(PlayerId seat, int from, int to) implements MorrisEvent {
 
         public Moved {

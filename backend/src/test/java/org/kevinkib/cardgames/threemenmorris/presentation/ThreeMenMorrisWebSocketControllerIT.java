@@ -114,6 +114,15 @@ class ThreeMenMorrisWebSocketControllerIT {
             }
         }
 
+        /** Sends a draw command and waits until both seats have seen its successful event. */
+        void draw(int seat, String command, String expectedEvent) throws Exception {
+            send(seat, "/three-men-morris/" + command, body(tokens[seat]));
+            for (int s = 0; s < 2; s++) {
+                frames[s].await(f -> expectedEvent.equals(f.get("eventType"))
+                        && Boolean.TRUE.equals(f.get("success")));
+            }
+        }
+
         Map<String, Object> rehydrate(int seat) throws Exception {
             HttpResponse<String> response = HttpClient.newHttpClient().send(
                     HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/api/three-men-morris/game/"
@@ -227,5 +236,46 @@ class ThreeMenMorrisWebSocketControllerIT {
 
         assertThat(table.rehydrate(0).get("version"), is(1));
         assertThat(table.frames[1].all.stream().filter(f -> Boolean.FALSE.equals(f.get("success"))).count(), is(0L));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void aDrawIsOfferedDeclinedOfferedAgainAfterAMoveAndAccepted() throws Exception {
+        Table table = new Table();
+        table.place(0, 0, "PLACE");
+        table.place(1, 1, "PLACE");
+        table.place(0, 2, "PLACE");
+        table.place(1, 5, "PLACE");
+        table.place(0, 7, "PLACE");
+
+        // an offer during placement is refused to its sender alone
+        table.send(0, "/three-men-morris/offerDraw", table.body(table.tokens[0]));
+        table.frames[0].await(f -> Boolean.FALSE.equals(f.get("success")));
+        table.place(1, 8, "PLACE");
+
+        table.draw(0, "offerDraw", "DRAW_OFFERED");
+        Map<String, Object> pending = table.rehydrate(1);
+        assertThat(pending.get("drawOffer"), is(Map.of("seat", 0)));
+        assertThat(pending.get("drawActions"), is(List.of("ACCEPT_DRAW", "DECLINE_DRAW")));
+        table.draw(1, "declineDraw", "DRAW_DECLINED");
+        assertThat(table.rehydrate(1).containsKey("drawOffer"), is(false));
+
+        // white cannot offer again before its own move
+        table.send(0, "/three-men-morris/offerDraw", table.body(table.tokens[0]));
+        table.frames[0].await(f -> Boolean.FALSE.equals(f.get("success")) && "DRAW_OFFERED".equals(f.get("eventType")));
+
+        table.move(0, 7, 6, "MOVE");
+        table.draw(0, "offerDraw", "DRAW_OFFERED");
+        table.send(1, "/three-men-morris/acceptDraw", table.body(table.tokens[1]));
+
+        for (int seat = 0; seat < 2; seat++) {
+            Map<String, Object> over = table.frames[seat].await(f -> "GAME_OVER".equals(f.get("eventType")));
+            Map<String, Object> outcome = (Map<String, Object>) state(over).get("outcome");
+            assertThat(outcome.get("status"), is("FINISHED"));
+            assertThat(outcome.get("winner"), is((Object) null));
+            assertThat(outcome.get("reason"), is("DRAW_AGREED"));
+            assertThat(((Map<String, Object>) over.get("eventData")).get("action"), is("ACCEPT_DRAW"));
+        }
+        assertThat(table.rehydrate(0).get("phase"), is("FINISHED"));
     }
 }
