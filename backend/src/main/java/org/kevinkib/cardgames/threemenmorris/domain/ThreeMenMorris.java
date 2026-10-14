@@ -291,11 +291,10 @@ public class ThreeMenMorris implements Game {
         }
     }
 
-    /** Whether the placement rule closes this point now: Picaria's centre until both players have placed. */
+    /** Whether the placement rule closes this point now: Picaria's centre, for the whole placement phase. */
     private boolean isLocked(int point) {
-        return rules.placement() == MorrisRules.PlacementRule.CENTRE_AFTER_FIRST_PIECES
-                && point == MorrisRules.CENTRE
-                && (inHand[0] == rules.piecesPerPlayer() || inHand[1] == rules.piecesPerPlayer());
+        return rules.placement() == MorrisRules.PlacementRule.CENTRE_FORBIDDEN_DURING_PLACEMENT
+                && point == MorrisRules.CENTRE;
     }
 
     private static PlayerId other(PlayerId seat) {

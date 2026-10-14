@@ -4,6 +4,6 @@ package org.kevinkib.cardgames.threemenmorris.domain;
 public class PointLockedException extends ThreeMenMorrisException {
 
     public PointLockedException(int point) {
-        super("Point " + point + " is closed until each player has placed a piece");
+        super("Point " + point + " cannot receive a placed piece");
     }
 }

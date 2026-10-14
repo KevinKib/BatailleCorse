@@ -43,7 +43,7 @@ class MorrisVariantTest {
         assertThat(MorrisRules.ACHI.placement(), is(MorrisRules.PlacementRule.FREE));
         assertThat(MorrisRules.PICARIA.piecesPerPlayer(), is(3));
         assertThat(MorrisRules.PICARIA.geometry(), is(Geometry.PICARIA));
-        assertThat(MorrisRules.PICARIA.placement(), is(MorrisRules.PlacementRule.CENTRE_AFTER_FIRST_PIECES));
+        assertThat(MorrisRules.PICARIA.placement(), is(MorrisRules.PlacementRule.CENTRE_FORBIDDEN_DURING_PLACEMENT));
     }
 
     @Test

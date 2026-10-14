@@ -74,11 +74,13 @@ class ThreeMenMorrisVariantsWireContractTest {
         play(picaria, out, 0, -1, 1);
         out.add("PICARIA-WHITE-PLACED\n" + views(picaria));
         play(picaria, out, 1, -1, 0);
-        out.add("PICARIA-CENTRE-OPEN\n" + views(picaria));
-        play(picaria, out, 0, -1, 6, 1, -1, 2, 0, -1, 8, 1, -1, 4);
+        out.add("PICARIA-CENTRE-STILL-CLOSED\n" + views(picaria));
+        play(picaria, out, 0, -1, 6, 1, -1, 2, 0, -1, 8, 1, -1, 5);
         out.add("PICARIA-MOVEMENT\n" + views(picaria));
         play(picaria, out, 0, 1, 3);
         out.add("PICARIA-AFTER-SHORT-DIAGONAL\n" + views(picaria));
+        play(picaria, out, 1, 5, 4);
+        out.add("PICARIA-BLACK-MOVE-TO-CENTRE\n" + views(picaria));
 
         assertThat(String.join("\n", out), is(golden()));
     }

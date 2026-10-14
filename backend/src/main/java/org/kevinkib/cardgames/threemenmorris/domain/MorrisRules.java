@@ -10,8 +10,8 @@ public record MorrisRules(Geometry geometry, int piecesPerPlayer, PlacementRule 
     public enum PlacementRule {
         /** Any free point. */
         FREE,
-        /** Any free point, except the centre until each player has placed their first piece. */
-        CENTRE_AFTER_FIRST_PIECES
+        /** Any free point except the centre, which no piece may be placed on (it is reached by a move). */
+        CENTRE_FORBIDDEN_DURING_PLACEMENT
     }
 
     /** The centre of the nine-point boards, row by row. */
@@ -23,7 +23,7 @@ public record MorrisRules(Geometry geometry, int piecesPerPlayer, PlacementRule 
     public static final MorrisRules ACHI = new MorrisRules(Geometry.TAPATAN, 4, PlacementRule.FREE);
 
     public static final MorrisRules PICARIA = new MorrisRules(Geometry.PICARIA, 3,
-            PlacementRule.CENTRE_AFTER_FIRST_PIECES);
+            PlacementRule.CENTRE_FORBIDDEN_DURING_PLACEMENT);
 
     public MorrisRules {
         if (geometry == null || placement == null) {
