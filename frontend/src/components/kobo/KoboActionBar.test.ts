@@ -39,6 +39,17 @@ describe('KoboActionBar', () => {
     expect(wrapper.findAll('button')).toHaveLength(0);
   });
 
+  // An empty button column still costs its flex gap, which pushes the title off the centre of the bar.
+  it('givenNoButton_thenNoButtonColumnTakesRoomBesideTheTitle', () => {
+    const wrapper = mountBar('DRAW', []);
+    expect(wrapper.find('.actions-buttons').exists()).toBe(false);
+  });
+
+  it('givenAButton_thenTheButtonColumnIsThere', () => {
+    const wrapper = mountBar('DRAW', ['DRAW']);
+    expect(wrapper.find('.actions-buttons').exists()).toBe(true);
+  });
+
   it('givenAButtonIsPressed_thenTheBarEmitsItsEvent', async () => {
     const wrapper = mountBar('TURN_END', ['END_TURN', 'ANNOUNCE_KOBO']);
     await button(wrapper, 'endTurn').trigger('click');
