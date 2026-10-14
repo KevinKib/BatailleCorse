@@ -1,6 +1,5 @@
 package org.kevinkib.cardgames.kobo.presentation;
 
-import org.kevinkib.cardgames.presentation.bot.BotSeats;
 import org.kevinkib.cardgames.presentation.state.SeatStateBroadcaster;
 import org.kevinkib.cardgames.kobo.presentation.dto.KoboDto;
 import org.kevinkib.cardgames.presentation.command.SeatCommands;
@@ -20,8 +19,8 @@ final class KoboTable {
     final InMemorySessionRepository repository = base.repository;
     final SessionService sessions = base.sessions;
     final RecordingMessaging messaging = base.messaging;
-    final SeatStateBroadcaster<Kobo, KoboDto> broadcaster = new SeatStateBroadcaster<>(messaging, BotSeats.none(), sessions::seatNames,
-            (game, viewer, names, bots) -> KoboDto.forViewer(game, viewer, names));
+    final SeatStateBroadcaster<Kobo, KoboDto> broadcaster = new SeatStateBroadcaster<>(messaging, sessions::botSeats, sessions::seatNames,
+            (game, viewer, names, bots) -> KoboDto.forViewer(game, viewer, names, bots));
     final KoboGameActions actions = new KoboGameActions(sessions, broadcaster);
     final LobbyBroadcaster lobbyBroadcaster = new LobbyBroadcaster(messaging);
     final KoboWebSocketController ws = new KoboWebSocketController(sessions, broadcaster,

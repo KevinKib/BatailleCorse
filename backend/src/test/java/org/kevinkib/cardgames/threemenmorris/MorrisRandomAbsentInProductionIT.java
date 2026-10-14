@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationContext;
 
+import java.util.Set;
 import java.util.random.RandomGenerator;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -20,8 +21,10 @@ class MorrisRandomAbsentInProductionIT {
     private ApplicationContext context;
 
     @Test
-    void theProductionContextHoldsTheThreadLocalGenerator() {
-        assertThat(context.getBeansOfType(RandomGenerator.class).size(), is(1));
+    void theProductionContextHoldsOnlyThreadLocalGenerators() {
+        // the Morris colour draw and the Kobo bots' forgetting; no constant or seeded test generator
+        assertThat(context.getBeansOfType(RandomGenerator.class).keySet(), is(Set.of("morrisRandom", "koboBotRandom")));
         assertThat(context.getBean("morrisRandom"), instanceOf(ThreadLocalRandomGenerator.class));
+        assertThat(context.getBean("koboBotRandom"), instanceOf(ThreadLocalRandomGenerator.class));
     }
 }

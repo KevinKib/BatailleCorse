@@ -55,7 +55,7 @@ public class ThreeMenMorrisConfig {
     }
 
     @Bean
-    public ThreeMenMorrisFactory threeMenMorrisFactory(RandomGenerator morrisRandom) {
+    public ThreeMenMorrisFactory threeMenMorrisFactory(@Qualifier("morrisRandom") RandomGenerator morrisRandom) {
         return new ThreeMenMorrisFactory(morrisRandom);
     }
 

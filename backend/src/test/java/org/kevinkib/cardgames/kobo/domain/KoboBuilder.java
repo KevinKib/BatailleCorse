@@ -24,6 +24,7 @@ public final class KoboBuilder {
     private Card drawn;
     private Power power;
     private int[] totals;
+    private GameId id;
 
     public static KoboBuilder aKobo() {
         return new KoboBuilder();
@@ -32,6 +33,12 @@ public final class KoboBuilder {
     /** One four-card tableau per call, e.g. {@code withTableau("AH", "2H", "3H", "4H")}. */
     public KoboBuilder withTableau(String... codes) {
         tableaux.add(cards(codes));
+        return this;
+    }
+
+    /** Builds the game under a given id (default: a new one), for tests that reopen a room under the same id. */
+    public KoboBuilder withId(GameId id) {
+        this.id = id;
         return this;
     }
 
@@ -78,7 +85,7 @@ public final class KoboBuilder {
     }
 
     public Kobo build() {
-        Kobo kobo = new Kobo(GameId.generate(), 42L, tableaux, drawPile, discard, phase, new PlayerId(current));
+        Kobo kobo = new Kobo(id == null ? GameId.generate() : id, 42L, tableaux, drawPile, discard, phase, new PlayerId(current));
         if (drawn != null) {
             kobo.setDrawn(drawn);
         }
