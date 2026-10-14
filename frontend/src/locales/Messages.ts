@@ -285,6 +285,56 @@ export interface KoboUiMessages {
   prompt: Record<KoboPromptKey, string>;   // one-line instruction while a click on a card is expected
   notice: Record<KoboNoticeKey, string>;   // why my last command did not go through
   log: KoboLogMessages;                    // the one-line event log
+  youObject: string;                       // "you", as the object of a sentence
+  sheet: KoboSheetMessages;                // the score sheet of the round end
+  end: KoboEndMessages;                    // the end screen
+}
+
+/** The score sheet that rises under the table at the gift and at the end of a round. */
+export interface KoboSheetMessages {
+  label: string;                       // '{n}' = round number: accessible name of the sheet
+  badge: string;                       // the announcer's "Kobo!"
+  title: {
+    won: string;                       // '{player}': the announcer had the fewest points
+    wonYou: string;
+    lost: string;                      // '{player}': the announcer did not
+    lostYou: string;
+    none: string;                      // nobody called Kobo
+  };
+  subtitle: {
+    giftChoose: string;                // I won my Kobo and pick the receiver
+    giftWaiting: string;               // '{player}' = the announcer
+    gave: string;                      // '{giver}', '{receiver}'
+    lost: string;                      // the announcer's penalty
+  };
+  columns: { player: string; hand: string; round: string; total: string };
+  tableCaption: string;                // accessible name of the scores table
+  totalChange: string;                 // '{before}', '{after}'
+  pills: {
+    kobo: string;
+    gift: string;                      // "+10"
+    giftLabel: string;                 // '{player}': accessible text of the gift pill
+    reset: string;                     // '{from}', '{to}'
+    resetLabel: string;                // '{from}', '{to}': accessible text of the reset pill
+  };
+  ready: string;                       // the tick of a player who is ready for the next round
+  giveTen: string;                     // '{player}'
+  nextRound: string;
+  waitingOthers: string;               // I am ready, the others are not
+}
+
+/** The end screen: names, subtitle by score or by forfeit, final totals. */
+export interface KoboEndMessages {
+  winner: string;                      // '{players}'
+  winners: string;                     // '{players}': several winners
+  lowestTotal: PluralForms;            // '{n}' = the winners' total
+  youWonResigned: string;              // '{player}'
+  youWonDisconnected: string;
+  youWonOthersLeft: string;
+  playAgain: string;
+  rematchPending: string;
+  rematchFailed: string;
+  totals: { title: string; player: string; rank: string; total: string; over: string };
 }
 
 /** '{actor}' = "You" or a name; '{owner}' = ownerYour or "{name}'s"; '{n}', '{m}' = 1-based slot numbers; '{card}'. */

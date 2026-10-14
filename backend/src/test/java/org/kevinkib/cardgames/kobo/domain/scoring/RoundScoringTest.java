@@ -47,6 +47,18 @@ class RoundScoringTest {
     }
 
     @Test
+    void givenAWinningAnnouncerStillChoosingTheGift_thenProvisionalScoresHaveNoGiftAndNoReset() {
+        RoundResult r = RoundScoring.provisional(of(3, 7, 9), P0, of(0, 65, 0));
+
+        assertThat(r.announcerWon(), is(true));
+        assertThat(r.giftTo(), nullValue());
+        assertThat(r.roundPoints(), is(of(0, 7, 9)));
+        assertThat(r.totalsBefore(), is(of(0, 65, 0)));
+        assertThat(r.totalsAfter(), is(of(0, 72, 9)));
+        assertThat(r.reset(), is(empty()));
+    }
+
+    @Test
     void givenAnnouncerTiedWithLowest_thenStillWins() {
         RoundResult r = RoundScoring.score(of(7, 7, 9), P0, P1, of(0, 0, 0));
 

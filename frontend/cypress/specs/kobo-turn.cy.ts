@@ -100,7 +100,9 @@ describe('Kobo turn', () => {
       scriptedDiscardTurn(bob);
       // The last turn ends the round: every card is face up for everybody.
       awaitState(bob, 'round resolved', (s) => s.revealed === true);
-      cy.get('[data-test="slot-0-0"]').should('not.have.attr', 'aria-label', 'Your card 1, face down');
+      // The score sheet rises under the table; Bob's cards, face up now, stay on the table above it.
+      cy.get('[data-test="score-sheet"]').should('be.visible');
+      cy.get('[data-test="slot-1-0"]').should('have.attr', 'aria-label').and('contain', '9 of heart');
       tableDoesNotScrollSideways();
       expectNoOverlap();
     });

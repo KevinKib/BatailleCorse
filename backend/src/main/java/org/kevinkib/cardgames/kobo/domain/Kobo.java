@@ -659,7 +659,16 @@ public class Kobo implements Game {
         return revealed;
     }
 
+    /**
+     * The scores of the round that just ended; while the winning announcer is still choosing who takes the 10
+     * points, the provisional scores (see {@link RoundScoring#provisional}), so the table can show them already.
+     */
     public synchronized Optional<RoundResult> lastRoundResult() {
+        if (phase == Phase.GIFT) {
+            Map<PlayerId, Integer> before = new LinkedHashMap<>();
+            players.forEach(p -> before.put(p.id, p.total));
+            return Optional.of(RoundScoring.provisional(handValues(), announcer, before));
+        }
         return Optional.ofNullable(lastRound);
     }
 
