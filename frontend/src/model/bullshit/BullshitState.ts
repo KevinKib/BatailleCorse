@@ -37,6 +37,8 @@ export interface BullshitState {
   outcome: OutcomeView;
   /** The viewer own seat, reported by the server. */
   mySeat?: number;
+  /** Counts the state changes of the game: a state older than the one held is dropped. */
+  version?: number;
 }
 
 export type BullshitView = LobbyView | BullshitState;

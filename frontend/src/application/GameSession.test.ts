@@ -359,6 +359,58 @@ describe('GameSession', () => {
     });
   });
 
+  describe('state versions', () => {
+    const frame = (version?: number, eventType = 'SEND') => ({
+      success: true, eventType, eventData: { player: { id: '1' } }, message: 'm',
+      state: gameJson(version === undefined ? {} : { version }),
+    });
+
+    it('drops a game frame older than the one held, with its animation, and applies an equal one', async () => {
+      const { session, events } = playing(0);
+      await session.onResponse(frame(5) as any);
+      await session.onResponse(frame(4) as any);
+      expect(events.filter(e => e.type === 'state-update')).toHaveLength(1);
+      expect(events.filter(e => e.type === 'send')).toHaveLength(1);
+      await session.onResponse(frame(5) as any);
+      expect(events.filter(e => e.type === 'state-update')).toHaveLength(2);
+    });
+
+    it('drops a late hydration answer overtaken by a game frame', async () => {
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce(respond(gameJson({ version: 3 })))
+        .mockResolvedValue(respond({ players: [] })));
+      const { session, events } = makeSession();
+      session.restore('game-1', 0, 'tok-0');
+      await session.onResponse(frame(7) as any);
+      events.length = 0;
+      expect(await session.hydrate()).toBe('ok');
+      expect(events.filter(e => e.type === 'state-update')).toHaveLength(0);
+    });
+
+    it('keeps the error of a refusal that carries an older state, without applying the state', () => {
+      const { session, events, fireSeat } = playing(0);
+      void session.onResponse(frame(5) as any);
+      events.length = 0;
+      fireSeat({ success: false, eventType: 'SEND', eventData: {}, message: 'Not your turn', state: gameJson({ version: 2 }) });
+      expect(events.map(e => e.type)).toEqual(['error']);
+    });
+
+    it('applies frames without a version as before', async () => {
+      const { session, events } = playing(0);
+      await session.onResponse(frame(5) as any);
+      await session.onResponse(frame(undefined) as any);
+      expect(events.filter(e => e.type === 'state-update')).toHaveLength(2);
+    });
+
+    it('starts from zero again after a new bind (Play again)', async () => {
+      const { session, events } = playing(0);
+      await session.onResponse(frame(9) as any);
+      session.restore('game-1', 0, 'tok-0');
+      events.length = 0;
+      await session.onResponse(frame(0) as any);
+      expect(events.filter(e => e.type === 'state-update')).toHaveLength(1);
+    });
+  });
+
   describe('GRAB event', () => {
     it('emits grab event with a snapshot of the pile before state update', async () => {
       const cardBeforeGrab = buildCard({ rank: 'A', suit: 'spade' });
