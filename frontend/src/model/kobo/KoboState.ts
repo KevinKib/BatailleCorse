@@ -29,6 +29,8 @@ export interface KoboPlayer {
   total: number;
   handSize: number;
   slots: KoboSlot[];
+  /** Computer player; omitted by the server when false. */
+  bot?: boolean;
 }
 
 /** A card the viewer was shown at the start (before "I have memorised"). */

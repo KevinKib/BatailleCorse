@@ -44,15 +44,54 @@ describe('KoboGameScreen', () => {
     expect(wrapper.find('[data-test="lobby"]').exists()).toBe(false);
   });
 
-  it('givenALobby_thenShowsTheSharedLobbyForKoboWithoutAddBot', async () => {
+  it('givenALobby_thenShowsTheSharedLobbyForKoboWithAddBotForTheHost', async () => {
     const { wrapper } = await mountRoom(store => {
       store.applyEvent({ type: 'seat-change', seat: 0 });
       store.applyEvent({ type: 'state-update', state: lobby(2) });
     });
     expect(wrapper.get('[data-test="lobby"]').text()).toContain('Kobo');
     expect(wrapper.get('[data-test="player-count"]').text()).toContain('2 / 6');
-    expect(wrapper.find('[data-test="add-bot"]').exists()).toBe(false);
+    expect(wrapper.find('[data-test="add-bot"]').exists()).toBe(true);
     expect(wrapper.find('[data-test="start"]').attributes('disabled')).toBeUndefined();
+  });
+
+  it('givenTheHostPressesAddBot_thenTheStoreSendsItToTheServer', async () => {
+    const { wrapper, store } = await mountRoom(s => {
+      s.applyEvent({ type: 'seat-change', seat: 0 });
+      s.applyEvent({ type: 'state-update', state: lobby(1) });
+    });
+    const addBot = vi.spyOn(store, 'addBot').mockImplementation(() => {});
+    await wrapper.get('[data-test="add-bot"]').trigger('click');
+    expect(addBot).toHaveBeenCalled();
+  });
+
+  it('givenABotSeat_thenTheHostPicksItsLevelAmongEasyMediumHardAndCanRemoveIt', async () => {
+    const { wrapper, store } = await mountRoom(s => {
+      s.applyEvent({ type: 'seat-change', seat: 0 });
+      s.applyEvent({
+        type: 'state-update',
+        state: {
+          ...lobby(1),
+          players: [
+            { seat: 0, name: 'P0', joined: true },
+            { seat: 1, name: 'Bot 1', joined: true, bot: true, seatOptions: { level: 'medium' } },
+          ],
+          removableBotSeats: [1],
+          seatOptionDescriptors: [
+            { key: 'level', type: 'CHOICE', values: ['easy', 'medium', 'hard'], defaultValue: 'medium', labelKey: 'options.kobo.level' },
+          ],
+        },
+      });
+    });
+    const setSeatOption = vi.spyOn(store, 'setSeatOption').mockImplementation(() => {});
+    const removeBot = vi.spyOn(store, 'removeBot').mockImplementation(() => {});
+    const level = wrapper.get('[data-test="seat-option-1-level"]');
+    expect(level.findAll('option').map(o => o.text())).toEqual(['Easy', 'Medium', 'Hard']);
+    expect((level.element as HTMLSelectElement).value).toBe('medium');
+    await level.setValue('hard');
+    expect(setSeatOption).toHaveBeenCalledWith(1, 'level', 'hard');
+    await wrapper.get('[data-test="remove-bot-1"]').trigger('click');
+    expect(removeBot).toHaveBeenCalledWith(1);
   });
 
   it('givenTheHostPressesStart_thenTheStoreStartsTheGame', async () => {
@@ -117,6 +156,17 @@ describe('KoboGameScreen', () => {
       const labels = wrapper.findAll('[data-test="opponent-seat"] [data-test="seat-label"]').map(w => w.text());
       expect(labels).toEqual(['Player 2', 'Cleo']);
       expect(wrapper.get('[data-test="my-zone"] [data-test="seat-label"]').text()).toBe('You');
+    });
+
+    it('givenBots_thenTheyAreLabelledBotNWhateverTheirNameAndHumansKeepTheirs', async () => {
+      const { wrapper } = await started({
+        players: [
+          buildKoboPlayer(0, { name: 'Alice' }), buildKoboPlayer(1, { name: 'Kobo Bot', bot: true }),
+          buildKoboPlayer(2, { name: 'Cleo' }), buildKoboPlayer(3, { name: 'x', bot: true }),
+        ],
+      });
+      const labels = wrapper.findAll('[data-test="opponent-seat"] [data-test="seat-label"]').map(w => w.text());
+      expect(labels).toEqual(['Bot 1', 'Cleo', 'Bot 2']);
     });
 
     it('givenMemorising_thenOnlyMyStartingCardsAreFaceUpAndTheOthersFaceDown', async () => {
@@ -697,6 +747,14 @@ describe('KoboGameScreen', () => {
       expect(wrapper.findAll('[data-test^="give-"]').map(b => b.text())).toEqual(['Give 10 to Bob', 'Give 10 to Cleo']);
     });
 
+    it('givenABotInTheSheet_thenTheGiftButtonAndTheScoresCallItBotN', async () => {
+      const players = [NAMED[0], buildKoboPlayer(1, { name: 'Robo', total: 35, bot: true }), NAMED[2]];
+      const { wrapper } = await at({ phase: 'GIFT', announcer: 0, availableActions: ['GIVE_TEN'], players });
+      expect(wrapper.findAll('[data-test^="give-"]').map(b => b.text())).toEqual(['Give 10 to Bot 1', 'Give 10 to Cleo']);
+      expect(wrapper.get('[data-test="score-sheet"]').text()).toContain('Bot 1');
+      expect(wrapper.get('[data-test="score-sheet"]').text()).not.toContain('Robo');
+    });
+
     it('givenAGiveButton_thenTheStoreGivesTheTenToThatSeat', async () => {
       const { wrapper, store } = await at({ phase: 'GIFT', announcer: 0, availableActions: ['GIVE_TEN'] });
       const give = vi.spyOn(store, 'giveTen').mockReturnValue(true);
@@ -754,6 +812,14 @@ describe('KoboGameScreen', () => {
         expect(wrapper.get('.end-title').text()).toBe(messagesEn.endScreen.victory);
         expect(wrapper.get('[data-test="final-row-2"] [data-test="pill-over"]').text()).toBe('over 100');
         expect(wrapper.findAll('[data-test="pill-over"]')).toHaveLength(1);
+      });
+
+      it('givenABotWins_thenTheEndScreenAndTheFinalTotalsCallItBotN', async () => {
+        const players = [NAMED[0], NAMED[1], buildKoboPlayer(2, { name: 'Robo', total: 5, bot: true })];
+        const { wrapper } = await done([2], 'SCORE', { players }, 0);
+        expect(wrapper.get('[data-test="end-winner"]').text()).toBe('Winner: Bot 1');
+        expect(wrapper.get('[data-test="final-row-2"]').text()).toContain('Bot 1');
+        expect(wrapper.get('[data-test="final-row-2"]').text()).not.toContain('Robo');
       });
 
       it('givenIDidNotWin_thenTheScreenIsADefeatWithTheWinnersName', async () => {

@@ -63,9 +63,10 @@ export const GAMES: readonly GameDefinition[] = [
     picker: { icon: 'pi pi-bolt', severity: 'warn' },
     hotkeys: { actions: ['discard', 'call'], storageKeys: ['bullshit.hotkeys'] },
   }),
-  // No bots and no remappable shortcuts (Tab, Enter, Escape and arrows only): no gear on its home and lobby.
+  // Bots play at three levels (a seat option); no remappable shortcuts (Tab, Enter, Escape and arrows only):
+  // no gear on its home and lobby.
   define('kobo', {
-    supportsBots: false,
+    supportsBots: true,
     picker: { icon: 'pi pi-star', severity: 'info' },
   }),
   // The board is operated with Tab, arrows, Enter and Escape: no remappable shortcut, so no gear.

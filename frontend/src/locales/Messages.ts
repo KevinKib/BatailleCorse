@@ -238,6 +238,9 @@ export interface OptionsMessages {
     hostColour: OptionTexts;           // `label`, then `white` / `black` / `random`
     level: OptionTexts;                // a bot seat's level: `label`, then `random` (Easy) / `greedy` (Medium) / `perfect` (Expert)
   };
+  kobo: {
+    level: OptionTexts;                // a bot seat's level: `label`, then `easy` / `medium` / `hard`
+  };
 }
 
 // Kobo screens (`KoboGameScreen`): the lobby wiring and the table (read only for now, the actions come next).
@@ -246,6 +249,7 @@ export interface KoboUiMessages {
   back: string;
   you: string;                         // my own tag
   playerLabel: string;                 // '{n}' = 1-based seat number, for a player without a name
+  botLabel: string;                    // '{n}' = 1-based position among the bots
   table: {
     round: string;                     // '{n}'
     total: string;                     // '{n}' = the player's total points
