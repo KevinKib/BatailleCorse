@@ -6,7 +6,9 @@ import org.kevinkib.cardgames.game.PlayerId;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Three Men's Morris for two players, played by the rules it is given ({@link MorrisRules}: the
@@ -21,6 +23,7 @@ import java.util.List;
 public class ThreeMenMorris implements Game {
 
     static final int PLAYERS = 2;
+    private static final int REPETITIONS_TO_DRAW = 3;
 
     private static final PlayerId SEAT_0 = new PlayerId(0);
     private static final PlayerId SEAT_1 = new PlayerId(1);
@@ -36,6 +39,9 @@ public class ThreeMenMorris implements Game {
     private MorrisResult result = MorrisResult.ONGOING;
     private List<Integer> winningLine = List.of();
     private int version;
+    private PlayerId drawOffer;
+    private final boolean[] offeredSinceOwnMove = new boolean[PLAYERS];
+    private final Map<MorrisPosition.Key, Integer> occurrences = new HashMap<>();
 
     /** A game of Tapatan, seat 0 white. */
     public ThreeMenMorris(GameId id) {
@@ -98,6 +104,9 @@ public class ThreeMenMorris implements Game {
         game.inHand[1] = blackInHand;
         game.current = current;
         game.phase = whiteInHand == 0 && blackInHand == 0 ? Phase.MOVEMENT : Phase.PLACEMENT;
+        if (game.phase == Phase.MOVEMENT) {
+            game.countPosition();
+        }
         return game;
     }
 
@@ -118,11 +127,14 @@ public class ThreeMenMorris implements Game {
         board[point] = seat;
         inHand[seat.id()]--;
         version++;
+        moved(seat);
         if (!finishIfLine(seat)) {
             current = other(seat);
             if (inHand[0] == 0 && inHand[1] == 0) {
                 phase = Phase.MOVEMENT;
-                finishIfBlocked(seat);
+                if (!finishIfBlocked(seat)) {
+                    countPosition();
+                }
             }
         }
         return new MorrisEvent.Placed(seat, point);
@@ -147,11 +159,54 @@ public class ThreeMenMorris implements Game {
         board[from] = null;
         board[to] = seat;
         version++;
+        moved(seat);
         if (!finishIfLine(seat)) {
             current = other(seat);
-            finishIfBlocked(seat);
+            if (!finishIfBlocked(seat) && countPosition() >= REPETITIONS_TO_DRAW) {
+                finish(null, MorrisResult.Reason.DRAW_REPETITION, List.of());
+            }
         }
         return new MorrisEvent.Moved(seat, from, to);
+    }
+
+    /**
+     * Offers a draw. Allowed in the movement phase, whoever's turn it is, when no offer is pending and
+     * the seat has not offered since its own last move. The next place or move cancels it.
+     */
+    public synchronized MorrisEvent offerDraw(PlayerId seat) throws ThreeMenMorrisException {
+        requireSeat(seat);
+        if (isFinished()) {
+            throw new FinishedGameException();
+        }
+        if (phase != Phase.MOVEMENT) {
+            throw new DrawOfferNotAllowedException("A draw can only be offered in the movement phase");
+        }
+        if (drawOffer != null) {
+            throw new DrawOfferPendingException();
+        }
+        if (offeredSinceOwnMove[seat.id()]) {
+            throw new DrawOfferNotAllowedException("You already offered a draw since your last move");
+        }
+        drawOffer = seat;
+        offeredSinceOwnMove[seat.id()] = true;
+        version++;
+        return new MorrisEvent.DrawOffered(seat);
+    }
+
+    /** The opponent of the offerer accepts: the game ends with no winner. */
+    public synchronized MorrisEvent acceptDraw(PlayerId seat) throws ThreeMenMorrisException {
+        requireAnswerable(seat);
+        version++;
+        finish(null, MorrisResult.Reason.DRAW_AGREED, List.of());
+        return new MorrisEvent.DrawAccepted(seat);
+    }
+
+    /** The opponent of the offerer declines: the offer is gone and the game goes on. */
+    public synchronized MorrisEvent declineDraw(PlayerId seat) throws ThreeMenMorrisException {
+        requireAnswerable(seat);
+        drawOffer = null;
+        version++;
+        return new MorrisEvent.DrawDeclined(seat);
     }
 
     @Override
@@ -267,6 +322,31 @@ public class ThreeMenMorris implements Game {
         return movesOf(seat);
     }
 
+    /** The seat that offered a draw and waits for an answer, null when no offer is pending. */
+    public synchronized PlayerId drawOffer() {
+        return drawOffer;
+    }
+
+    /**
+     * How many times the current position (board and seat to move) has occurred in the movement
+     * phase; 0 during placement and once the game is finished.
+     */
+    public synchronized int repetitions() {
+        return phase == Phase.MOVEMENT ? occurrences.getOrDefault(position().key(), 0) : 0;
+    }
+
+    /** The draw actions the seat may take now, at any time of the game, whoever's turn it is. */
+    public synchronized List<Action> drawActions(PlayerId seat) {
+        requireSeat(seat);
+        if (phase != Phase.MOVEMENT) {
+            return List.of();
+        }
+        if (drawOffer == null) {
+            return offeredSinceOwnMove[seat.id()] ? List.of() : List.of(Action.OFFER_DRAW);
+        }
+        return drawOffer.equals(seat) ? List.of() : List.of(Action.ACCEPT_DRAW, Action.DECLINE_DRAW);
+    }
+
     public synchronized List<Action> availableActions(PlayerId seat) {
         if (isFinished() || !seat.equals(current)) {
             return List.of();
@@ -283,6 +363,36 @@ public class ThreeMenMorris implements Game {
         if (!seat.equals(current)) {
             throw new NotPlayersTurnException();
         }
+    }
+
+    private static void requireSeat(PlayerId seat) {
+        if (!SEAT_0.equals(seat) && !SEAT_1.equals(seat)) {
+            throw new IllegalArgumentException("No such seat: " + seat);
+        }
+    }
+
+    private void requireAnswerable(PlayerId seat) throws ThreeMenMorrisException {
+        requireSeat(seat);
+        if (isFinished()) {
+            throw new FinishedGameException();
+        }
+        if (drawOffer == null) {
+            throw new NoDrawOfferException();
+        }
+        if (drawOffer.equals(seat)) {
+            throw new DrawOfferNotAllowedException("You cannot answer your own draw offer");
+        }
+    }
+
+    /** A place or move was accepted: it cancels a pending offer and gives the mover its right to offer back. */
+    private void moved(PlayerId mover) {
+        drawOffer = null;
+        offeredSinceOwnMove[mover.id()] = false;
+    }
+
+    /** Counts the current position (movement phase) and returns how many times it has occurred. */
+    private int countPosition() {
+        return occurrences.merge(position().key(), 1, Integer::sum);
     }
 
     private void requirePoint(int point) throws InvalidPointException {
@@ -326,14 +436,17 @@ public class ThreeMenMorris implements Game {
     }
 
     /** The seat to play, now {@code current}, has no move: the player who just played wins. */
-    private void finishIfBlocked(PlayerId mover) {
+    private boolean finishIfBlocked(PlayerId mover) {
         if (movesOf(current).isEmpty()) {
             finish(mover, MorrisResult.Reason.BLOCKED, List.of());
+            return true;
         }
+        return false;
     }
 
     private void finish(PlayerId winner, MorrisResult.Reason reason, List<Integer> line) {
         phase = Phase.FINISHED;
+        drawOffer = null;
         result = new MorrisResult(winner, reason);
         winningLine = List.copyOf(line);
     }

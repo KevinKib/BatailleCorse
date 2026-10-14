@@ -34,7 +34,7 @@ frontend paths relative to `frontend/src/`.
 | M1 | `refactor: Three Men's Morris rules as data` | M | - | [x] done (#190) |
 | M2 | `feat: Achi and Picaria variants of Three Men's Morris` | M | M1 | [x] done (#194) |
 | M3 | `feat: host colour option for Three Men's Morris` | S | M2 | [x] done (#198) |
-| M4 | `feat: draw offers and threefold repetition in Three Men's Morris` | M | M3 | [ ] to do |
+| M4 | `feat: draw offers and threefold repetition in Three Men's Morris` | M | M3 | [x] done (#199) |
 | M5 | `feat: Three Men's Morris bots with three levels` | L | M4 | [ ] to do |
 | F1 | `feat: Three Men's Morris variants and colours on screen` | M | M2, M3, #186 | [ ] to do |
 | F2 | `feat: Three Men's Morris draw offer and draw end screen` | M | M4, F1 | [ ] to do |
@@ -113,6 +113,12 @@ No behaviour, wire or test change for v1: every existing test passes unchanged.
   `DRAW_OFFERED`, `DRAW_DECLINED`, `GAME_OVER` with `action = ACCEPT_DRAW`; `ThreeMenMorrisEventData.from`
   covers the new domain events (new `MorrisEvent` records `DrawOffered`, `DrawDeclined`, `DrawAccepted`).
 - DTO: `drawOffer`, `repetitions`, `Finished(null, reason)`.
+- Deviation (kept the Tapatan wire byte for byte): the draw actions are not merged into `availableActions`
+  (they would change every movement-phase view of the pinned contract). The domain has `drawActions(seat)`
+  and the DTO an additive `drawActions`, written only when it is not the default of the phase (default:
+  `["OFFER_DRAW"]` in the movement phase, nothing otherwise). `drawOffer` and `repetitions` (written from 2)
+  are omitted at their default. Error events of the three commands carry `DRAW_OFFERED`, `DRAW_DECLINED`
+  and `GAME_OVER` as their event type. New pinned file: `golden/three-men-morris-draws-wire.txt`.
 - Tests first: `ThreeMenMorrisDrawOfferTest` (offer refused in placement, twice in a row, with one pending;
   accept finishes with no winner; decline clears it; a move by either side cancels it; version bumps; a
   forfeit with a pending offer finishes as a forfeit), `ThreeMenMorrisRepetitionTest` (a four-move cycle in

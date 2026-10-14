@@ -7,6 +7,7 @@ import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.threemenmorris.domain.Action;
 import org.kevinkib.cardgames.threemenmorris.domain.MorrisResult;
 import org.kevinkib.cardgames.threemenmorris.domain.MorrisVariant;
+import org.kevinkib.cardgames.threemenmorris.domain.Phase;
 import org.kevinkib.cardgames.threemenmorris.domain.ThreeMenMorris;
 import org.kevinkib.cardgames.threemenmorris.domain.ThreeMenMorrisFactory;
 
@@ -35,11 +36,18 @@ public record ThreeMenMorrisDto(
         Outcome outcome,
         @JsonInclude(JsonInclude.Include.NON_NULL) String variant,
         @JsonInclude(JsonInclude.Include.NON_NULL) List<Integer> legalPlacements,
-        @JsonInclude(JsonInclude.Include.NON_NULL) Integer whiteSeat) {
+        @JsonInclude(JsonInclude.Include.NON_NULL) Integer whiteSeat,
+        @JsonInclude(JsonInclude.Include.NON_NULL) DrawOfferDto drawOffer,
+        @JsonInclude(JsonInclude.Include.NON_NULL) Integer repetitions,
+        @JsonInclude(JsonInclude.Include.NON_NULL) List<String> drawActions) {
 
     /** {@code colour} (WHITE or BLACK) is left out while seat 0 plays White, like {@code whiteSeat}. */
     public record PlayerDto(int seat, String name, boolean current, int piecesToPlace,
                             @JsonInclude(JsonInclude.Include.NON_NULL) String colour) {
+    }
+
+    /** The pending draw offer: who made it. */
+    public record DrawOfferDto(int seat) {
     }
 
     public record MoveDto(int from, int to) {
@@ -59,6 +67,17 @@ public record ThreeMenMorrisDto(
     public record Finished(Integer winner, String reason) implements Outcome {
     }
 
+    private static final List<Action> DEFAULT_DRAW_ACTIONS = List.of(Action.OFFER_DRAW);
+
+    /** Only a draw situation that is not the default of the movement phase (OFFER_DRAW alone) is written. */
+    private static List<String> drawActions(ThreeMenMorris game, PlayerId viewer) {
+        List<Action> actions = game.drawActions(viewer);
+        if (actions.equals(DEFAULT_DRAW_ACTIONS) || actions.isEmpty() && game.phase() != Phase.MOVEMENT) {
+            return null;
+        }
+        return actions.stream().map(Action::name).toList();
+    }
+
     public static ThreeMenMorrisDto forViewer(ThreeMenMorris game, PlayerId viewer) {
         return forViewer(game, viewer, Map.of());
     }
@@ -73,7 +92,7 @@ public record ThreeMenMorrisDto(
                     .toList();
             MorrisResult result = game.result();
             Outcome outcome = result.isFinished()
-                    ? new Finished(result.winner().id(), result.reason().name())
+                    ? new Finished(result.winner() == null ? null : result.winner().id(), result.reason().name())
                     : new Ongoing();
             MorrisVariant variant = MorrisVariant.of(game.rules());
             boolean v1 = variant == MorrisVariant.TAPATAN;
@@ -92,7 +111,10 @@ public record ThreeMenMorrisDto(
                     outcome,
                     v1 ? null : variant.key(),
                     v1 ? null : game.legalPlacements(viewer),
-                    seatZeroWhite ? null : game.whiteSeat().id());
+                    seatZeroWhite ? null : game.whiteSeat().id(),
+                    game.drawOffer() == null ? null : new DrawOfferDto(game.drawOffer().id()),
+                    game.repetitions() >= 2 ? game.repetitions() : null,
+                    drawActions(game, viewer));
         }
     }
 }
