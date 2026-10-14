@@ -209,7 +209,10 @@ const rematchButton = computed(() => ({
            :class="{ 'table-frame--compact': compactOpponents, 'table-frame--round-end': sheetOpen }"
            :style="{ '--opponent-columns': columns }">
         <div class="table-center">
-          <KoboPiles :game="store.game" :my-seat="store.mySeat" :current-name="currentName" />
+          <KoboPiles
+            :game="store.game" :my-seat="store.mySeat" :current-name="currentName"
+            :can-draw="store.interaction.piles.draw" :can-discard="store.interaction.piles.discard" :busy="store.busy"
+            @draw="store.pickPile('draw')" @discard="store.pickPile('discard')" />
         </div>
 
         <div class="opponents-ring" data-test="opponents">
@@ -234,6 +237,7 @@ const rematchButton = computed(() => ({
               :group-label="format(ui.table.cardsOf, { player: displayName(opponent.seat) })"
               :faces="faces"
               :clickable="clickable"
+              :match-mode="store.interaction.directMatch"
               :highlighted="highlighted"
               :compact="compactOpponents"
               @pick="(seat: number, slot: number) => store.pickSlot(seat, slot)" />
@@ -269,6 +273,7 @@ const rematchButton = computed(() => ({
           :group-label="ui.table.yourCards"
           :faces="faces"
           :clickable="clickable"
+          :match-mode="store.interaction.directMatch"
           :highlighted="highlighted"
           :selected="selectedOwnSlot"
           @pick="(seat: number, slot: number) => store.pickSlot(seat, slot)" />

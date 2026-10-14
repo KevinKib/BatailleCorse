@@ -25,7 +25,9 @@ const props = withDefaults(defineProps<{
   selected?: number | null;
   /** Slots (by `slotKey`) named by the last event: marked until the next event replaces them. */
   highlighted?: string[];
-}>(), { clickable: () => ({}), compact: false, selected: null, highlighted: () => [] });
+  /** A click on a clickable slot is a match (no other action wants it): said in its name, marked lightly. */
+  matchMode?: boolean;
+}>(), { clickable: () => ({}), compact: false, selected: null, highlighted: () => [], matchMode: false });
 const emit = defineEmits<{ pick: [seat: number, slot: number] }>();
 
 const ui = useI18n().koboUi.table;
@@ -41,11 +43,13 @@ const cellStyle = (cell: { row: number; col: number }) => ({
 const isHighlighted = (slot: number): true | undefined =>
   props.highlighted.includes(slotKey(props.player.seat, slot)) ? true : undefined;
 const faceOf = (slot: number): Card | null => props.faces[slotKey(props.player.seat, slot)] ?? null;
+const isMatch = (slot: number): boolean => props.matchMode && !!props.clickable[slotKey(props.player.seat, slot)];
 const slotLabel = (slot: number): string => {
   const face = faceOf(slot);
-  return face
+  const label = face
     ? format(ui.slotUp, { owner: props.owner, n: slot + 1, card: cardName(face) })
     : format(ui.slotDown, { owner: props.owner, n: slot + 1 });
+  return isMatch(slot) ? format(ui.slotMatch, { label }) : label;
 };
 </script>
 
@@ -57,7 +61,9 @@ const slotLabel = (slot: number): string => {
         v-if="cell.occupied"
         type="button"
         class="slot"
-        :class="{ 'slot--selected': selected === cell.slot, 'slot--event': isHighlighted(cell.slot) }"
+        :class="{ 'slot--selected': selected === cell.slot, 'slot--event': isHighlighted(cell.slot), 'slot--match': isMatch(cell.slot) }"
+        :data-match="isMatch(cell.slot) ? 'true' : undefined"
+        :title="isMatch(cell.slot) ? ui.slotMatchHint : undefined"
         :data-highlighted="isHighlighted(cell.slot)"
         :aria-pressed="selected === cell.slot ? 'true' : undefined"
         :data-test="`slot-${player.seat}-${cell.slot}`"
@@ -115,6 +121,12 @@ const slotLabel = (slot: number): string => {
   background: color-mix(in srgb, var(--gold) 10%, transparent);
 }
 .slot.slot--selected { border-color: var(--gold); background: rgba(255, 255, 255, 0.12); }
+/* One click is a match: a faint 1 px neutral border (not the accent of an action slot) that warms under the
+   pointer. Nothing heavier: a stray tap costs a card, but the user dislikes heavy contours. */
+.slot.slot--match { border-color: rgba(255, 255, 255, 0.22); }
+@media (hover: hover) {
+  .slot.slot--match:hover { border-color: color-mix(in srgb, var(--gold) 70%, transparent); background: rgba(255, 255, 255, 0.06); }
+}
 .slot:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .slot-empty { border: 1px dashed rgba(255, 255, 255, 0.25); }
 

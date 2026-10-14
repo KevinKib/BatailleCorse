@@ -252,6 +252,10 @@ export interface KoboUiMessages {
     slotUp: string;                    // '{owner}', '{n}', '{card}': a face-up card
     cardName: string;                  // '{rank}', '{suit}'
     drawPile: PluralForms;             // '{n}' = cards left
+    drawAction: PluralForms;           // '{n}' = cards left: the draw pile when a click draws
+    discardAction: string;             // '{card}', '{n}': the discard pile when a click discards my drawn card
+    slotMatch: string;                 // '{label}' = the slot name: a click on it is a match
+    slotMatchHint: string;             // tooltip of such a slot
     discardPile: string;               // '{card}', '{n}': top card face up
     discardEmpty: string;
     drawnYours: string;                // '{card}'

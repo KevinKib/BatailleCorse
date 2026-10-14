@@ -175,10 +175,11 @@ describe('koboInteraction', () => {
 
   describe('nothing to click', () => {
     it('with no slot-picking action listed, nothing is clickable and there is no prompt', () => {
-      const state = listing(['DRAW', 'MATCH_DISCARD'], { phase: 'DRAW' });
+      const state = listing(['DRAW'], { phase: 'DRAW' });
       const interaction = koboInteraction(state, 0, NONE);
       expect(interaction.intents).toEqual({});
       expect(interaction.prompt).toBeNull();
+      expect(interaction.directMatch).toBe(false);
     });
 
     it('when I am not the one holding the action (not listed for me), nothing is clickable', () => {
@@ -188,6 +189,131 @@ describe('koboInteraction', () => {
     it('a seat that is not at the table gets nothing', () => {
       const state = listing(['SWAP_DRAWN']);
       expect(Object.keys(koboInteraction(state, 5, NONE).intents)).toEqual([]);
+    });
+  });
+
+  describe('piles', () => {
+    it('the draw pile is clickable exactly when DRAW is listed', () => {
+      expect(koboInteraction(listing(['DRAW', 'MATCH_DISCARD']), 0, NONE).piles).toEqual({ draw: true, discard: false });
+      expect(koboInteraction(listing(['MATCH_DISCARD']), 0, NONE).piles).toEqual({ draw: false, discard: false });
+    });
+
+    it('the discard pile is clickable exactly when DISCARD_DRAWN is listed (I hold a drawn card)', () => {
+      const state = listing(['SWAP_DRAWN', 'DISCARD_DRAWN'], { phase: 'DECISION', hasDrawn: true, drawnCard: buildKoboCard('5') });
+      expect(koboInteraction(state, 0, NONE).piles).toEqual({ draw: false, discard: true });
+    });
+
+    it('no pile is clickable for a seat that is not at the table', () => {
+      expect(koboInteraction(listing(['DRAW']), 5, NONE).piles).toEqual({ draw: false, discard: false });
+    });
+  });
+
+  // One click on an occupied slot is a match when no action of the phase uses the click on a slot.
+  describe('direct match', () => {
+    const matchable = (overrides: Partial<KoboState> = {}) => listing(['MATCH_DISCARD'], {
+      discardTop: buildKoboCard('KING'),
+      players: [
+        buildKoboPlayer(0, { current: false, slots: [buildKoboSlot(0, { revision: 4 }), buildKoboSlot(1, { occupied: false })] }),
+        buildKoboPlayer(1, { current: true, slots: [buildKoboSlot(0, { revision: 7 })] }),
+      ],
+      currentSeat: 1,
+      ...overrides,
+    });
+
+    it('outside my turn, every occupied slot is a one-click match, taken at the revision on screen', () => {
+      const interaction = koboInteraction(matchable(), 0, NONE);
+      expect(interaction.directMatch).toBe(true);
+      expect(Object.keys(interaction.intents).sort()).toEqual([slotKey(0, 0), slotKey(1, 0)]);
+      expect(interaction.prompt).toBeNull();
+      expect(interaction.intents[slotKey(0, 0)]).toEqual({
+        kind: 'send', command: { type: 'match', seat: 0, slot: 0, expectedTopRank: 'KING', expectedRevision: 4 },
+      });
+    });
+
+    it('a card of another player asks which of mine to give: a second click, like the armed mode', () => {
+      expect(koboInteraction(matchable(), 0, NONE).intents[slotKey(1, 0)]).toEqual({
+        kind: 'pend',
+        pending: { kind: 'match-give', target: { seat: 1, slot: 0 }, expectedTopRank: 'KING', expectedRevision: 7 },
+      });
+    });
+
+    it('my own turn before drawing (DRAW) and after discarding (TURN_END): still a match', () => {
+      for (const phase of ['DRAW', 'TURN_END'] as const) {
+        const state = matchable({
+          phase, currentSeat: 0,
+          players: [buildKoboPlayer(0, { current: true }), buildKoboPlayer(1)],
+        });
+        expect(koboInteraction(state, 0, NONE).directMatch, phase).toBe(true);
+      }
+    });
+
+    it('a listed swap of the drawn card keeps the click (swap), no match', () => {
+      const state = matchable({
+        availableActions: ['SWAP_DRAWN', 'DISCARD_DRAWN', 'MATCH_DISCARD'], phase: 'DECISION', currentSeat: 0,
+        hasDrawn: true, drawnCard: buildKoboCard('5'),
+      });
+      const interaction = koboInteraction(state, 0, NONE);
+      expect(interaction.directMatch).toBe(false);
+      expect(interaction.intents[slotKey(0, 0)]).toMatchObject({ command: { type: 'swapDrawn' } });
+      expect(interaction.intents[slotKey(1, 0)]).toBeUndefined();
+    });
+
+    it('a pending power of mine (peek 7/8, swap J/Q, king) takes the clicks: no match anywhere', () => {
+      const powers = [['PEEK_OWN', 'POWER'], ['PEEK_OTHER', 'POWER'], ['BLIND_SWAP', 'POWER'], ['KING', 'KING_DECISION']] as const;
+      for (const [power, phase] of powers) {
+        const state = matchable({
+          availableActions: ['MATCH_DISCARD', 'SKIP_POWER'], phase, pendingPower: power, currentSeat: 0,
+        });
+        const interaction = koboInteraction(state, 0, NONE);
+        expect(interaction.directMatch, power).toBe(false);
+        const matches = Object.values(interaction.intents)
+          .filter(i => i.kind === 'send' && i.command.type === 'match');
+        expect(matches, power).toEqual([]);
+      }
+    });
+
+    it('my turn, power pending but nothing listed that uses a slot: still no match (the power is not over)', () => {
+      const state = matchable({ phase: 'POWER', pendingPower: 'PEEK_OWN', currentSeat: 0, availableActions: ['MATCH_DISCARD'] });
+      expect(koboInteraction(state, 0, NONE).directMatch).toBe(false);
+    });
+
+    it('the power of another player does not stop me: I may match during their power', () => {
+      const state = matchable({ phase: 'POWER', pendingPower: 'PEEK_OTHER', currentSeat: 1 });
+      expect(koboInteraction(state, 0, NONE).directMatch).toBe(true);
+    });
+
+    it('a local selection (armed, give, blind-own) is never turned into a direct match', () => {
+      const give: KoboPending = { kind: 'match-give', target: { seat: 1, slot: 0 }, expectedTopRank: 'KING', expectedRevision: 7 };
+      expect(koboInteraction(matchable(), 0, give).directMatch).toBe(false);
+      expect(koboInteraction(matchable(), 0, { kind: 'match-armed' }).directMatch).toBe(false);
+      const blind = matchable({ availableActions: ['MATCH_DISCARD', 'BLIND_SWAP'], pendingPower: 'BLIND_SWAP', currentSeat: 0 });
+      expect(koboInteraction(blind, 0, { kind: 'blind-own', ownSlot: 0 }).directMatch).toBe(false);
+    });
+
+    it('no direct match without MATCH_DISCARD, without a discard top, while memorising, in a gift or a revealed round', () => {
+      expect(koboInteraction(matchable({ availableActions: [] }), 0, NONE).directMatch).toBe(false);
+      expect(koboInteraction(matchable({ discardTop: null }), 0, NONE).directMatch).toBe(false);
+      for (const phase of ['MEMORISING', 'GIFT', 'ROUND_OVER', 'FINISHED'] as const) {
+        expect(koboInteraction(matchable({ phase }), 0, NONE).directMatch, phase).toBe(false);
+      }
+      expect(koboInteraction(matchable({ revealed: true }), 0, NONE).directMatch).toBe(false);
+    });
+
+    it('a drawn card I hold blocks it even if the server listing were incomplete', () => {
+      const held = matchable({ currentSeat: 0, hasDrawn: true, drawnCard: buildKoboCard('5') });
+      expect(koboInteraction(held, 0, NONE).directMatch).toBe(false);
+    });
+
+    it('the caller can hold it back (settling after a command of mine): the slots are then not clickable', () => {
+      const interaction = koboInteraction(matchable(), 0, NONE, { directMatch: false });
+      expect(interaction.directMatch).toBe(false);
+      expect(interaction.intents).toEqual({});
+    });
+
+    it('the armed mode still reads matchPick and keeps its clickable slots', () => {
+      const interaction = koboInteraction(matchable(), 0, { kind: 'match-armed' });
+      expect(interaction.prompt).toBe('matchPick');
+      expect(Object.keys(interaction.intents)).toHaveLength(2);
     });
   });
 });

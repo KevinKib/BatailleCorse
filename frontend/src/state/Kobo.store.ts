@@ -6,7 +6,7 @@ import KoboSession, { type KoboSessionEvent } from '../application/KoboSession';
 import type { KoboAction, KoboPlayer, KoboState, KoboView } from '../model/kobo/KoboState';
 import type { KoboEventData, KoboLogEntry } from '../model/kobo/KoboEvents';
 import type { LobbyView } from '../model/lobby/LobbyView';
-import { koboInteraction, type KoboPending, type KoboSlotCommand } from '../model/kobo/interaction';
+import { koboInteraction, NOTHING, type KoboPending, type KoboSlotCommand } from '../model/kobo/interaction';
 import { reconcilePending } from '../model/kobo/pending';
 import { revealToken, visibleFaces } from '../model/kobo/faces';
 import { useSeatPresence, FORFEIT_NOTICE_HOLD_MS } from '../composables/useSeatPresence';
@@ -24,6 +24,8 @@ export type KoboNotice = 'matchTooLate' | 'moveImpossible' | 'connection';
 /** Events that are not about the table: they have their own state (presence, forfeit) and never enter the log. */
 const NOT_TABLE_EVENTS = new Set(['OPPONENT_DISCONNECTED', 'OPPONENT_RECONNECTED', 'FORFEIT']);
 const NO_PENDING: KoboPending = { kind: 'none' };
+/** After a command of mine, a click on a card is not a one-click match for this long (a double tap, a late tap). */
+export const KOBO_SETTLE_MS = 500;
 
 export const useKoboStore = defineStore('kobo-store', () => {
   const state = ref<KoboView | null>(null);
@@ -130,6 +132,8 @@ export const useKoboStore = defineStore('kobo-store', () => {
     state.value = null;
     pending.value = NO_PENDING;
     busy.value = false;
+    clearTimeout(settleTimer);
+    settling.value = false;
     events.value = [];
     notice.value = null;
     hiddenPeek.value = null;
@@ -140,8 +144,19 @@ export const useKoboStore = defineStore('kobo-store', () => {
   const me = computed(() => game.value?.players.find(p => p.seat === mySeat.value) ?? null);
   const isMyTurn = computed(() => game.value?.currentSeat === mySeat.value && me.value !== null);
   const can = (action: KoboAction) => game.value?.availableActions.includes(action) ?? false;
+  // True for a moment after each command I send: the one-click match is held back so that the second tap of a
+  // double tap, landing on the table the first one just changed, cannot cost a penalty card.
+  const settling = ref(false);
+  let settleTimer: ReturnType<typeof setTimeout> | undefined;
+  function settle() {
+    settling.value = true;
+    clearTimeout(settleTimer);
+    settleTimer = setTimeout(() => { settling.value = false; }, KOBO_SETTLE_MS);
+  }
   const interaction = computed(() =>
-    game.value ? koboInteraction(game.value, mySeat.value, pending.value) : { prompt: null, intents: {} });
+    game.value
+      ? koboInteraction(game.value, mySeat.value, pending.value, { directMatch: !settling.value })
+      : NOTHING);
   // Every card the viewer may see, by `slotKey` (see `visibleFaces`).
   const faces = computed(() =>
     game.value ? visibleFaces(game.value, mySeat.value, hiddenPeek.value) : {});
@@ -169,6 +184,7 @@ export const useKoboStore = defineStore('kobo-store', () => {
       return false;
     }
     if (!race) busy.value = true;
+    settle();
     return true;
   }
 
@@ -197,6 +213,12 @@ export const useKoboStore = defineStore('kobo-store', () => {
     if (sendSlotCommand(intent.command)) pending.value = NO_PENDING;
   }
 
+  /** A click on a pile: the draw pile draws, the discard pile discards the card I hold (the bar buttons stay). */
+  function pickPile(pile: 'draw' | 'discard') {
+    if (!interaction.value.piles[pile]) return;
+    send(pile === 'draw' ? () => session.draw() : () => session.discardDrawn());
+  }
+
   /** Arms (or disarms) the matching discard; only while the server lists it. */
   function armMatch() {
     if (pending.value.kind !== 'none') { pending.value = NO_PENDING; return; }
@@ -222,7 +244,7 @@ export const useKoboStore = defineStore('kobo-store', () => {
     forfeitNotice: presence.forfeitNotice,
     pending, busy, events, notice,
     me, isMyTurn, can, interaction, screen, faces, canHidePeek,
-    applyEvent, armMatch, cancelPending, pickSlot, hidePeek,
+    applyEvent, armMatch, cancelPending, pickSlot, pickPile, hidePeek,
     create: (name?: string) => session.create(name),
     join: (id: string, name?: string) => session.join(id, name),
     restore: (id: string, seat: number, token: string) => session.restore(id, seat, token),

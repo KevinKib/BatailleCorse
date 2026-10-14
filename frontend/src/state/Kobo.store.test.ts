@@ -215,6 +215,106 @@ describe('Kobo store', () => {
     });
   });
 
+  describe('direct clicks', () => {
+    const matchState = (overrides: Partial<KoboState> = {}) => game(['MATCH_DISCARD'], {
+      discardTop: buildKoboCard('KING'), currentSeat: 1,
+      players: [
+        buildKoboPlayer(0, { slots: [buildKoboSlot(0, { revision: 6 }), buildKoboSlot(1)] }),
+        buildKoboPlayer(1, { current: true }),
+      ],
+      ...overrides,
+    });
+
+    it('a click on the draw pile draws, once, while DRAW is listed', () => {
+      const store = boot();
+      store.applyEvent({ type: 'state-update', state: game(['DRAW', 'MATCH_DISCARD']) });
+      store.pickPile('draw');
+      store.pickPile('draw');
+      expect(sent().filter(m => m.dest === '/app/kobo/draw')).toHaveLength(1);
+    });
+
+    it('a click on the draw pile does nothing when DRAW is not listed', () => {
+      const store = boot();
+      store.applyEvent({ type: 'state-update', state: game(['MATCH_DISCARD']) });
+      store.pickPile('draw');
+      expect(publish).not.toHaveBeenCalled();
+    });
+
+    it('a click on the discard pile discards the card I hold, only while DISCARD_DRAWN is listed', () => {
+      const store = boot();
+      store.applyEvent({ type: 'state-update', state: game(['MATCH_DISCARD']) });
+      store.pickPile('discard');
+      expect(publish).not.toHaveBeenCalled();
+      store.applyEvent({
+        type: 'state-update',
+        state: game(['SWAP_DRAWN', 'DISCARD_DRAWN'], { version: 2, phase: 'DECISION', hasDrawn: true, drawnCard: buildKoboCard('5') }),
+      });
+      store.pickPile('discard');
+      expect(sent().at(-1)).toMatchObject({ dest: '/app/kobo/discardDrawn' });
+    });
+
+    it('one click on my own card matches at once, with what was on screen', () => {
+      const store = boot();
+      store.applyEvent({ type: 'state-update', state: matchState() });
+      store.pickSlot(0, 0);
+      expect(sent()).toEqual([{
+        dest: '/app/kobo/match',
+        body: { gameId: 'g1', token: 'tok', seat: 0, slot: 0, expectedTopRank: 'KING', expectedRevision: 6 },
+      }]);
+      expect(store.pending).toEqual({ kind: 'none' });
+    });
+
+    it("a click on another player's card goes on to the give step; my card then sends the match", () => {
+      const store = boot();
+      store.applyEvent({ type: 'state-update', state: matchState() });
+      store.pickSlot(1, 2);
+      expect(publish).not.toHaveBeenCalled();
+      expect(store.pending.kind).toBe('match-give');
+      store.pickSlot(0, 1);
+      expect(sent()).toHaveLength(1);
+      expect(sent()[0].body).toMatchObject({ seat: 1, slot: 2, giveSlot: 1, expectedTopRank: 'KING' });
+    });
+
+    describe('right after a command of mine', () => {
+      beforeEach(() => { vi.useFakeTimers(); });
+      afterEach(() => { vi.useRealTimers(); });
+
+      it('a double tap never turns into a match: the second tap lands while the table settles', () => {
+        const store = boot();
+        const deciding = game(['SWAP_DRAWN', 'DISCARD_DRAWN', 'MATCH_DISCARD'], {
+          phase: 'DECISION', currentSeat: 0, hasDrawn: true, drawnCard: buildKoboCard('5'), discardTop: buildKoboCard('KING'),
+        });
+        store.applyEvent({ type: 'state-update', state: deciding });
+        store.pickSlot(0, 1);
+        expect(sent().map(m => m.dest)).toEqual(['/app/kobo/swapDrawn']);
+        // The answer comes back: the phase now lists no slot action, yet the second tap must not match.
+        store.applyEvent({
+          type: 'state-update',
+          state: game(['END_TURN', 'MATCH_DISCARD'], {
+            version: 2, phase: 'TURN_END', currentSeat: 0, discardTop: buildKoboCard('KING'),
+          }),
+        });
+        expect(store.interaction.directMatch).toBe(false);
+        store.pickSlot(0, 1);
+        expect(sent()).toHaveLength(1);
+        vi.advanceTimersByTime(600);
+        expect(store.interaction.directMatch).toBe(true);
+        store.pickSlot(0, 1);
+        expect(sent().map(m => m.dest)).toEqual(['/app/kobo/swapDrawn', '/app/kobo/match']);
+      });
+
+      it('the armed mode is not held back', () => {
+        const store = boot();
+        store.applyEvent({ type: 'state-update', state: game(['DRAW', 'MATCH_DISCARD'], { discardTop: buildKoboCard('KING') }) });
+        store.draw();
+        store.applyEvent({ type: 'state-update', state: matchState({ version: 2 }) });
+        store.armMatch();
+        store.pickSlot(0, 0);
+        expect(sent().at(-1)).toMatchObject({ dest: '/app/kobo/match' });
+      });
+    });
+  });
+
   describe('pending selection', () => {
     function armedWithTarget() {
       const store = boot();
