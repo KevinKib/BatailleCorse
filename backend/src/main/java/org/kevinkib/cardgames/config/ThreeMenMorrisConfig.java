@@ -12,14 +12,42 @@ import org.kevinkib.cardgames.presentation.bot.BotSeats;
 import org.kevinkib.cardgames.presentation.state.SeatLifecycleBroadcaster;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
+import org.kevinkib.cardgames.presentation.bot.ThreadLocalRandomGenerator;
+
+import java.util.random.RandomGenerator;
 
 /** The beans of the Three Men Morris context: factory, broadcasters and actions. */
 @Configuration
 public class ThreeMenMorrisConfig {
 
+    /** Production: the colour of a "random" host is really drawn. */
+    @Bean("morrisRandom")
+    @Profile("!test")
+    public RandomGenerator morrisRandom() {
+        return new ThreadLocalRandomGenerator();
+    }
+
+    /** End-to-end tests (profile {@code test}): every draw is 0, so a "random" host is White. */
+    @Bean("morrisRandom")
+    @Profile("test")
+    public RandomGenerator morrisRandomFixed() {
+        return new RandomGenerator() {
+            @Override
+            public long nextLong() {
+                return 0;
+            }
+
+            @Override
+            public int nextInt(int bound) {
+                return 0;
+            }
+        };
+    }
+
     @Bean
-    public ThreeMenMorrisFactory threeMenMorrisFactory() {
-        return new ThreeMenMorrisFactory();
+    public ThreeMenMorrisFactory threeMenMorrisFactory(RandomGenerator morrisRandom) {
+        return new ThreeMenMorrisFactory(morrisRandom);
     }
 
     @Bean

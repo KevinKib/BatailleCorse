@@ -33,7 +33,7 @@ frontend paths relative to `frontend/src/`.
 |----|-------|------|-------|-------|
 | M1 | `refactor: Three Men's Morris rules as data` | M | - | [x] done (#190) |
 | M2 | `feat: Achi and Picaria variants of Three Men's Morris` | M | M1 | [x] done (#194) |
-| M3 | `feat: host colour option for Three Men's Morris` | S | M2 | [ ] to do |
+| M3 | `feat: host colour option for Three Men's Morris` | S | M2 | [x] done (#198) |
 | M4 | `feat: draw offers and threefold repetition in Three Men's Morris` | M | M3 | [ ] to do |
 | M5 | `feat: Three Men's Morris bots with three levels` | L | M4 | [ ] to do |
 | F1 | `feat: Three Men's Morris variants and colours on screen` | M | M2, M3, #186 | [ ] to do |

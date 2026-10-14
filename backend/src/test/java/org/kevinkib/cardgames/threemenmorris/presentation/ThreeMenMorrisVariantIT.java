@@ -109,6 +109,21 @@ class ThreeMenMorrisVariantIT {
     }
 
     @Test
+    void aRoomCreatedWithHostColourBlackStartsWithSeatOneToPlay() throws Exception {
+        RoomCreated room = sessionService.createRoom(ThreeMenMorrisFactory.GAME_TYPE, "Alice",
+                GameOptions.of(Map.of("hostColour", "black")));
+        String guestToken = sessionService.joinRoom(new GameId(room.gameId()), "Bob").token();
+
+        Map<String, Object> start = startAndAwaitStart(room, guestToken);
+
+        assertThat(state(start).get("currentSeat"), is(1));
+        assertThat(state(start).get("whiteSeat"), is(1));
+        assertThat(players(start).get(0).get("colour"), is("BLACK"));
+        assertThat(players(start).get(1).get("colour"), is("WHITE"));
+        assertThat(players(start).get(1).get("current"), is(true));
+    }
+
+    @Test
     void aRoomWithoutOptionsStartsAsTapatanWithoutTheNewFields() throws Exception {
         RoomCreated room = sessionService.createRoom(ThreeMenMorrisFactory.GAME_TYPE, "Alice");
         String guestToken = sessionService.joinRoom(new GameId(room.gameId()), "Bob").token();

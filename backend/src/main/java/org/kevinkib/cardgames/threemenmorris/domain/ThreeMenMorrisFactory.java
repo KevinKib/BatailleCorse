@@ -10,11 +10,27 @@ import org.kevinkib.cardgames.game.PlayerId;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.random.RandomGenerator;
 
 public class ThreeMenMorrisFactory implements GameFactory {
 
     public static final String GAME_TYPE = "three-men-morris";
     public static final String VARIANT_KEY = "variant";
+    public static final String HOST_COLOUR_KEY = "hostColour";
+
+    private static final PlayerId HOST = new PlayerId(0);
+    private static final PlayerId GUEST = new PlayerId(1);
+
+    private final RandomGenerator random;
+
+    public ThreeMenMorrisFactory() {
+        this(RandomGenerator.getDefault());
+    }
+
+    /** The generator is drawn once per game, and only when the host colour is {@code random}. */
+    public ThreeMenMorrisFactory(RandomGenerator random) {
+        this.random = random;
+    }
 
     @Override
     public String gameType() {
@@ -43,13 +59,26 @@ public class ThreeMenMorrisFactory implements GameFactory {
                     + ThreeMenMorris.PLAYERS + " players, not " + nbPlayers);
         }
         MorrisVariant variant = options.get(VARIANT_KEY).map(MorrisVariant::fromKey).orElse(MorrisVariant.DEFAULT);
-        return new ThreeMenMorris(id, variant.rules(), new PlayerId(0));
+        HostColour hostColour = options.get(HOST_COLOUR_KEY).map(HostColour::fromKey).orElse(HostColour.DEFAULT);
+        return new ThreeMenMorris(id, variant.rules(), whiteSeat(hostColour));
+    }
+
+    private PlayerId whiteSeat(HostColour hostColour) {
+        return switch (hostColour) {
+            case WHITE -> HOST;
+            case BLACK -> GUEST;
+            case RANDOM -> random.nextInt(2) == 0 ? HOST : GUEST;
+        };
     }
 
     @Override
     public List<OptionDescriptor> optionDescriptors() {
-        return List.of(new OptionDescriptor(VARIANT_KEY, OptionType.CHOICE,
-                Arrays.stream(MorrisVariant.values()).map(MorrisVariant::key).toList(),
-                MorrisVariant.DEFAULT.key(), "options.threeMenMorris.variant"));
+        return List.of(
+                new OptionDescriptor(VARIANT_KEY, OptionType.CHOICE,
+                        Arrays.stream(MorrisVariant.values()).map(MorrisVariant::key).toList(),
+                        MorrisVariant.DEFAULT.key(), "options.threeMenMorris.variant"),
+                new OptionDescriptor(HOST_COLOUR_KEY, OptionType.CHOICE,
+                        Arrays.stream(HostColour.values()).map(HostColour::key).toList(),
+                        HostColour.DEFAULT.key(), "options.threeMenMorris.hostColour"));
     }
 }

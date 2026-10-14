@@ -34,9 +34,12 @@ public record ThreeMenMorrisDto(
         List<Integer> winningLine,
         Outcome outcome,
         @JsonInclude(JsonInclude.Include.NON_NULL) String variant,
-        @JsonInclude(JsonInclude.Include.NON_NULL) List<Integer> legalPlacements) {
+        @JsonInclude(JsonInclude.Include.NON_NULL) List<Integer> legalPlacements,
+        @JsonInclude(JsonInclude.Include.NON_NULL) Integer whiteSeat) {
 
-    public record PlayerDto(int seat, String name, boolean current, int piecesToPlace) {
+    /** {@code colour} (WHITE or BLACK) is left out while seat 0 plays White, like {@code whiteSeat}. */
+    public record PlayerDto(int seat, String name, boolean current, int piecesToPlace,
+                            @JsonInclude(JsonInclude.Include.NON_NULL) String colour) {
     }
 
     public record MoveDto(int from, int to) {
@@ -63,9 +66,10 @@ public record ThreeMenMorrisDto(
     public static ThreeMenMorrisDto forViewer(ThreeMenMorris game, PlayerId viewer, Map<PlayerId, String> names) {
         synchronized (game) {
             List<Integer> board = game.board().stream().map(owner -> owner == null ? null : owner.id()).toList();
+            boolean seatZeroWhite = game.whiteSeat().id() == 0;
             List<PlayerDto> players = game.getPlayerIds().stream()
                     .map(p -> new PlayerDto(p.id(), names.get(p), p.equals(game.currentSeat()),
-                            game.piecesToPlace(p)))
+                            game.piecesToPlace(p), seatZeroWhite ? null : game.colourOf(p).name()))
                     .toList();
             MorrisResult result = game.result();
             Outcome outcome = result.isFinished()
@@ -87,7 +91,8 @@ public record ThreeMenMorrisDto(
                     game.winningLine(),
                     outcome,
                     v1 ? null : variant.key(),
-                    v1 ? null : game.legalPlacements(viewer));
+                    v1 ? null : game.legalPlacements(viewer),
+                    seatZeroWhite ? null : game.whiteSeat().id());
         }
     }
 }

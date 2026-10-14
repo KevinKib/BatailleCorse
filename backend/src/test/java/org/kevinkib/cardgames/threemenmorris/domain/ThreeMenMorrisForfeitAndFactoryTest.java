@@ -66,7 +66,7 @@ class ThreeMenMorrisForfeitAndFactoryTest {
         assertThat(game.getPlayerIds(), is(java.util.List.of(WHITE, BLACK)));
         assertThat(factory.seatOptionDescriptors(), is(empty()));
         assertThat(factory.validate(GameOptions.none()),
-                is(GameOptions.of(java.util.Map.of("variant", "tapatan"))));
+                is(GameOptions.of(java.util.Map.of("variant", "tapatan", "hostColour", "white"))));
         assertThat(factory.create(id, 2, GameOptions.none()), instanceOf(ThreeMenMorris.class));
     }
 }
