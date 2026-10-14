@@ -19,30 +19,6 @@ function visitRoomAs(kind: Kind, id: string, seat: number, token: string) {
   cy.get('[data-test="lobby"]', { timeout: 10000 }).should('be.visible');
 }
 
-/**
- * A view sent between the browser's first load and its seat subscription is lost, and the lobby carries no
- * other signal that the channel is live. So `publish` (a repeatable change that shows up in the lobby, such as a
- * rename) is replayed with a fresh label until the browser displays it: from then on the channel is live.
- */
-function untilBrowserSees(publish: (label: string) => void) {
-  return cy.window({ log: false }).then((win) => new Promise<void>((resolve, reject) => {
-    let attempt = 0;
-    const next = () => {
-      if (attempt >= 12) { reject(new Error('the browser never received the lobby update')); return; }
-      const label = `Nudge${++attempt}`;
-      publish(label);
-      const deadline = Date.now() + 1500;
-      const look = () => {
-        if (win.document.querySelector('.players')?.textContent?.includes(label)) { resolve(); return; }
-        if (Date.now() > deadline) { next(); return; }
-        setTimeout(look, 50);
-      };
-      look();
-    };
-    next();
-  }));
-}
-
 function noHorizontalScroll() {
   cy.document().then((doc) => {
     expect(doc.documentElement.scrollWidth, 'page width').to.be.at.most(doc.documentElement.clientWidth);
@@ -56,10 +32,9 @@ describe('Host removes a seat', () => {
       createRoom('bullshit').then(({ gameId, token }) => {
         visitRoomAs('bullshit', gameId, 0, token);
         joinAsScriptedPlayer(gameId, 'Bob').then((bob) => {
-          untilBrowserSees((label) => bob.publish('/app/lobby/rename', { name: label }));
           cy.get('[data-test="player-count"]').should('contain.text', '2 / 6');
           cy.get('[data-test="remove-seat-0"]').should('not.exist');
-          cy.get('[data-test="remove-seat-1"]').should('have.attr', 'aria-label', 'Remove Nudge1');
+          cy.get('[data-test="remove-seat-1"]').should('have.attr', 'aria-label', 'Remove Bob');
           noHorizontalScroll();
           cy.get('[data-test="remove-seat-1"]').click();
           cy.get('[data-test="player-count"]').should('contain.text', '1 / 6');
@@ -78,9 +53,7 @@ describe('Host removes a seat', () => {
     createRoom('bataillecorse').then(({ gameId, token }) => {
       visitRoomAs('bataillecorse', gameId, 0, token);
       cy.request('POST', joinPath('bataillecorse', gameId), { name: 'Bob' }).then((res) => {
-        connectScriptedPlayer(gameId, res.body.token, res.body.playerId).then((bob) => {
-          untilBrowserSees((label) => bob.publish('/app/lobby/rename', { name: label }));
-        });
+        connectScriptedPlayer(gameId, res.body.token, res.body.playerId);
         cy.get('[data-test="player-count"]').should('contain.text', '2 / 2');
         cy.get('[data-test="remove-seat-1"]').click();
         cy.get('[data-test="player-count"]').should('contain.text', '1 / 2');
@@ -92,7 +65,6 @@ describe('Host removes a seat', () => {
     createRoom('bullshit').then(({ gameId, token }) => {
       visitRoomAs('bullshit', gameId, 0, token);
       joinAsScriptedPlayer(gameId, 'Bob').then((bob) => {
-        untilBrowserSees((label) => bob.publish('/app/lobby/rename', { name: label }));
         bob.publish('/app/presence', {});
         cy.get('.players li').eq(1).find('[data-test="badge-offline"]').should('not.exist');
         cy.then(() => bob.disconnect());
@@ -110,7 +82,6 @@ describe('Host removes a seat', () => {
         cy.request('POST', joinPath('bullshit', gameId), { name: 'Bob' }).then((res) => {
           connectScriptedPlayer(gameId, hostToken, 0).then((host) => {
             visitRoomAs('bullshit', gameId, res.body.playerId, res.body.token);
-            untilBrowserSees((label) => host.publish('/app/lobby/rename', { name: label }));
             cy.get('.players li').should('have.length', 2);
             cy.then(() => host.publish('/app/lobby/removeSeat', { seat: 1 }));
             cy.location('pathname', { timeout: 10000 }).should('eq', '/games');
@@ -128,7 +99,6 @@ describe('Host removes a seat', () => {
       visitRoomAs('bullshit', gameId, 0, token);
       joinAsScriptedPlayer(gameId, 'Bob').then((bob) => {
         joinAsScriptedPlayer(gameId, 'Carol').then((carol) => {
-          untilBrowserSees((label) => carol.publish('/app/lobby/rename', { name: label }));
         });
         cy.get('[data-test="player-count"]').should('contain.text', '3 / 6');
         cy.then(() => bob.publish('/app/lobby/removeSeat', { seat: 2 }));

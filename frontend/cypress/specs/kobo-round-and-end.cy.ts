@@ -30,7 +30,7 @@ describe('Kobo round end and game end', () => {
     // Alice holds KH KD AH AD (2 points), Bob 9H 8H 7H 6H (30). Draw order: 2C (Alice), 3C (Bob).
     startKoboTable(2, ['KH', 'KD', 'AH', 'AD', '9H', '8H', '7H', '6H', '2C', '3C']).then(({ guests }) => {
       const bob = guests[0] as typeof guests[0] & { seat: number };
-      // The guest's name is whatever the lobby handshake left it (see `untilBrowserSees`): read it from the table.
+      // The guest's name is whatever the lobby handshake left it: read it from the table.
       let bobName = '';
       cy.get('[data-test="opponent-seat"][data-seat="1"] [data-test="seat-label"]').invoke('text').then((name) => { bobName = name; });
       aliceAnnouncesAndBobPlaysLast(bob);

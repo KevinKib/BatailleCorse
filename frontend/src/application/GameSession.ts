@@ -159,7 +159,7 @@ export default class GameSession {
     this.started = false;
     this.over = false;
     this.left = false;
-    this.webSocket.subscribeToSeat(gameId, seat, token, r => this.onSeatResponse(r), () => this.onConnected());
+    this.webSocket.subscribeToSeat(gameId, seat, token, r => this.onSeatResponse(r), () => { void this.onConnected(); });
     this.webSocket.subscribeToGame(gameId);
     // Tell the server which seat this connection occupies, so a socket drop is attributable to it
     // (disconnect grace timer, then forfeit). The WebSocketService re-asserts presence on reconnect.
@@ -173,10 +173,12 @@ export default class GameSession {
    * it was. A lobby view is version-guarded. A running game has no version, so it is not reloaded over events
    * still animating (that would replace the state under them); the next event brings it up to date.
    */
-  private onConnected(): void {
+  private async onConnected(): Promise<void> {
     if (this.left) return;
     if (this.started && (this.isProcessingQueue || this.eventQueue.length > 0)) return;
-    void this.hydrate();
+    const result = await this.hydrate();
+    // A refusal (403) or a missing game (404): the removal of this seat was among the lost frames.
+    if ((result === 'lost' || result === 'gone') && !this.left) this.removedByHost();
   }
 
   private identity(): { gameId: string; token: string } | null {

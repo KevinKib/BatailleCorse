@@ -563,4 +563,12 @@ describe('GameSession re-hydrates once the seat subscription is live', () => {
     connect();
     expect(fetchMock).not.toHaveBeenCalled();
   });
+
+  it('tears down as removed when the connection hydrate learns the seat is gone (REMOVED frame lost)', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(respond({}, 403)));
+    const { session, events, connect } = makeSession();
+    session.restore('game-1', 1, 'tok-1');
+    connect();
+    await vi.waitFor(() => expect(events.some(e => e.type === 'removed')).toBe(true));
+  });
 });

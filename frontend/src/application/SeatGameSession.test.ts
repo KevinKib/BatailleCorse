@@ -184,4 +184,15 @@ describe('SeatGameSession re-hydrates once the seat subscription is live', () =>
     fireSeat({ eventType: 'MOVE', message: '', state: { started: true, mySeat: 0, version: 5 } });
     expect(events.filter(e => e.type === 'state-update')).toHaveLength(2);
   });
+
+  it('tears down as removed when the connection hydrate learns the seat is gone (REMOVED frame lost)', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(respond({}, 403)));
+    const { session, events, connect, teardown } = make();
+    session.restore('g1', 1, 'tok');
+    localStorage.setItem('fake:tokens:g1', JSON.stringify({ 1: 'tok' }));
+    connect();
+    await vi.waitFor(() => expect(events.some(e => e.type === 'removed')).toBe(true));
+    expect(teardown).toContain('seat');
+    expect(localStorage.getItem('fake:tokens:g1')).toBeNull();
+  });
 });

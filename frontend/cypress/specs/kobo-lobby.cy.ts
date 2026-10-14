@@ -1,7 +1,7 @@
 // Kobo on the shared lobby (2 to 6 players, no bots, no options): the browser under test is the host, scripted
 // STOMP clients are the other players. Start leads to the table (its layout is covered by kobo-table.cy.ts).
 import { joinAsScriptedPlayer } from '../support/stompPlayer';
-import { hostLobby, noHorizontalScroll, untilBrowserSees, type Guest } from '../support/koboRoom';
+import { hostLobby, noHorizontalScroll, type Guest } from '../support/koboRoom';
 
 describe('Kobo lobby', () => {
   [375, 1280].forEach((width) => {
@@ -19,7 +19,6 @@ describe('Kobo lobby', () => {
         noHorizontalScroll();
 
         joinAsScriptedPlayer(id, 'Bob', 'kobo').then((bob) => {
-          untilBrowserSees((label) => bob.publish('/app/lobby/rename', { name: label }));
           cy.get('[data-test="player-count"]').should('contain.text', '2 / 6');
           cy.get('[data-test="start"]').should('not.be.disabled');
           cy.get('[data-test="start-hint"]').should('not.exist');
@@ -39,7 +38,6 @@ describe('Kobo lobby', () => {
       const guests: Guest[] = [];
       const joinNext = (name: string, expected: number) => joinAsScriptedPlayer(id, name, 'kobo').then((guest) => {
         guests.push(guest);
-        untilBrowserSees((label) => guest.publish('/app/lobby/rename', { name: label }));
         cy.get('[data-test="player-count"]').should('contain.text', `${expected} / 6`);
         cy.get('[data-test="add-bot"]').should('not.exist');
       });
@@ -66,7 +64,6 @@ describe('Kobo lobby', () => {
     hostLobby('Alice').then((id) => {
       joinAsScriptedPlayer(id, 'Bob', 'kobo').then((bob) => {
         joinAsScriptedPlayer(id, 'Carol', 'kobo').then((carol) => {
-          untilBrowserSees((label) => carol.publish('/app/lobby/rename', { name: label }));
           cy.get('[data-test="player-count"]').should('contain.text', '3 / 6');
           cy.get('[data-test="remove-seat-0"]').should('not.exist');
           cy.get('[data-test="remove-seat-1"]').click();
