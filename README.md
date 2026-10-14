@@ -71,6 +71,31 @@ On Windows, `cypress run` keeps the machine out of standby while it runs
 (`frontend/cypress/keepAwake.ts`): a run caught by the idle standby never resumes
 after wake-up and only ends when killed.
 
+#### Series of runs, standby watchdog, free ports
+
+Helper scripts live in `scripts/` (POSIX `sh`, run them from Git Bash on Windows). Their tests:
+`bash scripts/tests/run.sh`.
+
+- `sh scripts/e2e-loop.sh <runs> [cypress run arguments]` runs `cypress run` several times in a row. On Windows
+  it holds the keep-awake request (`scripts/keep-awake.ps1`) for the **whole** loop, so the gap between two
+  runs is covered too. A closed lid still suspends the machine: keep the laptop plugged in with the lid open.
+- `sh scripts/e2e-watchdog.sh -- <command>` wraps one command. A `timeout` cannot see a standby (its clock
+  stops with the machine), so the watchdog compares the wall clock between heartbeats: a jump larger than
+  `WATCHDOG_GAP` seconds (default 30) marks the run **INVALID** (exit code 3) instead of a pass or a failure.
+  `e2e-loop.sh` already wraps every run with it.
+- `sh scripts/free-ports.sh <ports.yml>` picks the smallest port offset for which the frontend (5173),
+  backend (8080) and debug (5005) ports are all free, and writes the Compose override for it (with
+  `VITE_HMR_CLIENT_PORT`). Keep the file outside the repository, then start the stack under its own project name:
+
+  ```sh
+  sh scripts/free-ports.sh <scratchpad>/ports.yml     # prints the URL and the commands
+  docker compose -p bc-<subject> -f docker-compose.e2e.yml -f <scratchpad>/ports.yml up --build -d --wait
+  npx cypress run --config baseUrl=http://localhost:<frontend port>
+  ```
+
+Under the e2e (`test`) Spring profile the forfeit grace of a dropped player is 5 s instead of 60 s
+(`presence.forfeit-grace-seconds` in `application-test.properties`); production keeps 60 s.
+
 ## Production
 
 Runs at https://kevinkib.com behind the shared gateway
