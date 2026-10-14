@@ -22,7 +22,8 @@ export function expectNoOverlap() {
       box('top bar', doc.querySelector('.top-bar')!),
       box('piles', doc.querySelector('[data-test="kobo-piles"]')!, frame),
       ...q('[data-test="opponent-seat"]').map((el, i) => box(`opponent ${i + 1}`, el, frame)),
-      box('my zone', doc.querySelector('[data-test="my-zone"]')!),
+      // My zone gives way to the score sheet at the round end.
+      ...q('[data-test="my-zone"]').map((el) => box('my zone', el)),
       box('footer', doc.querySelector('[data-test="table-footer"]')!),
     ].filter((z) => z.right > z.left && z.bottom > z.top);
     for (let i = 0; i < zones.length; i++) {
@@ -32,7 +33,9 @@ export function expectNoOverlap() {
     }
     // The table frame itself stays clear of the zones around it.
     for (const other of ['.top-bar', '[data-test="my-zone"]', '[data-test="table-footer"]']) {
-      expect(overlap(frame, box(other, doc.querySelector(other)!)), `table / ${other}`).to.eq(false);
+      const el = doc.querySelector(other);
+      if (!el) continue;
+      expect(overlap(frame, box(other, el)), `table / ${other}`).to.eq(false);
     }
   });
 }
