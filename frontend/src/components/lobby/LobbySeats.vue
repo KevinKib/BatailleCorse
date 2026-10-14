@@ -230,6 +230,13 @@ function revertName() {
 .chip--bot .pi { font-size: 0.75rem; }
 .chip--offline { color: rgba(255, 255, 255, 0.6); border-style: dashed; }
 
+/* On a phone the badge, the seat option and the remove cross crowd the name ("Bo…"): tighten the gaps and the
+   badge padding so the name keeps its room. Touch targets stay 44 px and nothing is dropped. */
+@media (max-width: 480px) {
+  .player { gap: 4px; }
+  .chip { padding: 4px 6px; }
+}
+
 .remove-bot.p-button { flex: none; width: 44px; height: 44px; padding: 0; }
 .add-bot.p-button { width: 100%; min-height: 44px; }
 .free-seat { margin: 0; min-height: 44px; display: flex; align-items: center; justify-content: center; font-size: 0.875rem; color: rgba(255, 255, 255, 0.6); border: 1px dashed rgba(255, 255, 255, 0.2); border-radius: 8px; }
