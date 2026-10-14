@@ -16,18 +16,21 @@ public class BatailleCorseDto {
     private final PlayerIdDto winner;
     private final PileDto pile;
     private final PlayerDto currentPlayer;
+    private final int version;
 
     @JsonCreator
     public BatailleCorseDto(@JsonProperty("id") String id,
                             @JsonProperty("players") List<PlayerDto> players,
                             @JsonProperty("winner") PlayerIdDto winner,
                             @JsonProperty("pile") PileDto pile,
-                            @JsonProperty("currentPlayer") PlayerDto currentPlayer) {
+                            @JsonProperty("currentPlayer") PlayerDto currentPlayer,
+                            @JsonProperty("version") int version) {
         this.id = id;
         this.players = players;
         this.winner = winner;
         this.pile = pile;
         this.currentPlayer = currentPlayer;
+        this.version = version;
     }
 
     public static BatailleCorseDto from(BatailleCorse batailleCorse) {
@@ -55,7 +58,8 @@ public class BatailleCorseDto {
                 players,
                 winner,
                 PileDto.from(batailleCorse.getPile()),
-                currentPlayer);
+                currentPlayer,
+                batailleCorse.version());
     }
 
     public String getId() {
@@ -76,6 +80,11 @@ public class BatailleCorseDto {
 
     public PlayerDto getCurrentPlayer() {
         return currentPlayer;
+    }
+
+    /** Counts the state changes of the game; a client drops a state older than the one it holds. */
+    public int getVersion() {
+        return version;
     }
 
 }

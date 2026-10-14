@@ -62,6 +62,8 @@ export default class GameSession {
   private state: BatailleCorse | undefined = undefined;
   // Highest lobby version applied; null when none is held (a fresh bind, or a game state came in).
   private lobbyVersion: number | null = null;
+  // Highest game-state version applied; null when none is held (a fresh bind) or the server sends none.
+  private gameVersion: number | null = null;
   // Set once a game state came in: a lobby view is then stale until the next bind (Play again).
   private started = false;
   // Set once the game is over: the next game on the same id belongs to whoever played again, not to me
@@ -156,6 +158,7 @@ export default class GameSession {
     this.myToken = token;
     this.mySeat = seat;
     this.lobbyVersion = null;
+    this.gameVersion = null;
     this.started = false;
     this.over = false;
     this.left = false;
@@ -170,7 +173,7 @@ export default class GameSession {
 
   /**
    * The seat channel is live (after every connection, the first included): reload what was broadcast before
-   * it was. A lobby view is version-guarded. A running game has no version, so it is not reloaded over events
+   * it was. A lobby view is version-guarded. A running game is not reloaded over events
    * still animating (that would replace the state under them); the next event brings it up to date.
    */
   private async onConnected(): Promise<void> {
@@ -204,10 +207,23 @@ export default class GameSession {
     if ((body as LobbyView).started === false) {
       this.applyLobby(body as LobbyView);
     } else {
+      if (!this.acceptVersion((body as { version?: number }).version)) return 'ok';
       this.hydrateGame(BatailleCorse.fromJSON(body as GameJson));
       await this.loadSeats();
     }
     return 'ok';
+  }
+
+  /**
+   * A game state older than the one held is a late answer overtaken by a newer frame: dropped. An equal version
+   * is applied (a refused command answers with the unchanged state). A state without a version (an older server)
+   * is always applied and leaves the held version alone.
+   */
+  private acceptVersion(version: number | undefined): boolean {
+    if (version === undefined) return true;
+    if (this.gameVersion !== null && version < this.gameVersion) return false;
+    this.gameVersion = version;
+    return true;
   }
 
   /** Shows a running game as it stands, without animating anything. */
@@ -271,7 +287,9 @@ export default class GameSession {
     if (response.success === false) {
       // Nothing moved: the state it carries is the unchanged lobby or game, so nothing animates.
       if (lobby) this.applyLobby(lobby);
-      else if (response.state) this.applyState(response.state as unknown as BatailleCorse);
+      else if (response.state && this.acceptVersion((response.state as { version?: number }).version)) {
+        this.applyState(response.state as unknown as BatailleCorse);
+      }
       this.callbacks.onEvent({ type: 'error', eventType: response.eventType, message: response.message });
       return;
     }
@@ -387,6 +405,8 @@ export default class GameSession {
     while (this.eventQueue.length > 0) {
       const response = this.eventQueue.shift()!;
       if (this.left || this.over) continue;
+      // A frame older than the state held: its state, its animation and its auto-grab are all out of date.
+      if (!this.acceptVersion((response.state as { version?: number } | undefined)?.version)) continue;
       await this.processEvent(response);
     }
     this.isProcessingQueue = false;

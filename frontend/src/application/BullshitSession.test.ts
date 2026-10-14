@@ -264,6 +264,22 @@ describe('BullshitSession', () => {
     });
   });
 
+  describe('game state versions', () => {
+    it('drops a started state older than the one held, applies an equal one, and still forwards the event', () => {
+      const { session, events, fireSeat } = makeSession();
+      session.restore('g1', 1, 'tok-1');
+      const frame = (version: number) => ({
+        success: true, eventType: 'DISCARD', eventData: {}, message: 'm', state: sampleState({ mySeat: 1, version }),
+      });
+      fireSeat(frame(5));
+      fireSeat(frame(4));
+      expect(events.filter(e => e.type === 'state-update')).toHaveLength(1);
+      fireSeat(frame(5));
+      expect(events.filter(e => e.type === 'state-update')).toHaveLength(2);
+      expect(events.filter(e => e.type === 'event')).toHaveLength(3);
+    });
+  });
+
   describe('lobby versions', () => {
     it('ignores a lobby view whose version is lower than or equal to the one held', () => {
       const { session, events, fireSeat } = makeSession();
