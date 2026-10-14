@@ -44,12 +44,13 @@ const armed = computed(() => props.pending.kind === 'match-armed' || props.pendi
 <template>
   <div class="kobo-actions" data-test="kobo-actions">
     <p v-if="notice" class="notice" data-test="notice" role="alert">{{ ui.notice[notice] }}</p>
-    <slot name="log" />
     <div class="actions-row">
       <div class="actions-text">
         <YourTurnIndicator :active="yourTurn" />
         <p v-if="prompt" class="line prompt" data-test="prompt" aria-live="polite">{{ ui.prompt[prompt] }}</p>
         <p v-else class="line" data-test="phase" aria-live="polite">{{ phaseText }}</p>
+        <!-- Under the phase line, in the room the text column leaves free in the first row of the bar. -->
+        <slot name="log" />
       </div>
       <div class="actions-buttons">
         <Button
@@ -100,7 +101,7 @@ const armed = computed(() => props.pending.kind === 'match-armed' || props.pendi
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: var(--space-1) var(--space-2);
+  gap: 0 var(--space-2);
   min-height: 44px;
 }
 /* The text takes what the buttons leave and wraps; the buttons keep their size and wrap below it if they must. */
@@ -110,7 +111,6 @@ const armed = computed(() => props.pending.kind === 'match-armed' || props.pendi
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
 }
 .actions-buttons {
   display: flex;

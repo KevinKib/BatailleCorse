@@ -70,9 +70,10 @@ const outcome = computed<'good' | 'bad' | undefined>(() => {
   gap: 6px;
   min-width: 0;
   /* Reserved even when empty: a line that appears must not move the cards under the pointer. */
-  height: 1.1rem;
-  font-size: 0.75rem;
-  line-height: 1.1rem;
+  width: 100%;
+  height: 1rem;
+  font-size: 0.72rem;
+  line-height: 1rem;
   color: rgba(255, 255, 255, 0.7);
 }
 .event-line {
