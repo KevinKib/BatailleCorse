@@ -16,7 +16,9 @@ export interface ScriptedPlayer {
 
 // Every scripted socket opened in the current test. The spec iframe lives for the whole spec file, so a socket
 // left open would outlive its test (and keep its seat connected on the server): they are all closed after each test.
-const openClients = new Set<Client>();
+// Cypress bundles the support file and each spec separately, so this module runs twice: the set lives on the shared
+// window, otherwise the support file's afterEach would empty a set the specs never fill.
+const openClients: Set<Client> = ((globalThis as any).__scriptedStompClients ??= new Set<Client>());
 
 export function disconnectAllScriptedPlayers(): Promise<void> {
   const closing = [...openClients].map((client) => client.deactivate());
