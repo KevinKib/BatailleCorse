@@ -25,9 +25,11 @@ class ThreeMenMorrisFactoryOptionsTest {
     }
 
     @Test
-    void theOnlyOptionIsTheVariantDefaultingToTapatan() {
+    void theOptionsAreTheVariantDefaultingToTapatanThenTheHostColour() {
         assertThat(factory.optionDescriptors(), is(List.of(new OptionDescriptor("variant", OptionType.CHOICE,
-                List.of("tapatan", "achi", "picaria"), "tapatan", "options.threeMenMorris.variant"))));
+                List.of("tapatan", "achi", "picaria"), "tapatan", "options.threeMenMorris.variant"),
+                new OptionDescriptor("hostColour", OptionType.CHOICE,
+                        List.of("white", "black", "random"), "white", "options.threeMenMorris.hostColour"))));
         assertThat(factory.seatOptionDescriptors(), is(List.of()));
     }
 
@@ -52,9 +54,9 @@ class ThreeMenMorrisFactoryOptionsTest {
 
     @Test
     void validateCompletesTheDefaultAndRefusesUnknownKeysAndValues() {
-        assertThat(factory.validate(GameOptions.none()), is(GameOptions.of(Map.of("variant", "tapatan"))));
+        assertThat(factory.validate(GameOptions.none()), is(GameOptions.of(Map.of("variant", "tapatan", "hostColour", "white"))));
         assertThat(factory.validate(GameOptions.of(Map.of("variant", "achi"))),
-                is(GameOptions.of(Map.of("variant", "achi"))));
+                is(GameOptions.of(Map.of("variant", "achi", "hostColour", "white"))));
         assertThrows(InvalidOptionException.class,
                 () -> factory.validate(GameOptions.of(Map.of("variant", "nine"))));
         assertThrows(InvalidOptionException.class,
