@@ -1,5 +1,7 @@
 package org.kevinkib.cardgames.config;
 
+import org.springframework.beans.factory.annotation.Value;
+import java.time.Duration;
 import org.kevinkib.cardgames.game.GameFactory;
 import org.kevinkib.cardgames.presentation.GameMessagingService;
 import org.kevinkib.cardgames.presentation.command.SeatCommands;
@@ -46,6 +48,10 @@ import java.util.List;
 @Configuration
 @EnableScheduling
 public class AppConfig {
+
+    /** Production grace before a dropped player auto-loses; only the e2e profile overrides it. */
+    private static final long DEFAULT_FORFEIT_GRACE_SECONDS = 60;
+
 
     @Bean
     public Clock clock() {
@@ -136,10 +142,12 @@ public class AppConfig {
     @Bean
     public PresenceService presenceService(GameDirectory gameDirectory,
                                            GameLifecycleBroadcasters gameLifecycleBroadcasters,
-                                           LobbyBroadcaster lobbyBroadcaster) {
+                                           LobbyBroadcaster lobbyBroadcaster,
+                                           @Value("${presence.forfeit-grace-seconds:"
+                                                   + DEFAULT_FORFEIT_GRACE_SECONDS + "}") long forfeitGraceSeconds) {
         PresenceService presence = new PresenceService(
                 gameDirectory, connectionRegistry(), forfeitScheduler(), clock(), forfeitLog(),
-                gameLifecycleBroadcasters);
+                gameLifecycleBroadcasters, Duration.ofSeconds(forfeitGraceSeconds));
         // A lobby seat whose connection dropped (or came back) is flagged to the others, so the host can remove it.
         presence.setLobbyPresenceListener((gameId, views) -> lobbyBroadcaster.send(gameId, views,
                 LifecycleEventType.JOIN.toString(), new EmptyEventData(), "A player's connection changed."));

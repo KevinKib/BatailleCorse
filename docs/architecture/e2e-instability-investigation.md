@@ -178,6 +178,10 @@ join or an option change until the next lobby update.
 | 8 | CI e2e job on demand: `workflow_dispatch` with a `spec` input plus a `e2e` PR label, ubuntu-latest, `settings.xml` generated from `GITHUB_TOKEN` (as `setup-java` does), `docker compose -f docker-compose.e2e.yml up --build -d --wait`, `cypress run --spec`. Not launched: it has to land on `main` first. | A clean reference to compare local failures with. | M | Medium (CI minutes, cold build ~5 min) |
 | 9 | Test profile property for `PresenceService.FORFEIT_GRACE` (now a 60 s constant) so the forfeit spec does not wait a real minute. | -60 s on morris-game, fewer long waits. | S | Low |
 
+Status of corrections 5, 7 (`dev-ports` part) and 9 (E4): implemented in `scripts/` (`e2e-loop.sh`,
+`e2e-watchdog.sh`, `keep-awake.ps1`, `free-ports.sh`) and `presence.forfeit-grace-seconds=5` in the test profile;
+usage in the README, section "End-to-end tests".
+
 ## 7. Still unknown
 
 - Whether machine load alone can fail a spec (H-B): the controlled experiment (series run while a second stack
