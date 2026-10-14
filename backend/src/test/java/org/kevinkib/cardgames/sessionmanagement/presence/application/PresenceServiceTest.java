@@ -102,6 +102,30 @@ class PresenceServiceTest {
     }
 
     @Test
+    void givenDefaultGrace_whenDisconnect_thenForfeitIsScheduledSixtySecondsAhead() {
+        service.onPresence("sess-0", gameId, tokenOf(0));
+
+        service.onDisconnect("sess-0");
+
+        assertThat(scheduler.lastTime, is(Instant.parse("2026-06-09T12:01:00Z")));
+        assertThat(service.forfeitGrace(), is(java.time.Duration.ofSeconds(60)));
+    }
+
+    @Test
+    void givenConfiguredGrace_whenDisconnect_thenForfeitIsScheduledAfterThatGrace() {
+        Clock clock = Clock.fixed(Instant.parse("2026-06-09T12:00:00Z"), ZoneOffset.UTC);
+        var broadcaster = new BatailleCorseLifecycleBroadcaster(
+                new org.kevinkib.cardgames.bataillecorse.presentation.BatailleCorseStateBroadcaster(messaging), forfeitLog);
+        PresenceService shortGrace = new PresenceService(sessionService, registry, scheduler, clock, forfeitLog,
+                new GameLifecycleBroadcasters(List.of(broadcaster)), java.time.Duration.ofSeconds(5));
+        shortGrace.onPresence("sess-0", gameId, tokenOf(0));
+
+        shortGrace.onDisconnect("sess-0");
+
+        assertThat(scheduler.lastTime, is(Instant.parse("2026-06-09T12:00:05Z")));
+    }
+
+    @Test
     void givenSeatBound_whenDisconnect_thenSchedulesAndBroadcastsDisconnected() {
         service.onPresence("sess-0", gameId, tokenOf(0));
 

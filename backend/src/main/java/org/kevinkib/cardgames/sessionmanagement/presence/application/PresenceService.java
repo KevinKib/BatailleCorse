@@ -33,6 +33,7 @@ public class PresenceService {
     /** Grace before a dropped player auto-loses. */
     public static final Duration FORFEIT_GRACE = Duration.ofSeconds(60);
 
+    private final Duration forfeitGrace;
     private final GameDirectory games;
     private final ConnectionRegistry registry;
     private final ForfeitScheduler scheduler;
@@ -57,12 +58,28 @@ public class PresenceService {
                            Clock clock,
                            ForfeitLog forfeitLog,
                            GameLifecycleBroadcasters broadcasters) {
+        this(games, registry, scheduler, clock, forfeitLog, broadcasters, FORFEIT_GRACE);
+    }
+
+    /** As above, with an explicit grace (the e2e profile shortens it; production keeps {@link #FORFEIT_GRACE}). */
+    public PresenceService(GameDirectory games,
+                           ConnectionRegistry registry,
+                           ForfeitScheduler scheduler,
+                           Clock clock,
+                           ForfeitLog forfeitLog,
+                           GameLifecycleBroadcasters broadcasters,
+                           Duration forfeitGrace) {
+        this.forfeitGrace = forfeitGrace;
         this.games = games;
         this.registry = registry;
         this.scheduler = scheduler;
         this.clock = clock;
         this.forfeitLog = forfeitLog;
         this.broadcasters = broadcasters;
+    }
+
+    public Duration forfeitGrace() {
+        return forfeitGrace;
     }
 
     /**
@@ -112,7 +129,7 @@ public class PresenceService {
             return;
         }
 
-        Instant deadline = clock.instant().plus(FORFEIT_GRACE);
+        Instant deadline = clock.instant().plus(forfeitGrace);
         ScheduledForfeit task = scheduler.schedule(deadline,
                 () -> forfeit(seat.gameId(), seat.playerId(), ForfeitReason.DISCONNECTED));
         pendingForfeits.put(seat, task);
