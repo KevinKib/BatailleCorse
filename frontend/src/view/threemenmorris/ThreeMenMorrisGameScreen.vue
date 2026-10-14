@@ -62,8 +62,17 @@ const rules = computed(() =>
 
 const noPieceDownYet = computed(() => store.game?.board.every(owner => owner === null) ?? false);
 
+// The draw bar is part of the movement phase only; it shows the offer I may answer and my own offer button.
+const showDrawBar = computed(() => store.phase === 'playing' && store.gamePhase === 'MOVEMENT');
+const drawOffererName = computed(() =>
+  store.drawOfferedBy === null ? '' : displayName(store.drawOfferedBy));
+
 // What the opponent (or I) just did, for the live region. A reload has no last move: nothing to say.
 const announcement = computed(() => {
+  const notice = store.drawNotice;
+  if (notice) {
+    return format(notice.kind === 'offered' ? ui.draw.offeredBy : ui.draw.declinedBy, { player: displayName(notice.seat) });
+  }
   const move = store.lastMove;
   if (!move) return '';
   const names = messages.morrisBoard.pointNames;
@@ -127,8 +136,7 @@ onBeforeUnmount(() => { stopHold(); endScreen.cancel(); });
 const endSubtitle = computed(() => {
   const outcome = store.game?.outcome;
   if (outcome?.status !== 'FINISHED') return '';
-  // A draw has no winner: its wording comes with the draw screen.
-  if (outcome.winner === null) return '';
+  if (outcome.winner === null) return outcome.reason === 'DRAW_REPETITION' ? ui.draw.byRepetition : ui.draw.agreed;
   const winner = displayName(outcome.winner);
   const loserSeat = outcome.winner === store.mySeat ? opponent.value?.seat ?? 0 : store.mySeat;
   if (outcome.reason === 'LINE') {
@@ -190,6 +198,7 @@ function leaveLobby() {
       v-else-if="store.phase === 'finished' && endScreen.showEndOverlay.value"
       data-test="end"
       :did-i-win="store.iWon"
+      :result="store.isDraw ? 'draw' : undefined"
       :winner-line="winnerLine"
       :subtitle="endSubtitle"
       :rematch-button="rematchButton"
@@ -225,7 +234,7 @@ function leaveLobby() {
         {{ ui.table.offline }}
       </div>
 
-      <div class="table">
+      <div class="table" :class="{ 'table--draw-bar': showDrawBar, 'table--draw-incoming': store.incomingDrawOffer }">
         <MorrisPlayerTag
           v-if="opponent"
           class="tag-slot"
@@ -261,6 +270,29 @@ function leaveLobby() {
         <p v-if="noPieceDownYet && store.phase === 'playing'" class="colour-hint" data-test="colour-hint">
           {{ format(ui.table.youPlay, { colour: store.myColour === 'WHITE' ? ui.white : ui.black }) }}
         </p>
+        <p v-if="store.repeatedTwice" class="repetition-hint" data-test="repetition-hint" role="status">
+          {{ ui.draw.repetition }}
+        </p>
+      </div>
+
+      <div v-if="showDrawBar" class="draw-bar" data-test="draw-bar">
+        <div v-if="store.incomingDrawOffer" class="draw-incoming" data-test="draw-incoming"
+             role="alertdialog" aria-labelledby="draw-incoming-title" aria-describedby="draw-incoming-hint">
+          <p id="draw-incoming-title" class="draw-title">{{ format(ui.draw.incoming, { player: drawOffererName }) }}</p>
+          <p id="draw-incoming-hint" class="draw-sub">{{ ui.draw.incomingHint }}</p>
+          <div class="draw-answers">
+            <button type="button" class="draw-btn draw-btn--accept" data-test="draw-accept" @click="store.acceptDraw()">
+              {{ ui.draw.accept }}
+            </button>
+            <button type="button" class="draw-btn draw-btn--decline" data-test="draw-decline" @click="store.declineDraw()">
+              {{ ui.draw.decline }}
+            </button>
+          </div>
+        </div>
+        <button type="button" class="draw-btn draw-btn--offer" data-test="draw-offer"
+                :disabled="!store.canOfferDraw" @click="store.offerDraw()">
+          {{ store.myDrawOfferPending ? ui.draw.offered : ui.draw.offer }}
+        </button>
       </div>
 
       <div class="table-footer" data-test="table-footer">
@@ -362,6 +394,65 @@ function leaveLobby() {
   overflow-wrap: anywhere;
 }
 .colour-hint { font-size: 0.75rem; color: rgba(255, 255, 255, 0.6); }
+
+.repetition-hint {
+  flex: none;
+  margin: 0;
+  text-align: center;
+  font-size: 0.78rem;
+  color: #f5e29a;
+  overflow-wrap: anywhere;
+}
+
+/* The draw bar sits under the table, above Back (the validated "Table A" layout). The board gives it room. */
+.table--draw-bar { --morris-board-vh: 46vh; }
+.table--draw-incoming { --morris-board-vh: 36vh; }
+.table--draw-incoming .turn-slot { display: none; }
+.draw-bar {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+.draw-incoming {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--space-2);
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+.draw-title { margin: 0; text-align: center; font-size: 0.95rem; font-weight: 700; overflow-wrap: anywhere; }
+.draw-sub { margin: 0 0 4px; text-align: center; font-size: 0.78rem; color: rgba(255, 255, 255, 0.78); }
+.draw-answers { display: flex; gap: var(--space-2); }
+.draw-btn {
+  flex: 1 1 0;
+  min-height: 44px;
+  padding: 0 var(--space-2);
+  border-radius: 22px;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.draw-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.draw-btn--accept { border: 0; background: #4ade80; color: #052e16; }
+.draw-btn--decline {
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.1);
+  color: #f4f1e6;
+}
+.draw-btn--offer {
+  border: 1px solid rgba(245, 200, 66, 0.55);
+  background: rgba(245, 200, 66, 0.1);
+  color: #f5e29a;
+}
+.draw-btn--offer:disabled { opacity: 0.55; cursor: default; }
 
 .table-footer {
   flex: none;

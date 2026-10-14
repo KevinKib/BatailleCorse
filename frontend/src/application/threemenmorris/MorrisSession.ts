@@ -15,7 +15,7 @@ export const MORRIS_SESSION_CONFIG: SeatGameSessionConfig = {
   startDestination: '/app/three-men-morris/start',
 };
 
-/** The seat-game session plus the two commands of Three Men's Morris. The server judges both. */
+/** The seat-game session plus the commands of Three Men's Morris. The server judges both. */
 export default class MorrisSession extends SeatGameSession<MorrisView, MorrisResponse> {
   constructor(webSocket: MorrisWebSocketPort, callbacks: MorrisSessionCallbacks) {
     super(MORRIS_SESSION_CONFIG, webSocket, callbacks);
@@ -29,5 +29,20 @@ export default class MorrisSession extends SeatGameSession<MorrisView, MorrisRes
   /** Movement phase: slide one of my pieces to a point the server listed as a legal destination. */
   move(from: number, to: number): void {
     this.publishAction('/app/three-men-morris/move', { from, to });
+  }
+
+  /** Movement phase: propose a draw. The opponent answers, or a move by either player withdraws it. */
+  offerDraw(): void {
+    this.publishAction('/app/three-men-morris/offerDraw');
+  }
+
+  /** Answer to the opponent's offer: the game ends as a draw. */
+  acceptDraw(): void {
+    this.publishAction('/app/three-men-morris/acceptDraw');
+  }
+
+  /** Answer to the opponent's offer: the game goes on. */
+  declineDraw(): void {
+    this.publishAction('/app/three-men-morris/declineDraw');
   }
 }

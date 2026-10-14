@@ -45,6 +45,26 @@ describe('EndGameOverlay', () => {
     expect(wrapper.get('.end-title').text()).toBe(messagesEn.endScreen.defeat);
   });
 
+  it('givenADrawResult_thenTheTitleIsNeutralWithoutTrophy', async () => {
+    const { wrapper } = await mountOverlay({ didIWin: false, result: 'draw' });
+    expect(wrapper.get('.end-title').text()).toBe(messagesEn.endScreen.draw);
+    expect(wrapper.find('[data-cy="victory-flourish"]').exists()).toBe(false);
+    expect(wrapper.get('.end-card').classes()).toContain('end-card--draw');
+    expect(wrapper.get('.end-card').classes()).not.toContain('end-card--defeat');
+  });
+
+  it('givenNoResult_thenItFollowsDidIWin', async () => {
+    const win = await mountOverlay({ didIWin: true });
+    expect(win.wrapper.get('.end-card').classes()).toContain('end-card--victory');
+    const loss = await mountOverlay({ didIWin: false });
+    expect(loss.wrapper.get('.end-card').classes()).toContain('end-card--defeat');
+  });
+
+  it('givenAnExplicitVictoryResult_thenItOverridesDidIWin', async () => {
+    const { wrapper } = await mountOverlay({ didIWin: false, result: 'victory' });
+    expect(wrapper.get('.end-title').text()).toBe(messagesEn.endScreen.victory);
+  });
+
   it('givenNoSlotContent_thenNothingIsRenderedUnderTheSubtitle', async () => {
     const { wrapper } = await mountOverlay();
     expect(wrapper.find('[data-test="end-extra"]').exists()).toBe(false);

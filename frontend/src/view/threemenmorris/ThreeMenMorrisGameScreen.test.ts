@@ -402,6 +402,90 @@ describe('ThreeMenMorrisGameScreen', () => {
     });
   });
 
+  describe('draws', () => {
+    const draw = messagesEn.threeMenMorrisUi.draw;
+    const incoming = { drawOffer: { seat: 1 }, drawActions: ['ACCEPT_DRAW', 'DECLINE_DRAW'] };
+
+    it('placement phase: no draw control at all', async () => {
+      const { wrapper } = await mountScreen(morrisState());
+      expect(wrapper.find('[data-test="draw-offer"]').exists()).toBe(false);
+      expect(wrapper.find('[data-test="draw-incoming"]').exists()).toBe(false);
+    });
+
+    it('movement phase with drawActions absent: an Offer a draw button, no banner', async () => {
+      const { wrapper, store } = await mountScreen(movementState());
+      const button = wrapper.get('[data-test="draw-offer"]');
+      expect(button.text()).toBe(draw.offer);
+      expect(button.attributes('disabled')).toBeUndefined();
+      expect(wrapper.find('[data-test="draw-incoming"]').exists()).toBe(false);
+      const offer = vi.spyOn(store, 'offerDraw').mockImplementation(() => {});
+      await button.trigger('click');
+      expect(offer).toHaveBeenCalledTimes(1);
+    });
+
+    it('my offer is pending: the button reads Draw offered and is disabled', async () => {
+      const { wrapper } = await mountScreen(movementState({ drawOffer: { seat: 0 }, drawActions: [] }));
+      const button = wrapper.get('[data-test="draw-offer"]');
+      expect(button.text()).toBe(draw.offered);
+      expect(button.attributes('disabled')).toBeDefined();
+    });
+
+    it('already offered since my last move (drawActions empty, no offer): the button is disabled', async () => {
+      const { wrapper } = await mountScreen(movementState({ drawActions: [] }));
+      expect(wrapper.get('[data-test="draw-offer"]').attributes('disabled')).toBeDefined();
+      expect(wrapper.get('[data-test="draw-offer"]').text()).toBe(draw.offer);
+    });
+
+    it('an incoming offer: an alertdialog names the offerer, with Accept and Decline', async () => {
+      const { wrapper, store } = await mountScreen(movementState(incoming));
+      const banner = wrapper.get('[data-test="draw-incoming"]');
+      expect(banner.attributes('role')).toBe('alertdialog');
+      expect(banner.attributes('aria-modal')).toBeUndefined();
+      expect(banner.text()).toContain('Bob offers a draw');
+      expect(banner.text()).toContain(draw.incomingHint);
+      expect(wrapper.get('[data-test="draw-offer"]').attributes('disabled')).toBeDefined();
+      const accept = vi.spyOn(store, 'acceptDraw').mockImplementation(() => {});
+      const decline = vi.spyOn(store, 'declineDraw').mockImplementation(() => {});
+      await wrapper.get('[data-test="draw-accept"]').trigger('click');
+      await wrapper.get('[data-test="draw-decline"]').trigger('click');
+      expect(accept).toHaveBeenCalledTimes(1);
+      expect(decline).toHaveBeenCalledTimes(1);
+    });
+
+    it('the banner leaves when the next state carries no offer (a move declines it)', async () => {
+      const { wrapper, store } = await mountScreen(movementState(incoming));
+      store.applyEvent({ type: 'state-update', state: movementState({ drawOffer: null }) });
+      await flushPromises();
+      expect(wrapper.find('[data-test="draw-incoming"]').exists()).toBe(false);
+      expect(wrapper.get('[data-test="draw-offer"]').attributes('disabled')).toBeUndefined();
+    });
+
+    it('the board stays playable while an offer is pending', async () => {
+      const { wrapper } = await mountScreen(movementState(incoming));
+      expect(point(wrapper, 1).attributes('disabled')).toBeUndefined();
+    });
+
+    it('the repetition hint shows only when the position occurred twice', async () => {
+      const first = await mountScreen(movementState());
+      expect(first.wrapper.find('[data-test="repetition-hint"]').exists()).toBe(false);
+      first.wrapper.unmount();
+      setActivePinia(createPinia());
+      const second = await mountScreen(movementState({ repetitions: 2 }));
+      expect(second.wrapper.get('[data-test="repetition-hint"]').text()).toBe(draw.repetition);
+    });
+
+    it('announces an offer and a refusal in the live region, by name', async () => {
+      const { wrapper, store } = await mountScreen(movementState());
+      const live = () => wrapper.get('[data-test="board-live"]').text();
+      store.applyEvent({ type: 'event', eventType: 'DRAW_OFFERED', message: '', eventData: { seat: 1, action: 'OFFER_DRAW', point: null, from: null, to: null } });
+      await flushPromises();
+      expect(live()).toBe('Bob offers a draw.');
+      store.applyEvent({ type: 'event', eventType: 'DRAW_DECLINED', message: '', eventData: { seat: 1, action: 'DECLINE_DRAW', point: null, from: null, to: null } });
+      await flushPromises();
+      expect(live()).toBe('Bob declined the draw.');
+    });
+  });
+
   describe('the end', () => {
     const subtitle = (w: VueWrapper) => w.get('.end-sub').text();
     const afterHold = (ms = WINNING_LINE_HOLD_MS + END_SCREEN_DELAY_MS + 50) => vi.advanceTimersByTimeAsync(ms);
@@ -472,6 +556,33 @@ describe('ThreeMenMorrisGameScreen', () => {
       second.store.applyEvent({ type: 'state-update', state: finished('FORFEIT', 0) });
       await afterHold(END_SCREEN_DELAY_MS + 50);
       expect(subtitle(second.wrapper)).toBe('Bob disconnected.');
+    });
+
+    const drawn = (reason: 'DRAW_AGREED' | 'DRAW_REPETITION') => movementState({
+      phase: 'FINISHED', availableActions: [], legalMoves: [], drawActions: [],
+      outcome: { status: 'FINISHED', winner: null, reason },
+    });
+
+    it('a draw by agreement: a DRAW title without trophy or winner, and says it was agreed', async () => {
+      const { wrapper } = await mountScreen(drawn('DRAW_AGREED'));
+      expect(wrapper.get('.end-title').text()).toBe('DRAW');
+      expect(wrapper.find('[data-cy="victory-flourish"]').exists()).toBe(false);
+      expect(wrapper.find('[data-test="end-winner"]').exists()).toBe(false);
+      expect(subtitle(wrapper)).toBe('Draw agreed.');
+    });
+
+    it('a draw by repetition says the position occurred three times, and nothing is held for a line', async () => {
+      vi.useFakeTimers();
+      const { wrapper, store } = await mountScreen(movementState());
+      store.applyEvent({ type: 'state-update', state: drawn('DRAW_REPETITION') });
+      await vi.advanceTimersByTimeAsync(END_SCREEN_DELAY_MS + 50);
+      expect(wrapper.get('.end-title').text()).toBe('DRAW');
+      expect(subtitle(wrapper)).toBe('Draw by repetition: the same position occurred three times.');
+    });
+
+    it('a finished game shows no draw control', async () => {
+      const { wrapper } = await mountScreen(drawn('DRAW_AGREED'));
+      expect(wrapper.find('[data-test="draw-offer"]').exists()).toBe(false);
     });
 
     it('a forfeit I lost (I left, then came back to the finished game) says that I left', async () => {

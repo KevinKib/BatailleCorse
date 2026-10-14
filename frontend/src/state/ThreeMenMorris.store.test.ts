@@ -153,6 +153,129 @@ describe('ThreeMenMorris store', () => {
     });
   });
 
+  describe('draws', () => {
+    it('reads an absent drawActions as OFFER_DRAW in the movement phase and nothing otherwise', () => {
+      const store = seated(0);
+      store.applyEvent({ type: 'state-update', state: morrisState() });
+      expect(store.drawActions).toEqual([]);
+      expect(store.canOfferDraw).toBe(false);
+      store.applyEvent({ type: 'state-update', state: movementState() });
+      expect(store.drawActions).toEqual(['OFFER_DRAW']);
+      expect(store.canOfferDraw).toBe(true);
+    });
+
+    it('reads a written drawActions as it is, even empty', () => {
+      const store = seated(0);
+      store.applyEvent({ type: 'state-update', state: movementState({ drawActions: [] }) });
+      expect(store.drawActions).toEqual([]);
+      expect(store.canOfferDraw).toBe(false);
+      store.applyEvent({ type: 'state-update', state: movementState({ drawActions: ['ACCEPT_DRAW', 'DECLINE_DRAW'] }) });
+      expect(store.canOfferDraw).toBe(false);
+      expect(store.canAnswerDraw).toBe(true);
+    });
+
+    it('offers nothing once the game is over', () => {
+      const store = seated(0);
+      store.applyEvent({
+        type: 'state-update',
+        state: movementState({ phase: 'FINISHED', outcome: { status: 'FINISHED', winner: null, reason: 'DRAW_AGREED' } }),
+      });
+      expect(store.drawActions).toEqual([]);
+    });
+
+    it('tells whose offer is pending: mine, or the opponent one I may answer', () => {
+      const store = seated(0);
+      store.applyEvent({ type: 'state-update', state: movementState() });
+      expect(store.drawOfferedBy).toBeNull();
+      store.applyEvent({ type: 'state-update', state: movementState({ drawOffer: { seat: 0 }, drawActions: [] }) });
+      expect(store.drawOfferedBy).toBe(0);
+      expect(store.myDrawOfferPending).toBe(true);
+      expect(store.incomingDrawOffer).toBe(false);
+      store.applyEvent({ type: 'state-update', state: movementState({ drawOffer: { seat: 1 }, drawActions: ['ACCEPT_DRAW', 'DECLINE_DRAW'] }) });
+      expect(store.myDrawOfferPending).toBe(false);
+      expect(store.incomingDrawOffer).toBe(true);
+    });
+
+    it('a move clears the banner: the next state has no offer', () => {
+      const store = seated(0);
+      store.applyEvent({ type: 'state-update', state: movementState({ drawOffer: { seat: 1 }, drawActions: ['ACCEPT_DRAW', 'DECLINE_DRAW'] }) });
+      expect(store.incomingDrawOffer).toBe(true);
+      store.applyEvent({ type: 'state-update', state: movementState({ drawOffer: null }) });
+      expect(store.incomingDrawOffer).toBe(false);
+    });
+
+    it('shows the repetition hint only when the position occurred twice', () => {
+      const store = seated(0);
+      store.applyEvent({ type: 'state-update', state: movementState() });
+      expect(store.repeatedTwice).toBe(false);
+      store.applyEvent({ type: 'state-update', state: movementState({ repetitions: 2 }) });
+      expect(store.repeatedTwice).toBe(true);
+    });
+
+    it('is a draw when the outcome has no winner', () => {
+      const store = seated(0);
+      store.applyEvent({
+        type: 'state-update',
+        state: movementState({ phase: 'FINISHED', outcome: { status: 'FINISHED', winner: null, reason: 'DRAW_REPETITION' } }),
+      });
+      expect(store.isDraw).toBe(true);
+      expect(store.iWon).toBe(false);
+      store.applyEvent({ type: 'state-update', state: movementState() });
+      expect(store.isDraw).toBe(false);
+    });
+
+    it('publishes the three draw commands', () => {
+      const publish = vi.spyOn(webSocketService, 'publish').mockImplementation(() => {});
+      const store = seated(0);
+      store.restore('g1', 0, 'tok-0');
+      store.applyEvent({ type: 'state-update', state: movementState() });
+      store.offerDraw();
+      store.acceptDraw();
+      store.declineDraw();
+      const body = JSON.stringify({ gameId: 'g1', token: 'tok-0' });
+      expect(publish.mock.calls).toEqual([
+        ['/app/three-men-morris/offerDraw', body],
+        ['/app/three-men-morris/acceptDraw', body],
+        ['/app/three-men-morris/declineDraw', body],
+      ]);
+    });
+
+    it('does not throw when a draw command cannot be sent (socket down)', () => {
+      vi.spyOn(webSocketService, 'publish').mockImplementation(() => { throw new Error('down'); });
+      const store = seated(0);
+      store.restore('g1', 0, 'tok-0');
+      expect(() => store.offerDraw()).not.toThrow();
+    });
+
+    it('keeps DRAW_OFFERED and DRAW_DECLINED for the live region, and drops them on the next move', () => {
+      const store = seated(0);
+      store.applyEvent({ type: 'state-update', state: movementState() });
+      expect(store.drawNotice).toBeNull();
+      store.applyEvent({ type: 'event', eventType: 'DRAW_OFFERED', message: '', eventData: { seat: 1, action: 'OFFER_DRAW', point: null, from: null, to: null } });
+      expect(store.drawNotice).toEqual({ kind: 'offered', seat: 1 });
+      expect(store.opponentLastMove).toEqual([]);
+      store.applyEvent({ type: 'event', eventType: 'DRAW_DECLINED', message: '', eventData: { seat: 1, action: 'DECLINE_DRAW', point: null, from: null, to: null } });
+      expect(store.drawNotice).toEqual({ kind: 'declined', seat: 1 });
+      store.applyEvent({ type: 'event', eventType: 'MOVE', message: '', eventData: { seat: 1, action: 'MOVE', point: null, from: 5, to: 2 } });
+      expect(store.drawNotice).toBeNull();
+    });
+
+    it('does not take a GAME_OVER with action ACCEPT_DRAW for a move', () => {
+      const store = seated(0);
+      store.applyEvent({ type: 'event', eventType: 'PLACE', message: '', eventData: { seat: 0, action: 'PLACE', point: 4, from: null, to: null } });
+      store.applyEvent({ type: 'event', eventType: 'GAME_OVER', message: '', eventData: { seat: 1, action: 'ACCEPT_DRAW', point: null, from: null, to: null } });
+      expect(store.lastMove).toEqual({ seat: 0, action: 'PLACE', point: 4, from: null, to: null });
+      expect(store.drawNotice).toBeNull();
+    });
+
+    it('forgets the draw notice when the room goes back to a lobby', () => {
+      const store = seated(0);
+      store.applyEvent({ type: 'event', eventType: 'DRAW_OFFERED', message: '', eventData: { seat: 1, action: 'OFFER_DRAW', point: null, from: null, to: null } });
+      store.applyEvent({ type: 'state-update', state: lobbyView() });
+      expect(store.drawNotice).toBeNull();
+    });
+  });
+
   it('is not my turn once the game is over', () => {
     const store = seated(0);
     store.applyEvent({

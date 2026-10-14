@@ -180,7 +180,8 @@ function onKeyup(event: KeyboardEvent): void {
   --morris-line: rgba(var(--accent-active-rgb), 0.5);
   --morris-hold: 1.2s;
   position: relative;
-  width: min(88vw, 52vh, 480px);
+  /* The screen lowers --morris-board-vh to make room for the draw bar. */
+  width: min(88vw, var(--morris-board-vh, 52vh), 480px);
   aspect-ratio: 1;
   flex: none;
 }

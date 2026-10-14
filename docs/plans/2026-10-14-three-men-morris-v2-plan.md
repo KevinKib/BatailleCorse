@@ -37,7 +37,7 @@ frontend paths relative to `frontend/src/`.
 | M4 | `feat: draw offers and threefold repetition in Three Men's Morris` | M | M3 | [x] done (#199) |
 | M5 | `feat: Three Men's Morris bots with three levels` | L | M4 | [x] done, PR #202 (review pending) |
 | F1 | `feat: Three Men's Morris variants and colours on screen` | M | M2, M3, #186 | [x] done, PR #205 |
-| F2 | `feat: Three Men's Morris draw offer and draw end screen` | M | M4, F1 | [ ] to do |
+| F2 | `feat: Three Men's Morris draw offer and draw end screen` | M | M4, F1 | [x] done, PR #210 |
 | F3 | `feat: play Three Men's Morris against a bot` | S-M | M5, F1 | [ ] to do |
 
 Total about 6 to 7 days of work.

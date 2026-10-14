@@ -55,11 +55,15 @@ export interface MorrisState {
   legalPlacements?: number[];
   /** Absent means seat 0 plays White. */
   whiteSeat?: number;
-  /** The pending draw offer, if any (the draw UI comes with the draw offer). */
+  /** The pending draw offer, if any; a move by either player cancels it. */
   drawOffer?: { seat: number } | null;
   /** How many times the current position has occurred, only written from 2. */
   repetitions?: number;
-  /** Draw commands the viewer may send, only written when they differ from the default. */
+  /**
+   * Draw commands the viewer may send, only written when they differ from the default: absent means
+   * `OFFER_DRAW` in the movement phase and none otherwise. Written empty: an offer of mine waits, or I offered
+   * since my last move.
+   */
   drawActions?: string[];
 }
 
@@ -72,6 +76,12 @@ export interface MorrisEventData {
   point: number | null;
   from: number | null;
   to: number | null;
+}
+
+/** Public description of a draw command; an accepted offer comes as the `GAME_OVER` with `ACCEPT_DRAW`. */
+export interface MorrisDrawEventData {
+  seat: number;
+  action: 'OFFER_DRAW' | 'DECLINE_DRAW' | 'ACCEPT_DRAW';
 }
 
 export interface MorrisResponse {
