@@ -1,17 +1,16 @@
-// Kobo on the shared lobby (2 to 6 players, no bots, no options): the browser under test is the host, scripted
+// Kobo on the shared lobby (2 to 6 players, bots added by the host: see kobo-bot.cy.ts): the browser under test is the host, scripted
 // STOMP clients are the other players. Start leads to the table (its layout is covered by kobo-table.cy.ts).
 import { joinAsScriptedPlayer } from '../support/stompPlayer';
 import { hostLobby, noHorizontalScroll, type Guest } from '../support/koboRoom';
 
 describe('Kobo lobby', () => {
   [375, 1280].forEach((width) => {
-    it(`creates a lobby without bots, shows the invite link, starts with two players at ${width} px`, () => {
+    it(`creates a lobby, offers Add bot to the host, shows the invite link, starts with two players at ${width} px`, () => {
       cy.viewport(width, width === 375 ? 667 : 800);
       hostLobby('Alice').then((id) => {
         cy.get('[data-test="lobby"] .game-title').should('have.text', 'Kobo');
         cy.get('[data-test="player-count"]').should('contain.text', '1 / 6');
-        cy.get('[data-test="add-bot"]').should('not.exist');
-        cy.get('[data-test="waiting-for-player"]').should('be.visible');
+        cy.get('[data-test="add-bot"]').should('be.visible').and('not.be.disabled');
         cy.get('[data-test="start"]').should('be.disabled');
         cy.get('[data-test="start-hint"]').should('contain.text', 'Waiting for 1 more player');
         cy.get('[data-test="invite-link"]').invoke('val').should('match', new RegExp(`/games/kobo/join/${id}$`));
@@ -39,7 +38,8 @@ describe('Kobo lobby', () => {
       const joinNext = (name: string, expected: number) => joinAsScriptedPlayer(id, name, 'kobo').then((guest) => {
         guests.push(guest);
         cy.get('[data-test="player-count"]').should('contain.text', `${expected} / 6`);
-        cy.get('[data-test="add-bot"]').should('not.exist');
+        // The host may add a bot while a seat is free.
+        cy.get('[data-test="add-bot"]').should(expected < 6 ? 'not.be.disabled' : 'be.disabled');
       });
       joinNext('Bob', 2);
       joinNext('Carol', 3);
@@ -73,7 +73,7 @@ describe('Kobo lobby', () => {
             const notice = frames.find((f) => f.eventType === 'REMOVED');
             expect(notice?.message).to.eq('You were removed from the lobby by the host');
           });
-          cy.get('[data-test="add-bot"]').should('not.exist');
+          cy.get('[data-test="add-bot"]').should('not.be.disabled');
         });
       });
     });
