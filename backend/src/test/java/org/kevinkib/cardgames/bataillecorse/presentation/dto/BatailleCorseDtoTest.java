@@ -33,4 +33,18 @@ class BatailleCorseDtoTest {
         assertThat(dto.getPlayers().get(0).getForfeitReason(), is(nullValue()));
         assertThat(dto.getPlayers().get(1).getForfeitReason(), is("RESIGNED"));
     }
+
+    @Test
+    void givenFreshGame_thenVersionIsZero() {
+        assertThat(BatailleCorseDto.from(twoPlayerGame()).getVersion(), is(0));
+    }
+
+    @Test
+    void givenStateChanges_thenVersionFollowsTheGame() throws Exception {
+        BatailleCorse game = twoPlayerGame();
+        game.send(game.getCurrentPlayer());
+        game.send(game.getCurrentPlayer());
+
+        assertThat(BatailleCorseDto.from(game).getVersion(), is(2));
+    }
 }

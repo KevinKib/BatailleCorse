@@ -89,4 +89,20 @@ class BullshitDtoTest {
         assertThat(dto.myHand().isEmpty(), is(true));
         assertThat(dto.availableActions().isEmpty(), is(true));
     }
+
+    @Test
+    void givenFreshGame_whenForViewer_thenVersionIsZero() {
+        Bullshit game = aBullshit().withPlayers(playerWithRanks(0, ACE), playerWithRanks(1, TWO)).build();
+
+        assertThat(BullshitDto.forViewer(game, new PlayerId(0)).version(), is(0));
+    }
+
+    @Test
+    void givenStateChange_whenForViewer_thenVersionFollowsTheGame() throws Exception {
+        Bullshit game = aBullshit().withPlayers(playerWithRanks(0, ACE, KING), playerWithRanks(1, TWO)).build();
+        game.discard(new PlayerId(0), java.util.List.of(game.getPlayers().get(0).getCards().get(0)));
+
+        assertThat(BullshitDto.forViewer(game, new PlayerId(1)).version(), is(game.version()));
+        assertThat(BullshitDto.forViewer(game, new PlayerId(1)).version(), is(1));
+    }
 }
