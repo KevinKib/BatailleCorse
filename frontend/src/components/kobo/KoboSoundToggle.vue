@@ -32,6 +32,9 @@ const ui = useI18n().koboUi.sound;
   border-radius: 999px;
   cursor: pointer;
 }
+/* The chip stays as small as its neighbours; its touch target is a 44 px square around it. */
+.sound-toggle { position: relative; }
+.sound-toggle::after { content: ''; position: absolute; inset: -8px; }
 .sound-toggle[aria-pressed='true'] { color: var(--gold); }
 .sound-toggle:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 </style>

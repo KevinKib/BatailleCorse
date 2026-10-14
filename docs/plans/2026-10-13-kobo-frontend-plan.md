@@ -189,11 +189,25 @@ Read-only rendering, no action yet. `ui-change` before/after.
 
 ## K7 `chore: Kobo accessibility and motion pass`
 
-- [ ] Flip transitions and the discard flight (`usePileAnimation`), card sound on discard growth, all
-      off under `prefers-reduced-motion` (Vitest with the media query mocked).
+Status: K7b done in PR #206 (`feat/kobo-animations`, ready for review): the motion, announcement and
+sound items below. K7a (click actions) was merged earlier (#201).
+
+- [x] Travelling cards (design B of the owner's canvas): `model/kobo/motion.ts` plans an event into
+      movements (pure, tested, each under 700 ms); `KoboMotionLayer` plays them as copies over the table
+      (fixed layer, no pointer events, hidden from assistive technology, skipped when a place cannot be
+      found, hidden real cards always shown again). Opponents' moves included, with a faint arrow. Nothing
+      waits for it: the one-click match and every button stay immediate. Off under
+      `prefers-reduced-motion` (Vitest with the media query mocked, and Cypress with the media emulated).
+- [x] Score sheet rise at the gift and the round end: 250 ms, `translateY(16px)` and a fade, cut by
+      reduced motion.
+- [x] Sound button in the top bar (off by default, remembered in `localStorage`): card, turn and missed
+      match sounds synthesised with Web Audio (no asset), the context resumed from the click that turns it on.
+- [x] One polite live region (`liveAnnouncement`) for what the event log does not say; the phase and prompt
+      lines are no longer live themselves; the table and my zone are named regions.
+- [x] Cypress `kobo-animations.cy.ts`.
 - [ ] Axe-style checks in Cypress on the lobby, table and end screen (labels, focus order, live
-      regions present before their text).
-- [ ] Final `ui-change` report at 375 and 1280 px, 2 and 6 players, light and dark.
+      regions present before their text): not done, see the PR for what was reviewed by hand.
+- [ ] Final `ui-change` report at 375 and 1280 px, 2 and 6 players, light and dark: in the PR description.
 - [ ] Comment on #149 with the merged PRs.
 
 ## Risks
