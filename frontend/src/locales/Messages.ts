@@ -280,10 +280,32 @@ export interface KoboUiMessages {
     announce: string;                  // Kobo!
     cancel: string;                    // drops a half-made selection
     hide: string;                      // turns the peeked card face down
-    match: string;                     // reserved for the matching discard
+    match: string;                     // arms the matching discard
   };
   prompt: Record<KoboPromptKey, string>;   // one-line instruction while a click on a card is expected
   notice: Record<KoboNoticeKey, string>;   // why my last command did not go through
+  log: KoboLogMessages;                    // the one-line event log
+}
+
+/** '{actor}' = "You" or a name; '{owner}' = ownerYour or "{name}'s"; '{n}', '{m}' = 1-based slot numbers; '{card}'. */
+export interface KoboLogMessages {
+  ownerYour: string;                   // "your", mid-sentence
+  draw: string;
+  drawEmpty: string;
+  swap: string;                        // '{actor}', '{n}' = slot swapped into, '{card}' = discarded
+  discard: string;
+  peek: string;                        // '{owner}', '{n}'
+  blindSwap: string;                   // '{n}' = actor's slot, '{owner}', '{m}' = the other slot
+  kingSwap: string;
+  skipPower: string;
+  endTurn: string;
+  kobo: string;
+  ready: string;
+  matchOwn: string;                    // '{n}', '{card}'
+  matchOther: string;                  // '{owner}', '{n}', '{card}', '{m}' = the card given
+  matchOtherNoGive: string;
+  matchMissed: string;
+  giveTen: string;                     // '{owner}' = receiver (a name, "you")
 }
 
 export type KoboNoticeKey = 'matchTooLate' | 'moveImpossible' | 'connection';

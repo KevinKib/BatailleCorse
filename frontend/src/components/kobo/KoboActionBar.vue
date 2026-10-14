@@ -23,18 +23,22 @@ const props = defineProps<{
   canHide: boolean;
 }>();
 const emit = defineEmits<{
-  ready: []; draw: []; discard: []; skip: []; 'end-turn': []; announce: []; cancel: []; hide: [];
+  ready: []; draw: []; discard: []; skip: []; 'end-turn': []; announce: []; match: []; cancel: []; hide: [];
 }>();
 
 const ui = useI18n().koboUi;
 const buttons = computed(() => barButtons(props.game));
 
-const EVENT: Record<KoboBarButton, 'ready' | 'draw' | 'discard' | 'skip' | 'end-turn' | 'announce'> = {
+const EVENT: Record<KoboBarButton, 'ready' | 'draw' | 'discard' | 'skip' | 'end-turn' | 'announce' | 'match'> = {
   ready: 'ready', draw: 'draw', discard: 'discard', skip: 'skip', endTurn: 'end-turn', announce: 'announce',
+  match: 'match',
 };
 const SEVERITY: Record<KoboBarButton, 'success' | 'secondary' | 'warn' | 'danger'> = {
   ready: 'success', draw: 'success', discard: 'secondary', skip: 'secondary', endTurn: 'success', announce: 'danger',
+  match: 'warn',
 };
+// The matching discard is a race against the other players, so a turn command in flight never disables it.
+const armed = computed(() => props.pending.kind === 'match-armed' || props.pending.kind === 'match-give');
 </script>
 
 <template>
@@ -45,6 +49,8 @@ const SEVERITY: Record<KoboBarButton, 'success' | 'secondary' | 'warn' | 'danger
         <YourTurnIndicator :active="yourTurn" />
         <p v-if="prompt" class="line prompt" data-test="prompt" aria-live="polite">{{ ui.prompt[prompt] }}</p>
         <p v-else class="line" data-test="phase" aria-live="polite">{{ phaseText }}</p>
+        <!-- Under the phase line, in the room the text column leaves free in the first row of the bar. -->
+        <slot name="log" />
       </div>
       <div class="actions-buttons">
         <Button
@@ -55,7 +61,8 @@ const SEVERITY: Record<KoboBarButton, 'success' | 'secondary' | 'warn' | 'danger
           :label="ui.actions[id]"
           :severity="SEVERITY[id]"
           rounded
-          :disabled="busy"
+          :disabled="busy && id !== 'match'"
+          :aria-pressed="id === 'match' ? String(armed) : undefined"
           @click="emit(EVENT[id])" />
         <Button
           v-if="pending.kind !== 'none'"
@@ -94,7 +101,7 @@ const SEVERITY: Record<KoboBarButton, 'success' | 'secondary' | 'warn' | 'danger
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: var(--space-1) var(--space-2);
+  gap: 0 var(--space-2);
   min-height: 44px;
 }
 /* The text takes what the buttons leave and wraps; the buttons keep their size and wrap below it if they must. */
@@ -104,7 +111,6 @@ const SEVERITY: Record<KoboBarButton, 'success' | 'secondary' | 'warn' | 'danger
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
 }
 .actions-buttons {
   display: flex;

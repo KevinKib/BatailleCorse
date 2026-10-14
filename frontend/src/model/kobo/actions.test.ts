@@ -31,8 +31,13 @@ describe('barButtons', () => {
     expect(buttons(phase, actions)).toEqual(expected);
   });
 
-  it('givenMatchAndGiftListed_thenTheyAreNotButtonsOfThisBar_theyBelongToTheNextSteps', () => {
-    expect(buttons('DRAW', ['MATCH_DISCARD'])).toEqual([]);
+  it('givenMatchListed_thenOffersMatchLast_whateverElseIsListed', () => {
+    expect(buttons('DRAW', ['DRAW', 'MATCH_DISCARD'])).toEqual(['draw', 'match']);
+    expect(buttons('TURN_END', ['END_TURN', 'ANNOUNCE_KOBO', 'MATCH_DISCARD'])).toEqual(['endTurn', 'announce', 'match']);
+    expect(buttons('DRAW', ['MATCH_DISCARD'])).toEqual(['match']);
+  });
+
+  it('givenTheGiftListed_thenItIsNotAButtonOfThisBar_itBelongsToTheRoundEnd', () => {
     expect(buttons('GIFT', ['GIVE_TEN'])).toEqual([]);
   });
 

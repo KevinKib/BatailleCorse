@@ -275,7 +275,7 @@ describe('KoboGameScreen', () => {
     it('givenMyDrawStep_thenDrawIsTheButtonAndNoCardIsClickable', async () => {
       const { wrapper, store } = await playing({ phase: 'DRAW', availableActions: ['DRAW', 'MATCH_DISCARD'] });
       expect(enabledSlots(wrapper)).toEqual([]);
-      expect(wrapper.find('[data-test="action-match"]').exists()).toBe(false);
+      expect(wrapper.find('[data-test="action-match"]').exists()).toBe(true);
       const draw = vi.spyOn(store, 'draw').mockReturnValue(true);
       await press(wrapper, 'draw');
       expect(draw).toHaveBeenCalledTimes(1);
@@ -377,6 +377,139 @@ describe('KoboGameScreen', () => {
       await press(wrapper, 'hide');
       expect(wrapper.get('[data-test="slot-1-0"]').attributes('aria-label')).toContain('face down');
       expect(wrapper.find('[data-test="action-hide"]').exists()).toBe(false);
+    });
+
+    describe('matching discard and event log', () => {
+      const NINE = buildKoboCard('9', 'SPADE');
+      const matchable = (overrides = {}) => playing({
+        phase: 'DRAW', currentSeat: 1, availableActions: ['MATCH_DISCARD'], discardTop: NINE, ...overrides,
+      });
+      const eventData = (overrides: Record<string, unknown>) => ({
+        seat: 1, action: 'MATCH', slot: null, targetSeat: null, targetSlot: null, card: null,
+        givenSlot: null, success: null, barrierOpened: null, ...overrides,
+      });
+
+      it('givenMatchIsListedDuringAnotherPlayersTurn_thenTheMatchButtonIsThereAndNoCardIsClickableYet', async () => {
+        const { wrapper } = await matchable();
+        expect(wrapper.get('[data-test="action-match"]').text()).toBe(messagesEn.koboUi.actions.match);
+        expect(wrapper.get('[data-test="action-match"]').attributes('aria-pressed')).toBe('false');
+        expect(enabledSlots(wrapper)).toEqual([]);
+      });
+
+      it('givenMatchIsNotListed_thenNoMatchButton', async () => {
+        const { wrapper } = await playing({ phase: 'DRAW', availableActions: ['DRAW'] });
+        expect(wrapper.find('[data-test="action-match"]').exists()).toBe(false);
+      });
+
+      it('givenMatchIsPressed_thenEveryCardOfEveryPlayerCanBePickedAndCancelIsOffered', async () => {
+        const { wrapper } = await matchable();
+        await press(wrapper, 'match');
+        expect(wrapper.get('[data-test="action-match"]').attributes('aria-pressed')).toBe('true');
+        expect(wrapper.get('[data-test="prompt"]').text()).toBe(messagesEn.koboUi.prompt.matchPick);
+        expect(enabledSlots(wrapper)).toHaveLength(8);
+        expect(wrapper.find('[data-test="action-cancel"]').exists()).toBe(true);
+      });
+
+      it('givenMatchIsPressedTwice_thenTheModeIsDisarmed', async () => {
+        const { wrapper, store } = await matchable();
+        await press(wrapper, 'match');
+        await press(wrapper, 'match');
+        expect(store.pending).toEqual({ kind: 'none' });
+        expect(enabledSlots(wrapper)).toEqual([]);
+      });
+
+      it('givenAnotherPlayersCardIsPicked_thenOnlyMyCardsCanBePickedToGive', async () => {
+        const { wrapper, store } = await matchable();
+        await press(wrapper, 'match');
+        await wrapper.get('[data-test="slot-1-2"]').trigger('click');
+        expect(store.pending.kind).toBe('match-give');
+        expect(wrapper.get('[data-test="prompt"]').text()).toBe(messagesEn.koboUi.prompt.matchGive);
+        expect(enabledSlots(wrapper)).toEqual(['slot-0-0', 'slot-0-1', 'slot-0-2', 'slot-0-3']);
+      });
+
+      it('givenMyCardIsPickedWhileArmed_thenItIsTheStoreThatSendsTheMatch', async () => {
+        const { wrapper, store } = await matchable();
+        const pick = vi.spyOn(store, 'pickSlot');
+        await press(wrapper, 'match');
+        await wrapper.get('[data-test="slot-0-1"]').trigger('click');
+        expect(pick).toHaveBeenCalledWith(0, 1);
+      });
+
+      it('givenEscape_thenTheArmedModeIsDropped', async () => {
+        const { wrapper, store } = await matchable();
+        await press(wrapper, 'match');
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+        await flushPromises();
+        expect(store.pending).toEqual({ kind: 'none' });
+        expect(wrapper.get('[data-test="action-match"]').attributes('aria-pressed')).toBe('false');
+      });
+
+      it('givenACommandInFlight_thenMatchIsStillAvailable', async () => {
+        const { wrapper, store } = await matchable({ currentSeat: 0, phase: 'TURN_END', availableActions: ['END_TURN', 'MATCH_DISCARD'] });
+        store.busy = true;
+        await flushPromises();
+        expect(wrapper.get('[data-test="action-endTurn"]').attributes('disabled')).toBeDefined();
+        expect(wrapper.get('[data-test="action-match"]').attributes('disabled')).toBeUndefined();
+      });
+
+      it('givenARefusedMatch_thenSaysTooLateAndMatchCanBeTriedAgain', async () => {
+        const { wrapper, store } = await matchable();
+        await press(wrapper, 'match');
+        store.applyEvent({ type: 'error', eventType: 'MATCH', message: 'late' });
+        await flushPromises();
+        expect(wrapper.get('[data-test="notice"]').text()).toBe(messagesEn.koboUi.notice.matchTooLate);
+        expect(wrapper.get('[data-test="action-match"]').attributes('disabled')).toBeUndefined();
+      });
+
+      it('givenNoEvent_thenTheLogRegionIsThereAndEmpty', async () => {
+        const { wrapper } = await matchable();
+        expect(wrapper.get('[data-test="event-log-line"]').attributes('aria-live')).toBe('polite');
+        expect(wrapper.get('[data-test="event-log-line"]').text()).toBe('');
+      });
+
+      it('givenAnOpponentsMatchOnMyCard_thenTheLogSaysItAndTheNamedSlotsAreMarked', async () => {
+        const { wrapper, store } = await matchable({
+          players: [buildKoboPlayer(0, { name: 'Ann' }), buildKoboPlayer(1, { name: 'Bob', current: true })],
+        });
+        store.applyEvent({
+          type: 'event', eventType: 'MATCH', message: '',
+          eventData: eventData({ seat: 1, targetSeat: 0, targetSlot: 2, givenSlot: 0, success: true, card: NINE }),
+        });
+        await flushPromises();
+        expect(wrapper.get('[data-test="event-log-line"]').text()).toBe('Bob matched your card 3 (9 of spade), gave card 1');
+        expect(wrapper.get('[data-test="slot-0-2"]').attributes('data-highlighted')).toBe('true');
+        // The slot Bob gave from is named too; nothing else is.
+        expect(wrapper.get('[data-test="slot-1-0"]').attributes('data-highlighted')).toBe('true');
+        expect(wrapper.findAll('[data-highlighted]')).toHaveLength(2);
+      });
+
+      it('givenAMissedMatchOfMine_thenTheLogSaysIAmPenalised', async () => {
+        const { wrapper, store } = await matchable();
+        store.applyEvent({ type: 'event', eventType: 'MATCH', message: '', eventData: eventData({ seat: 0, success: false }) });
+        await flushPromises();
+        expect(wrapper.get('[data-test="event-log-line"]').text()).toBe('You missed a match and took a penalty card');
+        expect(wrapper.get('[data-test="event-log"]').attributes('data-outcome')).toBe('bad');
+      });
+
+      it('givenAnEndOfTurnAfterAPeek_thenTheHighlightStaysWithTheLineThatStillSaysIt', async () => {
+        const { wrapper, store } = await matchable();
+        store.applyEvent({ type: 'event', eventType: 'PEEK', message: '', eventData: eventData({ seat: 1, action: 'PEEK', targetSeat: 0, targetSlot: 1 }) });
+        store.applyEvent({ type: 'event', eventType: 'END_TURN', message: '', eventData: eventData({ seat: 1, action: 'END_TURN' }) });
+        await flushPromises();
+        expect(wrapper.get('[data-test="event-log-line"]').text()).toBe('Player 1 looked at your card 2');
+        expect(wrapper.get('[data-test="slot-0-1"]').attributes('data-highlighted')).toBe('true');
+      });
+
+      it('givenTheNextEvent_thenItReplacesTheHighlight', async () => {
+        const { wrapper, store } = await matchable();
+        store.applyEvent({ type: 'event', eventType: 'PEEK', message: '', eventData: eventData({ seat: 1, action: 'PEEK', targetSeat: 0, targetSlot: 1 }) });
+        await flushPromises();
+        expect(wrapper.get('[data-test="slot-0-1"]').attributes('data-highlighted')).toBe('true');
+        store.applyEvent({ type: 'event', eventType: 'SWAP', message: '', eventData: eventData({ seat: 1, action: 'SWAP', slot: 3, card: NINE }) });
+        await flushPromises();
+        expect(wrapper.find('[data-test="slot-0-1"]').attributes('data-highlighted')).toBeUndefined();
+        expect(wrapper.get('[data-test="slot-1-3"]').attributes('data-highlighted')).toBe('true');
+      });
     });
 
     it('stopsListeningToEscapeOnceTheScreenIsGone', async () => {

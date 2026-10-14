@@ -168,6 +168,11 @@ describe('English messages', () => {
     expect(messagesEn.koboUi.back).toBeTruthy();
     expect(messagesEn.koboUi.table.round).toContain('{n}');
     expect(Object.keys(messagesEn.koboUi.phase.mine)).toEqual(Object.keys(messagesEn.koboUi.phase.other));
+    // Every sentence of the event log is filled, and says who acted (except the empty draw pile).
+    for (const [key, text] of Object.entries(messagesEn.koboUi.log)) {
+      expect(text, key).toBeTruthy();
+      if (key !== 'ownerYour' && key !== 'drawEmpty') expect(text, key).toContain('{actor}');
+    }
   });
 });
 
