@@ -28,6 +28,8 @@ const emit = defineEmits<{
 
 const ui = useI18n().koboUi;
 const buttons = computed(() => barButtons(props.game));
+// No button, no column: an empty one would still cost the row gap and push the title off the centre of the bar.
+const hasButtons = computed(() => buttons.value.length > 0 || props.pending.kind !== 'none' || props.canHide);
 
 const EVENT: Record<KoboBarButton, 'ready' | 'draw' | 'discard' | 'skip' | 'end-turn' | 'announce' | 'match'> = {
   ready: 'ready', draw: 'draw', discard: 'discard', skip: 'skip', endTurn: 'end-turn', announce: 'announce',
@@ -52,7 +54,7 @@ const armed = computed(() => props.pending.kind === 'match-armed' || props.pendi
         <!-- Under the phase line, in the room the text column leaves free in the first row of the bar. -->
         <slot name="log" />
       </div>
-      <div class="actions-buttons">
+      <div v-if="hasButtons" class="actions-buttons">
         <Button
           v-for="id in buttons"
           :key="id"
