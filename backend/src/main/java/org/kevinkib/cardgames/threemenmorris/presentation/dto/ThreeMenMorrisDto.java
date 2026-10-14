@@ -1,10 +1,12 @@
 package org.kevinkib.cardgames.threemenmorris.presentation.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.threemenmorris.domain.Action;
 import org.kevinkib.cardgames.threemenmorris.domain.MorrisResult;
+import org.kevinkib.cardgames.threemenmorris.domain.MorrisVariant;
 import org.kevinkib.cardgames.threemenmorris.domain.ThreeMenMorris;
 import org.kevinkib.cardgames.threemenmorris.domain.ThreeMenMorrisFactory;
 
@@ -14,7 +16,9 @@ import java.util.Map;
 /**
  * One player's view of a Three Men's Morris game, the only projection of the aggregate. Everything
  * is public; only the actions and the legal moves depend on the viewer. {@code board} holds the
- * owner seat of each of the nine points (row by row), null for a free point.
+ * owner seat of each of the nine points (row by row), null for a free point. {@code variant} and
+ * {@code legalPlacements} are additive and left out of the JSON for Tapatan, so the v1 wire is unchanged:
+ * a client reads an absent {@code variant} as {@code tapatan}.
  */
 public record ThreeMenMorrisDto(
         boolean started,
@@ -28,7 +32,9 @@ public record ThreeMenMorrisDto(
         List<MoveDto> legalMoves,
         List<String> availableActions,
         List<Integer> winningLine,
-        Outcome outcome) {
+        Outcome outcome,
+        @JsonInclude(JsonInclude.Include.NON_NULL) String variant,
+        @JsonInclude(JsonInclude.Include.NON_NULL) List<Integer> legalPlacements) {
 
     public record PlayerDto(int seat, String name, boolean current, int piecesToPlace) {
     }
@@ -65,6 +71,8 @@ public record ThreeMenMorrisDto(
             Outcome outcome = result.isFinished()
                     ? new Finished(result.winner().id(), result.reason().name())
                     : new Ongoing();
+            MorrisVariant variant = MorrisVariant.of(game.rules());
+            boolean v1 = variant == MorrisVariant.TAPATAN;
             return new ThreeMenMorrisDto(
                     true,
                     game.getId().uuid().toString(),
@@ -77,7 +85,9 @@ public record ThreeMenMorrisDto(
                     game.legalMoves(viewer).stream().map(m -> new MoveDto(m.from(), m.to())).toList(),
                     game.availableActions(viewer).stream().map(Action::name).toList(),
                     game.winningLine(),
-                    outcome);
+                    outcome,
+                    v1 ? null : variant.key(),
+                    v1 ? null : game.legalPlacements(viewer));
         }
     }
 }

@@ -32,7 +32,7 @@ frontend paths relative to `frontend/src/`.
 | PR | Title | Cost | Needs | State |
 |----|-------|------|-------|-------|
 | M1 | `refactor: Three Men's Morris rules as data` | M | - | [x] done (#190) |
-| M2 | `feat: Achi and Picaria variants of Three Men's Morris` | M | M1 | [ ] to do |
+| M2 | `feat: Achi and Picaria variants of Three Men's Morris` | M | M1 | [x] done (#194) |
 | M3 | `feat: host colour option for Three Men's Morris` | S | M2 | [ ] to do |
 | M4 | `feat: draw offers and threefold repetition in Three Men's Morris` | M | M3 | [ ] to do |
 | M5 | `feat: Three Men's Morris bots with three levels` | L | M4 | [ ] to do |
@@ -75,14 +75,14 @@ No behaviour, wire or test change for v1: every existing test passes unchanged.
 
 - `domain/MorrisVariant.java` (`TAPATAN`, `ACHI`, `PICARIA`; option key, rules). `Geometry.PICARIA` (Tapatan
   plus 1-3, 3-7, 7-5, 5-1). `MorrisRules.ACHI` (4 pieces), `MorrisRules.PICARIA` (3 pieces,
-  `CENTRE_AFTER_FIRST_PIECES`).
+  `CENTRE_FORBIDDEN_DURING_PLACEMENT`).
 - `ThreeMenMorris.place`: refuses the locked centre with a new `PointLockedException`; `legalPlacements`
   leaves it out.
 - `ThreeMenMorrisFactory`: `optionDescriptors()` = `variant` (`tapatan|achi|picaria`, default `tapatan`, label
   `options.threeMenMorris.variant`); `create(id, n, options)` builds the variant.
 - DTO: `variant`, `legalPlacements`.
 - Tests first: `AchiTest` (4 placements each, then movement with one hole; White blocked right after the
-  8th placement loses; line during placement wins), `PicariaTest` (centre refused until both placed; short
+  8th placement loses; line during placement wins), `PicariaTest` (centre refused during the whole placement, reachable by a move; short
   diagonal moves legal; no line along a short diagonal), `ThreeMenMorrisFactoryOptionsTest` (default
   `tapatan`, unknown variant refused by `validate`), `ThreeMenMorrisDtoTest` (new fields),
   `ThreeMenMorrisWebSocketControllerIT` (a room created with `variant=achi` starts with 4 pieces in hand).
@@ -157,7 +157,7 @@ Start after #186 (Kobo K3) is merged, or rebase on it. Use the `ui-change` skill
   `legalPlacements`; `MorrisBoard.test.ts` draws the diamond for Picaria and keeps 44 px targets; store test:
   colour from the DTO when the host plays Black). Cypress `morris-variants.cy.ts`: the host picks Achi and
   Black in the lobby, the guest sees both read-only, the guest (White) places first, 4 pieces each; Picaria
-  centre not offered on the first placement. Existing `morris-game.cy.ts` and `morris-lobby.cy.ts` unchanged
+  centre never offered in the placement phase. Existing `morris-game.cy.ts` and `morris-lobby.cy.ts` unchanged
   and green (defaults).
 
 ## F2 `feat: Three Men's Morris draw offer and draw end screen` (M)

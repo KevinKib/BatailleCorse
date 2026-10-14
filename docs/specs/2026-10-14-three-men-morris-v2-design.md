@@ -97,7 +97,7 @@ sources: White starts, as in v1.
 | Pieces each | 3 | **4** (8 on 9 points: one hole) | 3 |
 | Adjacency | orthogonal + centre (the two long diagonals) | same as Tapatan | Tapatan's **plus the four short diagonals between side middles** (1-3, 3-7, 7-5, 5-1) |
 | Winning lines | the 8 | the 8 | the 8 (the short diagonals join only two points, so they never make a line) |
-| Placement restriction | none | none | **the centre is closed until each player has placed one piece** |
+| Placement restriction | none | none | **no piece may be placed on the centre (owner decision, whatdowedoallday.com/picaria); it is reached by a move** |
 | Blocked player | practically unreachable (0 reachable blocked positions **[C]**) | **reachable** (12 reachable blocked positions **[C]**): the `BLOCKED` reason becomes a real ending | unreachable **[C]** |
 | Perfect play from the start | **White wins [C]** | **White wins [C]** | **draw [C]** |
 | Source | v1 source (Locus Ludi PDF, board B) | Wikipedia "Achi (game)", which cites Claudia Zaslavsky, *Tic Tac Toe and Other Three-in-a-Row Games* (1982) **[H: book not read]** | Wikipedia "Picaria", citing Merilyn Simonds Mohr, *The Games Treasury* (1993), p. 28 **[H: book not read]** |
@@ -126,7 +126,7 @@ Package `threemenmorris/domain` (pure, ArchUnit unchanged).
   `Geometry.PICARIA` (Tapatan plus the four short diagonals). Point validation goes through the geometry
   (`isPoint`, `neighbours`, `areAdjacent`).
 - `MorrisRules` (record): `geometry`, `piecesPerPlayer`, `PlacementRule` (`FREE` or
-  `CENTRE_AFTER_FIRST_PIECES`). Constants `TAPATAN`, `ACHI`, `PICARIA`; `MorrisVariant` enum
+  `CENTRE_FORBIDDEN_DURING_PLACEMENT`). Constants `TAPATAN`, `ACHI`, `PICARIA`; `MorrisVariant` enum
   (`TAPATAN`, `ACHI`, `PICARIA`, with the option key `tapatan` / `achi` / `picaria` and its rules).
 - `ThreeMenMorris(GameId, MorrisRules, PlayerId whiteSeat)`; the v1 constructor `ThreeMenMorris(GameId)`
   stays as `(id, TAPATAN, seat 0)` so every v1 test is untouched. New queries: `rules()`, `whiteSeat()`,
