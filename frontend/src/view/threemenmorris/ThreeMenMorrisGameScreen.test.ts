@@ -155,6 +155,100 @@ describe('ThreeMenMorrisGameScreen', () => {
     });
   });
 
+  describe('variants and colours', () => {
+    const hostBlack = (overrides: Partial<MorrisState> = {}) => morrisState({
+      whiteSeat: 1, currentSeat: 1,
+      players: [
+        { seat: 0, name: 'Alice', current: false, piecesToPlace: 3, colour: 'BLACK' },
+        { seat: 1, name: 'Bob', current: true, piecesToPlace: 3, colour: 'WHITE' },
+      ],
+      board: [N, N, N, N, N, N, N, N, N],
+      ...overrides,
+    });
+
+    it('names the variant in the top bar, Tapatan when the state carries none', async () => {
+      const { wrapper } = await mountScreen(morrisState());
+      expect(wrapper.get('[data-test="variant-name"]').text()).toBe('Tapatan');
+      expect(wrapper.get('[data-test="morris-board"]').attributes('data-variant')).toBe('tapatan');
+    });
+
+    it('shows Picaria with its diamond of short diagonals and no centre to place on', async () => {
+      const { wrapper } = await mountScreen(morrisState({
+        variant: 'picaria', legalPlacements: [0, 1, 2, 3, 5, 6, 7, 8],
+      }));
+      expect(wrapper.get('[data-test="variant-name"]').text()).toBe('Picaria');
+      expect(wrapper.findAll('[data-line]')).toHaveLength(12);
+      expect(point(wrapper, 4).attributes('data-state')).toBe('idle');
+      expect(point(wrapper, 3).attributes('data-state')).toBe('highlighted');
+    });
+
+    it('draws the colour of each player from the state when the host plays Black', async () => {
+      const { wrapper } = await mountScreen(hostBlack(), 0);
+      const tags = wrapper.findAll('[data-test="player-tag"]');
+      // The opponent is on top, then me.
+      expect(tags[0].attributes('data-colour')).toBe('white');
+      expect(tags[1].attributes('data-colour')).toBe('black');
+      expect(wrapper.get('[data-test="colour-hint"]').text()).toContain('You play Black');
+      expect(wrapper.get('[data-test="phase-hint"]').text()).toContain('Waiting for Bob');
+    });
+
+    it('colours the pieces by the state: the guest, White, places next to a Black host piece', async () => {
+      const { wrapper } = await mountScreen(hostBlack({ board: [N, N, N, N, 0, N, N, N, N] }), 1);
+      expect(point(wrapper, 4).attributes('data-owner')).toBe('black');
+      expect(wrapper.get('[data-test="phase-hint"]').text()).toBe('Place a piece');
+    });
+
+    it('rules of the variant: Achi says four pieces, Picaria says the centre is closed', async () => {
+      const achi = await mountScreen(morrisState({ variant: 'achi' }));
+      expect(achi.wrapper.get('[data-cy="rules-panel"]').text()).toContain('four pieces');
+      document.body.innerHTML = '';
+      const picaria = await mountScreen(morrisState({ variant: 'picaria' }));
+      expect(picaria.wrapper.get('[data-cy="rules-panel"]').text()).toContain('centre');
+      expect(picaria.wrapper.get('[data-cy="rules-panel"]').text()).toContain('short diagonals');
+    });
+
+    it('marks the points of the opponent last move on the board, not mine', async () => {
+      const { store, wrapper } = await mountScreen(movementState());
+      store.applyEvent({ type: 'event', eventType: 'MOVE', eventData: { seat: 1, action: 'MOVE', point: null, from: 5, to: 2 } });
+      await flushPromises();
+      expect(point(wrapper, 5).attributes('data-last')).toBe('true');
+      expect(point(wrapper, 2).attributes('data-last')).toBe('true');
+      store.applyEvent({ type: 'event', eventType: 'MOVE', eventData: { seat: 0, action: 'MOVE', point: null, from: 1, to: 2 } });
+      await flushPromises();
+      expect(point(wrapper, 5).attributes('data-last')).toBeUndefined();
+    });
+
+    it('lets the host pick the variant and the colour in the lobby, through the store', async () => {
+      const publish = vi.spyOn(webSocketService, 'publish').mockImplementation(() => {});
+      const { wrapper } = await mountScreen(lobbyView({
+        canEditOptions: true,
+        options: { variant: 'tapatan', hostColour: 'white' },
+        optionDescriptors: [
+          { key: 'variant', type: 'CHOICE', values: ['tapatan', 'achi', 'picaria'], defaultValue: 'tapatan', labelKey: 'options.threeMenMorris.variant' },
+          { key: 'hostColour', type: 'CHOICE', values: ['white', 'black', 'random'], defaultValue: 'white', labelKey: 'options.threeMenMorris.hostColour' },
+        ],
+      }));
+      await wrapper.get('[data-test="option-variant-achi"]').setValue(true);
+      expect(publish).toHaveBeenCalledWith('/app/lobby/setOptions', expect.stringContaining('"variant":"achi"'));
+      await wrapper.get('[data-test="option-hostColour-black"]').setValue(true);
+      expect(publish).toHaveBeenCalledWith('/app/lobby/setOptions', expect.stringContaining('"hostColour":"black"'));
+    });
+
+    it('shows the guest the same choices without controls', async () => {
+      const { wrapper } = await mountScreen(lobbyView({
+        mySeat: 1, canEditOptions: false,
+        options: { variant: 'achi', hostColour: 'black' },
+        optionDescriptors: [
+          { key: 'variant', type: 'CHOICE', values: ['tapatan', 'achi', 'picaria'], defaultValue: 'tapatan', labelKey: 'options.threeMenMorris.variant' },
+          { key: 'hostColour', type: 'CHOICE', values: ['white', 'black', 'random'], defaultValue: 'white', labelKey: 'options.threeMenMorris.hostColour' },
+        ],
+      }), 1);
+      expect(wrapper.get('[data-test="option-variant"]').text()).toContain('Achi');
+      expect(wrapper.get('[data-test="option-hostColour"]').text()).toContain('Black');
+      expect(wrapper.find('[data-test="option-variant-achi"]').exists()).toBe(false);
+    });
+  });
+
   describe('whose turn it is', () => {
     it('on my turn shows "Your turn" and the placement hint, and the free points can be played', async () => {
       const { wrapper } = await mountScreen(morrisState());

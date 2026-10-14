@@ -232,6 +232,10 @@ export interface OptionsMessages {
     deckSize: OptionTexts;
     vars: Record<string, Record<string, Record<string, string>>>;
   };
+  threeMenMorris: {
+    variant: OptionTexts;              // `label`, then `tapatan` / `achi` / `picaria`
+    hostColour: OptionTexts;           // `label`, then `white` / `black` / `random`
+  };
 }
 
 // Kobo screens (`KoboGameScreen`): the lobby wiring and the table (read only for now, the actions come next).
@@ -385,6 +389,22 @@ export interface TurnMessages {
   yourTurn: string;                    // the cue shown (and announced) when it is my turn
 }
 
+// What a Three Men's Morris variant is called, said in a few words, and its rule in one line.
+export interface MorrisVariantTexts {
+  name: string;                        // Tapatan, Achi, Picaria
+  summary: string;                     // under the name on its lobby card
+  rule: string;                        // the rule line shown under the choice
+}
+
+// The lobby of Three Men's Morris: the variant cards and the host colour (the host edits, the others read).
+export interface MorrisLobbyMessages {
+  variantLabel: string;                // group name of the variant cards
+  colourLabel: string;                 // group name of the colour buttons, for the host
+  hostPlays: string;                   // the same choice, read by the others
+  variants: Record<'tapatan' | 'achi' | 'picaria', MorrisVariantTexts>;
+  colours: { white: string; black: string; random: string };
+}
+
 // Three Men's Morris board: every word of its accessible names (no visible text on the board itself).
 export interface MorrisBoardMessages {
   boardLabel: string;                  // name of the board group
@@ -445,6 +465,8 @@ export interface Messages {
   threeMenMorris: RulesMessages;    // Three Men's Morris
   morrisBoard: MorrisBoardMessages; // Three Men's Morris board
   threeMenMorrisUi: ThreeMenMorrisUiMessages; // Three Men's Morris screens
+  morrisLobby: MorrisLobbyMessages; // Three Men's Morris lobby options
+  morrisVariantRules: Record<'achi' | 'picaria', RulesMessages>; // rules panel of the variants (Tapatan: threeMenMorris)
   bullshitUi: BullshitUiMessages; // Bullshit screens
   koboUi: KoboUiMessages;   // Kobo screens
   batailleCorseUi: BatailleCorseUiMessages; // Bataille Corse table

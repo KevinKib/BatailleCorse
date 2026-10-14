@@ -2,27 +2,32 @@
 import { computed, nextTick, ref, useTemplateRef } from 'vue';
 import { useI18n } from '../../composables/useI18n';
 import { format } from '../../locales/format';
+import { GEOMETRIES, neighbourByArrow, type MorrisGeometry } from '../../model/threemenmorris/geometries';
 
-// The Three Men's Morris board, presentational only: nine real buttons on a CSS grid over a decorative
-// SVG of the eight lines. Points are numbered row by row (0 1 2 / 3 4 5 / 6 7 8, the centre is 4), like
-// the backend. It knows nothing of sessions or stores: the table passes what to show and decides what an
-// event means (place, select, move, deselect).
+// The Three Men's Morris board, presentational only: nine real buttons placed from the coordinates of the
+// variant's geometry, over a decorative SVG of its lines (Picaria adds a diamond of short diagonals). Points are
+// numbered row by row (0 1 2 / 3 4 5 / 6 7 8, the centre is 4), like the backend. It knows nothing of sessions
+// or stores: the table passes what to show and decides what an event means (place, select, move, deselect).
 type Owner = 'white' | 'black' | null;
 
 const props = withDefaults(defineProps<{
   cells: Owner[];                // who sits on each point
+  geometry?: MorrisGeometry;     // where the points sit and what is drawn between them (Tapatan by default)
   selectable?: boolean[];        // points a click or Enter is accepted on (own movable pieces, free points, destinations)
   highlighted?: boolean[];       // points drawn as playable: free points, playable pieces, then the destinations
   selected?: number | null;      // the selected piece
   winningLine?: number[];        // the three points of the winning line, held on screen at the end
+  lastMove?: number[];           // the points of the opponent's last move, faintly ringed until the next state
   disabled?: boolean;            // game over or offline: readable but inert
   interactive?: boolean;         // false while it is not my turn: readable, nothing highlighted, inert
   announcement?: string;         // text read out by the live region (the last move)
 }>(), {
+  geometry: () => GEOMETRIES.tapatan,
   selectable: () => [],
   highlighted: () => [],
   selected: null,
   winningLine: () => [],
+  lastMove: () => [],
   disabled: false,
   interactive: true,
   announcement: '',
@@ -36,14 +41,19 @@ const emit = defineEmits<{
 const ui = useI18n().morrisBoard;
 
 const POINTS = Array.from({ length: 9 }, (_, n) => n);
-// The 8 lines of board B: three rows, three columns and the two diagonals through the centre.
-const LINES: number[][] = [
-  [0, 1, 2], [3, 4, 5], [6, 7, 8],
-  [0, 3, 6], [1, 4, 7], [2, 5, 8],
-  [0, 4, 8], [2, 4, 6],
-];
-const centre = (n: number): number => (n * 2 + 1) * (100 / 6);
-const lineKey = (line: number[]): string => line.join('-');
+const lineKey = (segment: readonly number[]): string => segment.join('-');
+// A segment is drawn from its first point to its last: the three points of a line are aligned.
+const lineEnds = (segment: readonly number[]) => {
+  const { points } = props.geometry;
+  const from = points[segment[0]];
+  const to = points[segment[segment.length - 1]];
+  return { x1: from.x, y1: from.y, x2: to.x, y2: to.y };
+};
+const pointStyle = (n: number) => {
+  const { x, y } = props.geometry.points[n];
+  return { left: `${x}%`, top: `${y}%` };
+};
+const isLastMove = (n: number): boolean => props.lastMove.includes(n);
 
 const inert = computed(() => props.disabled || !props.interactive);
 const winning = computed(() => props.winningLine.join('-'));
@@ -74,9 +84,7 @@ const tabStop = computed(() => {
 
 const buttons = useTemplateRef<HTMLButtonElement[]>('buttons');
 
-const ARROWS: Record<string, [number, number]> = {
-  ArrowUp: [-1, 0], ArrowDown: [1, 0], ArrowLeft: [0, -1], ArrowRight: [0, 1],
-};
+const ARROW_KEYS = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
 
 async function focusPoint(n: number): Promise<void> {
   roving.value = n;
@@ -91,12 +99,10 @@ function press(n: number): void {
 }
 
 function onKeydown(event: KeyboardEvent, n: number): void {
-  const arrow = ARROWS[event.key];
-  if (arrow) {
+  if (ARROW_KEYS.includes(event.key)) {
     event.preventDefault();
-    const row = Math.floor(n / 3) + arrow[0];
-    const col = (n % 3) + arrow[1];
-    if (row >= 0 && row < 3 && col >= 0 && col < 3) void focusPoint(row * 3 + col);
+    const next = neighbourByArrow(props.geometry, n, event.key);
+    if (next !== null) void focusPoint(next);
     return;
   }
   if (event.key === 'Enter' || event.key === ' ') {
@@ -116,19 +122,21 @@ function onKeyup(event: KeyboardEvent): void {
 </script>
 
 <template>
-  <div class="morris-board" role="group" data-test="morris-board" :aria-label="ui.boardLabel">
+  <div
+    class="morris-board"
+    role="group"
+    data-test="morris-board"
+    :data-variant="geometry.key"
+    :aria-label="ui.boardLabel">
     <svg class="morris-lines" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
       <line
-        v-for="line in LINES"
-        :key="lineKey(line)"
+        v-for="segment in geometry.segments"
+        :key="lineKey(segment)"
         class="morris-line"
-        :class="{ 'morris-line--winning': winning === lineKey(line) }"
-        :data-line="lineKey(line)"
-        :data-winning="winning === lineKey(line) ? 'true' : undefined"
-        :x1="centre(line[0] % 3)"
-        :y1="centre(Math.floor(line[0] / 3))"
-        :x2="centre(line[2] % 3)"
-        :y2="centre(Math.floor(line[2] / 3))"
+        :class="{ 'morris-line--winning': winning === lineKey(segment) }"
+        :data-line="lineKey(segment)"
+        :data-winning="winning === lineKey(segment) ? 'true' : undefined"
+        v-bind="lineEnds(segment)"
       />
     </svg>
     <div class="morris-grid">
@@ -138,10 +146,12 @@ function onKeyup(event: KeyboardEvent): void {
         ref="buttons"
         type="button"
         class="morris-point"
+        :style="pointStyle(n)"
         :data-test="`point-${n}`"
         :data-owner="cells[n] ?? 'none'"
         :data-state="stateOf(n)"
         :data-winning="isWinningPoint(n) ? 'true' : undefined"
+        :data-last="isLastMove(n) ? 'true' : undefined"
         :aria-label="labelOf(n)"
         :aria-pressed="selected === n ? 'true' : 'false'"
         :aria-disabled="inert ? 'true' : undefined"
@@ -201,12 +211,15 @@ function onKeyup(event: KeyboardEvent): void {
 .morris-grid {
   position: absolute;
   inset: 0;
-  display: grid;
-  grid-template: repeat(3, 1fr) / repeat(3, 1fr);
 }
 
 .morris-point {
-  position: relative;
+  /* Placed from the geometry: the centre of the button sits on the point. A third of the board wide, so the
+     touch target is the same on the three variants and the short diagonals never make two overlap. */
+  position: absolute;
+  width: 33.333%;
+  height: 33.333%;
+  transform: translate(-50%, -50%);
   display: grid;
   place-items: center;
   min-width: 44px;
@@ -250,6 +263,16 @@ function onKeyup(event: KeyboardEvent): void {
   background: none;
   box-shadow: 0 0 0 3px var(--gold), 0 0 14px rgba(var(--accent-active-rgb), 0.7);
   opacity: 1;
+}
+/* The opponent's last move: a faint ring on where the piece came from and where it went. */
+.morris-point[data-last='true']::after {
+  content: '';
+  position: absolute;
+  width: 74%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.45);
+  pointer-events: none;
 }
 .morris-point:focus-visible { outline: 2px solid var(--gold); outline-offset: -2px; }
 

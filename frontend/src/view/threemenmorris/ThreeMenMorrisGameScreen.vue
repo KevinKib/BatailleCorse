@@ -21,6 +21,7 @@ import GameLobby from '../../components/lobby/GameLobby.vue';
 import MorrisBoard from '../../components/morris/MorrisBoard.vue';
 import MorrisPlayerTag from '../../components/morris/MorrisPlayerTag.vue';
 import { findGame } from '../../model/games';
+import MorrisLobbyOptions from '../../components/morris/MorrisLobbyOptions.vue';
 import { WINNING_LINE_HOLD_MS } from '../../model/threemenmorris/board';
 import { rematchButtonFor } from '../../model/RematchButton';
 import { format } from '../../locales/format';
@@ -36,7 +37,7 @@ useMorrisBootstrap(props.gameId, game);
 // Names are user input: only ever rendered as text. A player without a typed name is "Player N" (from 1).
 const displayName = (seat: number): string =>
   store.game?.players.find(p => p.seat === seat)?.name?.trim() || format(ui.playerLabel, { n: seat + 1 });
-const colourOf = (seat: number): 'white' | 'black' => (seat === 0 ? 'white' : 'black');
+const colourOf = (seat: number): 'white' | 'black' => (store.colourOf(seat) === 'WHITE' ? 'white' : 'black');
 
 const me = computed(() => store.game?.players.find(p => p.seat === store.mySeat));
 const opponent = computed(() => store.game?.players.find(p => p.seat !== store.mySeat));
@@ -45,7 +46,7 @@ const cells = computed(() => (store.game?.board ?? Array(9).fill(null))
   .map((owner: number | null) => (owner === null ? null : colourOf(owner))));
 // What a click is accepted on: my free points or movable pieces, then the destinations of the selection.
 // The same points are drawn as playable: the server decides, the board only shows.
-const playable = computed(() => Array.from({ length: 9 }, (_, n) =>
+const playable = computed(() => Array.from({ length: store.geometry.points.length }, (_, n) =>
   store.selectablePoints.includes(n) || store.targetPoints.includes(n)));
 
 const { online } = useConnectionStatus();
@@ -53,6 +54,11 @@ watch(online, (isOnline, wasOnline) => {
   if (isOnline && !wasOnline) void store.hydrate();
 });
 const boardDisabled = computed(() => !online.value || store.phase !== 'playing');
+
+// Rules and name of the variant being played; Tapatan's rules are the original panel.
+const variantName = computed(() => messages.morrisLobby.variants[store.variant].name);
+const rules = computed(() =>
+  store.variant === 'tapatan' ? messages.threeMenMorris : messages.morrisVariantRules[store.variant]);
 
 const noPieceDownYet = computed(() => store.game?.board.every(owner => owner === null) ?? false);
 
@@ -121,6 +127,8 @@ onBeforeUnmount(() => { stopHold(); endScreen.cancel(); });
 const endSubtitle = computed(() => {
   const outcome = store.game?.outcome;
   if (outcome?.status !== 'FINISHED') return '';
+  // A draw has no winner: its wording comes with the draw screen.
+  if (outcome.winner === null) return '';
   const winner = displayName(outcome.winner);
   const loserSeat = outcome.winner === store.mySeat ? opponent.value?.seat ?? 0 : store.mySeat;
   if (outcome.reason === 'LINE') {
@@ -139,7 +147,9 @@ const endSubtitle = computed(() => {
 });
 const winnerLine = computed(() => {
   const outcome = store.game?.outcome;
-  return outcome?.status === 'FINISHED' ? format(ui.end.winner, { player: displayName(outcome.winner) }) : undefined;
+  return outcome?.status === 'FINISHED' && outcome.winner !== null
+    ? format(ui.end.winner, { player: displayName(outcome.winner) })
+    : undefined;
 });
 const rematchButton = computed(() =>
   rematchButtonFor(store.rematch, { playAgain: ui.end.playAgain, pending: ui.end.rematchPending }));
@@ -165,7 +175,16 @@ function leaveLobby() {
       @start="store.startGame()"
       @leave="leaveLobby"
       @remove-seat="seat => store.removeSeat(seat)"
-      @rename="name => store.rename(name)" />
+      @rename="name => store.rename(name)"
+      @set-option="(key, value) => store.setOption(key, value)">
+      <template #options="{ descriptors, options, editable, setOption }">
+        <MorrisLobbyOptions
+          :descriptors="descriptors"
+          :options="options"
+          :editable="editable"
+          @set-option="setOption" />
+      </template>
+    </GameLobby>
 
     <EndGameOverlay
       v-else-if="store.phase === 'finished' && endScreen.showEndOverlay.value"
@@ -187,10 +206,11 @@ function leaveLobby() {
     </div>
 
     <template v-else>
-      <RulesPanel :rules="messages.threeMenMorris" />
+      <RulesPanel :rules="rules" />
 
       <div class="top-bar">
         <GameTimer :time="formattedDuration" inline />
+        <span class="variant-name" data-test="variant-name">{{ variantName }}</span>
       </div>
 
       <Transition name="forfeit-fade">
@@ -216,6 +236,8 @@ function leaveLobby() {
 
         <MorrisBoard
           :cells="cells"
+          :geometry="store.geometry"
+          :last-move="store.opponentLastMove"
           :selectable="playable"
           :highlighted="playable"
           :selected="store.selected"
@@ -317,6 +339,16 @@ function leaveLobby() {
   width: 100%;
   max-width: 560px;
   margin: 0 auto;
+}
+.variant-name {
+  flex: none;
+  padding: 0 var(--space-2);
+  font-family: var(--font-title);
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.85);
+  white-space: nowrap;
 }
 .tag-slot { flex: none; }
 .turn-slot { flex: none; min-height: 1.2em; }

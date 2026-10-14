@@ -218,6 +218,108 @@ export const messagesEn: Messages = {
       rematchFailed: 'Could not start a new game. Try again.',
     },
   },
+  morrisLobby: {
+    variantLabel: 'Variant',
+    colourLabel: 'Your colour',
+    hostPlays: 'Host plays',
+    variants: {
+      tapatan: {
+        name: 'Tapatan',
+        summary: '3 pieces each, diameters',
+        rule: 'Tapatan: 3 pieces each. Slide along the rows, the columns and the two diagonals through the centre.',
+      },
+      achi: {
+        name: 'Achi',
+        summary: '4 pieces each, one free point',
+        rule: 'Achi: 4 pieces each, so eight pieces on nine points and one point stays free. Same board as Tapatan.',
+      },
+      picaria: {
+        name: 'Picaria',
+        summary: '3 pieces each, extra diagonals',
+        rule: 'Picaria: 3 pieces each. Four short diagonals add moves, and the centre is closed while you place: it is reached by moving.',
+      },
+    },
+    colours: { white: 'White', black: 'Black', random: 'Random' },
+  },
+  morrisVariantRules: {
+    achi: {
+      toggleLabel: 'Rules',
+      panelTitle: 'Achi',
+      closeLabel: 'Close rules',
+      sections: [
+        {
+          kind: 'text',
+          title: 'Goal',
+          body: ['Line up three of your four pieces in a row, a column or a diagonal.'],
+        },
+        {
+          kind: 'text',
+          title: 'The board',
+          body: ['Nine points, joined by rows, columns and the two diagonals through the centre. White plays first.'],
+        },
+        {
+          kind: 'text',
+          title: 'Placement',
+          body: ['Take turns putting your four pieces on free points. Eight pieces fill all but one point. A line made while placing wins at once.'],
+        },
+        {
+          kind: 'text',
+          title: 'Movement',
+          body: ['Once all eight pieces are down, slide one of yours along a line to the free neighbouring point.'],
+        },
+        {
+          kind: 'text',
+          title: 'Blocked',
+          body: ['If a player cannot move on their turn, the other player wins.'],
+        },
+        {
+          kind: 'text',
+          title: 'Forfeit',
+          body: ['Leaving the game, or staying disconnected too long, gives the win to your opponent.'],
+        },
+      ],
+    },
+    picaria: {
+      toggleLabel: 'Rules',
+      panelTitle: 'Picaria',
+      closeLabel: 'Close rules',
+      sections: [
+        {
+          kind: 'text',
+          title: 'Goal',
+          body: ['Line up your three pieces in a row, a column or a diagonal.'],
+        },
+        {
+          kind: 'text',
+          title: 'The board',
+          body: [
+            'Nine points, joined by rows, columns and the two diagonals through the centre, plus four short diagonals between the middles of the sides. White plays first.',
+            'The short diagonals let a piece move, but they never make a line.',
+          ],
+        },
+        {
+          kind: 'text',
+          title: 'Placement',
+          body: ['Take turns putting your three pieces on free points, except the centre: it stays closed while you place. A line made while placing wins at once.'],
+        },
+        {
+          kind: 'text',
+          title: 'Movement',
+          body: ['Once all six pieces are down, slide one of yours along a line to a free neighbouring point. The centre can now be reached.'],
+        },
+        {
+          kind: 'text',
+          title: 'Blocked',
+          body: ['If a player cannot move on their turn, the other player wins.'],
+        },
+        {
+          kind: 'text',
+          title: 'Forfeit',
+          body: ['Leaving the game, or staying disconnected too long, gives the win to your opponent.'],
+        },
+      ],
+    },
+  },
   hotkeys: {
     open: 'Keyboard shortcuts',
     title: 'Keyboard shortcuts',
@@ -568,6 +670,10 @@ export const messagesEn: Messages = {
       claimMode: { label: 'Claim mode', rank: 'By rank ({range})', suit: 'By suit' },
       deckSize: { label: 'Deck', '32': '32 cards (7 to Ace)', '52': '52 cards' },
       vars: { range: { deckSize: { '32': '7\u2192A', '52': 'A\u2192K' } } },
+    },
+    threeMenMorris: {
+      variant: { label: 'Variant', tapatan: 'Tapatan', achi: 'Achi', picaria: 'Picaria' },
+      hostColour: { label: 'Host plays', white: 'White', black: 'Black', random: 'Random' },
     },
   },
 };

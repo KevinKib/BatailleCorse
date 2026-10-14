@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { morrisState } from './morrisFixtures';
-import { LINES, POINTS, neighbourByArrow, onPoint, pointName, selectable, targets } from './board';
+import { colourOf, onPoint, selectable, targets } from './board';
 
 const N = null;
 
@@ -15,41 +15,6 @@ const movement = (overrides = {}) => morrisState({
   availableActions: ['MOVE'],
   legalMoves: [{ from: 1, to: 2 }, { from: 0, to: 6 }, { from: 8, to: 7 }],
   ...overrides,
-});
-
-describe('geometry', () => {
-  it('has nine points on a 3x3 grid, row by row', () => {
-    expect(POINTS).toHaveLength(9);
-    expect(POINTS[0]).toEqual({ row: 0, col: 0 });
-    expect(POINTS[4]).toEqual({ row: 1, col: 1 });
-    expect(POINTS[8]).toEqual({ row: 2, col: 2 });
-  });
-
-  it('draws the eight lines: three rows, three columns, two diagonals', () => {
-    expect(LINES).toHaveLength(8);
-    expect(LINES).toContainEqual([0, 2]);
-    expect(LINES).toContainEqual([0, 6]);
-    expect(LINES).toContainEqual([0, 8]);
-    expect(LINES).toContainEqual([2, 6]);
-    expect(LINES).toContainEqual([3, 5]);
-  });
-
-  it('moves between points with the arrows and stops at the edges', () => {
-    expect(neighbourByArrow(4, 'ArrowUp')).toBe(1);
-    expect(neighbourByArrow(4, 'ArrowDown')).toBe(7);
-    expect(neighbourByArrow(4, 'ArrowLeft')).toBe(3);
-    expect(neighbourByArrow(4, 'ArrowRight')).toBe(5);
-    expect(neighbourByArrow(0, 'ArrowUp')).toBeNull();
-    expect(neighbourByArrow(0, 'ArrowLeft')).toBeNull();
-    expect(neighbourByArrow(8, 'ArrowDown')).toBeNull();
-    expect(neighbourByArrow(2, 'ArrowRight')).toBeNull();
-    expect(neighbourByArrow(4, 'Enter')).toBeNull();
-  });
-
-  it('names a point from the given texts', () => {
-    const texts = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'];
-    expect(pointName(4, texts)).toBe('e');
-  });
 });
 
 describe('placement', () => {
@@ -68,6 +33,56 @@ describe('placement', () => {
 
   it('offers nothing when the current seat is not mine, whatever the actions say', () => {
     expect(selectable(morrisState({ currentSeat: 1 }), 0)).toEqual([]);
+  });
+});
+
+describe('placement with legalPlacements', () => {
+  it('offers exactly the points the server lists, the centre being closed in Picaria', () => {
+    const s = morrisState({
+      variant: 'picaria',
+      legalPlacements: [0, 1, 2, 3, 5, 6, 7, 8],
+    });
+    expect(selectable(s, 0)).toEqual([0, 1, 2, 3, 5, 6, 7, 8]);
+    expect(onPoint(s, 0, null, 4)).toEqual({ kind: 'none' });
+    expect(onPoint(s, 0, null, 3)).toEqual({ kind: 'place', point: 3 });
+  });
+
+  it('trusts an empty list from the server over the free points', () => {
+    const s = morrisState({ variant: 'achi', legalPlacements: [] });
+    expect(selectable(s, 0)).toEqual([]);
+  });
+
+  it('falls back to the free points when the server leaves legalPlacements out (Tapatan)', () => {
+    const s = morrisState({ board: [0, N, N, 1, N, N, N, N, N] });
+    expect(s.legalPlacements).toBeUndefined();
+    expect(selectable(s, 0)).toEqual([1, 2, 4, 5, 6, 7, 8]);
+  });
+});
+
+describe('colours', () => {
+  it('gives White to seat 0 and Black to seat 1 when the server leaves the colours out', () => {
+    const s = morrisState();
+    expect(s.whiteSeat).toBeUndefined();
+    expect(colourOf(s, 0)).toBe('WHITE');
+    expect(colourOf(s, 1)).toBe('BLACK');
+  });
+
+  it('reads players[].colour when the host plays Black', () => {
+    const s = morrisState({
+      whiteSeat: 1,
+      players: [
+        { seat: 0, name: 'Alice', current: false, piecesToPlace: 3, colour: 'BLACK' },
+        { seat: 1, name: 'Bob', current: true, piecesToPlace: 3, colour: 'WHITE' },
+      ],
+      currentSeat: 1,
+    });
+    expect(colourOf(s, 0)).toBe('BLACK');
+    expect(colourOf(s, 1)).toBe('WHITE');
+  });
+
+  it('falls back to whiteSeat when a player carries no colour', () => {
+    expect(colourOf(morrisState({ whiteSeat: 1 }), 1)).toBe('WHITE');
+    expect(colourOf(morrisState({ whiteSeat: 1 }), 0)).toBe('BLACK');
   });
 });
 

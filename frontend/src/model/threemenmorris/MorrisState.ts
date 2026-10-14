@@ -5,7 +5,12 @@ export type MorrisPhase = 'PLACEMENT' | 'MOVEMENT' | 'FINISHED';
 /** What the server lets the viewer do now: only the current seat has one, and none once the game is over. */
 export type MorrisAction = 'PLACE' | 'MOVE';
 
-export type MorrisReason = 'LINE' | 'BLOCKED' | 'FORFEIT';
+export type MorrisReason = 'LINE' | 'BLOCKED' | 'FORFEIT' | 'DRAW_AGREED' | 'DRAW_REPETITION';
+
+/** The variants a lobby offers; the server leaves `variant` out of the state for the default, Tapatan. */
+export type MorrisVariantKey = 'tapatan' | 'achi' | 'picaria';
+
+export type MorrisColour = 'WHITE' | 'BLACK';
 
 export interface MorrisPlayer {
   seat: number;
@@ -13,6 +18,8 @@ export interface MorrisPlayer {
   name: string | null;
   current: boolean;
   piecesToPlace: number;
+  /** Left out by the server while seat 0 plays White (the default). */
+  colour?: MorrisColour;
 }
 
 export interface MorrisMove {
@@ -22,8 +29,8 @@ export interface MorrisMove {
 
 export type MorrisOutcome =
   | { status: 'ONGOING' }
-  /** `winner` is a seat number (unlike Bullshit's string `winnerId`). */
-  | { status: 'FINISHED'; winner: number; reason: MorrisReason };
+  /** `winner` is a seat number (unlike Bullshit's string `winnerId`), null when the game is drawn. */
+  | { status: 'FINISHED'; winner: number | null; reason: MorrisReason };
 
 /** One viewer's view of a running game: the board holds the owner seat of each point, row by row. */
 export interface MorrisState {
@@ -41,6 +48,19 @@ export interface MorrisState {
   /** The three points of the winning line; empty unless the game was won by a line. */
   winningLine: number[];
   outcome: MorrisOutcome;
+  // The fields below are left out of the JSON when they hold their default: read an absent one as the default.
+  /** Absent means `tapatan`. */
+  variant?: MorrisVariantKey;
+  /** Points the viewer may place a piece on; absent means every free point (Tapatan). */
+  legalPlacements?: number[];
+  /** Absent means seat 0 plays White. */
+  whiteSeat?: number;
+  /** The pending draw offer, if any (the draw UI comes with the draw offer). */
+  drawOffer?: { seat: number } | null;
+  /** How many times the current position has occurred, only written from 2. */
+  repetitions?: number;
+  /** Draw commands the viewer may send, only written when they differ from the default. */
+  drawActions?: string[];
 }
 
 export type MorrisView = LobbyView | MorrisState;
