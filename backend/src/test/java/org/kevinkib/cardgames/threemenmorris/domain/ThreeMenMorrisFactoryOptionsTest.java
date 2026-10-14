@@ -25,12 +25,12 @@ class ThreeMenMorrisFactoryOptionsTest {
     }
 
     @Test
-    void theOptionsAreTheVariantDefaultingToTapatanThenTheHostColour() {
+    void theOptionsAreTheVariantDefaultingToTapatanThenTheHostColourAndTheSeatOptionIsTheBotLevel() {
         assertThat(factory.optionDescriptors(), is(List.of(new OptionDescriptor("variant", OptionType.CHOICE,
                 List.of("tapatan", "achi", "picaria"), "tapatan", "options.threeMenMorris.variant"),
                 new OptionDescriptor("hostColour", OptionType.CHOICE,
                         List.of("white", "black", "random"), "white", "options.threeMenMorris.hostColour"))));
-        assertThat(factory.seatOptionDescriptors(), is(List.of()));
+        assertThat(factory.seatOptionDescriptors().stream().map(OptionDescriptor::key).toList(), is(List.of("level")));
     }
 
     @Test

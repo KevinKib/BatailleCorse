@@ -108,8 +108,14 @@ class LobbyControllerTest {
     }
 
     @Test
-    void givenThreeMenMorrisRoom_whenAddBot_thenRefusedToTheSenderAloneAndNoBotSeat() {
-        assertAddBotRefused(ThreeMenMorrisFactory.GAME_TYPE);
+    void givenHostOfThreeMenMorris_whenAddBot_thenTheLobbyHasTheBot() {
+        RoomCreated room = sessionService.createRoom(ThreeMenMorrisFactory.GAME_TYPE, "Alice");
+        messaging.clear();
+
+        controller.addBot(new GameActionPayload(room.gameId(), room.hostToken()));
+
+        assertThat(messaging.seats, is(List.of(new PlayerId(0))));
+        assertThat(lobbyOf(messaging.payloads.get(0)).players().get(1).bot(), is(true));
     }
 
     private void assertAddBotRefused(String gameType) {

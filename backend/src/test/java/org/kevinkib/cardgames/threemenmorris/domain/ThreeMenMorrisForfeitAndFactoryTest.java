@@ -52,7 +52,7 @@ class ThreeMenMorrisForfeitAndFactoryTest {
     }
 
     @Test
-    void theFactoryBuildsATwoPlayerGameWithoutSeatOptions() {
+    void theFactoryBuildsATwoPlayerGameWhoseOnlySeatOptionIsTheBotLevel() {
         ThreeMenMorrisFactory factory = new ThreeMenMorrisFactory();
         GameId id = GameId.generate();
 
@@ -64,7 +64,7 @@ class ThreeMenMorrisForfeitAndFactoryTest {
         assertThat(game, instanceOf(ThreeMenMorris.class));
         assertThat(game.getId(), is(id));
         assertThat(game.getPlayerIds(), is(java.util.List.of(WHITE, BLACK)));
-        assertThat(factory.seatOptionDescriptors(), is(empty()));
+        assertThat(factory.seatOptionDescriptors().stream().map(d -> d.key()).toList(), is(java.util.List.of("level")));
         assertThat(factory.validate(GameOptions.none()),
                 is(GameOptions.of(java.util.Map.of("variant", "tapatan", "hostColour", "white"))));
         assertThat(factory.create(id, 2, GameOptions.none()), instanceOf(ThreeMenMorris.class));
