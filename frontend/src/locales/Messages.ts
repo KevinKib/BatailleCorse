@@ -241,6 +241,82 @@ export interface OptionsMessages {
   kobo: {
     level: OptionTexts;                // a bot seat's level: `label`, then `easy` / `medium` / `hard`
   };
+  /** By option key (`afterPass`...): `label`, then the text of each value. `preset` is the Classic card of the lobby. */
+  president: Record<string, OptionTexts>;
+}
+
+export type PresidentTitleKey = 'president' | 'vicePresident' | 'neutral' | 'viceScum' | 'scum';
+
+/** President screens: the lobby card, the table, the hand, the hints and the end screen. */
+export interface PresidentUiMessages {
+  connecting: string;
+  back: string;
+  you: string;
+  playerLabel: string;                 // '{n}' = 1-based seat number, for a player without a name
+  botLabel: string;                    // '{n}'
+  titles: Record<PresidentTitleKey, string>;
+  ranks: Record<string, string>;       // by backend rank label (`JACK`...); a number is its own name
+  suits: Record<string, string>;       // by backend suit (`HEART`...)
+  cardLabel: string;                   // '{rank}', '{suit}': accessible name of a card
+  cardSelected: string;                // '{card}': the same, once tapped
+  lobby: {
+    classicTitle: string;              // the preset card while the options are the defaults
+    classicSummary: string;
+    customTitle: string;               // the same card once the host changed an option
+    customSummary: string;
+    customise: string;                 // disclosure that opens every option
+    reset: string;                     // host: back to Classic
+  };
+  table: {
+    round: string;                     // '{n}'
+    roundOf: string;                   // '{n}', '{total}'
+    cards: PluralForms;                // '{n}' = cards a seat still holds
+    current: string;                   // the seat to play
+    passed: string;
+    out: string;                       // '{n}' = place taken
+    ready: string;
+    emptyTrick: string;                // nothing on the table
+    playedBy: string;                  // '{player}': who made the top play
+    playedByYou: string;
+    yourCards: string;                 // region names
+    opponents: string;
+    pile: string;
+    forfeited: string;                 // '{player}'
+    offline: string;
+  };
+  chips: Record<string, string>;       // by chip key (see `ruleChips`); '{count}', '{rank}' in `beat`
+  actions: { play: string; pass: string; clear: string; };
+  hint: {
+    nothingSelected: string;
+    mixedRanks: string;
+    mustPass: string;
+    wrongCount: string;                // '{counts}' = "1 or 2"
+    notHigher: PluralForms;            // '{n}' = cards to beat, '{rank}'
+    notPlayable: string;
+    cannotPlay: string;
+  };
+  phase: {
+    yourTurn: string;
+    waiting: string;                   // '{player}'
+    exchangeGive: PluralForms;         // '{n}' = cards I must give back
+    exchangeWaiting: string;
+    roundOver: string;                 // '{n}' = round
+  };
+  exchange: { give: PluralForms };     // '{n}': the minimal give-back button
+  roundOver: { ready: string; waiting: string; place: string };  // place: '{n}', '{player}'
+  notice: { moveImpossible: string; connection: string };
+  end: {
+    winner: string;                    // '{players}'
+    winners: string;
+    standing: string;                  // '{n}' = points of the winner(s)
+    youWonResigned: string;            // '{player}'
+    youWonDisconnected: string;        // '{player}'
+    youWonOthersLeft: string;
+    playAgain: string;
+    rematchPending: string;
+    rematchFailed: string;
+  };
+  live: { yourTurn: string };
 }
 
 // Kobo screens (`KoboGameScreen`): the lobby wiring and the table (read only for now, the actions come next).
@@ -547,6 +623,8 @@ export interface Messages {
   kobo: RulesMessages;      // Kobo
   hotkeys: HotkeyMessages; // keyboard shortcut settings
   turn: TurnMessages;      // turn cue shared by the tables
+  president: RulesMessages;         // President
+  presidentUi: PresidentUiMessages; // President screens
   threeMenMorris: RulesMessages;    // Three Men's Morris
   morrisBoard: MorrisBoardMessages; // Three Men's Morris board
   mangolaUi: MangolaUiMessages; // Mangola board and placement editor

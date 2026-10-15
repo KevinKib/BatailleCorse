@@ -96,3 +96,23 @@ describe('completingCards', () => {
     expect(completingCards(hand, [NINE_H, KING_H], [set('9', 2)])).toEqual([]);
   });
 });
+
+// The server names a pattern's rank by the enum (`TEN`) and a card's rank by its label (`10`): the matcher reads both.
+describe('rank names of patterns and cards', () => {
+  it.each([
+    ['TWO', '2'], ['THREE', '3'], ['NINE', '9'], ['TEN', '10'], ['JACK', 'JACK'], ['ACE', 'ACE'],
+  ])('givenThePattern_%s_thenTheCardOfRank_%s_matchesIt', (patternRank, cardRank) => {
+    const pair = [card(cardRank, 'HEART'), card(cardRank, 'SPADE')];
+    expect(analyseSelection(ctx([set(patternRank, 2)], null), pair).legal).toBe(true);
+  });
+
+  it('givenATopRankedByName_thenTheHintQuotesTheRankLikeTheCards', () => {
+    const higher = analyseSelection(ctx([set('TEN', 2)], set('NINE', 2)), [card('3', 'CLUB'), card('3', 'HEART')]);
+    expect(higher.reason).toEqual({ code: 'notHigher', rank: '9', count: 2 });
+  });
+
+  it('givenALegalPlayRankedByName_thenTheCompletingCardsAreFound', () => {
+    const hand = [card('10', 'HEART'), card('10', 'SPADE'), card('4', 'CLUB')];
+    expect(completingCards(hand, [hand[0]], [set('TEN', 2)])).toEqual([hand[1]]);
+  });
+});

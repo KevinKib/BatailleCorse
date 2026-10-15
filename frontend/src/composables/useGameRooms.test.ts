@@ -5,6 +5,7 @@ import { GAMES, findGame, type GameDefinition } from '../model/games';
 import { useBullshitStore } from '../state/Bullshit.store';
 import { useKoboStore } from '../state/Kobo.store';
 import { useThreeMenMorrisStore } from '../state/ThreeMenMorris.store';
+import { usePresidentStore } from '../state/President.store';
 import { useBatailleCorseStore } from '../state/BatailleCorse.store';
 
 describe('useGameRooms', () => {
@@ -59,6 +60,17 @@ describe('useGameRooms', () => {
     await room.join('g4', 'Bob');
     expect(create).toHaveBeenCalledWith('Alice');
     expect(join).toHaveBeenCalledWith('g4', 'Bob');
+  });
+
+  it('givenPresident_thenCreateAndJoinGoThroughItsStore', async () => {
+    const store = usePresidentStore();
+    const create = vi.spyOn(store, 'create').mockResolvedValue('g5');
+    const join = vi.spyOn(store, 'join').mockResolvedValue();
+    const room = useGameRooms()(findGame('president')!);
+    expect(await room.create('Alice')).toBe('g5');
+    await room.join('g5', 'Bob');
+    expect(create).toHaveBeenCalledWith('Alice');
+    expect(join).toHaveBeenCalledWith('g5', 'Bob');
   });
 
   it('givenAGameWithNoRoomClient_thenItFailsLoudlyInsteadOfJoiningAnotherGame', () => {
