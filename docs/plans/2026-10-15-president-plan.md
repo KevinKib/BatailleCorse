@@ -57,7 +57,7 @@ combination accepted, uncertain variants kept as options.
 | PR | Title | Size | Needs | Tests (strategy) | Risks | State |
 |----|-------|------|-------|------------------|-------|-------|
 | D0 | `docs: President game spec and plan` | S | - | - | owner reviews the variant catalogue | #216 |
-| P1 | `feat: President round rules (domain)` | L | D0 | ranking, play parsing, beat matrix, trick end, going out, titles: parameterised tables; scripted rounds | trick-end counting with re-entry and players out | - |
+| P1 | `feat: President round rules (domain)` | L | D0 | ranking, play parsing, beat matrix, trick end, going out, titles: parameterised tables; scripted rounds | trick-end counting with re-entry and players out | done (#219) |
 | P2 | `feat: President match, exchange and scoring (domain)` | M-L | P1 | exchange amounts by `n` and option, best-card selection, returns, scoring tables, match end, forfeit in each phase | forfeit during the exchange | - |
 | P3 | `feat: President at the table (server)` | M-L | P2 | factory and options (strict parse), DTO privacy, actions, controllers, STOMP IT, deal seam, shared tests | shared test counts collide with Mangola (#217) | - |
 | F1 | `feat: President model, session and store` | M | P3 | Vitest: DTO fixtures, one test per command, selection-to-pattern matcher, version guard | none visible | - |

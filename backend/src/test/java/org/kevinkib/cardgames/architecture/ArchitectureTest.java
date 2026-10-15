@@ -30,13 +30,13 @@ class ArchitectureTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"bataillecorse", "bullshit", "kobo", "threemenmorris"})
+    @ValueSource(strings = {"bataillecorse", "bullshit", "kobo", "threemenmorris", "president"})
     void gameDomainIsFreeOfSpringSessionsAndTransport(String game) {
         RULES.gameDomainIsPure(game).check(mainClasses);
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"bataillecorse", "bullshit", "kobo", "threemenmorris"})
+    @ValueSource(strings = {"bataillecorse", "bullshit", "kobo", "threemenmorris", "president"})
     void gameDependsOnNoOtherGame(String game) {
         RULES.gameDoesNotKnowOtherGames(game).check(mainClasses);
     }
