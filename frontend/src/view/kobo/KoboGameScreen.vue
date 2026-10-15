@@ -19,6 +19,8 @@ import KoboActionBar from '../../components/kobo/KoboActionBar.vue';
 import KoboSeat from '../../components/kobo/KoboSeat.vue';
 import KoboTableau from '../../components/kobo/KoboTableau.vue';
 import KoboPiles from '../../components/kobo/KoboPiles.vue';
+import KoboMatchHint from '../../components/kobo/KoboMatchHint.vue';
+import { useKoboMatchCoach } from '../../composables/useKoboMatchCoach';
 import KoboEventLog from '../../components/kobo/KoboEventLog.vue';
 import KoboScoreSheet from '../../components/kobo/KoboScoreSheet.vue';
 import KoboFinalTotals from '../../components/kobo/KoboFinalTotals.vue';
@@ -112,6 +114,18 @@ const clickable = computed<Record<string, boolean>>(() => {
 const highlighted = computed(() => eventHighlights(headlineEvent(store.events)));
 const selectedOwnSlot = computed(() => store.pending.kind === 'blind-own' ? store.pending.ownSlot : null);
 useEscapeKey(() => store.cancelPending());
+
+// A tap on a card goes to the store, which knows what it means (see `koboInteraction`). A tap that is a match,
+// right after the hint was shown, is the lesson learnt: the first-time cue goes for good.
+const matchCoach = useKoboMatchCoach();
+function pick(seat: number, slot: number) {
+  if (store.interaction.directMatch && store.interaction.intents[`${seat}:${slot}`]) matchCoach.dismiss();
+  store.pickSlot(seat, slot);
+}
+// The rival card picked for a match, waiting for the card I give (marked on its grid, like my blind-swap pick).
+const pickedRivalSlot = (seat: number): number | null =>
+  store.pending.kind === 'match-give' && store.pending.target.seat === seat ? store.pending.target.slot : null;
+const showsCoachRing = computed(() => !matchCoach.seen.value && store.interaction.matchHint);
 const me = computed(() => store.game?.players.find(p => p.seat === store.mySeat) ?? null);
 const isReady = (seat: number) => store.game?.readySeats.includes(seat) ?? false;
 const isFinalTurn = (seat: number) => store.game?.finalTurnsRemaining.includes(seat) ?? false;
@@ -347,6 +361,7 @@ watch(() => [store.game?.round, store.game?.phase, store.game?.currentSeat, live
             :game="store.game" :my-seat="store.mySeat" :current-name="currentName"
             :can-draw="store.interaction.piles.draw" :can-discard="store.interaction.piles.discard" :busy="store.busy"
             @draw="store.pickPile('draw')" @discard="store.pickPile('discard')" />
+          <KoboMatchHint :hint="store.interaction.matchHint" :coach="!matchCoach.seen.value" @dismiss="matchCoach.dismiss()" />
         </div>
 
         <div class="opponents-ring" data-test="opponents">
@@ -372,9 +387,11 @@ watch(() => [store.game?.round, store.game?.phase, store.game?.currentSeat, live
               :faces="faces"
               :clickable="clickable"
               :match-mode="store.interaction.directMatch"
+              :rival="true"
+              :picked="pickedRivalSlot(opponent.seat)"
               :highlighted="highlighted"
               :compact="compactOpponents"
-              @pick="(seat: number, slot: number) => store.pickSlot(seat, slot)" />
+              @pick="pick" />
           </div>
         </div>
       </div>
@@ -399,18 +416,21 @@ watch(() => [store.game?.round, store.game?.phase, store.game?.currentSeat, live
           :ready="showsReady && isReady(me.seat)"
           :announcer="isAnnouncer(me.seat)"
           :final-turn="isFinalTurn(me.seat)" />
-        <KoboTableau
-          v-if="me"
-          class="my-tableau"
-          :player="me"
-          :owner="ui.table.ownerYour"
-          :group-label="ui.table.yourCards"
-          :faces="faces"
-          :clickable="clickable"
-          :match-mode="store.interaction.directMatch"
-          :highlighted="highlighted"
-          :selected="selectedOwnSlot"
-          @pick="(seat: number, slot: number) => store.pickSlot(seat, slot)" />
+        <!-- The first-time cue rings my hand: a plain outline, no animation. -->
+        <div class="my-hand" :class="{ 'coach-ring': showsCoachRing }" data-test="my-tableau-ring">
+          <KoboTableau
+            v-if="me"
+            class="my-tableau"
+            :player="me"
+            :owner="ui.table.ownerYour"
+            :group-label="ui.table.yourCards"
+            :faces="faces"
+            :clickable="clickable"
+            :match-mode="store.interaction.directMatch"
+            :highlighted="highlighted"
+            :selected="selectedOwnSlot"
+            @pick="pick" />
+        </div>
         <KoboActionBar
           :game="store.game"
           :prompt="store.interaction.prompt"
@@ -420,6 +440,7 @@ watch(() => [store.game?.round, store.game?.phase, store.game?.currentSeat, live
           :busy="store.busy"
           :notice="store.notice"
           :can-hide="store.canHidePeek"
+          :match-button="store.interaction.matchButton"
           @ready="store.ready()"
           @draw="store.draw()"
           @discard="store.discardDrawn()"
@@ -567,6 +588,8 @@ watch(() => [store.game?.round, store.game?.phase, store.game?.currentSeat, live
   --kobo-card-w: clamp(48px, 8vh, 64px);
   --kobo-gap: 6px;
 }
+.my-hand { border-radius: 14px; padding: 2px; }
+.my-hand.coach-ring { outline: 2px solid var(--gold); outline-offset: 0; box-shadow: 0 0 0 5px rgba(245, 200, 66, 0.2); }
 .my-zone :deep(.seat-label) { font-size: 0.8rem; padding: 4px 14px; }
 
 .table-footer { flex: none; display: flex; align-items: center; }

@@ -11,6 +11,7 @@ import { buildKoboCard, buildKoboPlayer, buildKoboSlot, buildKoboState } from '.
 import { setConnectionOnline } from '../../composables/useConnectionStatus';
 import { messagesEn } from '../../locales/en';
 import { useKoboSound } from '../../composables/useKoboSound';
+import { MATCH_COACH_STORAGE_KEY, resetKoboMatchCoach } from '../../composables/useKoboMatchCoach';
 
 function lobby(joined: number, mySeat = 0): LobbyView {
   return {
@@ -328,8 +329,10 @@ describe('KoboGameScreen', () => {
       expect(enabledSlots(wrapper)).toHaveLength(8);
       expect(wrapper.get('[data-test="slot-0-1"]').attributes('aria-label')).toBe('Your card 2, face down: match this card');
       expect(wrapper.get('[data-test="slot-1-1"]').attributes('title')).toBe('Match this card');
-      expect(wrapper.find('[data-test="action-match"]').exists()).toBe(true);
-      const draw = vi.spyOn(store, 'draw').mockReturnValue(true);
+      // A tap already means Match here: no Match button, the hint line explains the tap instead.
+      expect(wrapper.find('[data-test="action-match"]').exists()).toBe(false);
+      expect(wrapper.find('[data-test="match-hint"], [data-test="match-coach"]').exists()).toBe(true);
+      const draw =vi.spyOn(store, 'draw').mockReturnValue(true);
       await press(wrapper, 'draw');
       expect(draw).toHaveBeenCalledTimes(1);
     });
@@ -462,22 +465,40 @@ describe('KoboGameScreen', () => {
         givenSlot: null, success: null, barrierOpened: null, ...overrides,
       });
 
-      it('givenMatchIsListedDuringAnotherPlayersTurn_thenTheButtonIsThereAndEverySlotIsAOneClickMatch', async () => {
+      // My own turn, a power waiting for a card: the taps are the power's, the Match button is the way to match.
+      const held = (overrides = {}) => matchable({
+        phase: 'POWER', currentSeat: 0, pendingPower: 'PEEK_OWN', availableActions: ['PEEK', 'SKIP_POWER', 'MATCH_DISCARD'],
+        ...overrides,
+      });
+
+      it('givenMatchIsListedDuringAnotherPlayersTurn_thenNoButtonAndEverySlotIsAOneClickMatch', async () => {
         const { wrapper, store } = await matchable();
-        expect(wrapper.get('[data-test="action-match"]').text()).toBe(messagesEn.koboUi.actions.match);
-        expect(wrapper.get('[data-test="action-match"]').attributes('aria-pressed')).toBe('false');
+        expect(wrapper.find('[data-test="action-match"]').exists()).toBe(false);
         expect(enabledSlots(wrapper)).toHaveLength(8);
         const pick = vi.spyOn(store, 'pickSlot');
         await wrapper.get('[data-test="slot-0-2"]').trigger('click');
         expect(pick).toHaveBeenCalledWith(0, 2);
       });
 
-      it('givenAPowerOfMineIsPending_thenNoSlotIsAMatchAndNoneSaysSo', async () => {
-        const { wrapper } = await matchable({
-          phase: 'POWER', currentSeat: 0, pendingPower: 'PEEK_OWN', availableActions: ['PEEK', 'SKIP_POWER', 'MATCH_DISCARD'],
-        });
+      it('givenAPowerOfMineIsPending_thenNoSlotIsAMatchNoHintShowsAndTheButtonIsOffered', async () => {
+        const { wrapper } = await held();
         expect(enabledSlots(wrapper)).toEqual(['slot-0-0', 'slot-0-1', 'slot-0-2', 'slot-0-3']);
         expect(wrapper.findAll('[data-match]')).toHaveLength(0);
+        expect(wrapper.find('[data-test="match-hint"]').exists()).toBe(false);
+        expect(wrapper.find('[data-test="match-coach"]').exists()).toBe(false);
+        expect(wrapper.get('[data-test="action-match"]').text()).toBe(messagesEn.koboUi.actions.match);
+        expect(wrapper.get('[data-test="action-match"]').attributes('aria-pressed')).toBe('false');
+      });
+
+      it('givenAPowerIsPending_thenATapOnMyCardDoesThePowerNotAMatch', async () => {
+        const { wrapper, store } = await held();
+        const peek = vi.spyOn(store, 'pickSlot');
+        await wrapper.get('[data-test="slot-0-1"]').trigger('click');
+        expect(peek).toHaveBeenCalledWith(0, 1);
+        const intent = store.interaction.intents['0:1'];
+        expect(intent).toMatchObject({ kind: 'send', command: { type: 'peek', seat: 0, slot: 1 } });
+        // A rival card is not a target of that power, so it cannot be tapped at all.
+        expect(wrapper.get('[data-test="slot-1-1"]').attributes('disabled')).toBeDefined();
       });
 
       it('givenMatchIsNotListed_thenNoMatchButton', async () => {
@@ -486,7 +507,7 @@ describe('KoboGameScreen', () => {
       });
 
       it('givenMatchIsPressed_thenEveryCardOfEveryPlayerCanBePickedAndCancelIsOffered', async () => {
-        const { wrapper } = await matchable();
+        const { wrapper } = await held();
         await press(wrapper, 'match');
         expect(wrapper.get('[data-test="action-match"]').attributes('aria-pressed')).toBe('true');
         expect(wrapper.get('[data-test="prompt"]').text()).toBe(messagesEn.koboUi.prompt.matchPick);
@@ -495,16 +516,109 @@ describe('KoboGameScreen', () => {
       });
 
       it('givenMatchIsPressedTwice_thenTheModeIsDisarmed', async () => {
-        const { wrapper, store } = await matchable();
+        const { wrapper, store } = await held();
         await press(wrapper, 'match');
         await press(wrapper, 'match');
         expect(store.pending).toEqual({ kind: 'none' });
-        // Back to the plain state: one click on a card is a match again.
-        expect(wrapper.get('[data-test="slot-0-0"]').attributes('data-match')).toBe('true');
+        // Back to the plain state: the power still owns the taps.
+        expect(wrapper.get('[data-test="action-match"]').attributes('aria-pressed')).toBe('false');
+        expect(wrapper.get('[data-test="slot-0-0"]').attributes('data-match')).toBeUndefined();
+      });
+
+      describe('option B: tap your card, or pick a rival card then give one of yours', () => {
+        beforeEach(() => {
+          resetKoboMatchCoach();
+          localStorage.removeItem(MATCH_COACH_STORAGE_KEY);
+        });
+        const dismissCoach = () => localStorage.setItem(MATCH_COACH_STORAGE_KEY, 'seen');
+
+        it('givenIdle_thenTheHintLineIsUnderThePilesAndNamesBothGestures', async () => {
+          dismissCoach();
+          const { wrapper } = await matchable();
+          const hint = wrapper.get('.table-center [data-test="match-hint"]');
+          expect(hint.text()).toBe(messagesEn.koboUi.match.hint);
+        });
+
+        it('givenATapOnARivalCard_thenOnlyThatCardIsPickedAndNothingIsSent', async () => {
+          dismissCoach();
+          const { wrapper, store } = await matchable();
+          const send = vi.spyOn(store, 'pickSlot');
+          await wrapper.get('[data-test="slot-1-2"]').trigger('click');
+          expect(send).toHaveBeenCalledWith(1, 2);
+          expect(store.pending).toMatchObject({ kind: 'match-give', target: { seat: 1, slot: 2 } });
+          const picked = wrapper.get('[data-test="slot-1-2"]');
+          expect(picked.attributes('aria-pressed')).toBe('true');
+          expect(picked.attributes('aria-label')).toContain('picked to match');
+          expect(wrapper.get('[data-test="prompt"]').text()).toBe(messagesEn.koboUi.prompt.matchGive);
+          expect(wrapper.get('[data-test="action-cancel"]').text()).toBe(messagesEn.koboUi.actions.cancel);
+          expect(wrapper.find('[data-test="match-hint"]').exists()).toBe(false);
+          expect(enabledSlots(wrapper)).toEqual(['slot-0-0', 'slot-0-1', 'slot-0-2', 'slot-0-3']);
+        });
+
+        it('givenARivalCardIsPicked_thenCancelAndEscapeBothDropItAndTheHintComesBack', async () => {
+          dismissCoach();
+          const { wrapper, store } = await matchable();
+          await wrapper.get('[data-test="slot-1-2"]').trigger('click');
+          await wrapper.get('[data-test="action-cancel"]').trigger('click');
+          expect(store.pending).toEqual({ kind: 'none' });
+          expect(wrapper.get('[data-test="match-hint"]').exists()).toBe(true);
+          await wrapper.get('[data-test="slot-1-2"]').trigger('click');
+          document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+          await flushPromises();
+          expect(store.pending).toEqual({ kind: 'none' });
+          expect(wrapper.find('[data-test="slot-1-2"]').attributes('aria-pressed')).toBeUndefined();
+        });
+
+        it('givenTheFirstVisit_thenTheCoachMarkRingsMyHandAndGotItRemembersIt', async () => {
+          const { wrapper } = await matchable();
+          expect(wrapper.get('[data-test="match-coach"]').text()).toContain(messagesEn.koboUi.match.coachText);
+          expect(wrapper.get('[data-test="my-tableau-ring"]').classes()).toContain('coach-ring');
+          await wrapper.get('[data-test="match-coach-dismiss"]').trigger('click');
+          expect(wrapper.find('[data-test="match-coach"]').exists()).toBe(false);
+          expect(wrapper.find('[data-test="match-hint"]').exists()).toBe(true);
+          expect(wrapper.get('[data-test="my-tableau-ring"]').classes()).not.toContain('coach-ring');
+          expect(localStorage.getItem(MATCH_COACH_STORAGE_KEY)).toBe('seen');
+        });
+
+        it('givenTheCueWasSeen_thenItDoesNotComeBack', async () => {
+          dismissCoach();
+          const { wrapper } = await matchable();
+          expect(wrapper.find('[data-test="match-coach"]').exists()).toBe(false);
+        });
+
+        it('givenTheFirstMatchTap_thenTheCueIsDismissedForGood', async () => {
+          const { wrapper, store } = await matchable();
+          vi.spyOn(store, 'pickSlot').mockImplementation(() => {});
+          await wrapper.get('[data-test="slot-0-1"]').trigger('click');
+          expect(wrapper.find('[data-test="match-coach"]').exists()).toBe(false);
+          expect(localStorage.getItem(MATCH_COACH_STORAGE_KEY)).toBe('seen');
+        });
+
+        it('givenATapDuringAPowerOfMine_thenTheCueStaysForAnotherDay', async () => {
+          const { wrapper, store } = await held();
+          vi.spyOn(store, 'pickSlot').mockImplementation(() => {});
+          await wrapper.get('[data-test="slot-0-1"]').trigger('click');
+          expect(localStorage.getItem(MATCH_COACH_STORAGE_KEY)).toBeNull();
+        });
+
+        it('givenBlockedStorage_thenTheCueStillShowsAndDismisses', async () => {
+          const get = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => { throw new Error('blocked'); });
+          const set = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('blocked'); });
+          try {
+            resetKoboMatchCoach();
+            const { wrapper } = await matchable();
+            expect(wrapper.find('[data-test="match-coach"]').exists()).toBe(true);
+            await wrapper.get('[data-test="match-coach-dismiss"]').trigger('click');
+            expect(wrapper.find('[data-test="match-coach"]').exists()).toBe(false);
+          } finally {
+            get.mockRestore();
+            set.mockRestore();
+          }
+        });
       });
 
       it('givenAnotherPlayersCardIsPicked_thenOnlyMyCardsCanBePickedToGive', async () => {
-        const { wrapper, store } = await matchable();
+        const { wrapper, store } = await held();
         await press(wrapper, 'match');
         await wrapper.get('[data-test="slot-1-2"]').trigger('click');
         expect(store.pending.kind).toBe('match-give');
@@ -513,7 +627,7 @@ describe('KoboGameScreen', () => {
       });
 
       it('givenMyCardIsPickedWhileArmed_thenItIsTheStoreThatSendsTheMatch', async () => {
-        const { wrapper, store } = await matchable();
+        const { wrapper, store } = await held();
         const pick = vi.spyOn(store, 'pickSlot');
         await press(wrapper, 'match');
         await wrapper.get('[data-test="slot-0-1"]').trigger('click');
@@ -521,7 +635,7 @@ describe('KoboGameScreen', () => {
       });
 
       it('givenEscape_thenTheArmedModeIsDropped', async () => {
-        const { wrapper, store } = await matchable();
+        const { wrapper, store } = await held();
         await press(wrapper, 'match');
         document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
         await flushPromises();
@@ -530,15 +644,15 @@ describe('KoboGameScreen', () => {
       });
 
       it('givenACommandInFlight_thenMatchIsStillAvailable', async () => {
-        const { wrapper, store } = await matchable({ currentSeat: 0, phase: 'TURN_END', availableActions: ['END_TURN', 'MATCH_DISCARD'] });
+        const { wrapper, store } = await held();
         store.busy = true;
         await flushPromises();
-        expect(wrapper.get('[data-test="action-endTurn"]').attributes('disabled')).toBeDefined();
+        expect(wrapper.get('[data-test="action-skip"]').attributes('disabled')).toBeDefined();
         expect(wrapper.get('[data-test="action-match"]').attributes('disabled')).toBeUndefined();
       });
 
       it('givenARefusedMatch_thenSaysTooLateAndMatchCanBeTriedAgain', async () => {
-        const { wrapper, store } = await matchable();
+        const { wrapper, store } = await held();
         await press(wrapper, 'match');
         store.applyEvent({ type: 'error', eventType: 'MATCH', message: 'late' });
         await flushPromises();
