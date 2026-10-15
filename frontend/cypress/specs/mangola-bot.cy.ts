@@ -91,7 +91,9 @@ describe('Mangola against a bot', () => {
     // First exchange: the bot's move is read out and leaves its mark on the board.
     cy.get('[data-test^="pit-"][data-selectable="true"]').first().click();
     cy.get('[data-test="board-live"]:contains("Bot 1 sowed")', { timeout: 30000 }).should('exist');
-    cy.get('[data-test^="pit-"][data-last-start="true"]').should('exist');
+    // Once the bot's hand has landed it is my turn again, and its starting pit stays marked.
+    cy.get('[data-test="turn-hint"]', { timeout: 30000 }).should('contain.text', 'Your turn');
+    cy.get('[data-test^="pit-"][data-last-start="true"]', { timeout: 30000 }).should('exist');
     playUntilTheEnd();
     cy.get('[data-test="end"]', { timeout: 30000 }).should('be.visible');
     cy.get('[data-cy="play-again"]').click();
