@@ -58,7 +58,7 @@ step with its real number; test-first visible in git (a `test:` commit before th
 | N6 | `feat: Mangola sowing animation` | M | N4, N5 | [x] |
 | N7 | `feat: play Mangola` (entry PR: registry, route, screen, lobby, locales, rules, Cypress) | M | N6, no other entry PR open | [x] |
 | N8 | `feat: Mangola bots with three levels` (backend) | L | N3 | [x] PR #240 |
-| N9 | `feat: play Mangola against a bot` (frontend + Cypress) | S | N7, N8 | [ ] |
+| N9 | `feat: play Mangola against a bot` (frontend + Cypress) | S | N7, N8 | [x] PR #241 |
 | N10 | `test: Mangola end-to-end coverage` (placement, endless, rematch, presence) | S-M | N9 | [ ] |
 
 Total about 10 to 12 days of work.
