@@ -14,7 +14,9 @@ sowing, and the shared lobby, forfeit, presence and rematch.
 1. **Endless sowings are illegal moves** (recommended), not a draw as in the JS (spec Q1). Changes the
    legal-move computation, the bots and one end reason.
 2. **Placement is simultaneous and hidden**, confirm and "edit again" until both are ready, presets in the
-   editor, no per-pit cap; host option `setup` = free / checkerboard / random (spec Q2, Q3).
+   editor, no per-pit cap (spec Q2, Q3). The host option `setup` = free / checkerboard / random planned here was
+   **removed on 2026-10-15 by owner decision** ("le set up sera toujours le free placement, jamais autre chose"):
+   the set-up is always free placement; the steps below describe the original plan, see the spec for the result.
 3. **Captures exactly as the JS**: automatic, the capturing pit keeps its seeds, captured seeds sown from
    the pit after the start of the capturing lap (spec Q10; the 1952 Mangola takes the capturing pit too).
    The ten E-examples of the spec are the reference: the owner checks them against their memory.

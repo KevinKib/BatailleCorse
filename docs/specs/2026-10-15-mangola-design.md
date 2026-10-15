@@ -19,8 +19,9 @@ on it; **[Q]** product question, listed at the end with a recommendation.
    origin"). The engine is a pure domain context `mangola` (new bounded context, like `threemenmorris`), with
    the board geometry and the rule switches held as data (`MangolaRules`), so the documented neighbours
    (Mangola as reported in 1952, Omweso, Kiela, Igisoro) can later be offered as variants without a rewrite.
-   Version 1 offers **one rule set** (the owner's) and two host options: the setup (free placement by
-   default) and who starts.
+   Version 1 offers **one rule set** (the owner's) and one host option, who starts. The set-up is
+   always free placement (owner decision, 2026-10-15: "le set up sera toujours le free placement, jamais autre
+   chose"), so there is no set-up option.
 2. **Free initial placement is a game phase in the domain.** Each player distributes exactly 32 seeds over
    their own 16 pits; both arrange **at the same time and hidden from each other**, confirm, and may take the
    confirmation back until the other has confirmed too; both layouts are revealed together and play starts.
@@ -272,8 +273,9 @@ which is why the placement protocol (hidden or not, who places first) matters **
 
 ## The placement phase
 
-- **Phases:** `PLACEMENT → PLAY → FINISHED`. With `setup = free` (default) the game starts in `PLACEMENT`;
-  with a preset set-up the factory builds the board and the game starts in `PLAY`.
+- **Phases:** `PLACEMENT → PLAY → FINISHED`. The game always starts in `PLACEMENT`
+  (owner decision 2026-10-15: no set-up option, no preset board built by the factory); tests and bots reach
+  `PLAY` through `Mangola.fromLayout`.
 - **Command `arrange(seat, int[16] counts)`**: the seat's whole layout, in the order of its loop (`a2..h2,
   h1..a1` for seat A); refused unless there are 16 non-negative integers summing to 32
   (`InvalidLayoutException`), the game is in `PLACEMENT` and the seat has not confirmed. No cap per pit
@@ -295,8 +297,9 @@ which is why the placement protocol (hidden or not, who places first) matters **
 - **Presets in the editor (client side, not rules):** "Checkerboard" (4 in every other pit, the Mangola
   opening and the JS classic), "Two per pit" (the Mangola start), "Random" (32 seeds dropped uniformly,
   without the JS bug), "Clear". Presets only fill the editor; the server only checks the sum.
-- **Host option `setup`:** `free` (default), `checkerboard`, `random` (each side drawn by the server's
-  `RandomGenerator`) **[Q3]**. The two presets skip the phase for quick games and for the e2e.
+- **Host option `setup`: removed (owner decision 2026-10-15).** It offered `free`, `checkerboard` and `random`
+  and the last two skipped the phase. The set-up is always free placement; the editor presets above are the only
+  shortcuts. An old client sending `setup` gets the same refusal as for any unknown option.
 - **Rematch:** the options are kept (`SessionService.playAgain`); a new placement phase starts.
 
 ## Domain design
@@ -307,11 +310,11 @@ presentation, no other game).
 - `Pit` helpers on `int` indexes `0..31` (`row * 8 + column`, row 0 = "1"): `MangolaBoard` (immutable `int[32]`,
   `seeds(pit)`, `sideTotal(seat)`, `withLayout(seat, counts)`), `MangolaGeometry` (constant: each seat's loop,
   `next(pit)`, `isInner(pit)`, `facing(pit)`, `behind(pit)`, `owner(pit)`, names `a1..h4`).
-- `MangolaRules` (record): `setup` (`FREE`, `CHECKERBOARD`, `RANDOM`), `endless` (`ILLEGAL` or `DRAW`),
+- `MangolaRules` (record): `endless` (`ILLEGAL` or `DRAW`),
   `capture` (`AUTOMATIC`; room for `OPTIONAL`), `capturedSeedsFrom` (`LAP_START`; room for
   `AFTER_CAPTURING_PIT`), `captureTakesOwnPit` (false; true for the 1952 Mangola), `lastSeedInEmptyPit`
   (`NEXT_PIT_AND_STOP`; room for `STOP`, Omweso and Kiela), `minSeedsToMove` (2). Constant `MangolaRules.OWNER`.
-  Version 1 builds only `OWNER` (with `setup` and `endless` from the options); the other switches exist as
+  Version 1 builds only `OWNER` (with `endless` from the options); the other switches exist as
   enums with one value plus a test per value, so a later variant is data plus tests.
 - `Sowing` (pure function): `sow(board, seat, pit, rules) → SowingResult(board, trace, endless)`; the
   trace is a list of `SowingStep`: `Pick(pit, count)`, `Drop(pit)`, `SkipEmpty(pit)` (the last seed passed
@@ -330,9 +333,9 @@ presentation, no other game).
 - Events (`MangolaEvent`): `LayoutChanged(seat)`, `LayoutConfirmed(seat)`, `LayoutWithdrawn(seat)`,
   `LayoutsRevealed`, `Sown(seat, pit, trace, captures)`, `Finished(result)`.
 - `MangolaFactory`: `GAME_TYPE = "mangola"`, 2 players, `supportsBots() = true` (from the bots PR), options
-  `setup` (`free|checkerboard|random`, default `free`) and `firstPlayer` (`host|guest|random`, default
-  `random`), seat option `level`; `create` maps `firstPlayer` to the seat that becomes seat A through the
-  injected `RandomGenerator`, and draws the `random` set-up there too, so the aggregate stays deterministic.
+  `firstPlayer` (`host|guest|random`, default `random`; no set-up option, owner decision 2026-10-15), seat
+  option `level`; `create` maps `firstPlayer` to the seat that becomes seat A through the injected
+  `RandomGenerator`, so the aggregate stays deterministic, and always builds a game in `PLACEMENT`.
 
 ## Network contract
 
@@ -349,7 +352,7 @@ presentation, no other game).
   and the viewer's are their draft), `players[]` (`seat`, `name`, `current`, `side` `A|B`, `seeds` on their
   side, `ready` in the placement phase), `legalPits` (viewer, in play), `availableActions`
   (`ARRANGE`, `CONFIRM_LAYOUT`, `EDIT_LAYOUT`, `SOW`), `lastMove` (`seat`, `pit`, `trace`, so a client that
-  reconnects mid-animation can still show the last move), `setup`, `repetitions` (from 2),
+  reconnects mid-animation can still show the last move), `repetitions` (from 2),
   `outcome` (`ONGOING` / `FINISHED{winner, reason}`). Trace size: a few hundred steps at most for a finite
   move [C]; it is sent once per move.
 
@@ -401,7 +404,7 @@ presentation, no other game).
 - Accessibility: every pit is a button with an accessible name ("c2, 3 seeds, your inner row"), arrow keys
   move between pits, Enter sows; a live region announces each move in words ("Bob sowed c3, captured 5
   seeds"); the placement editor is operable by keyboard (+ / − on the focused pit).
-- Lobby: nothing to build; the shared lobby renders `setup`, `firstPlayer` and `level`.
+- Lobby: nothing to build; the shared lobby renders `firstPlayer` and `level`.
 - Rules panel: the rules above in plain words with a small diagram of each loop, the empty-pit rule, the
   capture, and the origin paragraph.
 
@@ -490,8 +493,8 @@ port of the JS minimax (rewritten); no "Angola" or "Mancala" in the name.
   the JS behaviour, the game ends as a draw.
 - **Q2 Placement protocol.** Recommend: simultaneous and hidden, confirm and "edit again" until both are
   ready. Alternatives: sequential (Omweso: the first player arranges first, visible), or visible live.
-- **Q3 Placement limits and set-up option.** Recommend: no per-pit cap; `setup` = free (default),
-  checkerboard, random.
+- **Q3 Placement limits and set-up option.** Recommend: no per-pit cap. A `setup` option (free, checkerboard,
+  random) was first recommended, then **removed by the owner on 2026-10-15**: the set-up is always free placement.
 - **Q4 Name.** Recommend id `mangola`, display "Mangola", "also known under other names (Ngola, Mongola, Amungola, Angola)" in the rules panel. Decided by the owner on 2026-10-15: the game is called Mangola; id `mangola`.
 - **Q5 Who starts.** Recommend a `firstPlayer` option, default `random`; the starting player takes seat A.
 - **Q6 Repetition draw.** Recommend the third occurrence of a position with the same player to move ends
