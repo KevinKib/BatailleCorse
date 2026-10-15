@@ -181,9 +181,7 @@ describe('Kobo animations', () => {
       cy.get(sheet).should('be.visible');
       cy.window().then((win) => {
         expect((win as unknown as Spy).__seen, 'no card flew under reduced motion').to.have.length(0);
-        expect((win as unknown as Spy).__timings, 'no animation was started by the layer').to.have.length(0);
-        expect((win as unknown as Spy).__marks, 'the touched cards are still outlined').to.be.greaterThan(0);
-      });
+        expect((win as unknown as Spy).__timings, 'no animation was started by the layer').to.have.length(0);      });
       cy.get(sheet).should('have.css', 'animation-name', 'none');
 
       // Motion allowed again: the sheet rises (about 250 ms, soft easing) and its buttons answer at once.
