@@ -73,8 +73,13 @@ The id is a plain word, not a prefix of another game id, and reads well in `/gam
   - when a **later** player goes out, the trick goes on: the others may still beat that last play, and when
     the trick closes on it, the lead goes to the next player in seat order who still has cards
     [S, fr.wikipedia, pagat].
-  - A forbidden finisher (V7) does not take 1st place, so their going out lets the trick go on [D, to
-    confirm, section 13].
+  - A forbidden finisher (V7) does not take 1st place, so their going out does **not** close the trick
+    [O, decided 2026-10-15, section 13.1 item 20]: the forbidden finish places them last, and the trick
+    follows the normal rule for a later finisher (it goes on, the others may still beat that last play, and
+    when it closes the lead goes to the next seat in seat order that still holds cards). The rule "the first
+    player out closes the trick" applies to the player who actually **takes 1st place**: the first finisher
+    after a forbidden one (who then takes 1st place) closes it. A four completed in succession (3.1.1) still
+    closes the trick whoever completes it, forbidden finisher included.
 - **Round end**: when only one player still holds cards, that player takes the last place; the round is over
   (the last player does not play their cards out) [S].
 - **Titles** from the finishing order, by player count `n` [S, fr.wikipedia, regles-du-jeu.net]:
@@ -109,9 +114,10 @@ The owner's rules, all on by default with `equalPlay = on` (decided 2026-10-15):
   pass**; C cannot play higher. The binding falls on C, the player after the equal play, not on B.
 - **The binding repeats** [O]: if C plays a 9, D must play a 9 or pass, and so on. The consecutive plays of
   one rank at the top of the trick form the **chain**.
-- **End of the binding** on a pass is **open** (section 13, O1): either the first pass ends it (the next
-  player then beats the 9s normally), or it holds until the trick closes. Working assumption until the owner
-  answers [U]: the first pass ends it.
+- **End of the binding** [O, decided 2026-10-15, section 13.1 item 18]: the **first pass ends it**. After
+  C passes, the next player (D) is free again: D may beat the 9s normally with a higher play of the same
+  count, or play another 9 (an equal play, which binds the next player again), or pass. The binding does not
+  last until the trick closes.
 - A pass under the binding is an ordinary pass: it counts toward the trick end, and under
   `afterPass = reenter` the passer may play again later in the same trick.
 - A cut (V4) is a higher play, so it cannot answer the binding [O, "C cannot play higher"].
@@ -123,6 +129,12 @@ The owner's rules, all on by default with `equalPlay = on` (decided 2026-10-15):
   out and the lead passes to the next seat with cards (and, if they are the first player out, the
   first-finisher rule gives the same result). Completing the four does not trigger a revolution (V8), which
   needs four cards in one play [D].
+- **A quad played at once closes the trick** [O, decided 2026-10-15, section 13.1 item 21]: four cards of one
+  rank in a single play (lead or follow) end the trick like the four completed in succession, and that
+  player leads. This is the `quadClears` option, **on by default** (V5); `off` makes the quad an ordinary
+  four-card play that others must beat with a higher quad. If the quad empties the hand, the player goes
+  out and the lead passes to the next seat with cards (a forbidden finish, 4 twos, places them last as
+  usual). With a revolution (V8) both apply: the order reverses, the trick closes and the player leads.
 - **Completion out of turn** [O]: while a chain of rank r is the top of the trick, the player who holds
   **all the missing cards** of r (4 minus those of the chain) may play them **at once, out of turn**,
   whatever the count of the chain: this closes the trick and that player leads the next one. Any seat may do
@@ -132,8 +144,9 @@ The owner's rules, all on by default with `equalPlay = on` (decided 2026-10-15):
   completion).
   - **Window** [O]: it opens as soon as the chain holds two plays (at least one equal play) and stays open
     until the next **play** is made on the trick, or the trick closes. Passes, even several around the
-    table, do not close it, since the chain stays the top. Whether a single play of r (no equal play yet)
-    already opens it is open (section 13, O4); working assumption: it does not.
+    table, do not close it, since the chain stays the top. A **single lead of r does not open it** [O,
+    decided 2026-10-15, section 13.1 item 19]: an equal play is needed first, so the holder of the three
+    other 9s cannot play them out of turn on a lone 9 (example 8).
   - **Optional** [O]: the holder may keep the cards; there is no penalty.
   - This is the only out-of-turn play of the game (3.4).
 
@@ -158,10 +171,26 @@ The test contract of the PR that ships equal play (plan, V1). Four players A, B,
 5. **D passes, then B completes.** A leads 9♠; B plays 9♥; C plays 9♦; D, bound, passes. B holds 9♣ and plays
    it out of turn after D's pass: accepted, since a pass does not close the window. The trick closes and B
    leads.
-6. **Chain broken by a pass, then a play** (working assumption of O1). A leads 9♠; B plays 9♥ (C is bound);
-   C passes, which ends the binding; D plays a 10 (legal again: D beats the 9s normally). The window for the
-   9s is now closed: the holder of 9♦ 9♣ can no longer complete. Under the other answer to O1 (binding held
-   to the trick end), D could only play a 9 or pass, and the window would stay open.
+6. **The first pass ends the binding (O1), then D beats the 9s.** A leads 9♠; B plays 9♥ (C is bound); C
+   passes, which ends the binding (the window for the 9s stays open through the pass); D plays a 10 (legal:
+   D beats the 9s normally, the binding is gone). That play closes the window: the holder of 9♦ 9♣ can no
+   longer complete. The rejected alternative (binding held to the trick end) would have allowed D only a 9
+   or a pass; it is not the rule.
+7. **After the first pass D is free, and may still choose an equal 9.** Same start: A 9♠, B 9♥, C passes. D
+   holds 9♦ and plays it (equal play): the chain now holds three 9s, the binding is back and falls on A,
+   who must play a 9 or pass. A holds 9♣ and plays it: the four 9s are down, the trick closes (`QUAD`) and A
+   leads. Had A passed instead, that pass would end the binding again, and B would be free to play a 10.
+8. **A single lead does not open the window (O4).** A leads 9♠ (a chain of one play). C holds 9♥ 9♦ 9♣ and
+   plays them out of turn: refused with `NotPlayersTurnException`, no mutation. When the turn reaches C, the
+   same three cards are not a legal in-turn play either (a triple on a single). Only after an equal play
+   does the window open: had B played 9♥ (a chain of two), the holder of the two missing 9s could complete
+   at once, as in example 4.
+9. **A forbidden finisher out first does not close the trick (O3).** Forbidden finish on a 2 is on. A leads
+   K♠; B plays A♠; C plays 2♠ as their last card. C goes out but with a forbidden finish: C does not take 1st
+   place (C will be placed last) and the trick is **not** closed. Nothing beats a 2, so D, A and B pass; the
+   trick then closes on C's play (`ALL_PASSED`) and the lead goes to the next seat in seat order that holds
+   cards, D. Had D, instead of passing, gone out with a normal play, D would take 1st place and close the
+   trick at once (`FIRST_OUT`).
 
 Each example is one parameterised test row: the starting hands, the command sequence (seat, cards or pass,
 in or out of turn), and the expected trick state after each command (top, binding, window open, trick
@@ -194,10 +223,10 @@ together with others in the sources. Defaults are those of the "Classic" preset 
 | # | Variant | Names | Rule | Combined | Interactions / conflicts | Default | Status | Certainty |
 |---|---------|-------|------|----------|--------------------------|---------|--------|-----------|
 | V1 | Re-entry after passing | "passer plusieurs fois son tour"; Australian "no playing after passing" is the opposite | `reenter`: a player who passed may play again when the turn comes back in the same trick. `out`: a pass is final until the trick ends | always one of the two | With `out`, the trick ends as soon as nobody but the last player is still in it. A pass forced by the equal-play binding is an ordinary pass | `reenter` | Offered (`afterPass`), P1 | [O] decided 2026-10-15 (sources split: pagat and regles-du-jeu.net allow re-entry, regles.com memo says a passer "generally does not come back") |
-| V2 | Equal play binds the next player ("X or nothing"), the four closes the trick, completion out of turn | "X ou rien", "carte égale ou rien", "égaler", "carré qui coupe" | A play of the same count and the **same** rank as the top is legal; the player after it must play that rank and count, or pass, and the binding repeats; the four cards of a rank played in succession close the trick, the completing player leads; the holder of the missing cards may complete out of turn (3.1.1) | very common in French play | End of the binding open (O1). A cut (V4) cannot answer the binding. Two players left: the binding falls back on the first player, no special case. A run chain (V12) never completes a four | `on` | Offered (`equalPlay = on|off`), V1 | [O] the owner's rules (decided 2026-10-15); fr.wikipedia describes "or nothing" as a sub-variant of "passage de tour"; the name "ou rien" and the completion out of turn are not found in any written source; the four completed by equal plays is Danish Røvhul (pagat) |
+| V2 | Equal play binds the next player ("X or nothing"), the four closes the trick, completion out of turn | "X ou rien", "carte égale ou rien", "égaler", "carré qui coupe" | A play of the same count and the **same** rank as the top is legal; the player after it must play that rank and count, or pass, and the binding repeats; the four cards of a rank played in succession close the trick, the completing player leads; the holder of the missing cards may complete out of turn (3.1.1) | very common in French play | The first pass ends the binding (O1 decided). A single lead does not open the completion window (O4 decided). A cut (V4) cannot answer the binding. Two players left: the binding falls back on the first player, no special case. A run chain (V12) never completes a four | `on` | Offered (`equalPlay = on|off`), V1 | [O] the owner's rules (decided 2026-10-15); fr.wikipedia describes "or nothing" as a sub-variant of "passage de tour"; the name "ou rien" and the completion out of turn are not found in any written source; the four completed by equal plays is Danish Røvhul (pagat) |
 | V4 | The 2 cuts | "le 2 coupe", "2 utilisé comme atout", "single two wins", "bomb" | `single`: a single top card (2) may be played on any play (any count) and ends the trick at once; the player leads. `ladder`: k twos beat a set of k+1 cards of a lower rank (a 2 beats a pair, two 2s a triple, three 2s a quad), and end the trick | common | Under a revolution the cutting card is the top rank in force (the 3) [O]. A cut cannot answer the equal-play binding [O]; a chain of 2s can still be completed (it is a completion, not a cut). Leading with a 2 is allowed (it simply wins the trick at once) [U: en.wikipedia mentions groups that forbid leading a 2] | off | Offered (`twoCuts = off|single|ladder`), V2 | [S] single: fr.wikipedia, pagat, 10h26, officialgamerules; ladder: fr.wikipedia example "two 2s beat a triple of jacks", pagat Sofia/Toronto |
-| V5 | A quad played at once clears the trick | "carré qui coupe", "bombe", Danish Røvhul "four of a rank clear the pile" | A single play of four cards of one rank ends the trick; that player leads. The four completed in succession is not this option: it is part of `equalPlay = on` (V2) | regional | With revolution (V8) both apply: order reversed, then a fresh lead. Whether the owner's rules also close the trick on a quad played at once is open (O5) | off | Offered (`quadClears`), V2 | [S] pagat (Røvhul), gathertogethergames |
-| V7 | Forbidden finish | "interdiction de terminer par un 2", "on ne finit pas sur un 2", "cannot go out with the highest card" | A player whose last play contains a top-rank card (2; the 3 under a revolution) goes out but is placed **last**; among several such players the later one is lower [S, pagat Røvhul] | very common in French play | Under a revolution the forbidden card is the top rank in force (3) [O; S fr.wikipedia, pagat Daifugō]. A completion of 2s that empties the hand is a forbidden finish too. Alternative "the play is refused" not offered [U] | `lastPlace` | Offered (`forbiddenFinish = lastPlace|off`), V2 | [O] always on in the owner's rules, kept as a cheap host option; [S] regles-du-jeu.net, fr.wikipedia, 10h26, pagat Daifugō |
+| V5 | A quad played at once clears the trick | "carré qui coupe", "bombe", Danish Røvhul "four of a rank clear the pile" | `on`: a single play of four cards of one rank ends the trick; that player leads. `off`: the quad is an ordinary four-card play, beaten only by a higher quad. The four completed in succession is not this option: it is part of `equalPlay = on` (V2) and stays on whatever `quadClears` says | regional | With revolution (V8) both apply: order reversed, then a fresh lead. Independent of `equalPlay`. A quad that empties the hand: going out, then the lead passes to the next seat with cards | `on` | Offered (`quadClears = on|off`), V2 | [O] on by default, decided 2026-10-15 (O5); [S] pagat (Røvhul), gathertogethergames |
+| V7 | Forbidden finish | "interdiction de terminer par un 2", "on ne finit pas sur un 2", "cannot go out with the highest card" | A player whose last play contains a top-rank card (2; the 3 under a revolution) goes out but is placed **last**; among several such players the later one is lower [S, pagat Røvhul] | very common in French play | Under a revolution the forbidden card is the top rank in force (3) [O; S fr.wikipedia, pagat Daifugō]. A completion of 2s that empties the hand is a forbidden finish too. A forbidden finisher out first does not close the trick (O3 decided, 3.1). Alternative "the play is refused" not offered [U] | `lastPlace` | Offered (`forbiddenFinish = lastPlace|off`), V2 | [O] always on in the owner's rules, kept as a cheap host option; [S] regles-du-jeu.net, fr.wikipedia, 10h26, pagat Daifugō |
 | V8 | Revolution | "révolution", "contre-révolution", "four of a kind inverts ranks", "kakumei" | A quad (four of a rank in one play) reverses the ranking (3 high, 2 low); a later quad reverses it back (counter-revolution). Duration: `round` (until the end of the round) [S, fr.wikipedia, pagat Daifugō], `persistent` (carries over to later rounds until a new quad) [S, fr.wikipedia variant] | common | Effect is **immediate**: the next player must beat the quad in the reversed order, i.e. with a lower quad [O; S, fr.wikipedia "must follow the newly established order"; pagat Daifugō says "from the next clearing"]. The cutting card and the forbidden finish follow the top rank in force (3). A four completed in succession is no revolution. Exchange "best cards" follow the order in force at the deal | off | Offered (`revolution = off|round|persistent`), V3 | [O] decided 2026-10-15 as specified |
 | V10 | Aces high, 2 low | "Aces high", West Coast | Ranking A K Q ... 3 2 | rare | First lead `lowestClub` becomes the 2 of clubs; `kingOfHearts` and `queenOfHearts` are unaffected | `twoHigh` | Offered (`ranking = twoHigh|aceHigh`), V3 | [S] pagat, en.wikipedia |
 | V11 | Compulsory beating | "obligation de jouer", "compulsory beating" | A player who has a legal play must play; pass only when none | rare | Counts cuts and equal plays as legal plays when those variants are on; under the equal-play binding only a matching play counts; a completion out of turn is never compulsory [D] | off | Offered (`mustPlay`), V2 | [S] pagat. "Obligation de jouer le plus petit" (must play the lowest legal play) has **no** written source [U]: not offered |
@@ -207,7 +236,7 @@ together with others in the sources. Defaults are those of the "Classic" preset 
 | V15 | What the high rank gives back | "le Président donne ses plus faibles", "returns any unwanted card" | `free`: cards of their choice [S, O]; `lowest`: automatically their lowest cards, even out of a pair [S, fr.wikipedia variant] | always one | `lowest` makes the exchange instant (no exchange phase wait) | `free` | Offered (`giveBack`), P2 | [O] default confirmed |
 | V16 | First lead of round 1 | "Roi de cœur", "3 de trèfle", "Dame de cœur", "joueur après le donneur" | `kingOfHearts` (the owner's rule); `lowestClub` (holder of the lowest club: 3♣, or 2♣ with aces high); `queenOfHearts` (fr.wikipedia variant); `random` (a seat drawn at random, replacing "after the dealer"). The card only designates the leader, who opens with any legal play [O] | always one | - | `kingOfHearts` | Offered (`firstLead`), P1 (`kingOfHearts`: P3) | [O] king of hearts; [S] 3♣: pagat, en.wikipedia; queen of hearts: fr.wikipedia |
 | V17 | First lead of rounds 2+ | "le Trou du cul commence", "the President leads" | `scum` or `president` | always one | - | `scum` | Offered (`nextLead`), P2 | [S] both, sources split |
-| V18 | Points and match length | "points", "partie en N donnes" | Scoring by place: `rank` (place p of n scores n - p, fr.wikipedia), `titles` (President 2, Vice 1, others 0, pagat), `zeroSum` (+k for the k-th title pair from the top, -k from the bottom: 5 players 2 1 0 -1 -2, pagat). Length: 3, 5 or 10 rounds, first to 11 or 21 points, or `endless` (no end: rounds chain, the scoreboard keeps accumulating, players leave whenever they like) | always | `zeroSum` with a points target may never end: the match then ends after 10 rounds anyway [D]. `endless` reaches `FINISHED` only when a single player is left (section 8) | `rank`, `rounds-5` (to confirm against `endless`, section 13 O2) | Offered (`scoring`, `length`), P2 (`endless`: P3) | [O] points by place, endless added; [S] pagat, fr.wikipedia, regles-du-jeu.net (4/8/12 deals) |
+| V18 | Points and match length | "points", "partie en N donnes" | Scoring by place: `rank` (place p of n scores n - p, fr.wikipedia), `titles` (President 2, Vice 1, others 0, pagat), `zeroSum` (+k for the k-th title pair from the top, -k from the bottom: 5 players 2 1 0 -1 -2, pagat). Length: 3, 5 or 10 rounds, first to 11 or 21 points, or `endless` (no end: rounds chain, the scoreboard keeps accumulating, players leave whenever they like) | always | `zeroSum` with a points target may never end: the match then ends after 10 rounds anyway [D]. `endless` reaches `FINISHED` only when a single player is left (section 8) | `rank`, `rounds-5` (confirmed 2026-10-15, O2; `endless` stays an option) | Offered (`scoring`, `length`), P2 (`endless`: P3) | [O] points by place, endless added; [S] pagat, fr.wikipedia, regles-du-jeu.net (4/8/12 deals) |
 
 Row numbers are kept from the first version of this spec: V3 ("or nothing") is merged into V2, and V6, V9,
 V19, V20, V21 moved to 3.4 or 3.5. Row ids name catalogue rows; the PR in the Status column (V1 to V4) is a
@@ -270,7 +299,7 @@ documented, never refused, so the host can set options in any order [D, O].
 | `length` | `rounds-5`, `rounds-3`, `rounds-10`, `points-11`, `points-21`, `endless` | P2 / P3 (`endless` added in P3) |
 | `equalPlay` | `on`, `off` (on: binding, four closes the trick, completion out of turn) | V1 |
 | `twoCuts` | `off`, `single`, `ladder` | V2 |
-| `quadClears` | `off`, `on` (a quad played at once only) | V2 |
+| `quadClears` | `on`, `off` (on: a quad played at once closes the trick; the four completed in succession is `equalPlay`'s) | V2 |
 | `forbiddenFinish` | `lastPlace`, `off` | V2 |
 | `mustPlay` | `off`, `on` | V2 |
 | `revolution` | `off`, `round`, `persistent` | V3 |
@@ -290,11 +319,11 @@ in one call); the server knows no preset. The lobby shows which preset matches t
 
 | Preset | Values (only those that differ from the defaults) |
 |--------|---------------------------------------------------|
-| Classic (the owner's rules) | defaults: re-entry, equal play binds the next player (the four closes the trick, completion out of turn), forbidden finish on a 2, exchange 2/1 with a free return, king of hearts leads round 1, Scum leads rounds 2+, rank points, 5 rounds |
-| Pagat basic | `firstLead=lowestClub`, `equalPlay=off`, `forbiddenFinish=off`, `exchange=one`, `nextLead=president`, `scoring=titles`, `length=points-11` |
-| Strict | `afterPass=out`, `equalPlay=off`, `forbiddenFinish=off` |
+| Classic (the owner's rules) | defaults: re-entry, equal play binds the next player (the first pass ends the binding; the four closes the trick, completion out of turn), a quad played at once closes the trick, forbidden finish on a 2, exchange 2/1 with a free return, king of hearts leads round 1, Scum leads rounds 2+, rank points, 5 rounds |
+| Pagat basic | `firstLead=lowestClub`, `equalPlay=off`, `quadClears=off`, `forbiddenFinish=off`, `exchange=one`, `nextLead=president`, `scoring=titles`, `length=points-11` |
+| Strict | `afterPass=out`, `equalPlay=off`, `quadClears=off`, `forbiddenFinish=off` |
 | Party | `twoCuts=single`, `revolution=round` |
-| Daifugō-like | `equalPlay=off`, `revolution=round`, `runs=sameSuit`, `suitLock=on` (without the jokers, eight stops and fall of the real Daifugō, out of scope) |
+| Daifugō-like | `equalPlay=off`, `quadClears=off`, `revolution=round`, `runs=sameSuit`, `suitLock=on` (without the jokers, eight stops and fall of the real Daifugō, out of scope) |
 
 A preset that names a key not yet shipped is hidden until it ships.
 
@@ -379,7 +408,7 @@ on the first finisher, the exchange (who, how many, best cards), first leads, ti
   equal play, `BEAT` otherwise) and move to the next eligible seat. The "responded since the last play" set
   is cleared on every play.
 - **Completion** (in or out of turn) [O]: legal when `equalPlay = on`, the trick is not over, its chain
-  holds at least two plays (working assumption of O4) and the cards played are exactly all the missing
+  holds at least two plays (a single lead does not open it, O4 decided) and the cards played are exactly all the missing
   cards of the chain's rank, held by that seat. The seat need not be eligible (a passer, even under
   `afterPass = out`, may complete). After the play the turn order is not resumed: the trick closes as above
   and the completing player leads.
@@ -393,12 +422,13 @@ on the first finisher, the exchange (who, how many, best cards), first leads, ti
   turn.
 - `pass`: allowed for the current seat unless the trick is `FREE` (a leader must lead) or `mustPlay` and a
   legal play exists (a completion is never compulsory). The seat joins "responded" (and "out of the trick"
-  under `afterPass = out`); under `MATCH_OR_PASS` the binding ends after this pass (working assumption of
-  O1), and the next seat must beat the top normally. The chain and its completion window are unchanged.
+  under `afterPass = out`); under `MATCH_OR_PASS` the binding ends after this first pass (O1 decided), and
+  the next seat gets the `BEAT` constraint (a higher play, or an equal play that binds again). The chain and its completion window are unchanged.
 - Trick end: when every eligible seat except the last player is in "responded". The winner is the last
   player if they still have cards, else the next eligible seat after them. Event `TrickWon(reason)`, reasons
   `ALL_PASSED`, `FIRST_OUT`, `CUT`, `QUAD` (the four completed in succession, in or out of turn, or a quad at
-  once under `quadClears`). A trick that closes on `ALL_PASSED` also closes the completion window.
+  once under `quadClears = on`, the default). `FIRST_OUT` applies only to the player who takes 1st place; a
+  forbidden finisher out first leaves the trick open (O3 decided). A trick that closes on `ALL_PASSED` also closes the completion window.
 - Round end: one seat with cards left. That seat takes the last free place, above the forbidden finishers,
   who fill the bottom in reverse order of going out [S, pagat Røvhul].
 
@@ -607,7 +637,8 @@ le plus petit", the king of hearts lead. They are the owner's rules [O], marked 
    on, binding the next player to match or pass (3.1.1); forbidden finish on a 2 always on (`lastPlace`, kept
    as a host option); exchange 2/1, the Scum and Vice-Scum forced to give their best cards, the high ranks
    giving back any cards they choose; the Scum leads rounds 2+; the king of hearts holder leads round 1;
-   points by place (`rank`). Everything else off. The default match length is the open point O2.
+   points by place (`rank`); match length 5 rounds (`rounds-5`, O2); a quad played at once closes the trick
+   (`quadClears = on`, O5). Everything else off.
 4. **Q4 — Exchange flow.** Decided 2026-10-15: the server takes the low ranks' best cards automatically at the
    deal; the high ranks choose their returns freely, all pairs at once, with no timeout (the disconnect
    forfeit covers an absent player); a "Suggest" helper in the UI, not a server rule.
@@ -652,25 +683,34 @@ le plus petit", the king of hearts lead. They are the owner's rules [O], marked 
     `revolution = trick`, `runs = anySuit`, two decks, putsch, president fall (3.5). Jokers are excluded for
     good (3.4).
 
+18. **O1 — The first pass ends the equal-play binding.** Decided 2026-10-15: A plays a 9, B plays a 9, C is
+    bound to a 9 or a pass; if C passes, the binding ends there and D may beat the 9s normally (or play
+    another 9, which binds the next player again). The binding does **not** last until the trick closes.
+    Worked examples 6 and 7 (3.1.2).
+19. **O4 — A single lead does not open the completion window.** Decided 2026-10-15: the window opens only
+    once the chain holds an equal play (two plays of the rank). Three 9s held against a lone 9 cannot be
+    played out of turn (refused with `NotPlayersTurnException`). Worked example 8.
+20. **O3 — A forbidden finisher out first does not close the trick.** Decided 2026-10-15: the forbidden
+    finish places that player last and they do not take 1st place; the trick follows the normal rule for a
+    later finisher (it goes on, the others may beat that last play, and when it closes the lead goes to the
+    next seat with cards). Only the player who actually takes 1st place closes the trick on going out
+    (`FIRST_OUT`). A four completed in succession still closes it. Worked example 9.
+21. **O5 — A quad played at once closes the trick.** Decided 2026-10-15: a play of four cards of one rank
+    closes the trick and its player leads. This is `quadClears`, which becomes **`on` by default** (values
+    `on`, `off`; in the Classic preset it is on; the presets Pagat basic, Strict and Daifugō-like set it
+    `off`; Party keeps the default). It is independent of `equalPlay` (the four completed in succession
+    stays under `equalPlay`) and combines with a revolution as in V5.
+22. **O2 — Default match length.** Decided 2026-10-15: `rounds-5` is the default; `endless` stays an option.
+23. **P2 scoring and exchange rules accepted.** Decided 2026-10-15 (P2 merged in #223): the owner confirmed
+    the seven rules chosen there: (1) exchange amounts scaled by player count (`scaled`, V14); (2) title
+    scoring (`titles`, V18); (3) zero-sum scoring (`zeroSum`, V18); (4) a player who forfeits after going
+    out; (5) the low title forfeiting during the exchange (pending return completed with their lowest
+    cards, section 8); (6) titles recomputed after a forfeit between rounds; (7) the lowest give-back
+    (`giveBack = lowest`, V15).
+
 ### 13.2 Still open
 
-- **O1 — When the equal-play binding ends.** The binding repeats (decided). Scenario: A plays a 9, B plays a
-  9, so C must play a 9 or pass; C passes. Is D (a) free again to beat the 9s with a higher single, the
-  first pass having ended the binding, or (b) still bound to play a 9 or pass, the binding lasting until the
-  trick closes? Working assumption until answered [U]: (a). Example 6 of 3.1.2 shows both outcomes.
-- **O2 — Default match length.** Options: fixed `rounds-5` (current default) or `endless`. Recommendation:
-  keep `rounds-5` as the default and offer `endless` as an option. A fixed length gives every match a winner
-  by points, the end screen and Play again, which all other games share; an endless match only ends when the
-  players leave (forfeits), so the last player standing "wins" by forfeit rather than by points. If the
-  owner's table usually plays without an end, `endless` as the default only changes the value order in
-  `length`.
-- **O3 — Forbidden finisher going out first.** A player whose first-out play is a forbidden finish does not
-  take 1st place (they are placed last); this spec lets the trick continue in that case, as for a later
-  finisher [D]. Alternative: any first player out closes the trick, whatever their place.
-- **O4 — When the completion window opens.** Scenario: A leads a single 9 and C holds the three other 9s.
-  May C complete at once (three 9s out of turn on a single lead), or only once the chain holds an equal play
-  (A 9, then B 9)? Working assumption [U]: only once the chain holds two plays, as in all the owner's
-  examples ("A, B and C each played a 9").
-- **O5 — A quad played at once.** Scenario: A leads four 7s together. Does that close the trick in the
-  owner's rules (as the four completed in succession does), or must the others try to beat it with a higher
-  quad? Today it is the `quadClears` option, off by default; the answer only changes that default.
+- **N1 — Names of the Neutrals who exchange in `scaled` mode (6 to 8 players).** With `exchange = scaled`,
+  more than one pair exchanges and several Neutrals take part; today they are all titled "Neutral". Should
+  they get distinct names (for example by rank among the Neutrals) so the exchange pairs are readable in the
+  UI? Current behaviour kept until the owner answers; a small question that blocks nothing.
