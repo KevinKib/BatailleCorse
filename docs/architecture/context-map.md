@@ -153,7 +153,7 @@ graph TB
 - **Slots and revisions**: every command addresses a card as `SlotRef(seat, slot)`; each slot has a `revision` bumped when its card changes. The server never learns what a player remembers; clients drop what they knew of a slot whose revision moved.
 - **The race**: any player may try to discard a card (own or another's) that matches the rank on top of the discard pile. Commands go through the `synchronized` aggregate, so the first message processed wins. A losing attempt (slot already emptied or refilled, or the pile moved) is rejected without penalty (`expectedTopRank`, `expectedRevision`); only a real rank error costs a penalty card.
 - **Privacy**: `KoboDto.forViewer` is the only projection. Face-down values appear only in the viewer own DTO (starting cards before the first draw, the drawn card while deciding, the last peek) and in everyone's DTO once the round is revealed.
-- **Frontend**: registered in the game selection, with its lobby and game screen (`KoboSession`, `Kobo.store`, `view/kobo/KoboGameScreen.vue`); the table itself is in progress (issue #149). Bots: see "Kobo bots" below (the frontend does not offer them yet).
+- **Frontend**: registered in the game selection, with its lobby and game screen (`KoboSession`, `Kobo.store`, `view/kobo/KoboGameScreen.vue`); the table itself is in progress (issue #149). Bots: see "Kobo bots" below.
 
 ### Kobo bots
 
@@ -189,7 +189,7 @@ Spec: `docs/specs/2026-10-15-mangola-design.md`, plan: `docs/plans/2026-10-15-ma
 - **DTO fields**: `started`, `id`, `gameType`, `version`, `phase`, `currentSeat`, `seatA` (the seat owning rows 1 and 2, who starts), `board` (32 pits, `row * 8 + column`), `players[]` (`seat`, `name`, `current`, `side`, `seeds`, `ready`), `legalPits` (viewer, in play), `availableActions` (`ARRANGE`, `CONFIRM_LAYOUT`, `EDIT_LAYOUT`, `SOW`), `lastMove` (`seat`, `pit`, `trace` of `PICK`, `DROP`, `SKIP_EMPTY`, `CAPTURE`, `RELAY`, `RESUME_AFTER` steps), `setup`, `repetitions` (from 2), `outcome` (`ONGOING` / `FINISHED{winner, reason}`).
 - **Random seam**: the `mangolaRandom` generator is a `ThreadLocalRandomGenerator` outside the `test` profile and constant (every draw 0: the host starts, a random set-up drops all 32 seeds in the first pit of each loop) under it. A preset `setup` and `firstPlayer=host` make a game deterministic without it.
 - **Frontend**: entry PR N7 (registry with `supportsBots: false`, `mangola-room`, `MangolaGameScreen`: shared lobby with the two host options through the generic options mechanism, placement editor, then the board with the sowing animation and its Skip button, the end screen held until the last sowing is shown, a draw shown as `draw`).
-- **Not covered yet**: the frontend offer of bots (N9), the test-position seam of the end-to-end PR (the Cypress specs play from two seeds per pit instead). Bots: see "Mangola bots" below. The architecture rules cover the package (`ArchitectureRules.GAMES`).
+- **Not covered yet**: the test-position seam of the end-to-end PR (the Cypress specs play from two seeds per pit instead). The frontend offers bots (Add bot, seat option `level`: Easy, Medium, Expert; the rules say Expert is strong but not perfect). Bots: see "Mangola bots" below. The architecture rules cover the package (`ArchitectureRules.GAMES`).
 
 ### Mangola bots
 

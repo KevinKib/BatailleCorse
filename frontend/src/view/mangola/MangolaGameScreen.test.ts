@@ -86,7 +86,7 @@ describe('MangolaGameScreen', () => {
       expect(wrapper.find('[data-test="mangola-board"]').exists()).toBe(false);
     });
 
-    it('shows the shared lobby for two players, without Add bot, with the host options', async () => {
+    it('shows the shared lobby for two players, with Add bot and the host options', async () => {
       const { wrapper } = await mountScreen(lobbyView({
         players: [{ seat: 0, name: 'Alice', joined: true }, { seat: 1, name: null, joined: false }],
         optionDescriptors: [
@@ -98,11 +98,35 @@ describe('MangolaGameScreen', () => {
       }));
       expect(wrapper.find('[data-test="lobby"]').exists()).toBe(true);
       expect(wrapper.text()).toContain('Mangola');
-      expect(wrapper.find('[data-test="add-bot"]').exists()).toBe(false);
+      expect(wrapper.find('[data-test="add-bot"]').exists()).toBe(true);
       expect(wrapper.get('[data-test="option-setup"]').text()).toContain('Set-up');
       expect(wrapper.get('[data-test="option-setup"] .choice--on').text()).toBe('Free placement');
       expect(wrapper.get('[data-test="option-firstPlayer"] .choice--on').text()).toBe('Random');
       expect(wrapper.find('[data-test="mangola-board"]').exists()).toBe(false);
+    });
+
+    it('adds a bot through the store, and the host sets its level on the seat (Easy, Medium, Expert)', async () => {
+      const publish = vi.spyOn(webSocketService, 'publish').mockImplementation(() => {});
+      const { wrapper, store } = await mountScreen(lobbyView({
+        players: [{ seat: 0, name: 'Alice', joined: true }, { seat: 1, name: 'Bot 1', joined: true, bot: true, seatOptions: { level: 'greedy' } }],
+        removableBotSeats: [1],
+        seatOptionDescriptors: [
+          { key: 'level', type: 'CHOICE', values: ['random', 'greedy', 'expert'], defaultValue: 'greedy', labelKey: 'options.mangola.level' },
+        ],
+      }));
+      store.restore('g1', 0, 'tok');
+      const level = wrapper.get('[data-test="seat-option-1-level"]');
+      expect(level.findAll('option').map(o => o.text())).toEqual(['Easy', 'Medium', 'Expert']);
+      await level.setValue('expert');
+      expect(publish).toHaveBeenCalledWith('/app/lobby/setSeatOption', expect.stringContaining('"value":"expert"'));
+    });
+
+    it('sends Add bot to the server', async () => {
+      const publish = vi.spyOn(webSocketService, 'publish').mockImplementation(() => {});
+      const { wrapper, store } = await mountScreen(lobbyView({ players: [{ seat: 0, name: 'Alice', joined: true }, { seat: 1, name: null, joined: false }] }));
+      store.restore('g1', 0, 'tok');
+      await wrapper.get('[data-test="add-bot"]').trigger('click');
+      expect(publish).toHaveBeenCalledWith('/app/lobby/addBot', expect.stringContaining('"gameId":"g1"'));
     });
 
     it('the host changes an option and starts the game through the store', async () => {

@@ -53,9 +53,9 @@ describe('game registry', () => {
     expect(morris?.picker).toEqual({ icon: 'pi pi-th-large', severity: 'info' });
   });
 
-  it('givenMangola_thenItIsRegisteredWithoutBotsYetNorShortcutsAndItsOwnPickerStyle', () => {
+  it('givenMangola_thenItIsRegisteredWithBotsButNoShortcutsAndItsOwnPickerStyle', () => {
     const mangola = findGame('mangola');
-    expect(mangola?.supportsBots).toBe(false);
+    expect(mangola?.supportsBots).toBe(true);
     expect(mangola?.hotkeys).toBeUndefined();
     expect(mangola?.picker).toEqual({ icon: 'pi pi-circle', severity: 'help' });
   });
