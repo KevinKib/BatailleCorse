@@ -7,6 +7,7 @@ import org.kevinkib.cardgames.game.GameOptions;
 import org.kevinkib.cardgames.game.OptionDescriptor;
 import org.kevinkib.cardgames.game.OptionType;
 import org.kevinkib.cardgames.game.PlayerId;
+import org.kevinkib.cardgames.mangola.domain.bot.MangolaBotLevel;
 
 import java.util.Arrays;
 import java.util.List;
@@ -22,6 +23,8 @@ public class MangolaFactory implements GameFactory {
     public static final String GAME_TYPE = "mangola";
     public static final String SETUP_KEY = "setup";
     public static final String FIRST_PLAYER_KEY = "firstPlayer";
+    /** The seat option that carries the level of a computer seat. */
+    public static final String LEVEL_KEY = "level";
 
     private static final PlayerId HOST = new PlayerId(0);
     private static final PlayerId GUEST = new PlayerId(1);
@@ -49,6 +52,19 @@ public class MangolaFactory implements GameFactory {
     @Override
     public int maxPlayers() {
         return Mangola.PLAYERS;
+    }
+
+    @Override
+    public boolean supportsBots() {
+        return true;
+    }
+
+    /** A computer seat plays at one of three levels, greedy (Medium) unless the host picks another. */
+    @Override
+    public List<OptionDescriptor> seatOptionDescriptors() {
+        return List.of(new OptionDescriptor(LEVEL_KEY, OptionType.CHOICE,
+                Arrays.stream(MangolaBotLevel.values()).map(MangolaBotLevel::key).toList(),
+                MangolaBotLevel.DEFAULT.key(), "options.mangola.level"));
     }
 
     @Override
