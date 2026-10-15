@@ -12,6 +12,7 @@ import { setConnectionOnline } from '../../composables/useConnectionStatus';
 import { messagesEn } from '../../locales/en';
 import { useKoboSound } from '../../composables/useKoboSound';
 import { MATCH_COACH_STORAGE_KEY, resetKoboMatchCoach } from '../../composables/useKoboMatchCoach';
+import { TEMPO } from '../../model/kobo/tempo';
 
 function lobby(joined: number, mySeat = 0): LobbyView {
   return {
@@ -757,6 +758,61 @@ describe('KoboGameScreen', () => {
         await flushPromises();
         expect(cards(wrapper).length).toBeGreaterThan(0);
         expect(wrapper.get('[data-test="motion-layer"]').attributes('aria-hidden')).toBe('true');
+      });
+
+      it('givenABurstOfEvents_thenTheirFlightsAreStaggeredSoEachOneIsVisible', async () => {
+        vi.useFakeTimers();
+        try {
+          const { wrapper, store } = await playing({ phase: 'DRAW', currentSeat: 1 });
+          event(store, 'DRAW', {});
+          event(store, 'DISCARD_DRAWN', { card: buildKoboCard('4', 'CLUB') });
+          await vi.advanceTimersByTimeAsync(0);
+          const first = cards(wrapper).length;
+          expect(first).toBeGreaterThan(0);
+          const kinds = () => cards(wrapper).map(c => c.attributes('data-ghost'));
+          const firstIds = kinds();
+          // The second event waits for the end of the first flight, then flies.
+          await vi.advanceTimersByTimeAsync(TEMPO.opponent.holdBeforeMs + TEMPO.opponent.flightMs + 50);
+          expect(kinds().some(id => !firstIds.includes(id))).toBe(true);
+        } finally {
+          vi.useRealTimers();
+        }
+      });
+
+      it('givenAMoveInTheOpponentsArea_thenTheSlotsItTouchedAreRinged', async () => {
+        const { wrapper, store } = await playing({ phase: 'DRAW', currentSeat: 1 });
+        event(store, 'BLIND_SWAP', { seat: 1, slot: 0, targetSeat: 0, targetSlot: 1 });
+        await flushPromises();
+        expect(wrapper.findAll('[data-test="motion-mark"]').length).toBeGreaterThan(0);
+      });
+
+      it('givenReducedMotion_thenTheTouchedSlotsAreStillRingedAsOutlines', async () => {
+        window.matchMedia = ((q: string) => ({ matches: q.includes('reduce'), media: q, addEventListener() {}, removeEventListener() {} })) as typeof window.matchMedia;
+        const { wrapper, store } = await playing({ phase: 'DRAW', currentSeat: 1 });
+        event(store, 'BLIND_SWAP', { seat: 1, slot: 0, targetSeat: 0, targetSlot: 1 });
+        await flushPromises();
+        expect(cards(wrapper)).toHaveLength(0);
+        const rings = wrapper.findAll('[data-test="motion-mark"]');
+        expect(rings.length).toBeGreaterThan(0);
+        expect(rings.every(r => r.attributes('data-still') === 'true')).toBe(true);
+      });
+
+      it('givenQueuedEvents_thenAClickIsStillSentAtOnce', async () => {
+        vi.useFakeTimers();
+        try {
+          const { wrapper, store } = await playing({
+            phase: 'DRAW', currentSeat: 1, availableActions: ['MATCH_DISCARD'], discardTop: buildKoboCard('9', 'SPADE'),
+          });
+          const pick = vi.spyOn(store, 'pickSlot');
+          event(store, 'DRAW', {});
+          event(store, 'DISCARD_DRAWN', { card: buildKoboCard('4', 'CLUB') });
+          event(store, 'END_TURN', {});
+          await vi.advanceTimersByTimeAsync(0);
+          await wrapper.get('[data-test="slot-0-2"]').trigger('click');
+          expect(pick).toHaveBeenCalledWith(0, 2);
+        } finally {
+          vi.useRealTimers();
+        }
       });
 
       it('givenEventsAlreadyInTheLogAtMount_thenTheyAreNotPlayedAgain', async () => {

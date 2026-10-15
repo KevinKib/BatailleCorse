@@ -1,6 +1,6 @@
-# Ngola: design
+# Mangola: design
 
-Plan: `docs/plans/2026-10-15-ngola-plan.md`. Written by Claude Opus 5.5 on 2026-10-15 from `origin/main` at
+Plan: `docs/plans/2026-10-15-mangola-plan.md`. Written by Claude Opus 5.5 on 2026-10-15 from `origin/main` at
 `28c5832`. A fifth game: the four-row sowing (mancala) game the owner learned in their youth in the Congo
 and wrote in JavaScript (`KevinKib/Ngola`, `script/`). Two players, real time, bots with levels, a **free
 initial placement** of each player's 32 seeds, played like Three Men's Morris (seat game, lobby options,
@@ -16,8 +16,8 @@ on it; **[Q]** product question, listed at the end with a recommendation.
 
 1. **The rules are the owner's, as coded in `ngola.js` [V] and confirmed by the owner [O]**, and they match
    the documented **Mangola** of the Democratic Republic of the Congo almost rule for rule [S] (see "Name and
-   origin"). The engine is a pure domain context `ngola` (new bounded context, like `threemenmorris`), with
-   the board geometry and the rule switches held as data (`NgolaRules`), so the documented neighbours
+   origin"). The engine is a pure domain context `mangola` (new bounded context, like `threemenmorris`), with
+   the board geometry and the rule switches held as data (`MangolaRules`), so the documented neighbours
    (Mangola as reported in 1952, Omweso, Kiela, Igisoro) can later be offered as variants without a rewrite.
    Version 1 offers **one rule set** (the owner's) and two host options: the setup (free placement by
    default) and who starts.
@@ -81,7 +81,7 @@ on it; **[Q]** product question, listed at the end with a recommendation.
   coordinator that schedules after a `ThinkingDelay` and re-checks the game version under the monitor,
   draws as `Finished(null, reason)` and the shared end screen's `result: 'draw'` (`components/EndGameOverlay.vue`).
 - The checklist `docs/architecture/add-a-game.md` and the names of `docs/architecture/game-conventions.md`
-  apply as they are; the only new name is `ngola`.
+  apply as they are; the only new name is `mangola`.
 - Hidden information per seat already exists (Kobo's cards): `forViewer` is the only projection and hides
   what a seat must not see. The placement phase uses the same pattern.
 - Every DTO carries `version`; the clients drop stale states by version (#214).
@@ -90,8 +90,9 @@ on it; **[Q]** product question, listed at the end with a recommendation.
 
 ## Name and origin
 
-The owner calls the game "Ngola", learned it in their youth and believes it is Congolese (DR Congo or
-Congo-Brazzaville), with no written source [O]. The research below looked for a documented game with the
+The owner first called the game "Ngola", learned it in their youth and believes it is Congolese (DR Congo or
+Congo-Brazzaville), with no written source [O]. The owner decided on 2026-10-15 that the game is called
+**Mangola** (id `mangola`), the documented DR Congo name. The research below looked for a documented game with the
 owner's distinctive rule ("a last seed that would fall into an empty pit goes to the next pit and the turn
 ends").
 
@@ -99,7 +100,7 @@ ends").
 
 | Rank | Name | Evidence | Confidence |
 |------|------|----------|------------|
-| 1 | **Mangola** (DR Congo, Kinshasa and the whole central basin; locally also "Angola", and listed under the DR Congo names "Ngola", "Mongola", "Amungola", "Mungolo") | Same board (4×8, two rows each, 64 seeds), **2 seeds per pit at the start** (the JS default in `case.js`), an opening that leaves **a checkerboard of 4s and empty pits** (the JS "classic" set-up), anticlockwise sowing, at least two seeds to move (singletons cannot move), **"if the last seed is dropped in an empty hole, it is moved to the next hole and the turn ends"** (the owner's rule, word for word), relay sowing, capture from a non-empty inner pit of **both** opposite pits, the next lap beginning again from where the capturing lap began, and "a player who cannot move loses". The seeds themselves are called *ngola* in the description. | **High** that the owner's game is Mangola or a local form of it; "Ngola" is a documented DR Congo name in the same family, without its own rule description. |
+| 1 | **Mangola** (DR Congo, Kinshasa and the whole central basin; locally also "Angola", and listed under the DR Congo names "Ngola", "Mongola", "Amungola", "Mungolo") | Same board (4×8, two rows each, 64 seeds), **2 seeds per pit at the start** (the JS default in `case.js`), an opening that leaves **a checkerboard of 4s and empty pits** (the JS "classic" set-up), anticlockwise sowing, at least two seeds to move (singletons cannot move), **"if the last seed is dropped in an empty hole, it is moved to the next hole and the turn ends"** (the owner's rule, word for word), relay sowing, capture from a non-empty inner pit of **both** opposite pits, the next lap beginning again from where the capturing lap began, and "a player who cannot move loses". The seeds themselves are called *ngola* in the description. | **High** that the owner's game is Mangola or a local form of it; "Mangola" is a documented DR Congo name in the same family, without its own rule description. |
 | 2 | Omweso (Uganda) and the Mongola it lists as a Congolese relative | Same board, territory loop, relay, inner-pit capture of both opposite pits with re-sowing from where the lap began, "last player able to move wins"; **free arrangement of each player's 32 seeds before play** (first player arranges, then the second). But the last seed in an empty pit simply ends the move, there are reverse (clockwise) captures, special opening sowings and special wins. | A close relative, not the game. Its set-up is the documented precedent for free placement. |
 | 3 | Kiela (northern Angola, Kimbundu speakers) | 4 rows (of **10**), relay, inner-pit capture, "cannot move loses"; **expert players rearrange their seeds at their first turn**. The last seed in an empty pit ends the turn; a capture needs only the opposite inner pit (the outer one is taken too if occupied). | Related (same region and family), different game. |
 | 4 | Igisoro (Rwanda, Burundi) | 4×8, relay, capture of both opposite pits re-sown from the start of the turn, but the **capture is optional** (*ndahise* "I pass", answered by *ndakubye*). | Related, different game; the precedent for an optional capture. |
@@ -116,8 +117,8 @@ listed under "Room for documented variants".
 
 The name: Mangola is reported as possibly "the plural form of Angola", "a name also used for this game in
 Kinshasa", or the plural of *N'gola* (a royal title, the word behind "Angola"); the seeds are called *ngola*
-in the Kinshasa description, and *Ngola* is listed among the DR Congo names of mancala games. "Ngola" is
-therefore a legitimate name of this family, and the one the owner knows.
+in the Kinshasa description, and *Ngola* is listed among the DR Congo names of mancala games. "Mangola" is
+therefore a legitimate name of this family, and the one the owner chose (they first called it "Ngola").
 
 ### Sources
 
@@ -140,10 +141,11 @@ therefore a legitimate name of this family, and the one the owner knows.
 
 ### Naming decision [Q4]
 
-- **Id `ngola`** (permanent: URLs, tokens, wire). Short, the owner's name, not the prefix of another id.
-  Forms: `<pkg>` `ngola`, `<Pascal>` `Ngola`, `<camel>` `ngola` (`game-conventions.md`, section 1).
-- **Display name "Ngola"**; picker line "Four-row sowing game from the Congo"; the rules panel opens with
-  "Also known as Mangola in the DR Congo" and one sentence on its origin. We avoid "Angola" (the country) and
+- **Id `mangola`** (permanent: URLs, tokens, wire). Short, the owner's name, not the prefix of another id.
+  Forms: `<pkg>` `mangola`, `<Pascal>` `Mangola`, `<camel>` `mangola` (`game-conventions.md`, section 1).
+- **Display name "Mangola"** (decided by the owner on 2026-10-15); picker line "Four-row sowing game from the
+  Congo"; the rules panel opens with "Also known in the DR Congo under other names (Ngola, Mongola, Amungola,
+  Angola in Kinshasa)" and one sentence on its origin. We avoid "Angola" (the country) and
   "Mancala" (the family name, and a trademark of a commercial two-row game).
 
 ## Rules (the owner's game, version 1)
@@ -227,7 +229,7 @@ reproduces each one [C]):
   candidate pit (at most 16 simulations, each bounded). A player whose every pit with two seeds or more is
   endless has no legal move and loses. **Alternative (the JS):** the move is played and the game ends as a
   draw (`ENDLESS_SOWING`); this lets a losing player pick a known endless pit to escape, and a bot would.
-  Both are one switch in `NgolaRules`.
+  Both are one switch in `MangolaRules`.
 
 ### End of the game
 
@@ -243,7 +245,7 @@ reproduces each one [C]):
   the game with no winner, as in Morris; a safety net, since no endless game appeared in the simulated
   games (the longest took 352 plies) **[Q6]**.
 - No draw offer in version 1 (games are short: a median of 5 to 45 plies in the simulations [C]) **[Q7]**.
-- The result keeps the Morris shape: `NgolaResult(winner, reason)`, `winner` null for a draw.
+- The result keeps the Morris shape: `MangolaResult(winner, reason)`, `winner` null for a draw.
 
 ### Balance (for the owner's information) [C]
 
@@ -281,49 +283,49 @@ which is why the placement protocol (hidden or not, who places first) matters **
 
 ## Domain design
 
-Package `org.kevinkib.cardgames.ngola` (`package-info.java`), `domain` pure (ArchUnit: no Spring, session,
+Package `org.kevinkib.cardgames.mangola` (`package-info.java`), `domain` pure (ArchUnit: no Spring, session,
 presentation, no other game).
 
-- `Pit` helpers on `int` indexes `0..31` (`row * 8 + column`, row 0 = "1"): `NgolaBoard` (immutable `int[32]`,
-  `seeds(pit)`, `sideTotal(seat)`, `withLayout(seat, counts)`), `NgolaGeometry` (constant: each seat's loop,
+- `Pit` helpers on `int` indexes `0..31` (`row * 8 + column`, row 0 = "1"): `MangolaBoard` (immutable `int[32]`,
+  `seeds(pit)`, `sideTotal(seat)`, `withLayout(seat, counts)`), `MangolaGeometry` (constant: each seat's loop,
   `next(pit)`, `isInner(pit)`, `facing(pit)`, `behind(pit)`, `owner(pit)`, names `a1..h4`).
-- `NgolaRules` (record): `setup` (`FREE`, `CHECKERBOARD`, `RANDOM`), `endless` (`ILLEGAL` or `DRAW`),
+- `MangolaRules` (record): `setup` (`FREE`, `CHECKERBOARD`, `RANDOM`), `endless` (`ILLEGAL` or `DRAW`),
   `capture` (`AUTOMATIC`; room for `OPTIONAL`), `capturedSeedsFrom` (`LAP_START`; room for
   `AFTER_CAPTURING_PIT`), `captureTakesOwnPit` (false; true for the 1952 Mangola), `lastSeedInEmptyPit`
-  (`NEXT_PIT_AND_STOP`; room for `STOP`, Omweso and Kiela), `minSeedsToMove` (2). Constant `NgolaRules.OWNER`.
+  (`NEXT_PIT_AND_STOP`; room for `STOP`, Omweso and Kiela), `minSeedsToMove` (2). Constant `MangolaRules.OWNER`.
   Version 1 builds only `OWNER` (with `setup` and `endless` from the options); the other switches exist as
   enums with one value plus a test per value, so a later variant is data plus tests.
 - `Sowing` (pure function): `sow(board, seat, pit, rules) → SowingResult(board, trace, endless)`; the
   trace is a list of `SowingStep`: `Pick(pit, count)`, `Drop(pit)`, `SkipEmpty(pit)` (the last seed passed
   over an empty pit), `Capture(fromPit, facing, behind, count)`, `Relay(pit, count)`, `ResumeAfter(pit)`.
   Used by the aggregate, the legal-move check and the bots.
-- `Ngola` (aggregate, implements `game.Game`): `Ngola(GameId, NgolaRules, PlayerId firstSeat, board or
+- `Mangola` (aggregate, implements `game.Game`): `Mangola(GameId, MangolaRules, PlayerId firstSeat, board or
   null)`; commands `arrange`, `confirmLayout`, `editLayout`, `sow`, `forfeit`; queries `phase()`,
   `currentSeat()`, `board()`, `layoutOf(seat)`, `isReady(seat)`, `legalPits(seat)`, `lastMove()`
-  (`seat`, `pit`, `trace`), `result()`, `repetitions()`, `position()` (immutable `NgolaPosition`: board and
+  (`seat`, `pit`, `trace`), `result()`, `repetitions()`, `position()` (immutable `MangolaPosition`: board and
   seat to move, used by bots and the repetition count), `version()`. A `fromLayout` test factory, as in
   Morris.
-- Exceptions (`NgolaException` and subclasses): `WrongPhaseException`, `NotPlayersTurnException`,
+- Exceptions (`MangolaException` and subclasses): `WrongPhaseException`, `NotPlayersTurnException`,
   `NotYourPitException`, `TooFewSeedsException`, `EndlessSowingException`, `InvalidLayoutException`,
   `AlreadyReadyException`, `NoLayoutException`, `FinishedGameException`.
-- Events (`NgolaEvent`): `LayoutChanged(seat)`, `LayoutConfirmed(seat)`, `LayoutWithdrawn(seat)`,
+- Events (`MangolaEvent`): `LayoutChanged(seat)`, `LayoutConfirmed(seat)`, `LayoutWithdrawn(seat)`,
   `LayoutsRevealed`, `Sown(seat, pit, trace, captures)`, `Finished(result)`.
-- `NgolaFactory`: `GAME_TYPE = "ngola"`, 2 players, `supportsBots() = true` (from the bots PR), options
+- `MangolaFactory`: `GAME_TYPE = "mangola"`, 2 players, `supportsBots() = true` (from the bots PR), options
   `setup` (`free|checkerboard|random`, default `free`) and `firstPlayer` (`host|guest|random`, default
   `random`), seat option `level`; `create` maps `firstPlayer` to the seat that becomes seat A through the
   injected `RandomGenerator`, and draws the `random` set-up there too, so the aggregate stays deterministic.
 
 ## Network contract
 
-- **REST** `/api/ngola/game/{id}`, `/join`, `/play-again` over `SeatGameRest`.
-- **STOMP** (payloads carry `gameId`, `token`): `/app/ngola/start`, `/app/ngola/arrange` (`counts`: 16
-  integers), `/app/ngola/confirmLayout`, `/app/ngola/editLayout`, `/app/ngola/sow` (`pit`: 0..31). A refused
+- **REST** `/api/mangola/game/{id}`, `/join`, `/play-again` over `SeatGameRest`.
+- **STOMP** (payloads carry `gameId`, `token`): `/app/mangola/start`, `/app/mangola/arrange` (`counts`: 16
+  integers), `/app/mangola/confirmLayout`, `/app/mangola/editLayout`, `/app/mangola/sow` (`pit`: 0..31). A refused
   command answers the sender alone with an `ErrorResponse` and its state (`SeatCommands`).
-- **Events** (`NgolaEventType`): `LAYOUT_CHANGED` (it carries no counts, so the other seat learns only that
+- **Events** (`MangolaEventType`): `LAYOUT_CHANGED` (it carries no counts, so the other seat learns only that
   a draft changed; **[H]** whether the seat broadcaster can also skip it for the other seat, checked in N3),
   `LAYOUT_CONFIRMED`, `LAYOUT_WITHDRAWN`, `LAYOUTS_REVEALED`, `SOWN` (data: `seat`, `pit`, `trace`,
   `captured`), `GAME_OVER` (the `SOWN` that ended the game, or a forfeit).
-- **`NgolaDto`** (per viewer): `started`, `id`, `gameType`, `version`, `phase`, `currentSeat`, `seatA`
+- **`MangolaDto`** (per viewer): `started`, `id`, `gameType`, `version`, `phase`, `currentSeat`, `seatA`
   (which seat owns rows 1-2), `board` (32 integers; during a hidden placement the opponent's 16 are `null`
   and the viewer's are their draft), `players[]` (`seat`, `name`, `current`, `side` `A|B`, `seeds` on their
   side, `ready` in the placement phase), `legalPits` (viewer, in play), `availableActions`
@@ -334,13 +336,13 @@ presentation, no other game).
 
 ## Bots
 
-- **Port** `NgolaBot` (`ngola/domain/bot`, pure): `decideLayout(rules, seat, opponentLayout or null) →
+- **Port** `MangolaBot` (`mangola/domain/bot`, pure): `decideLayout(rules, seat, opponentLayout or null) →
   int[16]` and `decideMove(position, seat) → pit`. Every tie broken by an injected `RandomGenerator`.
 - **Levels** (seat option `level`, default `greedy`, labels Easy / Medium / Expert) **[Q8]**:
   - `random`: a uniformly random legal pit; a random layout.
   - `greedy`: one ply: the pit that leaves it the most seeds (captures), tie on the most legal moves left.
   - `expert`: negamax with alpha-beta and iterative deepening under a time budget (default 300 ms,
-    property `ngola.bots.think-ms`, a node cap for tests), move ordering by captures, evaluation = seed
+    property `mangola.bots.think-ms`, a node cap for tests), move ordering by captures, evaluation = seed
     difference + mobility (pits with two seeds or more) − exposure (own inner pits whose facing and behind
     pits are both occupied on the opponent's side next turn) and ±∞ for a finished game. The branching
     factor is about 7 [C] and a move simulation costs tens of drops, so depths of 6 to 10 plies are
@@ -351,10 +353,10 @@ presentation, no other game).
     candidate layouts (the presets, random ones and mutations of the best) and keeps the one whose shallow
     search against the opponent's layout scores best (with hidden placement it plays against a set of
     typical layouts). Budget 1 s. Simple, and replaceable later.
-- **Coordinator** `presentation/bot/NgolaBotCoordinator` (as `MorrisBotCoordinator`): on each broadcast,
+- **Coordinator** `presentation/bot/MangolaBotCoordinator` (as `MorrisBotCoordinator`): on each broadcast,
   for a bot seat that has an action, compute the decision **outside the game monitor** on a snapshot of the
-  position, then under the monitor re-check the version and act through `NgolaGameActions`; delay
-  `ngola.bots.delay-min-ms` 700 / `delay-max-ms` 1300 (0 under `test`), plus the client's animation time is
+  position, then under the monitor re-check the version and act through `MangolaGameActions`; delay
+  `mangola.bots.delay-min-ms` 700 / `delay-max-ms` 1300 (0 under `test`), plus the client's animation time is
   not waited for: the client queues the bot's trace after the human's **[Q9]**. A failing strategy falls back
   to the first legal pit (or a checkerboard layout).
 - Rematch, disconnection and bot seats receiving no message: unchanged from Morris (`claimBotsOf`,
@@ -362,12 +364,12 @@ presentation, no other game).
 
 ## Frontend
 
-- Files per `add-a-game.md`: `model/ngola/NgolaState.ts` (DTO types, pit names, rotation of the board for the
-  viewer, trace helpers), `application/NgolaSession.ts` (`NGOLA_SESSION_CONFIG`; `arrange`, `confirmLayout`,
-  `editLayout`, `sow`), `state/Ngola.store.ts`, `composables/useNgolaBootstrap.ts`,
-  `components/ngola/` (`NgolaBoard.vue`, `NgolaPit.vue`, `NgolaPlacementEditor.vue`,
-  `useSowingAnimation.ts`), `view/ngola/NgolaGameScreen.vue`, locales `ngola` (rules), `ngolaUi`,
-  `options.ngola`.
+- Files per `add-a-game.md`: `model/mangola/MangolaState.ts` (DTO types, pit names, rotation of the board for the
+  viewer, trace helpers), `application/MangolaSession.ts` (`MANGOLA_SESSION_CONFIG`; `arrange`, `confirmLayout`,
+  `editLayout`, `sow`), `state/Mangola.store.ts`, `composables/useMangolaBootstrap.ts`,
+  `components/mangola/` (`MangolaBoard.vue`, `MangolaPit.vue`, `MangolaPlacementEditor.vue`,
+  `useSowingAnimation.ts`), `view/mangola/MangolaGameScreen.vue`, locales `mangola` (rules), `mangolaUi`,
+  `options.mangola`.
 - The client holds no rule: legal pits, captures and the end come from the server; the placement editor
   only counts seeds left (32 minus the sum) to enable Confirm, and the server re-checks.
 - Board orientation: each viewer sees their own half at the bottom (the board is rotated for seat A), so
@@ -412,7 +414,7 @@ options each and a recommendation; it is not built by this PR.
 
 ## Room for documented variants (not built)
 
-Each is a switch of `NgolaRules` plus tests, a `variant` option and a rules-panel section:
+Each is a switch of `MangolaRules` plus tests, a `variant` option and a rules-panel section:
 
 - **Mangola 1952 (Comhaire-Sylvain):** 2 per pit, compulsory redistributing first move, second move from an
   end pit, capture takes the capturing pit too; the re-sowing start to be read in the 1952 text.
@@ -453,7 +455,7 @@ port of the JS minimax (rewritten); no "Angola" or "Mancala" in the name.
   ready. Alternatives: sequential (Omweso: the first player arranges first, visible), or visible live.
 - **Q3 Placement limits and set-up option.** Recommend: no per-pit cap; `setup` = free (default),
   checkerboard, random.
-- **Q4 Name.** Recommend id `ngola`, display "Ngola", "also known as Mangola" in the rules panel.
+- **Q4 Name.** Recommend id `mangola`, display "Mangola", "also known under other names (Ngola, Mongola, Amungola, Angola)" in the rules panel. Decided by the owner on 2026-10-15: the game is called Mangola; id `mangola`.
 - **Q5 Who starts.** Recommend a `firstPlayer` option, default `random`; the starting player takes seat A.
 - **Q6 Repetition draw.** Recommend the third occurrence of a position with the same player to move ends
   in a draw (a safety net).

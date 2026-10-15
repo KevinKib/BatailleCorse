@@ -26,7 +26,9 @@ import KoboScoreSheet from '../../components/kobo/KoboScoreSheet.vue';
 import KoboFinalTotals from '../../components/kobo/KoboFinalTotals.vue';
 import KoboMotionLayer, { type MotionRect, type MotionTarget } from '../../components/kobo/KoboMotionLayer.vue';
 import KoboSoundToggle from '../../components/kobo/KoboSoundToggle.vue';
-import { planMovements, type MotionAnchor, type Movement } from '../../model/kobo/motion';
+import { eventSpanMs, planMovements, type MotionAnchor, type Movement } from '../../model/kobo/motion';
+import { createTempoQueue } from '../../model/kobo/queue';
+import { prefersReducedMotion } from '../../composables/usePileAnimation';
 import type { KoboLogEntry } from '../../model/kobo/KoboEvents';
 import { liveAnnouncement } from '../../model/kobo/announcement';
 import { useKoboSound } from '../../composables/useKoboSound';
@@ -237,6 +239,8 @@ function resolveAnchor(anchor: MotionAnchor): MotionTarget | null {
   }
 }
 
+const tempoQueue = createTempoQueue(() => Date.now());
+
 const nextFrame = () => new Promise<void>(resolve => {
   if (typeof requestAnimationFrame === 'function') requestAnimationFrame(() => resolve());
   else setTimeout(resolve, 16);
@@ -254,7 +258,11 @@ async function playEvent(entry: KoboLogEntry) {
   const withFace = (list: Movement[]) => list.map(m => (m.flip && !m.card ? { ...m, card: store.game?.drawnCard ?? null } : m));
   let ready = withFace(moves);
   if (flipsWithoutFace(ready)) { await nextFrame(); ready = withFace(moves); }
-  motionLayer.value?.play(ready);
+  // Events of a burst play one after the other, within bounds (see `TEMPO.queue`): past them an event only gets its
+  // rings, at once. Under reduced motion nothing flies, so there is nothing to wait for.
+  const admission = prefersReducedMotion() ? { startInMs: 0, motion: false } : tempoQueue.admit(eventSpanMs(ready));
+  if (admission.startInMs > 0) await new Promise<void>(resolve => { setTimeout(resolve, admission.startInMs); });
+  motionLayer.value?.play(ready, { marksOnly: !admission.motion });
 }
 
 // The log is newest first: what is new is what comes before the head I already knew.
