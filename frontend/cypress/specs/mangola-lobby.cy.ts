@@ -16,10 +16,10 @@ function hostLobby(name = 'Alice') {
 }
 
 describe('Mangola lobby', () => {
-  it('opens a two-seat lobby without Add bot, Start disabled until the second player joins', () => {
+  it('opens a two-seat lobby with Add bot, Start disabled until the second player joins', () => {
     hostLobby().then((id) => {
       cy.get('[data-test="lobby"]').should('contain.text', 'Mangola');
-      cy.get('[data-test="add-bot"]').should('not.exist');
+      cy.get('[data-test="add-bot"]').should('be.visible');
       cy.get('[data-test="start"]').should('be.disabled');
       cy.get('[data-test="player-count"]').should('contain.text', '1 / 2');
       joinAsScriptedPlayer(id, 'Bob', 'mangola').then(() => {
