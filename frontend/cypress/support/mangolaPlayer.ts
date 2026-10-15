@@ -1,0 +1,58 @@
+// Mangola commands for a scripted player (see stompPlayer.ts) and the two games the specs replay.
+import { joinAsScriptedPlayer, type ScriptedPlayer } from './stompPlayer';
+
+export type Scripted = ScriptedPlayer & { token: string; seat: number };
+
+/** Placement: my whole layout, 16 counts in the order of my loop. */
+export const arrange = (p: Scripted, counts: number[]) => cy.then(() => p.publish('/app/mangola/arrange', { counts }));
+export const confirmLayout = (p: Scripted) => cy.then(() => p.publish('/app/mangola/confirmLayout', {}));
+export const sow = (p: Scripted, pit: number) => cy.then(() => p.publish('/app/mangola/sow', { pit }));
+
+/** Two seeds in every pit: the opening whose first player wins in five plies (hand-checked against the rules). */
+export const TWO_PER_PIT = Array<number>(16).fill(2);
+
+/** The pit named `a1..h4` (column letter, row number), numbered as the server does: row * 8 + column. */
+export const pitName = (pit: number) => `${String.fromCharCode(97 + (pit % 8))}${Math.floor(pit / 8) + 1}`;
+
+export const pitEl = (pit: number) => cy.get(`[data-test="pit-${pitName(pit)}"]`);
+
+/** My turn on the board: the pit I may sow is selectable (a pit is inert while a sowing is shown). */
+export const canSow = (pit: number) => pitEl(pit).should('have.attr', 'data-selectable', 'true');
+
+/**
+ * The browser as the host (seat 0, who starts: the option is set to Host) against a scripted guest, in the
+ * placement phase of a free game. Yields the guest and the game id.
+ */
+export function asHostInPlacement(): Cypress.Chainable<{ id: string; bob: Scripted }> {
+  cy.visit('/games/mangola');
+  cy.get('[data-test="name"]').type('Alice');
+  cy.get('[data-test="new-game"]').click();
+  cy.url({ timeout: 10000 }).should('match', /\/games\/mangola\/room\/.+/);
+  cy.get('[data-test="lobby"]', { timeout: 10000 }).should('be.visible');
+  cy.get('[data-test="option-firstPlayer"] .choice').contains('Host').click();
+  cy.get('[data-test="option-firstPlayer"] .choice--on').should('contain.text', 'Host');
+  return cy.location('pathname').then((path) => {
+    const id = path.split('/room/')[1];
+    return joinAsScriptedPlayer(id, 'Bob', 'mangola').then((bob) => {
+      cy.get('[data-test="start"]').should('not.be.disabled').click();
+      cy.get('[data-test="placement-editor"]', { timeout: 10000 }).should('be.visible');
+      return cy.wrap({ id, bob });
+    });
+  });
+}
+
+/** Both players lay out two seeds per pit and confirm; the board appears with the host to move. */
+export function playFromTwoPerPit(): Cypress.Chainable<{ id: string; bob: Scripted }> {
+  return asHostInPlacement().then(({ id, bob }) => {
+    cy.get('[data-test="preset-two-per-pit"]').click();
+    cy.get('[data-test="seeds-left"]').should('contain.text', 'All seeds placed');
+    arrange(bob, TWO_PER_PIT);
+    confirmLayout(bob);
+    cy.get('[data-test="opponent-half"]').should('have.attr', 'data-ready', 'true');
+    cy.get('[data-test="confirm"]').should('not.be.disabled').click();
+    cy.get('[data-test="mangola-board"]', { timeout: 10000 }).should('be.visible');
+    cy.get('[data-test="placement-editor"]').should('not.exist');
+    canSow(8);
+    return cy.wrap({ id, bob });
+  });
+}
