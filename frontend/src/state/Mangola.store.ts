@@ -24,6 +24,9 @@ export type MangolaPreset = 'checkerboard' | 'two-per-pit' | 'random' | 'clear';
 
 const NO_MARKS: LastMoveMarks = { start: null, captured: [] };
 
+/** The refusal of a confirmation that leaves the player who starts without a move. */
+export const STUCK_START_KEY = 'mangola.errors.stuckStart';
+
 export const useMangolaStore = defineStore('mangola-store', () => {
   const state = ref<MangolaView | null>(null);
   const gameId = ref<string | null>(null);
@@ -34,6 +37,8 @@ export const useMangolaStore = defineStore('mangola-store', () => {
   const draft = ref<Draft>(clearLayout());
   const dirty = ref(false);
   let arrangeTimer: ReturnType<typeof setTimeout> | null = null;
+  // The key of the last refused confirmation, until I change the layout, confirm again or the phase moves on.
+  const placementError = ref<string | null>(null);
 
   const game = computed<MangolaState | null>(() =>
     state.value && state.value.started ? state.value : null);
@@ -64,6 +69,7 @@ export const useMangolaStore = defineStore('mangola-store', () => {
     cancelArrange();
     dirty.value = false;
     draft.value = clearLayout();
+    placementError.value = null;
   }
 
   function applyEvent(event: MangolaSessionEvent) {
@@ -81,6 +87,8 @@ export const useMangolaStore = defineStore('mangola-store', () => {
       case 'game-id-change': gameId.value = event.gameId; break;
       case 'error':
         room.onError(state.value?.started === true, event.message);
+        // A refused confirmation stays in the editor, which says why (the key is mapped to a text by the screen).
+        if (event.message === STUCK_START_KEY && phase.value === 'placement') placementError.value = event.message;
         break;
       case 'removed':
         state.value = null;
@@ -156,6 +164,7 @@ export const useMangolaStore = defineStore('mangola-store', () => {
     if (!editable.value) return;
     draft.value = change(draft.value);
     dirty.value = true;
+    placementError.value = null;
     cancelArrange();
     if (seedsLeft.value === 0) arrangeTimer = setTimeout(sendDraft, ARRANGE_DEBOUNCE_MS);
   }
@@ -177,6 +186,7 @@ export const useMangolaStore = defineStore('mangola-store', () => {
   /** Confirm the layout: the pending edit goes first, so the server confirms what the player sees. */
   function confirmLayout() {
     if (!canConfirm.value) return;
+    placementError.value = null;
     if (dirty.value && !sendDraft()) return;
     try { session.confirmLayout(); } catch { /* socket down: the screen shows it, the button stays */ }
   }
@@ -209,7 +219,7 @@ export const useMangolaStore = defineStore('mangola-store', () => {
     forfeitNotice: presence.forfeitNotice,
     isMyTurn, isDraw, iWon, repeatedTwice, phase, mySide, rows, arrowOf, canSow, opponentLastMarks,
     me, opponent, myReady, opponentReady, draftOnlyEndless,
-    draft, seedsLeft, editable, canConfirm,
+    draft, seedsLeft, editable, canConfirm, placementError,
     addSeed: addDraftSeed, removeSeed: removeDraftSeed, applyPreset, confirmLayout, editLayout, sow,
     applyEvent,
     create: (name?: string) => session.create(name),

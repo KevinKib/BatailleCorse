@@ -435,6 +435,55 @@ export interface MorrisBoardMessages {
   pointLabel: string;                  // {point} then the state words, e.g. "Centre, White piece, can move"
 }
 
+// Screen text of the Mangola board and placement editor. Placeholders use `{name}` and are filled by `format()` / `plural()`.
+export interface MangolaUiMessages {
+  board: {
+    label: string;                     // name of the board group
+    yourSide: string;                  // legend of the viewer's half (bottom)
+    opponentSide: string;              // legend of the opponent's half (top)
+  };
+  pit: {
+    label: string;                     // '{pit}' = name (b3), '{state}' = the state words joined by commas
+    seeds: PluralForms;                // '{n}' = seeds in the pit
+    hidden: string;                    // the pit is hidden from me
+    canSow: string;                    // I may sow from this pit now
+    lastStart: string;                 // the opponent's last move started here
+    lastEnd: string;                   // the opponent's last move ended here
+    captured: PluralForms;             // '{n}' = seeds the opponent's last move took from this pit
+    capturedUnknown: string;           // captured, number of seeds unknown
+    tapToAdd: string;                  // editor: a tap adds a seed
+    tapToRemove: string;               // editor: a tap removes a seed
+  };
+  placement: {
+    title: string;
+    boardLabel: string;                // name of the layout group
+    intro: string;                     // one line under the title
+    seedsLeft: PluralForms;            // '{n}' = seeds still to place
+    allPlaced: string;                 // 0 seeds left
+    add: string;                       // mode button: a tap adds a seed
+    remove: string;                    // mode button: a tap removes a seed
+    presets: {
+      label: string;
+      checkerboard: string;
+      twoPerPit: string;
+      random: string;
+      clear: string;
+    };
+    confirm: string;
+    confirmDisabledHint: string;       // '{n}' = seeds left: why Confirm is not available
+    editLayout: string;
+    confirmedWaiting: string;          // I confirmed, the opponent has not yet
+    opponent: string;                  // '{player}' = the opponent's name, '{status}' = placing or ready
+    opponentPlacing: string;
+    opponentReady: string;
+    opponentAnonymous: string;         // name used when the opponent has none
+    endlessWarning: string;            // draftOnlyEndless
+  };
+  errors: {
+    stuckStart: string;                // `mangola.errors.stuckStart`: the layouts leave the starter without a move
+  };
+}
+
 // Screen text of the Three Men's Morris table. Placeholders use `{name}` and are filled by `format()` / `plural()`.
 export interface ThreeMenMorrisUiMessages {
   white: string;                       // colour of seat 0, who always starts
@@ -494,6 +543,7 @@ export interface Messages {
   turn: TurnMessages;      // turn cue shared by the tables
   threeMenMorris: RulesMessages;    // Three Men's Morris
   morrisBoard: MorrisBoardMessages; // Three Men's Morris board
+  mangolaUi: MangolaUiMessages; // Mangola board and placement editor
   threeMenMorrisUi: ThreeMenMorrisUiMessages; // Three Men's Morris screens
   morrisLobby: MorrisLobbyMessages; // Three Men's Morris lobby options
   morrisVariantRules: Record<'achi' | 'picaria', RulesMessages>; // rules panel of the variants (Tapatan: threeMenMorris)
