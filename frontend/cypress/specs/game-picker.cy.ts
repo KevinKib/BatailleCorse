@@ -41,6 +41,23 @@ describe('Game picker', () => {
       cy.contains('2 players');
       cy.contains('button', 'Play');
     });
+    cy.get('[data-test="choice-president"]').within(() => {
+      cy.contains('h2', 'President');
+      cy.contains('Climb the table: shed your cards first and take the top title.');
+      cy.contains('3–8 players');
+      cy.contains('button', 'Play');
+    });
+  });
+
+  it('plays President: Game home with New game and Join game, Back returns to the picker', () => {
+    cy.visit('/games');
+    cy.get('[data-test="play-president"]').click();
+    cy.location('pathname').should('eq', '/games/president');
+    cy.contains('h1', 'President').should('be.visible');
+    cy.contains('button', 'New game').should('be.visible');
+    cy.contains('button', 'Join game').should('be.visible');
+    cy.get('[data-test="back"]').click();
+    cy.location('pathname').should('eq', '/games');
   });
 
   it("plays Three Men's Morris: Game home with New game and Join game, Back returns to the picker", () => {

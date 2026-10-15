@@ -27,7 +27,7 @@ export function disconnectAllScriptedPlayers(): Promise<void> {
 }
 
 /** The game types a scripted player can join, as the server names them (`/api/lobby`'s `gameType`). */
-export type ScriptedGameType = 'bataille-corse' | 'bullshit' | 'kobo' | 'three-men-morris';
+export type ScriptedGameType = 'bataille-corse' | 'bullshit' | 'kobo' | 'three-men-morris' | 'president';
 
 /** Where a guest claims a seat: Bataille Corse keeps the historical unprefixed REST base. */
 const joinPath = (gameType: ScriptedGameType, gameId: string) =>
