@@ -4,6 +4,14 @@ import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.president.domain.President;
+import org.kevinkib.cardgames.president.domain.RandomDeckSource;
+import org.kevinkib.cardgames.president.domain.ScriptedDeckSource;
+import org.kevinkib.cards.domain.Card;
+import org.mockito.ArgumentCaptor;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import org.kevinkib.cardgames.sessionmanagement.core.application.RoomCreated;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +30,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.kevinkib.cardgames.president.domain.PresidentFixtures.card;
 
 /** Under the {@code test} profile an e2e test fixes the deal of a room over HTTP before the game starts. */
@@ -31,6 +41,9 @@ class PresidentFixedDealIT {
 
     @LocalServerPort
     private int port;
+
+    @MockitoSpyBean
+    private ScriptedDeckSource decks;
 
     @Autowired
     private SessionService sessionService;
@@ -97,6 +110,17 @@ class PresidentFixedDealIT {
         assertThat(send(HttpMethod.DELETE, room.gameId(), null).getStatusCode().value(), is(204));
         President president = start(room);
 
-        assertThat(president.hand(new PlayerId(0)).containsAll(java.util.List.of(card("KH"), card("KS"))), is(false));
+        // The seed is drawn at random by the factory, so replay the plain random source with the seed the deal
+        // actually used: a cleared fixed deal must be exactly that random deck, with nothing fixed in front.
+        ArgumentCaptor<Long> seed = ArgumentCaptor.forClass(Long.class);
+        verify(decks).deck(eq(new GameId(room.gameId())), eq(1), seed.capture());
+        List<Card> random = new RandomDeckSource().deck(new GameId(room.gameId()), 1, seed.getValue());
+        for (int seat = 0; seat < 3; seat++) {
+            List<Card> expected = new ArrayList<>();
+            for (int i = seat; i < random.size(); i += 3) {
+                expected.add(random.get(i));
+            }
+            assertThat(new HashSet<>(president.hand(new PlayerId(seat))), is(new HashSet<>(expected)));
+        }
     }
 }
