@@ -16,10 +16,11 @@ offered variant, against humans and bots, in a series of small PRs.
 2. **Players and deck**: 3 to 8 players, one 52-card deck, no jokers; no 2-player mode, no two-deck mode.
 3. **Classic defaults (the owner's rules)**: re-entry after a pass; equal play on, binding the next player to
    match or pass, repeating along the chain; the four cards of a rank played in succession close the trick,
-   and their last holder may complete them out of turn (optional, window open until the next play); forbidden
-   finish on a 2; exchange 2/1 (best cards forced, free return); the king of hearts holder leads round 1 with
+   and their last holder may complete them out of turn (optional, window open from the second play of the
+   chain until the next play; the first pass ends the binding); a quad played at once closes the trick
+   (`quadClears = on`); forbidden finish on a 2; exchange 2/1 (best cards forced, free return); the king of hearts holder leads round 1 with
    any play; the Scum leads rounds 2+; points by place; the first player out closes the trick, later ones
-   do not. Presets (Classic, Pagat basic, Strict, Party, Daifugō-like) are a lobby convenience, unknown to the
+   do not (a forbidden finisher out first closes nothing: only the player taking 1st place does). Presets (Classic, Pagat basic, Strict, Party, Daifugō-like) are a lobby convenience, unknown to the
    server.
 4. **Exchange flow**: the server takes the low ranks' best cards automatically; the high ranks choose their
    returns freely, all at once, no timeout (the disconnect forfeit covers absence).
@@ -31,11 +32,15 @@ Other decisions (spec §13.1, items 6-17): revolution as specified (no jokers), 
 rounds, forfeit down to two players, every option combination accepted, `afterPass = out` reading, variants
 dropped for now (spec §3.5).
 
-Still open (spec §13.2), none blocks P2 or P3: **O1** whether a pass ends the equal-play binding; **O2** the
-default match length (`rounds-5`, recommended, or `endless`); **O3** whether a forbidden finisher going out
-first closes the trick; **O4** whether a single lead opens the completion window; **O5** whether a quad
-played at once closes the trick by default. O1, O4 and O5 must be answered before V1 or V2 starts; their
-working assumptions are written in the spec.
+Answers of 2026-10-15 to the former open questions (spec §13.1, items 18 to 23): **O1** the first pass ends
+the equal-play binding; **O2** default match length `rounds-5` (`endless` stays an option); **O3** a
+forbidden finisher going out first does not close the trick (only the player taking 1st place does); **O4** a
+single lead does not open the completion window (an equal play is needed first); **O5** a quad played at once
+closes the trick by default (`quadClears` is `on` by default). The owner also accepted the seven P2 scoring
+and exchange rules (#223 merged).
+
+Still open (spec §13.2), blocks nothing: **N1** whether the Neutrals who exchange in `scaled` mode (6 to 8
+players) get distinct names (today all "Neutral").
 
 ## Rules for every PR
 
@@ -77,8 +82,8 @@ working assumptions are written in the spec.
 | B1 | `feat: President bot strategy` | M-L | P2 | view parity (in B2), memory, heuristic decision table (parameterised), self-play | strategy quality is subjective | - |
 | B2 | `feat: President bots at the table` | M | B1, P3 | coordinator with a manual scheduler, broadcaster skips bots, bot game IT | stale tasks | - |
 | B3 | `feat: play President against bots` | S-M | B2, F2 | Vitest; Cypress lobby with bots, a round against a hard bot | shared lobby specs | - |
-| V1 | `feat: President equal play, the four and completion out of turn` | L | P3, B2 (F2 for the UI part), O1 and O4 answered | worked examples of spec §3.1.2 as parameterised rows; ordering of a completion against the next play and against passes; DTO `completion` lifetime; bot completion; Cypress "Complete the four" | the first out-of-turn command of the game | - |
-| V2 | `feat: President cuts, quad, forbidden finish and must play` | M | V1, O5 answered | beat and effect matrix per option value, parameterised; Cypress per visible indicator | cuts against the equal-play binding | - |
+| V1 | `feat: President equal play, the four and completion out of turn` | L | P3, B2 (F2 for the UI part) | worked examples of spec §3.1.2 as parameterised rows; ordering of a completion against the next play and against passes; DTO `completion` lifetime; bot completion; Cypress "Complete the four" | the first out-of-turn command of the game | - |
+| V2 | `feat: President cuts, quad, forbidden finish and must play` | M | V1 | beat and effect matrix per option value, parameterised; Cypress per visible indicator | cuts against the equal-play binding | - |
 | V3 | `feat: President revolution and aces high` | M | V2 | rank order under each option and revolution state; exchange best cards under each order | revolution timing | - |
 | V4 | `feat: President runs and suit lock` | M-L | V3 | run parsing and beating tables; lock tables; `LegalPlays` enumeration size | `LegalPlays` growth with runs | - |
 | E1 | `test: President end-to-end matrix` | M | V4, B3 | Cypress: each preset through a scripted round, a completion out of turn, rematch, disconnect and forfeit | e2e duration | - |
@@ -88,7 +93,7 @@ Total about 18 to 21 days of agent work, of which D0 and P1 (about 2.5) are done
 one PR if the diff stays under about 800 lines. F3 and F4 can run in parallel after F2; B1 can start right
 after P2 (pure domain), in parallel with P3. The variant PRs are in series (they all extend `BeatRule`,
 `PlayEffects` and `LegalPlays`). V1 ships a default rule of the owner: until it merges, the table plays
-without equal play; it may start as soon as P3, F2 and B2 are merged, in parallel with B3.
+without equal play; V2 ships `quadClears = on` and the forbidden finish the same way; V1 may start as soon as P3, F2 and B2 are merged, in parallel with B3.
 
 ## Conflicts
 
@@ -150,7 +155,7 @@ What P1 left that later PRs adjust (owner's decisions of 2026-10-15):
   `ON`), `Revolution.TRICK`, `Runs.ANY_SUIT`; `DeckSpec(decks, jokers)` and the joker and multi-deck branches
   of `RandomDeckSource` (P3).
 
-## P2 `feat: President match, exchange and scoring (domain)` (M-L, in progress #223)
+## P2 `feat: President match, exchange and scoring (domain)` (M-L, done in #223)
 
 - Phases `EXCHANGE` and `FINISHED`; `ready` barrier; next round: deal from the previous Scum, titles in
   force, exchange, `nextLead`.
@@ -165,7 +170,7 @@ What P1 left that later PRs adjust (owner's decisions of 2026-10-15):
 - **The first player out closes the trick** (owner, 2026-10-15; spec §3.1 and §6.3): when the play that
   takes 1st place is made, the trick ends at once (`TrickWon` reason `FIRST_OUT`) and the next seat with
   cards leads; later finishers keep P1's behaviour. Forbidden finishers are V2's, so in P2 the first player
-  out always takes 1st place. If #223 merges without it, P3 carries it.
+  out always takes 1st place. #223 merged without it, so P3 carries it.
 - Tests first:
   - `ExchangePlanTest` (parameterised: `n` from 3 to 8 × `exchange` → pairs and amounts).
   - `BestCardsTest` (parameterised: hands → the k best, ties of rank irrelevant).
@@ -269,15 +274,15 @@ summary) and `shared-lobby.cy.ts` updated.
 
 ## V1 `feat: President equal play, the four and completion out of turn` (L)
 
-The owner's equal-play rules (spec §3.1.1), the default of the Classic preset. Needs O1 and O4 answered (or
-their working assumptions confirmed).
+The owner's equal-play rules (spec §3.1.1), the default of the Classic preset. O1 (the first pass ends the
+binding) and O4 (a single lead does not open the window) are decided.
 
 - Key `equalPlay` (`on|off`, default `on`): descriptor, parsing, locales, presets unlocked.
 - Domain: `BeatRule` equal case; `Trick` chain (rank, cards in succession) and `MATCH_OR_PASS` binding that
-  repeats along the chain (end per O1); the four completed in succession closes the trick (reason `QUAD`),
+  repeats along the chain (the first pass ends it, O1: the next seat gets the `BEAT` constraint); the four completed in succession closes the trick (reason `QUAD`),
   the completing player leads or, if out, the next seat with cards; `Completion` (missing cards, holder) and
   `completion(seat)`; `play` accepted out of turn only as a completion, the window open from the second play
-  of the chain (O4) until the next play or the trick's end, passes leaving it open;
+  of the chain (a lone lead never opens it, O4) until the next play or the trick's end, passes leaving it open;
   `CompletionClosedException`; `availableActions` `COMPLETE`; `LegalPlays` under the binding.
 - Presentation: `PresidentDto` `chain` (public) and `completion` (holder only), event type `COMPLETION`; the
   `/president/play` destination serves both; a completion refused as too late is answered to the sender alone.
@@ -285,8 +290,10 @@ their working assumptions confirmed).
   coordinator schedules a completion task for a bot that is not the current seat and drops it when refused.
 - Frontend: the "9 or nothing" and chain chips; the "Complete the four" button for the holder while
   `completion` is present, in or out of turn.
-- Tests first: the worked examples of spec §3.1.2 as parameterised rows (hands, command sequence, expected
-  trick state after each command), plus: an out-of-turn play that is not a completion refused without
+- Tests first: the worked examples of spec §3.1.2 (1 to 8; example 9 belongs to V2) as parameterised rows
+  (hands, command sequence, expected trick state after each command), among them example 6 (first pass ends
+  the binding, D beats the 9s), 7 (D free, equal 9 rebinds A) and 8 (a lone lead: out-of-turn triple refused
+  with `NotPlayersTurnException`), plus: an out-of-turn play that is not a completion refused without
   mutation; a completion after a play refused (`CompletionClosedException`), after one or several passes
   accepted; the completion by a passer under `afterPass = out`; a completion that empties the hand (and, when
   first out, `FIRST_OUT` and `QUAD` agree on the next leader); DTO: `completion` only in the holder's DTO,
@@ -299,9 +306,11 @@ their working assumptions confirmed).
 
 ## V2 `feat: President cuts, quad, forbidden finish and must play` (M)
 
-Keys `twoCuts`, `quadClears` (quad played at once), `forbiddenFinish` (default `lastPlace`), `mustPlay`.
+Keys `twoCuts`, `quadClears` (a quad played at once closes the trick; `on` by default, O5; the Pagat basic,
+Strict and Daifugō-like presets set it `off`), `forbiddenFinish` (default `lastPlace`), `mustPlay`.
 Domain: `BeatRule` cut cases, `PlayEffects` clears with reasons, forbidden finish places (a forbidden
-finisher out first does not close the trick, per O3), `mustPlay` in `pass` (a completion is never
+finisher out first does not close the trick, O3 decided; only the player taking 1st place does, so the
+`FIRST_OUT` rule of P2/P3 keys on 1st place; worked example 9 of spec §3.1.2 as a test row), `mustPlay` in `pass` (a completion is never
 compulsory), `LegalPlays` with cuts. Frontend: trick-won reason in the log, forbidden finish marker in the
 summary. Bot: keep a cutting 2, avoid a forbidden finish (already planned in B1). Tests first: a
 parameterised effect matrix (option value × play × top → beats, clear reason); scenario tests from the spec
@@ -337,13 +346,14 @@ on the e2e stack, one at a time.
 ## Risks
 
 - **Rule ambiguity**: President has no canonical rulebook; the owner's rules are now the defaults, the other
-  uncertain rules ([U] in the spec) are options with a documented choice, and O1 to O5 stay open with working
-  assumptions. Any default can change without touching the model.
+  uncertain rules ([U] in the spec) are options with a documented choice; O1 to O5 are answered (2026-10-15)
+  and only the small question N1 (Neutral names in `scaled` mode) is open. Any default can change without
+  touching the model.
 - **Out-of-turn completion** (V1): the first command of the game accepted from a seat that is not the current
   one. Mitigated by the one-deck rule (a single possible holder, no race between players), the aggregate's
   `synchronized` commands and a completion condition re-checked at processing time (a play closes the window,
   passes do not), a two-thread test, and the DTO flag only in the holder's view.
-- **P2 in flight** (#223): the first-finisher rule is added to its scope; if it merges first, P3 carries it.
+- **First-finisher rule** (merged P2 #223 did not carry it): P3 adds it, keyed on the player taking 1st place.
 - **Option explosion**: sixteen keys. Mitigated by presets, grouped lobby options, and the rule that every
   combination is legal; the effect matrix tests cover every value, not every combination (self-play covers
   random combinations).
