@@ -188,6 +188,64 @@ describe('English messages', () => {
   });
 });
 
+describe('President messages', () => {
+  const emptyLeaves = (root: unknown, name: string): string[] => {
+    const empty: string[] = [];
+    const visit = (node: unknown, path: string) => {
+      if (typeof node === 'string') {
+        if (!node.trim()) empty.push(path);
+      } else if (node && typeof node === 'object') {
+        for (const [key, value] of Object.entries(node)) visit(value, `${path}.${key}`);
+      }
+    };
+    visit(root, name);
+    return empty;
+  };
+
+  it('givenThePicker_thenPresidentIsNamedWithItsPlayerCount', () => {
+    expect(messagesEn.gamePicker.games.president!.name).toBe('President');
+    expect(messagesEn.gamePicker.games.president!.players).toBe('3–8 players');
+  });
+
+  it('givenThePresidentTexts_thenEveryLeafStringIsNonEmpty', () => {
+    expect(emptyLeaves(messagesEn.presidentUi, 'presidentUi')).toEqual([]);
+    expect(emptyLeaves(messagesEn.president, 'president')).toEqual([]);
+    expect(emptyLeaves(messagesEn.options.president, 'options.president')).toEqual([]);
+  });
+
+  it('givenThePresidentRules_thenTheyHaveATitleAndABodyPerSection', () => {
+    expect(messagesEn.president.sections.length).toBeGreaterThan(0);
+    for (const section of messagesEn.president.sections) {
+      expect(section.title).toBeTruthy();
+      if (section.kind === 'text') expect(section.body.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('givenTheTitles_thenTheyAreTheEnglishOnes', () => {
+    expect(messagesEn.presidentUi.titles).toEqual({
+      president: 'President', vicePresident: 'Vice-President', neutral: 'Neutral', viceScum: 'Vice-Scum', scum: 'Scum',
+    });
+  });
+
+  it('givenTheOptions_thenEveryKeyAndValueOfTheLobbyIsLabelled', () => {
+    const o = messagesEn.options.president;
+    const values: Record<string, string[]> = {
+      afterPass: ['reenter', 'out'],
+      firstLead: ['kingOfHearts', 'lowestClub', 'queenOfHearts', 'random'],
+      exchange: ['two', 'one', 'scaled', 'none'],
+      giveBack: ['free', 'lowest'],
+      nextLead: ['scum', 'president'],
+      scoring: ['rank', 'titles', 'zeroSum'],
+      length: ['rounds-5', 'rounds-3', 'rounds-10', 'points-11', 'points-21', 'endless'],
+    };
+    for (const [key, list] of Object.entries(values)) {
+      expect(o[key].label, key).toBeTruthy();
+      for (const value of list) expect(o[key][value], `${key}.${value}`).toBeTruthy();
+    }
+    expect(o.preset.classic).toBeTruthy();
+  });
+});
+
 describe('game home and join messages', () => {
   it('givenHomeAndJoin_thenEveryLeafStringIsNonEmpty', () => {
     const empty: string[] = [];

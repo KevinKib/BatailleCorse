@@ -3,7 +3,7 @@ import { GAMES, findGame, type GameDefinition, type GameKey } from './games';
 
 describe('game registry', () => {
   it('givenEveryGame_thenEachDeclaresItsRoutesUnderGamesKey', () => {
-    expect(GAMES.map(g => g.key)).toEqual(['bataillecorse', 'bullshit', 'kobo', 'three-men-morris']);
+    expect(GAMES.map(g => g.key)).toEqual(['bataillecorse', 'bullshit', 'kobo', 'three-men-morris', 'president']);
     for (const g of GAMES) {
       expect(g.gameHomeRoute).toBe(`/games/${g.key}`);
       expect(g.joinRoute()).toBe(`/games/${g.key}/join`);
@@ -51,6 +51,14 @@ describe('game registry', () => {
     expect(morris?.supportsBots).toBe(true);
     expect(morris?.hotkeys).toBeUndefined();
     expect(morris?.picker).toEqual({ icon: 'pi pi-th-large', severity: 'info' });
+  });
+
+  it('givenPresident_thenItIsRegisteredWithoutBotsNorShortcutsAndItsOwnPickerStyle', () => {
+    const president = findGame('president');
+    expect(president?.supportsBots).toBe(false);
+    expect(president?.hotkeys).toBeUndefined();
+    expect(president?.picker).toEqual({ icon: 'pi pi-crown', severity: 'contrast' });
+    expect(president?.roomRoute('abc')).toBe('/games/president/room/abc');
   });
 
   it('givenTheGameKeyIsOpen_thenAnUnknownKeyIsNotRegistered', () => {
