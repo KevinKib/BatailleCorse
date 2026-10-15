@@ -19,10 +19,14 @@ class MangolaDraftEndlessTest {
 
     private static final PlayerId SEAT_0 = new PlayerId(0);
 
-    /** The spec's 13-seed fixture in the order of side A's loop: its only moves (c1, g2) are endless. */
+    /**
+     * A real 32-seed draft found by a random search, in the order of side A's loop: 24 seeds on a2 and a single
+     * seed on every other pit from b2. The singletons cannot move, and sowing a2 never ends.
+     */
+    static final List<Integer> ENDLESS_DRAFT = List.of(24, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1);
+
     private static List<Integer> endlessFixture() {
-        MangolaBoard board = Boards.of(EndlessSowingTest.ENDLESS_SIDE_A);
-        return MangolaGeometry.loop(Side.A).stream().map(board::seeds).toList();
+        return ENDLESS_DRAFT;
     }
 
     @Test
@@ -46,6 +50,17 @@ class MangolaDraftEndlessTest {
     void whenEndlessSowingsAreADrawNothingIsFlagged() {
         MangolaRules draw = MangolaRules.OWNER.withEndless(MangolaRules.Endless.DRAW);
         assertFalse(Mangola.onlyEndlessMoves(draw, Side.A, endlessFixture()));
+    }
+
+    @Test
+    void theGameFlagsTheSeatsOwnEndlessDraftOnlyWhileArranging() throws Exception {
+        Mangola game = new Mangola(GameId.generate(), MangolaRules.OWNER, SEAT_0);
+        game.arrange(SEAT_0, ENDLESS_DRAFT.stream().mapToInt(Integer::intValue).toArray());
+
+        assertTrue(game.draftOnlyEndless(SEAT_0));
+        assertFalse(game.draftOnlyEndless(new PlayerId(1)), "the other seat has no draft");
+        game.forfeit(new PlayerId(1));
+        assertFalse(game.draftOnlyEndless(SEAT_0), "not once the game is over");
     }
 
     @Test

@@ -162,6 +162,16 @@ class MangolaDtoTest {
         assertThat(view(game, SEAT_1).draftOnlyEndless(), is(false));
     }
 
+    @Test
+    void aDraftWithNoFiniteMoveIsFlaggedToItsOwnerOnly() throws Exception {
+        Mangola game = placement();
+        game.arrange(SEAT_0, new int[]{24, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1});
+        game.arrange(SEAT_1, MangolaTable.twoPerPit());
+
+        assertThat(view(game, SEAT_0).draftOnlyEndless(), is(true));
+        assertThat(view(game, SEAT_1).draftOnlyEndless(), is(false));
+    }
+
     // ------------------------------------------------------------ the reveal
 
     @Test
