@@ -198,6 +198,12 @@ sound items below. K7a (click actions) was merged earlier (#201).
       found, hidden real cards always shown again). Opponents' moves included, with a faint arrow. Nothing
       waits for it: the one-click match and every button stay immediate. Off under
       `prefers-reduced-motion` (Vitest with the media query mocked, and Cypress with the media emulated).
+- [x] Tempo pass (PR #218, `fix/kobo-animation-tempo`): after trying #206 the owner found it too fast to see
+      which cards changed. All durations now live in `model/kobo/tempo.ts` (`TEMPO`): a hold on the source,
+      the flight (about 1 s for another seat, 0.7 s for me) and a hold on the destination; every slot a move
+      touches gets a ring for 2 s (a still outline for 1.5 s under reduced motion); events of a burst play one
+      after the other through a bounded queue (`model/kobo/queue.ts`), the extra ones only getting their rings.
+      Nothing waits for it. Not built (needs a design choice): replay button, slow-motion setting.
 - [x] Score sheet rise at the gift and the round end: 250 ms, `translateY(16px)` and a fade, cut by
       reduced motion.
 - [x] Sound button in the top bar (off by default, remembered in `localStorage`): card, turn and missed

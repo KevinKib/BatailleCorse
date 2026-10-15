@@ -2,31 +2,40 @@
 
 Spec: `docs/specs/2026-10-15-president-design.md` (rules, variant catalogue with sources and uncertainty
 flags, options, domain model, DTO, bots, UI decisions). Written by Claude Opus 5.5 on `origin/main` at
-`28c5832`. Checklist followed: `docs/architecture/add-a-game.md`; names: `docs/architecture/game-conventions.md`
+`28c5832`; amended on 2026-10-15 with the owner's decisions (spec section 13) and re-sliced (V1 to V4).
+Checklist followed: `docs/architecture/add-a-game.md`; names: `docs/architecture/game-conventions.md`
 (`president` everywhere: id, package, `President` prefix, `president` camel form).
 
-**Goal:** a fifth game, President (Le Président / Trou du cul), playable with every offered variant, against
-humans and bots, in a series of small PRs.
+**Goal:** a fifth game, President (Le Président / Trou du cul), playable with the owner's rules and every
+offered variant, against humans and bots, in a series of small PRs.
 
-## Key decisions to confirm (from the spec, section 13)
+## Key decisions (from the spec, section 13; decided by the owner on 2026-10-15)
 
 1. **Identity and titles**: id `president`; English UI titles President / Vice-President / Neutral /
    Vice-Scum / Scum; French names (Trou du cul...) only in the rules text.
-2. **Players and decks**: 3 to 8 players with one deck when the game opens, 10 with two decks from V4; no
-   2-player mode.
-3. **Classic defaults**: re-entry after a pass, equal play skips the next player, forbidden finish on a 2,
-   exchange 2/1 with a free return, the Scum leads rounds 2+, the 3♣ leads round 1, rank points over 5 rounds;
-   every other variant off. Presets (Classic, Pagat basic, Strict, Party, Daifugō-like) are a lobby
-   convenience, unknown to the server.
+2. **Players and deck**: 3 to 8 players, one 52-card deck, no jokers; no 2-player mode, no two-deck mode.
+3. **Classic defaults (the owner's rules)**: re-entry after a pass; equal play on, binding the next player to
+   match or pass, repeating along the chain; the four cards of a rank played in succession close the trick,
+   and their last holder may complete them out of turn (optional, window open until the next play); forbidden
+   finish on a 2; exchange 2/1 (best cards forced, free return); the king of hearts holder leads round 1 with
+   any play; the Scum leads rounds 2+; points by place; the first player out closes the trick, later ones
+   do not. Presets (Classic, Pagat basic, Strict, Party, Daifugō-like) are a lobby convenience, unknown to the
+   server.
 4. **Exchange flow**: the server takes the low ranks' best cards automatically; the high ranks choose their
    returns freely, all at once, no timeout (the disconnect forfeit covers absence).
 5. **Order**: base game end to end first (P1-P3, F1-F4), then bots on the base rules (B1-B3, candidates from
    the domain's `LegalPlays` so later variants cannot break them), then the variant groups V1-V4 (each full
    stack), then the e2e matrix E1.
 
-Other decisions (spec §13, items 6-12): revolution timing and duration, skip counted as a pass, forbidden
-finishers at the bottom, a ready barrier between rounds, forfeit down to two players, every option
-combination accepted, uncertain variants kept as options.
+Other decisions (spec §13.1, items 6-17): revolution as specified (no jokers), a ready barrier between
+rounds, forfeit down to two players, every option combination accepted, `afterPass = out` reading, variants
+dropped for now (spec §3.5).
+
+Still open (spec §13.2), none blocks P2 or P3: **O1** whether a pass ends the equal-play binding; **O2** the
+default match length (`rounds-5`, recommended, or `endless`); **O3** whether a forbidden finisher going out
+first closes the trick; **O4** whether a single lead opens the completion window; **O5** whether a quad
+played at once closes the trick by default. O1, O4 and O5 must be answered before V1 or V2 starts; their
+working assumptions are written in the spec.
 
 ## Rules for every PR
 
@@ -35,11 +44,11 @@ combination accepted, uncertain variants kept as options.
 - **Strict TDD**: a `test: …` commit with the failing tests before the `feat: …` commit that makes them pass
   (`add-a-game.md` §6). Rules tables are **parameterised tests** (`@ParameterizedTest` with `@MethodSource` or
   `@CsvSource`): one row per line of the spec's tables (ranking, titles by player count, exchange amounts,
-  beat matrix, effects, scoring).
+  beat matrix, effects, scoring, the worked examples of spec §3.1.2).
 - Domain tests: JUnit 5 + Hamcrest, no Mockito; a `PresidentBuilder` (explicit hands, trick, phase, titles,
   options) and `PresidentFixtures` (`cards("3C 3H 2S")`).
-- Every PR keeps an invariant test: the cards of hands + trick + discarded tricks are always the whole deck
-  (52, 54, 104 or 108), after every command of a scripted or random game.
+- Every PR keeps an invariant test: the cards of hands + trick + discarded tricks are always the 52 cards of
+  the deck, after every command of a scripted or random game.
 - Suites before the PR: `cd backend && mvn -s ../deploy/docker/settings.xml test` (unit, `*IT`, ArchUnit);
   `cd frontend && npm test && npx vite build`. Cypress for the PRs with a visible change, on the e2e stack or
   a shifted stack (`--config baseUrl=...`), waiting on DOM states or frames, never `cy.wait(ms)`.
@@ -57,25 +66,29 @@ combination accepted, uncertain variants kept as options.
 | PR | Title | Size | Needs | Tests (strategy) | Risks | State |
 |----|-------|------|-------|------------------|-------|-------|
 | D0 | `docs: President game spec and plan` | S | - | - | owner reviews the variant catalogue | #216 |
+| D1 | `docs: President owner decisions` | S | D0 | - | - | this PR |
 | P1 | `feat: President round rules (domain)` | L | D0 | ranking, play parsing, beat matrix, trick end, going out, titles: parameterised tables; scripted rounds | trick-end counting with re-entry and players out | done (#219) |
-| P2 | `feat: President match, exchange and scoring (domain)` | M-L | P1 | exchange amounts by `n` and option, best-card selection, returns, scoring tables, match end, forfeit in each phase | forfeit during the exchange | done (#223) |
-| P3 | `feat: President at the table (server)` | M-L | P2 | factory and options (strict parse), DTO privacy, actions, controllers, STOMP IT, deal seam, shared tests | shared test counts collide with Mangola (#217) | - |
+| P2 | `feat: President match, exchange and scoring (domain)` | M-L | P1 | exchange amounts by `n` and option, best-card selection, returns, scoring tables, match end, forfeit in each phase | forfeit during the exchange | done (#223); the first-out-closes-trick rule was not in it, P3 carries it |
+| P3 | `feat: President at the table (server)` | M-L | P2 | factory and options (strict parse), option pruning, `kingOfHearts`, `endless`, the first player out closes the trick (parameterised `TrickAfterGoingOutTest`), DTO privacy, actions, controllers, STOMP IT, deal seam, shared tests | shared test counts collide with Mangola (#217) | - |
 | F1 | `feat: President model, session and store` | M | P3 | Vitest: DTO fixtures, one test per command, selection-to-pattern matcher, version guard | none visible | - |
 | F2 | `feat: President in the game selection, lobby and table` (entry PR) | L | F1, canvas 1-3, 6 | Vitest per component; Cypress lobby + a scripted round | the only entry PR at a time (Mangola) | - |
 | F3 | `feat: President exchange step` | M | F2, canvas 4 | Vitest; Cypress with a fixed deal into round 2 | waiting state for the non-exchanging seats | - |
-| F4 | `feat: President round summary, standings and end screen` | M | F2, canvas 5 | Vitest; Cypress to `FINISHED` and Play again | several winners, forfeit subtitle | - |
+| F4 | `feat: President round summary, standings and end screen` | M | F2, canvas 5 | Vitest; Cypress to `FINISHED` and Play again; standings of an `endless` match | several winners, forfeit subtitle | - |
 | B1 | `feat: President bot strategy` | M-L | P2 | view parity (in B2), memory, heuristic decision table (parameterised), self-play | strategy quality is subjective | - |
 | B2 | `feat: President bots at the table` | M | B1, P3 | coordinator with a manual scheduler, broadcaster skips bots, bot game IT | stale tasks | - |
 | B3 | `feat: play President against bots` | S-M | B2, F2 | Vitest; Cypress lobby with bots, a round against a hard bot | shared lobby specs | - |
-| V1 | `feat: President trick variants (equal play, cuts, clears, forbidden finish, must play)` | L | P3 (F2 for the UI part) | beat and effect matrix per option value, parameterised; Cypress per visible indicator | combinations of skip, or-nothing and cuts | - |
-| V2 | `feat: President jokers, revolution and aces high` | L | V1 | rank order under each option and revolution state; wild-set parsing; exchange best cards with jokers | wild jokers in quads and revolution | - |
-| V3 | `feat: President runs and suit lock` | L | V2 | run parsing and beating tables; lock tables; `LegalPlays` enumeration size | `LegalPlays` growth with runs | - |
-| V4 | `feat: President two decks, putsch and fallen President` | L | V3 | two-deck deal and multiset tests up to 10 players; putsch and fall scenarios | 10 seats on a phone; putsch rule uncertain | - |
-| E1 | `test: President end-to-end matrix` | M | V4, B3 | Cypress: each preset through a scripted round, rematch, disconnect and forfeit | e2e duration | - |
+| V1 | `feat: President equal play, the four and completion out of turn` | L | P3, B2 (F2 for the UI part), O1 and O4 answered | worked examples of spec §3.1.2 as parameterised rows; ordering of a completion against the next play and against passes; DTO `completion` lifetime; bot completion; Cypress "Complete the four" | the first out-of-turn command of the game | - |
+| V2 | `feat: President cuts, quad, forbidden finish and must play` | M | V1, O5 answered | beat and effect matrix per option value, parameterised; Cypress per visible indicator | cuts against the equal-play binding | - |
+| V3 | `feat: President revolution and aces high` | M | V2 | rank order under each option and revolution state; exchange best cards under each order | revolution timing | - |
+| V4 | `feat: President runs and suit lock` | M-L | V3 | run parsing and beating tables; lock tables; `LegalPlays` enumeration size | `LegalPlays` growth with runs | - |
+| E1 | `test: President end-to-end matrix` | M | V4, B3 | Cypress: each preset through a scripted round, a completion out of turn, rematch, disconnect and forfeit | e2e duration | - |
 
-Total about 20 to 24 days of agent work. P1 and P2 may be one PR if the diff stays under about 800 lines.
-F3 and F4 can run in parallel after F2; B1 can start right after P2 (pure domain), in parallel with P3. The
-variant PRs are in series (they all extend `BeatRule`, `PlayEffects` and `LegalPlays`).
+Total about 18 to 21 days of agent work, of which D0 and P1 (about 2.5) are done; it was 20 to 24 before the
+2026-10-15 re-slice (no jokers, no two decks, putsch or fall; the equal-play rules grow V1). P1 and P2 may be
+one PR if the diff stays under about 800 lines. F3 and F4 can run in parallel after F2; B1 can start right
+after P2 (pure domain), in parallel with P3. The variant PRs are in series (they all extend `BeatRule`,
+`PlayEffects` and `LegalPlays`). V1 ships a default rule of the owner: until it merges, the table plays
+without equal play; it may start as soon as P3, F2 and B2 are merged, in parallel with B3.
 
 ## Conflicts
 
@@ -83,20 +96,25 @@ variant PRs are in series (they all extend `BeatRule`, `PlayEffects` and `LegalP
 |------|-----|----------|
 | `config/PerGameConfigTest.java`, `architecture/ArchitectureRules.java`, `ArchitectureTest.java`, `MalformedTokenIT.java`, `LobbyControllerTest.java` | P3, Mangola backend (#217's plan) | counts and lists: rebase the second, never weaken a shared test |
 | `model/games.ts`, `router.ts`, `useGameRooms.ts`, `locales/*`, `GamePickerView.test.ts`, picker Cypress specs | F2, Mangola entry PR | never two entry PRs at once (`add-a-game.md` §1): F2 waits for the other entry PR to merge, or the reverse |
-| `president/domain/play/*`, `PresidentDto.java`, `components/president/*` | V1-V4, B1-B3 | in series; bot candidates come from `LegalPlays`, so a variant touches the heuristic only to add a preference |
-| `docs/architecture/context-map.md` | P3, B2, V4 | one section, extended |
+| `president/domain/rules/*` | P2 (#223), P3 | P3 prunes the enums after P2 merges; P2 does not touch them beyond its own keys |
+| `president/domain/play/*`, `trick/*`, `PresidentDto.java`, `components/president/*`, `presentation/bot/*` | V1-V4, B1-B3 | in series; bot candidates come from `LegalPlays` and `completion(seat)`, so a variant touches the heuristic only to add a preference |
+| `docs/architecture/context-map.md` | P3, B2, V1 | one section, extended |
 
-## D0 `docs: President game spec and plan` (this PR, #216)
+## D0 `docs: President game spec and plan` (#216)
 
 Spec, plan, nothing else.
 
-## P1 `feat: President round rules (domain)` (L)
+## D1 `docs: President owner decisions` (this PR)
+
+The owner's decisions of 2026-10-15 in the spec and this plan; no code.
+
+## P1 `feat: President round rules (domain)` (L, done in #219)
 
 Package `president/` with `package-info.java` and `domain/` only; no wiring.
 
 - `rules/PresidentOptions` with the P1 keys (`afterPass`, `firstLead`) and the enums; every later key exists
   in the record as its "off" value, so V-PRs only add parsing.
-- `card/RankOrder` (normal order now; the `ranking` and revolution hooks are parameters that V2 fills),
+- `card/RankOrder` (normal order now; the `ranking` and revolution hooks are parameters that V3 fills),
   `HandSort`.
 - `play/Play`, `PlayParser`, `BeatRule` (same count, strictly higher), `LegalPlays` (sets only),
   `PlayEffects` (none yet).
@@ -123,7 +141,16 @@ Package `president/` with `package-info.java` and `domain/` only; no wiring.
   - Invariant: random legal games (seeded, a random legal-play driver) keep 52 cards and end.
 - Docs: none (context map in P3).
 
-## P2 `feat: President match, exchange and scoring (domain)` (M-L)
+What P1 left that later PRs adjust (owner's decisions of 2026-10-15):
+
+- Every finisher lets the trick continue; the first player out must close it (P2).
+- `FirstLead` has no `KING_OF_HEARTS` and defaults to `LOWEST_CLUB` (P3).
+- `PresidentOptions` and its enums still carry the dropped or excluded values: `Jokers`, `Decks`,
+  `eightClears`, `putsch`, `presidentFall`, `EqualPlay.SKIP` / `OR_NOTHING` (the owner's rule is one value,
+  `ON`), `Revolution.TRICK`, `Runs.ANY_SUIT`; `DeckSpec(decks, jokers)` and the joker and multi-deck branches
+  of `RandomDeckSource` (P3).
+
+## P2 `feat: President match, exchange and scoring (domain)` (M-L, in progress #223)
 
 - Phases `EXCHANGE` and `FINISHED`; `ready` barrier; next round: deal from the previous Scum, titles in
   force, exchange, `nextLead`.
@@ -135,6 +162,10 @@ Package `president/` with `package-info.java` and `domain/` only; no wiring.
 - `forfeit`: in `PLAYING` (current player, trick top, last-but-one player), in `EXCHANGE` (pending return
   completed with the lowest cards), in `ROUND_OVER` (barrier re-evaluated); down to two players continues,
   one left finishes with reason `FORFEIT`.
+- **The first player out closes the trick** (owner, 2026-10-15; spec §3.1 and §6.3): when the play that
+  takes 1st place is made, the trick ends at once (`TrickWon` reason `FIRST_OUT`) and the next seat with
+  cards leads; later finishers keep P1's behaviour. Forbidden finishers are V2's, so in P2 the first player
+  out always takes 1st place. If #223 merges without it, P3 carries it.
 - Tests first:
   - `ExchangePlanTest` (parameterised: `n` from 3 to 8 × `exchange` → pairs and amounts).
   - `BestCardsTest` (parameterised: hands → the k best, ties of rank irrelevant).
@@ -144,11 +175,19 @@ Package `president/` with `package-info.java` and `domain/` only; no wiring.
   - `MatchScoringTest` (parameterised: place × `n` × scoring → points).
   - `MatchLengthTest`: rounds and points targets, ties.
   - `NextLeadTest`: `scum`, `president`.
+  - `TrickAfterGoingOutTest` (parameterised: who goes out (first or later) × whether the trick top is theirs
+    × seats left → trick closed or not, next leader).
   - `PresidentForfeitTest`: one test per phase and position of the forfeiter (spec §8).
   - Invariant over whole seeded matches with 3, 5 and 8 players.
 
 ## P3 `feat: President at the table (server)` (M-L)
 
+- Domain adjustments first (owner, 2026-10-15): prune `PresidentOptions` and the enums to the spec's sixteen
+  keys (remove `Jokers`, `Decks`, `eightClears`, `putsch`, `presidentFall`; `EqualPlay` becomes `ON|OFF`;
+  `Revolution` `OFF|ROUND|PERSISTENT`; `Runs` `OFF|SAME_SUIT`); remove `DeckSpec` (or reduce it to the
+  standard deck) and the joker and multi-deck branches of `RandomDeckSource`; add `FirstLead.KING_OF_HEARTS`
+  as the default (the holder leads with any play); add `MatchLength.ENDLESS` (never `FINISHED` by length;
+  only one player left ends it, reason `FORFEIT`).
 - `PresidentFactory` (`GAME_TYPE = "president"`, 3 to 8, `optionDescriptors()` for the P1-P2 keys with label
   keys `options.president.<key>`, `validate` = `PresidentOptions.parseStrict`), `supportsBots()` false until
   B2.
@@ -159,12 +198,14 @@ Package `president/` with `package-info.java` and `domain/` only; no wiring.
   by profile).
 - Shared tests (`add-a-game.md` §2.2): `PerGameConfigTest`, `ArchitectureRules.GAMES`, `ArchitectureTest`
   (both lists), `MalformedTokenIT` (REST and every command), `LobbyControllerTest` (`assertAddBotRefused`).
-- Tests first: `PresidentFactoryTest` (type, bounds, descriptors, strict parse refuses an unknown key or
-  value, defaults filled), `PresidentDtoTest` (no other hand or other pair's exchange cards in any DTO; legal
-  plays only for the current seat), `PresidentGameActionsTest`, `PresidentRestAndLifecycleTest`,
-  `PresidentWebSocketControllerTest`, `PresidentWebSocketControllerIT` (create, join, start, a few plays, a
-  refused play answered to the sender alone, a forfeit), `PresidentFixedDealIT` and
-  `PresidentFixedDealAbsentInProductionIT`.
+- Tests first: `FirstLeadTest` gains `kingOfHearts` (the default) and a lead without the king; `MatchLengthTest`
+  gains `endless` (twenty rounds, never finished; a forfeit down to one player finishes);
+  `PresidentFactoryTest` (type, bounds, descriptors, strict parse refuses an unknown key or value, including
+  the pruned ones such as `jokers`, defaults filled), `PresidentDtoTest` (no other hand or other pair's
+  exchange cards in any DTO; legal plays only for the current seat), `PresidentGameActionsTest`,
+  `PresidentRestAndLifecycleTest`, `PresidentWebSocketControllerTest`, `PresidentWebSocketControllerIT`
+  (create, join, start, a few plays, a refused play answered to the sender alone, a forfeit),
+  `PresidentFixedDealIT` and `PresidentFixedDealAbsentInProductionIT`.
 - Docs: `context-map.md` section "President" (package, factory, endpoints, deal seam, not covered yet).
 
 ## F1 `feat: President model, session and store` (M)
@@ -196,9 +237,9 @@ fixed deal, round 1 scripted to a known order, round 2 exchange from both sides.
 ## F4 `feat: President round summary, standings and end screen` (M)
 
 After canvas decision 5. `PresidentRoundSummary` (finishing order, title changes, forbidden finishes, round and
-total points, ready checks), standings, `EndGameOverlay` with several winners and the forfeit subtitle, Play
-again to the lobby. Vitest; Cypress `president-end.cy.ts` (`length = rounds-3` scripted to `FINISHED`, Play
-again).
+total points, ready checks), standings (also the running scoreboard of an `endless` match), `EndGameOverlay`
+with several winners and the forfeit subtitle, Play again to the lobby. Vitest; Cypress `president-end.cy.ts`
+(`length = rounds-3` scripted to `FINISHED`, Play again).
 
 ## B1 `feat: President bot strategy` (M-L)
 
@@ -226,67 +267,95 @@ keeps the bot). Docs: "President bots" in `context-map.md`.
 `displayName`. Vitest; Cypress `president-bot.cy.ts` (one human and two hard bots play a round to the
 summary) and `shared-lobby.cy.ts` updated.
 
-## V1 `feat: President trick variants` (L)
+## V1 `feat: President equal play, the four and completion out of turn` (L)
 
-Keys `equalPlay`, `twoCuts`, `quadClears`, `eightClears`, `forbiddenFinish`, `mustPlay` (descriptors,
-parsing, locales, presets unlocked). Domain: `BeatRule` equal and cut cases, `PlayEffects` (skip,
-`MATCH_OR_PASS`, clears with reasons, quad completed by equal plays), forbidden finish places, `mustPlay` in
-`pass`, `LegalPlays` with cuts and equals. Frontend: rule chips ("Skip", "9 or nothing"), trick-won reason in
-the log, forbidden finish marker in the summary. Bot: prefer an equal play on the most dangerous next player,
-keep a cutting 2, avoid a forbidden finish (already planned in B1). Tests first: a parameterised effect matrix
-(option value × play × top → beats, skip, clear reason); scenario tests from the spec catalogue rows V2-V7 and
-V11, including two players left with a skip, a cut refused under "or nothing", two forbidden finishers;
-self-play with each option on. Cypress `president-trick-variants.cy.ts` (fixed deal: a skip, a cut, a
-forbidden finish).
+The owner's equal-play rules (spec §3.1.1), the default of the Classic preset. Needs O1 and O4 answered (or
+their working assumptions confirmed).
 
-## V2 `feat: President jokers, revolution and aces high` (L)
+- Key `equalPlay` (`on|off`, default `on`): descriptor, parsing, locales, presets unlocked.
+- Domain: `BeatRule` equal case; `Trick` chain (rank, cards in succession) and `MATCH_OR_PASS` binding that
+  repeats along the chain (end per O1); the four completed in succession closes the trick (reason `QUAD`),
+  the completing player leads or, if out, the next seat with cards; `Completion` (missing cards, holder) and
+  `completion(seat)`; `play` accepted out of turn only as a completion, the window open from the second play
+  of the chain (O4) until the next play or the trick's end, passes leaving it open;
+  `CompletionClosedException`; `availableActions` `COMPLETE`; `LegalPlays` under the binding.
+- Presentation: `PresidentDto` `chain` (public) and `completion` (holder only), event type `COMPLETION`; the
+  `/president/play` destination serves both; a completion refused as too late is answered to the sender alone.
+- Bots: candidates under the binding, the completion decision (take it, `hard` may keep it, spec §10), the
+  coordinator schedules a completion task for a bot that is not the current seat and drops it when refused.
+- Frontend: the "9 or nothing" and chain chips; the "Complete the four" button for the holder while
+  `completion` is present, in or out of turn.
+- Tests first: the worked examples of spec §3.1.2 as parameterised rows (hands, command sequence, expected
+  trick state after each command), plus: an out-of-turn play that is not a completion refused without
+  mutation; a completion after a play refused (`CompletionClosedException`), after one or several passes
+  accepted; the completion by a passer under `afterPass = out`; a completion that empties the hand (and, when
+  first out, `FIRST_OUT` and `QUAD` agree on the next leader); DTO: `completion` only in the holder's DTO,
+  present across passes, gone after the next play or the trick's end; a two-thread test (current player's
+  play and the completion submitted together, the aggregate serialises them, exactly one outcome, the card
+  invariant holds); bot coordinator completion task; self-play with `equalPlay` on and off. Cypress
+  `president-equal-play.cy.ts` (fixed deal: a chain closed in turn, a completion out of turn by a seat who
+  passed, a completion refused after a play).
+- Docs: `context-map.md` notes the first out-of-turn command.
 
-Keys `jokers`, `revolution`, `ranking`. Domain: deck with jokers (54 cards), wild-set parsing and equality,
-joker cut, `RankOrder` under revolution and aces high, counter-revolution, durations (`round`, `trick`,
-`persistent` across rounds), best cards and `lowestClub` under each order. Frontend: joker cards, the
-Revolution chip, hand sorted by the order in force. Tests first: parameterised rank-order table (ranking ×
-revolution × rank), wild-set table, revolution timing scenarios (immediate answer by a lower quad), exchange
-best cards with jokers, card invariant at 54. Cypress: a revolution flips the hand order and the chip.
+## V2 `feat: President cuts, quad, forbidden finish and must play` (M)
 
-## V3 `feat: President runs and suit lock` (L)
+Keys `twoCuts`, `quadClears` (quad played at once), `forbiddenFinish` (default `lastPlace`), `mustPlay`.
+Domain: `BeatRule` cut cases, `PlayEffects` clears with reasons, forbidden finish places (a forbidden
+finisher out first does not close the trick, per O3), `mustPlay` in `pass` (a completion is never
+compulsory), `LegalPlays` with cuts. Frontend: trick-won reason in the log, forbidden finish marker in the
+summary. Bot: keep a cutting 2, avoid a forbidden finish (already planned in B1). Tests first: a
+parameterised effect matrix (option value × play × top → beats, clear reason); scenario tests from the spec
+catalogue rows V4, V5, V7 and V11, including a cut refused under the binding and two forbidden finishers;
+self-play with each option on. Cypress `president-trick-variants.cy.ts` (fixed deal: a cut, a forbidden
+finish).
 
-Keys `runs`, `suitLock`. Domain: run parsing (3+, no wrap, 2 at the top end, same suit or any), run beating,
-equal runs, revolution on runs, suit lock (two consecutive plays with the same suits), `LegalPlays` for runs
-(bounded enumeration, measured). Frontend: a run shown as a sequence, the "Suits locked" chip; the selection
-matcher learns run patterns. Tests first: run-validity and run-beat tables, lock tables, `LegalPlays` size
-bound on a 13-card hand. Cypress: a run and a lock in a fixed deal.
+## V3 `feat: President revolution and aces high` (M)
 
-## V4 `feat: President two decks, putsch and fallen President` (L)
+Keys `revolution` (`off|round|persistent`), `ranking`. Domain: `RankOrder` under revolution and aces high,
+counter-revolution, durations (`round`, `persistent` across rounds), immediate effect, the cutting card and
+the forbidden finish following the top rank in force, best cards and `lowestClub` under each order; a four
+completed in succession is no revolution. Frontend: the Revolution chip, hand sorted by the order in force.
+Tests first: parameterised rank-order table (ranking × revolution × rank), revolution timing scenarios
+(immediate answer by a lower quad), exchange best cards under a persistent revolution. Cypress: a revolution
+flips the hand order and the chip.
 
-Keys `decks`, `putsch`, `presidentFall`; `maxPlayers()` 8 → 10. Domain: two-deck deal (104 / 108 cards),
-multiset hands, sets up to 8, first lead with two 3♣; `PUTSCH` phase and its scoring; fall of the reigning
-President. Frontend: lobby up to 10 seats at 375 px, the putsch prompt for the Scum, a 10-player table.
-Tests first: two-deck invariant at 104/108, duplicate cards in one play, putsch success and failure (round
-stops, titles kept, -1, four cards next round, no putsch then), fall scenarios. Cypress at 375 × 667 with 10
-seats (9 scripted). Docs: `context-map.md` updated.
+## V4 `feat: President runs and suit lock` (M-L)
+
+Keys `runs` (`off|sameSuit`), `suitLock`. Domain: run parsing (3+, one suit, no wrap, 2 at the top end), run
+beating, equal runs and the binding on runs, revolution on runs, suit lock (two consecutive plays with the
+same suits), `LegalPlays` for runs (bounded enumeration, measured). Frontend: a run shown as a sequence, the
+"Suits locked" chip; the selection matcher learns run patterns. Tests first: run-validity and run-beat
+tables, lock tables, `LegalPlays` size bound on a 13-card hand. Cypress: a run and a lock in a fixed deal.
 
 ## E1 `test: President end-to-end matrix` (M)
 
 Cypress only (and fixtures): each preset (Classic, Pagat basic, Strict, Party, Daifugō-like) through one
-scripted round on a fixed deal; Play again keeps options and bots; a disconnect then a forfeit mid-trick and
-mid-exchange; reload into each phase restores the DTO. Runs on the e2e stack, one at a time.
+scripted round on a fixed deal; a completion out of turn on the Classic preset; Play again keeps options and
+bots; a disconnect then a forfeit mid-trick and mid-exchange; reload into each phase restores the DTO. Runs
+on the e2e stack, one at a time.
 
 ## Risks
 
-- **Rule ambiguity**: President has no canonical rulebook; the uncertain rules ([U] in the spec) are options
-  with a documented choice, and the owner may change any default without touching the model.
-- **Option explosion**: about twenty keys. Mitigated by presets, grouped lobby options, and the rule that every
+- **Rule ambiguity**: President has no canonical rulebook; the owner's rules are now the defaults, the other
+  uncertain rules ([U] in the spec) are options with a documented choice, and O1 to O5 stay open with working
+  assumptions. Any default can change without touching the model.
+- **Out-of-turn completion** (V1): the first command of the game accepted from a seat that is not the current
+  one. Mitigated by the one-deck rule (a single possible holder, no race between players), the aggregate's
+  `synchronized` commands and a completion condition re-checked at processing time (a play closes the window,
+  passes do not), a two-thread test, and the DTO flag only in the holder's view.
+- **P2 in flight** (#223): the first-finisher rule is added to its scope; if it merges first, P3 carries it.
+- **Option explosion**: sixteen keys. Mitigated by presets, grouped lobby options, and the rule that every
   combination is legal; the effect matrix tests cover every value, not every combination (self-play covers
   random combinations).
-- **`LegalPlays` size** with runs, wild jokers and two decks: measured in V3/V4; patterns, not concrete card
-  lists, keep the DTO small.
-- **10 players on a phone** (V4): checked in the canvas first; the compact list layout (decision 1B) is the
-  fallback.
+- **`LegalPlays` size** with runs: measured in V4; patterns, not concrete card lists, keep the DTO small.
 - **Entry-PR collision with Mangola (#217)**: F2 is scheduled after the other entry PR, never at the same time.
 - **Bot quality**: subjective; self-play tests guarantee legality and termination, not strength; a tuning pass
   can follow playtests.
 
 ## Not done
 
-- Out-of-turn plays, negotiation-based exchanges, the variants of spec §3.4.
+- Out-of-turn plays other than the completion of the four, negotiation-based exchanges, the variants of spec
+  §3.4 (jokers among them).
+- Dropped for now by the owner (spec §3.5): the skip form of equal play, eight stops, `revolution = trick`,
+  `runs = anySuit`, two decks and 9-10 players, putsch, the fall of the President.
 - Spectators, chat, turn timers, persistence.

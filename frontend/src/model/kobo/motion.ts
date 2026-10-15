@@ -1,5 +1,6 @@
 import type Card from '../Card';
 import type { KoboLogEntry } from './KoboEvents';
+import { MOTION_MAX_MS, TEMPO, type LegTempo } from './tempo';
 
 /**
  * Where a card flies from or to, as the table names it (the component turns it into a rectangle). Purely visual:
@@ -30,17 +31,26 @@ export interface Movement {
   actor: number;
   /** An opponent's move gets a faint arrow as well: the one place where reading the table is hard. */
   byOpponent: boolean;
+  /** The hold on the source before the card leaves (plus the wait behind a previous move of the same event). */
   delayMs: number;
+  /** The flight itself. */
   durationMs: number;
+  /** The hold on the destination once landed. */
+  holdAfterMs: number;
+  /** The places to ring while this move plays (slots only: the piles speak for themselves). */
+  marks: MotionAnchor[];
 }
 
-/** No movement may last this long (delay included). */
-export const MOTION_MAX_MS = 700;
-const TRAVEL_MS = 320;
-const GLANCE_MS = 560;
-const REVEAL_MS = 360;
-/** The gift of a match leaves a beat after the matched card, so the two moves read in order. */
-const FOLLOW_MS = 80;
+export { MOTION_MAX_MS };
+
+const legOf = (byOpponent: boolean): LegTempo => (byOpponent ? TEMPO.opponent : TEMPO.own);
+const markable = (...anchors: MotionAnchor[]): MotionAnchor[] =>
+  anchors.filter(a => a.kind === 'slot' || a.kind === 'newSlot');
+
+/** When the last flight of an event is over (the holds after landing excluded): the next event may start then. */
+export function eventSpanMs(movements: Movement[]): number {
+  return movements.reduce((span, m) => Math.max(span, m.delayMs + m.durationMs), 0);
+}
 
 /**
  * The movements an event stands for, from its public data only. A swap is two crossing moves; a match sends the
@@ -51,7 +61,8 @@ export function planMovements(entry: KoboLogEntry, mySeat: number): Movement[] {
   if (entry.eventType === 'ROUND_END') {
     moves.push({
       kind: 'reveal', from: { kind: 'table' }, to: { kind: 'table' }, card: null, flip: false,
-      actor: entry.data?.seat ?? -1, byOpponent: false, delayMs: 0, durationMs: REVEAL_MS,
+      actor: entry.data?.seat ?? -1, byOpponent: false, delayMs: TEMPO.reveal.holdBeforeMs,
+      durationMs: TEMPO.reveal.flightMs, holdAfterMs: TEMPO.reveal.holdAfterMs, marks: [],
     });
   }
   return moves;
@@ -60,9 +71,15 @@ export function planMovements(entry: KoboLogEntry, mySeat: number): Movement[] {
 function ofAction(entry: KoboLogEntry, mySeat: number): Movement[] {
   const data = entry.data!;
   const actor = data.seat;
-  const base = { actor, byOpponent: actor !== mySeat, flip: false, delayMs: 0 };
-  const travel = (from: MotionAnchor, to: MotionAnchor, card: Card | null = null, extra: Partial<Movement> = {}): Movement =>
-    ({ ...base, kind: 'travel', from, to, card, durationMs: TRAVEL_MS, ...extra });
+  const byOpponent = actor !== mySeat;
+  const leg = legOf(byOpponent);
+  const base = { actor, byOpponent, flip: false };
+  /** `follow`: this move leaves that much later than the others of the event. */
+  const travel = (from: MotionAnchor, to: MotionAnchor, card: Card | null = null, extra: Partial<Movement> = {}, follow = 0): Movement =>
+    ({
+      ...base, kind: 'travel', from, to, card, marks: markable(from, to),
+      delayMs: leg.holdBeforeMs + follow, durationMs: leg.flightMs, holdAfterMs: leg.holdAfterMs, ...extra,
+    });
   const slot = (seat: number | null, n: number | null): MotionAnchor | null =>
     seat !== null && n !== null ? { kind: 'slot', seat, slot: n } : null;
 
@@ -78,7 +95,10 @@ function ofAction(entry: KoboLogEntry, mySeat: number): Movement[] {
     case 'PEEK': {
       const target = slot(data.targetSeat, data.targetSlot);
       if (!target || data.targetSeat === actor) return [];
-      return [{ ...base, kind: 'glance', from: target, to: { kind: 'seat', seat: actor }, card: null, durationMs: GLANCE_MS }];
+      return [{
+        ...base, kind: 'glance', from: target, to: { kind: 'seat', seat: actor }, card: null, marks: markable(target),
+        delayMs: TEMPO.glance.holdBeforeMs, durationMs: TEMPO.glance.flightMs, holdAfterMs: TEMPO.glance.holdAfterMs,
+      }];
     }
     case 'BLIND_SWAP':
     case 'KING_SWAP': {
@@ -92,7 +112,7 @@ function ofAction(entry: KoboLogEntry, mySeat: number): Movement[] {
       if (!target) return [];
       const moves = [travel(target, { kind: 'discard' }, data.card)];
       const given = slot(actor, data.givenSlot);
-      if (given && data.targetSeat !== actor) moves.push(travel(given, target, null, { delayMs: FOLLOW_MS }));
+      if (given && data.targetSeat !== actor) moves.push(travel(given, target, null, {}, TEMPO.followMs));
       return moves;
     }
     default: return [];
