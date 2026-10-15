@@ -27,6 +27,8 @@ Cypress.Commands.add('createGame', (options?: { tier?: string }) => {
     // The server handles one client's commands in the order sent: Start cannot overtake the tier change.
     cy.get('[data-test="start"]').should('not.be.disabled').click();
     cy.get('[data-cy="player-card-count"]', { timeout: 10000 }).should('contain.text', '26');
+    // The lobby fades out while the table fades in: the table is settled (and measurable) once it is alone.
+    cy.get('[data-test="lobby"]').should('not.exist');
   });
 });
 
