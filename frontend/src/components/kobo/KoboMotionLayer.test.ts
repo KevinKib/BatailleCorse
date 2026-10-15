@@ -111,6 +111,65 @@ describe('KoboMotionLayer', () => {
     expect(real.style.opacity).toBe('');
   });
 
+  describe('a movement queued behind another one', () => {
+    type Play = (m: Movement[], o?: { marksOnly?: boolean; startInMs?: number }) => void;
+    const play = (wrapper: ReturnType<typeof mount>) => (wrapper.vm as unknown as { play: Play }).play;
+
+    it('hidesTheLandingPlaceAtOnceNotWhenItsTurnComes_andLeavesTheCopyInvisibleUntilThen', async () => {
+      const real = document.createElement('img');
+      const wrapper = mount(KoboMotionLayer, { props: { resolve: (a) => target(a.kind === 'draw' ? 0 : 100, a.kind === 'hand' ? [real] : []) } });
+      play(wrapper)([travel()], { startInMs: 2000 });
+      await flushPromises();
+      expect(real.style.opacity).toBe('0');
+      expect(animateCalls[0].options.delay).toBe(2000 + 150);
+      // Another animation keeps the copy invisible while it waits for its turn.
+      const wait = animateCalls.find(c => c.options.delay === 0 && Number(c.options.duration) >= 2000);
+      expect(wait).toBeDefined();
+    });
+
+    it('showsWhatTheLandingPlaceShowedBeforeUntilTheCopyLands', async () => {
+      const real = document.createElement('img');
+      const wrapper = mount(KoboMotionLayer, { props: { resolve: (a) => target(a.kind === 'draw' ? 0 : 100, a.kind === 'hand' ? [real] : []) } });
+      play(wrapper)([travel({ restsOn: buildKoboCard('QUEEN', 'CLUB') })], { startInMs: 2000 });
+      await flushPromises();
+      expect(wrapper.findAll('[data-test="motion-under"]')).toHaveLength(1);
+      const flight = animations[0];
+      flight.end();
+      await flushPromises();
+      expect(wrapper.findAll('[data-test="motion-under"]')).toHaveLength(0);
+    });
+
+    it('showsABackOnASourceSlotUntilItsCardLeaves', async () => {
+      vi.useFakeTimers();
+      try {
+        const wrapper = mount(KoboMotionLayer, { props: { resolve: (a) => target(a.kind === 'draw' ? 0 : 100) } });
+        play(wrapper)([travel({ from: { kind: 'draw' }, to: { kind: 'hand' }, leavesBack: true })], { startInMs: 1000 });
+        await vi.advanceTimersByTimeAsync(0);
+        expect(wrapper.findAll('[data-test="motion-under"]')).toHaveLength(1);
+        await vi.advanceTimersByTimeAsync(1000 + 150 + 100);
+        expect(wrapper.findAll('[data-test="motion-under"]')).toHaveLength(0);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('givenNoWait_thenNoExtraAnimationAndNothingUnderTheCopy', async () => {
+      const wrapper = mount(KoboMotionLayer, { props: { resolve: (a) => target(a.kind === 'draw' ? 0 : 100) } });
+      play(wrapper)([travel()]);
+      await flushPromises();
+      expect(animateCalls).toHaveLength(1);
+      expect(wrapper.findAll('[data-test="motion-under"]')).toHaveLength(0);
+    });
+
+    it('givenAFaceUpCardThatTurnsDownOnArrival_thenTheCopyCarriesBothFacesAndTurnsAtTheEnd', async () => {
+      const wrapper = mount(KoboMotionLayer, { props: { resolve: (a) => target(a.kind === 'draw' ? 0 : 100) } });
+      play(wrapper)([travel({ card: buildKoboCard('QUEEN', 'CLUB'), turnDown: true, byOpponent: false })]);
+      await flushPromises();
+      expect(wrapper.find('[data-test="motion-card"] [data-face="front"]').exists()).toBe(true);
+      expect(wrapper.find('[data-test="motion-card"] [data-face="back"]').exists()).toBe(true);
+    });
+  });
+
   it('showsTheRealCardAgainWhenTheLayerGoesAwayMidFlight', async () => {
     const real = document.createElement('img');
     const wrapper = mount(KoboMotionLayer, { props: { resolve: (a) => target(a.kind === 'draw' ? 0 : 100, a.kind === 'hand' ? [real] : []) } });

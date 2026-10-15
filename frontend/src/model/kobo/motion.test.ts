@@ -35,7 +35,7 @@ describe('planMovements', () => {
     const moves = planMovements(entry('SWAP', { slot: 2, card: old }), ME);
     expect(moves).toHaveLength(2);
     expect(moves[0]).toMatchObject({ from: { kind: 'hand' }, to: { kind: 'slot', seat: 1, slot: 2 }, card: null, delayMs: TEMPO.opponent.holdBeforeMs });
-    expect(moves[1]).toMatchObject({ from: { kind: 'slot', seat: 1, slot: 2 }, to: { kind: 'discard' }, card: old, delayMs: TEMPO.opponent.holdBeforeMs });
+    expect(moves[1]).toMatchObject({ from: { kind: 'slot', seat: 1, slot: 2 }, to: { kind: 'discard' }, card: old, flip: true, delayMs: TEMPO.opponent.holdBeforeMs });
   });
 
   it('givenADiscardOfTheDrawnCard_thenItGoesFromTheHandToTheDiscardFaceUp', () => {
@@ -158,5 +158,69 @@ describe('planMovements', () => {
     const moves = planMovements(entry('MATCH', { seat: ME, targetSeat: 1, targetSlot: 2, givenSlot: 3, success: true }), ME);
     expect(eventSpanMs(moves)).toBe(Math.max(...moves.map(m => m.delayMs + m.durationMs)));
     expect(eventSpanMs([])).toBe(0);
+  });
+
+  describe('clarity of the travelling cards', () => {
+    const seven = buildKoboCard('7', 'SPADE');
+    const queen = buildKoboCard('QUEEN', 'CLUB');
+
+    it('givenMySwap_thenTheDrawnCardIsSeenFaceUpGoingToMySlotAndTurnsFaceDownThere', () => {
+      const [intoSlot, out] = planMovements(entry('SWAP', { seat: ME, slot: 2, card: seven }), ME, { drawnFace: queen });
+      expect(intoSlot).toMatchObject({ from: { kind: 'hand' }, to: { kind: 'slot', seat: ME, slot: 2 }, card: queen, turnDown: true, flip: false });
+      expect(out).toMatchObject({ from: { kind: 'slot', seat: ME, slot: 2 }, to: { kind: 'discard' }, card: seven, flip: true });
+    });
+
+    it('givenABotsSwap_thenTheDrawnCardStaysABackBecauseItsIdentityIsNeverSent', () => {
+      const [intoSlot] = planMovements(entry('SWAP', { slot: 2, card: seven }), ME, { drawnFace: queen });
+      expect(intoSlot).toMatchObject({ card: null, turnDown: false });
+    });
+
+    it('givenMySwapWithoutAKnownDrawnFace_thenTheCardTravelsAsABack', () => {
+      const [intoSlot] = planMovements(entry('SWAP', { seat: ME, slot: 2, card: seven }), ME);
+      expect(intoSlot).toMatchObject({ card: null, turnDown: false });
+    });
+
+    it('givenADiscardOfTheDrawnCard_thenOnlyThatCardMovesAndThePileKeepsShowingItsOldTopUnderIt', () => {
+      const moves = planMovements(entry('DISCARD_DRAWN', { card: seven }), ME, { discardBefore: queen });
+      expect(moves).toHaveLength(1);
+      expect(moves[0]).toMatchObject({ from: { kind: 'hand' }, to: { kind: 'discard' }, card: seven, restsOn: queen });
+    });
+
+    it('givenACardThatLandsOnTheDiscard_thenTheTopItCoversIsKnownToTheTable', () => {
+      const [, out] = planMovements(entry('SWAP', { slot: 2, card: seven }), ME, { discardBefore: queen });
+      expect(out.restsOn).toBe(queen);
+      const [match] = planMovements(entry('MATCH', { seat: ME, targetSeat: 1, targetSlot: 2, success: true, card: seven }), ME, { discardBefore: queen });
+      expect(match.restsOn).toBe(queen);
+    });
+
+    it('givenAnEmptyDiscardBefore_thenNothingRestsUnderTheLandingCard', () => {
+      const [m] = planMovements(entry('DISCARD_DRAWN', { card: seven }), ME, { discardBefore: null });
+      expect(m.restsOn).toBeUndefined();
+    });
+
+    it('givenASwap_thenTheSlotKeepsShowingABackUntilTheDrawnCardLandsOnIt', () => {
+      const [intoSlot, out] = planMovements(entry('SWAP', { slot: 2, card: seven }), ME);
+      expect(intoSlot.restsOn).toBeNull();
+      expect(out.leavesBack).toBe(true);
+    });
+
+    it('givenASwapOfSlots_thenEachSlotShowsABackUntilItsCardLeaves', () => {
+      const moves = planMovements(entry('BLIND_SWAP', { slot: 0, targetSeat: 2, targetSlot: 3 }), ME);
+      expect(moves.map(m => m.leavesBack)).toEqual([true, true]);
+    });
+
+    it('givenAMatch_thenTheMatchedSlotShowsABackUntilItsCardLeavesAndTheCardTurnsFaceUpInFlight', () => {
+      const [match] = planMovements(entry('MATCH', { seat: ME, targetSeat: 1, targetSlot: 2, success: true, card: seven }), ME);
+      expect(match.leavesBack).toBe(true);
+      expect(match.flip).toBe(true);
+    });
+
+    it('givenADrawOrAPenalty_thenNothingRestsOrLeavesBehind', () => {
+      const [draw] = planMovements(entry('DRAW', {}), ME);
+      expect(draw.restsOn).toBeUndefined();
+      expect(draw.leavesBack).toBeFalsy();
+      const [penalty] = planMovements(entry('MATCH', { seat: 1, success: false }), ME);
+      expect(penalty.restsOn).toBeUndefined();
+    });
   });
 });
