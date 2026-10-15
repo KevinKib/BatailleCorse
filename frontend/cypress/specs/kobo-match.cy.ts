@@ -28,24 +28,8 @@ describe('Kobo matching discard', () => {
       cy.get(logLine).should('have.text', '').and('have.attr', 'aria-live', 'polite');
 
       cy.get('[data-test="action-draw"]').click();
-      // Holding the drawn card, a tap on a card swaps it: the taps belong to that turn action, so no hint is shown
-      // and the Match button is the explicit way to match (armed mode: every card can be picked, Esc or Cancel leave).
-      cy.get('[data-test="match-hint"], [data-test="match-coach"]').should('not.exist');
-      cy.get('[data-test="action-match"]').should('be.visible').and('have.attr', 'aria-pressed', 'false');
-      cy.get('[data-test="action-match"]').click();
-      cy.get('[data-test="action-match"]').should('have.attr', 'aria-pressed', 'true');
-      cy.get('[data-test="prompt"]').should('have.text', 'Pick the card to match');
-      cy.get('button[data-test^="slot-"]:not([disabled])').should('have.length', 8);
-      cy.get('[data-test="action-cancel"]').should('be.visible');
-      actionBarIsReachable();
-      measureTable('match armed during a turn action, 2 players');
-      cy.get('body').type('{esc}');
-      cy.get('[data-test="action-match"]').should('have.attr', 'aria-pressed', 'false');
-      cy.get('[data-test="prompt"]').should('have.text', 'Pick one of your cards to swap with the drawn card');
-      cy.get('[data-test="action-match"]').click();
-      cy.get('[data-test="action-cancel"]').click();
-      cy.get('[data-test="action-match"]').should('have.attr', 'aria-pressed', 'false');
-
+      // The discard pile is still empty: nothing to match yet, so no hint and no button while I hold the card.
+      cy.get('[data-test="match-hint"], [data-test="match-coach"], [data-test="action-match"]').should('not.exist');
       cy.get('[data-test="action-discard"]').click();
       cy.get('[data-test="discard-pile"] img').should('have.attr', 'alt', '3 of spade');
       // Nothing else wants a tap now: no Match button, a tap on a card is the match (cypress/specs/kobo-click-actions.cy.ts).

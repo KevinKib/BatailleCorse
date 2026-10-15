@@ -580,6 +580,15 @@ describe('KoboGameScreen', () => {
           expect(localStorage.getItem(MATCH_COACH_STORAGE_KEY)).toBe('seen');
         });
 
+        it('givenAWideTable_thenTheNoteSitsBesideMyHandAndTheLineUnderThePilesWaitsForGotIt', async () => {
+          const { wrapper } = await matchable();
+          expect(wrapper.find('.my-zone .coach-side [data-test="match-coach"]').exists()).toBe(true);
+          expect(wrapper.find('.table-center [data-test="match-coach"]').exists()).toBe(false);
+          expect(wrapper.find('.table-center [data-test="match-hint"]').exists()).toBe(false);
+          await wrapper.get('[data-test="match-coach-dismiss"]').trigger('click');
+          expect(wrapper.find('.table-center [data-test="match-hint"]').exists()).toBe(true);
+        });
+
         it('givenTheCueWasSeen_thenItDoesNotComeBack', async () => {
           dismissCoach();
           const { wrapper } = await matchable();

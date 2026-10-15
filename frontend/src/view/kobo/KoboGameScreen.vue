@@ -354,14 +354,21 @@ watch(() => [store.game?.round, store.game?.phase, store.game?.currentSeat, live
 
       <!-- The table. On a phone it scrolls vertically inside its frame (never sideways, never the page). -->
       <div class="table-frame" data-test="kobo-table" role="region" :aria-label="ui.regions.table"
-           :class="{ 'table-frame--compact': compactOpponents, 'table-frame--round-end': sheetOpen }"
+           :class="{
+             'table-frame--compact': compactOpponents, 'table-frame--round-end': sheetOpen,
+             'table-frame--hint': store.interaction.matchHint, 'table-frame--coach': showsCoachRing,
+           }"
            :style="{ '--opponent-columns': columns }">
         <div class="table-center">
           <KoboPiles
             :game="store.game" :my-seat="store.mySeat" :current-name="currentName"
             :can-draw="store.interaction.piles.draw" :can-discard="store.interaction.piles.discard" :busy="store.busy"
             @draw="store.pickPile('draw')" @discard="store.pickPile('discard')" />
-          <KoboMatchHint :hint="store.interaction.matchHint" :coach="!matchCoach.seen.value" @dismiss="matchCoach.dismiss()" />
+          <!-- On a wide table there is no height to spare under the piles: the first-time note goes beside my hand. -->
+          <KoboMatchHint
+            :hint="store.interaction.matchHint && !(showsCoachRing && !narrow)"
+            :coach="showsCoachRing && narrow"
+            @dismiss="matchCoach.dismiss()" />
         </div>
 
         <div class="opponents-ring" data-test="opponents">
@@ -416,6 +423,7 @@ watch(() => [store.game?.round, store.game?.phase, store.game?.currentSeat, live
           :ready="showsReady && isReady(me.seat)"
           :announcer="isAnnouncer(me.seat)"
           :final-turn="isFinalTurn(me.seat)" />
+        <KoboMatchHint v-if="showsCoachRing && !narrow" class="coach-side" :hint="false" :coach="true" @dismiss="matchCoach.dismiss()" />
         <!-- The first-time cue rings my hand: a plain outline, no animation. -->
         <div class="my-hand" :class="{ 'coach-ring': showsCoachRing }" data-test="my-tableau-ring">
           <KoboTableau
@@ -550,6 +558,8 @@ watch(() => [store.game?.round, store.game?.phase, store.game?.currentSeat, live
   --ring-h: 70px;
 }
 .table-frame--compact { --ring-top: 78px; --ring-h: 56px; }
+/* The match hint (one or two lines) or the first-time note sits under the piles: the ring leaves room for it. */
+.table-frame--hint { --ring-bottom: 130px; }
 
 /* Wide screens: opponents on the ellipse, in an inner box so a whole tableau stays inside the frame. */
 .opponents-ring { position: absolute; inset: var(--ring-top) var(--ring-h) var(--ring-bottom); }
@@ -588,6 +598,9 @@ watch(() => [store.game?.round, store.game?.phase, store.game?.currentSeat, live
   --kobo-card-w: clamp(48px, 8vh, 64px);
   --kobo-gap: 6px;
 }
+/* Beside my hand, in the room the wide layout leaves free: it takes no height from the table above. */
+.my-zone { position: relative; }
+.my-zone .coach-side { position: absolute; left: 8px; top: 40px; width: 280px; margin: 0; z-index: 2; }
 .my-hand { border-radius: 14px; padding: 2px; }
 .my-hand.coach-ring { outline: 2px solid var(--gold); outline-offset: 0; box-shadow: 0 0 0 5px rgba(245, 200, 66, 0.2); }
 .my-zone :deep(.seat-label) { font-size: 0.8rem; padding: 4px 14px; }

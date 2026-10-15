@@ -33,8 +33,14 @@ describe('KoboMatchHint', () => {
     expect(wrapper.emitted('dismiss')).toHaveLength(1);
   });
 
-  it('givenNoHint_thenNothingShowsEvenWithTheCue', () => {
+  it('givenTheCueAloneAndNoHint_thenOnlyTheNoteShows_whereverTheScreenPutsIt', () => {
     const wrapper = mountHint({ hint: false, coach: true });
+    expect(wrapper.find('[data-test="match-hint"]').exists()).toBe(false);
+    expect(wrapper.find('[data-test="match-coach"]').exists()).toBe(true);
+  });
+
+  it('givenNeitherTheHintNorTheCue_thenNothingIsRendered', () => {
+    const wrapper = mountHint({ hint: false, coach: false });
     expect(wrapper.find('[data-test="match-hint"]').exists()).toBe(false);
     expect(wrapper.find('[data-test="match-coach"]').exists()).toBe(false);
   });

@@ -1,16 +1,17 @@
 <script setup lang="ts">
 import { useI18n } from '../../composables/useI18n';
 
-// Under the piles: how to match, in one line, while a tap on a card is a match (`hint`). The first time, the same
-// room holds a note instead (`coach`), paired with a ring around my hand drawn by the screen. Both are static
-// text, so reduced motion changes nothing; the one live region of the screen is not repeated here.
+// How to match. `hint`: the one line under the piles. `coach`: the first-time note (instead of the line), paired
+// with a ring around my hand drawn by the screen. Both are static text, so reduced motion changes nothing; the one
+// live region of the screen is not repeated here. Where it sits (under the piles, or beside my hand on a wide
+// table that has no height to spare) is the screen's choice.
 defineProps<{ hint: boolean; coach: boolean }>();
 defineEmits<{ dismiss: [] }>();
 const ui = useI18n().koboUi.match;
 </script>
 
 <template>
-  <div v-if="hint" class="match-hint-zone">
+  <div v-if="hint || coach" class="match-hint-zone">
     <div v-if="coach" class="coach" role="note" data-test="match-coach">
       <p class="coach-text"><strong>{{ ui.coachTitle }}</strong> {{ ui.coachText }}</p>
       <button type="button" class="coach-dismiss" data-test="match-coach-dismiss" @click="$emit('dismiss')">
@@ -22,7 +23,8 @@ const ui = useI18n().koboUi.match;
 </template>
 
 <style scoped>
-.match-hint-zone { display: flex; justify-content: center; max-width: 330px; margin: 0 auto; }
+/* One line on a wide table, two on a phone. */
+.match-hint-zone { display: flex; justify-content: center; max-width: min(560px, 100%); margin: 0 auto; }
 .match-hint {
   margin: 4px 0 0;
   font-size: 0.75rem;

@@ -108,6 +108,20 @@ describe('Kobo actions on direct clicks', () => {
       cy.get(slot(1, 2)).click({ force: true });
       discardTop('7 of spade');
       cy.get(logLine).should('not.contain.text', 'match');
+      // The explicit Match button arms the mode (every card can be picked); Esc and Cancel give the power its taps back.
+      cy.get('[data-test="action-match"]').click();
+      cy.get('[data-test="action-match"]').should('have.attr', 'aria-pressed', 'true');
+      cy.get('[data-test="prompt"]').should('have.text', 'Pick the card to match');
+      cy.get('button[data-test^="slot-"]:not([disabled])').should('have.length', 8);
+      cy.get('[data-test="action-cancel"]').should('be.visible');
+      actionBarIsReachable();
+      cy.get('body').type('{esc}');
+      cy.get('[data-test="action-match"]').should('have.attr', 'aria-pressed', 'false');
+      cy.get('[data-test="prompt"]').should('have.text', 'Look at one of your cards');
+      cy.get('[data-test="action-match"]').click();
+      cy.get('[data-test="action-cancel"]').click();
+      cy.get('[data-test="prompt"]').should('have.text', 'Look at one of your cards');
+      discardTop('7 of spade');
       cy.get(slot(0, 0)).click();
       cy.get(slot(0, 0)).should('have.attr', 'aria-label').and('contain', 'king of heart');
       discardTop('7 of spade');
