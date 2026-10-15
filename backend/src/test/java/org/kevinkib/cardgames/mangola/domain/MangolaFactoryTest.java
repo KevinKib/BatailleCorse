@@ -14,6 +14,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class MangolaFactoryTest {
 
@@ -32,7 +33,7 @@ class MangolaFactoryTest {
         assertEquals("mangola", factory.gameType());
         assertEquals(2, factory.minPlayers());
         assertEquals(2, factory.maxPlayers());
-        assertFalse(factory.supportsBots(), "bots arrive with their own PR");
+        assertTrue(factory.supportsBots());
         assertThrows(IllegalArgumentException.class, () -> factory.create(GameId.generate(), 3));
         assertThrows(IllegalArgumentException.class, () -> factory.create(GameId.generate(), 1));
     }
@@ -44,7 +45,15 @@ class MangolaFactoryTest {
                         "free", "options.mangola.setup"),
                 new OptionDescriptor("firstPlayer", OptionType.CHOICE, List.of("host", "guest", "random"),
                         "random", "options.mangola.firstPlayer")), factory.optionDescriptors());
-        assertEquals(List.of(), factory.seatOptionDescriptors());
+    }
+
+    @Test
+    void theOnlySeatOptionIsTheLevelWithGreedyAsTheDefault() {
+        assertEquals(List.of(new OptionDescriptor("level", OptionType.CHOICE, List.of("random", "greedy", "expert"),
+                "greedy", "options.mangola.level")), factory.seatOptionDescriptors());
+        factory.validateSeatOption("level", "expert");
+        assertThrows(InvalidOptionException.class, () -> factory.validateSeatOption("level", "grandmaster"));
+        assertThrows(InvalidOptionException.class, () -> factory.validateSeatOption("tier", "3"));
     }
 
     @Test
