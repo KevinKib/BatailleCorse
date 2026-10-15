@@ -20,6 +20,8 @@ const props = withDefaults(defineProps<{
   captured?: boolean;                 // ... emptied this pit
   capturedSeeds?: number | null;      // seeds it took from it, when known
   tabbable?: boolean;                 // the one pit of the board that is a tab stop
+  active?: boolean;                   // the travelling hand is over this pit (sowing animation)
+  capturing?: boolean;                // the hand is taking this pit's seeds (sowing animation)
 }>(), {
   mine: false,
   selectable: false,
@@ -29,6 +31,8 @@ const props = withDefaults(defineProps<{
   captured: false,
   capturedSeeds: null,
   tabbable: true,
+  active: false,
+  capturing: false,
 });
 
 const emit = defineEmits<{ press: [] }>();
@@ -74,6 +78,8 @@ function press(): void {
     :data-last-start="lastStart ? 'true' : undefined"
     :data-last-end="lastEnd ? 'true' : undefined"
     :data-captured="captured ? 'true' : undefined"
+    :data-active="active ? 'true' : undefined"
+    :data-capturing="capturing ? 'true' : undefined"
     :aria-label="label"
     :aria-disabled="selectable ? undefined : 'true'"
     :tabindex="tabbable ? 0 : -1"
@@ -186,6 +192,8 @@ function press(): void {
 .mg-pit[data-last-start='true'] .mg-pit__bowl { outline: 2.5px solid #fff; outline-offset: 1px; }
 .mg-pit[data-last-end='true'] .mg-pit__bowl { outline: 2.5px double #fff; outline-offset: 1px; }
 .mg-pit[data-captured='true'] .mg-pit__bowl { outline: 2px dashed rgb(var(--accent-negative-rgb)); outline-offset: 1px; }
+.mg-pit[data-active='true'] .mg-pit__bowl { box-shadow: inset 0 0 0 2.5px var(--gold), 0 0 10px rgba(var(--accent-active-rgb), 0.7); }
+.mg-pit[data-capturing='true'] .mg-pit__bowl { outline: 2px dashed rgb(var(--accent-negative-rgb)); outline-offset: 1px; }
 .mg-pit__taken {
   position: absolute;
   font-size: clamp(0.75rem, 3.6vw, 1rem);

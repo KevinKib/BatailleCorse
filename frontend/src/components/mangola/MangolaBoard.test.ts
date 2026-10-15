@@ -138,3 +138,86 @@ describe('MangolaBoard', () => {
     expect(w.findAll('[data-hidden="true"]')).toHaveLength(16);
   });
 });
+
+describe('MangolaBoard during a sowing animation', () => {
+  const sowing = { animating: true, hand: { pit: 10, seeds: 3 }, activePit: 10 };
+
+  it('shows no hand and no Skip button when nothing is playing', () => {
+    const w = board();
+    expect(w.find('[data-test="sowing-hand"]').exists()).toBe(false);
+    expect(w.find('[data-test="skip-sowing"]').exists()).toBe(false);
+  });
+
+  it('draws the hand over the pit it is on, hidden from assistive technology, with the seeds it holds', () => {
+    const w = board(sowing);
+    const hand = w.get('[data-test="sowing-hand"]');
+    expect(hand.attributes('aria-hidden')).toBe('true');
+    expect(hand.attributes('data-pit')).toBe('10');
+    expect(hand.text()).toBe('3');
+    // c2 is in screen row 2 (of 0..3) and column 2 for the viewer on side A: a cell is 12.5 % wide, 25 % high.
+    expect(hand.attributes('style')).toContain('left: 25%');
+    expect(hand.attributes('style')).toContain('top: 50%');
+  });
+
+  it('moves the hand when the pit changes, and for the second side too', async () => {
+    const w = board(sowing);
+    await w.setProps({ hand: { pit: 25, seeds: 1 } });
+    // b4 (pit 25) is in screen row 0 and column 1 for side A.
+    const style = w.get('[data-test="sowing-hand"]').attributes('style');
+    expect(style).toContain('left: 12.5%');
+    expect(style).toContain('top: 0%');
+    const b = board({ rows: viewerRows(mangolaState(), 1), ...sowing, hand: { pit: 25, seeds: 1 } }, 1);
+    // Seen from side B, b4 is in screen row 3 and column 6.
+    expect(b.get('[data-test="sowing-hand"]').attributes('style')).toContain('left: 75%');
+    expect(b.get('[data-test="sowing-hand"]').attributes('style')).toContain('top: 75%');
+  });
+
+  it('marks the active pit and the pits being captured', () => {
+    const w = board({ ...sowing, capturing: [18, 26] });
+    expect(pit(w, 'c2').attributes('data-active')).toBe('true');
+    expect(w.findAll('[data-active="true"]')).toHaveLength(1);
+    expect(pit(w, 'c3').attributes('data-capturing')).toBe('true');
+    expect(pit(w, 'c4').attributes('data-capturing')).toBe('true');
+  });
+
+  it('keeps every pit inert even on my turn, and a press on a pit skips instead of sowing', async () => {
+    const w = board(sowing);
+    expect(w.findAll('button[data-pit]').every(b => b.attributes('aria-disabled') === 'true')).toBe(true);
+    await pit(w, 'a2').trigger('click');
+    expect(w.emitted('sow')).toBeUndefined();
+    expect(w.emitted('skip')).toHaveLength(1);
+    await pit(w, 'c2').trigger('keydown', { key: 'Enter' });
+    expect(w.emitted('sow')).toBeUndefined();
+    expect(w.emitted('skip')).toHaveLength(2);
+  });
+
+  it('has a Skip button that emits skip', async () => {
+    const w = board(sowing);
+    const skip = w.get('[data-test="skip-sowing"]');
+    expect(skip.text()).toBe(ui.board.skip);
+    expect(skip.element.tagName).toBe('BUTTON');
+    await skip.trigger('click');
+    expect(w.emitted('skip')).toHaveLength(1);
+  });
+
+  it('a tap on the board between the pits skips too', async () => {
+    const w = board(sowing);
+    await w.get('.mg-board__grid').trigger('click');
+    expect(w.emitted('skip')).toHaveLength(1);
+  });
+
+  it('does not repeat the announcement: the live region keeps the one sentence it was given', async () => {
+    const w = board({ ...sowing, announcement: 'Bob sowed from a2.' });
+    await w.setProps({ hand: { pit: 11, seeds: 2 }, activePit: 11 });
+    expect(w.get('[data-test="board-live"]').text()).toBe('Bob sowed from a2.');
+    expect(w.find('[data-test="sowing-hand"]').element.closest('[role="status"]')).toBeNull();
+  });
+
+  it('shows the intermediate counts it is given', () => {
+    const state = mangolaState({ board: Array.from({ length: 32 }, (_, i) => (i === 8 ? 0 : i === 9 ? 5 : 1)) });
+    const w = board({ rows: viewerRows(state, 0), ...sowing });
+    expect(pit(w, 'a2').attributes('aria-label')).toContain('0 seeds');
+    expect(pit(w, 'b2').attributes('aria-label')).toContain('5 seeds');
+  });
+});
+
