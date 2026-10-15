@@ -23,7 +23,8 @@ class MorrisRandomAbsentInProductionIT {
     @Test
     void theProductionContextHoldsOnlyThreadLocalGenerators() {
         // the Morris colour draw and the Kobo bots' forgetting; no constant or seeded test generator
-        assertThat(context.getBeansOfType(RandomGenerator.class).keySet(), is(Set.of("morrisRandom", "koboBotRandom")));
+        assertThat(context.getBeansOfType(RandomGenerator.class).keySet(), is(Set.of("morrisRandom", "koboBotRandom",
+                "mangolaRandom")));
         assertThat(context.getBean("morrisRandom"), instanceOf(ThreadLocalRandomGenerator.class));
         assertThat(context.getBean("koboBotRandom"), instanceOf(ThreadLocalRandomGenerator.class));
     }

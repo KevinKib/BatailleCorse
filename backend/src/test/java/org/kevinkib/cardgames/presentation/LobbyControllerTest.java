@@ -60,7 +60,8 @@ class LobbyControllerTest {
         sessionService = new SessionService(
                 new InMemorySessionRepository(Clock.systemUTC()),
                 new GameFactories(List.of(new BullshitFactory(), new BatailleCorseFactory(), new TieredFactory(),
-                        new KoboFactory(), new ThreeMenMorrisFactory())));
+                        new KoboFactory(), new ThreeMenMorrisFactory(),
+                        new org.kevinkib.cardgames.mangola.domain.MangolaFactory())));
         messaging = new RecordingMessaging();
         messaging.resolvingTokensWith(sessionService);
         broadcaster = new RecordingBroadcaster();
@@ -123,6 +124,18 @@ class LobbyControllerTest {
 
         assertThat(messaging.seats, is(List.of(new PlayerId(0))));
         assertThat(lobbyOf(messaging.payloads.get(0)).players().get(1).bot(), is(true));
+    }
+
+    @Test
+    void givenHostOfMangola_whenAddBot_thenRefusedBecauseTheGameHasNoBotsYet() {
+        RoomCreated room = sessionService.createRoom(org.kevinkib.cardgames.mangola.domain.MangolaFactory.GAME_TYPE, "Alice");
+        messaging.clear();
+
+        controller.addBot(new GameActionPayload(room.gameId(), room.hostToken()));
+
+        assertThat(messaging.seats, is(List.of(new PlayerId(0))));
+        assertThat(messaging.payloads.get(0).isSuccess(), is(false));
+        assertThat(sessionService.botSeats(new GameId(room.gameId())).isEmpty(), is(true));
     }
 
     @Test
