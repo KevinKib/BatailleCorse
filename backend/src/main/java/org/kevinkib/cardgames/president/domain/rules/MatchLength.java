@@ -25,6 +25,11 @@ public enum MatchLength implements ChoiceOption {
         this.points = points;
     }
 
+    /** The number of rounds of a rounds match; 0 for a points or endless match. */
+    public int rounds() {
+        return rounds;
+    }
+
     @Override
     public String key() {
         return key;

@@ -18,6 +18,7 @@ import org.kevinkib.cardgames.president.domain.exchange.Title;
 import org.kevinkib.cardgames.president.domain.exchange.Titles;
 import org.kevinkib.cardgames.president.domain.exchange.WrongGiveBackException;
 import org.kevinkib.cardgames.president.domain.play.Play;
+import org.kevinkib.cardgames.president.domain.round.Action;
 import org.kevinkib.cardgames.president.domain.round.AlreadyReadyException;
 import org.kevinkib.cardgames.president.domain.round.FinishedGameException;
 import org.kevinkib.cardgames.president.domain.round.NotPlayersTurnException;
@@ -493,6 +494,34 @@ public class President implements Game {
     /** Every legal play of the seat to act; nothing for any other seat. */
     public synchronized List<Play> legalPlays(PlayerId seat) {
         return round.legalPlays(seat);
+    }
+
+    /**
+     * What the seat may do now: play (and pass unless it leads) when it is its turn, give back while a return
+     * is owed, say it is ready at the barrier; nothing for any other seat, a seat that left, or once finished.
+     */
+    public synchronized List<Action> availableActions(PlayerId seat) {
+        if (finished || !isActive(seat)) {
+            return List.of();
+        }
+        return switch (round.phase()) {
+            case PLAYING -> {
+                if (!seat.equals(round.currentSeat()) || round.hand(seat).isEmpty()) {
+                    yield List.of();
+                }
+                List<Action> actions = new ArrayList<>();
+                if (!round.legalPlays(seat).isEmpty()) {
+                    actions.add(Action.PLAY);
+                }
+                if (!round.trick().plays().isEmpty()) {
+                    actions.add(Action.PASS);
+                }
+                yield actions;
+            }
+            case EXCHANGE -> pendingIndex(seat) >= 0 ? List.of(Action.GIVE_BACK) : List.of();
+            case ROUND_OVER -> ready.contains(seat) ? List.of() : List.of(Action.READY);
+            case FINISHED -> List.of();
+        };
     }
 
     /** The titles earned by the round just scored; empty while a round is being played or dealt. */
