@@ -120,6 +120,12 @@ public class Mangola implements Game {
     /**
      * The seat is ready with its current draft. When both seats are ready the layouts are written on the
      * board, the play starts and the event is {@link MangolaEvent.LayoutsRevealed}.
+     *
+     * <p>Owner decision (2026-10-15): the confirmation that completes the pair is refused with
+     * {@link StuckStartException} when the starting seat would have no legal move on the revealed board. The
+     * check needs both halves (a capture breaks a cycle, so the starter's half alone settles nothing), hence it
+     * cannot run earlier, and it refuses whichever seat completes the pair. A refusal changes nothing and
+     * tells nothing beyond that fact. The seat that does not start is not constrained.
      */
     public synchronized MangolaEvent confirmLayout(PlayerId seat) throws MangolaException {
         requirePlacement();
@@ -130,14 +136,20 @@ public class Mangola implements Game {
         if (layouts[seat.id()] == null) {
             throw new NoLayoutException();
         }
-        ready[seat.id()] = true;
-        version++;
         if (!ready[other(seat).id()]) {
+            ready[seat.id()] = true;
+            version++;
             return new MangolaEvent.LayoutConfirmed(seat);
         }
-        board = MangolaBoard.empty()
+        MangolaBoard revealed = MangolaBoard.empty()
                 .withLayout(sideOf(SEAT_0), toArray(layouts[SEAT_0.id()]))
                 .withLayout(sideOf(SEAT_1), toArray(layouts[SEAT_1.id()]));
+        if (legalPitsOn(revealed, seatA).isEmpty()) {
+            throw new StuckStartException();
+        }
+        ready[seat.id()] = true;
+        version++;
+        board = revealed;
         phase = Phase.PLAY;
         current = seatA;
         countPosition();
@@ -240,8 +252,9 @@ public class Mangola implements Game {
 
     /**
      * Whether the seat's current draft has no finite move once played alone on an otherwise empty board (every
-     * pit it could sow is endless). The server cannot refuse such a draft (the opponent's half is hidden and a
-     * capture breaks a cycle), so it flags it for the editor. False outside the placement phase and without a draft.
+     * pit it could sow is endless). A warning only: the opponent's half is hidden and a capture breaks a cycle,
+     * so this neither proves nor excludes a stuck start (see {@link StuckStartException}, checked on the full
+     * board at the confirmation that completes the pair). False outside the placement phase and without a draft.
      */
     public synchronized boolean draftOnlyEndless(PlayerId seat) {
         requireSeat(seat);
@@ -373,13 +386,17 @@ public class Mangola implements Game {
 
     /** Own pits with enough seeds, leaving out endless ones when the rules make them illegal. */
     private List<Integer> legalPitsOf(PlayerId seat) {
+        return legalPitsOn(board, seat);
+    }
+
+    private List<Integer> legalPitsOn(MangolaBoard onBoard, PlayerId seat) {
         Side side = sideOf(seat);
         List<Integer> pits = new ArrayList<>();
         for (int pit : MangolaGeometry.loop(side)) {
-            if (board.seeds(pit) < rules.minSeedsToMove()) {
+            if (onBoard.seeds(pit) < rules.minSeedsToMove()) {
                 continue;
             }
-            if (rules.endless() == MangolaRules.Endless.ILLEGAL && Sowing.sow(board, side, pit, rules).endless()) {
+            if (rules.endless() == MangolaRules.Endless.ILLEGAL && Sowing.sow(onBoard, side, pit, rules).endless()) {
                 continue;
             }
             pits.add(pit);
