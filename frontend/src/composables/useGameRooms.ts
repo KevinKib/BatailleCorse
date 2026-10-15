@@ -3,6 +3,7 @@ import { useBullshitStore } from '../state/Bullshit.store';
 import { useKoboStore } from '../state/Kobo.store';
 import { useThreeMenMorrisStore } from '../state/ThreeMenMorris.store';
 import { useBatailleCorseStore } from '../state/BatailleCorse.store';
+import { useMangolaStore } from '../state/Mangola.store';
 
 /** What the Game home and the join page need from a game: open a lobby, claim a seat in one. */
 export interface GameRoomClient {
@@ -21,11 +22,13 @@ export function useGameRooms(): (game: GameDefinition) => GameRoomClient {
   const batailleCorse = useBatailleCorseStore();
   const kobo = useKoboStore();
   const morris = useThreeMenMorrisStore();
+  const mangola = useMangolaStore();
   const clients: { [K in GameKey]?: GameRoomClient } = {
     bataillecorse: { create: (name) => batailleCorse.create(name), join: (id, name) => batailleCorse.join(id, name) },
     bullshit: { create: (name) => bullshit.create(name), join: (id, name) => bullshit.join(id, name) },
     kobo: { create: (name) => kobo.create(name), join: (id, name) => kobo.join(id, name) },
     'three-men-morris': { create: (name) => morris.create(name), join: (id, name) => morris.join(id, name) },
+    mangola: { create: (name) => mangola.create(name), join: (id, name) => mangola.join(id, name) },
   };
   return (game) => {
     const client = clients[game.key];

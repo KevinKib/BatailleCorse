@@ -298,3 +298,55 @@ describe("Three Men's Morris messages", () => {
     expect(draw.byRepetition).toBe('Draw by repetition: the same position occurred three times.');
   });
 });
+
+describe('Mangola messages', () => {
+  const emptyLeaves = (node: unknown, path: string): string[] => {
+    if (typeof node === 'string') return node.trim() === '' ? [path] : [];
+    if (Array.isArray(node)) return node.flatMap((v, i) => emptyLeaves(v, `${path}[${i}]`));
+    if (node && typeof node === 'object') return Object.entries(node).flatMap(([k, v]) => emptyLeaves(v, `${path}.${k}`));
+    return [];
+  };
+
+  it('givenThePicker_thenMangolaIsNamedWithAShortPitchAndItsTwoPlayers', () => {
+    expect(messagesEn.gamePicker.games.mangola).toEqual({
+      name: 'Mangola',
+      description: 'Lay out your seeds, then sow and capture. Take every seed of your opponent.',
+      players: '2 players',
+      play: 'Play',
+    });
+  });
+
+  it('givenTheRules_thenTheyCoverGoalBoardPlacementMoveCaptureEndAndForfeit', () => {
+    const rules = messagesEn.mangola;
+    expect(rules.toggleLabel).toBeTruthy();
+    expect(rules.panelTitle).toBe('Mangola');
+    expect(rules.closeLabel).toBeTruthy();
+    for (const topic of ['goal', 'board', 'placement', 'move', 'capture', 'draw', 'forfeit']) {
+      expect(rules.sections.some(s => s.title.toLowerCase().includes(topic)), topic).toBe(true);
+    }
+  });
+
+  it('givenTheMessages_thenEveryLeafStringIsNonEmpty', () => {
+    expect(emptyLeaves(messagesEn.mangolaUi, 'mangolaUi')).toEqual([]);
+    expect(emptyLeaves(messagesEn.mangola, 'mangola')).toEqual([]);
+    expect(emptyLeaves(messagesEn.options.mangola, 'options.mangola')).toEqual([]);
+  });
+
+  it('givenTheLobbyOptions_thenEveryValueTheServerOffersIsNamed', () => {
+    const { setup, firstPlayer } = messagesEn.options.mangola;
+    expect(setup.label).toBeTruthy();
+    expect(['free', 'checkerboard', 'random'].map(v => setup[v])).toEqual(['Free placement', 'Checkerboard', 'Random']);
+    expect(firstPlayer.label).toBeTruthy();
+    expect(['host', 'guest', 'random'].map(v => firstPlayer[v])).toEqual(['Host', 'Guest', 'Random']);
+  });
+
+  it('givenTheTableMessages_thenTheEndScreenWordsEveryReason', () => {
+    const ui = messagesEn.mangolaUi;
+    expect(ui.end.winner).toBe('Winner: {player}');
+    expect(ui.end.noMoveWon).toContain('{player}');
+    expect(ui.end.noMoveLost).toBeTruthy();
+    expect(ui.end.drawRepetition).toContain('three times');
+    expect(ui.end.drawEndless).toBeTruthy();
+    expect(ui.end.youWonResigned).toContain('{player}');
+  });
+});
