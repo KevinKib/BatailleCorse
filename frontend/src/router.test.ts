@@ -25,7 +25,7 @@ describe('app router', () => {
   });
 
   it('givenAGameHome_thenStaysUnderItsOwnPathForBothGames', async () => {
-    for (const key of ['bataillecorse', 'bullshit', 'kobo', 'three-men-morris', 'president']) {
+    for (const key of ['bataillecorse', 'bullshit', 'kobo', 'three-men-morris', 'president', 'mangola']) {
       const route = await resolveAt(`/games/${key}`);
       expect(route.fullPath).toBe(`/games/${key}`);
       expect(route.name).toBe('game-home');
@@ -34,7 +34,7 @@ describe('app router', () => {
   });
 
   it('givenInviteLinks_thenTheyAreNotRedirected', async () => {
-    for (const key of ['bataillecorse', 'bullshit', 'kobo', 'three-men-morris', 'president']) {
+    for (const key of ['bataillecorse', 'bullshit', 'kobo', 'three-men-morris', 'president', 'mangola']) {
       const join = await resolveAt(`/games/${key}/join/abc`);
       expect(join.fullPath).toBe(`/games/${key}/join/abc`);
       expect(join.name).toBe('game-join');
@@ -46,6 +46,7 @@ describe('app router', () => {
     expect((await resolveAt('/games/kobo/room/abc')).name).toBe('kobo-room');
     expect((await resolveAt('/games/three-men-morris/room/abc')).name).toBe('three-men-morris-room');
     expect((await resolveAt('/games/president/room/abc')).name).toBe('president-room');
+    expect((await resolveAt('/games/mangola/room/abc')).name).toBe('mangola-room');
   });
 
   it('givenLegacyCreatePaths_thenRedirectToTheGameHome', async () => {

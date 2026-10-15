@@ -57,6 +57,11 @@ function fanStyle(i: number) {
   pointer-events: none;
 }
 
+/* Short phones (375x667, 360x640): six games in three rows need the room the decoration takes. */
+@media (max-width: 640px) and (max-height: 700px) {
+  .deco-cards { display: none; }
+}
+
 .deco-card {
   position: absolute;
   bottom: 0;

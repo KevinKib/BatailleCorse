@@ -486,6 +486,57 @@ export const messagesEn: Messages = {
   turn: {
     yourTurn: 'Your turn',
   },
+  mangola: {
+    toggleLabel: 'Rules',
+    panelTitle: 'Mangola',
+    closeLabel: 'Close rules',
+    sections: [
+      {
+        kind: 'text',
+        title: 'Goal',
+        body: ['Capture every seed of your opponent, or leave them without a move on their turn.'],
+      },
+      {
+        kind: 'text',
+        title: 'The board',
+        body: [
+          'Four rows of eight pits, 64 seeds in all. You own the two rows nearest you: 32 seeds, never more, never less. The two middle rows face each other.',
+          'Each player sows along a loop of their own 16 pits, never into the opponent\'s half. The small arrows show the direction.',
+        ],
+      },
+      {
+        kind: 'text',
+        title: 'Placement',
+        body: ['Before the first move both players lay out their 32 seeds, in secret. Tap a pit to add a seed, switch to Remove to take one back, or start from a preset. Both layouts are revealed together once both players confirm.'],
+      },
+      {
+        kind: 'text',
+        title: 'A move',
+        body: [
+          'Pick one of your pits with at least two seeds. Take all its seeds and drop them one by one in the next pits of your loop.',
+          'If the pit after the last seed is empty, the last seed goes one pit further and your turn ends. If it holds seeds, the last seed lands there and the move goes on.',
+        ],
+      },
+      {
+        kind: 'text',
+        title: 'Capture and relay',
+        body: [
+          'When the last seed lands in an occupied pit of your middle row and both the facing pit and the pit behind it hold seeds, you capture them all and sow them on, from the pit after the one you started the lap from.',
+          'Otherwise you take every seed of that pit and keep sowing from it (a relay).',
+        ],
+      },
+      {
+        kind: 'text',
+        title: 'End and draws',
+        body: ['A player who cannot move on their turn loses. A move that would sow for ever is not allowed. The same position three times is a draw.'],
+      },
+      {
+        kind: 'text',
+        title: 'Forfeit',
+        body: ['Leaving the game, or staying disconnected too long, gives the win to your opponent.'],
+      },
+    ],
+  },
   mangolaUi: {
     board: { label: 'Mangola board', yourSide: 'Your side', opponentSide: "Opponent's side", skip: 'Skip' },
     move: {
@@ -532,6 +583,31 @@ export const messagesEn: Messages = {
     },
     errors: {
       stuckStart: 'With these two layouts the player who starts would have no move. Change your layout and confirm again.',
+    },
+    playerLabel: 'Player {n}',
+    back: 'Back',
+    connecting: 'Joining the table…',
+    table: {
+      waitingFor: 'Waiting for {player}',
+      hintSow: 'Choose one of your pits with at least two seeds',
+      seeds: { one: '{n} seed', other: '{n} seeds' },
+      forfeited: '{player} forfeited',
+      offline: 'Connection lost. Reconnecting…',
+      repetition: 'This position has now appeared twice. A third time is a draw.',
+    },
+    end: {
+      winner: 'Winner: {player}',
+      noMoveWon: '{player} has no move left.',
+      noMoveLost: 'You have no move left.',
+      drawRepetition: 'Draw by repetition: the same position occurred three times.',
+      drawEndless: 'Draw: a sowing that never ends.',
+      youWonResigned: '{player} resigned.',
+      youWonDisconnected: '{player} disconnected.',
+      youWonForfeit: 'Your opponent left the game.',
+      youLostForfeit: 'You left the game.',
+      playAgain: 'Play again',
+      rematchPending: 'Joining the new table…',
+      rematchFailed: 'Could not start a new game. Try again.',
     },
   },
   morrisBoard: {
@@ -796,6 +872,12 @@ export const messagesEn: Messages = {
         players: '3–8 players',
         play: 'Play',
       },
+      mangola: {
+        name: 'Mangola',
+        description: 'Lay out your seeds, then sow and capture. Take every seed of your opponent.',
+        players: '2 players',
+        play: 'Play',
+      },
     },
   },
   endScreen: {
@@ -910,6 +992,10 @@ export const messagesEn: Messages = {
         label: 'Match length', 'rounds-5': '5 rounds', 'rounds-3': '3 rounds', 'rounds-10': '10 rounds',
         'points-11': 'First to 11', 'points-21': 'First to 21', endless: 'Endless',
       },
+    },
+    mangola: {
+      setup: { label: 'Set-up', free: 'Free placement', checkerboard: 'Checkerboard', random: 'Random' },
+      firstPlayer: { label: 'First player', host: 'Host', guest: 'Guest', random: 'Random' },
     },
   },
 };

@@ -7,6 +7,7 @@ import { useKoboStore } from '../state/Kobo.store';
 import { useThreeMenMorrisStore } from '../state/ThreeMenMorris.store';
 import { usePresidentStore } from '../state/President.store';
 import { useBatailleCorseStore } from '../state/BatailleCorse.store';
+import { useMangolaStore } from '../state/Mangola.store';
 
 describe('useGameRooms', () => {
   beforeEach(() => { setActivePinia(createPinia()); });
@@ -71,6 +72,17 @@ describe('useGameRooms', () => {
     await room.join('g5', 'Bob');
     expect(create).toHaveBeenCalledWith('Alice');
     expect(join).toHaveBeenCalledWith('g5', 'Bob');
+  });
+
+  it('givenMangola_thenCreateAndJoinGoThroughItsStore', async () => {
+    const store = useMangolaStore();
+    const create = vi.spyOn(store, 'create').mockResolvedValue('g6');
+    const join = vi.spyOn(store, 'join').mockResolvedValue();
+    const room = useGameRooms()(findGame('mangola')!);
+    expect(await room.create('Alice')).toBe('g6');
+    await room.join('g6', 'Bob');
+    expect(create).toHaveBeenCalledWith('Alice');
+    expect(join).toHaveBeenCalledWith('g6', 'Bob');
   });
 
   it('givenAGameWithNoRoomClient_thenItFailsLoudlyInsteadOfJoiningAnotherGame', () => {

@@ -7,6 +7,7 @@ import BullshitGameScreen from './view/bullshit/BullshitGameScreen.vue';
 import KoboGameScreen from './view/kobo/KoboGameScreen.vue';
 import ThreeMenMorrisGameScreen from './view/threemenmorris/ThreeMenMorrisGameScreen.vue';
 import PresidentGameScreen from './view/president/PresidentGameScreen.vue';
+import MangolaGameScreen from './view/mangola/MangolaGameScreen.vue';
 import { findGame } from './model/games';
 
 const BASE = '/games/bataillecorse';
@@ -35,6 +36,7 @@ export const routes = [
   { path: '/games/president/new', redirect: '/games/president' },
   { path: '/games/president/create', redirect: '/games/president' },
   { path: '/games/president/room/:id', name: 'president-room', component: PresidentGameScreen, props: (route: { params: Record<string, unknown> }) => ({ gameId: route.params.id }) },
+  { path: '/games/mangola/room/:id', name: 'mangola-room', component: MangolaGameScreen, props: (route: { params: Record<string, unknown> }) => ({ gameId: route.params.id }) },
   { path: '/:pathMatch(.*)*', redirect: { name: 'games' } },
 ];
 

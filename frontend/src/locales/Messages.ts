@@ -243,6 +243,10 @@ export interface OptionsMessages {
   };
   /** By option key (`afterPass`...): `label`, then the text of each value. `preset` is the Classic card of the lobby. */
   president: Record<string, OptionTexts>;
+  mangola: {
+    setup: OptionTexts;                // `label`, then `free` / `checkerboard` / `random`
+    firstPlayer: OptionTexts;          // `label`, then `host` / `guest` / `random`
+  };
 }
 
 export type PresidentTitleKey = 'president' | 'vicePresident' | 'neutral' | 'viceScum' | 'scum';
@@ -564,6 +568,32 @@ export interface MangolaUiMessages {
   errors: {
     stuckStart: string;                // `mangola.errors.stuckStart`: the layouts leave the starter without a move
   };
+  // The screen (`MangolaGameScreen`).
+  playerLabel: string;                 // '{n}' = 1-based seat number, for a player without a name
+  back: string;
+  connecting: string;                  // shown while the first server state is on its way
+  table: {
+    waitingFor: string;                // '{player}': not my turn
+    hintSow: string;                   // my turn
+    seeds: PluralForms;                // '{n}' = seeds on a player's side (the tag)
+    forfeited: string;                 // '{player}'
+    offline: string;                   // my own connection is down; the socket retries by itself
+    repetition: string;                // the position has occurred twice
+  };
+  end: {
+    winner: string;                    // '{player}': names the winner on the end screen
+    noMoveWon: string;                 // '{player}' (the loser) has no move left
+    noMoveLost: string;                // I have no move left
+    drawRepetition: string;
+    drawEndless: string;
+    youWonResigned: string;            // '{player}'
+    youWonDisconnected: string;        // '{player}'
+    youWonForfeit: string;             // the opponent left, reason unknown (event missed after a reload)
+    youLostForfeit: string;            // I left (resigned or timed out) and see the finished game again
+    playAgain: string;
+    rematchPending: string;
+    rematchFailed: string;
+  };
 }
 
 // Screen text of the Three Men's Morris table. Placeholders use `{name}` and are filled by `format()` / `plural()`.
@@ -627,7 +657,8 @@ export interface Messages {
   presidentUi: PresidentUiMessages; // President screens
   threeMenMorris: RulesMessages;    // Three Men's Morris
   morrisBoard: MorrisBoardMessages; // Three Men's Morris board
-  mangolaUi: MangolaUiMessages; // Mangola board and placement editor
+  mangola: RulesMessages;   // Mangola
+  mangolaUi: MangolaUiMessages; // Mangola screen, board and placement editor
   threeMenMorrisUi: ThreeMenMorrisUiMessages; // Three Men's Morris screens
   morrisLobby: MorrisLobbyMessages; // Three Men's Morris lobby options
   morrisVariantRules: Record<'achi' | 'picaria', RulesMessages>; // rules panel of the variants (Tapatan: threeMenMorris)
