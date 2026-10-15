@@ -155,7 +155,7 @@ describe('KoboMotionLayer', () => {
 
     it('givenNoWait_thenNoExtraAnimationAndNothingUnderTheCopy', async () => {
       const wrapper = mount(KoboMotionLayer, { props: { resolve: (a) => target(a.kind === 'draw' ? 0 : 100) } });
-      play(wrapper)([travel()]);
+      play(wrapper)([travel({ byOpponent: false })]);
       await flushPromises();
       expect(animateCalls).toHaveLength(1);
       expect(wrapper.findAll('[data-test="motion-under"]')).toHaveLength(0);
