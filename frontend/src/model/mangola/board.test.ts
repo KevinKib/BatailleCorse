@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { MAX_DOTS, arrowOf, seedDisplay, sideOfSeat, viewerRows } from './board';
+import { MAX_DOTS, arrowOf, rowsWithBoard, seedDisplay, sideOfSeat, viewerRows } from './board';
 import { mangolaState, placementState } from './mangolaFixtures';
 
 describe('sideOfSeat', () => {
@@ -100,5 +100,22 @@ describe('seedDisplay', () => {
 
   it('shows nothing for a hidden pit', () => {
     expect(seedDisplay(null)).toEqual({ kind: 'hidden' });
+  });
+});
+
+describe('rowsWithBoard', () => {
+  it('shows the counts of another board on the same cells, leaving the rest untouched', () => {
+    const rows = viewerRows(mangolaState(), 0);
+    const shown = Array.from({ length: 32 }, (_, pit) => pit);
+    const out = rowsWithBoard(rows, shown);
+    for (const cell of out.flat()) expect(cell.count).toBe(cell.pit);
+    const before = rows.flat().find(c => c.pit === 8)!;
+    const after = out.flat().find(c => c.pit === 8)!;
+    expect({ ...after, count: before.count }).toEqual(before);
+  });
+
+  it('returns the rows as they are without a board', () => {
+    const rows = viewerRows(mangolaState(), 0);
+    expect(rowsWithBoard(rows, null)).toBe(rows);
   });
 });
