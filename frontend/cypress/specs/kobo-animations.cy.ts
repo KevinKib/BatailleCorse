@@ -4,13 +4,14 @@
 // sheet is still rising); and `prefers-reduced-motion: reduce` shows the state at once with nothing moving.
 // No fixed wait anywhere: flights are observed from the page (a MutationObserver records every copy as it is added),
 // so a short flight cannot be missed by a slow poll. Two rooms only.
+import { MOTION_MAX_MS } from '../../src/model/kobo/tempo';
 import { awaitState, DECK_CODES, scriptedDiscardTurn, startKoboTable } from '../support/koboRoom';
 
 const slot = (seat: number, n: number) => `[data-test="slot-${seat}-${n}"]`;
 const logLine = '[data-test="event-log-line"]';
 const layer = '[data-test="motion-layer"]';
 const sheet = '[data-test="score-sheet"]';
-const MAX_MS = 700;
+const MAX_MS = MOTION_MAX_MS;
 
 interface Seen {
   kind: string | null;
@@ -24,6 +25,7 @@ interface Spy {
   __seen: Seen[];
   __timings: { duration: number; delay: number }[];
   __live: number;
+  __marks: number;
   __clickedInFlight: boolean | null;
   __clickWhen?: { slot: string; discardAlt: string };
 }
@@ -35,6 +37,7 @@ function spyOnMotion() {
     w.__seen = [];
     w.__timings = [];
     w.__live = 0;
+    w.__marks = 0;
     w.__clickedInFlight = null;
     const original = win.Element.prototype.animate;
     win.Element.prototype.animate = function (this: Element, frames: any, options: any) {
@@ -46,6 +49,7 @@ function spyOnMotion() {
     const observer = new win.MutationObserver((records) => {
       for (const record of records) {
         record.addedNodes.forEach((node) => {
+          if (node instanceof win.HTMLElement && node.dataset.test === 'motion-mark') w.__marks += 1;
           if (!(node instanceof win.HTMLElement) || node.dataset.test !== 'motion-card') return;
           const layerEl = win.document.querySelector(layer) as HTMLElement;
           const r = node.getBoundingClientRect();
@@ -144,8 +148,10 @@ describe('Kobo animations', () => {
           expect(s.left, 'starts inside the screen').to.be.at.least(0);
           expect(s.right, 'starts inside the screen').to.be.at.most(win.innerWidth);
         }
+        expect(w.__marks, 'the cards touched by the moves were ringed').to.be.greaterThan(0);
         expect(w.__timings.length).to.be.greaterThan(0);
-        for (const t of w.__timings) expect(t.delay + t.duration, 'a movement lasts under 700 ms').to.be.lessThan(MAX_MS);
+        expect(Math.max(...w.__timings.map((t) => t.duration)), 'an opponent flight is slow enough to follow').to.be.at.least(1200);
+        for (const t of w.__timings) expect(t.delay + t.duration, 'a movement lasts within the tempo limit').to.be.at.most(MAX_MS);
       });
       cy.document().then((doc) => {
         expect(doc.documentElement.scrollWidth, 'page width').to.be.at.most(doc.documentElement.clientWidth);
@@ -176,6 +182,7 @@ describe('Kobo animations', () => {
       cy.window().then((win) => {
         expect((win as unknown as Spy).__seen, 'no card flew under reduced motion').to.have.length(0);
         expect((win as unknown as Spy).__timings, 'no animation was started by the layer').to.have.length(0);
+        expect((win as unknown as Spy).__marks, 'the touched cards are still outlined').to.be.greaterThan(0);
       });
       cy.get(sheet).should('have.css', 'animation-name', 'none');
 
