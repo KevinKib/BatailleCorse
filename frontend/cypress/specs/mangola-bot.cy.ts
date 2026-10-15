@@ -8,13 +8,12 @@ const MAX_MOVES = 150;
 const level = () => cy.get('[data-test="seat-option-1-level"]');
 const live = () => cy.get('[data-test="board-live"]');
 
-/** The host's lobby with a bot on seat 1, the host to move first; `setup` is the lobby radio, free by default. */
-function lobbyWithBot(setup?: 'checkerboard' | 'random') {
+/** The host's lobby with a bot on seat 1, the host to move first (the set-up is always free placement). */
+function lobbyWithBot() {
   cy.visit('/games/mangola');
   cy.get('[data-test="name"]').type('Alice');
   cy.get('[data-test="new-game"]').click();
   cy.get('[data-test="lobby"]', { timeout: 10000 }).should('be.visible');
-  if (setup) cy.get(`[data-test="option-setup-${setup}"]`).check({ force: true });
   cy.get('[data-test="option-firstPlayer-host"]').check({ force: true });
   cy.get('[data-test="add-bot"]').click();
 }
@@ -79,11 +78,16 @@ describe('Mangola against a bot', () => {
     cy.get('[data-test="tag-name"]').first().should('have.text', 'Bot 1');
   });
 
-  it('Expert from a checkerboard: the bot answers each move, to an end screen, and Play again keeps it and its level', () => {
-    lobbyWithBot('checkerboard');
+  it('Expert from a placed checkerboard: the bot answers each move, to an end screen, and Play again keeps it and its level', () => {
+    lobbyWithBot();
     level().select('Expert');
     level().should('have.value', 'expert');
     cy.get('[data-test="start"]').click();
+    cy.get('[data-test="placement-editor"]', { timeout: 10000 }).should('be.visible');
+    cy.get('[data-test="preset-checkerboard"]').click();
+    cy.get('[data-test="seeds-left"]').should('contain.text', 'All seeds placed');
+    cy.get('[data-test="opponent-half"]').should('have.attr', 'data-ready', 'true');
+    cy.get('[data-test="confirm"]').should('not.be.disabled').click();
     cy.get('[data-test="mangola-board"]', { timeout: 10000 }).should('be.visible');
     cy.get('[data-test="placement-editor"]').should('not.exist');
     cy.get('[data-test="tag-name"]').first().should('have.text', 'Bot 1');
@@ -100,7 +104,7 @@ describe('Mangola against a bot', () => {
     cy.get('[data-test="lobby"]', { timeout: 10000 }).should('be.visible');
     cy.get('[data-test="badge-bot"]').should('be.visible');
     level().should('have.value', 'expert');
-    cy.get('[data-test="option-setup"] .choice--on').should('contain.text', 'Checkerboard');
+    cy.get('[data-test="option-firstPlayer"] .choice--on').should('contain.text', 'Host');
   });
 
   SIZES.forEach(([width, height]) => {

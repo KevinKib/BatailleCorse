@@ -1,4 +1,4 @@
-// Mangola lobby: the shared two-player lobby on the Mangola store, with the two host options (the set-up and who
+// Mangola lobby: the shared two-player lobby on the Mangola store, with the host option (who
 // starts). The second player is a scripted STOMP client (there is no bot yet).
 import { joinAsScriptedPlayer } from '../support/stompPlayer';
 
@@ -30,22 +30,18 @@ describe('Mangola lobby', () => {
     });
   });
 
-  it('lets the host choose the set-up and who starts; the guest reads them, read-only', () => {
+  it('lets the host choose who starts; the guest reads it, read-only', () => {
     hostLobby().then((id) => {
-      // The server's defaults: free placement, the first player drawn at random.
-      cy.get('[data-test="option-setup"] .choice--on').should('contain.text', 'Free placement');
+      // The server's default: the first player drawn at random (the set-up is always free placement).
       cy.get('[data-test="option-firstPlayer"] .choice--on').should('contain.text', 'Random');
-      cy.get('[data-test="option-setup-checkerboard"]').check({ force: true });
-      cy.get('[data-test="option-setup"] .choice--on').should('contain.text', 'Checkerboard');
       cy.get('[data-test="option-firstPlayer-host"]').check({ force: true });
       cy.get('[data-test="option-firstPlayer"] .choice--on').should('contain.text', 'Host');
       joinAsScriptedPlayer(id, 'Bob', 'mangola').then((bob) => {
         // The guest cannot change the host's choices: the server refuses and the lobby keeps them.
-        cy.then(() => bob.publish('/app/lobby/setOptions', { values: { setup: 'random' } }));
+        cy.then(() => bob.publish('/app/lobby/setOptions', { values: { firstPlayer: 'guest' } }));
         cy.wrap(bob.frames).should((frames) => {
           expect(frames.some((f) => f.eventType === 'ERROR' || f.success === false), 'the refusal reached the guest').to.eq(true);
         });
-        cy.get('[data-test="option-setup"] .choice--on').should('contain.text', 'Checkerboard');
         cy.get('[data-test="option-firstPlayer"] .choice--on').should('contain.text', 'Host');
       });
     });
@@ -53,8 +49,8 @@ describe('Mangola lobby', () => {
 
   it('shows the guest the options as read-only text', () => {
     hostLobby('Alice').then((id) => {
-      cy.get('[data-test="option-setup-random"]').check({ force: true });
-      cy.get('[data-test="option-setup"] .choice--on').should('contain.text', 'Random');
+      cy.get('[data-test="option-firstPlayer-guest"]').check({ force: true });
+      cy.get('[data-test="option-firstPlayer"] .choice--on').should('contain.text', 'Guest');
       cy.window().then((win) => win.localStorage.removeItem(`mangola:tokens:${id}`));
       cy.visit(`/games/mangola/join/${id}`);
       cy.get('[data-test="name"]').type('Bob');
@@ -62,8 +58,7 @@ describe('Mangola lobby', () => {
       cy.url({ timeout: 10000 }).should('match', new RegExp(`/games/mangola/room/${id}`));
       cy.get('[data-test="lobby"]', { timeout: 10000 }).should('be.visible');
       cy.get('.players li').should('have.length', 2);
-      cy.get('[data-test="option-setup"]').should('contain.text', 'Random');
-      cy.get('[data-test="option-setup"] input').should('not.exist');
+      cy.get('[data-test="option-firstPlayer"]').should('contain.text', 'Guest');
       cy.get('[data-test="option-firstPlayer"] input').should('not.exist');
       cy.get('[data-test="start"]').should('not.exist');
     });
@@ -93,14 +88,14 @@ describe('Mangola lobby', () => {
     });
   });
 
-  it('starts on the board when the set-up is not free', () => {
+  it('offers no set-up choice: whatever the options, the game starts on the placement editor', () => {
     hostLobby().then((id) => {
-      cy.get('[data-test="option-setup-checkerboard"]').check({ force: true });
-      cy.get('[data-test="option-setup"] .choice--on').should('contain.text', 'Checkerboard');
+      cy.get('[data-test="option-setup"]').should('not.exist');
+      cy.get('[data-test="option-firstPlayer-guest"]').check({ force: true });
       joinAsScriptedPlayer(id, 'Bob', 'mangola').then(() => {
         cy.get('[data-test="start"]').should('not.be.disabled').click();
-        cy.get('[data-test="mangola-board"]', { timeout: 10000 }).should('be.visible');
-        cy.get('[data-test="placement-editor"]').should('not.exist');
+        cy.get('[data-test="placement-editor"]', { timeout: 10000 }).should('be.visible');
+        cy.get('[data-test="mangola-board"]').should('not.exist');
       });
     });
   });
