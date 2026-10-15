@@ -751,6 +751,21 @@ describe('KoboGameScreen', () => {
         window.matchMedia = original.media;
       });
 
+      it('givenMySwap_thenTheCardIDrewTravelsFaceUpAndTurnsDownAndTheOldDiscardTopStaysUnderTheLandingCard', async () => {
+        const queen = buildKoboCard('QUEEN', 'CLUB');
+        const seven = buildKoboCard('7', 'SPADE');
+        const four = buildKoboCard('4', 'HEART');
+        const players = [buildKoboPlayer(0, { current: true }), buildKoboPlayer(1)];
+        const { wrapper, store } = await playing({ phase: 'TURN', currentSeat: 0, hasDrawn: true, drawnCard: queen, discardTop: four, players });
+        store.applyEvent({ type: 'state-update', state: buildKoboState({ phase: 'TURN', currentSeat: 0, hasDrawn: false, drawnCard: null, discardTop: seven, players, version: 99 }) });
+        event(store, 'SWAP', { seat: 0, slot: 0, card: seven });
+        await flushPromises();
+        const swapCopy = cards(wrapper).find(c => c.find('[data-face="front"]').exists() && c.find('[data-face="back"]').exists());
+        expect(swapCopy).toBeDefined();
+        // The pile top the discarded card is about to cover stays visible until it lands.
+        expect(wrapper.findAll('[data-test="motion-under"]').length).toBeGreaterThan(0);
+      });
+
       it('givenAnOpponentDraws_thenACardTravelsOverTheTableAndTheTableIsUntouched', async () => {
         const { wrapper, store } = await playing({ phase: 'DRAW', currentSeat: 1 });
         expect(cards(wrapper)).toHaveLength(0);
@@ -760,21 +775,27 @@ describe('KoboGameScreen', () => {
         expect(wrapper.get('[data-test="motion-layer"]').attributes('aria-hidden')).toBe('true');
       });
 
-      it('givenABurstOfEvents_thenTheirFlightsAreStaggeredSoEachOneIsVisible', async () => {
+      it('givenABurstOfEvents_thenEachCopyIsSetUpAtOnceButTheLaterOnesWaitForTheEndOfTheFlightBeforeThem', async () => {
         vi.useFakeTimers();
+        const delays: number[] = [];
+        const original = Element.prototype.animate;
+        Element.prototype.animate = function (this: Element, frames: Keyframe[], options: KeyframeAnimationOptions) {
+          if (this.getAttribute('data-test') === 'motion-card') delays.push(Number(options.delay ?? 0));
+          return original.call(this, frames, options);
+        } as typeof original;
         try {
           const { wrapper, store } = await playing({ phase: 'DRAW', currentSeat: 1 });
           event(store, 'DRAW', {});
           event(store, 'DISCARD_DRAWN', { card: buildKoboCard('4', 'CLUB') });
           await vi.advanceTimersByTimeAsync(0);
-          const first = cards(wrapper).length;
-          expect(first).toBeGreaterThan(0);
-          const kinds = () => cards(wrapper).map(c => c.attributes('data-ghost'));
-          const firstIds = kinds();
-          // The second event waits for the end of the first flight, then flies.
-          await vi.advanceTimersByTimeAsync(TEMPO.opponent.holdBeforeMs + TEMPO.opponent.flightMs + 50);
-          expect(kinds().some(id => !firstIds.includes(id))).toBe(true);
+          expect(cards(wrapper)).toHaveLength(2);
+          // The first leaves after its hold; the second also waits for the first flight to be over.
+          delays.splice(0, delays.length, ...delays.filter(d => d > 0)); // the 0 is the wait that keeps the second copy invisible
+          expect(delays).toHaveLength(2);
+          expect(delays[0]).toBe(TEMPO.opponent.holdBeforeMs);
+          expect(delays[1]).toBeGreaterThanOrEqual(TEMPO.opponent.holdBeforeMs + TEMPO.opponent.flightMs);
         } finally {
+          Element.prototype.animate = original;
           vi.useRealTimers();
         }
       });

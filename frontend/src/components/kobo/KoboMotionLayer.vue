@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, ref } from 'vue';
 import PlayingCard from '../PlayingCard.vue';
+import type Card from '../../model/Card';
 import type { Movement, MotionAnchor } from '../../model/kobo/motion';
 import { TEMPO } from '../../model/kobo/tempo';
 import { prefersReducedMotion } from '../../composables/usePileAnimation';
@@ -19,7 +20,9 @@ export interface MotionTarget {
 
 const props = defineProps<{ resolve: (anchor: MotionAnchor) => MotionTarget | null }>();
 
-interface Ghost { id: number; movement: Movement; from: MotionRect; to: MotionRect; hide: HTMLElement[] }
+interface Ghost { id: number; movement: Movement; from: MotionRect; to: MotionRect; hide: HTMLElement[]; waitMs: number }
+/** A card the table keeps showing in a place until a copy lands on it (or leaves it), so the place is never blank. */
+interface Under { id: number; owner: number; rect: MotionRect; card: Card | null; until: 'land' | 'leave' }
 interface Arrow { id: number; x1: number; y1: number; x2: number; y2: number; delayMs: number }
 /** A ring on a slot a move touched: a plain outline, kept for a moment so the changed cards can be found. */
 interface Mark { id: number; rect: MotionRect; role: 'from' | 'to'; lifeMs: number; still: boolean }
@@ -30,6 +33,7 @@ const MAX_MARKS = 24;
 const ghosts = ref<Ghost[]>([]);
 const arrows = ref<Arrow[]>([]);
 const marks = ref<Mark[]>([]);
+const unders = ref<Under[]>([]);
 const markTimers = new Set<ReturnType<typeof setTimeout>>();
 const root = ref<HTMLElement | null>(null);
 let counter = 0;
@@ -99,29 +103,61 @@ function showMarks(movements: Movement[]) {
  * Plays the movements of one event. Never throws, never waits: a failure only costs the picture. `marksOnly`: the
  * backlog is full, so the rings show at once and the flights are skipped.
  */
-function play(movements: Movement[], options: { marksOnly?: boolean } = {}) {
-  try {
-    showMarks(movements);
-  } catch {
-    /* a picture is never worth an error */
+function play(movements: Movement[], options: { marksOnly?: boolean; startInMs?: number } = {}) {
+  // `startInMs`: this event waits behind the previous one. It is set up at once (the table already shows the new
+  // state: the places the copies land on are hidden and show their old card meanwhile) but its copies stay
+  // invisible until their turn, and its rings come with them.
+  const wait = options.marksOnly || prefersReducedMotion() ? 0 : Math.max(0, options.startInMs ?? 0);
+  const ring = () => {
+    try {
+      showMarks(movements);
+    } catch {
+      /* a picture is never worth an error */
+    }
+  };
+  if (wait > 0) {
+    const timer = setTimeout(() => { markTimers.delete(timer); ring(); }, wait);
+    markTimers.add(timer);
+  } else {
+    ring();
   }
   try {
     if (options.marksOnly || !canAnimate()) return;
     for (const movement of movements) {
-      if (movement.kind === 'reveal') { playReveal(movement); continue; }
+      if (movement.kind === 'reveal') {
+        if (wait > 0) {
+          const timer = setTimeout(() => { markTimers.delete(timer); playReveal(movement); }, wait);
+          markTimers.add(timer);
+        } else {
+          playReveal(movement);
+        }
+        continue;
+      }
       if (ghosts.value.length >= MAX_LIVE) break;
       const from = props.resolve(movement.from);
       const to = props.resolve(movement.to);
       if (!from || !to || from.rect.width <= 0 || to.rect.width <= 0) continue;
       const id = ++counter;
       const hideCards = movement.kind === 'travel' ? to.cards : [];
-      ghosts.value.push({ id, movement, from: from.rect, to: to.rect, hide: hideCards });
+      ghosts.value.push({ id, movement, from: from.rect, to: to.rect, hide: hideCards, waitMs: wait });
+      if (movement.kind === 'travel') {
+        if (movement.restsOn !== undefined) unders.value.push({ id: ++counter, owner: id, rect: to.rect, card: movement.restsOn, until: 'land' });
+        if (movement.leavesBack) {
+          const under: Under = { id: ++counter, owner: id, rect: from.rect, card: null, until: 'leave' };
+          unders.value.push(under);
+          const timer = setTimeout(() => {
+            markTimers.delete(timer);
+            unders.value = unders.value.filter(u => u.id !== under.id);
+          }, wait + movement.delayMs + 80);
+          markTimers.add(timer);
+        }
+      }
       if (movement.byOpponent) {
         const center = (r: MotionRect) => ({ x: r.left + r.width / 2, y: r.top + r.height / 2 });
         const a = center(from.rect);
         const b = center(to.rect);
         if (Math.hypot(b.x - a.x, b.y - a.y) > 28) {
-          arrows.value.push({ id, x1: a.x, y1: a.y, x2: b.x, y2: b.y, delayMs: movement.delayMs });
+          arrows.value.push({ id, x1: a.x, y1: a.y, x2: b.x, y2: b.y, delayMs: wait + movement.delayMs });
         }
       }
       void nextTick(() => launch(id));
@@ -137,9 +173,11 @@ function launch(id: number) {
   const finish = () => {
     ghosts.value = ghosts.value.filter(g => g.id !== id);
     arrows.value = arrows.value.filter(a => a.id !== id);
+    unders.value = unders.value.filter(u => u.owner !== id);
   };
   if (!ghost || !el) { finish(); return; }
-  const { movement, from, to } = ghost;
+  const { movement, from, to, waitMs } = ghost;
+  const startMs = waitMs + movement.delayMs;
   const centre = (r: MotionRect, scale: number) =>
     `translate(${r.left}px, ${r.top}px) scale(${scale})`;
   const scale = to.width / from.width;
@@ -162,16 +200,19 @@ function launch(id: number) {
   ghost.hide.forEach(hide);
   const release = () => { ghost.hide.forEach(show); finish(); };
   // The cards come back whatever happens to the animation (cut, late, never started).
-  const safety = setTimeout(release, movement.delayMs + total + 250);
-  const options: KeyframeAnimationOptions = { duration: total, delay: movement.delayMs, fill: 'both' };
+  const safety = setTimeout(release, startMs + total + 250);
+  const options: KeyframeAnimationOptions = { duration: total, delay: startMs, fill: 'both' };
   try {
     track(el.animate(frames, options), () => { clearTimeout(safety); release(); });
-    if (movement.flip && movement.card) flipFaces(el, movement.durationMs, movement.delayMs);
+    // Behind another movement: the copy is not seen until its turn comes.
+    if (waitMs > 0) track(el.animate([{ opacity: 0 }, { opacity: 0 }], { duration: waitMs, delay: 0, fill: 'none' }));
+    if (movement.flip && movement.card) flipFaces(el, movement.durationMs, startMs);
+    if (movement.turnDown && movement.card) turnFacesDown(el, movement.durationMs, total, startMs);
     const arrow = root.value?.querySelector<SVGElement>(`[data-arrow="${id}"]`);
     if (arrow) {
       // Visible from the hold before to the end of the hold after, so the direction can be read.
       track(arrow.animate([{ opacity: 0 }, { opacity: 0.8, offset: 0.12 }, { opacity: 0.8, offset: 0.85 }, { opacity: 0 }],
-        { duration: total, delay: movement.delayMs, fill: 'both' }));
+        { duration: total, delay: startMs, fill: 'both' }));
     }
   } catch {
     clearTimeout(safety);
@@ -194,11 +235,23 @@ function flipFaces(el: HTMLElement, duration: number, delay: number) {
   if (front) track(front.animate([{ transform: 'scaleX(0)' }, { transform: 'scaleX(0)', offset: 0.5 }, { transform: 'scaleX(1)' }], options));
 }
 
+// The card I saw turns face down once it has landed: the face narrows to nothing, then the back opens.
+function turnFacesDown(el: HTMLElement, flight: number, total: number, delay: number) {
+  const back = el.querySelector<HTMLElement>('[data-face="back"]');
+  const front = el.querySelector<HTMLElement>('[data-face="front"]');
+  const landed = flight / total;
+  const closed = landed + (1 - landed) / 2;
+  const options = { duration: total, delay, fill: 'both' as const };
+  if (front) track(front.animate([{ transform: 'scaleX(1)' }, { transform: 'scaleX(1)', offset: landed }, { transform: 'scaleX(0)', offset: closed }, { transform: 'scaleX(0)' }], options));
+  if (back) track(back.animate([{ transform: 'scaleX(0)' }, { transform: 'scaleX(0)', offset: closed }, { transform: 'scaleX(1)' }], options));
+}
+
 onBeforeUnmount(() => {
   for (const animation of running) { try { animation.cancel(); } catch { /* already over */ } }
   running.clear();
   for (const timer of markTimers) clearTimeout(timer);
   markTimers.clear();
+  unders.value = [];
   for (const el of hidden.keys()) el.style.removeProperty('opacity');
   hidden.clear();
 });
@@ -220,9 +273,14 @@ defineExpose({ play });
     <div v-for="m in marks" :key="m.id" class="mark" data-test="motion-mark" :data-role="m.role"
          :data-still="m.still ? 'true' : undefined"
          :style="{ left: m.rect.left - 4 + 'px', top: m.rect.top - 4 + 'px', width: m.rect.width + 8 + 'px', height: m.rect.height + 8 + 'px', animationDuration: m.lifeMs + 'ms' }"></div>
+    <div v-for="u in unders" :key="u.id" class="under" data-test="motion-under"
+         :style="{ left: u.rect.left + 'px', top: u.rect.top + 'px', width: u.rect.width + 'px', height: u.rect.height + 'px' }">
+      <PlayingCard v-if="u.card" class="face" :rank="u.card.rank" :suit="u.card.suit" />
+      <PlayingCard v-else class="face" :hidden="true" rank="ace" suit="spade" />
+    </div>
     <div v-for="g in ghosts" :key="g.id" class="ghost" data-test="motion-card" :data-ghost="g.id"
          :data-kind="g.movement.kind" :style="{ width: g.from.width + 'px', height: g.from.height + 'px', transform: `translate(${g.from.left}px, ${g.from.top}px)` }">
-      <template v-if="g.movement.flip && g.movement.card">
+      <template v-if="(g.movement.flip || g.movement.turnDown) && g.movement.card">
         <PlayingCard data-face="back" :hidden="true" rank="ace" suit="spade" class="face" />
         <PlayingCard data-face="front" :rank="g.movement.card.rank" :suit="g.movement.card.suit" class="face" />
       </template>
@@ -264,6 +322,8 @@ defineExpose({ play });
 @media (prefers-reduced-motion: reduce) {
   .mark { animation: none; }
 }
+.under { position: absolute; }
+.under :deep(.playing_card) { display: block; width: 100%; height: 100%; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45); border-radius: 6%; }
 .ghost { position: absolute; left: 0; top: 0; transform-origin: top left; will-change: transform; }
 .ghost :deep(.playing_card) { display: block; width: 100%; height: 100%; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45); border-radius: 6%; }
 .ghost :deep(.playing_card[data-face]) { position: absolute; inset: 0; }

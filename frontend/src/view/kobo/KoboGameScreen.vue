@@ -30,6 +30,8 @@ import { eventSpanMs, planMovements, type MotionAnchor, type Movement } from '..
 import { createTempoQueue } from '../../model/kobo/queue';
 import { prefersReducedMotion } from '../../composables/usePileAnimation';
 import type { KoboLogEntry } from '../../model/kobo/KoboEvents';
+import type { KoboState } from '../../model/kobo/KoboState';
+import type Card from '../../model/Card';
 import { liveAnnouncement } from '../../model/kobo/announcement';
 import { useKoboSound } from '../../composables/useKoboSound';
 import { findGame } from '../../model/games';
@@ -203,6 +205,11 @@ function cardIn(host: Element | null): MotionTarget | null {
   const card = host.querySelector<HTMLElement>('.playing_card');
   const rect = card ? visibleRect(card) : null;
   if (card && rect) return { rect, cards: [card] };
+  // An empty pile place is a card-sized dashed outline: use its rectangle so that a card leaving it or landing on
+  // it has the same size and position as when the place holds a card (no jump between the two).
+  const placeholder = host.querySelector<HTMLElement>('.pile-empty');
+  const placeholderRect = placeholder ? visibleRect(placeholder) : null;
+  if (placeholderRect) return { rect: placeholderRect, cards: [] };
   const box = visibleRect(host);
   if (!box) return null;
   const width = Math.min(box.width, SEAT_CARD_W + 10);
@@ -246,10 +253,24 @@ const nextFrame = () => new Promise<void>(resolve => {
   else setTimeout(resolve, 16);
 });
 
+// What the table showed before the latest state: the pile top a card is about to cover, the card I was holding
+// (the movement plan needs them; the state itself only has the result).
+let gameBefore: KoboState | null = null;
+let lastDrawnFace: Card | null = null;
+watch(() => store.game, (next, previous) => {
+  gameBefore = previous ?? null;
+  const seen = next?.drawnCard ?? previous?.drawnCard ?? null;
+  if (seen) lastDrawnFace = seen;
+}, { flush: 'sync' });
+
 async function playEvent(entry: KoboLogEntry) {
   const data = entry.data;
   if (data?.action === 'MATCH' && data.success === false) sound.play('miss');
-  const moves = planMovements(entry, store.mySeat);
+  const before = gameBefore;
+  const moves = planMovements(entry, store.mySeat, {
+    drawnFace: before?.drawnCard ?? lastDrawnFace,
+    discardBefore: before ? before.discardTop : undefined,
+  });
   if (moves.length === 0) return;
   if (moves.some(m => m.kind !== 'reveal') && !(data?.action === 'MATCH' && data.success === false)) sound.play('card');
   await nextTick();
@@ -261,8 +282,9 @@ async function playEvent(entry: KoboLogEntry) {
   // Events of a burst play one after the other, within bounds (see `TEMPO.queue`): past them an event only gets its
   // rings, at once. Under reduced motion nothing flies, so there is nothing to wait for.
   const admission = prefersReducedMotion() ? { startInMs: 0, motion: false } : tempoQueue.admit(eventSpanMs(ready));
-  if (admission.startInMs > 0) await new Promise<void>(resolve => { setTimeout(resolve, admission.startInMs); });
-  motionLayer.value?.play(ready, { marksOnly: !admission.motion });
+  // The table already shows the state of this event, so its copies are set up now (they hold the places and show
+  // the old cards there) and only start flying when their turn comes: nothing is drawn late over a changed table.
+  motionLayer.value?.play(ready, { marksOnly: !admission.motion, startInMs: admission.startInMs });
 }
 
 // The log is newest first: what is new is what comes before the head I already knew.
