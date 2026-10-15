@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { MOTION_MAX_MS, planMovements, type Movement } from './motion';
+import { MOTION_MAX_MS, eventSpanMs, planMovements, type Movement } from './motion';
+import { TEMPO } from './tempo';
 import type { KoboEventData, KoboLogEntry } from './KoboEvents';
 import { buildKoboCard } from '../fixtures/kobo';
 
@@ -11,7 +12,7 @@ const entry = (eventType: string, data: Partial<KoboEventData> | null, action = 
   },
 });
 const ME = 0;
-const end = (m: Movement) => m.delayMs + m.durationMs;
+const end = (m: Movement) => m.delayMs + m.durationMs + m.holdAfterMs;
 
 describe('planMovements', () => {
   it('givenADrawByAnOpponent_thenACardTravelsFromTheDrawPileToTheHandFaceDown', () => {
@@ -33,8 +34,8 @@ describe('planMovements', () => {
     const old = buildKoboCard('7', 'SPADE');
     const moves = planMovements(entry('SWAP', { slot: 2, card: old }), ME);
     expect(moves).toHaveLength(2);
-    expect(moves[0]).toMatchObject({ from: { kind: 'hand' }, to: { kind: 'slot', seat: 1, slot: 2 }, card: null, delayMs: 0 });
-    expect(moves[1]).toMatchObject({ from: { kind: 'slot', seat: 1, slot: 2 }, to: { kind: 'discard' }, card: old, delayMs: 0 });
+    expect(moves[0]).toMatchObject({ from: { kind: 'hand' }, to: { kind: 'slot', seat: 1, slot: 2 }, card: null, delayMs: TEMPO.opponent.holdBeforeMs });
+    expect(moves[1]).toMatchObject({ from: { kind: 'slot', seat: 1, slot: 2 }, to: { kind: 'discard' }, card: old, delayMs: TEMPO.opponent.holdBeforeMs });
   });
 
   it('givenADiscardOfTheDrawnCard_thenItGoesFromTheHandToTheDiscardFaceUp', () => {
@@ -95,13 +96,67 @@ describe('planMovements', () => {
     expect(planMovements(entry('DRAW', null), ME)).toEqual([]);
   });
 
-  it('everyMovementEndsWellUnderTheLimit', () => {
-    const samples = [
-      entry('DRAW', {}), entry('SWAP', { slot: 0 }), entry('DISCARD_DRAWN', {}),
-      entry('MATCH', { targetSeat: 1, targetSlot: 0, givenSlot: 1, success: true }),
-      entry('MATCH', { success: false }), entry('PEEK', { targetSeat: 2, targetSlot: 0 }),
-      entry('BLIND_SWAP', { slot: 0, targetSeat: 2, targetSlot: 0 }), entry('ROUND_END', {}, 'END_TURN'),
-    ];
-    for (const s of samples) for (const m of planMovements(s, ME)) expect(end(m)).toBeLessThan(MOTION_MAX_MS);
+  const samples = () => [
+    entry('DRAW', {}), entry('SWAP', { slot: 0 }), entry('DISCARD_DRAWN', {}),
+    entry('MATCH', { targetSeat: 1, targetSlot: 0, givenSlot: 1, success: true }),
+    entry('MATCH', { success: false }), entry('PEEK', { targetSeat: 2, targetSlot: 0 }),
+    entry('BLIND_SWAP', { slot: 0, targetSeat: 2, targetSlot: 0 }), entry('ROUND_END', {}, 'END_TURN'),
+  ];
+
+  it('everyMovementEndsUnderTheLimit', () => {
+    for (const s of samples()) for (const m of planMovements(s, ME)) expect(end(m)).toBeLessThanOrEqual(MOTION_MAX_MS);
+  });
+
+  it('givenAnOpponentsMove_thenItFliesForAboutASecondAfterAShortHold', () => {
+    for (const s of samples().filter(e => e.eventType !== 'ROUND_END')) {
+      for (const m of planMovements(s, ME).filter(x => x.byOpponent && x.kind === 'travel')) {
+        expect(m.durationMs).toBeGreaterThanOrEqual(900);
+        expect(m.durationMs).toBeLessThanOrEqual(1200);
+        expect(m.delayMs).toBeGreaterThanOrEqual(TEMPO.opponent.holdBeforeMs);
+        expect(m.holdAfterMs).toBe(TEMPO.opponent.holdAfterMs);
+      }
+    }
+  });
+
+  it('givenMyOwnMove_thenItFliesAtAReadablePaceAfterAShortHold', () => {
+    const moves = [...planMovements(entry('DRAW', { seat: ME }), ME), ...planMovements(entry('SWAP', { seat: ME, slot: 1 }), ME)];
+    expect(moves.length).toBeGreaterThan(0);
+    for (const m of moves) {
+      expect(m.durationMs).toBeGreaterThanOrEqual(600);
+      expect(m.durationMs).toBeLessThanOrEqual(800);
+      expect(m.delayMs).toBeGreaterThanOrEqual(TEMPO.own.holdBeforeMs);
+      expect(m.holdAfterMs).toBeGreaterThan(0);
+    }
+  });
+
+  it('givenAGlanceAtAnOpponent_thenItIsSlowToo', () => {
+    const [m] = planMovements(entry('PEEK', { seat: 2, targetSeat: 1, targetSlot: 3 }), ME);
+    expect(m.durationMs).toBeGreaterThanOrEqual(900);
+  });
+
+  it('givenTheGiftOfAMatch_thenItLeavesAfterTheMatchedCardHasStartedItsFlight', () => {
+    const moves = planMovements(entry('MATCH', { seat: ME, targetSeat: 1, targetSlot: 2, givenSlot: 3, success: true, card: buildKoboCard('9', 'HEART') }), ME);
+    expect(moves[1].delayMs).toBeGreaterThan(moves[0].delayMs);
+  });
+
+  it('marksTheSlotsEveryMoveTouchesButNotThePiles', () => {
+    const [draw] = planMovements(entry('DRAW', {}), ME);
+    expect(draw.marks).toEqual([]);
+    const swap = planMovements(entry('SWAP', { slot: 2, card: buildKoboCard('7', 'SPADE') }), ME);
+    expect(swap[0].marks).toEqual([{ kind: 'slot', seat: 1, slot: 2 }]);
+    const [blind] = planMovements(entry('BLIND_SWAP', { seat: 1, slot: 0, targetSeat: 2, targetSlot: 3 }), ME);
+    expect(blind.marks).toEqual([{ kind: 'slot', seat: 1, slot: 0 }, { kind: 'slot', seat: 2, slot: 3 }]);
+    const [penalty] = planMovements(entry('MATCH', { seat: 1, success: false }), ME);
+    expect(penalty.marks).toEqual([{ kind: 'newSlot', seat: 1 }]);
+    const [peek] = planMovements(entry('PEEK', { seat: 2, targetSeat: 1, targetSlot: 3 }), ME);
+    expect(peek.marks).toEqual([{ kind: 'slot', seat: 1, slot: 3 }]);
+    const gift = planMovements(entry('MATCH', { seat: ME, targetSeat: 1, targetSlot: 2, givenSlot: 3, success: true }), ME);
+    expect(gift[1].marks).toEqual([{ kind: 'slot', seat: ME, slot: 3 }, { kind: 'slot', seat: 1, slot: 2 }]);
+  });
+
+  it('eventSpanMs_isTheEndOfTheLastFlightWithoutTheHoldAfterLanding', () => {
+    const moves = planMovements(entry('MATCH', { seat: ME, targetSeat: 1, targetSlot: 2, givenSlot: 3, success: true }), ME);
+    expect(eventSpanMs(moves)).toBe(Math.max(...moves.map(m => m.delayMs + m.durationMs)));
+    expect(eventSpanMs([])).toBe(0);
   });
 });

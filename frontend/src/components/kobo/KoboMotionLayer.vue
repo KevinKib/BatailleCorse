@@ -2,6 +2,7 @@
 import { nextTick, onBeforeUnmount, ref } from 'vue';
 import PlayingCard from '../PlayingCard.vue';
 import type { Movement, MotionAnchor } from '../../model/kobo/motion';
+import { TEMPO } from '../../model/kobo/tempo';
 import { prefersReducedMotion } from '../../composables/usePileAnimation';
 
 // The cards that travel. A layer over the whole screen (fixed, no pointer events, hidden from assistive
@@ -20,12 +21,16 @@ const props = defineProps<{ resolve: (anchor: MotionAnchor) => MotionTarget | nu
 
 interface Ghost { id: number; movement: Movement; from: MotionRect; to: MotionRect; hide: HTMLElement[] }
 interface Arrow { id: number; x1: number; y1: number; x2: number; y2: number; delayMs: number }
+/** A ring on a slot a move touched: a plain outline, kept for a moment so the changed cards can be found. */
+interface Mark { id: number; rect: MotionRect; role: 'from' | 'to'; lifeMs: number; still: boolean }
 
 const EASING = 'cubic-bezier(.2,.8,.2,1)';
-const ARROW_MS = 560;
 const MAX_LIVE = 12;
+const MAX_MARKS = 24;
 const ghosts = ref<Ghost[]>([]);
 const arrows = ref<Arrow[]>([]);
+const marks = ref<Mark[]>([]);
+const markTimers = new Set<ReturnType<typeof setTimeout>>();
 const root = ref<HTMLElement | null>(null);
 let counter = 0;
 const running = new Set<Animation>();
@@ -63,10 +68,45 @@ function track(animation: Animation, onEnd?: () => void) {
   animation.finished.then(done, done);
 }
 
-/** Plays the movements of one event. Never throws, never waits: a failure only costs the picture. */
-function play(movements: Movement[]) {
+/** Rings every slot the movements touch (source dashed, destination solid), under reduced motion too. */
+function showMarks(movements: Movement[]) {
+  const places = new Map<string, { anchor: MotionAnchor; role: 'from' | 'to' }>();
+  for (const movement of movements) {
+    for (const anchor of movement.marks) {
+      const key = JSON.stringify(anchor);
+      const role = JSON.stringify(anchor) === JSON.stringify(movement.from) ? 'from' : 'to';
+      if (places.get(key)?.role !== 'to') places.set(key, { anchor, role });
+    }
+  }
+  const still = prefersReducedMotion();
+  const end = movements.reduce((m, x) => Math.max(m, x.delayMs + x.durationMs + x.holdAfterMs), 0);
+  const lifeMs = still ? TEMPO.markReducedMs : Math.max(TEMPO.markMs, end);
+  for (const { anchor, role } of places.values()) {
+    if (marks.value.length >= MAX_MARKS) break;
+    const target = props.resolve(anchor);
+    if (!target || target.rect.width <= 0) continue;
+    const id = ++counter;
+    marks.value.push({ id, rect: target.rect, role, lifeMs, still });
+    const timer = setTimeout(() => {
+      markTimers.delete(timer);
+      marks.value = marks.value.filter(m => m.id !== id);
+    }, lifeMs);
+    markTimers.add(timer);
+  }
+}
+
+/**
+ * Plays the movements of one event. Never throws, never waits: a failure only costs the picture. `marksOnly`: the
+ * backlog is full, so the rings show at once and the flights are skipped.
+ */
+function play(movements: Movement[], options: { marksOnly?: boolean } = {}) {
   try {
-    if (!canAnimate()) return;
+    showMarks(movements);
+  } catch {
+    /* a picture is never worth an error */
+  }
+  try {
+    if (options.marksOnly || !canAnimate()) return;
     for (const movement of movements) {
       if (movement.kind === 'reveal') { playReveal(movement); continue; }
       if (ghosts.value.length >= MAX_LIVE) break;
@@ -105,22 +145,33 @@ function launch(id: number) {
   const scale = to.width / from.width;
   const start = centre(from, 1);
   const land = centre({ ...to, left: to.left + (to.width - from.width * scale) / 2, top: to.top + (to.height - from.height * scale) / 2 }, scale);
+  // One animation: the hold before is its delay (the copy waits on its source), then the flight, then the hold
+  // after landing (the copy stays on its destination, so its face can be read). Keyframe offsets cut the three.
+  const total = movement.durationMs + movement.holdAfterMs;
+  const flight = movement.durationMs / total;
   const frames: Keyframe[] = movement.kind === 'glance'
-    ? [{ transform: start }, { transform: midway(from, to), offset: 0.4 }, { transform: midway(from, to), offset: 0.6 }, { transform: start }]
-    : [{ transform: start }, { transform: land }];
+    ? [
+      { transform: start, easing: EASING },
+      { transform: midway(from, to), offset: flight * 0.35 },
+      { transform: midway(from, to), offset: flight * 0.65, easing: EASING },
+      { transform: start, offset: flight },
+      { transform: start },
+    ]
+    : [{ transform: start, easing: EASING }, { transform: land, offset: flight }, { transform: land }];
 
   ghost.hide.forEach(hide);
   const release = () => { ghost.hide.forEach(show); finish(); };
   // The cards come back whatever happens to the animation (cut, late, never started).
-  const safety = setTimeout(release, movement.delayMs + movement.durationMs + 250);
-  const options: KeyframeAnimationOptions = { duration: movement.durationMs, delay: movement.delayMs, easing: EASING, fill: 'both' };
+  const safety = setTimeout(release, movement.delayMs + total + 250);
+  const options: KeyframeAnimationOptions = { duration: total, delay: movement.delayMs, fill: 'both' };
   try {
     track(el.animate(frames, options), () => { clearTimeout(safety); release(); });
     if (movement.flip && movement.card) flipFaces(el, movement.durationMs, movement.delayMs);
     const arrow = root.value?.querySelector<SVGElement>(`[data-arrow="${id}"]`);
     if (arrow) {
-      track(arrow.animate([{ opacity: 0 }, { opacity: 0.7, offset: 0.25 }, { opacity: 0.7, offset: 0.6 }, { opacity: 0 }],
-        { duration: ARROW_MS, delay: movement.delayMs, fill: 'both' }));
+      // Visible from the hold before to the end of the hold after, so the direction can be read.
+      track(arrow.animate([{ opacity: 0 }, { opacity: 0.8, offset: 0.12 }, { opacity: 0.8, offset: 0.85 }, { opacity: 0 }],
+        { duration: total, delay: movement.delayMs, fill: 'both' }));
     }
   } catch {
     clearTimeout(safety);
@@ -146,6 +197,8 @@ function flipFaces(el: HTMLElement, duration: number, delay: number) {
 onBeforeUnmount(() => {
   for (const animation of running) { try { animation.cancel(); } catch { /* already over */ } }
   running.clear();
+  for (const timer of markTimers) clearTimeout(timer);
+  markTimers.clear();
   for (const el of hidden.keys()) el.style.removeProperty('opacity');
   hidden.clear();
 });
@@ -164,6 +217,9 @@ defineExpose({ play });
       <line v-for="a in arrows" :key="a.id" class="motion-arrow" data-test="motion-arrow" :data-arrow="a.id"
             :x1="a.x1" :y1="a.y1" :x2="a.x2" :y2="a.y2" marker-end="url(#kobo-arrow-head)" style="opacity: 0" />
     </svg>
+    <div v-for="m in marks" :key="m.id" class="mark" data-test="motion-mark" :data-role="m.role"
+         :data-still="m.still ? 'true' : undefined"
+         :style="{ left: m.rect.left - 4 + 'px', top: m.rect.top - 4 + 'px', width: m.rect.width + 8 + 'px', height: m.rect.height + 8 + 'px', animationDuration: m.lifeMs + 'ms' }"></div>
     <div v-for="g in ghosts" :key="g.id" class="ghost" data-test="motion-card" :data-ghost="g.id"
          :data-kind="g.movement.kind" :style="{ width: g.from.width + 'px', height: g.from.height + 'px', transform: `translate(${g.from.left}px, ${g.from.top}px)` }">
       <template v-if="g.movement.flip && g.movement.card">
@@ -187,6 +243,27 @@ defineExpose({ play });
 }
 .motion-arrows { position: absolute; inset: 0; width: 100%; height: 100%; overflow: hidden; color: rgba(255, 255, 255, 0.8); }
 .motion-arrow { stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-dasharray: 2 5; }
+/* The ring of a card a move touched: an outline that glows and fades over its life; the source is dashed. Under
+   reduced motion it does not animate: a still outline that the script removes after a shorter time. */
+.mark {
+  position: absolute;
+  box-sizing: border-box;
+  border: 3px solid #ffd23f;
+  border-radius: 8px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.55), 0 0 14px 3px rgba(255, 210, 63, 0.75);
+  animation: mark-glow ease-out both;
+}
+.mark[data-role="from"] { border-style: dashed; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.55), 0 0 10px 2px rgba(255, 210, 63, 0.5); }
+.mark[data-still="true"] { animation: none; }
+@keyframes mark-glow {
+  0% { opacity: 0; transform: scale(1.12); }
+  8% { opacity: 1; transform: scale(1); }
+  70% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mark { animation: none; }
+}
 .ghost { position: absolute; left: 0; top: 0; transform-origin: top left; will-change: transform; }
 .ghost :deep(.playing_card) { display: block; width: 100%; height: 100%; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45); border-radius: 6%; }
 .ghost :deep(.playing_card[data-face]) { position: absolute; inset: 0; }
