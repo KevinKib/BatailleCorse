@@ -15,17 +15,13 @@ import java.util.List;
 final class MangolaMoves {
 
     /** A legal move and what it does: the resulting board, the seeds it captured, whether it never ends. */
-    record Move(int pit, SowingResult result) {
+    record Move(int pit, SowingResult result, int captured) {
         MangolaBoard board() {
             return result.board();
         }
 
         boolean endless() {
             return result.endless();
-        }
-
-        int captured() {
-            return result.captured();
         }
     }
 
@@ -54,7 +50,7 @@ final class MangolaMoves {
             if (result.endless() && rules.endless() == MangolaRules.Endless.ILLEGAL) {
                 continue;
             }
-            moves.add(new Move(pit, result));
+            moves.add(new Move(pit, result, result.captured()));
         }
         return moves;
     }
