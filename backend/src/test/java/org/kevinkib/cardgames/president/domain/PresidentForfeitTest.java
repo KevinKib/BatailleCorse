@@ -156,9 +156,9 @@ class PresidentForfeitTest {
         assertThat(game.lastRoundResult().points(), is(Map.of(p(0), 1, p(2), 0)));
         assertThat(game.getPlayerIds(), contains(p(0), p(2)));
         assertThat(game.standings().ranked(), contains(p(0), p(2)));
-        // the forfeiter's hand is set aside; the last trick stays on the table
-        assertThat(game.discard(), containsInAnyOrder(card("4C"), card("9C")));
-        assertThat(game.trick().plays().size(), is(1));
+        // the forfeiter's hand is set aside, and so is the trick the first player out closed
+        assertThat(game.discard(), containsInAnyOrder(card("3C"), card("4C"), card("9C")));
+        assertThat(game.trick().plays().size(), is(0));
     }
 
     @Test

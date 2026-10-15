@@ -188,17 +188,18 @@ class TrickTest {
 
     @Test
     void whenTheWinnerWentOutTheLeadGoesToTheNextSeatWithCards() throws Exception {
-        President game = aPresident().withHand("9C").withHand("3C 4C 5C").withHand("3D 4D 5D")
-                .withHand("3H 4H 5H").leader(0).build();
+        // seat 0 is the first out (it closes the trick); seat 1 goes out second and wins the trick it leads
+        President game = aPresident().withHand("3C").withHand("4C").withHand("5C 6C 7C")
+                .withHand("8C 9C 10C").leader(0).build();
 
-        play(game, 0, "9C");
-        pass(game, 1);
+        play(game, 0, "3C");
+        play(game, 1, "4C");
         pass(game, 2);
         List<PresidentEvent> events = pass(game, 3);
 
-        assertThat(events, hasItem(new TrickWon(p(1), TrickEndReason.ALL_PASSED)));
-        assertThat(game.currentSeat(), is(p(1)));
-        assertThat(game.trick().leader(), is(p(1)));
+        assertThat(events, hasItem(new TrickWon(p(2), TrickEndReason.ALL_PASSED)));
+        assertThat(game.currentSeat(), is(p(2)));
+        assertThat(game.trick().leader(), is(p(2)));
     }
 
     @Test
@@ -206,9 +207,6 @@ class TrickTest {
         President game = aPresident().withHand("9C").withHand("3C 4C 5C").withHand("3D 4D 5D").withHand("JH")
                 .leader(0).build();
         play(game, 0, "9C");
-        pass(game, 1);
-        pass(game, 2);
-        pass(game, 3);
         assertThat(game.currentSeat(), is(p(1)));
 
         play(game, 1, "3C");

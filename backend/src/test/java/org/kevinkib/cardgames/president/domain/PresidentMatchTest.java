@@ -69,13 +69,7 @@ class PresidentMatchTest {
     void theRoundIsScoredWhenItEndsAndTheMatchGoesOn() throws Exception {
         President again = OrderedRounds.start(GameId.generate(), new RandomDeckSource(),
                 PresidentOptions.defaults(), ORDER);
-        List<PresidentEvent> events = null;
-        while (again.phase() == Phase.PLAYING) {
-            PlayerId current = again.currentSeat();
-            int next = ORDER[again.finishingOrder().size()];
-            events = current.id() == next
-                    ? again.play(current, List.of(again.hand(current).get(0))) : again.pass(current);
-        }
+        List<PresidentEvent> events = OrderedRounds.finish(again, ORDER);
 
         RoundResult result = again.lastRoundResult();
         assertThat(events, hasItem(new RoundScored(result)));

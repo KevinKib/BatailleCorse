@@ -60,6 +60,8 @@ public class President implements Game {
 
     public static final int MIN_PLAYERS = 3;
     public static final int MAX_PLAYERS = 8;
+    /** One French deck, no joker. */
+    public static final int DECK_SIZE = 52;
 
     private final GameId id;
     private final PresidentOptions options;
@@ -139,10 +141,9 @@ public class President implements Game {
     }
 
     private List<Card> deckFor(int roundNumber) {
-        DeckSpec spec = DeckSpec.standard();
-        List<Card> deck = deckSource.deck(id, roundNumber, seed + roundNumber - 1, spec);
-        if (deck.size() != spec.size()) {
-            throw new IllegalArgumentException("A deck holds " + spec.size() + " cards, not " + deck.size());
+        List<Card> deck = deckSource.deck(id, roundNumber, seed + roundNumber - 1);
+        if (deck.size() != DECK_SIZE) {
+            throw new IllegalArgumentException("A deck holds " + DECK_SIZE + " cards, not " + deck.size());
         }
         return deck;
     }
@@ -172,6 +173,7 @@ public class President implements Game {
 
     private static int firstLead(List<List<Card>> hands, FirstLead rule, Random random) {
         return switch (rule) {
+            case KING_OF_HEARTS -> holderOf(hands, new Card(FrenchRank.KING, FrenchSuit.HEART));
             case LOWEST_CLUB -> holderOf(hands, new Card(FrenchRank.THREE, FrenchSuit.CLUB));
             case QUEEN_OF_HEARTS -> holderOf(hands, new Card(FrenchRank.QUEEN, FrenchSuit.HEART));
             case RANDOM -> random.nextInt(hands.size());

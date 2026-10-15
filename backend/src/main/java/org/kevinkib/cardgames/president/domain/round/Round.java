@@ -90,6 +90,11 @@ public final class Round {
                 endRound(events);
                 return events;
             }
+            if (finishing.size() == 1) {
+                // the owner's rule: the first player out closes the trick, the next seat with cards leads
+                completeTrick(events, TrickEndReason.FIRST_OUT);
+                return events;
+            }
         }
         afterAction(events);
         return events;
@@ -268,12 +273,16 @@ public final class Round {
 
     /** The trick goes to its last player, or to the next seat with cards when that player has gone out or left. */
     private void completeTrick(List<PresidentEvent> events) {
+        completeTrick(events, TrickEndReason.ALL_PASSED);
+    }
+
+    private void completeTrick(List<PresidentEvent> events, TrickEndReason reason) {
         int last = trick.lastPlayer();
         int winner = hands.get(last).isEmpty() ? nextSeatWithCards(last) : last;
         discard.addAll(trick.cards());
         trick = new Trick(winner);
         current = winner;
-        events.add(new TrickWon(new PlayerId(winner), TrickEndReason.ALL_PASSED));
+        events.add(new TrickWon(new PlayerId(winner), reason));
     }
 
     /** The seat that was to lead has left: the next seat with cards leads an empty trick. */
