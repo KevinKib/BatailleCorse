@@ -6,6 +6,7 @@ import GameScreen from './view/alpha/GameScreen.vue';
 import BullshitGameScreen from './view/bullshit/BullshitGameScreen.vue';
 import KoboGameScreen from './view/kobo/KoboGameScreen.vue';
 import ThreeMenMorrisGameScreen from './view/threemenmorris/ThreeMenMorrisGameScreen.vue';
+import PresidentGameScreen from './view/president/PresidentGameScreen.vue';
 import { findGame } from './model/games';
 
 const BASE = '/games/bataillecorse';
@@ -31,6 +32,9 @@ export const routes = [
   { path: '/games/three-men-morris/new', redirect: '/games/three-men-morris' },
   { path: '/games/three-men-morris/create', redirect: '/games/three-men-morris' },
   { path: '/games/three-men-morris/room/:id', name: 'three-men-morris-room', component: ThreeMenMorrisGameScreen, props: (route: { params: Record<string, unknown> }) => ({ gameId: route.params.id }) },
+  { path: '/games/president/new', redirect: '/games/president' },
+  { path: '/games/president/create', redirect: '/games/president' },
+  { path: '/games/president/room/:id', name: 'president-room', component: PresidentGameScreen, props: (route: { params: Record<string, unknown> }) => ({ gameId: route.params.id }) },
   { path: '/:pathMatch(.*)*', redirect: { name: 'games' } },
 ];
 
