@@ -32,4 +32,22 @@ class TitlesTest {
     void fewerThanThreePlayersHaveNoTitles() {
         assertThrows(IllegalArgumentException.class, () -> Titles.forPlaces(2));
     }
+
+    /** Two players are left only after a forfeit: a President and a Scum, no middle. */
+    @ParameterizedTest(name = "{0} active players")
+    @CsvSource(delimiter = '|', value = {
+            "2 | PRESIDENT SCUM",
+            "3 | PRESIDENT NEUTRAL SCUM",
+            "5 | PRESIDENT VICE_PRESIDENT NEUTRAL VICE_SCUM SCUM",
+    })
+    void activePlayersAfterAForfeit(int players, String expected) {
+        List<Title> titles = Arrays.stream(expected.split(" ")).map(Title::valueOf).toList();
+
+        assertThat(Titles.forActivePlayers(players), is(titles));
+    }
+
+    @Test
+    void fewerThanTwoActivePlayersHaveNoTitles() {
+        assertThrows(IllegalArgumentException.class, () -> Titles.forActivePlayers(1));
+    }
 }

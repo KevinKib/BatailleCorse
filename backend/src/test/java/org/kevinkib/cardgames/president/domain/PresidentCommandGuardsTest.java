@@ -7,6 +7,7 @@ import org.kevinkib.cardgames.president.domain.play.PlayDoesNotBeatException;
 import org.kevinkib.cardgames.president.domain.round.CardsNotInHandException;
 import org.kevinkib.cardgames.president.domain.round.FinishedGameException;
 import org.kevinkib.cardgames.president.domain.round.NotPlayersTurnException;
+import org.kevinkib.cardgames.president.domain.round.WrongPhaseException;
 import org.kevinkib.cardgames.president.domain.rules.PresidentException;
 
 import java.util.List;
@@ -108,14 +109,25 @@ class PresidentCommandGuardsTest {
     }
 
     @Test
-    void onceTheRoundIsOverNothingCanBePlayed() throws Exception {
+    void onceTheRoundIsOverNothingCanBePlayedUntilTheNextRound() throws Exception {
         President game = aPresident().withHand("4C").withHand("5C").withHand("6C").leader(0).build();
         game.play(p(0), cards("4C"));
         game.play(p(1), cards("5C"));
+        assertThat(game.isFinished(), is(false));
+
+        assertRefusedWithoutEffect(game, WrongPhaseException.class, g -> g.play(p(2), cards("6C")));
+        assertRefusedWithoutEffect(game, WrongPhaseException.class, g -> g.pass(p(2)));
+    }
+
+    @Test
+    void onceTheMatchIsFinishedNothingCanBePlayed() throws Exception {
+        President game = aPresident().withHand("4C 9C").withHand("5C").withHand("6C 10C").leader(0).build();
+        game.forfeit(p(1));
+        game.forfeit(p(2));
         assertThat(game.isFinished(), is(true));
 
-        assertRefusedWithoutEffect(game, FinishedGameException.class, g -> g.play(p(2), cards("6C")));
-        assertRefusedWithoutEffect(game, FinishedGameException.class, g -> g.pass(p(2)));
+        assertRefusedWithoutEffect(game, FinishedGameException.class, g -> g.play(p(0), cards("4C")));
+        assertRefusedWithoutEffect(game, FinishedGameException.class, g -> g.pass(p(0)));
     }
 
     @Test
