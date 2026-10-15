@@ -5,6 +5,7 @@ import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.president.domain.play.IllegalPlayException;
 import org.kevinkib.cardgames.president.domain.play.PlayDoesNotBeatException;
 import org.kevinkib.cardgames.president.domain.round.CardsNotInHandException;
+import org.kevinkib.cardgames.president.domain.round.FinishedGameException;
 import org.kevinkib.cardgames.president.domain.round.NotPlayersTurnException;
 import org.kevinkib.cardgames.president.domain.rules.PresidentException;
 
