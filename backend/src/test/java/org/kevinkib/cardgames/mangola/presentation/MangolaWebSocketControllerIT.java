@@ -9,7 +9,8 @@ import org.kevinkib.cardgames.mangola.domain.Mangola;
 import org.kevinkib.cardgames.mangola.domain.MangolaGeometry;
 import org.kevinkib.cardgames.mangola.domain.MangolaResult;
 import org.kevinkib.cardgames.mangola.domain.MangolaRules;
-import org.kevinkib.cardgames.mangola.domain.MangolaSetup;
+import org.kevinkib.cardgames.mangola.domain.MangolaBoard;
+import org.kevinkib.cardgames.mangola.domain.MangolaLayouts;
 import org.kevinkib.cardgames.mangola.domain.Side;
 import org.kevinkib.cardgames.mangola.domain.Sowing;
 import org.kevinkib.cardgames.presentation.support.StompTestClient;
@@ -36,7 +37,7 @@ import static org.hamcrest.Matchers.is;
 /**
  * Mangola over a real WebSocket with two clients: lobby creation, join, options, start, the hidden placement
  * (no draft of the other seat in any frame), the reveal, a capture, a refused sow answered to the sender alone
- * and a whole game from the checkerboard set-up played to its end.
+ * and a whole game from a checkerboard placement played to its end.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class MangolaWebSocketControllerIT {
@@ -73,14 +74,14 @@ class MangolaWebSocketControllerIT {
         final Frames[] frames = new Frames[2];
 
         @SuppressWarnings("unchecked")
-        Table(String setup) throws Exception {
+        Table() throws Exception {
             HttpResponse<String> created = post("/api/lobby", "{\"gameType\":\"mangola\",\"name\":\"Alice\"}");
             assertThat(created.statusCode(), is(200));
             Map<String, Object> room = objectMapper.readValue(created.body(), Map.class);
             gameId = (String) room.get("gameId");
             tokens[0] = (String) room.get("token");
             assertThat(sessionService.gameType(new GameId(gameId)), is("mangola"));
-            sessionService.updateOptions(new GameId(gameId), tokens[0], Map.of("setup", setup, "firstPlayer", "host"));
+            sessionService.updateOptions(new GameId(gameId), tokens[0], Map.of("firstPlayer", "host"));
 
             HttpResponse<String> joined = post("/api/mangola/game/" + gameId + "/join", "{\"name\":\"Bob\"}");
             assertThat(joined.statusCode(), is(200));
@@ -93,7 +94,7 @@ class MangolaWebSocketControllerIT {
             send(0, "/mangola/start", body(tokens[0]));
             for (int seat = 0; seat < 2; seat++) {
                 Map<String, Object> start = frames[seat].await(f -> "START".equals(f.get("eventType")));
-                assertThat(state(start).get("phase"), is("free".equals(setup) ? "PLACEMENT" : "PLAY"));
+                assertThat(state(start).get("phase"), is("PLACEMENT"));
             }
         }
 
@@ -163,12 +164,17 @@ class MangolaWebSocketControllerIT {
         return new int[]{10, 0, 3, 0, 0, 0, 0, 17, 0, 0, 0, 0, 0, 2, 0, 0};
     }
 
+    /** A side of a board as the counts of its loop, the shape of a placement draft. */
+    private static int[] loopCounts(MangolaBoard board, Side side) {
+        return MangolaGeometry.loop(side).stream().mapToInt(board::seeds).toArray();
+    }
+
     // ------------------------------------------------------------------ tests
 
     @Test
     @SuppressWarnings("unchecked")
     void thePlacementIsHiddenThenRevealedToBothSeatsAndAMoveCapturesTheOpponentsSeeds() throws Exception {
-        Table table = new Table("free");
+        Table table = new Table();
 
         table.arrange(0, captureLayoutA());
         table.arrange(1, captureLayoutB());
@@ -218,7 +224,7 @@ class MangolaWebSocketControllerIT {
 
     @Test
     void aDraftCanBeTakenBackAndTheSamePlayerStillCannotSowDuringPlacement() throws Exception {
-        Table table = new Table("free");
+        Table table = new Table();
         table.arrange(0, MangolaTable.twoPerPit());
         table.command(0, "/mangola/confirmLayout", "LAYOUT_CONFIRMED");
 
@@ -235,7 +241,7 @@ class MangolaWebSocketControllerIT {
 
     @Test
     void aSeatCannotCommandWithTheOtherSeatsTokenNorWithoutOne() throws Exception {
-        Table table = new Table("free");
+        Table table = new Table();
 
         table.send(1, "/mangola/arrange", table.body("forged", "counts",
                 java.util.Arrays.stream(MangolaTable.allOnFirst()).boxed().toList()));
@@ -247,16 +253,21 @@ class MangolaWebSocketControllerIT {
     }
 
     /**
-     * A whole game from the checkerboard preset, the moves picked by a replica of the domain (the most seeds on the
+     * A whole game from the checkerboard placed by both seats, the moves picked by a replica of the domain (the most seeds on the
      * mover's side after the move): every frame must match the replica, and the end must be the replica's.
      */
     @Test
     @SuppressWarnings("unchecked")
     void aWholeCheckerboardGameIsPlayedToItsEndAndBroadcastToBothSeats() throws Exception {
-        Table table = new Table("checkerboard");
+        Table table = new Table();
         PlayerId seatA = new PlayerId(0);
-        MangolaRules rules = MangolaRules.OWNER.withSetup(MangolaSetup.CHECKERBOARD);
-        Mangola replica = Mangola.fromLayout(GameId.generate(), rules, seatA, MangolaSetup.checkerboard());
+        MangolaRules rules = MangolaRules.OWNER;
+        MangolaBoard checkerboard = MangolaLayouts.checkerboard();
+        table.arrange(0, loopCounts(checkerboard, Side.A));
+        table.arrange(1, loopCounts(checkerboard, Side.B));
+        table.command(0, "/mangola/confirmLayout", "LAYOUT_CONFIRMED");
+        table.command(1, "/mangola/confirmLayout", "LAYOUTS_REVEALED");
+        Mangola replica = Mangola.fromLayout(GameId.generate(), rules, seatA, checkerboard);
 
         int plies = 0;
         while (!replica.isFinished() && plies++ < 400) {

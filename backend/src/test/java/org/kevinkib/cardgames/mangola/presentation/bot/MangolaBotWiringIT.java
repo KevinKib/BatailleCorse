@@ -51,9 +51,9 @@ class MangolaBotWiringIT {
     @Autowired
     private Environment environment;
 
-    private Mangola startedGameWithBot(String setup, String level) throws Exception {
+    private Mangola startedGameWithBot(String level) throws Exception {
         RoomCreated room = sessions.createRoom(MangolaFactory.GAME_TYPE, "Alice",
-                GameOptions.of(Map.of(MangolaFactory.SETUP_KEY, setup, MangolaFactory.FIRST_PLAYER_KEY, "host")));
+                GameOptions.of(Map.of(MangolaFactory.FIRST_PLAYER_KEY, "host")));
         GameId id = new GameId(room.gameId());
         sessions.addBot(id, room.hostToken());
         sessions.setSeatOption(id, room.hostToken(), 1, "level", level);
@@ -71,7 +71,13 @@ class MangolaBotWiringIT {
     @Test
     void theCoordinatorIsABeanAndAComputerSeatAnswersAHumanMove() throws Exception {
         assertThat(coordinator, notNullValue());
-        Mangola game = startedGameWithBot("checkerboard", "expert");
+        Mangola game = startedGameWithBot("expert");
+        int[] twoPerPit = new int[16];
+        Arrays.fill(twoPerPit, 2);
+        actions.arrange(game.getId(), HUMAN, twoPerPit);
+        actions.confirmLayout(game.getId(), HUMAN);
+        await(() -> game.phase() == Phase.PLAY);
+        await(() -> game.currentSeat().equals(HUMAN));
         int pit = game.legalPits(HUMAN).get(0);
 
         actions.sow(game.getId(), HUMAN, pit);
@@ -82,7 +88,7 @@ class MangolaBotWiringIT {
 
     @Test
     void aComputerSeatArrangesAndConfirmsItsLayoutDuringHiddenPlacement() throws Exception {
-        Mangola game = startedGameWithBot("free", "greedy");
+        Mangola game = startedGameWithBot("greedy");
         int[] twoPerPit = new int[16];
         Arrays.fill(twoPerPit, 2);
 
@@ -96,7 +102,7 @@ class MangolaBotWiringIT {
 
     @Test
     void aComputerSeatKeepsItsLevelAfterPlayAgain() throws Exception {
-        Mangola game = startedGameWithBot("free", "expert");
+        Mangola game = startedGameWithBot("expert");
         GameId id = game.getId();
 
         JoinResult again = sessions.playAgain(id, "Alice");

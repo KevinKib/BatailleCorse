@@ -1,40 +1,15 @@
 package org.kevinkib.cardgames.mangola.domain;
 
-import java.util.Arrays;
 import java.util.random.RandomGenerator;
 
 /**
- * How the 32 seeds of each side get on the board: arranged freely by the players during the placement
- * phase, or by a preset that skips it. The presets are the lobby shortcuts for quick games; the free
- * placement is the real set-up of the game (the checkerboard is only one layout a player may choose).
+ * Test-only full boards (32 seeds per side): the classic checkerboard and a random layout. The game itself
+ * always starts in free placement (owner decision 2026-10-15); these boards only feed the test seams that
+ * need a position ({@code Mangola.fromLayout}) and the bot tests.
  */
-public enum MangolaSetup {
-    FREE("free"), CHECKERBOARD("checkerboard"), RANDOM("random");
+public final class MangolaLayouts {
 
-    public static final MangolaSetup DEFAULT = FREE;
-
-    private final String key;
-
-    MangolaSetup(String key) {
-        this.key = key;
-    }
-
-    public String key() {
-        return key;
-    }
-
-    public static MangolaSetup fromKey(String key) {
-        return Arrays.stream(values()).filter(s -> s.key.equals(key)).findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Unknown set-up: " + key));
-    }
-
-    /** The board of a preset set-up; the free set-up has none, the players build it. */
-    public MangolaBoard board(RandomGenerator random) {
-        return switch (this) {
-            case CHECKERBOARD -> checkerboard();
-            case RANDOM -> random(random);
-            case FREE -> throw new IllegalStateException("The free set-up has no preset board");
-        };
+    private MangolaLayouts() {
     }
 
     /**

@@ -39,14 +39,14 @@ class MangolaRandomFixedUnderTestProfileIT {
     }
 
     @Test
-    void aRandomFirstPlayerIsTheHostAndTheRandomSetupIsTheSameEveryTime() {
+    void aRandomFirstPlayerIsTheHostEveryTime() {
         Mangola first = (Mangola) factory.create(GameId.generate(), 2,
-                GameOptions.of(Map.of("setup", "random", "firstPlayer", "random")));
+                GameOptions.of(Map.of("firstPlayer", "random")));
         Mangola second = (Mangola) factory.create(GameId.generate(), 2,
-                GameOptions.of(Map.of("setup", "random", "firstPlayer", "random")));
+                GameOptions.of(Map.of("firstPlayer", "random")));
 
         assertThat(first.seatA().id(), is(0));
-        assertThat(first.phase(), is(Phase.PLAY));
-        assertThat(first.board(), is(second.board()));
+        assertThat(second.seatA().id(), is(0));
+        assertThat(first.phase(), is(Phase.PLACEMENT));
     }
 }

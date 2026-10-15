@@ -14,14 +14,13 @@ import java.util.List;
 import java.util.random.RandomGenerator;
 
 /**
- * Builds Mangola games from the host's options: {@code setup} (free placement by default, or a preset board)
- * and {@code firstPlayer}. Every random choice comes from the injected generator, drawn once at creation
- * (the starting seat first, then the random set-up), so the aggregate itself stays deterministic.
+ * Builds Mangola games from the host's {@code firstPlayer} option. The set-up is always free placement (owner
+ * decision 2026-10-15), so there is no set-up option. The random choice comes from the injected generator,
+ * drawn once at creation, so the aggregate itself stays deterministic.
  */
 public class MangolaFactory implements GameFactory {
 
     public static final String GAME_TYPE = "mangola";
-    public static final String SETUP_KEY = "setup";
     public static final String FIRST_PLAYER_KEY = "firstPlayer";
     /** The seat option that carries the level of a computer seat. */
     public static final String LEVEL_KEY = "level";
@@ -78,14 +77,8 @@ public class MangolaFactory implements GameFactory {
             throw new IllegalArgumentException("Mangola is played by exactly " + Mangola.PLAYERS
                     + " players, not " + nbPlayers);
         }
-        MangolaSetup setup = options.get(SETUP_KEY).map(MangolaSetup::fromKey).orElse(MangolaSetup.DEFAULT);
         FirstPlayer firstPlayer = options.get(FIRST_PLAYER_KEY).map(FirstPlayer::fromKey).orElse(FirstPlayer.DEFAULT);
-        PlayerId seatA = seatA(firstPlayer);
-        MangolaRules rules = MangolaRules.OWNER.withSetup(setup);
-        if (setup == MangolaSetup.FREE) {
-            return new Mangola(id, rules, seatA);
-        }
-        return Mangola.fromLayout(id, rules, seatA, setup.board(random));
+        return new Mangola(id, MangolaRules.OWNER, seatA(firstPlayer));
     }
 
     private PlayerId seatA(FirstPlayer firstPlayer) {
@@ -99,9 +92,6 @@ public class MangolaFactory implements GameFactory {
     @Override
     public List<OptionDescriptor> optionDescriptors() {
         return List.of(
-                new OptionDescriptor(SETUP_KEY, OptionType.CHOICE,
-                        Arrays.stream(MangolaSetup.values()).map(MangolaSetup::key).toList(),
-                        MangolaSetup.DEFAULT.key(), "options.mangola.setup"),
                 new OptionDescriptor(FIRST_PLAYER_KEY, OptionType.CHOICE,
                         Arrays.stream(FirstPlayer.values()).map(FirstPlayer::key).toList(),
                         FirstPlayer.DEFAULT.key(), "options.mangola.firstPlayer"));

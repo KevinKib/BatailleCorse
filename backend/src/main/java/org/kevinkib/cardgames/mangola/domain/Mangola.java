@@ -19,10 +19,10 @@ import java.util.Optional;
  * third occurrence of a position is a draw. Every mutating method is synchronized, validates, mutates,
  * bumps the version and returns what happened; a rejected command changes nothing.
  *
- * <p>With the free set-up a game starts in the PLACEMENT phase: each seat arranges its 32 seeds on its own 16
+ * <p>The set-up is always free placement (owner decision 2026-10-15): a game starts in the PLACEMENT phase: each seat arranges its 32 seeds on its own 16
  * pits, simultaneously and without seeing the other, confirms, and may take the confirmation back until the
  * other seat has confirmed too. The second confirmation writes both layouts on the board and starts the PLAY
- * phase (side A to move). A game built from a board (a preset set-up, tests, bots) starts in PLAY.
+ * phase (side A to move). A game built from a board (tests, bots) starts in PLAY.
  */
 public class Mangola implements Game {
 
@@ -51,9 +51,6 @@ public class Mangola implements Game {
     /** A game in the PLACEMENT phase, side A (the starting seat) to move once the layouts are revealed. */
     public Mangola(GameId id, MangolaRules rules, PlayerId seatA) {
         requireSeat(seatA);
-        if (rules.setup() != MangolaSetup.FREE) {
-            throw new IllegalArgumentException("Only the free set-up has a placement phase, not " + rules.setup());
-        }
         this.id = id;
         this.rules = rules;
         this.seatA = seatA;

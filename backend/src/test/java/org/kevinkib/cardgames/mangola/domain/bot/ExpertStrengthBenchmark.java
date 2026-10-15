@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.kevinkib.cardgames.mangola.domain.MangolaBoard;
 import org.kevinkib.cardgames.mangola.domain.MangolaRules;
-import org.kevinkib.cardgames.mangola.domain.MangolaSetup;
+import org.kevinkib.cardgames.mangola.domain.MangolaLayouts;
 import org.kevinkib.cardgames.mangola.domain.Side;
 
 import java.util.Random;
@@ -34,7 +34,7 @@ class ExpertStrengthBenchmark {
             long nodeSum = 0;
             int n = 20;
             for (int i = 0; i < n; i++) {
-                MangolaBoard board = MangolaSetup.random(random);
+                MangolaBoard board = MangolaLayouts.random(random);
                 if (MangolaMoves.moves(board, Side.A, MangolaRules.OWNER).isEmpty()) {
                     continue;
                 }

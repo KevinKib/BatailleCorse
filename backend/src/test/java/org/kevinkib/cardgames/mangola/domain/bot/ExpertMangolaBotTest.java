@@ -8,7 +8,7 @@ import org.kevinkib.cardgames.mangola.domain.MangolaBoard;
 import org.kevinkib.cardgames.mangola.domain.MangolaException;
 import org.kevinkib.cardgames.mangola.domain.MangolaGeometry;
 import org.kevinkib.cardgames.mangola.domain.MangolaRules;
-import org.kevinkib.cardgames.mangola.domain.MangolaSetup;
+import org.kevinkib.cardgames.mangola.domain.MangolaLayouts;
 import org.kevinkib.cardgames.mangola.domain.Side;
 
 import java.util.HashSet;
@@ -106,7 +106,7 @@ class ExpertMangolaBotTest {
 
     @Test
     void itRespectsTheNodeCap() {
-        MangolaBoard board = MangolaSetup.random(new Random(5));
+        MangolaBoard board = MangolaLayouts.random(new Random(5));
         for (long cap : new long[]{50, 500, 5_000}) {
             ExpertMangolaBot.SearchResult result = expert(cap).search(BotFixtures.position(board, Side.A), Side.A);
             // A started iteration is stopped at the cap: allow the few nodes of the move generation of the last one.
@@ -117,7 +117,7 @@ class ExpertMangolaBotTest {
 
     @Test
     void itAlwaysAnswersEvenWithAnEmptyBudget() {
-        MangolaBoard board = MangolaSetup.random(new Random(6));
+        MangolaBoard board = MangolaLayouts.random(new Random(6));
         ExpertMangolaBot bot = new ExpertMangolaBot(BotFixtures.CONSTANT, new ExpertMangolaBot.Budget(0, 0));
         int pit = bot.decideMove(BotFixtures.position(board, Side.A), Side.A);
         assertThat(MangolaMoves.legalPits(board, Side.A, OWNER).contains(pit), is(true));
@@ -125,7 +125,7 @@ class ExpertMangolaBotTest {
 
     @Test
     void itRespectsTheTimeBudget() {
-        MangolaBoard board = MangolaSetup.random(new Random(8));
+        MangolaBoard board = MangolaLayouts.random(new Random(8));
         ExpertMangolaBot bot = new ExpertMangolaBot(BotFixtures.CONSTANT, new ExpertMangolaBot.Budget(100, Long.MAX_VALUE));
         bot.decideMove(BotFixtures.position(board, Side.A), Side.A); // warm up
         long start = System.nanoTime();
@@ -136,7 +136,7 @@ class ExpertMangolaBotTest {
 
     @Test
     void itIsDeterministicWithTheConstantGenerator() {
-        MangolaBoard board = MangolaSetup.random(new Random(9));
+        MangolaBoard board = MangolaLayouts.random(new Random(9));
         int first = expert(2_000).decideMove(BotFixtures.position(board, Side.A), Side.A);
         int second = expert(2_000).decideMove(BotFixtures.position(board, Side.A), Side.A);
         assertThat(first, is(second));
@@ -208,7 +208,7 @@ class ExpertMangolaBotTest {
                     new ExpertMangolaBot.Budget(60_000, nodeCap, 20));
             GreedyMangolaBot greedy = new GreedyMangolaBot(new Random(seed * 31));
             MangolaBoard board = source == Layouts.RANDOM_BOARDS
-                    ? MangolaSetup.random(new Random(seed))
+                    ? MangolaLayouts.random(new Random(seed))
                     : MangolaBoard.empty()
                             .withLayout(expertSide, expert.decideLayout(OWNER, expertSide, Set.of()))
                             .withLayout(expertSide.other(), greedy.decideLayout(OWNER, expertSide.other(), Set.of()));

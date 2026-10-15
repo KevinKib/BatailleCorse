@@ -6,7 +6,7 @@ import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.mangola.domain.Mangola;
 import org.kevinkib.cardgames.mangola.domain.MangolaGeometry;
 import org.kevinkib.cardgames.mangola.domain.MangolaRules;
-import org.kevinkib.cardgames.mangola.domain.MangolaSetup;
+import org.kevinkib.cardgames.mangola.domain.MangolaLayouts;
 import org.kevinkib.cardgames.mangola.domain.SowingStep;
 import org.kevinkib.cardgames.mangola.presentation.dto.MangolaDto;
 import tools.jackson.databind.JsonNode;
@@ -72,7 +72,6 @@ class MangolaDtoTest {
         assertThat(dto.id(), is(game.getId().uuid().toString()));
         assertThat(dto.version(), is(0));
         assertThat(dto.phase(), is("PLACEMENT"));
-        assertThat(dto.setup(), is("free"));
         assertThat(dto.seatA(), is(0));
         assertThat(dto.board().size(), is(32));
         assertThat(at(dto.board(), halfOf(0)), is(Collections.nCopies(16, 0)));
@@ -216,15 +215,14 @@ class MangolaDtoTest {
     // ------------------------------------------------------------------ play
 
     @Test
-    void aPresetGameStartsInPlayWithEverythingPublic() {
-        Mangola game = Mangola.fromLayout(GameId.generate(), MangolaRules.OWNER.withSetup(MangolaSetup.CHECKERBOARD),
-                SEAT_0, MangolaSetup.checkerboard());
+    void aGameBuiltFromABoardStartsInPlayWithEverythingPublic() {
+        Mangola game = Mangola.fromLayout(GameId.generate(), MangolaRules.OWNER,
+                SEAT_0, MangolaLayouts.checkerboard());
 
         MangolaDto dto = view(game, SEAT_1);
 
         assertThat(dto.phase(), is("PLAY"));
-        assertThat(dto.setup(), is("checkerboard"));
-        assertThat(dto.board(), is(MangolaSetup.checkerboard().toList()));
+        assertThat(dto.board(), is(MangolaLayouts.checkerboard().toList()));
         assertThat(dto.players().get(0).ready(), is(true));
         assertThat(dto.players().get(1).ready(), is(true));
         assertThat(dto.availableActions(), is(empty()));
