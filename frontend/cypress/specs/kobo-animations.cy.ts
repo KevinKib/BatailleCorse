@@ -4,7 +4,7 @@
 // sheet is still rising); and `prefers-reduced-motion: reduce` shows the state at once with nothing moving.
 // No fixed wait anywhere: flights are observed from the page (a MutationObserver records every copy as it is added),
 // so a short flight cannot be missed by a slow poll. Two rooms only.
-import { MOTION_MAX_MS } from '../../src/model/kobo/tempo';
+import { MOTION_MAX_MS, TEMPO } from '../../src/model/kobo/tempo';
 import { awaitState, DECK_CODES, scriptedDiscardTurn, startKoboTable } from '../support/koboRoom';
 
 const slot = (seat: number, n: number) => `[data-test="slot-${seat}-${n}"]`;
@@ -151,7 +151,8 @@ describe('Kobo animations', () => {
         expect(w.__marks, 'the cards touched by the moves were ringed').to.be.greaterThan(0);
         expect(w.__timings.length).to.be.greaterThan(0);
         expect(Math.max(...w.__timings.map((t) => t.duration)), 'an opponent flight is slow enough to follow').to.be.at.least(1200);
-        for (const t of w.__timings) expect(t.delay + t.duration, 'a movement lasts within the tempo limit').to.be.at.most(MAX_MS);
+        // The copy of a queued event is set up at once and waits its turn: that wait (bounded by the queue) comes on top of the movement.
+        for (const t of w.__timings) expect(t.delay + t.duration, 'a movement lasts within the tempo limit').to.be.at.most(MAX_MS + TEMPO.queue.maxLagMs);
       });
       cy.document().then((doc) => {
         expect(doc.documentElement.scrollWidth, 'page width').to.be.at.most(doc.documentElement.clientWidth);
