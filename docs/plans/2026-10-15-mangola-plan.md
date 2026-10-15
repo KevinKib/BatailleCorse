@@ -151,6 +151,22 @@ Follows `docs/architecture/add-a-game.md` section 2 line by line.
   broadcasters, placement phase, what is not covered yet); `docs/architecture/game-conventions.md` unchanged
   (no new name).
 
+## N3b `feat: refuse a Mangola layout that leaves the starter without a move` (S, owner-decided 2026-10-15)
+
+- `Mangola.confirmLayout`: the confirmation that completes the pair builds the revealed board and throws
+  the new `StuckStartException` (message = locale key `mangola.errors.stuckStart`) when the starting seat has
+  no legal pit on it; nothing changes on a refusal. The check is on the full board, not on the starter's
+  half alone (a random search showed the half alone neither implies nor excludes a stuck start). The
+  non-starting seat is not constrained (`NO_MOVE` applies later); no confirmation timeout. `draftOnlyEndless`
+  stays as the editor's warning.
+- Reuses the existing error path (`SeatCommands` replies an `ErrorResponse` to the sender alone, message =
+  the key, state = its own projection). **N5 (editor) consumes the key:** the frontend maps
+  `mangola.errors.stuckStart` to its text and keeps the seat in the editor.
+- **Tests first:** `MangolaStuckStartTest` (refused for either completing seat, refusal changes nothing,
+  rearrange then confirm, starter takes its confirmation back, first confirmation never checked, endless
+  alone but fine on the full board, non-starter stuck not refused, `DRAW` rules never stuck),
+  `MangolaGameActionsTest` and `MangolaWebSocketControllerTest` (no broadcast, error to the sender alone).
+
 ## N4 `feat: Mangola frontend model, session and store` (M)
 
 - `model/mangola/MangolaState.ts` (DTO types; pit names; `viewerRows(dto)`: the 4×8 grid rotated so the
@@ -171,7 +187,8 @@ Use the `ui-change` skill for the before/after evidence at 375 px and 1280 px, l
   captured states), `MangolaBoard.vue` (4×8 grid, inner-row divider, path cues per the canvas choice, arrow
   keys, emits `sow(pit)`), `MangolaPlacementEditor.vue` (add / remove a seed, seeds-left counter, presets
   Checkerboard / Two per pit / Random / Clear, Confirm / Edit again, opponent "Arranging…" / "Ready",
-  `draftOnlyEndless` warning).
+  `draftOnlyEndless` warning, and the refusal `mangola.errors.stuckStart` of a confirmation that leaves the
+  starter without a move, owner-decided 2026-10-15).
 - Locales `mangolaUi` for these texts.
 - **Tests first** (Vitest): every pit shows its count and name; only `legalPits` are enabled; keyboard
   path; the editor never lets the counter go below 0 or the sum above 32, Confirm enabled at exactly 32;
