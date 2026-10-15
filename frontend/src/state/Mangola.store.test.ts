@@ -372,6 +372,48 @@ describe('Mangola store', () => {
       expect(store.lobbyError).toBeNull();
     });
 
+    describe('refused confirmation (mangola.errors.stuckStart)', () => {
+      const KEY = 'mangola.errors.stuckStart';
+      function placing() {
+        const store = seated(0);
+        store.applyEvent({ type: 'state-update', state: placementState(Array(16).fill(2)) });
+        return store;
+      }
+
+      it('keeps the key for the editor and leaves the lobby error alone', () => {
+        const store = placing();
+        store.applyEvent({ type: 'error', eventType: 'CONFIRM_LAYOUT', message: KEY });
+        expect(store.placementError).toBe(KEY);
+        expect(store.lobbyError).toBeNull();
+        expect(store.phase).toBe('placement');
+      });
+
+      it('goes away when the layout changes, is taken back, or the game moves on', () => {
+        const store = placing();
+        store.applyEvent({ type: 'error', eventType: 'CONFIRM_LAYOUT', message: KEY });
+        store.removeSeed(0);
+        expect(store.placementError).toBeNull();
+
+        store.applyEvent({ type: 'error', eventType: 'CONFIRM_LAYOUT', message: KEY });
+        store.applyEvent({ type: 'state-update', state: mangolaState() });
+        expect(store.placementError).toBeNull();
+      });
+
+      it('goes away when I try to confirm again', () => {
+        publishSpy();
+        const store = placing();
+        store.applyEvent({ type: 'error', eventType: 'CONFIRM_LAYOUT', message: KEY });
+        store.confirmLayout();
+        expect(store.placementError).toBeNull();
+      });
+
+      it('ignores other in-game errors', () => {
+        const store = placing();
+        store.applyEvent({ type: 'error', eventType: 'ARRANGE', message: 'Something else' });
+        expect(store.placementError).toBeNull();
+      });
+    });
+
     it('a FORFEIT event keeps its reason', () => {
       const store = seated(0);
       store.applyEvent({ type: 'event', eventType: 'FORFEIT', message: '', eventData: { loserSeat: 1, reason: 'DISCONNECTED' } });
