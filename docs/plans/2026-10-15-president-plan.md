@@ -20,7 +20,7 @@ offered variant, against humans and bots, in a series of small PRs.
    chain until the next play; the first pass ends the binding); a quad played at once closes the trick
    (`quadClears = on`); forbidden finish on a 2; exchange 2/1 (best cards forced, free return); the king of hearts holder leads round 1 with
    any play; the Scum leads rounds 2+; points by place; the first player out closes the trick, later ones
-   do not (a forbidden finisher out first closes nothing: only the player taking 1st place does). Presets (Classic, Pagat basic, Strict, Party, Daifugō-like) are a lobby convenience, unknown to the
+   do not (a forbidden finisher out first closes nothing: only the player taking 1st place does). The lobby offers one preset, Classic (owner, 2026-10-15; the other presets are out of scope, spec 3.5), plus a "Customise" path; a preset is a lobby convenience, client-side only, unknown to the
    server.
 4. **Exchange flow**: the server takes the low ranks' best cards automatically; the high ranks choose their
    returns freely, all at once, no timeout (the disconnect forfeit covers absence).
@@ -86,7 +86,7 @@ players) get distinct names (today all "Neutral").
 | V2 | `feat: President cuts, quad, forbidden finish and must play` | M | V1 | beat and effect matrix per option value, parameterised; Cypress per visible indicator | cuts against the equal-play binding | - |
 | V3 | `feat: President revolution and aces high` | M | V2 | rank order under each option and revolution state; exchange best cards under each order | revolution timing | - |
 | V4 | `feat: President runs and suit lock` | M-L | V3 | run parsing and beating tables; lock tables; `LegalPlays` enumeration size | `LegalPlays` growth with runs | - |
-| E1 | `test: President end-to-end matrix` | M | V4, B3 | Cypress: each preset through a scripted round, a completion out of turn, rematch, disconnect and forfeit | e2e duration | - |
+| E1 | `test: President end-to-end matrix` | M | V4, B3 | Cypress: the Classic preset through a scripted round, a completion out of turn, rematch, disconnect and forfeit | e2e duration | - |
 
 Total about 18 to 21 days of agent work, of which D0 and P1 (about 2.5) are done; it was 20 to 24 before the
 2026-10-15 re-slice (no jokers, no two decks, putsch or fall; the equal-play rules grow V1). P1 and P2 may be
@@ -226,9 +226,9 @@ version guard, store selection reset on a new trick or a refused play.
 
 After the canvas decisions 1, 2, 3 and 6. Registry entry (`supportsBots: false`), route `president-room`,
 `useGameRooms`, locales (`gamePicker.games.president`, rules `president`, `presidentUi`, `options.president`),
-`PresidentLobbyOptions` (presets + groups, generic fallback), `PresidentGameScreen.vue` with the table, hand,
+`PresidentLobbyOptions` (the Classic preset + groups, generic fallback), `PresidentGameScreen.vue` with the table, hand,
 trick, seats, play and pass, rule chips, a minimal round-over line (F4 does the full summary). Shared tests and
-Cypress lists per `add-a-game.md` §3.2 and §4. Cypress `president-lobby.cy.ts` (options, presets, Start at 3
+Cypress lists per `add-a-game.md` §3.2 and §4. Cypress `president-lobby.cy.ts` (options, the Classic preset and Customise, Start at 3
 with two scripted players) and `president-game.cy.ts` (fixed deal, a full round with scripted players to
 `ROUND_OVER`). `CLAUDE.md` game list updated. Never at the same time as another entry PR.
 
@@ -277,7 +277,7 @@ summary) and `shared-lobby.cy.ts` updated.
 The owner's equal-play rules (spec §3.1.1), the default of the Classic preset. O1 (the first pass ends the
 binding) and O4 (a single lead does not open the window) are decided.
 
-- Key `equalPlay` (`on|off`, default `on`): descriptor, parsing, locales, presets unlocked.
+- Key `equalPlay` (`on|off`, default `on`): descriptor, parsing, locales.
 - Domain: `BeatRule` equal case; `Trick` chain (rank, cards in succession) and `MATCH_OR_PASS` binding that
   repeats along the chain (the first pass ends it, O1: the next seat gets the `BEAT` constraint); the four completed in succession closes the trick (reason `QUAD`),
   the completing player leads or, if out, the next seat with cards; `Completion` (missing cards, holder) and
@@ -306,8 +306,7 @@ binding) and O4 (a single lead does not open the window) are decided.
 
 ## V2 `feat: President cuts, quad, forbidden finish and must play` (M)
 
-Keys `twoCuts`, `quadClears` (a quad played at once closes the trick; `on` by default, O5; the Pagat basic,
-Strict and Daifugō-like presets set it `off`), `forbiddenFinish` (default `lastPlace`), `mustPlay`.
+Keys `twoCuts`, `quadClears` (a quad played at once closes the trick; `on` by default, O5), `forbiddenFinish` (default `lastPlace`), `mustPlay`.
 Domain: `BeatRule` cut cases, `PlayEffects` clears with reasons, forbidden finish places (a forbidden
 finisher out first does not close the trick, O3 decided; only the player taking 1st place does, so the
 `FIRST_OUT` rule of P2/P3 keys on 1st place; worked example 9 of spec §3.1.2 as a test row), `mustPlay` in `pass` (a completion is never
@@ -338,7 +337,7 @@ tables, lock tables, `LegalPlays` size bound on a 13-card hand. Cypress: a run a
 
 ## E1 `test: President end-to-end matrix` (M)
 
-Cypress only (and fixtures): each preset (Classic, Pagat basic, Strict, Party, Daifugō-like) through one
+Cypress only (and fixtures): the Classic preset through one
 scripted round on a fixed deal; a completion out of turn on the Classic preset; Play again keeps options and
 bots; a disconnect then a forfeit mid-trick and mid-exchange; reload into each phase restores the DTO. Runs
 on the e2e stack, one at a time.
@@ -354,7 +353,7 @@ on the e2e stack, one at a time.
   `synchronized` commands and a completion condition re-checked at processing time (a play closes the window,
   passes do not), a two-thread test, and the DTO flag only in the holder's view.
 - **First-finisher rule** (merged P2 #223 did not carry it): P3 adds it, keyed on the player taking 1st place.
-- **Option explosion**: sixteen keys. Mitigated by presets, grouped lobby options, and the rule that every
+- **Option explosion**: sixteen keys. Mitigated by the Classic preset, grouped lobby options, and the rule that every
   combination is legal; the effect matrix tests cover every value, not every combination (self-play covers
   random combinations).
 - **`LegalPlays` size** with runs: measured in V4; patterns, not concrete card lists, keep the DTO small.

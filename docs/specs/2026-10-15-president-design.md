@@ -218,7 +218,7 @@ forbids it]. Each return is visible only to its two players; the others see the 
 
 One row per variant. **Status**: *Offered* = a host option of this design (PR in the plan). The variants not
 offered, and those dropped for now by the owner, are in 3.4 and 3.5. **Combined** = how often it is played
-together with others in the sources. Defaults are those of the "Classic" preset (section 4.2).
+together with others in the sources. Defaults are those of the "Classic" preset, the only one (section 4.2).
 
 | # | Variant | Names | Rule | Combined | Interactions / conflicts | Default | Status | Certainty |
 |---|---------|-------|------|----------|--------------------------|---------|--------|-----------|
@@ -277,6 +277,17 @@ them can come back as an option later without new research; none has a key, a PR
 | V20 | Putsch ("le putsch") | Before the exchange, the Scum may declare a putsch: no exchange this round. If the Scum finishes first, they are President with one bonus point; otherwise the round stops as soon as someone else goes out first, every player keeps their previous title, the putschist loses one point, gives their 4 best cards to the President next round and cannot putsch then | [U] single source (fr.wikipedia, citation needed) |
 | V21 | The President falls ("miyako-ochi", "falling from the capital") | If the reigning President does not finish first, they are placed last at once (out of the round) | [S] pagat Daifugō; not French [U] |
 
+Lobby presets other than Classic (owner: only Classic for now, others later, decided 2026-10-15). Presets are
+client-side bundles of option values (4.2); their definitions are kept so they can come back without new
+research. None has a card, a key, a PR or a test; all are a single change map over the keys of 4.1.
+
+| Former preset | Values (only those that differ from the Classic defaults) |
+|---------------|-----------------------------------------------------------|
+| Pagat basic | `firstLead=lowestClub`, `equalPlay=off`, `quadClears=off`, `forbiddenFinish=off`, `exchange=one`, `nextLead=president`, `scoring=titles`, `length=points-11` |
+| Strict | `afterPass=out`, `equalPlay=off`, `quadClears=off`, `forbiddenFinish=off` |
+| Party | `twoCuts=single`, `revolution=round` |
+| Daifugō-like | `equalPlay=off`, `quadClears=off`, `revolution=round`, `runs=sameSuit`, `suitLock=on` (without the jokers, eight stops and fall of the real Daifugō, also out of scope) |
+
 ## 4. Options (host, game-level)
 
 ### 4.1 Option keys
@@ -311,21 +322,20 @@ Sixteen keys. Until a variant's PR ships, its key does not exist (the server ref
 domain behaves as the "off" value. Defaults are the Classic preset, so a room created without touching
 anything plays the owner's rules.
 
-### 4.2 Presets (frontend convenience) [D]
+### 4.2 Preset (frontend convenience) [D]
 
-A preset is a named bundle of values sent as **one** change map (`updateOptions` already merges several keys
-in one call); the server knows no preset. The lobby shows which preset matches the current values, or
-"Custom".
+Owner, 2026-10-15: the lobby offers **one** preset, **Classic** (the owner's rules), plus a "Customise" path
+that opens every option. A preset is a named bundle of values sent as **one** change map (`updateOptions`
+already merges several keys in one call); it stays **client-side only**: the server knows no preset. The lobby
+shows "Classic" while the current values equal it, "Custom" otherwise. The other bundles that were studied
+(Pagat basic, Strict, Party, Daifugō-like) are in 3.5.
 
-| Preset | Values (only those that differ from the defaults) |
-|--------|---------------------------------------------------|
-| Classic (the owner's rules) | defaults: re-entry, equal play binds the next player (the first pass ends the binding; the four closes the trick, completion out of turn), a quad played at once closes the trick, forbidden finish on a 2, exchange 2/1 with a free return, king of hearts leads round 1, Scum leads rounds 2+, rank points, 5 rounds |
-| Pagat basic | `firstLead=lowestClub`, `equalPlay=off`, `quadClears=off`, `forbiddenFinish=off`, `exchange=one`, `nextLead=president`, `scoring=titles`, `length=points-11` |
-| Strict | `afterPass=out`, `equalPlay=off`, `quadClears=off`, `forbiddenFinish=off` |
-| Party | `twoCuts=single`, `revolution=round` |
-| Daifugō-like | `equalPlay=off`, `quadClears=off`, `revolution=round`, `runs=sameSuit`, `suitLock=on` (without the jokers, eight stops and fall of the real Daifugō, out of scope) |
+| Preset | Values |
+|--------|--------|
+| Classic (the owner's rules) | the defaults: re-entry after a pass, equal play binds the next player (the first pass ends the binding; the four closes the trick, completion out of turn), a quad played at once closes the trick, forbidden finish on a 2, exchange 2/1 with a free return, king of hearts leads round 1, Scum leads rounds 2+, rank points, 5 rounds; every other option off |
 
-A preset that names a key not yet shipped is hidden until it ships.
+Classic changes no key from the defaults, so selecting it is a reset to the defaults. A key not yet shipped is
+simply absent from the change map.
 
 ### 4.3 Seat options
 
@@ -524,7 +534,7 @@ commands `play`, `pass`, `giveBack`, `ready`), `state/President.store.ts`,
 `PresidentRuleChips`), `view/president/PresidentGameScreen.vue`. Texts in `presidentUi`, rules in `president`,
 options in `options.president`. Registry: `define('president', { supportsBots, picker })`.
 
-The lobby options component is data-driven: it renders the presets and groups the descriptors it knows
+The lobby options component is data-driven: it renders the Classic preset and groups the descriptors it knows
 (Trick, Special cards, Exchange, Match); any descriptor it does not know falls back to the generic radio
 group, so a backend variant never needs a frontend change to be settable (only texts).
 
@@ -582,9 +592,9 @@ at round 3 with titles, a revolution active, an exchange pending). This spec doe
    (C) a bar of suggested plays ("Pair of 9s", "Single 2: cut") above the hand, plus free selection. In every
    option, a visible "Complete the four" button appears for the holder while `completion` is present, even
    outside their turn, and plays exactly those cards.
-3. **Lobby options (sixteen keys).** (A) Preset cards (Classic, Pagat, Strict, Party, Daifugō) with a
+3. **Lobby options (sixteen keys).** (A) A single Classic preset card (the only preset, owner 2026-10-15) with a
    "Customise" disclosure grouping every option; (B) all options in four accordions (Trick, Special cards,
-   Exchange, Match) with the generic radios; (C) preset first, then a list of rule chips, each opening a
+   Exchange, Match) with the generic radios; (C) the Classic preset first, then a list of rule chips, each opening a
    small sheet to change it.
 4. **Exchange step.** (A) Inline at the table: a banner, my received cards highlighted in my hand, select k
    cards and Give; (B) a modal sheet with "You received" and "Choose k cards to give back", with a
@@ -697,8 +707,7 @@ le plus petit", the king of hearts lead. They are the owner's rules [O], marked 
     (`FIRST_OUT`). A four completed in succession still closes it. Worked example 9.
 21. **O5 — A quad played at once closes the trick.** Decided 2026-10-15: a play of four cards of one rank
     closes the trick and its player leads. This is `quadClears`, which becomes **`on` by default** (values
-    `on`, `off`; in the Classic preset it is on; the presets Pagat basic, Strict and Daifugō-like set it
-    `off`; Party keeps the default). It is independent of `equalPlay` (the four completed in succession
+    `on`, `off`; in the Classic preset it is on). It is independent of `equalPlay` (the four completed in succession
     stays under `equalPlay`) and combines with a revolution as in V5.
 22. **O2 — Default match length.** Decided 2026-10-15: `rounds-5` is the default; `endless` stays an option.
 23. **P2 scoring and exchange rules accepted.** Decided 2026-10-15 (P2 merged in #223): the owner confirmed
@@ -707,6 +716,13 @@ le plus petit", the king of hearts lead. They are the owner's rules [O], marked 
     out; (5) the low title forfeiting during the exchange (pending return completed with their lowest
     cards, section 8); (6) titles recomputed after a forfeit between rounds; (7) the lowest give-back
     (`giveBack = lowest`, V15).
+
+24. **One lobby preset: Classic.** Decided 2026-10-15 (owner: only Classic for now, others later): the lobby
+    offers a single preset, **Classic** (re-entry after a pass, equal-play binding on, a quad closes the trick,
+    forbidden finish on a 2, king of hearts leads round 1, exchange 2/1, 5 rounds, everything else off), and a
+    "Customise" path to every option. Pagat basic, Strict, Party and Daifugō-like move to 3.5 with their
+    definitions. Presets stay client-side only: the server knows none, and a preset is one `updateOptions`
+    change map. Plan: preset tests cover Classic only, the Cypress matrix drops the per-preset rounds.
 
 ### 13.2 Still open
 
