@@ -242,4 +242,17 @@ class TrickTest {
         assertThat(codes(game.hand(p(1))), is("4C 9C 9D"));
         assertThat(game.handSizes(), contains(2, 3, 3, 3));
     }
+
+    @Test
+    void theTrickViewNamesTheSeatsThatPassedSinceTheLastPlay() throws Exception {
+        President game = fourPlayers().build();
+
+        play(game, 0, "3C");
+        pass(game, 1);
+        pass(game, 2);
+        assertThat(game.trick().passed(), contains(p(1), p(2)));
+
+        play(game, 3, "6C");
+        assertThat(game.trick().passed(), is(empty()));
+    }
 }
