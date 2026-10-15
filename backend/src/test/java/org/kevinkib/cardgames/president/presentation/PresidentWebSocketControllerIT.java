@@ -132,9 +132,8 @@ class PresidentWebSocketControllerIT {
 
         // the leader plays its first legal pattern: every seat sees the play, only the leader's hand shrinks
         Map<String, Object> pattern = list(leaderState.get("legalPlays")).get(0);
-        List<Map<String, Object>> toPlay = list(leaderState.get("hand")).stream()
-                .filter(c -> c.get("rank").equals(pattern.get("rank")))
-                .limit(((Number) pattern.get("count")).intValue()).toList();
+        assertThat(pattern.get("count"), is(1));
+        List<Map<String, Object>> toPlay = list(leaderState.get("hand")).subList(0, 1); // the weakest card
         stomp.sendApp(sessions[leader], "/president/play", body(gameId, tokens[leader], "cards", toPlay));
         for (int i = 0; i < 3; i++) {
             Map<String, Object> played = frames[i].await(f -> "PLAY".equals(f.get("eventType")));
