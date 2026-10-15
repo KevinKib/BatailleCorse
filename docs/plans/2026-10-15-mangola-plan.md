@@ -23,8 +23,11 @@ sowing, and the shared lobby, forfeit, presence and rematch.
    Expert with no perfect level (spec Q5, Q8).
 
 The other product questions (repetition draw, no draw offer, bot pace) take the spec's recommendation
-unless the owner says otherwise. The UI questions (spec, "UI decisions to take") are settled on a Claude
-Design canvas before N5.
+unless the owner says otherwise. The UI questions were settled by the owner on a Claude Design canvas on 2026-10-15
+(spec, "UI decisions taken"; canvas https://claude.ai/artifact/9pYmbUu1rN9QdNo5SYcwDp).
+Backend rule decided the same day: at confirmation, a layout that would leave the starting player without any
+legal move is refused; no confirmation timeout is added (presence and Leave cover it). It lands as a small
+backend follow-up on the placement phase (N2/N3 code), before N5 relies on it.
 
 **Order:** backend first (N1 → N2 → N3), then the frontend (N4 and N5 in parallel, then N6, then the entry PR
 N7), bots after N3 (N8 can run in parallel with the frontend), N9 after N7 and N8, N10 last. Nothing is
@@ -50,7 +53,7 @@ step with its real number; test-first visible in git (a `test:` commit before th
 | N1 | `feat: Mangola sowing engine (domain)` | L | N0 validated | [x] PR #222 (merged) |
 | N2 | `feat: Mangola placement phase and set-up options` | M | N1 | [x] PR #226 (merged) |
 | N3 | `feat: Mangola table, factory, DTO and broadcasters` | L | N2 | [x] PR #228 (draft, not merged) |
-| N4 | `feat: Mangola frontend model, session and store` | M | N3 | [ ] |
+| N4 | `feat: Mangola frontend model, session and store` | M | N3 | [x] PR #231 |
 | N5 | `feat: Mangola board and placement editor components` | M-L | N3, Claude Design choice | [ ] |
 | N6 | `feat: Mangola sowing animation` | M | N4, N5 | [ ] |
 | N7 | `feat: play Mangola` (entry PR: registry, route, screen, lobby, locales, rules, Cypress) | M | N6, no other entry PR open | [ ] |
@@ -180,27 +183,35 @@ Follows `docs/architecture/add-a-game.md` section 2 line by line.
 
 ## N5 `feat: Mangola board and placement editor components` (M-L)
 
-Start after the owner chose on the Claude Design canvas (spec, "UI decisions to take", items 1, 3, 4, 5).
+The owner chose on the Claude Design canvas on 2026-10-15 (spec, "UI decisions taken", items 1, 3, 4, 5):
+dots only with exact count up to 8 seeds and the written number above 8 (count on hover/focus), tap to add
+with a Remove toggle, faint direction chevrons always visible, last move by pit marks only (no log line;
+the live-region sentence stays).
 Use the `ui-change` skill for the before/after evidence at 375 px and 1280 px, light and dark.
 
 - `components/mangola/MangolaPit.vue` (count, seed dots, accessible name, selectable / disabled / last-move /
-  captured states), `MangolaBoard.vue` (4×8 grid, inner-row divider, path cues per the canvas choice, arrow
-  keys, emits `sow(pit)`), `MangolaPlacementEditor.vue` (add / remove a seed, seeds-left counter, presets
-  Checkerboard / Two per pit / Random / Clear, Confirm / Edit again, opponent "Arranging…" / "Ready",
+  captured states), `MangolaBoard.vue` (4×8 grid, inner-row divider, path cues = faint chevrons, always visible; last-move rings (start ring, dashed rings with -n on captured
+  pits, end ring); arrow
+  keys, emits `sow(pit)`), `MangolaPlacementEditor.vue` (tap to add a seed, a Remove toggle instead of a long press, seeds-left
+  counter, presets Checkerboard / Two per pit / Random / Clear, Confirm enabled only at 0 seeds left,
+  "Edit layout" until the other is ready, opponent greyed "Placing..." then "Ready", both revealed together,
   `draftOnlyEndless` warning, and the refusal `mangola.errors.stuckStart` of a confirmation that leaves the
   starter without a move, owner-decided 2026-10-15).
 - Locales `mangolaUi` for these texts.
 - **Tests first** (Vitest): every pit shows its count and name; only `legalPits` are enabled; keyboard
   path; the editor never lets the counter go below 0 or the sum above 32, Confirm enabled at exactly 32;
   presets fill exactly 32; the opponent half is blank during hidden placement; 44 px targets (or the
-  canvas's agreed alternative) at 375 px.
+  agreed alternative) at 375 px.
 
 ## N6 `feat: Mangola sowing animation` (M)
 
-Per the canvas choice (spec item 2). Recommended: a hand token travelling pit to pit.
+Decided (spec item 2, option A, 2026-10-15): a hand token travelling pit to pit, accelerating; Skip button or
+tap to jump to the end; tick 2400 ms / seeds dropped clamped to 60..280 ms, halving toward the end, pauses 1.5
+ticks (min 200 ms), total cap 4.5 s; reduced motion shows the final board. The "replay last move" of option C
+is a possible later addition.
 
 - `components/mangola/useSowingAnimation.ts`: plays a trace on a local copy of the previous board, tick time
-  shrinking with the trace length (a cap on the total duration, about 4 s), Skip and click-to-finish,
+  shrinking with the trace length (a cap of 4.5 s on the total duration), Skip and click-to-finish,
   snaps to the DTO board at the end, queues states that arrive meanwhile and flushes to the newest version;
   `prefers-reduced-motion`: no travel, the result with the last move marked.
 - Live region text for each move (seat, pit, relays, seeds captured) in `mangolaUi`.
@@ -296,8 +307,9 @@ Only entry PR open at the time (check `gh pr list` for the President entry PR fi
 - **Entry PR collision with President (#216)**: N7 waits for the other entry PR or goes first, never both.
 - **Bot strength and time**: the expert's budget runs off the game monitor; node cap and zero delays under
   `test` keep Cypress deterministic.
-- **Board at 375 px**: 8 columns of 44 px do not fit with gaps; the canvas decides (smaller pits with
-  generous hit areas, or a layout change).
+- **Board at 375 px**: 8 columns of 44 px do not fit with gaps; decided as dots-only pits (exact dots up to 8 seeds,
+  the written number above); N5 settles the 44 px targets (smaller pits with generous hit areas, or a layout
+  change) and checks the legibility at 375 px.
 - **Name**: "Mangola" is the documented DR Congo name (chosen by the owner, 2026-10-15); the rules panel lists
   the other DR Congo names (Ngola, Mongola, Amungola, Angola) so players can find the game elsewhere.
 

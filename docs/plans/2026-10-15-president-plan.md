@@ -60,7 +60,8 @@ players) get distinct names (today all "Neutral").
 - Every visible text through `frontend/src/locales/` (`president`, `presidentUi`, `options.president`).
 - A dev environment only for the PRs with visible play (F2-F4, B3, V1-V4), never for P1-P3, F1, B1-B2, E1.
 - UI PRs follow the `ui-change` skill (inventory before/after, 375 and 1280 px, light and dark). The screens of
-  F2-F4 wait for the owner's choices on the Claude Design canvas (spec §11).
+  F2-F4 follow the owner's choices of 2026-10-15 on the Claude Design canvas (spec §11, "UI decisions taken";
+  https://claude.ai/artifact/45XcdLmxpAc2CCS5CBmTnY).
 - Tracking: open an issue "President" at P1 launch; comment on it and on roadmap #1 at each merge; no status
   PR. Update this Status table in the last PR.
 
@@ -76,9 +77,9 @@ players) get distinct names (today all "Neutral").
 | P2 | `feat: President match, exchange and scoring (domain)` | M-L | P1 | exchange amounts by `n` and option, best-card selection, returns, scoring tables, match end, forfeit in each phase | forfeit during the exchange | done (#223); the first-out-closes-trick rule was not in it, P3 carries it |
 | P3 | `feat: President at the table (server)` | M-L | P2 | factory and options (strict parse), option pruning, `kingOfHearts`, `endless`, the first player out closes the trick (parameterised `TrickAfterGoingOutTest`), DTO privacy, actions, controllers, STOMP IT, deal seam, shared tests | shared test counts collide with Mangola (#217) | done (#229) |
 | F1 | `feat: President model, session and store` | M | P3 | Vitest: DTO fixtures, one test per command, selection-to-pattern matcher, version guard | none visible | - |
-| F2 | `feat: President in the game selection, lobby and table` (entry PR) | L | F1, canvas 1-3, 6 | Vitest per component; Cypress lobby + a scripted round | the only entry PR at a time (Mangola) | - |
-| F3 | `feat: President exchange step` | M | F2, canvas 4 | Vitest; Cypress with a fixed deal into round 2 | waiting state for the non-exchanging seats | - |
-| F4 | `feat: President round summary, standings and end screen` | M | F2, canvas 5 | Vitest; Cypress to `FINISHED` and Play again; standings of an `endless` match | several winners, forfeit subtitle | - |
+| F2 | `feat: President in the game selection, lobby and table` (entry PR) | L | F1, decisions 1-3, 6 (spec §11) | Vitest per component; Cypress lobby + a scripted round | the only entry PR at a time (Mangola) | - |
+| F3 | `feat: President exchange step` | M | F2, decision 4 (spec §11) | Vitest; Cypress with a fixed deal into round 2 | waiting state for the non-exchanging seats | - |
+| F4 | `feat: President round summary, standings and end screen` | M | F2, decision 5 (spec §11) | Vitest; Cypress to `FINISHED` and Play again; standings of an `endless` match | several winners, forfeit subtitle | - |
 | B1 | `feat: President bot strategy` | M-L | P2 | view parity (in B2), memory, heuristic decision table (parameterised), self-play | strategy quality is subjective | - |
 | B2 | `feat: President bots at the table` | M | B1, P3 | coordinator with a manual scheduler, broadcaster skips bots, bot game IT | stale tasks | - |
 | B3 | `feat: play President against bots` | S-M | B2, F2 | Vitest; Cypress lobby with bots, a round against a hard bot | shared lobby specs | - |
@@ -224,7 +225,8 @@ version guard, store selection reset on a new trick or a refused play.
 
 ## F2 `feat: President in the game selection, lobby and table` (L, entry PR)
 
-After the canvas decisions 1, 2, 3 and 6. Registry entry (`supportsBots: false`), route `president-room`,
+After the decisions 1, 2, 3 and 6 (spec §11): ring of opponents, tap-to-select with a hint line, the lobby options through
+the existing pattern (constraint in Risks), top play plus rule chips (to re-evaluate after trying it). Registry entry (`supportsBots: false`), route `president-room`,
 `useGameRooms`, locales (`gamePicker.games.president`, rules `president`, `presidentUi`, `options.president`),
 `PresidentLobbyOptions` (the Classic preset + groups, generic fallback), `PresidentGameScreen.vue` with the table, hand,
 trick, seats, play and pass, rule chips, a minimal round-over line (F4 does the full summary). Shared tests and
@@ -234,14 +236,14 @@ with two scripted players) and `president-game.cy.ts` (fixed deal, a full round 
 
 ## F3 `feat: President exchange step` (M)
 
-After canvas decision 4. `PresidentExchangePanel` (received cards, choose k, Give, Suggest = lowest cards
+After decision 4 (inline exchange, received card tagged, Suggest link, "Give X to Y" button). `PresidentExchangePanel` (received cards, choose k, Give, Suggest = lowest cards
 that break no pair, computed client-side as a convenience only), waiting state for the others with the pair
 counts. Vitest per role (President, Vice, Neutral, Vice-Scum, Scum). Cypress `president-exchange.cy.ts`:
 fixed deal, round 1 scripted to a known order, round 2 exchange from both sides.
 
 ## F4 `feat: President round summary, standings and end screen` (M)
 
-After canvas decision 5. `PresidentRoundSummary` (finishing order, title changes, forbidden finishes, round and
+After decision 5 (end-of-round sheet; keep the Scores button idea). `PresidentRoundSummary` (finishing order, title changes, forbidden finishes, round and
 total points, ready checks), standings (also the running scoreboard of an `endless` match), `EndGameOverlay`
 with several winners and the forfeit subtitle, Play again to the lobby. Vitest; Cypress `president-end.cy.ts`
 (`length = rounds-3` scripted to `FINISHED`, Play again).
@@ -357,6 +359,14 @@ on the e2e stack, one at a time.
   combination is legal; the effect matrix tests cover every value, not every combination (self-play covers
   random combinations).
 - **`LegalPlays` size** with runs: measured in V4; patterns, not concrete card lists, keep the DTO small.
+- **Lobby options constraint (F2, owner 2026-10-15)**: customisation goes through the lobby with the existing
+  pattern (host options in the shared `GameLobby` / game options mechanism, as the other games do). F2 must not
+  introduce a new pattern; the Classic card + Customise disclosure is kept only if it fits that pattern,
+  otherwise the existing pattern is followed exactly (and the Classic-preset wording of this plan and of the
+  Cypress specs is adapted).
+- **Table for 8 players (F2)**: the ring of opponents was chosen; check what 8 players need at 375 px and report
+  it in the entry PR.
+- **Trick and rule chips (F2)**: decision 6 (option C) is provisional; re-evaluate after trying it.
 - **Entry-PR collision with Mangola (#217)**: F2 is scheduled after the other entry PR, never at the same time.
 - **Bot quality**: subjective; self-play tests guarantee legality and termination, not strength; a tuning pass
   can follow playtests.
