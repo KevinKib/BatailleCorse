@@ -90,17 +90,16 @@ describe('MangolaGameScreen', () => {
       const { wrapper } = await mountScreen(lobbyView({
         players: [{ seat: 0, name: 'Alice', joined: true }, { seat: 1, name: null, joined: false }],
         optionDescriptors: [
-          { key: 'setup', type: 'CHOICE', values: ['free', 'checkerboard', 'random'], defaultValue: 'free', labelKey: 'options.mangola.setup' },
           { key: 'firstPlayer', type: 'CHOICE', values: ['host', 'guest', 'random'], defaultValue: 'random', labelKey: 'options.mangola.firstPlayer' },
         ],
-        options: { setup: 'free', firstPlayer: 'random' },
+        options: { firstPlayer: 'random' },
         canEditOptions: true,
       }));
       expect(wrapper.find('[data-test="lobby"]').exists()).toBe(true);
       expect(wrapper.text()).toContain('Mangola');
       expect(wrapper.find('[data-test="add-bot"]').exists()).toBe(true);
-      expect(wrapper.get('[data-test="option-setup"]').text()).toContain('Set-up');
-      expect(wrapper.get('[data-test="option-setup"] .choice--on').text()).toBe('Free placement');
+      expect(wrapper.get('[data-test="option-firstPlayer"]').text()).toContain('First player');
+      expect(wrapper.find('[data-test="option-setup"]').exists()).toBe(false);
       expect(wrapper.get('[data-test="option-firstPlayer"] .choice--on').text()).toBe('Random');
       expect(wrapper.find('[data-test="mangola-board"]').exists()).toBe(false);
     });
@@ -133,14 +132,14 @@ describe('MangolaGameScreen', () => {
       const publish = vi.spyOn(webSocketService, 'publish').mockImplementation(() => {});
       const { wrapper, store } = await mountScreen(lobbyView({
         optionDescriptors: [
-          { key: 'setup', type: 'CHOICE', values: ['free', 'checkerboard', 'random'], defaultValue: 'free', labelKey: 'options.mangola.setup' },
+          { key: 'firstPlayer', type: 'CHOICE', values: ['host', 'guest', 'random'], defaultValue: 'random', labelKey: 'options.mangola.firstPlayer' },
         ],
-        options: { setup: 'free' },
+        options: { firstPlayer: 'random' },
         canEditOptions: true,
       }));
       store.restore('g1', 0, 'tok');
-      await wrapper.get('[data-test="option-setup-checkerboard"]').setValue(true);
-      expect(publish).toHaveBeenCalledWith('/app/lobby/setOptions', expect.stringContaining('"checkerboard"'));
+      await wrapper.get('[data-test="option-firstPlayer-guest"]').setValue(true);
+      expect(publish).toHaveBeenCalledWith('/app/lobby/setOptions', expect.stringContaining('"guest"'));
       const start = vi.spyOn(store, 'startGame').mockImplementation(() => {});
       await wrapper.get('[data-test="start"]').trigger('click');
       expect(start).toHaveBeenCalled();

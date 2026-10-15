@@ -23,7 +23,7 @@ import java.util.Optional;
  * One player's view of a Mangola game, the only projection of the aggregate. {@code board} holds the 32 pits
  * ({@code row * 8 + column}, rows 1 and 2 are side A's). During the placement phase it shows the viewer its own
  * draft and {@code null} for each of the opponent's 16 pits: the opponent's draft is never sent, only whether
- * the opponent is {@code ready}. Once both layouts are revealed (and for a preset set-up) everything is public.
+ * the opponent is {@code ready}. Once both layouts are revealed everything is public.
  * {@code legalPits} and {@code availableActions} depend on the viewer; {@code draftOnlyEndless} warns the
  * placement editor about a draft with no finite move.
  */
@@ -40,7 +40,6 @@ public record MangolaDto(
         List<Integer> legalPits,
         List<String> availableActions,
         @JsonInclude(JsonInclude.Include.NON_NULL) LastMoveDto lastMove,
-        String setup,
         @JsonInclude(JsonInclude.Include.NON_NULL) Integer repetitions,
         Outcome outcome,
         boolean draftOnlyEndless) {
@@ -158,7 +157,6 @@ public record MangolaDto(
                     game.legalPits(viewer),
                     availableActions(game, viewer),
                     lastMove,
-                    game.rules().setup().key(),
                     game.repetitions() >= 2 ? game.repetitions() : null,
                     outcome,
                     game.draftOnlyEndless(viewer));

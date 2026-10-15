@@ -5,7 +5,6 @@ package org.kevinkib.cardgames.mangola.domain;
  * {@code ngola.js}), with the {@code endless} switch set by a host option; the other switches have one
  * value each and mark where the documented variants (Mangola 1952, Omweso, Igisoro, Kiela) will plug in.
  *
- * @param setup              how the seeds get on the board: free placement, or a preset board
  * @param endless            what happens to a sowing that never ends
  * @param capture            how a capture is triggered
  * @param capturedSeedsFrom  where the captured seeds are sown from
@@ -14,7 +13,7 @@ package org.kevinkib.cardgames.mangola.domain;
  * @param lastSeedInEmptyPit what a last seed does when the next pit is empty
  * @param minSeedsToMove     the seeds a pit needs to be sown
  */
-public record MangolaRules(MangolaSetup setup, Endless endless, Capture capture, CapturedSeedsFrom capturedSeedsFrom,
+public record MangolaRules(Endless endless, Capture capture, CapturedSeedsFrom capturedSeedsFrom,
                            boolean captureTakesOwnPit, LastSeedInEmptyPit lastSeedInEmptyPit,
                            int minSeedsToMove) {
 
@@ -30,11 +29,11 @@ public record MangolaRules(MangolaSetup setup, Endless endless, Capture capture,
     /** The last seed goes to the pit after the empty one and the turn ends (no relay, no capture). */
     public enum LastSeedInEmptyPit { NEXT_PIT_AND_STOP }
 
-    public static final MangolaRules OWNER = new MangolaRules(MangolaSetup.FREE, Endless.ILLEGAL, Capture.AUTOMATIC,
+    public static final MangolaRules OWNER = new MangolaRules(Endless.ILLEGAL, Capture.AUTOMATIC,
             CapturedSeedsFrom.LAP_START, false, LastSeedInEmptyPit.NEXT_PIT_AND_STOP, 2);
 
     public MangolaRules {
-        if (setup == null || endless == null || capture == null || capturedSeedsFrom == null || lastSeedInEmptyPit == null) {
+        if (endless == null || capture == null || capturedSeedsFrom == null || lastSeedInEmptyPit == null) {
             throw new IllegalArgumentException("Every rule switch needs a value");
         }
         if (captureTakesOwnPit) {
@@ -46,12 +45,8 @@ public record MangolaRules(MangolaSetup setup, Endless endless, Capture capture,
     }
 
     public MangolaRules withEndless(Endless endless) {
-        return new MangolaRules(setup, endless, capture, capturedSeedsFrom, captureTakesOwnPit,
+        return new MangolaRules(endless, capture, capturedSeedsFrom, captureTakesOwnPit,
                 lastSeedInEmptyPit, minSeedsToMove);
     }
 
-    public MangolaRules withSetup(MangolaSetup setup) {
-        return new MangolaRules(setup, endless, capture, capturedSeedsFrom, captureTakesOwnPit,
-                lastSeedInEmptyPit, minSeedsToMove);
-    }
 }

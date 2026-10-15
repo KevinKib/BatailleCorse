@@ -42,7 +42,7 @@ import static org.hamcrest.Matchers.not;
 /**
  * Whole games through the real lobby, session core, broadcaster, coordinator and use cases, with a manual
  * scheduler and seeded randomness: a "human" who arranges and plays at random against a computer seat of every
- * level, in every set-up, whoever starts. The bot seat must never be messaged, never forfeit, never stall the
+ * level, whoever starts. The bot seat must never be messaged, never forfeit, never stall the
  * table and never play an illegal pit (a fallback would hide it, so the strategies are wrapped and checked).
  */
 class MangolaBotGameIT {
@@ -99,7 +99,7 @@ class MangolaBotGameIT {
         final GameId id;
         Mangola game;
 
-        Table(String setup, String firstPlayer, MangolaBotLevel level, long seed) throws Exception {
+        Table(String firstPlayer, MangolaBotLevel level, long seed) throws Exception {
             sessions = new SessionTable(new MangolaFactory(new Random(seed * 13))).sessions;
             messaging = new RecordingMessaging() {
                 @Override
@@ -122,7 +122,7 @@ class MangolaBotGameIT {
             broadcaster.addListener(coordinator);
 
             RoomCreated room = sessions.createRoom(MangolaFactory.GAME_TYPE, "Alice", GameOptions.of(Map.of(
-                    MangolaFactory.SETUP_KEY, setup, MangolaFactory.FIRST_PLAYER_KEY, firstPlayer)));
+                    MangolaFactory.FIRST_PLAYER_KEY, firstPlayer)));
             id = new GameId(room.gameId());
             sessions.addBot(id, room.hostToken());
             sessions.setSeatOption(id, room.hostToken(), 1, "level", level.key());
@@ -183,17 +183,15 @@ class MangolaBotGameIT {
     }
 
     @Test
-    void everyLevelFinishesEverySetupWithoutStallingForfeitingOrPlayingAnIllegalPit() throws Exception {
-        for (String setup : List.of("free", "checkerboard", "random")) {
-            for (String first : List.of("host", "guest")) {
-                for (MangolaBotLevel level : MangolaBotLevel.values()) {
-                    for (long seed = 1; seed <= 4; seed++) {
-                        Table table = new Table(setup, first, level, seed);
+    void everyLevelFinishesWithoutStallingForfeitingOrPlayingAnIllegalPit() throws Exception {
+        for (String first : List.of("host", "guest")) {
+            for (MangolaBotLevel level : MangolaBotLevel.values()) {
+                for (long seed = 1; seed <= 4; seed++) {
+                    Table table = new Table(first, level, seed);
 
-                        play(table);
+                    play(table);
 
-                        assertCleanFinish(table, setup + " " + first + " " + level + " seed " + seed);
-                    }
+                    assertCleanFinish(table, first + " " + level + " seed " + seed);
                 }
             }
         }
@@ -202,7 +200,7 @@ class MangolaBotGameIT {
     @Test
     void theBotSeatNeverReceivesAMessage() throws Exception {
         // The messaging double throws when a bot seat is addressed: playing whole games proves it never is.
-        Table table = new Table("free", "random", MangolaBotLevel.EXPERT, 5);
+        Table table = new Table("random", MangolaBotLevel.EXPERT, 5);
         play(table);
         assertThat(table.messaging.seats.contains(BOT), is(false));
         assertThat(table.messaging.seats.contains(HUMAN), is(true));
@@ -213,7 +211,7 @@ class MangolaBotGameIT {
         // Same seeds, two different human layouts: the bot arranges the same layout, since it never sees the draft.
         List<List<Integer>> layouts = new ArrayList<>();
         for (int humanLayout = 0; humanLayout < 2; humanLayout++) {
-            Table table = new Table("free", "host", MangolaBotLevel.GREEDY, 11);
+            Table table = new Table("host", MangolaBotLevel.GREEDY, 11);
             int[] draft = new int[16];
             java.util.Arrays.fill(draft, 2);
             if (humanLayout == 1) {
@@ -228,7 +226,7 @@ class MangolaBotGameIT {
 
     @Test
     void playAgainKeepsTheBotAndTheNextGameGetsItsOwnTable() throws Exception {
-        Table table = new Table("free", "host", MangolaBotLevel.GREEDY, 3);
+        Table table = new Table("host", MangolaBotLevel.GREEDY, 3);
         play(table);
         assertCleanFinish(table, "first game");
 

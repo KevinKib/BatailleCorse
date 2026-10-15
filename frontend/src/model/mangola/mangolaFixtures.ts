@@ -25,7 +25,6 @@ export function mangolaState(overrides: Partial<MangolaState> = {}): MangolaStat
     ],
     legalPits: [8, 10, 12, 14, 1, 3, 5, 7],
     availableActions: ['SOW'],
-    setup: 'checkerboard',
     outcome: { status: 'ONGOING' },
     draftOnlyEndless: false,
     ...overrides,
@@ -41,7 +40,6 @@ export function placementState(draft: number[] = Array(16).fill(0), overrides: P
   const total = draft.reduce((a, b) => a + b, 0);
   return mangolaState({
     phase: 'PLACEMENT',
-    setup: 'free',
     board,
     players: [
       { seat: 0, name: 'Alice', current: false, side: 'A', seeds: total, ready: false },

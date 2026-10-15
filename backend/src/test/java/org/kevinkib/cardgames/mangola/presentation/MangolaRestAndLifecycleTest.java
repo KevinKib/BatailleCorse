@@ -68,7 +68,7 @@ class MangolaRestAndLifecycleTest {
     }
 
     @Test
-    void getGame_beforeTheStart_returnsTheLobbyWithItsTwoOptions() {
+    void getGame_beforeTheStart_returnsTheLobbyWithItsOnlyOption() {
         RoomCreated room = table.sessions.createRoom(MangolaFactory.GAME_TYPE, "Alice");
 
         ResponseEntity<?> response = table.rest.getGame(room.gameId(), room.hostToken());
@@ -77,7 +77,7 @@ class MangolaRestAndLifecycleTest {
         LobbyView lobby = (LobbyView) response.getBody();
         assertThat(lobby.minPlayers(), is(2));
         assertThat(lobby.maxPlayers(), is(2));
-        assertThat(lobby.optionDescriptors().stream().map(d -> d.key()).toList(), is(List.of("setup", "firstPlayer")));
+        assertThat(lobby.optionDescriptors().stream().map(d -> d.key()).toList(), is(List.of("firstPlayer")));
     }
 
     @Test
@@ -100,7 +100,7 @@ class MangolaRestAndLifecycleTest {
     void playAgain_reopensTheRoomWithTheCallerAsHostAndKeepsTheOptions() {
         RoomCreated room = table.sessions.createRoom(MangolaFactory.GAME_TYPE, "Alice");
         table.sessions.updateOptions(new GameId(room.gameId()), room.hostToken(),
-                Map.of("setup", "checkerboard", "firstPlayer", "guest"));
+                Map.of("firstPlayer", "guest"));
         table.rest.joinGame(room.gameId(), new JoinGamePayload("Bob"));
         Mangola game = (Mangola) table.sessions.startGame(new GameId(room.gameId()), room.hostToken());
         game.forfeit(SEAT_1);
@@ -112,7 +112,7 @@ class MangolaRestAndLifecycleTest {
         assertThat(again.getBody().playerId(), is(0));
         assertThat(table.sessions.findGame(new GameId(room.gameId())).isPresent(), is(false));
         LobbyView lobby = (LobbyView) table.rest.getGame(room.gameId(), again.getBody().token()).getBody();
-        assertThat(lobby.options(), is(Map.of("setup", "checkerboard", "firstPlayer", "guest")));
+        assertThat(lobby.options(), is(Map.of("firstPlayer", "guest")));
     }
 
     // ---- session core hosts the game

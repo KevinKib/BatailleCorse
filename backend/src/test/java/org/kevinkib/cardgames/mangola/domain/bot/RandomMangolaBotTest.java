@@ -5,7 +5,7 @@ import org.kevinkib.cardgames.mangola.domain.MangolaBoard;
 import org.kevinkib.cardgames.mangola.domain.MangolaGeometry;
 import org.kevinkib.cardgames.mangola.domain.MangolaPosition;
 import org.kevinkib.cardgames.mangola.domain.MangolaRules;
-import org.kevinkib.cardgames.mangola.domain.MangolaSetup;
+import org.kevinkib.cardgames.mangola.domain.MangolaLayouts;
 import org.kevinkib.cardgames.mangola.domain.Side;
 import org.kevinkib.cardgames.mangola.domain.Sowing;
 
@@ -27,7 +27,7 @@ class RandomMangolaBotTest {
         Random seeds = new Random(42);
         RandomMangolaBot bot = new RandomMangolaBot(seeds);
         for (int game = 0; game < 200; game++) {
-            MangolaBoard board = MangolaSetup.random(seeds);
+            MangolaBoard board = MangolaLayouts.random(seeds);
             for (Side side : Side.values()) {
                 MangolaPosition position = BotFixtures.position(board, side);
                 List<Integer> legal = MangolaMoves.legalPits(board, side, OWNER);

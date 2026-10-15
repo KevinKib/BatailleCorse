@@ -999,7 +999,6 @@ export const messagesEn: Messages = {
       },
     },
     mangola: {
-      setup: { label: 'Set-up', free: 'Free placement', checkerboard: 'Checkerboard', random: 'Random' },
       firstPlayer: { label: 'First player', host: 'Host', guest: 'Guest', random: 'Random' },
       level: { label: 'Level', random: 'Easy', greedy: 'Medium', expert: 'Expert' },
     },

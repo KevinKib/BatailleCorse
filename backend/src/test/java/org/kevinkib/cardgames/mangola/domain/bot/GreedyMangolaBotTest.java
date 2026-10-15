@@ -71,7 +71,7 @@ class GreedyMangolaBotTest {
         Random random = new Random(11);
         GreedyMangolaBot bot = new GreedyMangolaBot(random);
         for (int i = 0; i < 300; i++) {
-            MangolaBoard board = org.kevinkib.cardgames.mangola.domain.MangolaSetup.random(random);
+            MangolaBoard board = org.kevinkib.cardgames.mangola.domain.MangolaLayouts.random(random);
             if (MangolaMoves.legalPits(board, Side.A, OWNER).isEmpty()) {
                 continue;
             }

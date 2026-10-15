@@ -73,9 +73,7 @@ class MangolaPlacementTest {
     }
 
     @Test
-    void thePublicConstructorOnlyBuildsFreeGames() {
-        MangolaRules preset = MangolaRules.OWNER.withSetup(MangolaSetup.CHECKERBOARD);
-        assertThrows(IllegalArgumentException.class, () -> new Mangola(GameId.generate(), preset, SEAT_0));
+    void thePublicConstructorRefusesASeatThatIsNotASeat() {
         assertThrows(IllegalArgumentException.class,
                 () -> new Mangola(GameId.generate(), MangolaRules.OWNER, new PlayerId(2)));
     }
