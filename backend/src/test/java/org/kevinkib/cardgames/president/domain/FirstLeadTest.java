@@ -31,6 +31,33 @@ class FirstLeadTest {
         return new President(id, players, seed, source, PresidentOptions.defaults().withFirstLead(firstLead));
     }
 
+    @ParameterizedTest(name = "king of hearts on seat {0} of {1}")
+    @CsvSource({"0, 3", "1, 3", "2, 3", "0, 5", "3, 5", "4, 5", "7, 8"})
+    void kingOfHeartsGivesTheLeadToItsHolder(int seat, int players) {
+        President game = dealing(card("KH"), seat, players, FirstLead.KING_OF_HEARTS, 1L);
+
+        assertThat(game.currentSeat(), is(new PlayerId(seat)));
+        assertThat(game.hand(new PlayerId(seat)).contains(card("KH")), is(true));
+    }
+
+    @Test
+    void kingOfHeartsIsTheDefaultFirstLead() {
+        assertThat(PresidentOptions.defaults().firstLead(), is(FirstLead.KING_OF_HEARTS));
+    }
+
+    @Test
+    void theHolderOfTheKingOfHeartsLeadsWithAnyPlayAndIsNotObligedToIncludeIt() throws Exception {
+        President game = dealing(card("KH"), 2, 4, FirstLead.KING_OF_HEARTS, 1L);
+        PlayerId leader = game.currentSeat();
+        org.kevinkib.cards.domain.Card other = game.hand(leader).stream()
+                .filter(c -> !c.equals(card("KH"))).findFirst().orElseThrow();
+
+        game.play(leader, List.of(other));
+
+        assertThat(game.hand(leader).contains(card("KH")), is(true));
+        assertThat(game.trick().plays().size(), is(1));
+    }
+
     @ParameterizedTest(name = "3 of clubs on seat {0} of {1}")
     @CsvSource({"0, 3", "1, 3", "2, 3", "0, 5", "3, 5", "4, 5", "7, 8"})
     void lowestClubGivesTheLeadToTheHolderOfTheThreeOfClubs(int seat, int players) {

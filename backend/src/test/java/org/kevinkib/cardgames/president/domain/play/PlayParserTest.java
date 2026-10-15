@@ -47,7 +47,7 @@ class PlayParserTest {
     }
 
     @Test
-    void aJokerIsNotPlayableWithoutTheJokersOption() {
+    void aJokerIsNeverPlayable() {
         List<Card> joker = List.of(new Card(FrenchRank.JOKER, FrenchSuit.RED_JOKER));
 
         assertThrows(IllegalPlayException.class, () -> PlayParser.parse(joker));

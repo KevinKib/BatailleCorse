@@ -31,6 +31,10 @@ class MatchLengthTest {
             "POINTS_11 | 10 | ZERO_SUM | 5 -1 -4  | true",
             "POINTS_21 | 10 | ZERO_SUM | 1 0 -1   | true",
             "POINTS_11 | 4  | ZERO_SUM | 11 0 -11 | true",
+            "ENDLESS   | 1  | RANK     | 5 4 0    | false",
+            "ENDLESS   | 20 | RANK     | 99 4 0   | false",
+            "ENDLESS   | 500| TITLES   | 999 0 0  | false",
+            "ENDLESS   | 20 | ZERO_SUM | 5 -1 -4  | false",
     })
     void isOver(MatchLength length, int roundsPlayed, Scoring scoring, String totals, boolean expected) {
         List<Integer> points = Arrays.stream(totals.split(" ")).map(Integer::parseInt).toList();
