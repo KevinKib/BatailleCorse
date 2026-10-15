@@ -578,33 +578,42 @@ Seat option `level` (`easy|medium|hard`), `PresidentFactory.supportsBots() = tru
   at a time), so no reaction delay: a completion uses the thinking delay like any other decision, and since
   passes keep the window open, only a human's quick play can beat it.
 
-## 11. UI decisions to take (Claude Design canvas, owner's choice before the frontend spec)
+## 11. UI decisions taken (Claude Design canvas, owner's choice of 2026-10-15)
 
-Per the global rule, each is settled on a canvas with 2-3 options on real President data (a 6-player table
-at round 3 with titles, a revolution active, an exchange pending). This spec does not choose.
+Canvas: https://claude.ai/artifact/45XcdLmxpAc2CCS5CBmTnY (real President data: a 6-player table at round 3 with
+titles, a revolution active, an exchange pending). The options are kept for context; the chosen one is marked
+**Chosen**.
 
-1. **Table layout for 3 to 8 players.** (A) Ring of opponents around the central trick, my hand fanned at
-   the bottom (Kobo/Bullshit ring); (B) a compact list of opponent rows (name, title badge, card count,
-   passed / out) above the trick, scaling to 8 on a phone; (C) an arc of opponents across the top only, the
-   trick in the middle, my hand at the bottom.
-2. **Selecting and playing cards.** (A) Tap cards to select, Play enabled only when the selection matches a
-   `legalPlays` pattern; (B) the hand grouped in rank stacks, tap a stack then a count chip (1..n);
-   (C) a bar of suggested plays ("Pair of 9s", "Single 2: cut") above the hand, plus free selection. In every
-   option, a visible "Complete the four" button appears for the holder while `completion` is present, even
-   outside their turn, and plays exactly those cards.
-3. **Lobby options (sixteen keys).** (A) A single Classic preset card (the only preset, owner 2026-10-15) with a
-   "Customise" disclosure grouping every option; (B) all options in four accordions (Trick, Special cards,
-   Exchange, Match) with the generic radios; (C) the Classic preset first, then a list of rule chips, each opening a
-   small sheet to change it.
-4. **Exchange step.** (A) Inline at the table: a banner, my received cards highlighted in my hand, select k
-   cards and Give; (B) a modal sheet with "You received" and "Choose k cards to give back", with a
-   "Suggest" button; (C) a trade view showing both partners of each pair (counts only for others).
-5. **Round end and standings.** (A) An overlay sheet with the finishing order, title changes (arrows), round
-   and total points, ready checks; (B) a persistent side scoreboard plus a short toast at round end (fits an
-   `endless` match); (C) a full-screen podium (President to Scum) then the next-round button.
-6. **Trick and rule state on the table.** (A) Only the top play, with a small stack and a log line;
-   (B) the whole trick fanned with the seat name on each play; (C) top play plus status chips (Revolution,
-   "9 or nothing", Suits locked, the chain count "9s: 3 of 4") next to the pile.
+1. **Table layout for 3 to 8 players.** **(A) Ring of opponents around the central trick, my hand fanned at
+   the bottom (Kobo/Bullshit ring). Chosen (owner, 2026-10-15).** The owner does not like (B), a compact list
+   of opponent rows; the "visible" opponents of (A) are preferred. **Risk to look at in the entry PR (F2):**
+   check what 8 players need on a 375 px screen (seat size, name, title badge, card count, passed / out) and
+   report it in the PR; (C), an arc of opponents across the top only, stays a fallback to discuss with the
+   owner if the ring does not fit.
+2. **Selecting and playing cards.** **(A) Tap cards to select, Play enabled only when the selection matches
+   a `legalPlays` pattern, a hint line explaining why otherwise. Chosen (owner, 2026-10-15).** Not chosen:
+   (B) rank stacks plus a count chip; (C) a bar of suggested plays. In every option, a visible "Complete the
+   four" button appears for the holder while `completion` is present, even outside their turn, and plays
+   exactly those cards.
+3. **Lobby options (sixteen keys).** **(A) A single Classic preset card (the only preset, owner 2026-10-15)
+   with a "Customise" disclosure grouping every option. Chosen (owner, 2026-10-15), with a constraint:** the
+   owner wants the options customised **through the lobby, with the existing lobby pattern** (host options
+   in the shared `GameLobby` / game options mechanism, as the other games do). No new pattern is introduced:
+   the "Classic" card and "Customise" disclosure are kept only if they fit that existing pattern, otherwise
+   the existing pattern is followed exactly. Not chosen: (B) four accordions; (C) rule chips each opening a
+   sheet.
+4. **Exchange step.** **(A) Inline at the table: a banner, the received cards tagged in my hand, select k
+   cards, a "Suggest" link and a "Give X to Y" button. Chosen (owner, 2026-10-15).** Not chosen: (B) a modal
+   sheet; (C) a trade view of both partners.
+5. **Round end and standings.** **(A) An end-of-round sheet with the finishing order, title changes
+   (arrows), round and total points, ready checks. Chosen (owner, 2026-10-15).** The "Scores" button of (B)
+   is kept as noted on the canvas (a way to reopen the standings, also useful in an `endless` match). Not
+   chosen: (B) as the main design, (C) a full-screen podium.
+6. **Trick and rule state on the table.** **(C) The top play plus rule chips such as "Finn: 9 or pass",
+   "9s: 2 of 4", "Revolution: 3 high" next to the pile. Chosen (owner, 2026-10-15), but the owner is not
+   certain: to be re-evaluated after trying it** (in the F2 playtest, before F3). Not chosen: (A) only the
+   top play with a log line; (B) the whole trick fanned with the seat name on each play (the fallback if (C)
+   disappoints).
 
 ## 12. Sources
 

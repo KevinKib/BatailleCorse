@@ -386,31 +386,49 @@ presentation, no other game).
 - Rules panel: the rules above in plain words with a small diagram of each loop, the empty-pit rule, the
   capture, and the origin paragraph.
 
-## UI decisions to take (Claude Design canvas, owner's choice before the frontend PRs)
+## UI decisions taken (Claude Design canvas, owner's choice of 2026-10-15)
 
-The canvas is to be built on the real data of a game (the E-examples and a simulated position), with 2 or 3
-options each and a recommendation; it is not built by this PR.
+Canvas: https://claude.ai/artifact/9pYmbUu1rN9QdNo5SYcwDp (built on the real E-examples and a simulated
+position). The options are kept for context; the chosen one is marked **Chosen**.
 
 1. **Board and seeds.** (a) A 4×8 grid of round pits with the **count** in each pit and up to 6 seed dots,
-   viewer's half at the bottom, the inner rows separated by a line; (b) the same grid with seed dots only
-   (numbers on hover/focus), closer to the real board, harder to read at 375 px; (c) a counts-only compact
-   grid with a heat colour per count. Recommend (a). At 375 px, 8 columns of 40 px pits fit in 343 px; the
-   44 px touch target needs the gap to count as target or a 2-row zoom: to settle on the canvas.
-2. **Sowing animation.** (a) A "hand" token travelling pit to pit, one seed per tick, counts ticking, the
-   capture drawn as seeds flying from the two opponent pits into the hand, accelerating with the trace
-   length, Skip button; (b) lap by lap: each lap's pits flash together and counts update per lap, capture
-   pits flash red; (c) no animation, the result at once plus a "replay last move" control with a step
-   slider. Recommend (a) with the acceleration and (c)'s replay as a later addition.
-3. **Placement screen.** (a) Tap a pit to add a seed, a minus button (or long press) to remove one, a big
-   "seeds left: 12" counter, presets row (Checkerboard, Two per pit, Random, Clear), Confirm; (b) drag seeds
-   from a reserve heap onto pits; (c) a +/− stepper under each pit. Recommend (a) (works by keyboard and at
-   375 px). Opponent's half during hidden placement: greyed pits with "Arranging…" then "Ready".
-4. **Path and capture cues.** (a) Faint arrows along each loop always visible; (b) arrows only during the
-   player's first turns and in the rules panel; (c) none, the animation teaches the path. And whether to
-   preview the destination of a sowing on hover (it would reveal computed outcomes: the server would have
-   to send them, **not recommended** for version 1).
-5. **Last move and opponent's turn.** (a) The opponent's start pit ringed and the captured pits marked until
-   the next move; (b) a one-line move log under the board ("Bob: c3, relay ×3, captured 5"); (c) both.
+   viewer's half at the bottom, the inner rows separated by a line; **(b) the same grid with seed dots only
+   (count on hover/focus), closer to the real board. Chosen (owner, 2026-10-15)**, with this owner-approved
+   rule: up to 8 seeds the pit shows **exactly as many dots as seeds** (the count on hover/focus); above 8 the
+   dots are replaced by the **written number**, never an approximation (a pit can hold up to 32 seeds);
+   (c) a counts-only compact grid with a heat colour per count. At 375 px, 8 columns of 40 px pits fit in
+   343 px; the 44 px touch target needs the gap to count as target or a 2-row zoom: to settle in the
+   frontend PR (N5), whose evidence includes the legibility of the dots at 375 px.
+2. **Sowing animation.** **(a) A "hand" token travelling pit to pit that accelerates, with a Skip button or a
+   tap to jump to the end. Chosen (owner, 2026-10-15).** Timing: tick 2400 ms / seeds dropped, clamped to
+   60..280 ms per seed, halving toward the end of the trace; pauses of 1.5 ticks (minimum 200 ms); total
+   cap 4.5 s; with `prefers-reduced-motion` the final board is shown at once. Not chosen: (b) lap by lap;
+   (c) no animation plus a "replay last move" control with a step slider; (c)'s replay is a possible later
+   addition, not part of the first frontend PRs.
+3. **Placement screen.** **(a) Tap a pit to add a seed, a "Remove" toggle (instead of a long press) to remove
+   one, a "seeds left" counter, presets Checkerboard / Two per pit / Random / Clear. Chosen (owner,
+   2026-10-15).** Confirm is enabled only at 0 seeds left; once confirmed, an "Edit layout" button takes the
+   confirmation back until the other player is ready; the opponent's half is greyed with "Placing..." then
+   "Ready", and both layouts are revealed together. Not chosen: (b) dragging seeds from a reserve heap;
+   (c) a +/- stepper under each pit.
+4. **Path and capture cues.** **(a) Direction arrows always visible as faint chevrons along each loop.
+   Chosen (owner, 2026-10-15).** Not chosen: (b) arrows only during the first turns and in the rules panel;
+   (c) none. No preview of a sowing's destination on hover (it would reveal computed outcomes: the server would
+   have to send them; out of version 1).
+5. **Last move and opponent's turn.** **(a) The opponent's last move is shown by pit marks only: a ring on the
+   start pit, dashed rings with "-n" on the captured pits, a ring on the end pit. Chosen (owner,
+   2026-10-15).** The one-line move log of (b) is not part of the on-screen design (nor (c), both); the
+   screen-reader announcement sentence of the live region ("Bob sowed c3, captured 5 seeds") stays.
+
+### Backend rule decided with these choices (2026-10-15)
+
+At confirmation, a layout that would leave the **starting player** without any legal move is refused (the
+exception name is left to the implementing PR). **No confirmation timeout is added**: presence (grace period,
+forfeit) and Leave cover a player who never confirms. This tightens the `NO_MOVE` paragraph of "End of the
+game" for the starting side only; the case of a layout whose every move is endless against the unknown
+opponent half stays flagged by `draftOnlyEndless`, since the check at confirmation can only use what the
+confirming seat knows. The PR that implements the refusal states which opponent half it assumes and covers it
+with tests.
 
 ## Room for documented variants (not built)
 
