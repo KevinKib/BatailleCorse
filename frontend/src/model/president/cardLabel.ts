@@ -1,5 +1,6 @@
 import type Card from '../Card';
 import { format } from '../../locales/format';
+import { canonicalRank } from './ranks';
 
 /** The words a card name is made of; the locales hold them (`presidentUi.table`). */
 export interface CardLabelTexts {
@@ -14,7 +15,8 @@ export interface CardLabelTexts {
 }
 
 export function rankLabel(rank: string, texts: Pick<CardLabelTexts, 'ranks'>): string {
-  return texts.ranks[rank] ?? rank;
+  const canonical = canonicalRank(rank);
+  return texts.ranks[canonical] ?? canonical;
 }
 
 /** "Queen of hearts", or "Queen of hearts, selected": the accessible name of a card of the hand. */

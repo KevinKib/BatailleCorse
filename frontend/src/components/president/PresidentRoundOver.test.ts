@@ -24,6 +24,22 @@ describe('PresidentRoundOver (placeholder until the round summary)', () => {
     ]);
   });
 
+  it('givenARoundOne_thenTheTitlesEarnedComeFromTheLastRound', () => {
+    const noTitle = players.map(p => ({ ...p, title: null }));
+    const lastRound = {
+      round: 1, finishingOrder: [1, 2, 0],
+      players: [
+        { seat: 1, place: 1, title: 'PRESIDENT' as const, points: 3, total: 3 },
+        { seat: 2, place: 2, title: 'NEUTRAL' as const, points: 2, total: 2 },
+        { seat: 0, place: 3, title: 'SCUM' as const, points: 1, total: 1 },
+      ],
+    };
+    const wrapper = mountOver({ players: noTitle, lastRound });
+    expect(wrapper.findAll('[data-test="round-over-place"]').map(l => l.text())).toEqual([
+      '1. P1 President', '2. P2 Neutral', '3. P0 Scum',
+    ]);
+  });
+
   it('whenReadyIsPressed_thenItEmitsReady', async () => {
     const wrapper = mountOver();
     await wrapper.get('[data-test="ready"]').trigger('click');

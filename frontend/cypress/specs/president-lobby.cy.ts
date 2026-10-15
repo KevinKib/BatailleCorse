@@ -36,13 +36,13 @@ describe('President lobby', () => {
       cy.get('[data-test="customise"]').should('have.attr', 'aria-expanded', 'false').click();
       cy.get('[data-test="customise"]').should('have.attr', 'aria-expanded', 'true');
       ['afterPass', 'firstLead', 'exchange', 'giveBack', 'nextLead', 'scoring', 'length'].forEach((key) => {
-        cy.get(`[data-test="option-${key}"]`).should('be.visible');
+        cy.get(`[data-test="option-${key}"]`).scrollIntoView().should('be.visible');
       });
       cy.get('[data-test="option-afterPass-out"]').check({ force: true });
       cy.get('[data-test="preset-title"]').should('have.text', 'Custom');
       cy.get('[data-test="option-afterPass-out"]').should('be.checked');
       cy.get('[data-test="option-length-endless"]').check({ force: true });
-      cy.get('[data-test="preset-reset"]').should('be.visible').click();
+      cy.get('[data-test="preset-reset"]').scrollIntoView().should('be.visible').click();
       cy.get('[data-test="preset-title"]').should('have.text', 'Classic');
       cy.get('[data-test="option-afterPass-reenter"]').should('be.checked');
       cy.get('[data-test="option-length-rounds-5"]').should('be.checked');

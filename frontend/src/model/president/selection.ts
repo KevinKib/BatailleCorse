@@ -1,5 +1,6 @@
 import type Card from '../Card';
 import type { PresidentAction, PresidentPattern, PresidentState } from './PresidentState';
+import { canonicalRank } from './ranks';
 
 /**
  * Turns the cards the player tapped into the pattern they form, and says whether it is a legal play. There is no
@@ -40,7 +41,7 @@ export function patternOf(cards: readonly Card[]): PresidentPattern | null {
 }
 
 const samePattern = (a: PresidentPattern, b: PresidentPattern) =>
-  a.kind === b.kind && a.rank === b.rank && a.count === b.count;
+  a.kind === b.kind && canonicalRank(a.rank) === canonicalRank(b.rank) && a.count === b.count;
 
 function canPlay(actions: readonly PresidentAction[]): boolean {
   return actions.includes('PLAY');
@@ -59,7 +60,7 @@ export function analyseSelection(context: SelectionContext, selected: readonly C
   const counts = [...new Set(context.legalPlays.map(p => p.count))].sort((a, b) => a - b);
   if (!counts.includes(pattern.count)) return refuse({ code: 'wrongCount', counts });
   const top = context.trick.top;
-  if (top) return refuse({ code: 'notHigher', rank: top.rank, count: top.count });
+  if (top) return refuse({ code: 'notHigher', rank: canonicalRank(top.rank), count: top.count });
   return refuse({ code: 'notPlayable' });
 }
 
@@ -72,7 +73,7 @@ export function completingCards(
 ): Card[] {
   const pattern = patternOf(selected);
   if (!pattern) return [];
-  if (!legalPlays.some(p => p.rank === pattern.rank && p.count > pattern.count)) return [];
+  if (!legalPlays.some(p => canonicalRank(p.rank) === canonicalRank(pattern.rank) && p.count > pattern.count)) return [];
   const chosen = new Set(selected.map(c => c.name));
   return hand.filter(c => c.rank === pattern.rank && !chosen.has(c.name));
 }

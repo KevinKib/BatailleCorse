@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { Button } from 'primevue';
-import type { PresidentPlayer } from '../../model/president/PresidentState';
+import type { PresidentPlayer, PresidentRound, PresidentTitle } from '../../model/president/PresidentState';
 import { seatsByPlace, titleKey } from '../../model/president/titles';
 import { useI18n } from '../../composables/useI18n';
 import { format } from '../../locales/format';
@@ -12,6 +12,7 @@ import type { PresidentTitleKey } from '../../locales/Messages';
 const props = defineProps<{
   players: PresidentPlayer[];
   round: number;
+  lastRound?: PresidentRound | null;
   nameOf: (seat: number) => string;
   /** False once I pressed Ready: the button gives way to a waiting line. */
   canReady: boolean;
@@ -19,11 +20,15 @@ const props = defineProps<{
 const emit = defineEmits<{ ready: [] }>();
 
 const ui = useI18n().presidentUi;
+// The title a seat has just earned is in `lastRound`; a seat's own `title` is the one it played this round with.
+const earnedTitle = (p: PresidentPlayer): PresidentTitle | null =>
+  props.lastRound?.players.find(r => r.seat === p.seat)?.title ?? p.title;
+const titleText = (title: PresidentTitle | null) => title ? ui.titles[titleKey(title) as PresidentTitleKey] : '';
 const ordered = computed(() => seatsByPlace(props.players).map(p => ({
   seat: p.seat,
   line: [
     format(ui.roundOver.place, { n: p.place ?? '', player: props.nameOf(p.seat) }),
-    p.title ? ui.titles[titleKey(p.title) as PresidentTitleKey] : '',
+    titleText(earnedTitle(p)),
   ].filter(Boolean).join(' '),
 })));
 </script>

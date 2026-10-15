@@ -92,7 +92,8 @@ function playTriple(rank: string, goesOut = false) {
           cy.get('[data-test="seat-title"]').should('exist');
           cy.get('[data-test="play"]').should('have.text', 'Give 2 cards').and('be.disabled');
           cy.get('[data-test="pass"]').should('not.exist');
-          cy.get('[data-test^="hand-card-"]').should('have.length', 18);
+          // The Scum's two best cards are already in my hand: 17 or 18 dealt, plus 2.
+          cy.get('[data-test^="hand-card-"]').should('have.length.within', 19, 20);
           cy.get('[data-test="hand-card-0"]').click({ force: true });
           cy.get('[data-test="hand-card-1"]').click({ force: true });
           cy.get('[data-test="play"]').should('not.be.disabled').click();

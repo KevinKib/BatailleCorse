@@ -263,6 +263,7 @@ const rematchButton = computed(() =>
           v-if="isRoundOver"
           :players="store.game.players"
           :round="store.game.round"
+          :last-round="store.game.lastRound"
           :name-of="displayName"
           :can-ready="canReady"
           @ready="store.ready()" />
