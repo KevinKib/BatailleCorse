@@ -65,6 +65,8 @@ class MalformedTokenIT {
     @Autowired
     private ThreeMenMorrisWebSocketController threeMenMorris;
     @Autowired
+    private org.kevinkib.cardgames.mangola.presentation.MangolaWebSocketController mangola;
+    @Autowired
     private org.kevinkib.cardgames.president.presentation.PresidentWebSocketController president;
     @Autowired
     private LobbyController lobby;
@@ -129,6 +131,27 @@ class MalformedTokenIT {
         return Stream.of(started, room).flatMap(id ->
                 forEachBadToken("GET " + prefix + " " + (id.equals(room) ? "lobby" : "started"),
                         t -> assertEquals(403, statusOfGet(prefix + id, t))));
+    }
+
+    @TestFactory
+    Stream<DynamicTest> mangolaRest() {
+        return restViewAnswers403("/api/mangola/game/", org.kevinkib.cardgames.mangola.domain.MangolaFactory.GAME_TYPE);
+    }
+
+    @TestFactory
+    Stream<DynamicTest> mangolaWebSocket() {
+        String gameType = org.kevinkib.cardgames.mangola.domain.MangolaFactory.GAME_TYPE;
+        String id = StartedRooms.start(sessions, gameType, 2).getId().uuid().toString();
+        String room = sessions.createRoom(gameType, "Alice").gameId();
+        return Stream.of(
+                forEachBadToken("mangola start", t -> assertDoesNotThrow(() -> mangola.start(new GameActionPayload(room, t)))),
+                forEachBadToken("mangola arrange", t -> assertDoesNotThrow(() -> mangola.arrange(
+                        new org.kevinkib.cardgames.mangola.presentation.api.MangolaArrangePayload(id, t, List.of(2, 2))))),
+                forEachBadToken("mangola confirmLayout", t -> assertDoesNotThrow(() -> mangola.confirmLayout(new GameActionPayload(id, t)))),
+                forEachBadToken("mangola editLayout", t -> assertDoesNotThrow(() -> mangola.editLayout(new GameActionPayload(id, t)))),
+                forEachBadToken("mangola sow", t -> assertDoesNotThrow(() -> mangola.sow(
+                        new org.kevinkib.cardgames.mangola.presentation.api.MangolaSowPayload(id, t, 8)))))
+                .flatMap(s -> s);
     }
 
     @TestFactory

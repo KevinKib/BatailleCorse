@@ -238,6 +238,41 @@ public class Mangola implements Game {
         return ready[seat.id()];
     }
 
+    /**
+     * Whether the seat's current draft has no finite move once played alone on an otherwise empty board (every
+     * pit it could sow is endless). The server cannot refuse such a draft (the opponent's half is hidden and a
+     * capture breaks a cycle), so it flags it for the editor. False outside the placement phase and without a draft.
+     */
+    public synchronized boolean draftOnlyEndless(PlayerId seat) {
+        requireSeat(seat);
+        if (phase != Phase.PLACEMENT || layouts[seat.id()] == null) {
+            return false;
+        }
+        return onlyEndlessMoves(rules, sideOf(seat), layouts[seat.id()]);
+    }
+
+    /**
+     * Whether a side's layout (16 counts in loop order), alone on the board, has at least one pit it could sow and
+     * every such pit is endless. Always false when the rules let endless sowings be played (they end in a draw).
+     */
+    public static boolean onlyEndlessMoves(MangolaRules rules, Side side, List<Integer> counts) {
+        if (rules.endless() != MangolaRules.Endless.ILLEGAL) {
+            return false;
+        }
+        MangolaBoard alone = MangolaBoard.empty().withLayout(side, toArray(counts));
+        boolean anyMovable = false;
+        for (int pit : MangolaGeometry.loop(side)) {
+            if (alone.seeds(pit) < rules.minSeedsToMove()) {
+                continue;
+            }
+            anyMovable = true;
+            if (!Sowing.sow(alone, side, pit, rules).endless()) {
+                return false;
+            }
+        }
+        return anyMovable;
+    }
+
     public synchronized Phase phase() {
         return phase;
     }

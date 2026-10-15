@@ -26,6 +26,7 @@ class LobbyRestControllerTest {
             new InMemorySessionRepository(Clock.systemUTC()),
             new GameFactories(List.of(new BatailleCorseFactory(), new BullshitFactory(), new KoboFactory(),
                     new org.kevinkib.cardgames.threemenmorris.domain.ThreeMenMorrisFactory(),
+                    new org.kevinkib.cardgames.mangola.domain.MangolaFactory(),
                     new org.kevinkib.cardgames.president.domain.PresidentFactory())));
     private final LobbyRestController controller = new LobbyRestController(sessions);
 
@@ -48,6 +49,7 @@ class LobbyRestControllerTest {
     void create_worksForEveryRegisteredGameType() {
         for (String type : List.of(BullshitFactory.GAME_TYPE, KoboFactory.GAME_TYPE,
                 org.kevinkib.cardgames.threemenmorris.domain.ThreeMenMorrisFactory.GAME_TYPE,
+                org.kevinkib.cardgames.mangola.domain.MangolaFactory.GAME_TYPE,
                 org.kevinkib.cardgames.president.domain.PresidentFactory.GAME_TYPE)) {
             ResponseEntity<LobbyCreatedDto> response = controller.create(new CreateLobbyPayload(type, null));
             assertThat(response.getStatusCode(), is(HttpStatus.OK));
