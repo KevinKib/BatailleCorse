@@ -42,25 +42,28 @@ class RandomMangolaBotTest {
 
     @Test
     void itNeverPicksAnEndlessPitWhenEndlessSowingsAreIllegal() {
-        // a1 and h1 hold 2 each on an otherwise empty board: find boards where some pit is endless.
-        Random random = new Random(7);
-        RandomMangolaBot bot = new RandomMangolaBot(random);
-        int checkedWithEndless = 0;
-        for (int game = 0; game < 400; game++) {
-            MangolaBoard board = MangolaSetup.random(random);
-            boolean someEndless = MangolaGeometry.loop(Side.A).stream()
-                    .filter(p -> board.seeds(p) >= 2)
-                    .anyMatch(p -> Sowing.sow(board, Side.A, p, OWNER).endless());
-            if (!someEndless || MangolaMoves.legalPits(board, Side.A, OWNER).isEmpty()) {
-                continue;
-            }
-            checkedWithEndless++;
-            for (int i = 0; i < 5; i++) {
-                int pit = bot.decideMove(BotFixtures.position(board, Side.A), Side.A);
-                assertThat(Sowing.sow(board, Side.A, pit, OWNER).endless(), is(false));
-            }
+        // The spec's 13-seed fixture: sowing c1 cycles for ever; e1 and g2 are fine.
+        MangolaBoard board = BotFixtures.board(BotFixtures.ENDLESS_SIDE_A + " a4:2");
+        assertThat(Sowing.sow(board, Side.A, MangolaGeometry.pit("c1"), OWNER).endless(), is(true));
+        RandomMangolaBot bot = new RandomMangolaBot(new Random(7));
+        Set<Integer> chosen = new java.util.HashSet<>();
+        for (int i = 0; i < 300; i++) {
+            chosen.add(bot.decideMove(BotFixtures.position(board, Side.A), Side.A));
         }
-        assertThat("the fixture boards must exercise the endless case", checkedWithEndless > 0, is(true));
+        assertThat(chosen, not(hasItem(MangolaGeometry.pit("c1"))));
+        assertThat(chosen.size() > 1, is(true));
+    }
+
+    @Test
+    void underDrawAnEndlessPitIsALegalChoice() {
+        MangolaRules draw = OWNER.withEndless(MangolaRules.Endless.DRAW);
+        MangolaBoard board = BotFixtures.board(BotFixtures.ENDLESS_SIDE_A + " a4:2");
+        RandomMangolaBot bot = new RandomMangolaBot(new Random(7));
+        Set<Integer> chosen = new java.util.HashSet<>();
+        for (int i = 0; i < 300; i++) {
+            chosen.add(bot.decideMove(BotFixtures.position(draw, board, 0), Side.A));
+        }
+        assertThat(chosen, hasItem(MangolaGeometry.pit("c1")));
     }
 
     @Test

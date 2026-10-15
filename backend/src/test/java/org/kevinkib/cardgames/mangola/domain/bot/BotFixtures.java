@@ -27,6 +27,9 @@ final class BotFixtures {
         }
     };
 
+    /** The spec's 13-seed side-A fixture: sowing c1 never ends. */
+    static final String ENDLESS_SIDE_A = "a1:1 c1:2 d1:1 e1:2 g1:1 b2:1 d2:1 f2:1 g2:2 h2:1";
+
     private BotFixtures() {
     }
 

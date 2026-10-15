@@ -81,6 +81,25 @@ class GreedyMangolaBotTest {
     }
 
     @Test
+    void underDrawItAvoidsTheEndlessPitWhileAnotherMoveExists() {
+        MangolaRules draw = OWNER.withEndless(MangolaRules.Endless.DRAW);
+        MangolaBoard board = BotFixtures.board(BotFixtures.ENDLESS_SIDE_A + " a4:2");
+        for (long seed = 0; seed < 30; seed++) {
+            int pit = new GreedyMangolaBot(new Random(seed)).decideMove(BotFixtures.position(draw, board, 0), Side.A);
+            assertThat(pit == MangolaGeometry.pit("c1"), is(false));
+        }
+    }
+
+    @Test
+    void underDrawItPlaysTheEndlessPitWhenItIsTheOnlyMove() {
+        MangolaRules draw = OWNER.withEndless(MangolaRules.Endless.DRAW);
+        // Found by a random search (see EndlessSowingTest): the only pit with two seeds, h2, is endless.
+        MangolaBoard board = BotFixtures.board("b1:1 d1:1 f1:1 h1:1 a2:1 c2:1 e2:1 g2:1 h2:3 a4:2");
+        int pit = new GreedyMangolaBot(new Random(1)).decideMove(BotFixtures.position(draw, board, 0), Side.A);
+        assertThat(MangolaGeometry.name(pit), is("h2"));
+    }
+
+    @Test
     void itsLayoutsAreLegalAndVaried() {
         GreedyMangolaBot bot = new GreedyMangolaBot(new Random(5));
         Set<java.util.List<Integer>> seen = new java.util.HashSet<>();
