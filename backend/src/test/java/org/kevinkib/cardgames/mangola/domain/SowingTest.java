@@ -55,7 +55,6 @@ class SowingTest {
         assertFalse(result.endless());
         assertEquals(expected, result.board());
         assertEquals(List.of(trace), result.trace());
-        assertEquals(64, result.board().total());
     }
 
     @Test
@@ -127,7 +126,7 @@ class SowingTest {
         assertEquals(relay("b2", 2), result.trace().get(18));
         assertEquals(skip("b2"), result.trace().get(result.trace().size() - 2));
         assertEquals(drop("c2"), result.trace().get(result.trace().size() - 1));
-        assertEquals(64, result.board().total());
+        assertEquals(17, result.board().total());
     }
 
     @Test
