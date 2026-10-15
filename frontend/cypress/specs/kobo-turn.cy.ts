@@ -43,7 +43,7 @@ describe('Kobo turn', () => {
       cy.get('[data-test="action-announce"]').should('have.text', 'Kobo!');
       cy.get('button[data-test^="slot-"]:not([disabled])').should('not.exist');
       // The swapped card goes in face down, I do not get to see it.
-      cy.get(slot(0, 1)).should('have.attr', 'aria-label', 'Your card 2, face down');
+      cy.get(slot(0, 1)).should('have.attr', 'aria-label').and('match', /^Your card 2, face down(: match this card)?$/);
       actionBarIsReachable();
       measureTable('turn end: End turn + Kobo!, 2 players');
       cy.get('[data-test="action-endTurn"]').click();
@@ -68,13 +68,14 @@ describe('Kobo turn', () => {
       cy.get('button[data-test^="slot-"]:not([disabled])').should('have.length', 4)
         .each(($b) => expect($b.attr('data-test')).to.match(/^slot-0-/));
       cy.get(slot(0, 0)).click();
-      cy.get(slot(0, 0)).should('have.attr', 'aria-label', 'Your card 1: king of heart');
+      cy.get(slot(0, 0)).should('have.attr', 'aria-label').and('match', /^Your card 1: king of heart(: match this card)?$/);
       cy.get('[data-test="action-hide"]').should('be.visible');
       cy.get('[data-test="action-endTurn"]').should('be.visible');
       actionBarIsReachable();
       measureTable('turn end: End turn + Kobo! + Hide, 2 players');
       cy.get('[data-test="action-hide"]').click();
-      cy.get(slot(0, 0)).should('have.attr', 'aria-label', 'Your card 1, face down');
+      // The one-click match hold (KOBO_SETTLE_MS) may or may not have lapsed by now: both labels mean face down.
+      cy.get(slot(0, 0)).should('have.attr', 'aria-label').and('match', /^Your card 1, face down(: match this card)?$/);
       cy.get('[data-test="action-hide"]').should('not.exist');
       cy.get('[data-test="action-endTurn"]').click();
       scriptedDiscardTurn(bob);
