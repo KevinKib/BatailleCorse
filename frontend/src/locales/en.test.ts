@@ -398,6 +398,15 @@ describe('Mangola messages', () => {
     expect(['host', 'guest', 'random'].map(v => firstPlayer[v])).toEqual(['Host', 'Guest', 'Random']);
   });
 
+  it('givenABotSeat_thenItsLevelsAreNamedAndTheRulesSayTheExpertIsNotPerfect', () => {
+    const { level } = messagesEn.options.mangola;
+    expect(level.label).toBe('Level');
+    expect(['random', 'greedy', 'expert'].map(v => level[v])).toEqual(['Easy', 'Medium', 'Expert']);
+    const bots = messagesEn.mangola.sections.find(s => s.title.toLowerCase().includes('bot'));
+    expect(bots?.kind).toBe('text');
+    expect(bots?.kind === 'text' && bots.body.join(' ')).toContain('Expert is strong but not perfect');
+  });
+
   it('givenTheTableMessages_thenTheEndScreenWordsEveryReason', () => {
     const ui = messagesEn.mangolaUi;
     expect(ui.end.winner).toBe('Winner: {player}');

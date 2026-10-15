@@ -246,6 +246,7 @@ export interface OptionsMessages {
   mangola: {
     setup: OptionTexts;                // `label`, then `free` / `checkerboard` / `random`
     firstPlayer: OptionTexts;          // `label`, then `host` / `guest` / `random`
+    level: OptionTexts;                // a bot seat's level: `label`, then `random` (Easy) / `greedy` (Medium) / `expert` (Expert)
   };
 }
 

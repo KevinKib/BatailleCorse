@@ -535,6 +535,11 @@ export const messagesEn: Messages = {
         title: 'Forfeit',
         body: ['Leaving the game, or staying disconnected too long, gives the win to your opponent.'],
       },
+      {
+        kind: 'text',
+        title: 'Playing a bot',
+        body: ['The host can add a bot at three levels: Easy plays at random, Medium plays for the most seeds one move ahead, Expert looks several moves ahead. Expert is strong but not perfect.'],
+      },
     ],
   },
   mangolaUi: {
@@ -996,6 +1001,7 @@ export const messagesEn: Messages = {
     mangola: {
       setup: { label: 'Set-up', free: 'Free placement', checkerboard: 'Checkerboard', random: 'Random' },
       firstPlayer: { label: 'First player', host: 'Host', guest: 'Guest', random: 'Random' },
+      level: { label: 'Level', random: 'Easy', greedy: 'Medium', expert: 'Expert' },
     },
   },
 };

@@ -81,10 +81,10 @@ export const GAMES: readonly GameDefinition[] = [
     supportsBots: false,
     picker: { icon: 'pi pi-crown', severity: 'contrast' },
   }),
-  // The board is operated with Tab, arrows, Enter and Space: no remappable shortcut, so no gear. No bots yet
-  // (they come with their own change, which flips the flag together with the factory's).
+  // The board is operated with Tab, arrows, Enter and Space: no remappable shortcut, so no gear.
+  // Bots play at three levels (a seat option).
   define('mangola', {
-    supportsBots: false,
+    supportsBots: true,
     picker: { icon: 'pi pi-circle', severity: 'help' },
   }),
 ];
