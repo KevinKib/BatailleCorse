@@ -114,7 +114,8 @@ describe('Mangola game', () => {
       canSow(F1);
       cy.reload();
       cy.get('[data-test="mangola-board"]', { timeout: 10000 }).should('be.visible');
-      [18, 26, 20, 28, 17, 25].forEach((pit) => seeds(pit, '0 seeds'));
+      // b4 and d4 got a seed from the guest's a4; the others are still empty.
+      [17, 18, 20, 26, 28].forEach((pit) => seeds(pit, '0 seeds'));
       canSow(F1);
       cy.get('[data-test="player-tag"]').should('contain.text', 'Alice');
     });
@@ -170,9 +171,14 @@ describe('Mangola layout', () => {
             expect(skip.right, 'Skip right').to.be.at.most(width + 1);
             expect(skip.bottom, 'Skip bottom').to.be.at.most(height + 1);
             expect(skip.height, 'Skip height').to.be.at.least(44);
-            const legend = doc.querySelector('.mg-board__legend--bottom')!.getBoundingClientRect();
+            // The legend's text (not its full-width box) must stay clear of the button.
+            const range = doc.createRange();
+            range.selectNodeContents(doc.querySelector('.mg-board__legend--bottom')!);
+            const legend = range.getBoundingClientRect();
             const overlap = skip.left < legend.right && legend.left < skip.right && skip.top < legend.bottom && legend.top < skip.bottom;
             expect(overlap, 'Skip does not cover the legend').to.eq(false);
+            const grid = doc.querySelector('.mg-board__grid')!.getBoundingClientRect();
+            expect(skip.top, 'Skip sits under the grid, not over its last row').to.be.at.least(grid.bottom - 1);
           });
         });
         cy.get('[data-test="mangola-board"]').then(($board) => {

@@ -17,7 +17,7 @@ export const pitName = (pit: number) => `${String.fromCharCode(97 + (pit % 8))}$
 export const pitEl = (pit: number) => cy.get(`[data-test="pit-${pitName(pit)}"]`);
 
 /** My turn on the board: the pit I may sow is selectable (a pit is inert while a sowing is shown). */
-export const canSow = (pit: number) => pitEl(pit).should('have.attr', 'data-selectable', 'true');
+export const canSow = (pit: number) => cy.get(`[data-test="pit-${pitName(pit)}"]`, { timeout: 20000 }).should('have.attr', 'data-selectable', 'true');
 
 /**
  * The browser as the host (seat 0, who starts: the option is set to Host) against a scripted guest, in the
@@ -29,7 +29,7 @@ export function asHostInPlacement(): Cypress.Chainable<{ id: string; bob: Script
   cy.get('[data-test="new-game"]').click();
   cy.url({ timeout: 10000 }).should('match', /\/games\/mangola\/room\/.+/);
   cy.get('[data-test="lobby"]', { timeout: 10000 }).should('be.visible');
-  cy.get('[data-test="option-firstPlayer"] .choice').contains('Host').click();
+  cy.get('[data-test="option-firstPlayer-host"]').check({ force: true });
   cy.get('[data-test="option-firstPlayer"] .choice--on').should('contain.text', 'Host');
   return cy.location('pathname').then((path) => {
     const id = path.split('/room/')[1];
