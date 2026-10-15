@@ -101,7 +101,8 @@ export function koboInteraction(
   const tapIsMatch = allowsDirectMatch(state, mySeat, pending, base);
   const matchPossible = state.availableActions.includes('MATCH_DISCARD') && !!state.discardTop
     && !NO_MATCH_PHASES.includes(state.phase);
-  const flags = { matchHint: tapIsMatch, matchButton: matchPossible && !tapIsMatch };
+  // The give step has its own exit (Cancel, Esc): the Match toggle would only repeat it.
+  const flags = { matchHint: tapIsMatch, matchButton: matchPossible && !tapIsMatch && pending.kind !== 'match-give' };
   if (options.directMatch !== false && tapIsMatch) {
     return { ...base, ...flags, piles, directMatch: true, intents: matchIntents(state, me, state.players) };
   }

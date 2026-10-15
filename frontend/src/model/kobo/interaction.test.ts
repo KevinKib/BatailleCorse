@@ -352,13 +352,17 @@ describe('koboInteraction', () => {
         expect(interaction.matchButton).toBe(false);
       });
 
-      it('a selection under way (armed, give) keeps the button as the toggle and hides the hint', () => {
+      it('the armed mode keeps the button as its toggle and hides the hint', () => {
+        const interaction = koboInteraction(matchable(), 0, { kind: 'match-armed' });
+        expect(interaction.matchHint).toBe(false);
+        expect(interaction.matchButton).toBe(true);
+      });
+
+      it('a rival card picked (give step): no hint and no Match button, only Cancel (in the bar) leaves', () => {
         const give: KoboPending = { kind: 'match-give', target: { seat: 1, slot: 0 }, expectedTopRank: 'KING', expectedRevision: 7 };
-        for (const pending of [give, { kind: 'match-armed' } as KoboPending]) {
-          const interaction = koboInteraction(matchable(), 0, pending);
-          expect(interaction.matchHint).toBe(false);
-          expect(interaction.matchButton).toBe(true);
-        }
+        const interaction = koboInteraction(matchable(), 0, give);
+        expect(interaction.matchHint).toBe(false);
+        expect(interaction.matchButton).toBe(false);
       });
 
       it('nothing to match (no listing, empty discard, memorising, gift): no hint, no button', () => {
