@@ -2,6 +2,7 @@ import type { GameDefinition, GameKey } from '../model/games';
 import { useBullshitStore } from '../state/Bullshit.store';
 import { useKoboStore } from '../state/Kobo.store';
 import { useThreeMenMorrisStore } from '../state/ThreeMenMorris.store';
+import { usePresidentStore } from '../state/President.store';
 import { useBatailleCorseStore } from '../state/BatailleCorse.store';
 import { useMangolaStore } from '../state/Mangola.store';
 
@@ -22,12 +23,14 @@ export function useGameRooms(): (game: GameDefinition) => GameRoomClient {
   const batailleCorse = useBatailleCorseStore();
   const kobo = useKoboStore();
   const morris = useThreeMenMorrisStore();
+  const president = usePresidentStore();
   const mangola = useMangolaStore();
   const clients: { [K in GameKey]?: GameRoomClient } = {
     bataillecorse: { create: (name) => batailleCorse.create(name), join: (id, name) => batailleCorse.join(id, name) },
     bullshit: { create: (name) => bullshit.create(name), join: (id, name) => bullshit.join(id, name) },
     kobo: { create: (name) => kobo.create(name), join: (id, name) => kobo.join(id, name) },
     'three-men-morris': { create: (name) => morris.create(name), join: (id, name) => morris.join(id, name) },
+    president: { create: (name) => president.create(name), join: (id, name) => president.join(id, name) },
     mangola: { create: (name) => mangola.create(name), join: (id, name) => mangola.join(id, name) },
   };
   return (game) => {

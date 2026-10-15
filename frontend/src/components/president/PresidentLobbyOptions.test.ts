@@ -1,0 +1,74 @@
+import { describe, it, expect } from 'vitest';
+import { mount } from '@vue/test-utils';
+import PresidentLobbyOptions from './PresidentLobbyOptions.vue';
+import { CLASSIC_PRESIDENT_OPTIONS } from '../../model/fixtures/president';
+import type { OptionDescriptor } from '../../model/lobby/LobbyView';
+
+const VALUES: Record<string, string[]> = {
+  afterPass: ['reenter', 'out'],
+  firstLead: ['kingOfHearts', 'lowestClub', 'queenOfHearts', 'random'],
+  exchange: ['two', 'one', 'scaled', 'none'],
+  giveBack: ['free', 'lowest'],
+  nextLead: ['scum', 'president'],
+  scoring: ['rank', 'titles', 'zeroSum'],
+  length: ['rounds-5', 'rounds-3', 'rounds-10', 'points-11', 'points-21', 'endless'],
+};
+const descriptors: OptionDescriptor[] = Object.entries(VALUES).map(([key, values]) => ({
+  key, type: 'CHOICE', values, defaultValue: CLASSIC_PRESIDENT_OPTIONS[key], labelKey: `options.president.${key}`,
+}));
+
+function mountOptions(options: Record<string, string> = { ...CLASSIC_PRESIDENT_OPTIONS }, editable = true, extra = descriptors) {
+  return mount(PresidentLobbyOptions, { props: { descriptors: extra, options, editable } });
+}
+
+describe('PresidentLobbyOptions', () => {
+  it('givenTheDefaults_thenTheClassicCardIsShown', () => {
+    const wrapper = mountOptions();
+    expect(wrapper.get('[data-test="preset-title"]').text()).toBe('Classic');
+    expect(wrapper.find('[data-test="preset-reset"]').exists()).toBe(false);
+  });
+
+  it('givenAChangedOption_thenTheCardSaysCustomAndTheHostCanGoBackToClassic', async () => {
+    const wrapper = mountOptions({ ...CLASSIC_PRESIDENT_OPTIONS, afterPass: 'out', scoring: 'titles' });
+    expect(wrapper.get('[data-test="preset-title"]').text()).toBe('Custom');
+    await wrapper.get('[data-test="preset-reset"]').trigger('click');
+    expect(wrapper.emitted('set-option')).toEqual([['afterPass', 'reenter'], ['scoring', 'rank']]);
+  });
+
+  it('givenNoValueForAnOption_thenItsDefaultCounts', () => {
+    expect(mountOptions({}).get('[data-test="preset-title"]').text()).toBe('Classic');
+  });
+
+  it('keepsTheOptionsBehindCustomiseUntilOpened', async () => {
+    const wrapper = mountOptions();
+    const toggle = wrapper.get('[data-test="customise"]');
+    expect(toggle.attributes('aria-expanded')).toBe('false');
+    expect(wrapper.find('[data-test="game-options"]').exists()).toBe(false);
+    await toggle.trigger('click');
+    expect(toggle.attributes('aria-expanded')).toBe('true');
+    for (const key of Object.keys(VALUES)) expect(wrapper.find(`[data-test="option-${key}"]`).exists(), key).toBe(true);
+  });
+
+  it('givenTheHostPicksAValue_thenSetOptionIsEmitted', async () => {
+    const wrapper = mountOptions();
+    await wrapper.get('[data-test="customise"]').trigger('click');
+    await wrapper.get('[data-test="option-length-endless"]').setValue(true);
+    expect(wrapper.emitted('set-option')).toEqual([['length', 'endless']]);
+  });
+
+  it('givenAKeyTheClientHasNoTextFor_thenTheGenericGroupShowsItsRawKeyAndValues', async () => {
+    const future: OptionDescriptor = { key: 'twoCuts', type: 'CHOICE', values: ['off', 'single'], defaultValue: 'off', labelKey: 'options.president.twoCuts' };
+    const wrapper = mountOptions({ ...CLASSIC_PRESIDENT_OPTIONS }, true, [...descriptors, future]);
+    await wrapper.get('[data-test="customise"]').trigger('click');
+    expect(wrapper.get('[data-test="option-twoCuts"]').text()).toContain('twoCuts');
+    expect(wrapper.get('[data-test="option-twoCuts-single"]').exists()).toBe(true);
+  });
+
+  it('givenAGuest_thenTheOptionsAreReadOnlyAndThereIsNoReset', async () => {
+    const wrapper = mountOptions({ ...CLASSIC_PRESIDENT_OPTIONS, afterPass: 'out' }, false);
+    expect(wrapper.find('[data-test="preset-reset"]').exists()).toBe(false);
+    await wrapper.get('[data-test="customise"]').trigger('click');
+    expect(wrapper.findAll('input[type="radio"]')).toHaveLength(0);
+    expect(wrapper.get('[data-test="option-afterPass"]').text()).toContain('Out of the trick');
+  });
+});

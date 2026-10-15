@@ -97,5 +97,23 @@ defineEmits<{ play: [] }>();
   .choice-players { font-size: 0.68rem; letter-spacing: 0.08em; }
   .choice-description { font-size: 0.8rem; line-height: 1.35; overflow-wrap: anywhere; }
   .choice-play { margin-top: 2px; }
+  /* An odd count leaves the last card alone on its row: it takes the whole row, with the Play button beside the text,
+     so a fifth game costs a short row instead of a tall one (the picker must still fit a 375x667 phone). */
+  .game-choice:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 12px;
+    align-items: center;
+  }
+  .game-choice:last-child:nth-child(odd) .choice-head { grid-column: 1; flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: 0 8px; }
+  .game-choice:last-child:nth-child(odd) .choice-name { overflow-wrap: normal; }
+  .game-choice:last-child:nth-child(odd) .choice-description { grid-column: 1; }
+  .game-choice:last-child:nth-child(odd) .choice-play { grid-column: 2; grid-row: 1 / span 2; width: auto; min-width: 112px; margin: 0; }
+}
+/* Short phones (375x667, 360x640): five games in three rows, so each card gives back a little room. */
+@media (max-width: 640px) and (max-height: 700px) {
+  .game-choice { gap: 4px; padding: 8px 10px; }
+  .choice-description { font-size: 0.75rem; line-height: 1.25; }
 }
 </style>

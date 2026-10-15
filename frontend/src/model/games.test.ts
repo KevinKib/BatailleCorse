@@ -3,7 +3,7 @@ import { GAMES, findGame, type GameDefinition, type GameKey } from './games';
 
 describe('game registry', () => {
   it('givenEveryGame_thenEachDeclaresItsRoutesUnderGamesKey', () => {
-    expect(GAMES.map(g => g.key)).toEqual(['bataillecorse', 'bullshit', 'kobo', 'three-men-morris', 'mangola']);
+    expect(GAMES.map(g => g.key)).toEqual(['bataillecorse', 'bullshit', 'kobo', 'three-men-morris', 'president', 'mangola']);
     for (const g of GAMES) {
       expect(g.gameHomeRoute).toBe(`/games/${g.key}`);
       expect(g.joinRoute()).toBe(`/games/${g.key}/join`);
@@ -58,6 +58,14 @@ describe('game registry', () => {
     expect(mangola?.supportsBots).toBe(false);
     expect(mangola?.hotkeys).toBeUndefined();
     expect(mangola?.picker).toEqual({ icon: 'pi pi-circle', severity: 'help' });
+  });
+
+  it('givenPresident_thenItIsRegisteredWithoutBotsNorShortcutsAndItsOwnPickerStyle', () => {
+    const president = findGame('president');
+    expect(president?.supportsBots).toBe(false);
+    expect(president?.hotkeys).toBeUndefined();
+    expect(president?.picker).toEqual({ icon: 'pi pi-crown', severity: 'contrast' });
+    expect(president?.roomRoute('abc')).toBe('/games/president/room/abc');
   });
 
   it('givenTheGameKeyIsOpen_thenAnUnknownKeyIsNotRegistered', () => {

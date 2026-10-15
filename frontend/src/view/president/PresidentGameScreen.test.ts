@@ -1,0 +1,242 @@
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { mount, flushPromises } from '@vue/test-utils';
+import { setActivePinia, createPinia } from 'pinia';
+import { createMemoryHistory, RouterView } from 'vue-router';
+import { defineComponent, h } from 'vue';
+import PrimeVue from 'primevue/config';
+import { createAppRouter } from '../../router';
+import { usePresidentStore } from '../../state/President.store';
+import type { LobbyView } from '../../model/lobby/LobbyView';
+import type { PresidentState } from '../../model/president/PresidentState';
+import {
+  buildPresidentHand, buildPresidentPlayer, buildPresidentState, buildPresidentTrick, CLASSIC_PRESIDENT_OPTIONS,
+} from '../../model/fixtures/president';
+import { messagesEn } from '../../locales/en';
+
+const DESCRIPTORS = Object.entries({
+  afterPass: ['reenter', 'out'], firstLead: ['kingOfHearts', 'lowestClub', 'queenOfHearts', 'random'],
+  exchange: ['two', 'one', 'scaled', 'none'], giveBack: ['free', 'lowest'], nextLead: ['scum', 'president'],
+  scoring: ['rank', 'titles', 'zeroSum'], length: ['rounds-5', 'rounds-3', 'rounds-10', 'points-11', 'points-21', 'endless'],
+}).map(([key, values]) => ({
+  key, type: 'CHOICE' as const, values, defaultValue: CLASSIC_PRESIDENT_OPTIONS[key], labelKey: `options.president.${key}`,
+}));
+
+function lobby(joined: number, mySeat = 0): LobbyView {
+  return {
+    started: false, gameId: 'p1',
+    players: Array.from({ length: joined }, (_, seat) => ({ seat, name: `P${seat}`, joined: true })),
+    hostSeat: 0, mySeat, minPlayers: 3, maxPlayers: 8, canStart: joined >= 3, lobbyVersion: 1,
+    optionDescriptors: DESCRIPTORS, options: { ...CLASSIC_PRESIDENT_OPTIONS }, canEditOptions: true,
+  };
+}
+
+async function mountRoom(setup: (store: ReturnType<typeof usePresidentStore>) => void) {
+  const store = usePresidentStore();
+  localStorage.setItem('president:tokens:p1', JSON.stringify({ 0: 'tok' }));
+  setup(store);
+  vi.spyOn(store, 'hydrate').mockImplementation(() => {});
+  vi.spyOn(store, 'restore').mockImplementation(() => {});
+  const router = createAppRouter(createMemoryHistory());
+  await router.push('/games/president/room/p1');
+  await router.isReady();
+  const Root = defineComponent({ render: () => h(RouterView) });
+  const wrapper = mount(Root, { global: { plugins: [router, PrimeVue] } });
+  await flushPromises();
+  return { store, router, wrapper };
+}
+
+const seatsOf = (n: number, overrides: Record<number, Partial<ReturnType<typeof buildPresidentPlayer>>> = {}) =>
+  Array.from({ length: n }, (_, seat) => buildPresidentPlayer(seat, { name: `P${seat}`, ...overrides[seat] }));
+
+function playing(overrides: Partial<PresidentState> = {}): PresidentState {
+  return buildPresidentState({
+    players: seatsOf(3),
+    hand: buildPresidentHand(['3', 'CLUB'], ['9', 'HEART'], ['9', 'SPADE'], ['KING', 'HEART']),
+    legalPlays: [{ kind: 'SET', rank: '3', count: 1 }, { kind: 'SET', rank: '9', count: 1 }, { kind: 'SET', rank: '9', count: 2 },
+      { kind: 'SET', rank: 'KING', count: 1 }],
+    availableActions: ['PLAY'],
+    ...overrides,
+  });
+}
+
+const room = (state: PresidentState, seat = 0) => (s: ReturnType<typeof usePresidentStore>) => {
+  s.applyEvent({ type: 'seat-change', seat });
+  s.applyEvent({ type: 'state-update', state });
+};
+
+describe('PresidentGameScreen', () => {
+  beforeEach(() => { vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {}))); setActivePinia(createPinia()); localStorage.clear(); });
+
+  it('givenNoStateYet_thenShowsTheConnectingScreen', async () => {
+    const { wrapper } = await mountRoom(() => {});
+    expect(wrapper.get('[data-test="connecting"]').text()).toContain(messagesEn.presidentUi.connecting);
+  });
+
+  it('givenALobby_thenShowsTheSharedLobbyWithTheClassicCardAndNoAddBot', async () => {
+    const { wrapper } = await mountRoom(room(lobby(2) as unknown as PresidentState));
+    expect(wrapper.get('[data-test="lobby"]').text()).toContain('President');
+    expect(wrapper.get('[data-test="player-count"]').text()).toContain('2 / 8');
+    expect(wrapper.get('[data-test="preset-title"]').text()).toBe('Classic');
+    expect(wrapper.find('[data-test="add-bot"]').exists()).toBe(false);
+    expect(wrapper.get('[data-test="start"]').attributes('disabled')).toBeDefined();
+  });
+
+  it('givenThreePlayers_thenTheHostCanStart', async () => {
+    const { wrapper, store } = await mountRoom(room(lobby(3) as unknown as PresidentState));
+    const start = vi.spyOn(store, 'startGame').mockImplementation(() => {});
+    await wrapper.get('[data-test="start"]').trigger('click');
+    expect(start).toHaveBeenCalled();
+  });
+
+  it('givenTheHostCustomises_thenTheOptionGoesThroughTheStore', async () => {
+    const { wrapper, store } = await mountRoom(room(lobby(3) as unknown as PresidentState));
+    const setOption = vi.spyOn(store, 'setOption').mockImplementation(() => {});
+    await wrapper.get('[data-test="customise"]').trigger('click');
+    await wrapper.get('[data-test="option-afterPass-out"]').setValue(true);
+    expect(setOption).toHaveBeenCalledWith('afterPass', 'out');
+  });
+
+  it('givenALobbyLeave_thenGoesToTheGameSelection', async () => {
+    const { wrapper, store, router } = await mountRoom(room(lobby(2) as unknown as PresidentState));
+    vi.spyOn(store, 'leave').mockReturnValue(true);
+    await wrapper.get('[data-test="leave-lobby"]').trigger('click');
+    await flushPromises();
+    expect(router.currentRoute.value.name).toBe('games');
+  });
+
+  it('givenMyTurn_thenTheTableShowsTheSeatsTheHandThePileAndTheRuleChips', async () => {
+    const { wrapper } = await mountRoom(room(playing({
+      round: 2,
+      players: seatsOf(3, { 1: { title: 'PRESIDENT', handSize: 5 }, 2: { title: 'SCUM', passed: true } }),
+      trick: buildPresidentTrick({
+        leader: 1, plays: [{ seat: 1, cards: buildPresidentHand(['5', 'DIAMOND']) }], top: { kind: 'SET', rank: '5', count: 1 },
+      }),
+    })));
+    expect(wrapper.findAll('[data-test="opponent-seat"]')).toHaveLength(2);
+    expect(wrapper.text()).toContain('President');
+    expect(wrapper.text()).toContain('Scum');
+    expect(wrapper.findAll('[data-test^="hand-card-"]')).toHaveLength(4);
+    expect(wrapper.get('[data-test="trick-by"]').text()).toBe('P1 played');
+    expect(wrapper.findAll('[data-test="rule-chip"]').map(c => c.text())).toContain('To beat: 1 × 5');
+    expect(wrapper.get('[data-test="phase-text"]').text()).toBe('Your turn');
+    expect(wrapper.get('[data-test="round"]').text()).toBe('Round 2 of 5');
+  });
+
+  it.each([3, 5, 8])('given%dPlayers_thenEveryOpponentHasASeat', async (n) => {
+    const { wrapper } = await mountRoom(room(playing({
+      players: seatsOf(n),
+      standings: seatsOf(n).map(p => ({ seat: p.seat, points: 0 })),
+    })));
+    expect(wrapper.findAll('[data-test="opponent-seat"]')).toHaveLength(n - 1);
+  });
+
+  it('givenNothingSelected_thenPlayIsDisabledWithAHintLine', async () => {
+    const { wrapper } = await mountRoom(room(playing()));
+    expect(wrapper.get('[data-test="play"]').attributes('disabled')).toBeDefined();
+    expect(wrapper.get('[data-test="play-hint"]').text()).toBe('Tap the cards you want to play.');
+  });
+
+  it('givenALegalSelection_thenPlayIsEnabledAndSendsThePlay', async () => {
+    const { wrapper, store } = await mountRoom(room(playing()));
+    const play = vi.spyOn(store, 'play').mockReturnValue(true);
+    await wrapper.get('[data-card="HEART_9"]').trigger('click');
+    await wrapper.get('[data-card="SPADE_9"]').trigger('click');
+    expect(wrapper.get('[data-card="HEART_9"]').attributes('aria-label')).toBe('9 of hearts, selected');
+    expect(wrapper.get('[data-test="play"]').attributes('disabled')).toBeUndefined();
+    expect(wrapper.get('[data-test="play-hint"]').text()).toBe('');
+    await wrapper.get('[data-test="play"]').trigger('click');
+    expect(play).toHaveBeenCalled();
+  });
+
+  it('givenAnIllegalSelection_thenPlayStaysDisabledAndTheHintSaysWhy', async () => {
+    const { wrapper } = await mountRoom(room(playing()));
+    await wrapper.get('[data-card="CLUB_3"]').trigger('click');
+    await wrapper.get('[data-card="HEART_KING"]').trigger('click');
+    expect(wrapper.get('[data-test="play"]').attributes('disabled')).toBeDefined();
+    expect(wrapper.get('[data-test="play-hint"]').text()).toBe('Cards of one rank only.');
+  });
+
+  it('whenClearIsPressed_thenTheSelectionIsEmpty', async () => {
+    const { wrapper } = await mountRoom(room(playing()));
+    await wrapper.get('[data-card="CLUB_3"]').trigger('click');
+    await wrapper.get('[data-test="clear"]').trigger('click');
+    expect(wrapper.get('[data-card="CLUB_3"]').attributes('aria-pressed')).toBe('false');
+  });
+
+  it('whenPassIsPressedOnMyTurn_thenThePassGoesThroughTheStore', async () => {
+    const { wrapper, store } = await mountRoom(room(playing({ availableActions: ['PLAY', 'PASS'] })));
+    const pass = vi.spyOn(store, 'pass').mockReturnValue(true);
+    await wrapper.get('[data-test="pass"]').trigger('click');
+    expect(pass).toHaveBeenCalled();
+  });
+
+  it('givenNotMyTurn_thenTheScreenNamesWhoPlaysAndNothingCanBePlayed', async () => {
+    const { wrapper } = await mountRoom(room(playing({ currentSeat: 2, availableActions: [], legalPlays: [] })));
+    expect(wrapper.get('[data-test="phase-text"]').text()).toBe('P2 is playing');
+    expect(wrapper.get('[data-test="play"]').attributes('disabled')).toBeDefined();
+    expect(wrapper.get('[data-test="pass"]').attributes('disabled')).toBeDefined();
+    expect(wrapper.get('[data-test="play-hint"]').text()).toBe('Wait for your turn.');
+  });
+
+  it('givenTheExchangeAndIOweCards_thenAGiveButtonTakesTheExactCount', async () => {
+    const { wrapper, store } = await mountRoom(room(playing({
+      round: 2, phase: 'EXCHANGE', availableActions: ['GIVE_BACK'], toGiveBack: 2, legalPlays: [],
+    })));
+    expect(wrapper.get('[data-test="phase-text"]').text()).toBe('Choose 2 cards to give back');
+    expect(wrapper.get('[data-test="play"]').text()).toBe('Give 2 cards');
+    expect(wrapper.get('[data-test="play"]').attributes('disabled')).toBeDefined();
+    expect(wrapper.find('[data-test="pass"]').exists()).toBe(false);
+    const giveBack = vi.spyOn(store, 'giveBack').mockReturnValue(true);
+    await wrapper.get('[data-card="CLUB_3"]').trigger('click');
+    await wrapper.get('[data-card="HEART_9"]').trigger('click');
+    await wrapper.get('[data-test="play"]').trigger('click');
+    expect(giveBack).toHaveBeenCalled();
+  });
+
+  it('givenTheExchangeAndIAmNotGiving_thenTheScreenWaits', async () => {
+    const { wrapper } = await mountRoom(room(playing({
+      round: 2, phase: 'EXCHANGE', availableActions: [], toGiveBack: 0, legalPlays: [],
+    })));
+    expect(wrapper.get('[data-test="phase-text"]').text()).toBe('Waiting for the exchange');
+  });
+
+  it('givenTheRoundIsOver_thenThePlaceholderListsThePlacesAndReadyGoesThroughTheStore', async () => {
+    const { wrapper, store } = await mountRoom(room(playing({
+      phase: 'ROUND_OVER', availableActions: ['READY'], legalPlays: [],
+      players: seatsOf(3, { 0: { place: 3, title: 'SCUM' }, 1: { place: 1, title: 'PRESIDENT' }, 2: { place: 2, title: 'NEUTRAL' } }),
+    })));
+    expect(wrapper.get('[data-test="round-over-title"]').text()).toBe('Round 1 is over');
+    const ready = vi.spyOn(store, 'ready').mockReturnValue(true);
+    await wrapper.get('[data-test="ready"]').trigger('click');
+    expect(ready).toHaveBeenCalled();
+  });
+
+  it('givenTheMatchIsFinished_thenTheEndScreenNamesTheWinner', async () => {
+    const { wrapper } = await mountRoom(room(playing({
+      phase: 'FINISHED', availableActions: [], legalPlays: [],
+      outcome: { status: 'FINISHED', winners: [1], reason: 'ROUNDS' },
+    })));
+    expect(wrapper.get('[data-test="end-winner"]').text()).toBe('Winner: P1');
+    expect(wrapper.get('[data-test="end"]').exists()).toBe(true);
+  });
+
+  it('givenMyConnectionIsDown_thenTheTableSaysSo', async () => {
+    const { setConnectionOnline } = await import('../../composables/useConnectionStatus');
+    const { wrapper } = await mountRoom(room(playing()));
+    setConnectionOnline(false);
+    await flushPromises();
+    expect(wrapper.get('[data-test="offline"]').text()).toContain(messagesEn.presidentUi.table.offline);
+    setConnectionOnline(true);
+  });
+
+  it('whenBackIsPressed_thenGoesToTheGameSelection', async () => {
+    // Leaving a running game asks first, then forfeits.
+    window.confirm = vi.fn(() => true);
+    const { wrapper, router, store } = await mountRoom(room(playing()));
+    const forfeit = vi.spyOn(store, 'forfeit').mockImplementation(() => {});
+    await wrapper.get('[data-test="back"]').trigger('click');
+    expect(forfeit).toHaveBeenCalled();
+    await flushPromises();
+    expect(router.currentRoute.value.name).toBe('games');
+  });
+});

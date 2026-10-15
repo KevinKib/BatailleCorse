@@ -2,7 +2,7 @@
  * Every game the app knows by key. Keys are opened ahead of their game: a game only appears on the Game
  * selection once its own change registers it in `GAMES`.
  */
-export type GameKey = 'bataillecorse' | 'bullshit' | 'kobo' | 'three-men-morris' | 'mangola';
+export type GameKey = 'bataillecorse' | 'bullshit' | 'kobo' | 'three-men-morris' | 'president' | 'mangola';
 
 /** How a game's card looks on the Game selection (PrimeVue button icon and severity). */
 export interface GamePickerStyle {
@@ -74,6 +74,12 @@ export const GAMES: readonly GameDefinition[] = [
   define('three-men-morris', {
     supportsBots: true,
     picker: { icon: 'pi pi-th-large', severity: 'info' },
+  }),
+  // Cards are tapped and then confirmed with buttons: no remappable shortcut, so no gear. No bots yet (they come
+  // with their own change, together with the seat option).
+  define('president', {
+    supportsBots: false,
+    picker: { icon: 'pi pi-crown', severity: 'contrast' },
   }),
   // The board is operated with Tab, arrows, Enter and Space: no remappable shortcut, so no gear. No bots yet
   // (they come with their own change, which flips the flag together with the factory's).

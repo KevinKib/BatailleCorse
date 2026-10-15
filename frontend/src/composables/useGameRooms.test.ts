@@ -5,6 +5,7 @@ import { GAMES, findGame, type GameDefinition } from '../model/games';
 import { useBullshitStore } from '../state/Bullshit.store';
 import { useKoboStore } from '../state/Kobo.store';
 import { useThreeMenMorrisStore } from '../state/ThreeMenMorris.store';
+import { usePresidentStore } from '../state/President.store';
 import { useBatailleCorseStore } from '../state/BatailleCorse.store';
 import { useMangolaStore } from '../state/Mangola.store';
 
@@ -62,15 +63,26 @@ describe('useGameRooms', () => {
     expect(join).toHaveBeenCalledWith('g4', 'Bob');
   });
 
-  it('givenMangola_thenCreateAndJoinGoThroughItsStore', async () => {
-    const store = useMangolaStore();
+  it('givenPresident_thenCreateAndJoinGoThroughItsStore', async () => {
+    const store = usePresidentStore();
     const create = vi.spyOn(store, 'create').mockResolvedValue('g5');
     const join = vi.spyOn(store, 'join').mockResolvedValue();
-    const room = useGameRooms()(findGame('mangola')!);
+    const room = useGameRooms()(findGame('president')!);
     expect(await room.create('Alice')).toBe('g5');
     await room.join('g5', 'Bob');
     expect(create).toHaveBeenCalledWith('Alice');
     expect(join).toHaveBeenCalledWith('g5', 'Bob');
+  });
+
+  it('givenMangola_thenCreateAndJoinGoThroughItsStore', async () => {
+    const store = useMangolaStore();
+    const create = vi.spyOn(store, 'create').mockResolvedValue('g6');
+    const join = vi.spyOn(store, 'join').mockResolvedValue();
+    const room = useGameRooms()(findGame('mangola')!);
+    expect(await room.create('Alice')).toBe('g6');
+    await room.join('g6', 'Bob');
+    expect(create).toHaveBeenCalledWith('Alice');
+    expect(join).toHaveBeenCalledWith('g6', 'Bob');
   });
 
   it('givenAGameWithNoRoomClient_thenItFailsLoudlyInsteadOfJoiningAnotherGame', () => {

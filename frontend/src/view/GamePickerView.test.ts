@@ -32,23 +32,31 @@ describe('GamePickerView', () => {
     const text = wrapper.text();
     const p = messagesEn.gamePicker;
     expect(wrapper.get('h1').text()).toBe(p.title);
-    for (const game of [p.games.bataillecorse!, p.games.bullshit!, p.games.kobo!, p.games['three-men-morris']!, p.games.mangola!]) {
+    for (const game of [p.games.bataillecorse!, p.games.bullshit!, p.games.kobo!, p.games['three-men-morris']!, p.games.president!, p.games.mangola!]) {
       expect(text).toContain(game.name);
       expect(text).toContain(game.description);
       expect(text).toContain(game.players);
     }
-    expect(wrapper.findAll('article')).toHaveLength(5);
+    expect(wrapper.findAll('article')).toHaveLength(6);
   });
 
   it('givenPicker_thenEachCardHasAKeyboardReachablePlayButtonNamedAfterItsGame', async () => {
     const { wrapper } = await mountPicker();
     const buttons = wrapper.findAll('button');
-    expect(buttons).toHaveLength(5);
+    expect(buttons).toHaveLength(6);
     expect(buttons[0].attributes('aria-label')).toBe('Play Bataille Corse');
     expect(buttons[1].attributes('aria-label')).toBe('Play Bullshit');
     expect(buttons[2].attributes('aria-label')).toBe('Play Kobo');
     expect(buttons[3].attributes('aria-label')).toBe("Play Three Men's Morris");
-    expect(buttons[4].attributes('aria-label')).toBe('Play Mangola');
+    expect(buttons[4].attributes('aria-label')).toBe('Play President');
+    expect(buttons[5].attributes('aria-label')).toBe('Play Mangola');
+  });
+
+  it('givenPlayOnPresident_thenGoesToItsGameHome', async () => {
+    const { wrapper, router } = await mountPicker();
+    await wrapper.get('[data-test="play-president"]').trigger('click');
+    await flushPromises();
+    expect(router.currentRoute.value.fullPath).toBe('/games/president');
   });
 
   it('givenPlayOnMangola_thenGoesToItsGameHome', async () => {
