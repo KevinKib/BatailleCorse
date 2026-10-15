@@ -59,9 +59,9 @@ combination accepted, uncertain variants kept as options.
 | D0 | `docs: President game spec and plan` | S | - | - | owner reviews the variant catalogue | #216 |
 | P1 | `feat: President round rules (domain)` | L | D0 | ranking, play parsing, beat matrix, trick end, going out, titles: parameterised tables; scripted rounds | trick-end counting with re-entry and players out | - |
 | P2 | `feat: President match, exchange and scoring (domain)` | M-L | P1 | exchange amounts by `n` and option, best-card selection, returns, scoring tables, match end, forfeit in each phase | forfeit during the exchange | - |
-| P3 | `feat: President at the table (server)` | M-L | P2 | factory and options (strict parse), DTO privacy, actions, controllers, STOMP IT, deal seam, shared tests | shared test counts collide with Ngola (#217) | - |
+| P3 | `feat: President at the table (server)` | M-L | P2 | factory and options (strict parse), DTO privacy, actions, controllers, STOMP IT, deal seam, shared tests | shared test counts collide with Mangola (#217) | - |
 | F1 | `feat: President model, session and store` | M | P3 | Vitest: DTO fixtures, one test per command, selection-to-pattern matcher, version guard | none visible | - |
-| F2 | `feat: President in the game selection, lobby and table` (entry PR) | L | F1, canvas 1-3, 6 | Vitest per component; Cypress lobby + a scripted round | the only entry PR at a time (Ngola) | - |
+| F2 | `feat: President in the game selection, lobby and table` (entry PR) | L | F1, canvas 1-3, 6 | Vitest per component; Cypress lobby + a scripted round | the only entry PR at a time (Mangola) | - |
 | F3 | `feat: President exchange step` | M | F2, canvas 4 | Vitest; Cypress with a fixed deal into round 2 | waiting state for the non-exchanging seats | - |
 | F4 | `feat: President round summary, standings and end screen` | M | F2, canvas 5 | Vitest; Cypress to `FINISHED` and Play again | several winners, forfeit subtitle | - |
 | B1 | `feat: President bot strategy` | M-L | P2 | view parity (in B2), memory, heuristic decision table (parameterised), self-play | strategy quality is subjective | - |
@@ -81,8 +81,8 @@ variant PRs are in series (they all extend `BeatRule`, `PlayEffects` and `LegalP
 
 | File | PRs | Handling |
 |------|-----|----------|
-| `config/PerGameConfigTest.java`, `architecture/ArchitectureRules.java`, `ArchitectureTest.java`, `MalformedTokenIT.java`, `LobbyControllerTest.java` | P3, Ngola backend (#217's plan) | counts and lists: rebase the second, never weaken a shared test |
-| `model/games.ts`, `router.ts`, `useGameRooms.ts`, `locales/*`, `GamePickerView.test.ts`, picker Cypress specs | F2, Ngola entry PR | never two entry PRs at once (`add-a-game.md` §1): F2 waits for the other entry PR to merge, or the reverse |
+| `config/PerGameConfigTest.java`, `architecture/ArchitectureRules.java`, `ArchitectureTest.java`, `MalformedTokenIT.java`, `LobbyControllerTest.java` | P3, Mangola backend (#217's plan) | counts and lists: rebase the second, never weaken a shared test |
+| `model/games.ts`, `router.ts`, `useGameRooms.ts`, `locales/*`, `GamePickerView.test.ts`, picker Cypress specs | F2, Mangola entry PR | never two entry PRs at once (`add-a-game.md` §1): F2 waits for the other entry PR to merge, or the reverse |
 | `president/domain/play/*`, `PresidentDto.java`, `components/president/*` | V1-V4, B1-B3 | in series; bot candidates come from `LegalPlays`, so a variant touches the heuristic only to add a preference |
 | `docs/architecture/context-map.md` | P3, B2, V4 | one section, extended |
 
@@ -282,7 +282,7 @@ mid-exchange; reload into each phase restores the DTO. Runs on the e2e stack, on
   lists, keep the DTO small.
 - **10 players on a phone** (V4): checked in the canvas first; the compact list layout (decision 1B) is the
   fallback.
-- **Entry-PR collision with Ngola (#217)**: F2 is scheduled after the other entry PR, never at the same time.
+- **Entry-PR collision with Mangola (#217)**: F2 is scheduled after the other entry PR, never at the same time.
 - **Bot quality**: subjective; self-play tests guarantee legality and termination, not strength; a tuning pass
   can follow playtests.
 
