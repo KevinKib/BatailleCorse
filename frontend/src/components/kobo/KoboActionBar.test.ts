@@ -115,7 +115,7 @@ describe('KoboActionBar', () => {
 
   describe('matching discard', () => {
     it('givenMatchListed_thenMatchIsAToggleButtonEmittingItsEvent', async () => {
-      const wrapper = mountBar('DRAW', ['DRAW', 'MATCH_DISCARD']);
+      const wrapper = mountBar('DRAW', ['DRAW', 'MATCH_DISCARD'], { matchButton: true });
       const match = button(wrapper, 'match');
       expect(match.text()).toBe(ui.actions.match);
       expect(match.attributes('aria-pressed')).toBe('false');
@@ -127,20 +127,32 @@ describe('KoboActionBar', () => {
       [{ kind: 'match-armed' }],
       [{ kind: 'match-give', target: { seat: 1, slot: 0 }, expectedTopRank: '7', expectedRevision: 0 }],
     ])('givenTheModeIsArmed%j_thenMatchIsPressedAndCancelIsOffered', (pending) => {
-      const wrapper = mountBar('DRAW', ['DRAW', 'MATCH_DISCARD'], { pending });
+      const wrapper = mountBar('DRAW', ['DRAW', 'MATCH_DISCARD'], { pending, matchButton: true });
       expect(button(wrapper, 'match').attributes('aria-pressed')).toBe('true');
       expect(wrapper.find('[data-test="action-cancel"]').exists()).toBe(true);
     });
 
     it('givenAnotherSelection_thenMatchIsNotPressed', () => {
-      const wrapper = mountBar('POWER', ['BLIND_SWAP', 'MATCH_DISCARD'], { pending: { kind: 'blind-own', ownSlot: 1 } });
+      const wrapper = mountBar('POWER', ['BLIND_SWAP', 'MATCH_DISCARD'], { pending: { kind: 'blind-own', ownSlot: 1 }, matchButton: true });
       expect(button(wrapper, 'match').attributes('aria-pressed')).toBe('false');
     });
 
     it('givenACommandInFlight_thenMatchStaysEnabled_itIsARace', () => {
-      const wrapper = mountBar('TURN_END', ['END_TURN', 'MATCH_DISCARD'], { busy: true });
+      const wrapper = mountBar('TURN_END', ['END_TURN', 'MATCH_DISCARD'], { busy: true, matchButton: true });
       expect(button(wrapper, 'endTurn').attributes('disabled')).toBeDefined();
       expect(button(wrapper, 'match').attributes('disabled')).toBeUndefined();
+    });
+
+    // Option B: a tap on a card already means Match when nothing else wants it, so the button is not drawn then.
+    it('givenATapAlreadyMeansMatch_thenNoMatchButtonEvenThoughTheServerListsIt', () => {
+      const wrapper = mountBar('DRAW', ['DRAW', 'MATCH_DISCARD']);
+      expect(button(wrapper, 'match').exists()).toBe(false);
+      expect(button(wrapper, 'draw').exists()).toBe(true);
+      expect(mountBar('DRAW', ['DRAW', 'MATCH_DISCARD'], { matchButton: false }).find('[data-test="action-match"]').exists()).toBe(false);
+    });
+
+    it('givenTheButtonIsOnlyThere_thenItStillRespectsTheListing', () => {
+      expect(mountBar('DRAW', ['DRAW'], { matchButton: true }).find('[data-test="action-match"]').exists()).toBe(false);
     });
   });
 

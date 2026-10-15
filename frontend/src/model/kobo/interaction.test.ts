@@ -310,6 +310,83 @@ describe('koboInteraction', () => {
       expect(interaction.intents).toEqual({});
     });
 
+    // Option B: which phase and mode a tap means "Match" vs "turn action". The hint and the explicit Match button
+    // follow the same rule, so a tap is never ambiguous: either nothing else wants the card, or a turn action does.
+    describe('what a tap means (option B)', () => {
+      const turnActions: [string, Partial<KoboState>][] = [
+        ['swap of the drawn card', {
+          availableActions: ['SWAP_DRAWN', 'DISCARD_DRAWN', 'MATCH_DISCARD'], phase: 'DECISION', currentSeat: 0,
+          hasDrawn: true, drawnCard: buildKoboCard('5'),
+        }],
+        ['look at one of my cards', { availableActions: ['PEEK', 'SKIP_POWER', 'MATCH_DISCARD'], phase: 'POWER', pendingPower: 'PEEK_OWN', currentSeat: 0 }],
+        ['look at another card', { availableActions: ['PEEK', 'SKIP_POWER', 'MATCH_DISCARD'], phase: 'POWER', pendingPower: 'PEEK_OTHER', currentSeat: 0 }],
+        ['blind swap', { availableActions: ['BLIND_SWAP', 'SKIP_POWER', 'MATCH_DISCARD'], phase: 'POWER', pendingPower: 'BLIND_SWAP', currentSeat: 0 }],
+        ['king swap', { availableActions: ['KING_SWAP', 'SKIP_POWER', 'MATCH_DISCARD'], phase: 'KING_DECISION', pendingPower: 'KING', currentSeat: 0 }],
+      ];
+
+      it('idle: a tap is a match, the hint line is shown and no Match button is needed', () => {
+        const interaction = koboInteraction(matchable(), 0, NONE);
+        expect(interaction.matchHint).toBe(true);
+        expect(interaction.matchButton).toBe(false);
+      });
+
+      it.each(turnActions)('%s waiting for a card: the tap does that action, no hint, and Match stays reachable by its button', (_name, overrides) => {
+        const interaction = koboInteraction(matchable(overrides), 0, NONE);
+        expect(interaction.directMatch).toBe(false);
+        expect(interaction.matchHint).toBe(false);
+        expect(interaction.matchButton).toBe(true);
+        const matches = Object.values(interaction.intents).filter(i => i.kind === 'send' && i.command.type === 'match');
+        expect(matches).toEqual([]);
+      });
+
+      it('a revealed peek holds the taps too: the button is the way to match', () => {
+        const interaction = koboInteraction(matchable({ revealed: true }), 0, NONE);
+        expect(interaction.matchHint).toBe(false);
+        expect(interaction.matchButton).toBe(true);
+      });
+
+      it('settling after my command only holds the tap back: neither the hint nor the button flicker', () => {
+        const interaction = koboInteraction(matchable(), 0, NONE, { directMatch: false });
+        expect(interaction.directMatch).toBe(false);
+        expect(interaction.matchHint).toBe(true);
+        expect(interaction.matchButton).toBe(false);
+      });
+
+      it('a selection under way (armed, give) keeps the button as the toggle and hides the hint', () => {
+        const give: KoboPending = { kind: 'match-give', target: { seat: 1, slot: 0 }, expectedTopRank: 'KING', expectedRevision: 7 };
+        for (const pending of [give, { kind: 'match-armed' } as KoboPending]) {
+          const interaction = koboInteraction(matchable(), 0, pending);
+          expect(interaction.matchHint).toBe(false);
+          expect(interaction.matchButton).toBe(true);
+        }
+      });
+
+      it('nothing to match (no listing, empty discard, memorising, gift): no hint, no button', () => {
+        expect(koboInteraction(matchable({ availableActions: [] }), 0, NONE)).toMatchObject({ matchHint: false, matchButton: false });
+        expect(koboInteraction(matchable({ discardTop: null }), 0, NONE)).toMatchObject({ matchHint: false, matchButton: false });
+        for (const phase of ['MEMORISING', 'GIFT', 'ROUND_OVER', 'FINISHED'] as const) {
+          expect(koboInteraction(matchable({ phase }), 0, NONE), phase).toMatchObject({ matchHint: false, matchButton: false });
+        }
+      });
+
+      it('a seat that is not at the table gets neither', () => {
+        expect(koboInteraction(matchable(), 5, NONE)).toMatchObject({ matchHint: false, matchButton: false });
+      });
+
+      it('a tap on a rival card only picks it (nothing is sent), the next tap on mine sends the match with the give slot', () => {
+        const first = koboInteraction(matchable(), 0, NONE).intents[slotKey(1, 0)];
+        expect(first.kind).toBe('pend');
+        if (first.kind !== 'pend') return;
+        const second = koboInteraction(matchable(), 0, first.pending).intents[slotKey(0, 0)];
+        expect(second).toEqual({
+          kind: 'send',
+          command: { type: 'match', seat: 1, slot: 0, giveSlot: 0, expectedTopRank: 'KING', expectedRevision: 7 },
+        });
+        // While a rival card is picked, no rival card is a target any more.
+        expect(Object.keys(koboInteraction(matchable(), 0, first.pending).intents)).toEqual([slotKey(0, 0)]);
+      });
+    });
+
     it('the armed mode still reads matchPick and keeps its clickable slots', () => {
       const interaction = koboInteraction(matchable(), 0, { kind: 'match-armed' });
       expect(interaction.prompt).toBe('matchPick');

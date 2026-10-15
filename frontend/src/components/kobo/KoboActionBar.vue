@@ -12,7 +12,7 @@ import { useI18n } from '../../composables/useI18n';
 // phase), the buttons the server lists, and why my last command failed. It decides nothing: the buttons come from
 // `availableActions` (see `barButtons`), a click on a card is the table's business. Cancel and Hide are local:
 // they only drop a half-made selection or turn the peeked card face down.
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   game: KoboState;
   prompt: KoboPromptKey | null;
   phaseText: string;
@@ -21,13 +21,16 @@ const props = defineProps<{
   busy: boolean;
   notice: KoboNotice | null;
   canHide: boolean;
-}>();
+  /** A tap on a card does not mean Match right now (a turn action wants it, or the mode is on): the button is the way. */
+  matchButton?: boolean;
+}>(), { matchButton: false });
 const emit = defineEmits<{
   ready: []; draw: []; discard: []; skip: []; 'end-turn': []; announce: []; match: []; cancel: []; hide: [];
 }>();
 
 const ui = useI18n().koboUi;
-const buttons = computed(() => barButtons(props.game));
+// Option B: a tap on a card is the match, so the Match button only shows when a tap is not (see `matchButton`).
+const buttons = computed(() => barButtons(props.game).filter(id => id !== 'match' || props.matchButton));
 // No button, no column: an empty one would still cost the row gap and push the title off the centre of the bar.
 const hasButtons = computed(() => buttons.value.length > 0 || props.pending.kind !== 'none' || props.canHide);
 
