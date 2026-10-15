@@ -751,6 +751,21 @@ describe('KoboGameScreen', () => {
         window.matchMedia = original.media;
       });
 
+      it('givenMySwap_thenTheCardIDrewTravelsFaceUpAndTurnsDownAndTheOldDiscardTopStaysUnderTheLandingCard', async () => {
+        const queen = buildKoboCard('QUEEN', 'CLUB');
+        const seven = buildKoboCard('7', 'SPADE');
+        const four = buildKoboCard('4', 'HEART');
+        const players = [buildKoboPlayer(0, { current: true }), buildKoboPlayer(1)];
+        const { wrapper, store } = await playing({ phase: 'TURN', currentSeat: 0, hasDrawn: true, drawnCard: queen, discardTop: four, players });
+        store.applyEvent({ type: 'state-update', state: buildKoboState({ phase: 'TURN', currentSeat: 0, hasDrawn: false, drawnCard: null, discardTop: seven, players, version: 99 }) });
+        event(store, 'SWAP', { seat: 0, slot: 0, card: seven });
+        await flushPromises();
+        const swapCopy = cards(wrapper).find(c => c.find('[data-face="front"]').exists() && c.find('[data-face="back"]').exists());
+        expect(swapCopy).toBeDefined();
+        // The pile top the discarded card is about to cover stays visible until it lands.
+        expect(wrapper.findAll('[data-test="motion-under"]').length).toBeGreaterThan(0);
+      });
+
       it('givenAnOpponentDraws_thenACardTravelsOverTheTableAndTheTableIsUntouched', async () => {
         const { wrapper, store } = await playing({ phase: 'DRAW', currentSeat: 1 });
         expect(cards(wrapper)).toHaveLength(0);
