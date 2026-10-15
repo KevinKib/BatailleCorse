@@ -47,7 +47,7 @@ step with its real number; test-first visible in git (a `test:` commit before th
 | PR | Title | Cost | Needs | State |
 |----|-------|------|-------|-------|
 | N0 | `docs: Mangola (4-row mancala) spec and plan` | S | - | this PR (#217) |
-| N1 | `feat: Mangola sowing engine (domain)` | L | N0 validated | [ ] |
+| N1 | `feat: Mangola sowing engine (domain)` | L | N0 validated | [x] PR #222 (not merged yet) |
 | N2 | `feat: Mangola placement phase and set-up options` | M | N1 | [ ] |
 | N3 | `feat: Mangola table, factory, DTO and broadcasters` | L | N2 | [ ] |
 | N4 | `feat: Mangola frontend model, session and store` | M | N3 | [ ] |
