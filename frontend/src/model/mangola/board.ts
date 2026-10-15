@@ -81,3 +81,9 @@ export function seedDisplay(count: number | null): SeedDisplay {
   if (count === null) return { kind: 'hidden' };
   return count <= MAX_DOTS ? { kind: 'dots', count } : { kind: 'number', count };
 }
+
+/** The same grid showing the counts of `board` (a step of the sowing animation); the rows themselves without one. */
+export function rowsWithBoard(rows: MangolaCell[][], board: readonly (number | null)[] | null): MangolaCell[][] {
+  if (board === null) return rows;
+  return rows.map(row => row.map(cell => ({ ...cell, count: board[cell.pit] })));
+}

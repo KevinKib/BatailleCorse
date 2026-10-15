@@ -55,7 +55,7 @@ step with its real number; test-first visible in git (a `test:` commit before th
 | N3 | `feat: Mangola table, factory, DTO and broadcasters` | L | N2 | [x] PR #228 (draft, not merged) |
 | N4 | `feat: Mangola frontend model, session and store` | M | N3 | [x] PR #231 |
 | N5 | `feat: Mangola board and placement editor components` | M-L | N3, Claude Design choice | [x] |
-| N6 | `feat: Mangola sowing animation` | M | N4, N5 | [ ] |
+| N6 | `feat: Mangola sowing animation` | M | N4, N5 | [x] |
 | N7 | `feat: play Mangola` (entry PR: registry, route, screen, lobby, locales, rules, Cypress) | M | N6, no other entry PR open | [ ] |
 | N8 | `feat: Mangola bots with three levels` (backend) | L | N3 | [ ] |
 | N9 | `feat: play Mangola against a bot` (frontend + Cypress) | S | N7, N8 | [ ] |

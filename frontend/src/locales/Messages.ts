@@ -441,6 +441,12 @@ export interface MangolaUiMessages {
     label: string;                     // name of the board group
     yourSide: string;                  // legend of the viewer's half (bottom)
     opponentSide: string;              // legend of the opponent's half (top)
+    skip: string;                      // button that jumps to the end of the sowing animation
+  };
+  move: {
+    sowed: string;                     // '{player}', '{pit}': the live-region sentence of a move
+    relays: PluralForms;               // '{n}' = relays in the move
+    captured: PluralForms;             // '{n}' = seeds the move captured
   };
   pit: {
     label: string;                     // '{pit}' = name (b3), '{state}' = the state words joined by commas
