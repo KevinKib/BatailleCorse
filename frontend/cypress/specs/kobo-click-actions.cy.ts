@@ -58,7 +58,9 @@ describe('Kobo actions on direct clicks', () => {
         expect(s.borderTopWidth, 'a 1 px border').to.eq('1px');
         expect(s.boxShadow, 'no ring or glow').to.eq('none');
       });
-      cy.get('[data-test="action-match"]').should('be.visible').and('have.attr', 'aria-pressed', 'false');
+      // A tap is the match, so there is no Match button: the hint line (or the first-time note) says how.
+      cy.get('[data-test="action-match"]').should('not.exist');
+      cy.get('[data-test="match-hint"], [data-test="match-coach"]').should('be.visible');
       actionBarIsReachable();
       measureTable('one-click match, 2 players');
 
@@ -98,7 +100,14 @@ describe('Kobo actions on direct clicks', () => {
       cy.get('button[data-test^="slot-"]:not([disabled])').should('have.length', 4)
         .each(($b) => expect($b.attr('data-test')).to.match(/^slot-0-/));
       cy.get('[data-match]').should('not.exist');
+      // Stray taps: no hint (a tap here is the power's), a rival card cannot be tapped, and a tap on my card
+      // looks at it; nothing is thrown on the pile. The Match button is the explicit way to match meanwhile.
+      cy.get('[data-test="match-hint"], [data-test="match-coach"]').should('not.exist');
+      cy.get('[data-test="action-match"]').should('be.visible').and('have.attr', 'aria-pressed', 'false');
       cy.get(slot(1, 2)).should('be.disabled');
+      cy.get(slot(1, 2)).click({ force: true });
+      discardTop('7 of spade');
+      cy.get(logLine).should('not.contain.text', 'match');
       cy.get(slot(0, 0)).click();
       cy.get(slot(0, 0)).should('have.attr', 'aria-label').and('contain', 'king of heart');
       discardTop('7 of spade');
