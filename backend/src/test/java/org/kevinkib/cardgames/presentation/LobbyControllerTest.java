@@ -141,15 +141,14 @@ class LobbyControllerTest {
     }
 
     @Test
-    void givenHostOfMangola_whenAddBot_thenRefusedBecauseTheGameHasNoBotsYet() {
+    void givenHostOfMangola_whenAddBot_thenTheComputerTakesTheGuestSeat() {
         RoomCreated room = sessionService.createRoom(org.kevinkib.cardgames.mangola.domain.MangolaFactory.GAME_TYPE, "Alice");
         messaging.clear();
 
         controller.addBot(new GameActionPayload(room.gameId(), room.hostToken()));
 
-        assertThat(messaging.seats, is(List.of(new PlayerId(0))));
-        assertThat(messaging.payloads.get(0).isSuccess(), is(false));
-        assertThat(sessionService.botSeats(new GameId(room.gameId())).isEmpty(), is(true));
+        assertThat(messaging.payloads.get(0).isSuccess(), is(true));
+        assertThat(sessionService.botSeats(new GameId(room.gameId())), is(java.util.Set.of(new PlayerId(1))));
     }
 
     @Test
