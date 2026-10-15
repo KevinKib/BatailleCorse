@@ -9,25 +9,17 @@ import org.kevinkib.cards.domain.deck.DeckCreationOptions;
 import org.kevinkib.cards.domain.deck.DeckType;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Random;
 
-/** The default source: freshly shuffled French decks, reproducible from the seed. */
+/** The default source: a freshly shuffled French deck of 52 cards, reproducible from the seed. */
 public class RandomDeckSource implements DeckSource {
 
     @Override
-    public List<Card> deck(GameId id, int round, long seed, DeckSpec spec) {
-        DeckType type = spec.jokers() ? DeckType.FRENCH_WITH_JOKERS : DeckType.FRENCH;
+    public List<Card> deck(GameId id, int round, long seed) {
+        Deck deck = new CardsService().createDeck(DeckType.FRENCH, new DeckCreationOptions(Visibility.HIDDEN, seed));
         List<Card> cards = new ArrayList<>();
-        for (int i = 0; i < spec.decks(); i++) {
-            Deck deck = new CardsService().createDeck(type, new DeckCreationOptions(Visibility.HIDDEN, seed));
-            while (deck.getSize() > 0) {
-                cards.add(deck.draw());
-            }
-        }
-        if (spec.decks() > 1) {
-            Collections.shuffle(cards, new Random(seed));
+        while (deck.getSize() > 0) {
+            cards.add(deck.draw());
         }
         return cards;
     }

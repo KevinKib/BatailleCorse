@@ -1,7 +1,7 @@
 package org.kevinkib.cardgames.president.domain.round;
 
 /**
- * Where the game stands. {@code PUTSCH} arrives with V4.
+ * Where the game stands.
  *
  * <ul>
  *   <li>{@code EXCHANGE}: round 2 or later, the best cards of the low ranks moved, the high ranks give back;</li>

@@ -82,6 +82,7 @@ public final class Trick {
     }
 
     public TrickView view() {
-        return new TrickView(new PlayerId(leader), plays);
+        List<PlayerId> passed = responded.stream().sorted().map(PlayerId::new).toList();
+        return new TrickView(new PlayerId(leader), plays, passed);
     }
 }

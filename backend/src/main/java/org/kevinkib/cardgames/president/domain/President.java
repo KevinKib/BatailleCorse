@@ -18,6 +18,7 @@ import org.kevinkib.cardgames.president.domain.exchange.Title;
 import org.kevinkib.cardgames.president.domain.exchange.Titles;
 import org.kevinkib.cardgames.president.domain.exchange.WrongGiveBackException;
 import org.kevinkib.cardgames.president.domain.play.Play;
+import org.kevinkib.cardgames.president.domain.round.Action;
 import org.kevinkib.cardgames.president.domain.round.AlreadyReadyException;
 import org.kevinkib.cardgames.president.domain.round.FinishedGameException;
 import org.kevinkib.cardgames.president.domain.round.NotPlayersTurnException;
@@ -60,6 +61,8 @@ public class President implements Game {
 
     public static final int MIN_PLAYERS = 3;
     public static final int MAX_PLAYERS = 8;
+    /** One French deck, no joker. */
+    public static final int DECK_SIZE = 52;
 
     private final GameId id;
     private final PresidentOptions options;
@@ -139,10 +142,9 @@ public class President implements Game {
     }
 
     private List<Card> deckFor(int roundNumber) {
-        DeckSpec spec = DeckSpec.standard();
-        List<Card> deck = deckSource.deck(id, roundNumber, seed + roundNumber - 1, spec);
-        if (deck.size() != spec.size()) {
-            throw new IllegalArgumentException("A deck holds " + spec.size() + " cards, not " + deck.size());
+        List<Card> deck = deckSource.deck(id, roundNumber, seed + roundNumber - 1);
+        if (deck.size() != DECK_SIZE) {
+            throw new IllegalArgumentException("A deck holds " + DECK_SIZE + " cards, not " + deck.size());
         }
         return deck;
     }
@@ -172,6 +174,7 @@ public class President implements Game {
 
     private static int firstLead(List<List<Card>> hands, FirstLead rule, Random random) {
         return switch (rule) {
+            case KING_OF_HEARTS -> holderOf(hands, new Card(FrenchRank.KING, FrenchSuit.HEART));
             case LOWEST_CLUB -> holderOf(hands, new Card(FrenchRank.THREE, FrenchSuit.CLUB));
             case QUEEN_OF_HEARTS -> holderOf(hands, new Card(FrenchRank.QUEEN, FrenchSuit.HEART));
             case RANDOM -> random.nextInt(hands.size());
@@ -491,6 +494,34 @@ public class President implements Game {
     /** Every legal play of the seat to act; nothing for any other seat. */
     public synchronized List<Play> legalPlays(PlayerId seat) {
         return round.legalPlays(seat);
+    }
+
+    /**
+     * What the seat may do now: play (and pass unless it leads) when it is its turn, give back while a return
+     * is owed, say it is ready at the barrier; nothing for any other seat, a seat that left, or once finished.
+     */
+    public synchronized List<Action> availableActions(PlayerId seat) {
+        if (finished || !isActive(seat)) {
+            return List.of();
+        }
+        return switch (round.phase()) {
+            case PLAYING -> {
+                if (!seat.equals(round.currentSeat()) || round.hand(seat).isEmpty()) {
+                    yield List.of();
+                }
+                List<Action> actions = new ArrayList<>();
+                if (!round.legalPlays(seat).isEmpty()) {
+                    actions.add(Action.PLAY);
+                }
+                if (!round.trick().plays().isEmpty()) {
+                    actions.add(Action.PASS);
+                }
+                yield actions;
+            }
+            case EXCHANGE -> pendingIndex(seat) >= 0 ? List.of(Action.GIVE_BACK) : List.of();
+            case ROUND_OVER -> ready.contains(seat) ? List.of() : List.of(Action.READY);
+            case FINISHED -> List.of();
+        };
     }
 
     /** The titles earned by the round just scored; empty while a round is being played or dealt. */

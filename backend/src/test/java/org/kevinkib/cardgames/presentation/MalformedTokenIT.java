@@ -67,6 +67,8 @@ class MalformedTokenIT {
     @Autowired
     private org.kevinkib.cardgames.mangola.presentation.MangolaWebSocketController mangola;
     @Autowired
+    private org.kevinkib.cardgames.president.presentation.PresidentWebSocketController president;
+    @Autowired
     private LobbyController lobby;
     @Autowired
     private LifecycleController lifecycle;
@@ -118,6 +120,17 @@ class MalformedTokenIT {
     @TestFactory
     Stream<DynamicTest> threeMenMorrisRest() {
         return restViewAnswers403("/api/three-men-morris/game/", ThreeMenMorrisFactory.GAME_TYPE);
+    }
+
+    @TestFactory
+    Stream<DynamicTest> presidentRest() {
+        String prefix = "/api/president/game/";
+        String type = org.kevinkib.cardgames.president.domain.PresidentFactory.GAME_TYPE;
+        String started = StartedRooms.start(sessions, type, 3).getId().uuid().toString();
+        String room = sessions.createRoom(type, "Alice").gameId();
+        return Stream.of(started, room).flatMap(id ->
+                forEachBadToken("GET " + prefix + " " + (id.equals(room) ? "lobby" : "started"),
+                        t -> assertEquals(403, statusOfGet(prefix + id, t))));
     }
 
     @TestFactory
@@ -193,6 +206,21 @@ class MalformedTokenIT {
                 forEachBadToken("tmm start", t -> assertDoesNotThrow(() -> threeMenMorris.start(new GameActionPayload(room, t)))),
                 forEachBadToken("tmm place", t -> assertDoesNotThrow(() -> threeMenMorris.place(new ThreeMenMorrisPlacePayload(id, t, 0)))),
                 forEachBadToken("tmm move", t -> assertDoesNotThrow(() -> threeMenMorris.move(new ThreeMenMorrisMovePayload(id, t, 0, 1)))))
+                .flatMap(s -> s);
+    }
+
+    @TestFactory
+    Stream<DynamicTest> presidentWebSocket() {
+        String type = org.kevinkib.cardgames.president.domain.PresidentFactory.GAME_TYPE;
+        String id = StartedRooms.start(sessions, type, 3).getId().uuid().toString();
+        String room = sessions.createRoom(type, "Alice").gameId();
+        List<org.kevinkib.cardgames.presentation.dto.CardDto> none = List.of();
+        return Stream.of(
+                forEachBadToken("president start", t -> assertDoesNotThrow(() -> president.start(new GameActionPayload(room, t)))),
+                forEachBadToken("president play", t -> assertDoesNotThrow(() -> president.play(new org.kevinkib.cardgames.president.presentation.api.PresidentCardsPayload(id, t, none)))),
+                forEachBadToken("president pass", t -> assertDoesNotThrow(() -> president.pass(new GameActionPayload(id, t)))),
+                forEachBadToken("president giveBack", t -> assertDoesNotThrow(() -> president.giveBack(new org.kevinkib.cardgames.president.presentation.api.PresidentCardsPayload(id, t, none)))),
+                forEachBadToken("president ready", t -> assertDoesNotThrow(() -> president.ready(new GameActionPayload(id, t)))))
                 .flatMap(s -> s);
     }
 

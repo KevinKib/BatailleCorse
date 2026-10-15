@@ -23,14 +23,20 @@ public class ScriptedDeckSource implements DeckSource {
     }
 
     /**
-     * Fixes the leading cards, in deal order, of one round of one game. A card the deck does not hold (once
-     * per copy) is reported when the deck is built.
+     * Fixes the leading cards, in deal order, of one round of one game. A card the deck does not hold, or
+     * named twice, is reported when the deck is built.
      *
-     * @throws IllegalArgumentException for a round below 1
+     * @throws IllegalArgumentException for a round below 1, more than 52 cards or a repeated card
      */
     public void fix(GameId id, int round, List<Card> leadingCards) {
         if (round < 1) {
             throw new IllegalArgumentException("Rounds start at 1, not " + round);
+        }
+        if (leadingCards.size() > President.DECK_SIZE) {
+            throw new IllegalArgumentException("A deck holds 52 cards, not " + leadingCards.size());
+        }
+        if (new java.util.HashSet<>(leadingCards).size() != leadingCards.size()) {
+            throw new IllegalArgumentException("A card cannot be fixed twice");
         }
         fixed.computeIfAbsent(id, k -> new ConcurrentHashMap<>()).put(round, List.copyOf(leadingCards));
     }
@@ -41,8 +47,8 @@ public class ScriptedDeckSource implements DeckSource {
     }
 
     @Override
-    public List<Card> deck(GameId id, int round, long seed, DeckSpec spec) {
-        List<Card> random = delegate.deck(id, round, seed, spec);
+    public List<Card> deck(GameId id, int round, long seed) {
+        List<Card> random = delegate.deck(id, round, seed);
         List<Card> leading = fixed.getOrDefault(id, Map.of()).get(round);
         if (leading == null) {
             return random;

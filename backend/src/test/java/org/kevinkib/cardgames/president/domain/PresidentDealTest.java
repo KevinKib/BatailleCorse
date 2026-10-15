@@ -100,9 +100,9 @@ class PresidentDealTest {
 
     @Test
     void anyDeckSourceDecidesTheDealOrder() {
-        List<Card> sortedDeck = new ArrayList<>(new RandomDeckSource().deck(GameId.generate(), 1, 1L, DeckSpec.standard()));
+        List<Card> sortedDeck = new ArrayList<>(new RandomDeckSource().deck(GameId.generate(), 1, 1L));
         sortedDeck.sort(java.util.Comparator.comparing(PresidentFixtures::code));
-        DeckSource fixed = (id, round, seed, spec) -> sortedDeck;
+        DeckSource fixed = (id, round, seed) -> sortedDeck;
 
         President game = new President(GameId.generate(), 4, 1L, fixed);
 
@@ -122,22 +122,19 @@ class PresidentDealTest {
 
     @Test
     void aDeckSourceThatDoesNotReturnTheWholeDeckIsRefused() {
-        DeckSource short1 = (id, round, seed, spec) -> cards("3C 4C 5C");
+        DeckSource short1 = (id, round, seed) -> cards("3C 4C 5C");
 
         assertThrows(IllegalArgumentException.class, () -> new President(GameId.generate(), 3, 1L, short1));
     }
 
     @Test
-    void deckSourcesDescribedInTheSpecReturnTheRightNumberOfCards() {
+    void theRandomSourceDealsTheStandardDeckOfFiftyTwoCardsAndIsReproducible() {
         RandomDeckSource random = new RandomDeckSource();
         GameId id = GameId.generate();
 
-        assertThat(random.deck(id, 1, 5L, DeckSpec.standard()).size(), is(52));
-        assertThat(random.deck(id, 1, 5L, new DeckSpec(1, true)).size(), is(54));
-        assertThat(random.deck(id, 1, 5L, new DeckSpec(2, false)).size(), is(104));
-        assertThat(random.deck(id, 1, 5L, new DeckSpec(2, true)).size(), is(108));
-        assertThat(codes(random.deck(id, 1, 5L, DeckSpec.standard())),
-                is(codes(random.deck(id, 1, 5L, DeckSpec.standard()))));
+        assertThat(random.deck(id, 1, 5L).size(), is(52));
+        assertThat(codes(random.deck(id, 1, 5L)),
+                is(codes(random.deck(id, 1, 5L))));
     }
 
     @Test
@@ -146,13 +143,13 @@ class PresidentDealTest {
         GameId id = GameId.generate();
         source.fix(id, 1, cards("3C 4C"));
 
-        assertThat(codes(source.deck(id, 1, 9L, DeckSpec.standard()).subList(0, 2)), is("3C 4C"));
-        assertThat(source.deck(id, 1, 9L, DeckSpec.standard()).size(), is(52));
-        assertThat(source.deck(id, 2, 9L, DeckSpec.standard()),
-                is(new RandomDeckSource().deck(id, 2, 9L, DeckSpec.standard())));
+        assertThat(codes(source.deck(id, 1, 9L).subList(0, 2)), is("3C 4C"));
+        assertThat(source.deck(id, 1, 9L).size(), is(52));
+        assertThat(source.deck(id, 2, 9L),
+                is(new RandomDeckSource().deck(id, 2, 9L)));
         source.clear(id);
-        assertThat(source.deck(id, 1, 9L, DeckSpec.standard()),
-                is(new RandomDeckSource().deck(id, 1, 9L, DeckSpec.standard())));
+        assertThat(source.deck(id, 1, 9L),
+                is(new RandomDeckSource().deck(id, 1, 9L)));
         assertThrows(IllegalArgumentException.class, () -> source.fix(id, 0, cards("3C")));
     }
 }

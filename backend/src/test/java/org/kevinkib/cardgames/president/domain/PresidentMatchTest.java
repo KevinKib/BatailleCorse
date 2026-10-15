@@ -69,13 +69,7 @@ class PresidentMatchTest {
     void theRoundIsScoredWhenItEndsAndTheMatchGoesOn() throws Exception {
         President again = OrderedRounds.start(GameId.generate(), new RandomDeckSource(),
                 PresidentOptions.defaults(), ORDER);
-        List<PresidentEvent> events = null;
-        while (again.phase() == Phase.PLAYING) {
-            PlayerId current = again.currentSeat();
-            int next = ORDER[again.finishingOrder().size()];
-            events = current.id() == next
-                    ? again.play(current, List.of(again.hand(current).get(0))) : again.pass(current);
-        }
+        List<PresidentEvent> events = OrderedRounds.finish(again, ORDER);
 
         RoundResult result = again.lastRoundResult();
         assertThat(events, hasItem(new RoundScored(result)));
@@ -267,5 +261,38 @@ class PresidentMatchTest {
 
         assertThat(game.version(), is(version));
         assertThat(game.phase(), is(Phase.FINISHED));
+    }
+
+    @Test
+    void anEndlessMatchIsNeverFinishedByItsLengthWhateverTheRoundsAndThePoints() throws Exception {
+        President game = new President(GameId.generate(), 4, 7L, new RandomDeckSource(),
+                PresidentOptions.defaults().withLength(MatchLength.ENDLESS));
+        Random random = new Random(7);
+
+        for (int step = 0; step < 200000 && game.round() <= 20; step++) {
+            PresidentDriver.step(game, random);
+            assertThat(game.isFinished(), is(false));
+        }
+
+        assertThat(game.round(), is(21));
+        assertThat(game.result(), is(PresidentResult.ONGOING));
+        assertThat(game.lastRoundResult().round(), is(20));
+        assertThat(game.standings().totals().values().stream().mapToInt(Integer::intValue).sum() > 0, is(true));
+    }
+
+    @Test
+    void anEndlessMatchEndsWhenASinglePlayerIsLeftWithReasonForfeit() throws Exception {
+        President game = new President(GameId.generate(), 4, 3L, new RandomDeckSource(),
+                PresidentOptions.defaults().withLength(MatchLength.ENDLESS));
+        drive(game, new Random(3), g -> g.round() >= 3);
+
+        game.forfeit(p(0));
+        game.forfeit(p(1));
+        assertThat(game.isFinished(), is(false));
+        game.forfeit(p(2));
+
+        assertThat(game.isFinished(), is(true));
+        assertThat(game.phase(), is(Phase.FINISHED));
+        assertThat(game.result(), is(new PresidentResult(List.of(p(3)), PresidentResult.Reason.FORFEIT)));
     }
 }

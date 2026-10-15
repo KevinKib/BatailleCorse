@@ -48,10 +48,7 @@ class GoingOutTest {
                 .leader(0).build();
 
         game.play(p(0), cards("4C"));
-        game.pass(p(1));
-        game.pass(p(2));
-        game.pass(p(3));
-
+        // the first player out closes the trick: the next seat leads a fresh one
         assertThat(game.currentSeat(), is(p(1)));
         game.play(p(1), cards("5C"));
         game.pass(p(2));
