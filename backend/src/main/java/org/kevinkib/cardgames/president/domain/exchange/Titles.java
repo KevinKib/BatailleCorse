@@ -10,6 +10,17 @@ public final class Titles {
     }
 
     /**
+     * The titles of the players still in the match: as {@link #forPlaces} from 3 players, and a President and
+     * a Scum when a forfeit left only two.
+     */
+    public static List<Title> forActivePlayers(int players) {
+        if (players < 2) {
+            throw new IllegalArgumentException("Titles need at least 2 active players, not " + players);
+        }
+        return players == 2 ? List.of(Title.PRESIDENT, Title.SCUM) : forPlaces(players);
+    }
+
+    /**
      * Titles from the first place to the last: President, then Vice-President (from 4 players), Neutrals,
      * Vice-Scum (from 4 players) and Scum. With 3 players the middle place is the only Neutral.
      */

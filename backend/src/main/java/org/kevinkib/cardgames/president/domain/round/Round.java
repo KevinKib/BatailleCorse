@@ -41,13 +41,21 @@ public final class Round {
     private final PlayerId dealer;
     private Trick trick;
     private int current;
-    private Phase phase = Phase.PLAYING;
+    private Phase phase;
 
     /**
      * @param hands  one hand per seat, any order (they are sorted)
      * @param leader the seat that leads the first trick
      */
     public Round(PresidentOptions options, List<List<Card>> hands, int dealer, int leader) {
+        this(options, hands, dealer, leader, Phase.PLAYING);
+    }
+
+    /**
+     * @param phase {@code PLAYING}, or {@code EXCHANGE} when cards still change hands before the first trick
+     */
+    public Round(PresidentOptions options, List<List<Card>> hands, int dealer, int leader, Phase phase) {
+        this.phase = phase;
         this.options = options;
         for (List<Card> hand : hands) {
             this.hands.add(new ArrayList<>(HandSort.sorted(hand, order)));
@@ -97,6 +105,55 @@ public final class Round {
         List<PresidentEvent> events = new ArrayList<>();
         events.add(new Passed(who));
         afterAction(events);
+        return events;
+    }
+
+    /** The exchange: moves cards between two hands (the exchange phase only, validated by the caller's phase). */
+    public void transfer(PlayerId from, PlayerId to, List<Card> cards) throws PresidentException {
+        int source = indexOf(from);
+        int target = indexOf(to);
+        List<Card> remaining = removeFromHand(source, cards);
+        List<Card> received = new ArrayList<>(hands.get(target));
+        received.addAll(cards);
+        hands.set(source, new ArrayList<>(HandSort.sorted(remaining, order)));
+        hands.set(target, new ArrayList<>(HandSort.sorted(received, order)));
+    }
+
+    /** The exchange is done: the first trick can start. */
+    public void beginPlay() {
+        phase = Phase.PLAYING;
+    }
+
+    /**
+     * The player leaves the match: their hand is set aside. Whoever was to act is replaced, a trick that
+     * only waited for them ends, and the round ends when a single hand is left. A player who is already out
+     * keeps the place they took.
+     */
+    public List<PresidentEvent> forfeit(PlayerId who) {
+        List<PresidentEvent> events = new ArrayList<>();
+        int seat = indexOf(who);
+        if (hands.get(seat).isEmpty()) {
+            return events;
+        }
+        discard.addAll(hands.get(seat));
+        hands.set(seat, new ArrayList<>());
+        if (phase == Phase.EXCHANGE) {
+            if (seat == current) {
+                passLeadFrom(seat);
+            }
+        } else if (phase == Phase.PLAYING) {
+            if (seatsWithCards() == 1) {
+                endRound(events);
+            } else if (seat == current) {
+                if (trick.isEmpty()) {
+                    passLeadFrom(seat);
+                } else {
+                    afterAction(events);
+                }
+            } else if (trick.isComplete(this::eligible, hands.size())) {
+                completeTrick(events);
+            }
+        }
         return events;
     }
 
@@ -151,7 +208,7 @@ public final class Round {
 
     private void checkTurn(PlayerId who) throws PresidentException {
         if (phase != Phase.PLAYING) {
-            throw new FinishedGameException();
+            throw new WrongPhaseException(phase, "PLAYING");
         }
         if (who == null || who.id() == null || who.id() != current) {
             throw new NotPlayersTurnException();
@@ -197,12 +254,7 @@ public final class Round {
     /** Ends the trick when everyone answered, else hands the turn to the next seat that can act. */
     private void afterAction(List<PresidentEvent> events) {
         if (trick.isComplete(this::eligible, hands.size())) {
-            int last = trick.lastPlayer();
-            int winner = hands.get(last).isEmpty() ? nextSeatWithCards(last) : last;
-            discard.addAll(trick.cards());
-            trick = new Trick(winner);
-            current = winner;
-            events.add(new TrickWon(new PlayerId(winner), TrickEndReason.ALL_PASSED));
+            completeTrick(events);
             return;
         }
         for (int step = 1; step <= hands.size(); step++) {
@@ -212,6 +264,23 @@ public final class Round {
                 return;
             }
         }
+    }
+
+    /** The trick goes to its last player, or to the next seat with cards when that player has gone out or left. */
+    private void completeTrick(List<PresidentEvent> events) {
+        int last = trick.lastPlayer();
+        int winner = hands.get(last).isEmpty() ? nextSeatWithCards(last) : last;
+        discard.addAll(trick.cards());
+        trick = new Trick(winner);
+        current = winner;
+        events.add(new TrickWon(new PlayerId(winner), TrickEndReason.ALL_PASSED));
+    }
+
+    /** The seat that was to lead has left: the next seat with cards leads an empty trick. */
+    private void passLeadFrom(int seat) {
+        int next = nextSeatWithCards(seat);
+        trick = new Trick(next);
+        current = next;
     }
 
     private int nextSeatWithCards(int from) {

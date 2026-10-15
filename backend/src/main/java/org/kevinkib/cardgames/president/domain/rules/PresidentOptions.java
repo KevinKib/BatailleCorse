@@ -48,6 +48,36 @@ public record PresidentOptions(
                 suitLock, decks, putsch, presidentFall);
     }
 
+    public PresidentOptions withExchange(ExchangeAmount value) {
+        return new PresidentOptions(afterPass, firstLead, value, giveBack, nextLead, scoring, length, equalPlay,
+                twoCuts, quadClears, eightClears, forbiddenFinish, mustPlay, jokers, revolution, ranking, runs,
+                suitLock, decks, putsch, presidentFall);
+    }
+
+    public PresidentOptions withGiveBack(GiveBack value) {
+        return new PresidentOptions(afterPass, firstLead, exchange, value, nextLead, scoring, length, equalPlay,
+                twoCuts, quadClears, eightClears, forbiddenFinish, mustPlay, jokers, revolution, ranking, runs,
+                suitLock, decks, putsch, presidentFall);
+    }
+
+    public PresidentOptions withNextLead(NextLead value) {
+        return new PresidentOptions(afterPass, firstLead, exchange, giveBack, value, scoring, length, equalPlay,
+                twoCuts, quadClears, eightClears, forbiddenFinish, mustPlay, jokers, revolution, ranking, runs,
+                suitLock, decks, putsch, presidentFall);
+    }
+
+    public PresidentOptions withScoring(Scoring value) {
+        return new PresidentOptions(afterPass, firstLead, exchange, giveBack, nextLead, value, length, equalPlay,
+                twoCuts, quadClears, eightClears, forbiddenFinish, mustPlay, jokers, revolution, ranking, runs,
+                suitLock, decks, putsch, presidentFall);
+    }
+
+    public PresidentOptions withLength(MatchLength value) {
+        return new PresidentOptions(afterPass, firstLead, exchange, giveBack, nextLead, scoring, value, equalPlay,
+                twoCuts, quadClears, eightClears, forbiddenFinish, mustPlay, jokers, revolution, ranking, runs,
+                suitLock, decks, putsch, presidentFall);
+    }
+
     public PresidentOptions withFirstLead(FirstLead value) {
         return new PresidentOptions(afterPass, value, exchange, giveBack, nextLead, scoring, length, equalPlay,
                 twoCuts, quadClears, eightClears, forbiddenFinish, mustPlay, jokers, revolution, ranking, runs,

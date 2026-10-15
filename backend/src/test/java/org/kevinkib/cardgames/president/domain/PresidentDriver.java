@@ -3,7 +3,6 @@ package org.kevinkib.cardgames.president.domain;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.president.domain.exchange.PendingReturn;
 import org.kevinkib.cardgames.president.domain.play.Play;
-import org.kevinkib.cardgames.president.domain.round.Phase;
 import org.kevinkib.cards.domain.Card;
 
 import java.util.ArrayList;
@@ -82,9 +81,5 @@ final class PresidentDriver {
             afterStep.accept(steps);
         }
         return steps;
-    }
-
-    static boolean inPlay(President game) {
-        return game.phase() == Phase.PLAYING;
     }
 }

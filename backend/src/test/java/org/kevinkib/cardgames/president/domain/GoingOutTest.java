@@ -69,7 +69,10 @@ class GoingOutTest {
         List<PresidentEvent> events = game.play(p(1), cards("6C"));
 
         assertThat(events, hasItem(new PlayerOut(p(1), 2)));
-        assertThat(events.get(events.size() - 1), is(new RoundOver(List.of(p(0), p(1), p(2)))));
+        // the round is over, then scored by the match
+        assertThat(events.get(events.size() - 2), is(new RoundOver(List.of(p(0), p(1), p(2)))));
+        assertThat(events.get(events.size() - 1) instanceof org.kevinkib.cardgames.president.domain.event.RoundScored,
+                is(true));
         assertThat(game.finishingOrder(), contains(p(0), p(1), p(2)));
         assertThat(game.phase(), is(Phase.ROUND_OVER));
         // a game is a match of several rounds: one round over does not finish it
