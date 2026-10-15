@@ -106,6 +106,21 @@ describe('KoboTableau', () => {
       expect(slot.classes()).toContain('slot--match');
     });
 
+    it('givenARivalTableauInMatchMode_thenTheNameSaysThatAGiveFollows', () => {
+      const wrapper = mountTableau({ clickable, matchMode: true, rival: true });
+      expect(wrapper.get('[data-test="slot-1-0"]').attributes('aria-label'))
+        .toBe("Bob's card 1, face down: match this card, then pick one of yours to give");
+    });
+
+    it('givenARivalSlotPickedToMatch_thenItIsMarkedPressedAndNamedAsPicked', () => {
+      const wrapper = mountTableau({ clickable: {}, rival: true, picked: 2 });
+      const slot = wrapper.get('[data-test="slot-1-2"]');
+      expect(slot.attributes('aria-label')).toBe("Bob's card 3, face down: picked to match");
+      expect(slot.attributes('aria-pressed')).toBe('true');
+      expect(slot.classes()).toContain('slot--selected');
+      expect(wrapper.get('[data-test="slot-1-1"]').attributes('aria-pressed')).toBeUndefined();
+    });
+
     it('givenMatchMode_thenASlotThatIsNotClickableKeepsItsPlainName', () => {
       const wrapper = mountTableau({ clickable, matchMode: true });
       const slot = wrapper.get('[data-test="slot-1-3"]');

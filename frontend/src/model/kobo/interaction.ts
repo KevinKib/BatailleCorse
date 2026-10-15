@@ -37,6 +37,16 @@ export interface KoboInteraction {
   piles: { draw: boolean; discard: boolean };
   /** True when `intents` are one-click matches (no action of the phase uses a click on a slot). */
   directMatch: boolean;
+  /**
+   * True when a tap on a card is a match as far as the situation goes, settling aside: the line that explains
+   * it ("tap your card") is shown exactly then, and does not blink while `directMatch` is held back.
+   */
+  matchHint: boolean;
+  /**
+   * True when a match is possible yet a tap does not mean it (a turn action waits for a card, a peek is shown, or
+   * the explicit mode is on): the Match button is then the only way, and the toggle that leaves the mode.
+   */
+  matchButton: boolean;
 }
 
 export interface KoboInteractionOptions {
@@ -50,7 +60,9 @@ export function slotKey(seat: number, slot: number): string {
 
 const NO_PILES = { draw: false, discard: false };
 /** No game, no seat: nothing to click. */
-export const NOTHING: KoboInteraction = { prompt: null, intents: {}, piles: NO_PILES, directMatch: false };
+export const NOTHING: KoboInteraction = {
+  prompt: null, intents: {}, piles: NO_PILES, directMatch: false, matchHint: false, matchButton: false,
+};
 /** Phases where nobody may match: the cards are being learnt, given or counted. */
 const NO_MATCH_PHASES: KoboState['phase'][] = ['MEMORISING', 'GIFT', 'ROUND_OVER', 'FINISHED'];
 /** My own turn leaves the click to a match only between turn actions: before the draw and after the discard. */
@@ -86,10 +98,15 @@ export function koboInteraction(
     draw: state.availableActions.includes('DRAW'),
     discard: state.availableActions.includes('DISCARD_DRAWN'),
   };
-  if (options.directMatch !== false && allowsDirectMatch(state, mySeat, pending, base)) {
-    return { ...base, piles, directMatch: true, intents: matchIntents(state, me, state.players) };
+  const tapIsMatch = allowsDirectMatch(state, mySeat, pending, base);
+  const matchPossible = state.availableActions.includes('MATCH_DISCARD') && !!state.discardTop
+    && !NO_MATCH_PHASES.includes(state.phase);
+  // The give step has its own exit (Cancel, Esc): the Match toggle would only repeat it.
+  const flags = { matchHint: tapIsMatch, matchButton: matchPossible && !tapIsMatch && pending.kind !== 'match-give' };
+  if (options.directMatch !== false && tapIsMatch) {
+    return { ...base, ...flags, piles, directMatch: true, intents: matchIntents(state, me, state.players) };
   }
-  return { ...base, piles };
+  return { ...base, ...flags, piles };
 }
 
 /**

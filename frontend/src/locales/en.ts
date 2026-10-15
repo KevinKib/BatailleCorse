@@ -437,6 +437,8 @@ export const messagesEn: Messages = {
       discardAction: 'Discard the drawn card. Pile, top card {card}, {n} in the pile',
       slotMatch: '{label}: match this card',
       slotMatchHint: 'Match this card',
+      slotMatchRival: "{label}: match this card, then pick one of yours to give",
+      slotPicked: '{label}: picked to match',
       discardEmpty: 'Discard pile, empty',
       drawnYours: 'Your drawn card: {card}',
       drawnOther: '{player} holds a drawn card',
@@ -485,6 +487,12 @@ export const messagesEn: Messages = {
       cancel: 'Cancel',
       hide: 'Hide',
       match: 'Match',
+    },
+    match: {
+      hint: "Same rank as the discard? Tap your card. A rival's card: tap it, then yours.",
+      coachTitle: 'Match:',
+      coachText: "same rank as the discard? Tap your card to throw it. A rival's card: tap it, then the card you give.",
+      gotIt: 'Got it',
     },
     prompt: {
       swapDrawn: 'Pick one of your cards to swap with the drawn card',

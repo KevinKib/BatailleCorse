@@ -27,7 +27,14 @@ const props = withDefaults(defineProps<{
   highlighted?: string[];
   /** A click on a clickable slot is a match (no other action wants it): said in its name, marked lightly. */
   matchMode?: boolean;
-}>(), { clickable: () => ({}), compact: false, selected: null, highlighted: () => [], matchMode: false });
+  /** Another player's grid: a match on it asks for a card of mine to give, said in the slot's name. */
+  rival?: boolean;
+  /** The slot of this (rival) grid picked for a match, waiting for the card I give. */
+  picked?: number | null;
+}>(), {
+  clickable: () => ({}), compact: false, selected: null, highlighted: () => [], matchMode: false, rival: false,
+  picked: null,
+});
 const emit = defineEmits<{ pick: [seat: number, slot: number] }>();
 
 const ui = useI18n().koboUi.table;
@@ -49,8 +56,11 @@ const slotLabel = (slot: number): string => {
   const label = face
     ? format(ui.slotUp, { owner: props.owner, n: slot + 1, card: cardName(face) })
     : format(ui.slotDown, { owner: props.owner, n: slot + 1 });
-  return isMatch(slot) ? format(ui.slotMatch, { label }) : label;
+  if (props.picked === slot) return format(ui.slotPicked, { label });
+  if (!isMatch(slot)) return label;
+  return format(props.rival ? ui.slotMatchRival : ui.slotMatch, { label });
 };
+const isMarked = (slot: number): boolean => props.selected === slot || props.picked === slot;
 </script>
 
 <template>
@@ -61,11 +71,11 @@ const slotLabel = (slot: number): string => {
         v-if="cell.occupied"
         type="button"
         class="slot"
-        :class="{ 'slot--selected': selected === cell.slot, 'slot--event': isHighlighted(cell.slot), 'slot--match': isMatch(cell.slot) }"
+        :class="{ 'slot--selected': isMarked(cell.slot), 'slot--event': isHighlighted(cell.slot), 'slot--match': isMatch(cell.slot) }"
         :data-match="isMatch(cell.slot) ? 'true' : undefined"
         :title="isMatch(cell.slot) ? ui.slotMatchHint : undefined"
         :data-highlighted="isHighlighted(cell.slot)"
-        :aria-pressed="selected === cell.slot ? 'true' : undefined"
+        :aria-pressed="isMarked(cell.slot) ? 'true' : undefined"
         :data-test="`slot-${player.seat}-${cell.slot}`"
         :style="cellStyle(cell)"
         :aria-label="slotLabel(cell.slot)"

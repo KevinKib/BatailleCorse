@@ -28,39 +28,34 @@ describe('Kobo matching discard', () => {
       cy.get(logLine).should('have.text', '').and('have.attr', 'aria-live', 'polite');
 
       cy.get('[data-test="action-draw"]').click();
+      // The discard pile is still empty: nothing to match yet, so no hint and no button while I hold the card.
+      cy.get('[data-test="match-hint"], [data-test="match-coach"], [data-test="action-match"]').should('not.exist');
       cy.get('[data-test="action-discard"]').click();
       cy.get('[data-test="discard-pile"] img').should('have.attr', 'alt', '3 of spade');
-      // Anyone may match at any time the server lists it, my own turn included.
-      cy.get('[data-test="action-match"]').should('be.visible').and('have.attr', 'aria-pressed', 'false');
-      // Nothing else wants a click on a card: each is a one-click match (cypress/specs/kobo-click-actions.cy.ts).
+      // Nothing else wants a tap now: no Match button, a tap on a card is the match (cypress/specs/kobo-click-actions.cy.ts).
+      cy.get('[data-test="action-match"]').should('not.exist');
       cy.get('button[data-test^="slot-"]:not([disabled])').should('have.length', 8);
       cy.get('[data-test="prompt"]').should('not.exist');
-
-      // Arm the mode: every card of every player can be picked, and Cancel is offered.
-      cy.get('[data-test="action-match"]').click();
-      cy.get('[data-test="action-match"]').should('have.attr', 'aria-pressed', 'true');
-      cy.get('[data-test="prompt"]').should('have.text', 'Pick the card to match');
-      cy.get('button[data-test^="slot-"]:not([disabled])').should('have.length', 8);
-      cy.get('[data-test="action-cancel"]').should('be.visible');
+      // The first time, the coach mark rings my hand and says both gestures; "Got it" remembers it in this browser.
+      cy.get('[data-test="match-coach"]').should('be.visible').and('contain.text', 'Tap your card to throw it');
+      cy.get('[data-test="my-tableau-ring"]').should('have.class', 'coach-ring');
+      cy.get('[data-test="match-coach-dismiss"]').should('be.visible').invoke('outerHeight').should('be.gte', 44);
       actionBarIsReachable();
-      measureTable('match armed, 2 players');
-      // Escape disarms it; Cancel too.
-      cy.get('body').type('{esc}');
-      cy.get('[data-test="action-match"]').should('have.attr', 'aria-pressed', 'false');
-      cy.get('[data-test="prompt"]').should('not.exist');
-      cy.get(slot(0, 1)).should('have.attr', 'data-match', 'true');
-      cy.get('[data-test="action-match"]').click();
-      cy.get('[data-test="action-cancel"]').click();
-      cy.get('[data-test="action-match"]').should('have.attr', 'aria-pressed', 'false');
+      cy.get('[data-test="match-coach-dismiss"]').click();
+      cy.get('[data-test="match-coach"]').should('not.exist');
+      cy.get('[data-test="my-tableau-ring"]').should('not.have.class', 'coach-ring');
+      cy.window().then((w) => expect(w.localStorage.getItem('kobo.matchCoach')).to.eq('seen'));
+      cy.get('[data-test="match-hint"]').should('be.visible')
+        .and('have.text', "Same rank as the discard? Tap your card. A rival's card: tap it, then yours.");
+      measureTable('one-tap match hint, 2 players');
 
-      // My second card is a 3 like the top of the pile: the match works, the card goes to the discard pile.
-      cy.get('[data-test="action-match"]').click();
+      // My second card is a 3 like the top of the pile: ONE tap, the card goes to the discard pile.
       cy.get(slot(0, 1)).click();
       cy.get('[data-test="discard-pile"] img').should('have.attr', 'alt', '3 of heart');
       cy.get(empty(0, 1)).should('exist').and('have.attr', 'data-highlighted', 'true');
       cy.get(logLine).should('have.text', 'You matched card 2 (3 of heart)');
       cy.get('[data-test="event-log"]').should('have.attr', 'data-outcome', 'good');
-      cy.get('[data-test="action-match"]').should('have.attr', 'aria-pressed', 'false');
+      cy.get('[data-test="action-match"]').should('not.exist');
       awaitState(bob, 'Bob sees my card gone', (s) => s.players[0].slots[1].occupied === false && s.discardTop.rank === '3');
       cy.then(() => {
         const match = bob.frames.find((f) => f.eventType === 'MATCH');
@@ -69,7 +64,6 @@ describe('Kobo matching discard', () => {
       actionBarIsReachable();
 
       // My first card is a king, the top is a 3: a penalty card is added to my cards (a fifth slot).
-      cy.get('[data-test="action-match"]').click();
       cy.get(slot(0, 0)).click();
       cy.get(logLine).should('have.text', 'You missed a match and took a penalty card');
       cy.get('[data-test="event-log"]').should('have.attr', 'data-outcome', 'bad');
@@ -95,14 +89,29 @@ describe('Kobo matching discard', () => {
       cy.get('[data-test="action-discard"]').click();
       cy.get('[data-test="discard-pile"] img').should('have.attr', 'alt', '4 of spade');
 
-      // Bob's third card is a 4: I pick it, then the card of mine I hand over.
-      cy.get('[data-test="action-match"]').click();
+      // Bob's third card is a 4: a first tap only PICKS it (nothing is sent), Cancel and Esc drop the pick...
+      cy.get('[data-test="action-match"]').should('not.exist');
+      cy.get(slot(1, 2)).should('have.attr', 'aria-label').and('contain', 'match this card, then pick one of yours to give');
       cy.get(slot(1, 2)).click();
       cy.get('[data-test="prompt"]').should('have.text', 'Pick one of your cards to give');
+      cy.get(slot(1, 2)).should('have.attr', 'aria-pressed', 'true').and('have.attr', 'aria-label').and('contain', 'picked to match');
+      cy.get('[data-test="match-hint"]').should('not.exist');
       cy.get('button[data-test^="slot-"]:not([disabled])').should('have.length', 4)
         .each(($b) => expect($b.attr('data-test')).to.match(/^slot-0-/));
       cy.get('[data-test="action-cancel"]').should('be.visible');
+      cy.get('[data-test="discard-pile"] img').should('have.attr', 'alt', '4 of spade');
       actionBarIsReachable();
+      cy.get('[data-test="action-cancel"]').click();
+      cy.get('[data-test="prompt"]').should('not.exist');
+      cy.get(slot(1, 2)).should('not.have.attr', 'aria-pressed');
+      cy.get('[data-test="match-hint"]').should('be.visible');
+      cy.get(slot(1, 2)).click();
+      cy.get('[data-test="prompt"]').should('have.text', 'Pick one of your cards to give');
+      cy.get('body').type('{esc}');
+      cy.get('[data-test="prompt"]').should('not.exist');
+      cy.get('[data-test="discard-pile"] img').should('have.attr', 'alt', '4 of spade');
+      // ...and the second tap, on one of MY cards, is the card I give: only then is the match sent.
+      cy.get(slot(1, 2)).click();
       cy.get(slot(0, 0)).click();
       cy.get('[data-test="discard-pile"] img').should('have.attr', 'alt', '4 of heart');
       cy.get(empty(0, 0)).should('exist').and('have.attr', 'data-highlighted', 'true');
@@ -116,7 +125,6 @@ describe('Kobo matching discard', () => {
 
       // Bob's turn is over, the 5 he discarded is on top. I pick his second card (a 5)...
       cy.get('[data-test="discard-pile"] img', { timeout: 10000 }).should('have.attr', 'alt', '5 of spade');
-      cy.get('[data-test="action-match"]').click();
       cy.get(slot(1, 1)).click();
       cy.get('[data-test="prompt"]').should('have.text', 'Pick one of your cards to give');
       // ...but Bob matches that very card first: mine changed under my hand, nothing is sent, and I am told.
@@ -127,7 +135,7 @@ describe('Kobo matching discard', () => {
         });
       });
       cy.get('[data-test="notice"]').should('have.text', 'Too late, nothing happened');
-      cy.get('[data-test="action-match"]').should('have.attr', 'aria-pressed', 'false');
+      cy.get('[data-test="action-match"]').should('not.exist');
       cy.get('[data-test="action-cancel"]').should('not.exist');
       // What Bob did is readable: the line, and his emptied slot.
       cy.get<string>('@bobName').then((name) => {

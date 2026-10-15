@@ -267,6 +267,8 @@ export interface KoboUiMessages {
     discardAction: string;             // '{card}', '{n}': the discard pile when a click discards my drawn card
     slotMatch: string;                 // '{label}' = the slot name: a click on it is a match
     slotMatchHint: string;             // tooltip of such a slot
+    slotMatchRival: string;            // '{label}': another player's slot, a click picks it before I give one of mine
+    slotPicked: string;                // '{label}': the rival slot I picked, waiting for the card I give
     discardPile: string;               // '{card}', '{n}': top card face up
     discardEmpty: string;
     drawnYours: string;                // '{card}'
@@ -296,6 +298,12 @@ export interface KoboUiMessages {
     cancel: string;                    // drops a half-made selection
     hide: string;                      // turns the peeked card face down
     match: string;                     // arms the matching discard
+  };
+  match: {                             // how to match: the line under the piles and the first-time cue around my hand
+    hint: string;
+    coachTitle: string;
+    coachText: string;
+    gotIt: string;
   };
   prompt: Record<KoboPromptKey, string>;   // one-line instruction while a click on a card is expected
   notice: Record<KoboNoticeKey, string>;   // why my last command did not go through
