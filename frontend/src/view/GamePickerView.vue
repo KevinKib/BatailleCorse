@@ -84,6 +84,16 @@ onMounted(() => preloadAllCards());
   box-sizing: border-box;
   margin: auto 0;
 }
+/* Wide screens: three games a row once there are more than four, so five games are two rows, not three. */
+@media (min-width: 900px) {
+  .title-panel { max-width: 960px; }
+  .choices { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+/* A short wide window (1280x720): two rows of cards must still fit, so the panel's own spacing tightens. */
+@media (min-width: 900px) and (max-height: 800px) {
+  .titlescreen { padding-top: 88px; padding-bottom: 12px; }
+  .title-panel { gap: 12px; padding: 28px 40px 24px; }
+}
 
 .title-block {
   text-align: center;
@@ -145,5 +155,12 @@ onMounted(() => preloadAllCards());
 @media (max-width: 640px) and (max-height: 700px) {
   .titlescreen { padding-top: 76px; padding-bottom: 12px; }
   .title-panel { gap: 8px; padding-bottom: 12px; }
+}
+/* The shortest phones (360x640): five games in three rows need the header to give back some height. */
+@media (max-width: 640px) and (max-height: 660px) {
+  .titlescreen { padding-top: 60px; padding-bottom: 8px; }
+  .title-panel { padding-top: 34px; padding-bottom: 8px; gap: 6px; }
+  .game-title { font-size: 1.6rem; }
+  .choices { gap: 6px; }
 }
 </style>

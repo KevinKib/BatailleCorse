@@ -43,7 +43,7 @@ describe('Game picker', () => {
     });
     cy.get('[data-test="choice-president"]').within(() => {
       cy.contains('h2', 'President');
-      cy.contains('Climb the table: shed your cards first and take the top title.');
+      cy.contains('Shed your cards first and take the top title.');
       cy.contains('3–8 players');
       cy.contains('button', 'Play');
     });

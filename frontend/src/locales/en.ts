@@ -744,7 +744,7 @@ export const messagesEn: Messages = {
       },
       president: {
         name: 'President',
-        description: 'Climb the table: shed your cards first and take the top title.',
+        description: 'Shed your cards first and take the top title.',
         players: '3–8 players',
         play: 'Play',
       },
