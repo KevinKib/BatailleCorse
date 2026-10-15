@@ -237,9 +237,25 @@ reproduces each one [C]):
   without a pit to sow: 32 seeds on 16 pits always leave a pit with two or more (pigeonhole). With the
   recommended endless rule, a revealed layout whose every candidate pit is endless would lose at once; it
   needs a deliberate layout (the endless example above uses 13 seeds in a precise pattern) and depends on
-  the opponent's half (a capture breaks a cycle), so it cannot be refused at confirmation under hidden
-  placement; instead the viewer's DTO flags a draft whose moves are all endless on an otherwise empty board
-  (`draftOnlyEndless`, computed by the server) and the editor shows a warning **[H]**.
+  the opponent's half (a capture breaks a cycle). The viewer's DTO still flags a draft whose moves are all
+  endless on an otherwise empty board (`draftOnlyEndless`, computed by the server) and the editor shows a
+  warning, but that flag is only a warning.
+- **Stuck start refused (owner-decided 2026-10-15):** a confirmation that would leave the **starting** seat
+  without a legal move on the revealed board is refused (`StuckStartException`, message = the locale key
+  `mangola.errors.stuckStart`). Where the check lives was verified by a random search (400,000 pairs): the
+  starter's half alone decides nothing, in either direction. Of 99,912 drafts that are endless alone, none
+  was stuck on the full board (the opponent's seeds turn a relay into a capture, which breaks the cycle),
+  and a draft that has a finite move alone can still be stuck on the full board (a capture adds seeds to
+  the hand and can create a cycle). So the check runs on the **full revealed board, at the confirmation
+  that completes the pair**, and refuses that confirmation whichever seat sends it; the refused seat
+  stays unconfirmed and may arrange again, and the other seat may take its confirmation back
+  (`editLayout`). A refusal changes nothing (no version bump, no broadcast); the first confirmation is never
+  refused. Feedback without leaking: the refusal carries only the locale key, identical for both seats,
+  and the sender's own projection (the other half stays `null`); it does reveal one bit (this pair leaves
+  the starter stuck), which can only be learnt by the seat that completes the pair, and only when the
+  pair is stuck. The seat that does **not** start is not constrained: if it has no legal move later, the
+  normal `NO_MOVE` rule applies. No confirmation timeout is added (owner decision), so a seat that
+  never confirms keeps the other waiting, as before.
 - **`FORFEIT`:** the shared forfeit (presence grace, Leave), as for every game.
 - **`REPETITION` (draw):** the third occurrence of the same position (32 pits and the player to move) ends
   the game with no winner, as in Morris; a safety net, since no endless game appeared in the simulated
@@ -262,7 +278,9 @@ which is why the placement protocol (hidden or not, who places first) matters **
   h1..a1` for seat A); refused unless there are 16 non-negative integers summing to 32
   (`InvalidLayoutException`), the game is in `PLACEMENT` and the seat has not confirmed. No cap per pit
   (Omweso's "10 per pit" is a disputed local restriction) **[Q3]**. The latest layout replaces the previous one.
-- **Command `confirmLayout(seat)`**: the seat is ready; refused without a layout. **`editLayout(seat)`**
+- **Command `confirmLayout(seat)`**: the seat is ready; refused without a layout, and refused with
+  `StuckStartException` when completing the pair would leave the starter without a legal move (see "End of
+  the game"). **`editLayout(seat)`**
   takes the confirmation back, allowed until both are ready. When both seats are ready, the layouts are
   written on the board, the phase becomes `PLAY` and the starting seat is to move (one version bump, one
   event `LAYOUTS_REVEALED`). Every command bumps `version`.
@@ -307,7 +325,8 @@ presentation, no other game).
   Morris.
 - Exceptions (`MangolaException` and subclasses): `WrongPhaseException`, `NotPlayersTurnException`,
   `NotYourPitException`, `TooFewSeedsException`, `EndlessSowingException`, `InvalidLayoutException`,
-  `AlreadyReadyException`, `NoLayoutException`, `FinishedGameException`.
+  `AlreadyReadyException`, `NoLayoutException`, `StuckStartException` (owner-decided 2026-10-15),
+  `FinishedGameException`.
 - Events (`MangolaEvent`): `LayoutChanged(seat)`, `LayoutConfirmed(seat)`, `LayoutWithdrawn(seat)`,
   `LayoutsRevealed`, `Sown(seat, pit, trace, captures)`, `Finished(result)`.
 - `MangolaFactory`: `GAME_TYPE = "mangola"`, 2 players, `supportsBots() = true` (from the bots PR), options

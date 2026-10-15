@@ -6,6 +6,7 @@ import org.kevinkib.cardgames.mangola.domain.InvalidLayoutException;
 import org.kevinkib.cardgames.mangola.domain.Mangola;
 import org.kevinkib.cardgames.mangola.domain.MangolaGeometry;
 import org.kevinkib.cardgames.mangola.domain.NotPlayersTurnException;
+import org.kevinkib.cardgames.mangola.domain.StuckStartException;
 import org.kevinkib.cardgames.mangola.presentation.dto.MangolaDto;
 import org.kevinkib.cardgames.mangola.presentation.dto.event.MangolaEventData;
 import org.kevinkib.cardgames.presentation.api.Response;
@@ -119,6 +120,23 @@ class MangolaGameActionsTest {
         assertThat(((MangolaEventData) over.getEventData()).action(), is("SOW"));
         assertThat(((MangolaDto) over.getState()).outcome(), is(new MangolaDto.Finished(0, "NO_MOVE")));
         assertThat(table.messaging.payloads.size(), is(2));
+    }
+
+    @Test
+    void aConfirmationRefusedForAStuckStartBroadcastsNothingAndPropagates() throws Exception {
+        Mangola game = table.placementGame();
+        table.actions.arrange(game.getId(), SEAT_0,
+                new int[]{24, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1});
+        table.actions.arrange(game.getId(), SEAT_1,
+                new int[]{2, 1, 1, 1, 1, 2, 3, 0, 3, 0, 1, 5, 2, 2, 3, 5});
+        table.actions.confirmLayout(game.getId(), SEAT_1);
+        table.messaging.clear();
+        int version = game.version();
+
+        assertThrows(StuckStartException.class, () -> table.actions.confirmLayout(game.getId(), SEAT_0));
+
+        assertThat(table.messaging.payloads.isEmpty(), is(true));
+        assertThat(game.version(), is(version));
     }
 
     @Test

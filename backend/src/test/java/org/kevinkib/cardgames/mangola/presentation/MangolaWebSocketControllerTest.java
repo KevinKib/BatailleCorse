@@ -140,6 +140,32 @@ class MangolaWebSocketControllerTest {
     }
 
     @Test
+    void aRefusedConfirmationRepliesTheLocaleKeyToTheSenderOnlyWithoutShowingTheOtherDraft() {
+        Mangola game = table.placementGame();
+        String gameId = game.getId().uuid().toString();
+        List<Integer> stuckStart = List.of(24, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1);
+        List<Integer> facing = List.of(2, 1, 1, 1, 1, 2, 3, 0, 3, 0, 1, 5, 2, 2, 3, 5);
+        table.ws.arrange(new MangolaArrangePayload(gameId, table.token(game, 0), stuckStart));
+        table.ws.arrange(new MangolaArrangePayload(gameId, table.token(game, 1), facing));
+        table.ws.confirmLayout(new GameActionPayload(gameId, table.token(game, 1)));
+        table.messaging.clear();
+
+        table.ws.confirmLayout(new GameActionPayload(gameId, table.token(game, 0)));
+
+        assertThat(table.messaging.seats, is(List.of(SEAT_0)));
+        Response error = table.messaging.payloads.get(0);
+        assertThat(error.isSuccess(), is(false));
+        assertThat(error.getEventType(), is("LAYOUT_CONFIRMED"));
+        assertThat(error.getMessage(), is("mangola.errors.stuckStart"));
+        MangolaDto state = (MangolaDto) error.getState();
+        assertThat(state.phase(), is("PLACEMENT"));
+        // its own draft, and nothing of the other half
+        assertThat(state.board().subList(0, 16).stream().mapToInt(c -> c).sum(), is(32));
+        assertThat(state.board().subList(16, 32).stream().allMatch(c -> c == null), is(true));
+        assertThat(game.isReady(SEAT_0), is(false));
+    }
+
+    @Test
     void sow_isRefusedDuringPlacementToTheSenderOnly() {
         Mangola game = table.placementGame();
 
