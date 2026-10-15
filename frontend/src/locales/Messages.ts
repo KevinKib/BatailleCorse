@@ -244,7 +244,6 @@ export interface OptionsMessages {
   /** By option key (`afterPass`...): `label`, then the text of each value. `preset` is the Classic card of the lobby. */
   president: Record<string, OptionTexts>;
   mangola: {
-    setup: OptionTexts;                // `label`, then `free` / `checkerboard` / `random`
     firstPlayer: OptionTexts;          // `label`, then `host` / `guest` / `random`
     level: OptionTexts;                // a bot seat's level: `label`, then `random` (Easy) / `greedy` (Medium) / `expert` (Expert)
   };

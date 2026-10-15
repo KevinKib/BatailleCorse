@@ -391,9 +391,9 @@ describe('Mangola messages', () => {
   });
 
   it('givenTheLobbyOptions_thenEveryValueTheServerOffersIsNamed', () => {
-    const { setup, firstPlayer } = messagesEn.options.mangola;
-    expect(setup.label).toBeTruthy();
-    expect(['free', 'checkerboard', 'random'].map(v => setup[v])).toEqual(['Free placement', 'Checkerboard', 'Random']);
+    const { firstPlayer } = messagesEn.options.mangola;
+    // the set-up is always free placement (owner decision 2026-10-15): there is no set-up option to name
+    expect('setup' in messagesEn.options.mangola).toBe(false);
     expect(firstPlayer.label).toBeTruthy();
     expect(['host', 'guest', 'random'].map(v => firstPlayer[v])).toEqual(['Host', 'Guest', 'Random']);
   });

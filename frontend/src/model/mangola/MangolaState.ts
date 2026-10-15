@@ -5,8 +5,6 @@ export type MangolaPhase = 'PLACEMENT' | 'PLAY' | 'FINISHED';
 /** The two halves of the board: side A owns rows 1 and 2 (pits 0..15), side B rows 3 and 4 (pits 16..31). */
 export type MangolaSide = 'A' | 'B';
 
-export type MangolaSetupKey = 'free' | 'checkerboard' | 'random';
-
 /** What the server lets the viewer do now (placement: `ARRANGE`, `CONFIRM_LAYOUT`, `EDIT_LAYOUT`; play: `SOW`). */
 export type MangolaAction = 'ARRANGE' | 'CONFIRM_LAYOUT' | 'EDIT_LAYOUT' | 'SOW';
 
@@ -70,7 +68,6 @@ export interface MangolaState {
   /** The pits the viewer may sow; empty unless it is the viewer's turn in the play phase. */
   legalPits: number[];
   availableActions: MangolaAction[];
-  setup: MangolaSetupKey;
   outcome: MangolaOutcome;
   /** The viewer's draft has no finite move on an otherwise empty board: the editor warns. */
   draftOnlyEndless: boolean;
