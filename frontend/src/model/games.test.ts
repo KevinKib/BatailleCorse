@@ -3,7 +3,7 @@ import { GAMES, findGame, type GameDefinition, type GameKey } from './games';
 
 describe('game registry', () => {
   it('givenEveryGame_thenEachDeclaresItsRoutesUnderGamesKey', () => {
-    expect(GAMES.map(g => g.key)).toEqual(['bataillecorse', 'bullshit', 'kobo', 'three-men-morris', 'president']);
+    expect(GAMES.map(g => g.key)).toEqual(['bataillecorse', 'bullshit', 'kobo', 'three-men-morris', 'president', 'mangola']);
     for (const g of GAMES) {
       expect(g.gameHomeRoute).toBe(`/games/${g.key}`);
       expect(g.joinRoute()).toBe(`/games/${g.key}/join`);
@@ -51,6 +51,13 @@ describe('game registry', () => {
     expect(morris?.supportsBots).toBe(true);
     expect(morris?.hotkeys).toBeUndefined();
     expect(morris?.picker).toEqual({ icon: 'pi pi-th-large', severity: 'info' });
+  });
+
+  it('givenMangola_thenItIsRegisteredWithoutBotsYetNorShortcutsAndItsOwnPickerStyle', () => {
+    const mangola = findGame('mangola');
+    expect(mangola?.supportsBots).toBe(false);
+    expect(mangola?.hotkeys).toBeUndefined();
+    expect(mangola?.picker).toEqual({ icon: 'pi pi-circle', severity: 'help' });
   });
 
   it('givenPresident_thenItIsRegisteredWithoutBotsNorShortcutsAndItsOwnPickerStyle', () => {

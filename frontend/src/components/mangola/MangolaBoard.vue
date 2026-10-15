@@ -152,7 +152,9 @@ const handStyle = computed(() => {
 </template>
 
 <style scoped>
-.mg-board__footer { position: relative; }
+/* Tall enough for the 44 px Skip button, which then sits under the grid instead of over its last row. */
+.mg-board__footer { position: relative; min-height: 44px; display: flex; align-items: center; justify-content: center; }
+.mg-board__footer .mg-board__legend { margin: 0; }
 .mg-board__skip {
   position: absolute;
   right: 0;

@@ -153,13 +153,13 @@ onMounted(() => preloadAllCards());
 }
 /* Short phones (375x667): the fan above the panel takes less room. */
 @media (max-width: 640px) and (max-height: 700px) {
-  .titlescreen { padding-top: 76px; padding-bottom: 12px; }
-  .title-panel { gap: 8px; padding-bottom: 12px; }
+  .titlescreen { padding-top: 12px; padding-bottom: 12px; }
+  .title-panel { gap: 8px; padding-top: 16px; padding-bottom: 12px; }
 }
-/* The shortest phones (360x640): five games in three rows need the header to give back some height. */
+/* The shortest phones (360x640): six games in three rows need the header to give back some height. */
 @media (max-width: 640px) and (max-height: 660px) {
-  .titlescreen { padding-top: 60px; padding-bottom: 8px; }
-  .title-panel { padding-top: 34px; padding-bottom: 8px; gap: 6px; }
+  .titlescreen { padding-top: 8px; padding-bottom: 8px; }
+  .title-panel { padding-top: 10px; padding-bottom: 8px; gap: 6px; }
   .game-title { font-size: 1.6rem; }
   .choices { gap: 6px; }
 }
