@@ -351,7 +351,12 @@ export const messagesEn: Messages = {
     yourTurn: 'Your turn',
   },
   mangolaUi: {
-    board: { label: 'Mangola board', yourSide: 'Your side', opponentSide: "Opponent's side" },
+    board: { label: 'Mangola board', yourSide: 'Your side', opponentSide: "Opponent's side", skip: 'Skip' },
+    move: {
+      sowed: '{player} sowed from {pit}',
+      relays: { one: '{n} relay', other: '{n} relays' },
+      captured: { one: '{n} seed captured', other: '{n} seeds captured' },
+    },
     pit: {
       label: 'Pit {pit}, {state}',
       seeds: { one: '{n} seed', other: '{n} seeds' },
