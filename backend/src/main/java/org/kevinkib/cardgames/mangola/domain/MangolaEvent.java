@@ -14,4 +14,20 @@ public sealed interface MangolaEvent {
             trace = List.copyOf(trace);
         }
     }
+
+    /** A seat's draft changed. It deliberately carries no counts: the other seat must not learn them. */
+    record LayoutChanged(PlayerId seat) implements MangolaEvent {
+    }
+
+    /** A seat is ready. */
+    record LayoutConfirmed(PlayerId seat) implements MangolaEvent {
+    }
+
+    /** A seat took its confirmation back and is arranging again. */
+    record LayoutWithdrawn(PlayerId seat) implements MangolaEvent {
+    }
+
+    /** Both seats were ready: the layouts are on the board and the play starts. */
+    record LayoutsRevealed() implements MangolaEvent {
+    }
 }

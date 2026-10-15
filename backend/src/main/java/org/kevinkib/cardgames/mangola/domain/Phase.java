@@ -1,4 +1,4 @@
 package org.kevinkib.cardgames.mangola.domain;
 
-/** Where a game is. The placement phase arrives with the free set-up. */
-public enum Phase { PLAY, FINISHED }
+/** Where a game is: players arranging their seeds, sowing, or over. */
+public enum Phase { PLACEMENT, PLAY, FINISHED }
