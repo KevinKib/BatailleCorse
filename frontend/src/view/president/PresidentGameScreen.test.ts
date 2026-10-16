@@ -257,7 +257,7 @@ describe('PresidentGameScreen', () => {
     expect(wrapper.find('[data-test="scores-panel"]').exists()).toBe(false);
     await wrapper.get('[data-test="scores"]').trigger('click');
     const rows = wrapper.findAll('[data-test="standing-row"]');
-    expect(rows.map(r => r.get('[data-test="standing-name"]').text())).toEqual(['P2', 'You', 'P1']);
+    expect(rows.map(r => r.get('[data-test="standing-name"]').text())).toEqual(['P2', 'P0', 'P1']);
     expect(rows.map(r => r.get('[data-test="standing-points"]').text())).toEqual(['9', '6', '2']);
   });
 
@@ -279,7 +279,7 @@ describe('PresidentGameScreen', () => {
       standings: [{ seat: 0, points: 10 }, { seat: 2, points: 10 }, { seat: 1, points: 3 }],
       outcome: { status: 'FINISHED', winners: [0, 2], reason: 'ROUNDS' },
     })));
-    expect(wrapper.get('[data-test="end-winner"]').text()).toBe('Winners: You, P2');
+    expect(wrapper.get('[data-test="end-winner"]').text()).toBe('Winners: P0, P2');
     expect(wrapper.get('.end-title').text()).toBe(messagesEn.endScreen.victory);
     expect(wrapper.get('[data-test="end-sub"]').text()).toBe('10 points');
   });

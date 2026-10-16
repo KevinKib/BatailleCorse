@@ -299,6 +299,16 @@ export const messagesEn: Messages = {
       done: 'done',
     },
     roundOver: { ready: 'Next round', waiting: 'Waiting for the others', place: '{n}. {player}' },
+    summary: {
+      points: '+{n}',
+      pointsLabel: 'Points of this round',
+      totalLabel: 'Total points',
+      up: 'Up from {title}',
+      down: 'Down from {title}',
+      same: 'Same title',
+      ready: 'Ready',
+    },
+    standings: { title: 'Standings', scores: 'Scores', close: 'Close' },
     notice: {
       moveImpossible: 'That play was refused. Check your cards.',
       connection: 'Could not reach the server. Try again.',

@@ -76,10 +76,14 @@ function playTriple(rank: string, goesOut = false) {
           // Round over: the placeholder lists the places and Ready is the way on.
           cy.get('[data-test="round-over-title"]', { timeout: 10000 }).should('have.text', 'Round 1 is over');
           cy.get('[data-test="round-over-place"]').then(($rows) => {
-            const rows = [...$rows].map((el) => el.textContent);
-            expect(rows[0], '1st').to.match(/^1\. Alice President$/);
-            expect(rows[1], '2nd').to.match(/^2\. Bob Neutral$/);
-            expect(rows[2], '3rd').to.match(/^3\. Carol Scum$/);
+            const row = (i: number, part: string) => $rows.eq(i).find(`[data-test="place-${part}"]`).text();
+            expect(row(0, 'label'), '1st').to.eq('1. Alice');
+            expect(row(0, 'title')).to.eq('President');
+            expect(row(1, 'label'), '2nd').to.eq('2. Bob');
+            expect(row(1, 'title')).to.eq('Neutral');
+            expect(row(2, 'label'), '3rd').to.eq('3. Carol');
+            expect(row(2, 'title')).to.eq('Scum');
+            expect(row(0, 'points')).to.match(/^\+\d+$/);
           });
           cy.get('[data-test="ready"]').click();
           cy.get('[data-test="round-over-waiting"]').should('have.text', 'Waiting for the others');

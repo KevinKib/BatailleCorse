@@ -21,7 +21,9 @@ import PresidentExchangePanel from '../../components/president/PresidentExchange
 import PresidentActionBar from '../../components/president/PresidentActionBar.vue';
 import PresidentHand from '../../components/president/PresidentHand.vue';
 import PresidentLobbyOptions from '../../components/president/PresidentLobbyOptions.vue';
-import PresidentRoundOver from '../../components/president/PresidentRoundOver.vue';
+import PresidentRoundSummary from '../../components/president/PresidentRoundSummary.vue';
+import PresidentScores from '../../components/president/PresidentScores.vue';
+import PresidentStandings from '../../components/president/PresidentStandings.vue';
 import PresidentSeat from '../../components/president/PresidentSeat.vue';
 import PresidentTrick from '../../components/president/PresidentTrick.vue';
 import { findGame } from '../../model/games';
@@ -35,7 +37,7 @@ import { format } from '../../locales/format';
 
 // The President table: the opponents around the trick (a ring on a wide screen, a compact grid on a phone), my hand,
 // and what I can do with it. Every rule is the server's (`legalPlays`): the screen only shows and sends. The exchange
-// is the exchange panel; the round summary is minimal here (a list of places) and its own change replaces it.
+// is the exchange panel; the round summary is the end-of-round sheet.
 const props = defineProps<{ gameId: string }>();
 const messages = useI18n();
 const ui = messages.presidentUi;
@@ -185,7 +187,9 @@ const rematchButton = computed(() =>
       :subtitle="endSubtitle"
       :rematch-button="rematchButton"
       :error="store.rematch === 'failed' ? ui.end.rematchFailed : undefined"
-      @play-again="store.playAgain()" />
+      @play-again="store.playAgain()">
+      <PresidentStandings :standings="store.game?.standings ?? []" :name-of="displayName" :my-seat="store.mySeat" />
+    </EndGameOverlay>
 
     <!-- First server state not here yet (e.g. arriving through an invite link): a neutral felt screen. -->
     <div v-else-if="store.screen === 'connecting'" class="connecting" data-test="connecting"
@@ -200,6 +204,7 @@ const rematchButton = computed(() =>
       <div class="top-bar" data-test="top-bar">
         <GameTimer :time="formattedDuration" inline />
         <span class="round-chip" data-test="round">{{ roundText }}</span>
+        <PresidentScores :standings="store.game.standings" :name-of="displayName" :my-seat="store.mySeat" />
       </div>
 
       <p class="sr-only" role="status" aria-live="polite" aria-atomic="true" data-test="president-live">{{ liveSpoken }}</p>
@@ -248,7 +253,7 @@ const rematchButton = computed(() =>
           :current="store.isMyTurn && store.game.phase === 'PLAYING'"
           :show-ready="isRoundOver" />
         <PresidentHand :cards="store.hand" :selected="selectedNames" :received="receivedNames" @toggle="name => store.toggleCard(name)" />
-        <PresidentRoundOver
+        <PresidentRoundSummary
           v-if="isRoundOver"
           :players="store.game.players"
           :round="store.game.round"

@@ -4,7 +4,7 @@
       <div v-if="outcome === 'victory'" class="end-trophy" data-cy="victory-flourish">🏆</div>
       <h1 class="end-title">{{ ui[outcome] }}</h1>
       <p v-if="winnerLine" class="end-winner" data-test="end-winner">{{ winnerLine }}</p>
-      <p class="end-sub">{{ subtitle }}</p>
+      <p class="end-sub" data-test="end-sub">{{ subtitle }}</p>
       <!-- Extra content under the subtitle (a game's scores); nothing is rendered without it. -->
       <div v-if="$slots.default" class="end-extra" data-test="end-extra"><slot /></div>
       <p v-if="error" class="end-error" data-test="rematch-error" role="alert">{{ error }}</p>

@@ -324,6 +324,16 @@ export interface PresidentUiMessages {
     done: string;
   };
   roundOver: { ready: string; waiting: string; place: string };  // place: '{n}', '{player}'
+  summary: {                          // the end-of-round sheet
+    points: string;                    // '{n}' = points won this round
+    pointsLabel: string;               // tooltip of the points column
+    totalLabel: string;                // tooltip of the total column
+    up: string;                        // '{title}' = the title held before
+    down: string;
+    same: string;
+    ready: string;
+  };
+  standings: { title: string; scores: string; close: string };
   notice: { moveImpossible: string; connection: string };
   end: {
     winner: string;                    // '{players}'
