@@ -244,6 +244,12 @@ describe('President messages', () => {
     }
     expect(o.preset.classic).toBeTruthy();
   });
+
+  it('givenABotSeat_thenItsPresidentLevelsAreNamed', () => {
+    const { level } = messagesEn.options.president;
+    expect(level.label).toBe('Level');
+    expect(['easy', 'medium', 'hard'].map(v => level[v])).toEqual(['Easy', 'Medium', 'Hard']);
+  });
 });
 
 describe('game home and join messages', () => {

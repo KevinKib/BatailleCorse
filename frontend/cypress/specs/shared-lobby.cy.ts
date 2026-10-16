@@ -53,6 +53,28 @@ describe('Shared lobby', () => {
     });
   });
 
+  // A game with bots and a seat option (President): a guest sees the host's bots, labelled the same way, but cannot
+  // add, configure or remove them.
+  it('shows a guest the bots the host added, without any control on them', () => {
+    cy.request('POST', '/api/lobby', { gameType: 'president', name: 'Hosty' }).then((res) => {
+      const { gameId, token } = res.body as { gameId: string; token: string };
+      connectScriptedPlayer(gameId, token, 0).then((host) => {
+        cy.visit(`/games/president/join/${gameId}`);
+        cy.get('[data-test="name"]').type('Zoe');
+        cy.get('[data-test="submit"]').click();
+        cy.url({ timeout: 10000 }).should('include', `/games/president/room/${gameId}`);
+        cy.get('[data-test="lobby"]').should('be.visible');
+        cy.then(() => host.publish('/app/lobby/addBot', {}));
+        cy.get('[data-test="player-count"]').should('contain.text', '3 / 8');
+        cy.get('[data-test="badge-bot"]').should('have.length', 1);
+        cy.get('.players li').eq(2).should('contain.text', 'Bot 1');
+        cy.get('[data-test="add-bot"]').should('not.exist');
+        cy.get('[data-test="seat-option-2-level"]').should('not.exist');
+        cy.get('[data-test="remove-bot-2"]').should('not.exist');
+      });
+    });
+  });
+
   it('frees the seat of a guest who leaves, and sends them to /games', () => {
     hostLobby('Alice');
     roomId().then((id) => {

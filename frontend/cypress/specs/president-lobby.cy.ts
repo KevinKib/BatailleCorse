@@ -1,15 +1,15 @@
-// President on the shared lobby (3 to 8 players, no bots yet): the browser under test is the host, scripted STOMP
+// President on the shared lobby (3 to 8 players; the bots have their own spec, president-bot.cy.ts): the browser under test is the host, scripted STOMP
 // clients are the other players. The options go through the shared lobby (Classic card + Customise).
 import { hostLobby, joinGuests, noHorizontalScroll } from '../support/presidentRoom';
 
 describe('President lobby', () => {
   [375, 1280].forEach((width) => {
-    it(`creates a lobby with the Classic rules, no Add bot, starts with three players at ${width} px`, () => {
+    it(`creates a lobby with the Classic rules and Add bot, starts with three players at ${width} px`, () => {
       cy.viewport(width, width === 375 ? 667 : 800);
       hostLobby('Alice').then((id) => {
         cy.get('[data-test="lobby"] .game-title').should('have.text', 'President');
         cy.get('[data-test="player-count"]').should('contain.text', '1 / 8');
-        cy.get('[data-test="add-bot"]').should('not.exist');
+        cy.get('[data-test="add-bot"]').should('be.visible').and('not.be.disabled');
         cy.get('[data-test="start"]').should('be.disabled');
         cy.get('[data-test="start-hint"]').should('contain.text', 'Waiting for 2 more players');
         cy.get('[data-test="preset-title"]').should('have.text', 'Classic');
