@@ -56,3 +56,14 @@ export function playFromTwoPerPit(): Cypress.Chainable<{ id: string; bob: Script
     return cy.wrap({ id, bob });
   });
 }
+
+/** The browser host's own draft, tapped pit by pit: `[pit, seeds]` pairs, each tap adding one seed (placement editor). */
+export function tapDraft(pits: Array<[number, number]>) {
+  pits.forEach(([pit, times]) => {
+    for (let i = 0; i < times; i += 1) pitEl(pit).click();
+  });
+}
+
+/** The aria-labels of my 16 pits in the placement editor, read as one string to compare two moments. */
+export const myHalfSignature = ($half: JQuery<HTMLElement>) =>
+  [...$half.find('button')].map((el) => el.getAttribute('aria-label')).join('|');
