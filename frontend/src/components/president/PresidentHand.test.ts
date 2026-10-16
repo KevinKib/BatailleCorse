@@ -5,8 +5,8 @@ import { buildPresidentHand } from '../../model/fixtures/president';
 
 const hand = buildPresidentHand(['3', 'CLUB'], ['QUEEN', 'HEART'], ['ACE', 'SPADE'], ['2', 'DIAMOND']);
 
-function mountHand(selected: string[] = []) {
-  return mount(PresidentHand, { props: { cards: hand, selected } });
+function mountHand(selected: string[] = [], received: string[] = []) {
+  return mount(PresidentHand, { props: { cards: hand, selected, received } });
 }
 
 describe('PresidentHand', () => {
@@ -41,5 +41,20 @@ describe('PresidentHand', () => {
   it('givenAnEmptyHand_thenNoButtonIsShown', () => {
     const wrapper = mount(PresidentHand, { props: { cards: [], selected: [] } });
     expect(wrapper.findAll('button')).toHaveLength(0);
+  });
+
+  it('givenReceivedCards_thenTheyAreTaggedInTextAndInTheirName', () => {
+    const wrapper = mountHand([], ['SPADE_ACE']);
+    const ace = wrapper.get('[data-card="SPADE_ACE"]');
+    expect(ace.attributes('data-received')).toBe('true');
+    expect(ace.attributes('aria-label')).toBe('Ace of spades, received');
+    expect(ace.get('[data-test="received-tag"]').text()).toBe('New');
+    expect(wrapper.findAll('[data-test="received-tag"]')).toHaveLength(1);
+    expect(wrapper.get('[data-card="CLUB_3"]').attributes('data-received')).toBeUndefined();
+  });
+
+  it('aReceivedCardThatIsSelectedSaysBoth', () => {
+    const wrapper = mountHand(['SPADE_ACE'], ['SPADE_ACE']);
+    expect(wrapper.get('[data-card="SPADE_ACE"]').attributes('aria-label')).toBe('Ace of spades, selected, received');
   });
 });

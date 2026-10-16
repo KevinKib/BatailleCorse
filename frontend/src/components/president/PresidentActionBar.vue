@@ -3,19 +3,17 @@ import { Button } from 'primevue';
 import { useId } from 'vue';
 import { useI18n } from '../../composables/useI18n';
 
-// What I can do with my hand: the phase line, the Play (or Give) button, Pass and Clear, and the hint line that says
+// What I can do with my hand: the phase line, the Play button, Pass and Clear, and the hint line that says
 // why the selection cannot be played. The screen decides what the primary button does; this only shows and emits.
-withDefaults(defineProps<{
+defineProps<{
   phaseText: string;
   primaryLabel: string;
   canPrimary: boolean;
   canPass: boolean;
-  /** Pass is not part of the exchange step. */
-  showPass?: boolean;
   hasSelection: boolean;
   hint: string;
   notice: string;
-}>(), { showPass: true });
+}>();
 const emit = defineEmits<{ primary: []; pass: []; clear: [] }>();
 
 const ui = useI18n().presidentUi.actions;
@@ -30,7 +28,7 @@ const hintId = `president-hint-${useId()}`;
     <div class="buttons">
       <Button data-test="play" class="action action--play" :label="primaryLabel" severity="success" rounded
               :disabled="!canPrimary" :aria-describedby="hintId" @click="emit('primary')" />
-      <Button v-if="showPass" data-test="pass" class="action" :label="ui.pass" severity="secondary" rounded
+      <Button data-test="pass" class="action" :label="ui.pass" severity="secondary" rounded
               :disabled="!canPass" @click="emit('pass')" />
       <Button v-if="hasSelection" data-test="clear" class="action" :label="ui.clear" severity="secondary" variant="text"
               rounded @click="emit('clear')" />

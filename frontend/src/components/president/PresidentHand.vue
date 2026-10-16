@@ -3,6 +3,7 @@ import { computed, ref } from 'vue';
 import PlayingCard from '../PlayingCard.vue';
 import { useHandLayout } from '../../composables/useHandLayout';
 import { useI18n } from '../../composables/useI18n';
+import { format } from '../../locales/format';
 import { cardLabel } from '../../model/president/cardLabel';
 import type Card from '../../model/Card';
 
@@ -13,6 +14,8 @@ const props = defineProps<{
   cards: Card[];
   /** The names (`SUIT_RANK`) of the tapped cards. */
   selected: string[];
+  /** The names of the cards received in the exchange: tagged until the round is played. */
+  received?: string[];
 }>();
 const emit = defineEmits<{ toggle: [name: string] }>();
 
@@ -27,6 +30,11 @@ const rows = computed(() => {
     : [indexed.slice(0, layout.value.perRow), indexed.slice(layout.value.perRow)];
 });
 const isSelected = (card: Card) => props.selected.includes(card.name);
+const isReceived = (card: Card) => props.received?.includes(card.name) ?? false;
+const labelOf = (card: Card) => {
+  const label = cardLabel(card, ui, isSelected(card));
+  return isReceived(card) ? format(ui.cardReceived, { card: label }) : label;
+};
 </script>
 
 <template>
@@ -38,12 +46,14 @@ const isSelected = (card: Card) => props.selected.includes(card.name);
         :data-test="`hand-card-${index}`"
         :data-card="card.name"
         class="hand-card"
-        :class="{ selected: isSelected(card) }"
+        :class="{ selected: isSelected(card), received: isReceived(card) }"
         type="button"
-        :aria-label="cardLabel(card, ui, isSelected(card))"
+        :data-received="isReceived(card) ? 'true' : undefined"
+        :aria-label="labelOf(card)"
         :aria-pressed="isSelected(card)"
         @click="emit('toggle', card.name)">
         <PlayingCard :rank="card.rank" :suit="card.suit" />
+        <span v-if="isReceived(card)" class="received-tag" data-test="received-tag" aria-hidden="true">{{ ui.receivedTag }}</span>
       </button>
     </div>
   </div>
@@ -77,6 +87,21 @@ const isSelected = (card: Card) => props.selected.includes(card.name);
 .hand-card.selected {
   transform: translateY(calc(-1 * var(--space-3)));
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
+}
+/* A card received in the exchange wears a small gold tag (text, not colour alone). */
+.received-tag {
+  position: absolute;
+  top: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0 5px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #000;
+  background: var(--gold);
+  border-radius: 999px;
+  pointer-events: none;
 }
 /* Raised is not the only cue: a selected card also gets a gold outline. */
 .hand-card.selected :deep(.playing_card) { outline: 2px solid var(--gold); outline-offset: -2px; }

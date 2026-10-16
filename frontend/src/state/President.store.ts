@@ -12,6 +12,7 @@ import type Card from '../model/Card';
 import {
   analyseSelection, completingCards, type SelectionAnalysis, type SelectionRefusal,
 } from '../model/president/selection';
+import { suggestGiveBack as lowestUnpaired } from '../model/president/exchange';
 import { useSeatPresence, FORFEIT_NOTICE_HOLD_MS } from '../composables/useSeatPresence';
 import { useSeatRoom } from '../composables/useSeatRoom';
 import type { ForfeitEventData } from '../model/SeatLifecycleEvents';
@@ -217,6 +218,13 @@ export const usePresidentStore = defineStore('president-store', () => {
     return send(() => session.giveBack(cards));
   }
 
+  /** Selects the lowest cards that break no pair for the return I owe; the player may still change them. */
+  function suggestGiveBack(): void {
+    const owed = game.value?.toGiveBack ?? 0;
+    if (!can('GIVE_BACK') || owed <= 0) return;
+    selectedNames.value = lowestUnpaired(hand.value, owed).map(c => c.name);
+  }
+
   function ready(): boolean {
     return can('READY') ? send(() => session.ready()) : false;
   }
@@ -235,6 +243,7 @@ export const usePresidentStore = defineStore('president-store', () => {
     me, isMyTurn, can, options, hand, screen,
     selectedCards, selectedPattern, canPlay, playHint, completions, canGiveBack,
     applyEvent, toggleCard, clearSelection, play, pass, giveBack, ready,
+    suggestGiveBack,
     create: (name?: string) => session.create(name),
     join: (id: string, name?: string) => session.join(id, name),
     restore: (id: string, seat: number, token: string) => session.restore(id, seat, token),

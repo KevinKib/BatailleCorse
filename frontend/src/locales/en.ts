@@ -213,6 +213,8 @@ export const messagesEn: Messages = {
     suits: { HEART: 'hearts', DIAMOND: 'diamonds', CLUB: 'clubs', SPADE: 'spades' },
     cardLabel: '{rank} of {suit}',
     cardSelected: '{card}, selected',
+    cardReceived: '{card}, received',
+    receivedTag: 'New',
     lobby: {
       classicTitle: 'Classic',
       classicSummary: 'King of hearts leads, you may re-enter after a pass, 5 rounds.',
@@ -260,11 +262,42 @@ export const messagesEn: Messages = {
     phase: {
       yourTurn: 'Your turn',
       waiting: '{player} is playing',
-      exchangeGive: { one: 'Choose {n} card to give back', other: 'Choose {n} cards to give back' },
-      exchangeWaiting: 'Waiting for the exchange',
       roundOver: 'Round {n} is over',
     },
-    exchange: { give: { one: 'Give {n} card', other: 'Give {n} cards' } },
+    exchange: {
+      label: 'Card exchange',
+      youAre: {
+        president: 'You are the President',
+        vicePresident: 'You are the Vice-President',
+        neutral: 'You are Neutral',
+        viceScum: 'You are the Vice-Scum',
+        scum: 'You are the Scum',
+      },
+      received: {
+        one: '{player} gave you their best card. It is tagged in your hand.',
+        other: '{player} gave you their {n} best cards. They are tagged in your hand.',
+      },
+      choose: { one: 'Choose {n} card to give to {player}.', other: 'Choose {n} cards to give to {player}.' },
+      give: { one: 'Give {n} card to {player}', other: 'Give {n} cards to {player}' },
+      suggest: 'Suggest',
+      gave: {
+        one: 'You gave {n} card back to {player}. Waiting for the others.',
+        other: 'You gave {n} cards back to {player}. Waiting for the others.',
+      },
+      taken: {
+        one: 'Your best card went to {player}. Waiting for them to give one back.',
+        other: 'Your {n} best cards went to {player}. Waiting for them to give {n} back.',
+      },
+      returned: {
+        one: '{player} gave back {n} card. Waiting for the others.',
+        other: '{player} gave back {n} cards. Waiting for the others.',
+      },
+      idle: 'You neither give nor receive. Waiting for the others.',
+      pairs: 'Exchanges at the table',
+      pair: { one: '{high} and {low}: {n} card, {state}', other: '{high} and {low}: {n} cards, {state}' },
+      pending: 'pending',
+      done: 'done',
+    },
     roundOver: { ready: 'Next round', waiting: 'Waiting for the others', place: '{n}. {player}' },
     notice: {
       moveImpossible: 'That play was refused. Check your cards.',
