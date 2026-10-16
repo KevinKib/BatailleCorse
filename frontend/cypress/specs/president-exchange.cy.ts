@@ -171,9 +171,9 @@ function browserPass() {
           scriptedPlay(carol, '2', 2);
           cy.get('[data-test="round-over-title"]', { timeout: 10000 }).should('have.text', 'Round 1 is over');
           cy.get('[data-test="round-over-place"]').then(($rows) => {
-            const rows = [...$rows].map((el) => el.textContent);
-            expect(rows[0], '1st').to.match(/^1\. Bob President$/);
-            expect(rows[2], '3rd').to.match(/^3\. Alice Scum$/);
+            const row = (i: number, part: string) => $rows.eq(i).find(`[data-test="place-${part}"]`).text();
+            expect(`${row(0, 'label')} ${row(0, 'title')}`, '1st').to.eq('1. Bob President');
+            expect(`${row(2, 'label')} ${row(2, 'title')}`, '3rd').to.eq('3. Alice Scum');
           });
           cy.get('[data-test="ready"]').click();
           scriptedReady(bob);
