@@ -78,8 +78,8 @@ players) get distinct names (today all "Neutral").
 | P3 | `feat: President at the table (server)` | M-L | P2 | factory and options (strict parse), option pruning, `kingOfHearts`, `endless`, the first player out closes the trick (parameterised `TrickAfterGoingOutTest`), DTO privacy, actions, controllers, STOMP IT, deal seam, shared tests | shared test counts collide with Mangola (#217) | done (#229) |
 | F1 | `feat: President model, session and store` | M | P3 | Vitest: DTO fixtures, one test per command, selection-to-pattern matcher, version guard | none visible | done (#234) |
 | F2 | `feat: President in the game selection, lobby and table` (entry PR) | L | F1, decisions 1-3, 6 (spec §11) | Vitest per component; Cypress lobby + a scripted round | the only entry PR at a time (Mangola) | done (#236) |
-| F3 | `feat: President exchange step` | M | F2, decision 4 (spec §11) | Vitest; Cypress with a fixed deal into round 2 | waiting state for the non-exchanging seats | - |
-| F4 | `feat: President round summary, standings and end screen` | M | F2, decision 5 (spec §11) | Vitest; Cypress to `FINISHED` and Play again; standings of an `endless` match | several winners, forfeit subtitle | - |
+| F3 | `feat: President exchange step` | M | F2, decision 4 (spec §11) | Vitest; Cypress with a fixed deal into round 2 | waiting state for the non-exchanging seats | done (#246) |
+| F4 | `feat: President round summary, standings and end screen` | M | F2, decision 5 (spec §11) | Vitest; Cypress to `FINISHED` and Play again; standings of an `endless` match | several winners, forfeit subtitle | done (#247) |
 | B1 | `feat: President bot strategy` | M-L | P2 | view parity (in B2), memory, heuristic decision table (parameterised), self-play | strategy quality is subjective | done (#249) |
 | B2 | `feat: President bots at the table` | M | B1, P3 | coordinator with a manual scheduler, broadcaster skips bots, bot game IT | stale tasks | - |
 | B3 | `feat: play President against bots` | S-M | B2, F2 | Vitest; Cypress lobby with bots, a round against a hard bot | shared lobby specs | - |
