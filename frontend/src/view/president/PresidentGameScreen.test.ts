@@ -21,10 +21,17 @@ const DESCRIPTORS = Object.entries({
   key, type: 'CHOICE' as const, values, defaultValue: CLASSIC_PRESIDENT_OPTIONS[key], labelKey: `options.president.${key}`,
 }));
 
-function lobby(joined: number, mySeat = 0): LobbyView {
+const LEVEL = {
+  key: 'level', type: 'CHOICE' as const, values: ['easy', 'medium', 'hard'], defaultValue: 'medium', labelKey: 'options.president.level',
+};
+
+function lobby(joined: number, mySeat = 0, bots: number[] = []): LobbyView {
   return {
     started: false, gameId: 'p1',
-    players: Array.from({ length: joined }, (_, seat) => ({ seat, name: `P${seat}`, joined: true })),
+    players: Array.from({ length: joined }, (_, seat) => bots.includes(seat)
+      ? { seat, name: 'Bot', joined: true, bot: true, seatOptions: { level: 'medium' } }
+      : { seat, name: `P${seat}`, joined: true }),
+    seatOptionDescriptors: [LEVEL], removableBotSeats: bots,
     hostSeat: 0, mySeat, minPlayers: 3, maxPlayers: 8, canStart: joined >= 3, lobbyVersion: 1,
     optionDescriptors: DESCRIPTORS, options: { ...CLASSIC_PRESIDENT_OPTIONS }, canEditOptions: true,
   };
@@ -72,13 +79,46 @@ describe('PresidentGameScreen', () => {
     expect(wrapper.get('[data-test="connecting"]').text()).toContain(messagesEn.presidentUi.connecting);
   });
 
-  it('givenALobby_thenShowsTheSharedLobbyWithTheClassicCardAndNoAddBot', async () => {
+  it('givenALobby_thenShowsTheSharedLobbyWithTheClassicCardAndAddBot', async () => {
     const { wrapper } = await mountRoom(room(lobby(2) as unknown as PresidentState));
     expect(wrapper.get('[data-test="lobby"]').text()).toContain('President');
     expect(wrapper.get('[data-test="player-count"]').text()).toContain('2 / 8');
     expect(wrapper.get('[data-test="preset-title"]').text()).toBe('Classic');
-    expect(wrapper.find('[data-test="add-bot"]').exists()).toBe(false);
+    expect(wrapper.get('[data-test="add-bot"]').text()).toContain('Add bot');
     expect(wrapper.get('[data-test="start"]').attributes('disabled')).toBeDefined();
+  });
+
+  it('whenAddBotIsPressed_thenTheBotIsAskedThroughTheStore', async () => {
+    const { wrapper, store } = await mountRoom(room(lobby(2) as unknown as PresidentState));
+    const addBot = vi.spyOn(store, 'addBot').mockImplementation(() => {});
+    await wrapper.get('[data-test="add-bot"]').trigger('click');
+    expect(addBot).toHaveBeenCalled();
+  });
+
+  it('givenABotSeat_thenTheHostSeesItNamedBot1WithItsLevelAndCanRemoveIt', async () => {
+    const { wrapper, store } = await mountRoom(room(lobby(3, 0, [1, 2]) as unknown as PresidentState));
+    // My own row is an editable field; the bots' names are text.
+    const names = wrapper.findAll('.players li span.player-name').map(n => n.text());
+    expect(names).toEqual(['Bot 1', 'Bot 2']);
+    expect(wrapper.findAll('[data-test="badge-bot"]')).toHaveLength(2);
+    const level = wrapper.get('[data-test="seat-option-1-level"]');
+    expect((level.element as HTMLSelectElement).value).toBe('medium');
+    expect(level.attributes('aria-label')).toBe('Level for Bot 1');
+    expect(level.findAll('option').map(o => o.text())).toEqual(['Easy', 'Medium', 'Hard']);
+    const setSeatOption = vi.spyOn(store, 'setSeatOption').mockImplementation(() => {});
+    await level.setValue('hard');
+    expect(setSeatOption).toHaveBeenCalledWith(1, 'level', 'hard');
+    const removeBot = vi.spyOn(store, 'removeBot').mockImplementation(() => {});
+    await wrapper.get('[data-test="remove-bot-2"]').trigger('click');
+    expect(removeBot).toHaveBeenCalledWith(2);
+  });
+
+  it('givenBotsAtTheTable_thenTheirSeatsAreLabelledBotNInSeatOrderAndHumansKeepTheirNames', async () => {
+    const { wrapper } = await mountRoom(room(playing({
+      players: seatsOf(4, { 1: { bot: true, name: 'Bot' }, 3: { bot: true, name: 'Bot' } }),
+    })));
+    const labels = wrapper.findAll('[data-test="opponent-seat"] [data-test="seat-label"]').map(l => l.text());
+    expect(labels).toEqual(['Bot 1', 'P2', 'Bot 2']);
   });
 
   it('givenThreePlayers_thenTheHostCanStart', async () => {

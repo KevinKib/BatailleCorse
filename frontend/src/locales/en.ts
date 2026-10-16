@@ -1027,6 +1027,7 @@ export const messagesEn: Messages = {
     },
     president: {
       preset: { classic: 'Classic', custom: 'Custom' },
+      level: { label: 'Level', easy: 'Easy', medium: 'Medium', hard: 'Hard' },
       afterPass: { label: 'After a pass', reenter: 'Play again', out: 'Out of the trick' },
       firstLead: {
         label: 'First lead', kingOfHearts: 'King of hearts', lowestClub: 'Lowest club',

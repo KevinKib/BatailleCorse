@@ -241,7 +241,10 @@ export interface OptionsMessages {
   kobo: {
     level: OptionTexts;                // a bot seat's level: `label`, then `easy` / `medium` / `hard`
   };
-  /** By option key (`afterPass`...): `label`, then the text of each value. `preset` is the Classic card of the lobby. */
+  /**
+   * By option key (`afterPass`...): `label`, then the text of each value. `preset` is the Classic card of the lobby;
+   * `level` is a bot seat's level (`label`, then `easy` / `medium` / `hard`).
+   */
   president: Record<string, OptionTexts>;
   mangola: {
     firstPlayer: OptionTexts;          // `label`, then `host` / `guest` / `random`

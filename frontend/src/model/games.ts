@@ -75,10 +75,10 @@ export const GAMES: readonly GameDefinition[] = [
     supportsBots: true,
     picker: { icon: 'pi pi-th-large', severity: 'info' },
   }),
-  // Cards are tapped and then confirmed with buttons: no remappable shortcut, so no gear. No bots yet (they come
-  // with their own change, together with the seat option).
+  // Cards are tapped and then confirmed with buttons: no remappable shortcut, so no gear.
+  // Bots play at three levels (a seat option).
   define('president', {
-    supportsBots: false,
+    supportsBots: true,
     picker: { icon: 'pi pi-crown', severity: 'contrast' },
   }),
   // The board is operated with Tab, arrows, Enter and Space: no remappable shortcut, so no gear.

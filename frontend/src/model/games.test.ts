@@ -60,9 +60,9 @@ describe('game registry', () => {
     expect(mangola?.picker).toEqual({ icon: 'pi pi-circle', severity: 'help' });
   });
 
-  it('givenPresident_thenItIsRegisteredWithoutBotsNorShortcutsAndItsOwnPickerStyle', () => {
+  it('givenPresident_thenItIsRegisteredWithBotsButNoShortcutsAndItsOwnPickerStyle', () => {
     const president = findGame('president');
-    expect(president?.supportsBots).toBe(false);
+    expect(president?.supportsBots).toBe(true);
     expect(president?.hotkeys).toBeUndefined();
     expect(president?.picker).toEqual({ icon: 'pi pi-crown', severity: 'contrast' });
     expect(president?.roomRoute('abc')).toBe('/games/president/room/abc');

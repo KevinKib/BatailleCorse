@@ -6,6 +6,7 @@ const GAMES: Array<{ label: string; path: string; room: RegExp; option: string |
   { label: "Three Men's Morris", path: '/games/three-men-morris', room: /\/room\//, option: 'level' },
   { label: 'Bataille Corse', path: '/games/bataillecorse', room: /\/room\//, option: 'tier' },
   { label: 'Bullshit', path: '/games/bullshit', room: /\/room\//, option: null },
+  { label: 'President', path: '/games/president', room: /\/room\//, option: 'level' },
 ];
 
 function lobbyWithBot(path: string) {

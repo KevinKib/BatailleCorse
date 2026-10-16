@@ -82,7 +82,7 @@ players) get distinct names (today all "Neutral").
 | F4 | `feat: President round summary, standings and end screen` | M | F2, decision 5 (spec §11) | Vitest; Cypress to `FINISHED` and Play again; standings of an `endless` match | several winners, forfeit subtitle | done (#247) |
 | B1 | `feat: President bot strategy` | M-L | P2 | view parity (in B2), memory, heuristic decision table (parameterised), self-play | strategy quality is subjective | done (#249) |
 | B2 | `feat: President bots at the table` | M | B1, P3 | coordinator with a manual scheduler, broadcaster skips bots, bot game IT | stale tasks | done (#251) |
-| B3 | `feat: play President against bots` | S-M | B2, F2 | Vitest; Cypress lobby with bots, a round against a hard bot | shared lobby specs | - |
+| B3 | `feat: play President against bots` | S-M | B2, F2 | Vitest; Cypress lobby with bots, a round against a hard bot | shared lobby specs | done (#252) |
 | V1 | `feat: President equal play, the four and completion out of turn` | L | P3, B2 (F2 for the UI part) | worked examples of spec §3.1.2 as parameterised rows; ordering of a completion against the next play and against passes; DTO `completion` lifetime; bot completion; Cypress "Complete the four" | the first out-of-turn command of the game | - |
 | V2 | `feat: President cuts, quad, forbidden finish and must play` | M | V1 | beat and effect matrix per option value, parameterised; Cypress per visible indicator | cuts against the equal-play binding | - |
 | V3 | `feat: President revolution and aces high` | M | V2 | rank order under each option and revolution state; exchange best cards under each order | revolution timing | - |
