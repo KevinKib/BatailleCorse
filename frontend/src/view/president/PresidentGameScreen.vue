@@ -17,6 +17,7 @@ import EndGameOverlay from '../../components/EndGameOverlay.vue';
 import ForfeitBanner from '../../components/ForfeitBanner.vue';
 import RulesPanel from '../../components/RulesPanel.vue';
 import GameTimer from '../../components/GameTimer.vue';
+import PresidentExchangePanel from '../../components/president/PresidentExchangePanel.vue';
 import PresidentActionBar from '../../components/president/PresidentActionBar.vue';
 import PresidentHand from '../../components/president/PresidentHand.vue';
 import PresidentLobbyOptions from '../../components/president/PresidentLobbyOptions.vue';
@@ -30,11 +31,11 @@ import { seatPositions } from '../../model/table/seatRing';
 import { rematchButtonFor } from '../../model/RematchButton';
 import { ruleChips } from '../../model/president/chips';
 import { hintText } from '../../model/president/hint';
-import { format, plural } from '../../locales/format';
+import { format } from '../../locales/format';
 
 // The President table: the opponents around the trick (a ring on a wide screen, a compact grid on a phone), my hand,
 // and what I can do with it. Every rule is the server's (`legalPlays`): the screen only shows and sends. The exchange
-// and the round summary are minimal here (a give button, a list of places); their own changes replace them.
+// is the exchange panel; the round summary is minimal here (a list of places) and its own change replaces it.
 const props = defineProps<{ gameId: string }>();
 const messages = useI18n();
 const ui = messages.presidentUi;
@@ -102,25 +103,13 @@ const isRoundOver = computed(() => store.game?.phase === 'ROUND_OVER');
 const phaseText = computed(() => {
   const g = store.game;
   if (!g) return '';
-  if (g.phase === 'EXCHANGE') {
-    return g.toGiveBack > 0 && store.can('GIVE_BACK')
-      ? plural(ui.phase.exchangeGive, g.toGiveBack)
-      : ui.phase.exchangeWaiting;
-  }
   return store.isMyTurn ? ui.phase.yourTurn : format(ui.phase.waiting, { player: displayName(g.currentSeat) });
 });
-const primaryLabel = computed(() =>
-  isExchange.value ? plural(ui.exchange.give, store.game?.toGiveBack ?? 0) : ui.actions.play);
-const canPrimary = computed(() => isExchange.value ? store.canGiveBack : store.canPlay);
-const hint = computed(() => isExchange.value ? '' : hintText(store.playHint, ui));
+const hint = computed(() => hintText(store.playHint, ui));
 const noticeText = computed(() => store.notice ? ui.notice[store.notice] : '');
 const canReady = computed(() => store.can('READY') && !store.busy && !(store.me?.ready ?? false));
 
-function primary() {
-  if (isExchange.value) store.giveBack();
-  else store.play();
-}
-
+const receivedNames = computed(() => (store.game?.received ?? []).map(c => c.name));
 const selectedNames = computed(() => store.selectedCards.map(c => c.name));
 
 // One polite region for the turn: cleared and set again so that two turns in a row are both read.
@@ -258,7 +247,7 @@ const rematchButton = computed(() =>
           :label="ui.you"
           :current="store.isMyTurn && store.game.phase === 'PLAYING'"
           :show-ready="isRoundOver" />
-        <PresidentHand :cards="store.hand" :selected="selectedNames" @toggle="name => store.toggleCard(name)" />
+        <PresidentHand :cards="store.hand" :selected="selectedNames" :received="receivedNames" @toggle="name => store.toggleCard(name)" />
         <PresidentRoundOver
           v-if="isRoundOver"
           :players="store.game.players"
@@ -267,17 +256,28 @@ const rematchButton = computed(() =>
           :name-of="displayName"
           :can-ready="canReady"
           @ready="store.ready()" />
+        <PresidentExchangePanel
+          v-else-if="isExchange"
+          :pairs="store.game.exchange"
+          :my-seat="store.mySeat"
+          :title="store.me?.title ?? null"
+          :received-count="store.game.received.length"
+          :selected-count="store.selectedCards.length"
+          :can-give="store.canGiveBack"
+          :name-of="displayName"
+          @give="store.giveBack()"
+          @suggest="store.suggestGiveBack()"
+          @clear="store.clearSelection()" />
         <PresidentActionBar
           v-else
           :phase-text="phaseText"
-          :primary-label="primaryLabel"
-          :can-primary="canPrimary"
+          :primary-label="ui.actions.play"
+          :can-primary="store.canPlay"
           :can-pass="store.can('PASS') && !store.busy"
-          :show-pass="!isExchange"
           :has-selection="store.selectedCards.length > 0"
           :hint="hint"
           :notice="noticeText"
-          @primary="primary"
+          @primary="store.play()"
           @pass="store.pass()"
           @clear="store.clearSelection()" />
       </div>

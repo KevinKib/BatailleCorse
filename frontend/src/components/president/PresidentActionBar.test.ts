@@ -50,12 +50,6 @@ describe('PresidentActionBar', () => {
     expect(wrapper.emitted('clear')).toHaveLength(1);
   });
 
-  it('givenTheExchangeStep_thenThePassButtonIsNotShown', () => {
-    const wrapper = mountBar({ primaryLabel: 'Give 2 cards', showPass: false });
-    expect(wrapper.find('[data-test="pass"]').exists()).toBe(false);
-    expect(wrapper.get('[data-test="play"]').text()).toBe('Give 2 cards');
-  });
-
   it('givenARefusalNotice_thenItIsAnnounced', () => {
     const wrapper = mountBar({ notice: 'That play was refused. Check your cards.' });
     expect(wrapper.get('[data-test="notice"]').attributes('role')).toBe('alert');

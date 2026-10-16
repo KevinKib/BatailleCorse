@@ -285,6 +285,22 @@ describe('President store', () => {
       }]);
     });
 
+    it('suggestGiveBack selects the lowest cards that break no pair, then giveBack sends them', () => {
+      const store = boot();
+      const hand = buildPresidentHand(['4', 'DIAMOND'], ['4', 'SPADE'], ['6', 'HEART'], ['9', 'HEART'], ['KING', 'HEART']);
+      store.applyEvent({ type: 'state-update', state: game(['GIVE_BACK'], { phase: 'EXCHANGE', toGiveBack: 1, hand }) });
+      store.suggestGiveBack();
+      expect(store.selectedCards.map(c => c.name)).toEqual(['HEART_6']);
+      expect(store.canGiveBack).toBe(true);
+    });
+
+    it('suggestGiveBack does nothing when no return is owed', () => {
+      const store = boot();
+      store.applyEvent({ type: 'state-update', state: game([], { phase: 'EXCHANGE', toGiveBack: 0 }) });
+      store.suggestGiveBack();
+      expect(store.selectedCards).toEqual([]);
+    });
+
     it('is busy from a command until the next state, and does not send twice meanwhile', () => {
       const store = turn();
       store.pass();

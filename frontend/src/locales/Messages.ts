@@ -263,6 +263,8 @@ export interface PresidentUiMessages {
   suits: Record<string, string>;       // by backend suit (`HEART`...)
   cardLabel: string;                   // '{rank}', '{suit}': accessible name of a card
   cardSelected: string;                // '{card}': the same, once tapped
+  cardReceived: string;                // '{card}': the same, for a card received in the exchange
+  receivedTag: string;                 // the visible tag on a received card
   lobby: {
     classicTitle: string;              // the preset card while the options are the defaults
     classicSummary: string;
@@ -302,11 +304,25 @@ export interface PresidentUiMessages {
   phase: {
     yourTurn: string;
     waiting: string;                   // '{player}'
-    exchangeGive: PluralForms;         // '{n}' = cards I must give back
-    exchangeWaiting: string;
     roundOver: string;                 // '{n}' = round
   };
-  exchange: { give: PluralForms };     // '{n}': the minimal give-back button
+  /** The exchange step (`PresidentExchangePanel`); `{player}` is a name, `{n}` a number of cards. */
+  exchange: {
+    label: string;                     // region name
+    youAre: Record<PresidentTitleKey, string>; // 'You are the President'
+    received: PluralForms;             // '{player}' gave me their best card(s)
+    choose: PluralForms;               // asks for `{n}` cards for '{player}'
+    give: PluralForms;                 // the button: 'Give {n} cards to {player}'
+    suggest: string;
+    gave: PluralForms;                 // I gave `{n}` cards back to '{player}'
+    taken: PluralForms;                // my best `{n}` went to '{player}', who owes `{n}` back
+    returned: PluralForms;             // '{player}' gave `{n}` back to me
+    idle: string;                      // a Neutral
+    pairs: string;                     // label of the list of pairs
+    pair: PluralForms;                 // '{high}', '{low}', '{n}', '{state}'
+    pending: string;
+    done: string;
+  };
   roundOver: { ready: string; waiting: string; place: string };  // place: '{n}', '{player}'
   notice: { moveImpossible: string; connection: string };
   end: {

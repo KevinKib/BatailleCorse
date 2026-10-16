@@ -178,26 +178,50 @@ describe('PresidentGameScreen', () => {
     expect(wrapper.get('[data-test="play-hint"]').text()).toBe('Wait for your turn.');
   });
 
-  it('givenTheExchangeAndIOweCards_thenAGiveButtonTakesTheExactCount', async () => {
-    const { wrapper, store } = await mountRoom(room(playing({
-      round: 2, phase: 'EXCHANGE', availableActions: ['GIVE_BACK'], toGiveBack: 2, legalPlays: [],
-    })));
-    expect(wrapper.get('[data-test="phase-text"]').text()).toBe('Choose 2 cards to give back');
-    expect(wrapper.get('[data-test="play"]').text()).toBe('Give 2 cards');
-    expect(wrapper.get('[data-test="play"]').attributes('disabled')).toBeDefined();
-    expect(wrapper.find('[data-test="pass"]').exists()).toBe(false);
-    const giveBack = vi.spyOn(store, 'giveBack').mockReturnValue(true);
-    await wrapper.get('[data-card="CLUB_3"]').trigger('click');
-    await wrapper.get('[data-card="HEART_9"]').trigger('click');
-    await wrapper.get('[data-test="play"]').trigger('click');
-    expect(giveBack).toHaveBeenCalled();
-  });
+  describe('exchange', () => {
+    const exchanging = (overrides: Partial<PresidentState> = {}) => playing({
+      round: 2, phase: 'EXCHANGE', legalPlays: [],
+      players: seatsOf(3, { 0: { title: 'PRESIDENT' }, 1: { title: 'NEUTRAL' }, 2: { title: 'SCUM' } }),
+      exchange: [{ high: 0, low: 2, count: 2, done: false }],
+      availableActions: ['GIVE_BACK'], toGiveBack: 2,
+      received: buildPresidentHand(['KING', 'HEART']),
+      ...overrides,
+    });
 
-  it('givenTheExchangeAndIAmNotGiving_thenTheScreenWaits', async () => {
-    const { wrapper } = await mountRoom(room(playing({
-      round: 2, phase: 'EXCHANGE', availableActions: [], toGiveBack: 0, legalPlays: [],
-    })));
-    expect(wrapper.get('[data-test="phase-text"]').text()).toBe('Waiting for the exchange');
+    it('givenIOweCards_thenThePanelAsksForTheExactCountAndTheReceivedCardsAreTagged', async () => {
+      const { wrapper, store } = await mountRoom(room(exchanging()));
+      expect(wrapper.get('[data-test="exchange-role"]').text()).toBe('You are the President');
+      expect(wrapper.get('[data-test="exchange-instruction"]').text()).toBe('Choose 2 cards to give to P2.');
+      expect(wrapper.get('[data-test="exchange-give"]').text()).toBe('Give 2 cards to P2');
+      expect(wrapper.get('[data-test="exchange-give"]').attributes('disabled')).toBeDefined();
+      expect(wrapper.find('[data-test="action-bar"]').exists()).toBe(false);
+      expect(wrapper.get('[data-card="HEART_KING"]').attributes('data-received')).toBe('true');
+      expect(wrapper.findAll('[data-received="true"]')).toHaveLength(1);
+      const giveBack = vi.spyOn(store, 'giveBack').mockReturnValue(true);
+      await wrapper.get('[data-card="CLUB_3"]').trigger('click');
+      await wrapper.get('[data-card="HEART_9"]').trigger('click');
+      await wrapper.get('[data-test="exchange-give"]').trigger('click');
+      expect(giveBack).toHaveBeenCalled();
+    });
+
+    it('whenSuggestIsPressed_thenTheLowestCardsThatBreakNoPairAreSelected', async () => {
+      const { wrapper } = await mountRoom(room(exchanging()));
+      await wrapper.get('[data-test="exchange-suggest"]').trigger('click');
+      // Hand: 3 of clubs, 9 of hearts, 9 of spades, king of hearts; the pair of nines stays, the king goes.
+      expect(wrapper.get('[data-card="CLUB_3"]').attributes('aria-pressed')).toBe('true');
+      expect(wrapper.get('[data-card="HEART_KING"]').attributes('aria-pressed')).toBe('true');
+      expect(wrapper.get('[data-card="HEART_9"]').attributes('aria-pressed')).toBe('false');
+      expect(wrapper.get('[data-test="exchange-give"]').attributes('disabled')).toBeUndefined();
+    });
+
+    it('givenIAmTheScum_thenThePanelWaitsForTheReturn', async () => {
+      const { wrapper } = await mountRoom(room(exchanging({
+        availableActions: [], toGiveBack: 0, received: [],
+      }), 2));
+      expect(wrapper.get('[data-test="exchange-role"]').text()).toBe('You are the Scum');
+      expect(wrapper.get('[data-test="exchange-instruction"]').text()).toBe('Your 2 best cards went to P0. Waiting for them to give 2 back.');
+      expect(wrapper.find('[data-test="exchange-give"]').exists()).toBe(false);
+    });
   });
 
   it('givenTheRoundIsOver_thenThePlaceholderListsThePlacesAndReadyGoesThroughTheStore', async () => {

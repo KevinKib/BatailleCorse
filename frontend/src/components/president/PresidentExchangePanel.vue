@@ -1,0 +1,92 @@
+<script setup lang="ts">
+import { computed } from 'vue';
+import { Button } from 'primevue';
+import { useI18n } from '../../composables/useI18n';
+import { exchangeView } from '../../model/president/exchange';
+import { titleKey } from '../../model/president/titles';
+import type { PresidentExchangePair, PresidentTitle } from '../../model/president/PresidentState';
+import type { PresidentTitleKey } from '../../locales/Messages';
+import { format, plural } from '../../locales/format';
+
+// The exchange step at the table (round 2 and later): who I am, what I got, what I owe and to whom, and the pairs
+// the others are in. A high rank picks the cards in their own hand (the ones received are tagged there) and gives
+// them with the button; Suggest only selects. Everyone else reads a waiting line. The server judges every give.
+const props = defineProps<{
+  pairs: PresidentExchangePair[];
+  mySeat: number;
+  /** My title this round. */
+  title: PresidentTitle | null;
+  /** The best cards I took from my partner at the deal. */
+  receivedCount: number;
+  selectedCount: number;
+  /** The exact number of cards is selected and nothing is in flight. */
+  canGive: boolean;
+  nameOf: (seat: number) => string;
+}>();
+const emit = defineEmits<{ give: []; suggest: []; clear: [] }>();
+
+const ui = useI18n().presidentUi;
+const view = computed(() => exchangeView(props.pairs, props.mySeat));
+const partner = computed(() => view.value.partner === null ? '' : props.nameOf(view.value.partner));
+const roleText = computed(() => props.title ? ui.exchange.youAre[titleKey(props.title) as PresidentTitleKey] : '');
+const myPairDone = computed(() => props.pairs.find(p => p.low === props.mySeat)?.done ?? false);
+
+const vars = computed(() => ({ player: partner.value }));
+const instruction = computed(() => {
+  const { role, count } = view.value;
+  switch (role) {
+    case 'giving': return plural(ui.exchange.choose, count, vars.value);
+    case 'gave': return plural(ui.exchange.gave, count, vars.value);
+    case 'taken': return plural(myPairDone.value ? ui.exchange.returned : ui.exchange.taken, count, vars.value);
+    default: return ui.exchange.idle;
+  }
+});
+const receivedText = computed(() =>
+  props.receivedCount > 0 && (view.value.role === 'giving' || view.value.role === 'gave')
+    ? plural(ui.exchange.received, props.receivedCount, vars.value)
+    : '');
+const giveLabel = computed(() => plural(ui.exchange.give, view.value.count, vars.value));
+const pairLines = computed(() => props.pairs.map(p => ({
+  key: `${p.high}-${p.low}`,
+  mine: p.high === props.mySeat || p.low === props.mySeat,
+  text: plural(ui.exchange.pair, p.count, {
+    high: props.nameOf(p.high), low: props.nameOf(p.low), state: p.done ? ui.exchange.done : ui.exchange.pending,
+  }),
+})));
+</script>
+
+<template>
+  <section class="exchange" data-test="exchange-panel" role="region" :aria-label="ui.exchange.label">
+    <p class="role" data-test="exchange-role">{{ roleText }}</p>
+    <p v-if="receivedText" class="received" data-test="exchange-received">{{ receivedText }}</p>
+    <p class="instruction" data-test="exchange-instruction" role="status" aria-live="polite">{{ instruction }}</p>
+    <div v-if="view.role === 'giving'" class="buttons">
+      <Button data-test="exchange-give" class="action" :label="giveLabel" severity="success" rounded
+              :disabled="!canGive" @click="emit('give')" />
+      <Button data-test="exchange-suggest" class="action" :label="ui.exchange.suggest" severity="secondary"
+              variant="text" rounded @click="emit('suggest')" />
+      <Button v-if="selectedCount > 0" data-test="exchange-clear" class="action" :label="ui.actions.clear"
+              severity="secondary" variant="text" rounded @click="emit('clear')" />
+    </div>
+    <ul class="pairs" :aria-label="ui.exchange.pairs">
+      <li v-for="line in pairLines" :key="line.key" data-test="exchange-pair" :class="{ mine: line.mine }">
+        {{ line.text }}
+      </li>
+    </ul>
+  </section>
+</template>
+
+<style scoped>
+.exchange { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 100%; }
+.exchange p { margin: 0; text-align: center; }
+.role { font-size: 0.85rem; font-weight: 700; color: var(--gold); }
+.received { font-size: 0.75rem; color: rgba(255, 255, 255, 0.85); }
+.instruction { font-size: 0.85rem; font-weight: 700; color: #fff; }
+.buttons { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.action.p-button { min-height: 44px; min-width: 88px; }
+.pairs {
+  list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center;
+  gap: 2px 12px; font-size: 0.75rem; color: rgba(255, 255, 255, 0.7);
+}
+.pairs .mine { color: rgba(255, 255, 255, 0.95); font-weight: 700; }
+</style>
