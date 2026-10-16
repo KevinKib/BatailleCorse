@@ -19,10 +19,10 @@ class PresidentOptionsTest {
     }
 
     @Test
-    void theKeysOfTheVariantPrsExistAndBehaveAsOffUntilTheyShip() {
+    void theKeysOfTheVariantPrsNotShippedYetExistAndBehaveAsOff() {
         PresidentOptions options = PresidentOptions.defaults();
 
-        assertThat(options.equalPlay(), is(EqualPlay.OFF));
+        assertThat(options.equalPlay(), is(EqualPlay.ON));
         assertThat(options.twoCuts(), is(TwoCuts.OFF));
         assertThat(options.quadClears(), is(false));
         assertThat(options.forbiddenFinish(), is(ForbiddenFinish.OFF));

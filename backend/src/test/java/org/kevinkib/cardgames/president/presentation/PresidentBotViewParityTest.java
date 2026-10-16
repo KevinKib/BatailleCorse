@@ -50,6 +50,8 @@ class PresidentBotViewParityTest {
         assertThat(context, dtos(view.received()), is(human.received()));
         assertThat(context, dtos(view.given()), is(human.given()));
         assertThat(context, view.options().toGameOptions().values(), is(human.options()));
+        assertThat(context, dtos(view.completion()), is(human.completion() == null ? List.of() : human.completion()));
+        assertThat(context, view.trick().constraint().name(), is(human.trick().constraint()));
 
         if (viewer.equals(game.currentSeat())) {
             List<PresidentDto.PatternDto> patterns = view.legalPlays().stream()
@@ -142,6 +144,23 @@ class PresidentBotViewParityTest {
         assertThat(seen, hasItem(Phase.PLAYING));
         assertThat(seen, hasItem(Phase.EXCHANGE));
         assertThat(seen, hasItem(Phase.ROUND_OVER));
+    }
+
+    @Test
+    void theViewMatchesTheDtoWhileACompletionIsOnOffer() throws Exception {
+        President game = org.kevinkib.cardgames.president.domain.PresidentBuilder.aPresident().leader(0)
+                .withHand("9S 3C").withHand("9H 4C").withHand("9D 9C 5C").withHand("10H 6C").build();
+        game.play(new PlayerId(0), org.kevinkib.cardgames.president.domain.PresidentFixtures.cards("9S"));
+        game.play(new PlayerId(1), org.kevinkib.cardgames.president.domain.PresidentFixtures.cards("9H"));
+        assertEverySeat(game, Set.of());
+        game.pass(new PlayerId(2));
+        assertEverySeat(game, Set.of());
+
+        PresidentBotView holder = PresidentBotView.forSeat(game, new PlayerId(2));
+
+        assertThat(holder.completion().size(), is(2));
+        assertThat(holder.actions(), is(List.of(Action.COMPLETE)));
+        assertThat(PresidentBotView.forSeat(game, new PlayerId(3)).completion().isEmpty(), is(true));
     }
 
     @Test

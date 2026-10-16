@@ -55,6 +55,32 @@ class LegalPlaysTest {
         assertThat(legal("6C 6D 6H 6S", "4D 4S 4H 4C"), contains("6C 6D 6H 6S"));
     }
 
+    private static List<String> legal(String hand, String top, Constraint constraint, boolean equalPlay)
+            throws Exception {
+        return LegalPlays.of(cards(hand), PlayParser.parse(cards(top)), RankOrder.standard(), constraint, equalPlay)
+                .stream().map(p -> codes(p.cards())).toList();
+    }
+
+    @Test
+    void withEqualPlayAnEqualSetJoinsTheHigherOnes() throws Exception {
+        assertThat(legal("5D 5S 5H KC", "5C", Constraint.BEAT, true), contains("5D", "KC"));
+        assertThat(legal("5D 5S 5H KC", "5C 5H", Constraint.BEAT, true), contains("5D 5S"));
+    }
+
+    @Test
+    void withoutEqualPlayTheEqualSetIsNotListed() throws Exception {
+        assertThat(legal("5D 5S 5H KC", "5C", Constraint.BEAT, false), contains("KC"));
+    }
+
+    @Test
+    void underTheBindingOnlyTheSameRankAndCountIsListed() throws Exception {
+        assertThat(legal("5D 5S 5H KC", "5C", Constraint.MATCH_OR_PASS, true), contains("5D"));
+        assertThat(legal("5D 5S 5H KC", "5C 5H", Constraint.MATCH_OR_PASS, true), contains("5D 5S"));
+        assertThat(legal("5D 5S 5H KC", "5C 5H 5D", Constraint.MATCH_OR_PASS, true), empty());
+        assertThat(legal("KC KD", "5C", Constraint.MATCH_OR_PASS, true), empty());
+        assertThat(legal("5D 2S", "5C", Constraint.MATCH_OR_PASS, true), contains("5D"));
+    }
+
     @Test
     void anEmptyHandHasNoPlay() throws Exception {
         assertThat(legal("", null), empty());

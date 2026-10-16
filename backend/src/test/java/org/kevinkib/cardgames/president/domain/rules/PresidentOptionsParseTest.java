@@ -27,7 +27,7 @@ class PresidentOptionsParseTest {
         assertThat(parsed, is(PresidentOptions.defaults()));
         assertThat(parsed.toGameOptions().values(), is(Map.of(
                 "afterPass", "reenter", "firstLead", "kingOfHearts", "exchange", "two", "giveBack", "free",
-                "nextLead", "scum", "scoring", "rank", "length", "rounds-5")));
+                "nextLead", "scum", "scoring", "rank", "length", "rounds-5", "equalPlay", "on")));
     }
 
     /** One row per value of every option the P3 server declares. */
@@ -40,7 +40,7 @@ class PresidentOptionsParseTest {
             "nextLead, scum", "nextLead, president",
             "scoring, rank", "scoring, titles", "scoring, zeroSum",
             "length, rounds-5", "length, rounds-3", "length, rounds-10", "length, points-11", "length, points-21",
-            "length, endless",
+            "length, endless", "equalPlay, on", "equalPlay, off",
     })
     void everyValueIsAcceptedAndRoundTrips(String key, String value) {
         PresidentOptions parsed = PresidentOptions.parseStrict(with(key, value));
@@ -62,7 +62,7 @@ class PresidentOptionsParseTest {
 
     /** The pruned options (jokers, decks, eight stops, putsch, fall) and the variants not shipped yet are unknown keys. */
     @ParameterizedTest
-    @ValueSource(strings = {"jokers", "decks", "eightClears", "putsch", "presidentFall", "equalPlay", "twoCuts",
+    @ValueSource(strings = {"jokers", "decks", "eightClears", "putsch", "presidentFall", "twoCuts",
             "quadClears", "forbiddenFinish", "mustPlay", "revolution", "ranking", "runs", "suitLock", "bogus", ""})
     void anUnknownKeyIsRefused(String key) {
         assertThrows(InvalidOptionException.class, () -> PresidentOptions.parseStrict(with(key, "on")));
