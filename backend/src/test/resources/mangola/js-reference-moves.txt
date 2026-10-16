@@ -1,8 +1,7 @@
-# GENERATED FILE, do not edit. Moves played by the owner's reference implementation (KevinKib/Ngola,
+# FROZEN FILE, do not edit. Moves played by the owner's reference implementation (KevinKib/Ngola,
 # script/ngola.js, plateau.js, case.js, commit 745fe00a162e8efbe90452ef91600a199e5119bf) and replayed by
-# MangolaJsCharacterisationTest. Regenerate (Node 18+, see the driver's header for the writer.js stub):
-#   node generate-js-reference-moves.js <Ngola>/script fixture
-# keeping the lines below the first "# N moves" comment. Content: every legal move of the classic
+# MangolaJsCharacterisationTest. Generated once from that JS; the generator script was dropped, so this
+# file is not regenerated. Content: every legal move of the classic
 # checkerboard and of the two-per-pit board (both players to move), of 8 random 32+32 layouts (both
 # players), the first plies of 6 random-play games, and finite and endless moves of one-sided sparse
 # boards. Format per line: <mover A|B> <pit> | <board before> | <board after> | <winner - | A | B>, or
