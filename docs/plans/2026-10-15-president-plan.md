@@ -80,7 +80,7 @@ players) get distinct names (today all "Neutral").
 | F2 | `feat: President in the game selection, lobby and table` (entry PR) | L | F1, decisions 1-3, 6 (spec §11) | Vitest per component; Cypress lobby + a scripted round | the only entry PR at a time (Mangola) | done (#236) |
 | F3 | `feat: President exchange step` | M | F2, decision 4 (spec §11) | Vitest; Cypress with a fixed deal into round 2 | waiting state for the non-exchanging seats | done (#246) |
 | F4 | `feat: President round summary, standings and end screen` | M | F2, decision 5 (spec §11) | Vitest; Cypress to `FINISHED` and Play again; standings of an `endless` match | several winners, forfeit subtitle | done (#247) |
-| B1 | `feat: President bot strategy` | M-L | P2 | view parity (in B2), memory, heuristic decision table (parameterised), self-play | strategy quality is subjective | - |
+| B1 | `feat: President bot strategy` | M-L | P2 | view parity (in B2), memory, heuristic decision table (parameterised), self-play | strategy quality is subjective | done (#249) |
 | B2 | `feat: President bots at the table` | M | B1, P3 | coordinator with a manual scheduler, broadcaster skips bots, bot game IT | stale tasks | - |
 | B3 | `feat: play President against bots` | S-M | B2, F2 | Vitest; Cypress lobby with bots, a round against a hard bot | shared lobby specs | - |
 | V1 | `feat: President equal play, the four and completion out of turn` | L | P3, B2 (F2 for the UI part) | worked examples of spec §3.1.2 as parameterised rows; ordering of a completion against the next play and against passes; DTO `completion` lifetime; bot completion; Cypress "Complete the four" | the first out-of-turn command of the game | - |
