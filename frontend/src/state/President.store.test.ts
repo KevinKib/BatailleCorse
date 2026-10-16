@@ -249,6 +249,26 @@ describe('President store', () => {
       expect(sent()).toEqual([]);
     });
 
+    it('complete sends the completion cards the server offers, in or out of turn', () => {
+      const store = boot();
+      const completion = [card('9', 'HEART'), card('9', 'SPADE')];
+      store.applyEvent({
+        type: 'state-update',
+        state: game(['COMPLETE'], { currentSeat: 1, completion }),
+      });
+      expect(store.canComplete).toBe(true);
+      expect(store.complete()).toBe(true);
+      expect(sent()).toEqual([{ dest: '/app/president/play', body: { gameId: 'g1', token: 'tok', cards: completion } }]);
+    });
+
+    it('complete sends nothing without a completion on offer', () => {
+      const store = boot();
+      store.applyEvent({ type: 'state-update', state: game(['PLAY', 'PASS']) });
+      expect(store.canComplete).toBe(false);
+      expect(store.complete()).toBe(false);
+      expect(sent()).toEqual([]);
+    });
+
     it('pass is sent when the server lists it', () => {
       const store = turn();
       expect(store.pass()).toBe(true);

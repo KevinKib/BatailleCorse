@@ -27,7 +27,15 @@ function known(options: Record<string, string>, name: string): string | null {
 export function ruleChips(state: ChipContext): PresidentChip[] {
   const chips: PresidentChip[] = [];
   const top = state.trick.top;
-  if (top) chips.push({ key: 'beat', vars: { count: top.count, rank: top.rank } });
+  if (state.trick.constraint === 'MATCH_OR_PASS' && state.trick.requiredRank) {
+    // Equal play: the binding replaces "to beat" (only the same rank and count may follow), and the chain says
+    // how long the run of equal plays is.
+    chips.push({ key: 'match', vars: { rank: state.trick.requiredRank } });
+    const chain = state.trick.chain;
+    if (chain) chips.push({ key: 'chain', vars: { count: chain.plays, rank: chain.rank } });
+  } else if (top) {
+    chips.push({ key: 'beat', vars: { count: top.count, rank: top.rank } });
+  }
   // The lead rule only matters to the first player of the match.
   const firstLead = known(state.options, 'firstLead');
   if (state.round === 1 && state.trick.plays.length === 0 && firstLead) chips.push({ key: `firstLead.${firstLead}` });

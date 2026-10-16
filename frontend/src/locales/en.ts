@@ -173,6 +173,14 @@ export const messagesEn: Messages = {
       },
       {
         kind: 'text',
+        title: 'Equal play and the four',
+        body: [
+          'With equal play, you may answer with the same rank and count instead of a higher one. The next player then has to match it too ("9 or nothing") or pass, and the first pass ends the run.',
+          'When the four cards of a rank have been played in a row, the trick is closed and the last player to play leads. A player holding the missing cards may complete the four at once, even out of turn, as long as nobody has played since: the window opens with the second play of the run.',
+        ],
+      },
+      {
+        kind: 'text',
         title: 'Going out and titles',
         body: [
           'Whoever plays their last card is out of the round. The last player holding cards is the Scum.',
@@ -242,6 +250,8 @@ export const messagesEn: Messages = {
     },
     chips: {
       beat: 'To beat: {count} × {rank}',
+      match: '{rank} or nothing',
+      chain: '{count} plays of {rank} in a row',
       'firstLead.kingOfHearts': 'King of hearts leads',
       'firstLead.lowestClub': 'Lowest club leads',
       'firstLead.queenOfHearts': 'Queen of hearts leads',
@@ -249,7 +259,7 @@ export const messagesEn: Messages = {
       'afterPass.reenter': 'After a pass: play again',
       'afterPass.out': 'After a pass: out of the trick',
     },
-    actions: { play: 'Play', pass: 'Pass', clear: 'Clear' },
+    actions: { play: 'Play', complete: 'Complete the four', pass: 'Pass', clear: 'Clear' },
     hint: {
       nothingSelected: 'Tap the cards you want to play.',
       mixedRanks: 'Cards of one rank only.',
@@ -1029,6 +1039,7 @@ export const messagesEn: Messages = {
       preset: { classic: 'Classic', custom: 'Custom' },
       level: { label: 'Level', easy: 'Easy', medium: 'Medium', hard: 'Hard' },
       afterPass: { label: 'After a pass', reenter: 'Play again', out: 'Out of the trick' },
+      equalPlay: { label: 'Equal play', on: 'Allowed', off: 'Not allowed' },
       firstLead: {
         label: 'First lead', kingOfHearts: 'King of hearts', lowestClub: 'Lowest club',
         queenOfHearts: 'Queen of hearts', random: 'Random',

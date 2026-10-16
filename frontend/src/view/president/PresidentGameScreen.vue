@@ -282,6 +282,8 @@ const rematchButton = computed(() =>
           :has-selection="store.selectedCards.length > 0"
           :hint="hint"
           :notice="noticeText"
+          :can-complete="store.canComplete"
+          @complete="store.complete()"
           @primary="store.play()"
           @pass="store.pass()"
           @clear="store.clearSelection()" />

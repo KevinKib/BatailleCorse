@@ -165,6 +165,9 @@ export const usePresidentStore = defineStore('president-store', () => {
   const canPlay = computed(() => analysis.value.legal && !busy.value);
   // The hint line under the Play button: why the selection cannot be played, null when it can.
   const playHint = computed<SelectionRefusal | null>(() => analysis.value.reason);
+  // The completion window is open for me: the server lists COMPLETE and offers the cards.
+  const canComplete = computed(() =>
+    can('COMPLETE') && (game.value?.completion?.length ?? 0) > 0 && !busy.value);
   const completions = computed<Card[]>(() =>
     game.value ? completingCards(hand.value, selectedCards.value, game.value.legalPlays) : []);
   // The exchange step: exactly the cards owed.
@@ -208,6 +211,13 @@ export const usePresidentStore = defineStore('president-store', () => {
     return send(() => session.play(cards));
   }
 
+  /** Completes the four with the cards the server offers; the same play command, in turn or out of it. */
+  function complete(): boolean {
+    const cards = game.value?.completion ?? [];
+    if (!canComplete.value) return false;
+    return send(() => session.play(cards));
+  }
+
   function pass(): boolean {
     return can('PASS') ? send(() => session.pass()) : false;
   }
@@ -241,8 +251,8 @@ export const usePresidentStore = defineStore('president-store', () => {
     forfeitNotice: presence.forfeitNotice,
     busy, notice, lastEvent,
     me, isMyTurn, can, options, hand, screen,
-    selectedCards, selectedPattern, canPlay, playHint, completions, canGiveBack,
-    applyEvent, toggleCard, clearSelection, play, pass, giveBack, ready,
+    selectedCards, selectedPattern, canPlay, playHint, completions, canGiveBack, canComplete,
+    applyEvent, toggleCard, clearSelection, play, complete, pass, giveBack, ready,
     suggestGiveBack,
     create: (name?: string) => session.create(name),
     join: (id: string, name?: string) => session.join(id, name),

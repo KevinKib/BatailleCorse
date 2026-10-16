@@ -10,6 +10,7 @@ export const CLASSIC_PRESIDENT_OPTIONS: Record<string, string> = {
   nextLead: 'scum',
   scoring: 'rank',
   length: 'rounds-5',
+  equalPlay: 'on',
 };
 
 /** A card shaped like the backend `CardDto`: upper-case labels (`3`..`10`, `JACK`, `ACE`...) and a `SUIT_RANK` name. */
@@ -40,7 +41,7 @@ export function buildPresidentPlayer(seat: number, overrides: Partial<PresidentP
 
 /** A trick nobody has played in yet. */
 export function buildPresidentTrick(overrides: Partial<PresidentTrick> = {}): PresidentTrick {
-  return { leader: null, plays: [], top: null, lastPlayer: null, passed: [], ...overrides };
+  return { leader: null, plays: [], top: null, lastPlayer: null, passed: [], constraint: 'FREE', requiredRank: null, requiredCount: null, chain: null, ...overrides };
 }
 
 /** A running three-player game, round 1, seat 0 to lead; the viewer's hand and legal plays are the caller's. */

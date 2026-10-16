@@ -2,7 +2,7 @@ import type Card from '../Card';
 import type { PresidentView } from './PresidentState';
 
 export type PresidentEventType =
-  | 'START' | 'ROUND_START' | 'EXCHANGE' | 'PLAY' | 'PASS' | 'ROUND_END' | 'READY' | 'GAME_OVER';
+  | 'START' | 'ROUND_START' | 'EXCHANGE' | 'PLAY' | 'COMPLETION' | 'PASS' | 'ROUND_END' | 'READY' | 'GAME_OVER';
 
 /**
  * What a command did, public to every seat. `action` is the command even when the event type is a ROUND_END or
