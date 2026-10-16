@@ -1,8 +1,10 @@
 package org.kevinkib.cardgames.president.domain.trick;
 
 import org.kevinkib.cardgames.game.PlayerId;
+import org.kevinkib.cardgames.president.domain.play.Constraint;
 import org.kevinkib.cardgames.president.domain.play.Play;
 import org.kevinkib.cards.domain.Card;
+import org.kevinkib.cards.domain.deck.french.FrenchRank;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -20,6 +22,7 @@ public final class Trick {
     private final List<TrickPlay> plays = new ArrayList<>();
     private final Set<Integer> responded = new HashSet<>();
     private final Set<Integer> out = new HashSet<>();
+    private boolean bound;
 
     public Trick(int leader) {
         this.leader = leader;
@@ -41,16 +44,49 @@ public final class Trick {
 
     /** A play: it answers everyone, so the passes since the previous play no longer count. */
     public void play(int seat, Play play) {
-        plays.add(new TrickPlay(new PlayerId(seat), play));
-        responded.clear();
+        play(seat, play, false);
     }
 
-    /** A pass; {@code final} when the passer is out of the trick until it ends. */
+    /**
+     * A play; {@code equal} when it repeats the rank and count of the previous top under equal play, which binds
+     * the next player to match it or pass.
+     */
+    public void play(int seat, Play play, boolean equal) {
+        plays.add(new TrickPlay(new PlayerId(seat), play));
+        responded.clear();
+        bound = equal;
+    }
+
+    /** A pass; {@code final} when the passer is out of the trick until it ends. The first pass ends the binding. */
     public void pass(int seat, boolean finalPass) {
         responded.add(seat);
+        bound = false;
         if (finalPass) {
             out.add(seat);
         }
+    }
+
+    /** What the next play must answer. */
+    public Constraint constraint() {
+        if (plays.isEmpty()) {
+            return Constraint.FREE;
+        }
+        return bound ? Constraint.MATCH_OR_PASS : Constraint.BEAT;
+    }
+
+    /** The plays of the top rank in succession, or {@code null} on an empty trick. */
+    public Chain chain() {
+        if (plays.isEmpty()) {
+            return null;
+        }
+        FrenchRank rank = plays.get(plays.size() - 1).play().rank();
+        List<Card> cards = new ArrayList<>();
+        int count = 0;
+        for (int index = plays.size() - 1; index >= 0 && plays.get(index).play().rank() == rank; index--) {
+            cards.addAll(0, plays.get(index).play().cards());
+            count++;
+        }
+        return new Chain(rank, cards, count);
     }
 
     public boolean isOut(int seat) {
@@ -83,6 +119,6 @@ public final class Trick {
 
     public TrickView view() {
         List<PlayerId> passed = responded.stream().sorted().map(PlayerId::new).toList();
-        return new TrickView(new PlayerId(leader), plays, passed);
+        return new TrickView(new PlayerId(leader), plays, passed, constraint(), chain());
     }
 }

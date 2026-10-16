@@ -3,6 +3,7 @@ package org.kevinkib.cardgames.president.presentation;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.president.domain.President;
+import org.kevinkib.cardgames.president.domain.event.Played;
 import org.kevinkib.cardgames.president.domain.event.PresidentEvent;
 import org.kevinkib.cardgames.president.domain.round.Phase;
 import org.kevinkib.cardgames.president.domain.rules.PresidentException;
@@ -60,15 +61,18 @@ public class PresidentGameActions {
             Phase before = game.phase();
             List<PresidentEvent> events = action.apply(game);
             sessionService.touch(gameId);
-            broadcaster.broadcast(game, broadcastType(before, game, command, events).toString(),
-                    PresidentEventData.from(command, seat.id(), events), message);
+            // a play made out of turn is the completion of the four, announced as such
+            PresidentEventType named = events.stream().anyMatch(e -> e instanceof Played p && p.outOfTurn())
+                    ? PresidentEventType.COMPLETION : command;
+            broadcaster.broadcast(game, broadcastType(before, game, named, events).toString(),
+                    PresidentEventData.from(named, seat.id(), events), message);
         }
     }
 
     /**
      * The type follows the command: a command that finished the match is announced as GAME_OVER, one that
      * moved the game into ROUND_OVER as ROUND_END, a ready that opens the barrier as ROUND_START, anything
-     * else by its own type. The data still names the command.
+     * else by its own type (a completion out of turn is COMPLETION). The data still names the command.
      */
     private static PresidentEventType broadcastType(Phase before, President game, PresidentEventType command,
                                                     List<PresidentEvent> events) {

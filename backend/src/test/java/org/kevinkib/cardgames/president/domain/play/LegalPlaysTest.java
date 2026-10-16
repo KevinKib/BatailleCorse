@@ -76,7 +76,7 @@ class LegalPlaysTest {
     void underTheBindingOnlyTheSameRankAndCountIsListed() throws Exception {
         assertThat(legal("5D 5S 5H KC", "5C", Constraint.MATCH_OR_PASS, true), contains("5D"));
         assertThat(legal("5D 5S 5H KC", "5C 5H", Constraint.MATCH_OR_PASS, true), contains("5D 5S"));
-        assertThat(legal("5D 5S 5H KC", "5C 5H 5D", Constraint.MATCH_OR_PASS, true), empty());
+        assertThat(legal("5D 5S 5H KC", "5C 5H 5D 5S", Constraint.MATCH_OR_PASS, true), empty());
         assertThat(legal("KC KD", "5C", Constraint.MATCH_OR_PASS, true), empty());
         assertThat(legal("5D 2S", "5C", Constraint.MATCH_OR_PASS, true), contains("5D"));
     }

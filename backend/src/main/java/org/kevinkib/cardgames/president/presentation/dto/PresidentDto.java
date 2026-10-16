@@ -9,9 +9,11 @@ import org.kevinkib.cardgames.president.domain.PresidentFactory;
 import org.kevinkib.cardgames.president.domain.event.PresidentResult;
 import org.kevinkib.cardgames.president.domain.exchange.PendingReturn;
 import org.kevinkib.cardgames.president.domain.exchange.Title;
+import org.kevinkib.cardgames.president.domain.play.Constraint;
 import org.kevinkib.cardgames.president.domain.play.Play;
 import org.kevinkib.cardgames.president.domain.round.Action;
 import org.kevinkib.cardgames.president.domain.scoring.RoundResult;
+import org.kevinkib.cardgames.president.domain.trick.Chain;
 import org.kevinkib.cardgames.president.domain.trick.TrickPlay;
 import org.kevinkib.cardgames.president.domain.trick.TrickView;
 import org.kevinkib.cardgames.presentation.dto.CardDto;
@@ -47,6 +49,7 @@ public record PresidentDto(
         List<CardDto> given,
         int toGiveBack,
         List<PatternDto> legalPlays,
+        @JsonInclude(JsonInclude.Include.NON_NULL) List<CardDto> completion,
         List<String> availableActions) {
 
     /** {@code bot} is true for a computer seat and omitted from the JSON otherwise. */
@@ -63,7 +66,16 @@ public record PresidentDto(
     }
 
     public record TrickDto(Integer leader, List<TrickPlayDto> plays, PatternDto top, Integer lastPlayer,
-                           List<Integer> passed) {
+                           List<Integer> passed, String constraint, String requiredRank, Integer requiredCount,
+                           ChainDto chain) {
+    }
+
+    /**
+     * The plays of one rank at the top of the trick, in succession: public, since every card is on the table. With
+     * two plays or more the holder of the missing cards may complete the four (that holder alone gets
+     * {@code completion}).
+     */
+    public record ChainDto(String rank, List<CardDto> cards, int plays) {
     }
 
     /** A title pair of the exchange: seats and a count only, so every player may see it. */
@@ -140,6 +152,7 @@ public record PresidentDto(
                     game.pendingReturns().stream().filter(p -> p.high().equals(viewer))
                             .mapToInt(PendingReturn::count).sum(),
                     toAct ? game.legalPlays(viewer).stream().map(PresidentDto::pattern).toList() : List.of(),
+                    completionOf(game, viewer),
                     game.availableActions(viewer).stream().map(Action::name).toList());
         }
     }
@@ -152,14 +165,26 @@ public record PresidentDto(
         return new PatternDto("SET", play.rank().name(), play.count());
     }
 
+    /** The cards that complete the four, for the holder alone while the window is open; null for everybody else. */
+    private static List<CardDto> completionOf(President game, PlayerId viewer) {
+        List<Card> completion = game.completion(viewer);
+        return completion.isEmpty() ? null : cards(completion);
+    }
+
     private static TrickDto trickOf(TrickView trick) {
         Play top = trick.top();
+        boolean bound = trick.constraint() == Constraint.MATCH_OR_PASS;
+        Chain chain = trick.chain();
         return new TrickDto(
                 trick.leader().id(),
                 trick.plays().stream().map(PresidentDto::playOf).toList(),
                 top == null ? null : pattern(top),
                 trick.lastPlayer() == null ? null : trick.lastPlayer().id(),
-                trick.passed().stream().map(PlayerId::id).toList());
+                trick.passed().stream().map(PlayerId::id).toList(),
+                trick.constraint().name(),
+                bound ? top.rank().name() : null,
+                bound ? top.count() : null,
+                chain == null ? null : new ChainDto(chain.rank().name(), cards(chain.cards()), chain.plays()));
     }
 
     private static TrickPlayDto playOf(TrickPlay play) {

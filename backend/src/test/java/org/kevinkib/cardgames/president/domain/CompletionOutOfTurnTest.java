@@ -171,6 +171,7 @@ class CompletionOutOfTurnTest {
     @Test
     void theEventTellsAnOutOfTurnCompletionFromAnInTurnPlay() throws Exception {
         President game = windowOpenForC();
+        game.pass(seat(2));
 
         List<PresidentEvent> events = play(game, 2, "9D 9C");
 

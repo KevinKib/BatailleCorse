@@ -20,7 +20,8 @@ import java.util.Set;
  * What a human sitting at one seat sees of a President game, in domain types: the seat's own hand, the other
  * hands as sizes only, the public trick, the titles, the exchange pairs (seats and counts) and, private to the
  * seat, the cards it received and gave. A bot strategy receives this view, never the {@link President}
- * aggregate, so it cannot read another hand.
+ * aggregate, so it cannot read another hand. {@code completion} holds the cards that complete the four when the
+ * seat holds them and the window is open, as in its DTO.
  */
 public record PresidentBotView(
         PlayerId seat,
@@ -33,6 +34,7 @@ public record PresidentBotView(
         Map<PlayerId, Integer> handSizes,
         TrickView trick,
         List<Play> legalPlays,
+        List<Card> completion,
         List<PlayerId> finishingOrder,
         Map<PlayerId, Title> titles,
         List<PendingReturn> pendingReturns,
@@ -41,6 +43,16 @@ public record PresidentBotView(
         Set<PlayerId> readySeats,
         Map<PlayerId, Integer> totals,
         PresidentOptions options) {
+
+    /** A view without a completion on offer, for the steps of the game that never have one. */
+    public PresidentBotView(PlayerId seat, int version, int round, Phase phase, PlayerId currentSeat,
+                            List<Action> actions, List<Card> hand, Map<PlayerId, Integer> handSizes, TrickView trick,
+                            List<Play> legalPlays, List<PlayerId> finishingOrder, Map<PlayerId, Title> titles,
+                            List<PendingReturn> pendingReturns, List<Card> received, List<Card> given,
+                            Set<PlayerId> readySeats, Map<PlayerId, Integer> totals, PresidentOptions options) {
+        this(seat, version, round, phase, currentSeat, actions, hand, handSizes, trick, legalPlays, List.of(),
+                finishingOrder, titles, pendingReturns, received, given, readySeats, totals, options);
+    }
 
     /** Built under the game's monitor, so the fields belong to one version. */
     public static PresidentBotView forSeat(President game, PlayerId seat) {
@@ -61,6 +73,7 @@ public record PresidentBotView(
                     sizes,
                     game.trick(),
                     game.legalPlays(seat),
+                    game.completion(seat),
                     game.finishingOrder(),
                     game.titles(),
                     game.pendingReturns(),

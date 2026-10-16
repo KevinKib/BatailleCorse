@@ -4,7 +4,8 @@ package org.kevinkib.cardgames.president.domain.bot;
 public interface PresidentBotStrategy {
 
     /**
-     * The decision for one of the bot's own steps (its turn, its return in the exchange, the barrier); the view
+     * The decision for one of the bot's own steps (its turn, its return in the exchange, the barrier, or a
+     * completion of the four it may take out of turn, which it may also {@code Keep}); the view
      * offers at least one action.
      *
      * @throws IllegalStateException when the seat has nothing to do

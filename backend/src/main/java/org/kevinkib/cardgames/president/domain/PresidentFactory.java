@@ -9,6 +9,7 @@ import org.kevinkib.cardgames.game.OptionType;
 import org.kevinkib.cardgames.president.domain.bot.PresidentBotLevel;
 import org.kevinkib.cardgames.president.domain.rules.AfterPass;
 import org.kevinkib.cardgames.president.domain.rules.ChoiceOption;
+import org.kevinkib.cardgames.president.domain.rules.EqualPlay;
 import org.kevinkib.cardgames.president.domain.rules.ExchangeAmount;
 import org.kevinkib.cardgames.president.domain.rules.FirstLead;
 import org.kevinkib.cardgames.president.domain.rules.GiveBack;
@@ -76,7 +77,7 @@ public class PresidentFactory implements GameFactory {
         return new President(id, nbPlayers, new Random().nextLong(), deckSource, PresidentOptions.from(options));
     }
 
-    /** The round and match keys, default first; the variant keys are declared by the PRs that ship them. */
+    /** The round and match keys and equal play, default first; the other variant keys are declared by the PRs that ship them. */
     @Override
     public List<OptionDescriptor> optionDescriptors() {
         PresidentOptions defaults = PresidentOptions.defaults();
@@ -87,7 +88,8 @@ public class PresidentFactory implements GameFactory {
                 descriptor(PresidentOptions.GIVE_BACK_KEY, GiveBack.values(), defaults.giveBack()),
                 descriptor(PresidentOptions.NEXT_LEAD_KEY, NextLead.values(), defaults.nextLead()),
                 descriptor(PresidentOptions.SCORING_KEY, Scoring.values(), defaults.scoring()),
-                descriptor(PresidentOptions.LENGTH_KEY, MatchLength.values(), defaults.length()));
+                descriptor(PresidentOptions.LENGTH_KEY, MatchLength.values(), defaults.length()),
+                descriptor(PresidentOptions.EQUAL_PLAY_KEY, EqualPlay.values(), defaults.equalPlay()));
     }
 
     @Override

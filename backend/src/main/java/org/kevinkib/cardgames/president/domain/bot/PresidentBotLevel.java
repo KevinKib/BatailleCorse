@@ -7,12 +7,14 @@ import static org.kevinkib.cardgames.president.domain.bot.PresidentBotTuning.ANY
 /**
  * The strength of a President computer seat, a seat option of the lobby ({@code level}). Self-play showed that
  * passing rather than breaking a set or spending a control card loses points, so the medium and hard levels
- * treat every hand as short; the easy level stays cautious from 7 cards and plays at random.
+ * treat every hand as short; the easy level stays cautious from 7 cards and plays at random. A completion of the
+ * four is taken by every level but easy (half of the time); the hard level keeps one that would be a forbidden
+ * finish.
  */
 public enum PresidentBotLevel {
-    EASY("easy", new PresidentBotTuning(0.30, 0.20, 0, 2, 6, false)),
-    MEDIUM("medium", new PresidentBotTuning(0.0, 0.0, 3, 2, ANY_HAND, false)),
-    HARD("hard", new PresidentBotTuning(0.0, 0.0, 13, 2, ANY_HAND, true));
+    EASY("easy", new PresidentBotTuning(0.30, 0.20, 0, 2, 6, false, 0.5, false)),
+    MEDIUM("medium", new PresidentBotTuning(0.0, 0.0, 3, 2, ANY_HAND, false, 1.0, false)),
+    HARD("hard", new PresidentBotTuning(0.0, 0.0, 13, 2, ANY_HAND, true, 1.0, true));
 
     public static final PresidentBotLevel DEFAULT = MEDIUM;
 
