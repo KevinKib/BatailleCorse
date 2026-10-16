@@ -224,24 +224,74 @@ describe('PresidentGameScreen', () => {
     });
   });
 
-  it('givenTheRoundIsOver_thenThePlaceholderListsThePlacesAndReadyGoesThroughTheStore', async () => {
-    const { wrapper, store } = await mountRoom(room(playing({
-      phase: 'ROUND_OVER', availableActions: ['READY'], legalPlays: [],
-      players: seatsOf(3, { 0: { place: 3, title: 'SCUM' }, 1: { place: 1, title: 'PRESIDENT' }, 2: { place: 2, title: 'NEUTRAL' } }),
-    })));
-    expect(wrapper.get('[data-test="round-over-title"]').text()).toBe('Round 1 is over');
+  const roundOverState = () => playing({
+    round: 2, phase: 'ROUND_OVER', availableActions: ['READY'], legalPlays: [],
+    players: seatsOf(3, { 0: { place: 3, title: 'PRESIDENT' }, 1: { place: 1, title: 'SCUM' }, 2: { place: 2, title: 'NEUTRAL' } }),
+    lastRound: {
+      round: 2, finishingOrder: [1, 2, 0],
+      players: [
+        { seat: 1, place: 1, title: 'PRESIDENT', points: 3, total: 5 },
+        { seat: 2, place: 2, title: 'NEUTRAL', points: 2, total: 4 },
+        { seat: 0, place: 3, title: 'SCUM', points: 1, total: 3 },
+      ],
+    },
+  });
+
+  it('givenTheRoundIsOver_thenTheSummaryShowsOrderTitlesAndPointsAndReadyGoesThroughTheStore', async () => {
+    const { wrapper, store } = await mountRoom(room(roundOverState()));
+    expect(wrapper.get('[data-test="round-over-title"]').text()).toBe('Round 2 is over');
+    const rows = wrapper.findAll('[data-test="round-over-place"]');
+    expect(rows.map(r => r.get('[data-test="place-label"]').text())).toEqual(['1. P1', '2. P2', '3. P0']);
+    expect(rows.map(r => r.get('[data-test="place-points"]').text())).toEqual(['+3', '+2', '+1']);
+    expect(rows[0].get('[data-test="place-change"]').attributes('data-change')).toBe('up');
     const ready = vi.spyOn(store, 'ready').mockReturnValue(true);
     await wrapper.get('[data-test="ready"]').trigger('click');
     expect(ready).toHaveBeenCalled();
   });
 
-  it('givenTheMatchIsFinished_thenTheEndScreenNamesTheWinner', async () => {
+  it('givenTheScoresButton_thenTheStandingsOpenWithTheRunningTotals', async () => {
+    const { wrapper } = await mountRoom(room(playing({
+      round: 4, rounds: null, options: { ...CLASSIC_PRESIDENT_OPTIONS, length: 'endless' },
+      standings: [{ seat: 2, points: 9 }, { seat: 0, points: 6 }, { seat: 1, points: 2 }],
+    })));
+    expect(wrapper.find('[data-test="scores-panel"]').exists()).toBe(false);
+    await wrapper.get('[data-test="scores"]').trigger('click');
+    const rows = wrapper.findAll('[data-test="standing-row"]');
+    expect(rows.map(r => r.get('[data-test="standing-name"]').text())).toEqual(['P2', 'You', 'P1']);
+    expect(rows.map(r => r.get('[data-test="standing-points"]').text())).toEqual(['9', '6', '2']);
+  });
+
+  it('givenTheMatchIsFinished_thenTheEndScreenNamesTheWinnerAndShowsTheFinalStandings', async () => {
     const { wrapper } = await mountRoom(room(playing({
       phase: 'FINISHED', availableActions: [], legalPlays: [],
+      standings: [{ seat: 1, points: 12 }, { seat: 0, points: 8 }, { seat: 2, points: 5 }],
       outcome: { status: 'FINISHED', winners: [1], reason: 'ROUNDS' },
     })));
     expect(wrapper.get('[data-test="end-winner"]').text()).toBe('Winner: P1');
-    expect(wrapper.get('[data-test="end"]').exists()).toBe(true);
+    expect(wrapper.get('[data-test="end-sub"]').text()).toBe('12 points');
+    expect(wrapper.get('.end-title').text()).toBe(messagesEn.endScreen.defeat);
+    expect(wrapper.findAll('[data-test="end-extra"] [data-test="standing-row"]')).toHaveLength(3);
+  });
+
+  it('givenSeveralWinners_thenTheyAreAllNamedAndIAmOneOfThem', async () => {
+    const { wrapper } = await mountRoom(room(playing({
+      phase: 'FINISHED', availableActions: [], legalPlays: [],
+      standings: [{ seat: 0, points: 10 }, { seat: 2, points: 10 }, { seat: 1, points: 3 }],
+      outcome: { status: 'FINISHED', winners: [0, 2], reason: 'ROUNDS' },
+    })));
+    expect(wrapper.get('[data-test="end-winner"]').text()).toBe('Winners: You, P2');
+    expect(wrapper.get('.end-title').text()).toBe(messagesEn.endScreen.victory);
+    expect(wrapper.get('[data-test="end-sub"]').text()).toBe('10 points');
+  });
+
+  it('givenAForfeitEnd_thenTheSubtitleSaysWhoLeft', async () => {
+    const { wrapper, store } = await mountRoom(room(playing({
+      phase: 'FINISHED', availableActions: [], legalPlays: [],
+      outcome: { status: 'FINISHED', winners: [0], reason: 'FORFEIT' },
+    })));
+    store.lastForfeit = { seat: 1, reason: 'RESIGNED' } as typeof store.lastForfeit;
+    await flushPromises();
+    expect(wrapper.get('[data-test="end-sub"]').text()).toBe('P1 left. You win by default.');
   });
 
   it('givenMyConnectionIsDown_thenTheTableSaysSo', async () => {
