@@ -17,9 +17,9 @@ class PresidentBotLevelTest {
     static Stream<Arguments> tuningTable() {
         // level, random play, random pass, counted ranks, control ranks, short hand, plans the end game
         return Stream.of(
-                Arguments.of(PresidentBotLevel.EASY, 0.30, 0.20, 0, 2, 3, false),
-                Arguments.of(PresidentBotLevel.MEDIUM, 0.0, 0.0, 3, 2, 4, false),
-                Arguments.of(PresidentBotLevel.HARD, 0.0, 0.0, 13, 2, 4, true));
+                Arguments.of(PresidentBotLevel.EASY, 0.30, 0.20, 0, 2, 6, false),
+                Arguments.of(PresidentBotLevel.MEDIUM, 0.0, 0.0, 3, 2, 52, false),
+                Arguments.of(PresidentBotLevel.HARD, 0.0, 0.0, 13, 2, 52, true));
     }
 
     @ParameterizedTest

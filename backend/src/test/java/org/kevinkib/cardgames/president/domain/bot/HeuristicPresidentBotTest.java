@@ -29,8 +29,8 @@ import static org.kevinkib.cardgames.president.domain.bot.PresidentBotFixtures.r
 class HeuristicPresidentBotTest {
 
     /** Medium's counting and control, without any randomness. */
-    private static final PresidentBotTuning MEDIUM = new PresidentBotTuning(0, 0, 3, 2, 4, false);
-    private static final PresidentBotTuning HARD = new PresidentBotTuning(0, 0, 13, 2, 4, true);
+    private static final PresidentBotTuning CAUTIOUS = new PresidentBotTuning(0, 0, 3, 2, 4, false);
+    private static final PresidentBotTuning CAUTIOUS_PLANNER = new PresidentBotTuning(0, 0, 13, 2, 4, true);
     /** A random generator that always draws zero: below every probability, and index zero. */
     private static final RandomGenerator ALWAYS_LOW = () -> 0L;
     /** One that always draws just under one: above every probability. */
@@ -78,7 +78,7 @@ class HeuristicPresidentBotTest {
     @ParameterizedTest(name = "{0}: {1} leads {2}")
     @MethodSource("leads")
     void itLeadsTheLowestUnbrokenNonControlSet(String rule, String hand, String expected) {
-        PresidentBotDecision decision = decide(MEDIUM, leading(hand), new PresidentBotMemory(PresidentBotFixtures.BOT_LEADING));
+        PresidentBotDecision decision = decide(CAUTIOUS, leading(hand), new PresidentBotMemory(PresidentBotFixtures.BOT_LEADING));
 
         assertThat(shown(decision), is(expected));
     }
@@ -103,7 +103,7 @@ class HeuristicPresidentBotTest {
     @ParameterizedTest(name = "{0}: {1} on {2} gives {3}")
     @MethodSource("follows")
     void itFollowsWithTheLowestUnbrokenBeatingPlayOrPasses(String rule, String hand, String top, String expected) {
-        PresidentBotDecision decision = decide(MEDIUM, following(hand, top), new PresidentBotMemory(PresidentBotFixtures.BOT_FOLLOWING));
+        PresidentBotDecision decision = decide(CAUTIOUS, following(hand, top), new PresidentBotMemory(PresidentBotFixtures.BOT_FOLLOWING));
 
         assertThat(shown(decision), is(expected));
     }
@@ -120,7 +120,7 @@ class HeuristicPresidentBotTest {
     @ParameterizedTest(name = "{0}: {1} on {2} gives {3}")
     @MethodSource("forbiddenFinishes")
     void itDoesNotGoOutOnATwoWhenThatFinishIsForbidden(String rule, String hand, String top, String expected) {
-        PresidentBotDecision decision = decide(MEDIUM, following(hand, top, FORBIDDEN_FINISH),
+        PresidentBotDecision decision = decide(CAUTIOUS, following(hand, top, FORBIDDEN_FINISH),
                 new PresidentBotMemory(PresidentBotFixtures.BOT_FOLLOWING));
 
         assertThat(shown(decision), is(expected));
@@ -128,7 +128,7 @@ class HeuristicPresidentBotTest {
 
     @Test
     void withoutTheForbiddenFinishItGoesOutOnATwo() {
-        PresidentBotDecision decision = decide(MEDIUM, following("2C", "9H"),
+        PresidentBotDecision decision = decide(CAUTIOUS, following("2C", "9H"),
                 new PresidentBotMemory(PresidentBotFixtures.BOT_FOLLOWING));
 
         assertThat(shown(decision), is("2"));
@@ -138,15 +138,15 @@ class HeuristicPresidentBotTest {
     void theHardPlannerLeadsTheTwosFirstToKeepALowCardForLast() {
         PresidentBotView view = leading("2C 2D 5H", FORBIDDEN_FINISH);
 
-        assertThat(shown(decide(HARD, view, new PresidentBotMemory(PresidentBotFixtures.BOT_LEADING))), is("2 2"));
-        assertThat(shown(decide(MEDIUM, view, new PresidentBotMemory(PresidentBotFixtures.BOT_LEADING))), is("5"));
+        assertThat(shown(decide(CAUTIOUS_PLANNER, view, new PresidentBotMemory(PresidentBotFixtures.BOT_LEADING))), is("2 2"));
+        assertThat(shown(decide(CAUTIOUS, view, new PresidentBotMemory(PresidentBotFixtures.BOT_LEADING))), is("5"));
     }
 
     @Test
     void thePlannerKeepsLeadingLowFirstWhenSeveralLowSetsRemain() {
         PresidentBotView view = leading("2C 2D 5H 9D", FORBIDDEN_FINISH);
 
-        assertThat(shown(decide(HARD, view, new PresidentBotMemory(PresidentBotFixtures.BOT_LEADING))), is("5"));
+        assertThat(shown(decide(CAUTIOUS_PLANNER, view, new PresidentBotMemory(PresidentBotFixtures.BOT_LEADING))), is("5"));
     }
 
     // ----- card counting: a set nobody can beat is kept for last -----
@@ -159,7 +159,7 @@ class HeuristicPresidentBotTest {
         PresidentBotMemory blind = new PresidentBotMemory(PresidentBotFixtures.BOT_LEADING);
 
         // no pair above the queens can be formed any more, but an ace still beats the king: lead the king first
-        assertThat(shown(decide(HARD, view, counting)), is("K"));
+        assertThat(shown(decide(CAUTIOUS_PLANNER, view, counting)), is("K"));
         // a level that counts nothing leads the lowest set
         assertThat(shown(decide(new PresidentBotTuning(0, 0, 0, 2, 4, false), view, blind)), is("Q Q"));
     }
@@ -180,7 +180,7 @@ class HeuristicPresidentBotTest {
     @ParameterizedTest(name = "{0}: {1} gives {2} back: {3}")
     @MethodSource("giveBacks")
     void itGivesBackTheLowestCardsWithoutBreakingAPair(String rule, String hand, int count, String expected) {
-        PresidentBotDecision decision = decide(MEDIUM, givingBack(hand, count), new PresidentBotMemory(new org.kevinkib.cardgames.game.PlayerId(0)));
+        PresidentBotDecision decision = decide(CAUTIOUS, givingBack(hand, count), new PresidentBotMemory(new org.kevinkib.cardgames.game.PlayerId(0)));
 
         assertThat(decision, instanceOf(PresidentBotDecision.GiveBack.class));
         assertThat(shown(decision), is(expected));
@@ -190,7 +190,7 @@ class HeuristicPresidentBotTest {
 
     @Test
     void itIsReadyAtTheBarrier() {
-        PresidentBotDecision decision = decide(MEDIUM, atTheBarrier(), new PresidentBotMemory(PresidentBotFixtures.BOT_LEADING));
+        PresidentBotDecision decision = decide(CAUTIOUS, atTheBarrier(), new PresidentBotMemory(PresidentBotFixtures.BOT_LEADING));
 
         assertThat(decision, instanceOf(PresidentBotDecision.Ready.class));
     }
@@ -232,6 +232,18 @@ class HeuristicPresidentBotTest {
     }
 
     @Test
+    void mediumAndHardBotsBreakASetRatherThanPass() {
+        // self-play showed that passing here loses points: the level tunings treat every hand as short
+        PresidentBotView view = following("6H 6D 8C 8D JH JD", "5H");
+
+        for (PresidentBotLevel level : List.of(PresidentBotLevel.MEDIUM, PresidentBotLevel.HARD)) {
+            PresidentBotDecision decision = new HeuristicPresidentBot(level.tuning(), ALWAYS_HIGH)
+                    .decide(view, new PresidentBotMemory(PresidentBotFixtures.BOT_FOLLOWING));
+            assertThat(level + " answers with its lowest card", shown(decision), is("6"));
+        }
+    }
+
+    @Test
     void itRefusesToDecideWhenTheSeatHasNothingToDo() {
         PresidentBotView view = PresidentBotFixtures.following("7H 9D", "5H");
         PresidentBotView notMyTurn = new PresidentBotView(view.seat(), view.version(), view.round(), view.phase(),
@@ -240,6 +252,6 @@ class HeuristicPresidentBotTest {
                 view.readySeats(), view.totals(), view.options());
 
         org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class,
-                () -> decide(MEDIUM, notMyTurn, new PresidentBotMemory(view.seat())));
+                () -> decide(CAUTIOUS, notMyTurn, new PresidentBotMemory(view.seat())));
     }
 }
