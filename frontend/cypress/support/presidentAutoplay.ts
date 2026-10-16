@@ -20,6 +20,15 @@ export function autoplay(gameId: string, player: AutoPlayer, options: { ready?: 
   let fetched: any = null;
   let inflight = false;
   const timer = setInterval(() => {
+    try {
+      step();
+    } catch {
+      // The socket was closed under the timer (the test's afterEach deactivates it before `test:after:run` fires,
+      // and a game still running at that point keeps offering moves): this seat is done.
+      clearInterval(timer);
+    }
+  }, 150);
+  function step() {
     if (!inflight) {
       inflight = true;
       fetch(`/api/president/game/${gameId}?token=${player.token}`)
@@ -52,7 +61,7 @@ export function autoplay(gameId: string, player: AutoPlayer, options: { ready?: 
       done = false;
     }
     if (done) { acted = state.version; actedAt = Date.now(); }
-  }, 150);
+  }
   const disconnect = player.disconnect;
   player.disconnect = () => { clearInterval(timer); disconnect(); };
   Cypress.once('test:after:run', () => clearInterval(timer));

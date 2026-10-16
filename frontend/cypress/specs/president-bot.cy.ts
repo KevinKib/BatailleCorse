@@ -62,6 +62,9 @@ describe('President against bots', () => {
           expect([...$labels].map((l) => l.textContent?.trim())).to.deep.eq(['Bot 1', 'Bot 2']);
         });
         noHorizontalScroll();
+        // Documentation shots: `--env shots=name` saves the table as <name>-president-table-<size>.png.
+        const shots = Cypress.env('shots');
+        if (shots) cy.screenshot(`${shots}-president-table-${width}x${height}`, { capture: 'viewport' });
 
         // The round is played to its end: the bots lead, beat and pass on their own.
         cy.get('[data-test="round-over-title"]', { timeout: 60000 }).should('have.text', 'Round 1 is over');
