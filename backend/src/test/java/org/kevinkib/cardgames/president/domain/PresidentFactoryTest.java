@@ -28,13 +28,24 @@ class PresidentFactoryTest {
     private final PresidentFactory factory = new PresidentFactory();
 
     @Test
-    void theFactoryDeclaresThreeToEightPlayersAndNoBots() {
+    void theFactoryDeclaresThreeToEightPlayersAndComputerSeatsWithALevel() {
         assertThat(factory.gameType(), is("president"));
         assertThat(PresidentFactory.GAME_TYPE, is("president"));
         assertThat(factory.minPlayers(), is(3));
         assertThat(factory.maxPlayers(), is(8));
-        assertThat(factory.supportsBots(), is(false));
-        assertThat(factory.seatOptionDescriptors(), is(List.of()));
+        assertThat(factory.supportsBots(), is(true));
+        assertThat(factory.seatOptionDescriptors(), is(List.of(new org.kevinkib.cardgames.game.OptionDescriptor(
+                "level", org.kevinkib.cardgames.game.OptionType.CHOICE, List.of("easy", "medium", "hard"), "medium",
+                "options.president.level"))));
+    }
+
+    @Test
+    void aSeatLevelIsValidatedStrictly() {
+        factory.validateSeatOption("level", "hard");
+        org.junit.jupiter.api.Assertions.assertThrows(org.kevinkib.cardgames.game.InvalidOptionException.class,
+                () -> factory.validateSeatOption("level", "expert"));
+        org.junit.jupiter.api.Assertions.assertThrows(org.kevinkib.cardgames.game.InvalidOptionException.class,
+                () -> factory.validateSeatOption("speed", "hard"));
     }
 
     @ParameterizedTest

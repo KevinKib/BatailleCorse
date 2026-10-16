@@ -128,7 +128,7 @@ class LobbyControllerTest {
     }
 
     @Test
-    void givenHostOfPresident_whenAddBot_thenRefusedWithAnErrorToTheHostAndNoBotSeat() {
+    void givenHostOfPresident_whenAddBot_thenTheLobbyHasTheBot() {
         RoomCreated room = sessionService.createRoom(
                 org.kevinkib.cardgames.president.domain.PresidentFactory.GAME_TYPE, "Alice");
         messaging.clear();
@@ -136,8 +136,8 @@ class LobbyControllerTest {
         controller.addBot(new GameActionPayload(room.gameId(), room.hostToken()));
 
         assertThat(messaging.seats, is(List.of(new PlayerId(0))));
-        assertThat(messaging.payloads.get(0).isSuccess(), is(false));
-        assertThat(sessionService.botSeats(new GameId(room.gameId())).isEmpty(), is(true));
+        assertThat(lobbyOf(messaging.payloads.get(0)).players().get(1).bot(), is(true));
+        assertThat(sessionService.botSeats(new GameId(room.gameId())), is(java.util.Set.of(new PlayerId(1))));
     }
 
     @Test

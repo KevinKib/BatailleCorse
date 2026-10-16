@@ -5,20 +5,53 @@ import org.kevinkib.cardgames.president.domain.President;
 import org.kevinkib.cardgames.president.domain.PresidentFactory;
 import org.kevinkib.cardgames.president.domain.RandomDeckSource;
 import org.kevinkib.cardgames.president.domain.ScriptedDeckSource;
+import org.kevinkib.cardgames.president.domain.bot.HeuristicPresidentBot;
 import org.kevinkib.cardgames.president.presentation.PresidentGameActions;
+import org.kevinkib.cardgames.president.presentation.bot.PresidentBotCoordinator;
 import org.kevinkib.cardgames.president.presentation.dto.PresidentDto;
 import org.kevinkib.cardgames.presentation.GameMessagingService;
+import org.kevinkib.cardgames.presentation.bot.BotScheduler;
+import org.kevinkib.cardgames.presentation.bot.BotSeatOptions;
+import org.kevinkib.cardgames.presentation.bot.ThreadLocalRandomGenerator;
+import org.kevinkib.cardgames.presentation.bot.UniformThinkingDelay;
 import org.kevinkib.cardgames.presentation.state.SeatLifecycleBroadcaster;
 import org.kevinkib.cardgames.presentation.state.SeatStateBroadcaster;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
 import org.kevinkib.cardgames.sessionmanagement.presence.port.GameLifecycleBroadcaster;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
-/** The beans of the President context: factory, deal source, broadcasters and actions. No bots yet. */
+import java.util.Random;
+import java.util.random.RandomGenerator;
+
+/** The beans of the President context: factory, deal source, broadcasters, actions and the bot coordinator. */
 @Configuration
 public class PresidentConfig {
+
+    /** A bot "thinks" for a random 700-1300 ms before each step (properties {@code president.bots.delay-min-ms} / {@code delay-max-ms}). */
+    public static final String DEFAULT_DELAY_MIN_MS = "700";
+    public static final String DEFAULT_DELAY_MAX_MS = "1300";
+
+    /** Production: the bots' random choices (the easy level, ties) really vary. */
+    @Bean("presidentBotRandom")
+    @Profile("!test")
+    public RandomGenerator presidentBotRandom() {
+        return new ThreadLocalRandomGenerator();
+    }
+
+    /**
+     * End-to-end tests (profile {@code test}): a generator with a fixed seed, so a bot's choices are repeatable.
+     * It is not a constant: a constant 0 would make every {@code nextDouble() < p} true and turn an easy bot into
+     * a random player.
+     */
+    @Bean("presidentBotRandom")
+    @Profile("test")
+    public RandomGenerator presidentBotRandomSeeded() {
+        return new Random(20261016L);
+    }
 
     /** Production: a random deal. */
     @Bean
@@ -56,5 +89,27 @@ public class PresidentConfig {
     public GameLifecycleBroadcaster presidentLifecycleBroadcaster(
             SeatStateBroadcaster<President, PresidentDto> presidentStateBroadcaster) {
         return new SeatLifecycleBroadcaster<>(President.class, presidentStateBroadcaster);
+    }
+
+    /**
+     * Drives the computer seats. The thinking delay is built here and not published as a bean, so it does not
+     * compete with the other games' {@code ThinkingDelay} beans; the {@code test} profile pins it to 0.
+     */
+    @Bean
+    public PresidentBotCoordinator presidentBotCoordinator(
+            SessionService sessionService,
+            BotSeatOptions botSeatOptions,
+            PresidentGameActions actions,
+            SeatStateBroadcaster<President, PresidentDto> presidentStateBroadcaster,
+            BotScheduler botScheduler,
+            @Qualifier("presidentBotRandom") RandomGenerator presidentBotRandom,
+            @Value("${president.bots.delay-min-ms:" + DEFAULT_DELAY_MIN_MS + "}") long minMillis,
+            @Value("${president.bots.delay-max-ms:" + DEFAULT_DELAY_MAX_MS + "}") long maxMillis) {
+        PresidentBotCoordinator coordinator = new PresidentBotCoordinator(
+                sessionService::botSeats, botSeatOptions, actions, botScheduler,
+                new UniformThinkingDelay(minMillis, maxMillis, presidentBotRandom),
+                level -> new HeuristicPresidentBot(level.tuning(), presidentBotRandom));
+        presidentStateBroadcaster.addListener(coordinator);
+        return coordinator;
     }
 }
