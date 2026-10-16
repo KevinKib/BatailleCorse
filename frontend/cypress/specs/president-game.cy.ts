@@ -86,17 +86,18 @@ function playTriple(rank: string, goesOut = false) {
           scriptedReady(bob);
           scriptedReady(carol);
 
-          // Round 2 opens on the exchange: Alice (President) chooses two cards to give back.
-          cy.get('[data-test="phase-text"]', { timeout: 10000 }).should('have.text', 'Choose 2 cards to give back');
+          // Round 2 opens on the exchange: Alice (President) chooses two cards to give back (the panel's own
+          // behaviour is in president-exchange.cy.ts).
+          cy.get('[data-test="exchange-instruction"]', { timeout: 10000 }).should('have.text', 'Choose 2 cards to give to Carol.');
           cy.get('[data-test="round"]').should('have.text', 'Round 2 of 5');
           cy.get('[data-test="seat-title"]').should('exist');
-          cy.get('[data-test="play"]').should('have.text', 'Give 2 cards').and('be.disabled');
+          cy.get('[data-test="exchange-give"]').should('have.text', 'Give 2 cards to Carol').and('be.disabled');
           cy.get('[data-test="pass"]').should('not.exist');
           // The Scum's two best cards are already in my hand: 17 or 18 dealt, plus 2.
           cy.get('[data-test^="hand-card-"]').should('have.length.within', 19, 20);
           cy.get('[data-test="hand-card-0"]').click({ force: true });
           cy.get('[data-test="hand-card-1"]').click({ force: true });
-          cy.get('[data-test="play"]').should('not.be.disabled').click();
+          cy.get('[data-test="exchange-give"]').should('not.be.disabled').click();
 
           // Exchange done: the Scum leads round 2; the table names who plays.
           cy.get('[data-test="phase-text"]', { timeout: 10000 }).should('have.text', 'Carol is playing');
