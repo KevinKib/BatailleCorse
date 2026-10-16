@@ -40,7 +40,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.is;
 import static org.kevinkib.cardgames.president.domain.PresidentBuilder.aPresident;
 import static org.kevinkib.cardgames.president.domain.PresidentFixtures.card;
@@ -76,14 +75,12 @@ class PresidentBotCoordinatorTest {
                 new Random(1));
         President watched;
         Function<PresidentBotView, PresidentBotDecision> answer = null;
-        Runnable duringDecision = () -> { };
 
         @Override
         public PresidentBotDecision decide(PresidentBotView view, PresidentBotMemory memory) {
             views.add(view);
             playedSeen.add(memory.played());
             underMonitor.add(watched != null && Thread.holdsLock(watched));
-            duringDecision.run();
             return answer == null ? heuristic.decide(view, memory) : answer.apply(view);
         }
     }
@@ -201,31 +198,13 @@ class PresidentBotCoordinatorTest {
     // ------------------------------------------------------------------ stale decisions
 
     @Test
-    void theDecisionIsComputedOutsideTheMonitorOfTheGame() {
+    void theDecisionIsTakenAndAppliedUnderTheMonitorOfTheGameSoItIsNeverStale() {
         President game = register(table(1), 1);
         start(game);
 
         scheduler.runNext();
 
-        assertThat(bot.underMonitor, contains(false));
-    }
-
-    @Test
-    void aDecisionComputedWhileTheStateMovedIsDroppedAfterTheVersionCheck() {
-        President game = register(table(1), 1);
-        bot.answer = view -> new PresidentBotDecision.Play(cards("6S"));
-        bot.duringDecision = () -> {
-            try {
-                game.play(BOT, cards("7S")); // the state moves while the bot thinks, with no broadcast
-            } catch (Exception e) {
-                throw new AssertionError(e);
-            }
-        };
-        start(game);
-
-        scheduler.runNext();
-
-        assertThat(game.hand(BOT), is(cards("6S 9H"))); // 7S went, the stale 6S was not applied
+        assertThat(bot.underMonitor, contains(true));
     }
 
     @Test

@@ -57,8 +57,8 @@ public final class PresidentBotMemory {
         given.addAll(view.given());
     }
 
-    /** Records cards seen played. Package-private: the memory's own input is {@link #observe}; tests use this. */
-    void learnPlayed(Collection<Card> cards) {
+    /** Records cards seen played that the seat view no longer shows (the last play of a closed trick, announced by the broadcast). */
+    public void learnPlayed(Collection<Card> cards) {
         played.addAll(cards);
     }
 

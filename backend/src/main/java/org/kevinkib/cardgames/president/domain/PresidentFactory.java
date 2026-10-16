@@ -6,6 +6,7 @@ import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.GameOptions;
 import org.kevinkib.cardgames.game.OptionDescriptor;
 import org.kevinkib.cardgames.game.OptionType;
+import org.kevinkib.cardgames.president.domain.bot.PresidentBotLevel;
 import org.kevinkib.cardgames.president.domain.rules.AfterPass;
 import org.kevinkib.cardgames.president.domain.rules.ChoiceOption;
 import org.kevinkib.cardgames.president.domain.rules.ExchangeAmount;
@@ -20,10 +21,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
-/** Creates President games for the session core: 3 to 8 players, host options, no computer seat yet. */
+/** Creates President games for the session core: 3 to 8 players, host options, computer seats with a level. */
 public class PresidentFactory implements GameFactory {
 
     public static final String GAME_TYPE = "president";
+    public static final String LEVEL_KEY = "level";
 
     private final DeckSource deckSource;
 
@@ -49,6 +51,19 @@ public class PresidentFactory implements GameFactory {
     @Override
     public int maxPlayers() {
         return President.MAX_PLAYERS;
+    }
+
+    @Override
+    public boolean supportsBots() {
+        return true;
+    }
+
+    /** A computer seat plays at one of three levels, medium unless the host picks another. */
+    @Override
+    public List<OptionDescriptor> seatOptionDescriptors() {
+        return List.of(new OptionDescriptor(LEVEL_KEY, OptionType.CHOICE,
+                Arrays.stream(PresidentBotLevel.values()).map(PresidentBotLevel::key).toList(),
+                PresidentBotLevel.DEFAULT.key(), "options.president.level"));
     }
 
     @Override
