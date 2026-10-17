@@ -12,11 +12,13 @@ import org.kevinkib.cardgames.president.domain.rules.ChoiceOption;
 import org.kevinkib.cardgames.president.domain.rules.EqualPlay;
 import org.kevinkib.cardgames.president.domain.rules.ExchangeAmount;
 import org.kevinkib.cardgames.president.domain.rules.FirstLead;
+import org.kevinkib.cardgames.president.domain.rules.ForbiddenFinish;
 import org.kevinkib.cardgames.president.domain.rules.GiveBack;
 import org.kevinkib.cardgames.president.domain.rules.MatchLength;
 import org.kevinkib.cardgames.president.domain.rules.NextLead;
 import org.kevinkib.cardgames.president.domain.rules.PresidentOptions;
 import org.kevinkib.cardgames.president.domain.rules.Scoring;
+import org.kevinkib.cardgames.president.domain.rules.TwoCuts;
 
 import java.util.Arrays;
 import java.util.List;
@@ -77,7 +79,7 @@ public class PresidentFactory implements GameFactory {
         return new President(id, nbPlayers, new Random().nextLong(), deckSource, PresidentOptions.from(options));
     }
 
-    /** The round and match keys and equal play, default first; the other variant keys are declared by the PRs that ship them. */
+    /** The round and match keys, equal play and the trick variants, default first; the other variant keys wait for their PRs. */
     @Override
     public List<OptionDescriptor> optionDescriptors() {
         PresidentOptions defaults = PresidentOptions.defaults();
@@ -89,12 +91,23 @@ public class PresidentFactory implements GameFactory {
                 descriptor(PresidentOptions.NEXT_LEAD_KEY, NextLead.values(), defaults.nextLead()),
                 descriptor(PresidentOptions.SCORING_KEY, Scoring.values(), defaults.scoring()),
                 descriptor(PresidentOptions.LENGTH_KEY, MatchLength.values(), defaults.length()),
-                descriptor(PresidentOptions.EQUAL_PLAY_KEY, EqualPlay.values(), defaults.equalPlay()));
+                descriptor(PresidentOptions.EQUAL_PLAY_KEY, EqualPlay.values(), defaults.equalPlay()),
+                descriptor(PresidentOptions.TWO_CUTS_KEY, TwoCuts.values(), defaults.twoCuts()),
+                flag(PresidentOptions.QUAD_CLEARS_KEY, defaults.quadClears()),
+                descriptor(PresidentOptions.FORBIDDEN_FINISH_KEY, ForbiddenFinish.values(),
+                        defaults.forbiddenFinish()),
+                flag(PresidentOptions.MUST_PLAY_KEY, defaults.mustPlay()));
     }
 
     @Override
     public GameOptions validate(GameOptions requested) {
         return PresidentOptions.parseStrict(requested).toGameOptions();
+    }
+
+    /** An on/off key: the default value comes first. */
+    private static OptionDescriptor flag(String key, boolean defaultOn) {
+        List<String> values = defaultOn ? List.of("on", "off") : List.of("off", "on");
+        return new OptionDescriptor(key, OptionType.CHOICE, values, values.get(0), "options.president." + key);
     }
 
     private static <E extends Enum<E> & ChoiceOption> OptionDescriptor descriptor(String key, E[] values,

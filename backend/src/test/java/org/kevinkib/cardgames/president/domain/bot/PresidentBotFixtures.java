@@ -22,6 +22,14 @@ import static org.kevinkib.cardgames.president.domain.PresidentFixtures.code;
 /** Scenarios for the bot tests: tables built from explicit hands, and hand-made views for the phases a table cannot reach quickly. */
 final class PresidentBotFixtures {
 
+    /**
+     * The options of the scenarios that do not name any: the defaults without the forbidden finish, so that the rows
+     * about leading and following keep their meaning when the bot goes out on a two. The rows about the forbidden
+     * finish pass their own options.
+     */
+    static final PresidentOptions OPEN_FINISH =
+            PresidentOptions.defaults().withForbiddenFinish(org.kevinkib.cardgames.president.domain.rules.ForbiddenFinish.OFF);
+
     static final PlayerId BOT_LEADING = new PlayerId(0);
     static final PlayerId BOT_FOLLOWING = new PlayerId(1);
 
@@ -36,7 +44,7 @@ final class PresidentBotFixtures {
     }
 
     static PresidentBotView leading(String botHand) {
-        return leading(botHand, PresidentOptions.defaults());
+        return leading(botHand, OPEN_FINISH);
     }
 
     /** Seat 0 led {@code top}; the bot (seat 1) must answer. Seats 0 and 2 keep one other card (3S, 4S). */
@@ -52,7 +60,7 @@ final class PresidentBotFixtures {
     }
 
     static PresidentBotView following(String botHand, String top) {
-        return following(botHand, top, PresidentOptions.defaults());
+        return following(botHand, top, OPEN_FINISH);
     }
 
     /** A bot (seat 0) that owes {@code count} cards back to seat 1 in the exchange of round 2. */

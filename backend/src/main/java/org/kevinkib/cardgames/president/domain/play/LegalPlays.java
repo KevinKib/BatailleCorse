@@ -1,6 +1,7 @@
 package org.kevinkib.cardgames.president.domain.play;
 
 import org.kevinkib.cardgames.president.domain.card.RankOrder;
+import org.kevinkib.cardgames.president.domain.rules.TwoCuts;
 import org.kevinkib.cards.domain.Card;
 import org.kevinkib.cards.domain.deck.french.FrenchRank;
 
@@ -31,6 +32,12 @@ public final class LegalPlays {
      */
     public static List<Play> of(List<Card> hand, Play top, RankOrder order, Constraint constraint,
                                 boolean equalPlay) {
+        return of(hand, top, order, constraint, equalPlay, TwoCuts.OFF);
+    }
+
+    /** As above, and the 2 cuts of {@code twoCuts} join the plays that answer a {@link Constraint#BEAT}. */
+    public static List<Play> of(List<Card> hand, Play top, RankOrder order, Constraint constraint,
+                                boolean equalPlay, TwoCuts twoCuts) {
         Map<FrenchRank, List<Card>> byRank = new LinkedHashMap<>();
         for (Card card : hand) {
             byRank.computeIfAbsent((FrenchRank) card.getRank(), r -> new ArrayList<>()).add(card);
@@ -43,7 +50,7 @@ public final class LegalPlays {
             }
             for (int count = 1; count <= group.size(); count++) {
                 Play candidate = new Play(group.subList(0, count), rank);
-                if (top == null || BeatRule.answers(candidate, top, order, constraint, equalPlay)) {
+                if (top == null || BeatRule.answers(candidate, top, order, constraint, equalPlay, twoCuts)) {
                     plays.add(candidate);
                 }
             }

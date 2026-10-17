@@ -312,7 +312,8 @@ public class President implements Game {
         for (int place = 0; place < order.size(); place++) {
             earned.put(order.get(place), byPlace.get(place));
         }
-        lastRound = new RoundResult(number, order, earned, points, new LinkedHashMap<>(totals));
+        List<PlayerId> forbidden = round.forbiddenFinishers().stream().filter(this::isActive).toList();
+        lastRound = new RoundResult(number, order, earned, points, new LinkedHashMap<>(totals), forbidden);
         previousOrder = order;
         events.add(new RoundScored(lastRound));
         if (options.length().isOver(number, options.scoring(), totals.values())) {
@@ -491,6 +492,11 @@ public class President implements Game {
         return round.finishingOrder();
     }
 
+    /** The players who went out on a forbidden finish this round, the earliest first; they end the finishing order. */
+    public synchronized List<PlayerId> forbiddenFinishers() {
+        return round.forbiddenFinishers();
+    }
+
     /** Every legal play of the seat to act; nothing for any other seat. */
     public synchronized List<Play> legalPlays(PlayerId seat) {
         return round.legalPlays(seat);
@@ -520,10 +526,12 @@ public class President implements Game {
             case PLAYING -> {
                 List<Action> actions = new ArrayList<>();
                 if (seat.equals(round.currentSeat()) && !round.hand(seat).isEmpty()) {
-                    if (!round.legalPlays(seat).isEmpty()) {
+                    boolean canPlay = !round.legalPlays(seat).isEmpty();
+                    if (canPlay) {
                         actions.add(Action.PLAY);
                     }
-                    if (!round.trick().plays().isEmpty()) {
+                    // compulsory play refuses a pass while a legal play exists
+                    if (!round.trick().plays().isEmpty() && !(options.mustPlay() && canPlay)) {
                         actions.add(Action.PASS);
                     }
                 }

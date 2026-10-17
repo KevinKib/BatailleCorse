@@ -25,8 +25,10 @@ import java.util.random.RandomGenerator;
  *       nobody can beat when the level counts cards) kept for the end;</li>
  *   <li>follow with the lowest beating set that does not break a set; pass rather than break a pair or spend a
  *       control card, unless the hand is short or the play goes out;</li>
- *   <li>never go out on a two when that finish is forbidden; the hard level also leads its twos first so that a
- *       low set stays for last;</li>
+ *   <li>never go out on a two when that finish is forbidden (a cutting two included); the hard level also leads its
+ *       twos first so that a low set stays for last;</li>
+ *   <li>keep a cutting two like any control card: it is played on a low trick only when the hand is short; under
+ *       compulsory play, which refuses the pass, it plays the weakest legal play instead;</li>
  *   <li>give back the lowest cards of the exchange without breaking a pair;</li>
  *   <li>under the equal-play binding the candidates are the matching sets and a pass (the domain lists them);
  *       a completion of the four is taken, in turn or out of turn, unless the level declines it.</li>
@@ -100,7 +102,16 @@ public final class HeuristicPresidentBot implements PresidentBotStrategy {
         if (chance(tuning.randomPlayProbability())) {
             return play(legal.get(random.nextInt(legal.size())));
         }
-        return leading ? lead(view, memory, legal) : follow(view, legal);
+        if (leading) {
+            return lead(view, memory, legal);
+        }
+        PresidentBotDecision decision = follow(view, legal);
+        if (decision instanceof PresidentBotDecision.Pass && !canPass) {
+            // compulsory play refuses the pass: the weakest play, one that is not a forbidden finish if there is one
+            List<Play> allowed = withoutForbiddenFinish(view, legal);
+            return play(allowed.isEmpty() ? legal.get(0) : allowed.get(0));
+        }
+        return decision;
     }
 
     /**
