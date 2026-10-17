@@ -1,5 +1,5 @@
 import type { MangolaStep } from './MangolaState';
-import { planSowing } from './trace';
+import { planSowing, type TraceSpeed } from './trace';
 
 /** The seeds the travelling hand holds, and the pit it is over. */
 export interface HandPosition {
@@ -83,9 +83,13 @@ export function replayTrace(previous: readonly (number | null)[], trace: readonl
  * captured. The last frame's board is exactly `replayTrace(previous, trace)`. Null when the trace does not fit
  * `previous` (the caller then shows the final board without a sowing).
  */
-export function sowingFrames(previous: readonly (number | null)[], trace: readonly MangolaStep[]): SowingFrames | null {
+export function sowingFrames(
+  previous: readonly (number | null)[],
+  trace: readonly MangolaStep[],
+  speed: TraceSpeed = 'fast',
+): SowingFrames | null {
   if (!isFull(previous)) return null;
-  const plan = planSowing(trace);
+  const plan = planSowing(trace, speed);
   const board = [...previous];
   let hand: HandPosition | null = null;
   const frames: SowingFrame[] = [];

@@ -30,6 +30,9 @@ export const STUCK_START_KEY = 'mangola.errors.stuckStart';
 export const useMangolaStore = defineStore('mangola-store', () => {
   const state = ref<MangolaView | null>(null);
   const gameId = ref<string | null>(null);
+  // The computer seats, read from the lobby: the game view does not say which seat is one, so a player who
+  // reloads in the middle of a game has none (the screen then just says it is waiting).
+  const botSeats = ref<number[]>([]);
   const mySeat = ref<number>(0);
 
   // The layout being edited: 16 counts in the order of my loop. It follows the server's draft (so a reload or a
@@ -76,6 +79,7 @@ export const useMangolaStore = defineStore('mangola-store', () => {
     switch (event.type) {
       case 'state-update':
         state.value = event.state;
+        if (!event.state.started) botSeats.value = event.state.players.filter(p => p.bot === true).map(p => p.seat);
         room.onStateUpdate(event.state.started);
         if (event.state.started && event.state.phase === 'PLACEMENT') {
           // My unsent edit stands over what the server says; otherwise the server's draft is the truth.
@@ -92,6 +96,7 @@ export const useMangolaStore = defineStore('mangola-store', () => {
         break;
       case 'removed':
         state.value = null;
+        botSeats.value = [];
         forgetDraft();
         gameId.value = null;
         room.onRemoved();
@@ -206,6 +211,7 @@ export const useMangolaStore = defineStore('mangola-store', () => {
 
   const leave = () => room.leave(() => {
     state.value = null;
+    botSeats.value = [];
     forgetDraft();
     gameId.value = null;
   });
@@ -213,7 +219,7 @@ export const useMangolaStore = defineStore('mangola-store', () => {
   const playAgain = () => room.playAgain(() => { presence.reset(); forgetDraft(); });
 
   return {
-    state, game, lobby, lobbyError, removedByHost, starting, gameId, mySeat, rematch, lastForfeit, gamePhase,
+    state, game, lobby, botSeats, lobbyError, removedByHost, starting, gameId, mySeat, rematch, lastForfeit, gamePhase,
     disconnections: presence.disconnections,
     liveDisconnections: presence.liveDisconnections,
     forfeitNotice: presence.forfeitNotice,

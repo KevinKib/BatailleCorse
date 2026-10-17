@@ -107,4 +107,12 @@ describe('MangolaPit', () => {
     expect(pit({ mine: true }).attributes('data-mine')).toBe('true');
     expect(pit({ mine: false }).attributes('data-mine')).toBe('false');
   });
+
+  it('a pit the opponent has just chosen is flagged and says so in its name', () => {
+    const w = pit({ chosen: true });
+    expect(w.attributes('data-chosen')).toBe('true');
+    expect(w.attributes('aria-label')).toContain(ui.pit.chosen);
+    expect(pit().attributes('data-chosen')).toBeUndefined();
+    expect(pit().attributes('aria-label')).not.toContain(ui.pit.chosen);
+  });
 });

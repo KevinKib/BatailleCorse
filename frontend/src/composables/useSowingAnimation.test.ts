@@ -6,6 +6,7 @@ import { boardOf, sow } from '../model/mangola/sowingFixtures';
 import { MAX_TOTAL_MS, planSowing } from '../model/mangola/trace';
 import type { MangolaState } from '../model/mangola/MangolaState';
 import { pitFromName } from '../model/mangola/geometry';
+import type { AnimationSpeed } from './useAnimationSpeed';
 
 const POSITIONS: { name: string; before: string; pit: string }[] = [
   { name: 'PICK/DROP/SKIP_EMPTY (E1)', before: 'a2:3', pit: 'a2' },
@@ -31,12 +32,12 @@ function start(before: string, version = 1, over: Partial<MangolaState> = {}): M
 }
 
 describe('useSowingAnimation', () => {
-  let reduced = false;
-  const make = () => useSowingAnimation({ reducedMotion: () => reduced });
+  let speed: AnimationSpeed = 'fast';
+  const make = () => useSowingAnimation({ speed: () => speed });
 
   beforeEach(() => {
     vi.useFakeTimers();
-    reduced = false;
+    speed = 'fast';
   });
   afterEach(() => {
     vi.useRealTimers();
@@ -212,8 +213,8 @@ describe('useSowingAnimation', () => {
     expect(anim.displayBoard.value).toEqual(next.board);
   });
 
-  it('shows the final board at once under reduced motion, with the move announced', () => {
-    reduced = true;
+  it('shows the final board at once at the Instant speed, with the move announced', () => {
+    speed = 'instant';
     const anim = make();
     anim.push(start('a2:17'));
     const next = played('a2:17', 'a2', 2);

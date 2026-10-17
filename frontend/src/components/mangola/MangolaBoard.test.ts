@@ -20,7 +20,8 @@ describe('MangolaBoard', () => {
   it('is a named group of 32 real buttons in a 4 x 8 grid', () => {
     const w = board();
     expect(w.get('[data-test="mangola-board"]').attributes('aria-label')).toBe(ui.board.label);
-    expect(w.findAll('button')).toHaveLength(32);
+    expect(w.findAll('button.mg-pit')).toHaveLength(32);
+    expect(w.findAll('button')).toHaveLength(33); // and the speed button under the board
     expect(w.findAll('[data-test="board-row"]')).toHaveLength(4);
     for (const row of w.findAll('[data-test="board-row"]')) expect(row.findAll('button')).toHaveLength(8);
   });
@@ -43,16 +44,16 @@ describe('MangolaBoard', () => {
 
   it('enables only the legal pits', () => {
     const w = board();
-    const enabled = w.findAll('button').filter(b => b.attributes('aria-disabled') === undefined).map(b => b.attributes('data-test'));
+    const enabled = w.findAll('button.mg-pit').filter(b => b.attributes('aria-disabled') === undefined).map(b => b.attributes('data-test'));
     expect(enabled.sort()).toEqual(['pit-a2', 'pit-b1', 'pit-c2', 'pit-d1', 'pit-e2', 'pit-f1', 'pit-g2', 'pit-h1'].sort());
     expect(pit(w, 'a2').attributes('aria-label')).toContain('can sow');
   });
 
   it('enables nothing when it is not my turn or the board is disabled', async () => {
     const w = board({ interactive: false });
-    expect(w.findAll('button').every(b => b.attributes('aria-disabled') === 'true')).toBe(true);
+    expect(w.findAll('button.mg-pit').every(b => b.attributes('aria-disabled') === 'true')).toBe(true);
     await w.setProps({ interactive: true, disabled: true });
-    expect(w.findAll('button').every(b => b.attributes('aria-disabled') === 'true')).toBe(true);
+    expect(w.findAll('button.mg-pit').every(b => b.attributes('aria-disabled') === 'true')).toBe(true);
   });
 
   it('emits sow with the pit number on a click of a legal pit, and nothing on another', async () => {
@@ -219,5 +220,66 @@ describe('MangolaBoard during a sowing animation', () => {
     expect(pit(w, 'a2').attributes('aria-label')).toContain('0 seeds');
     expect(pit(w, 'b2').attributes('aria-label')).toContain('5 seeds');
   });
-});
 
+  describe('the speed button', () => {
+    const speedButton = (w: ReturnType<typeof board>) => w.get('[data-test="speed-button"]');
+
+    it('is a real button, always there, named after the speed in words', () => {
+      const w = board();
+      const button = speedButton(w);
+      expect(button.element.tagName).toBe('BUTTON');
+      expect(button.attributes('type')).toBe('button');
+      expect(button.attributes('aria-label')).toBe('Animation speed: Normal');
+      expect(button.text()).toContain('Normal');
+    });
+
+    it('says the speed it is given: Fast, Instant', async () => {
+      const w = board({ speed: 'fast' });
+      expect(speedButton(w).attributes('aria-label')).toBe('Animation speed: Fast');
+      await w.setProps({ speed: 'instant' });
+      expect(speedButton(w).attributes('aria-label')).toBe('Animation speed: Instant');
+      expect(speedButton(w).text()).toContain('Instant');
+    });
+
+    it('emits cycle-speed on a tap, also while a sowing plays (and does not skip it)', async () => {
+      const w = board({ animating: true, hand: { pit: 8, seeds: 2 }, activePit: 8 });
+      await speedButton(w).trigger('click');
+      expect(w.emitted('cycle-speed')).toHaveLength(1);
+      expect(w.emitted('skip')).toBeUndefined();
+    });
+
+    it('is on the left of the line under the board, Skip on its right, the legend between', async () => {
+      const w = board({ animating: true });
+      const footer = w.get('.mg-board__footer');
+      const order = [...footer.element.children].map(c => (c as HTMLElement).dataset.test ?? c.className);
+      expect(order.indexOf('speed-button')).toBeGreaterThanOrEqual(0);
+      expect(order.indexOf('speed-button')).toBeLessThan(order.indexOf('mg-board__legend mg-board__legend--bottom'));
+      expect(order.indexOf('mg-board__legend mg-board__legend--bottom')).toBeLessThan(order.indexOf('skip-sowing'));
+    });
+
+    it('announces the new speed once it changes, not at first', async () => {
+      const w = board({ speed: 'normal' });
+      expect(w.get('[data-test="speed-live"]').text()).toBe('');
+      expect(w.get('[data-test="speed-live"]').attributes('role')).toBe('status');
+      await w.setProps({ speed: 'fast' });
+      expect(w.get('[data-test="speed-live"]').text()).toBe('Animation speed: Fast');
+      await w.setProps({ speed: 'instant' });
+      expect(w.get('[data-test="speed-live"]').text()).toBe('Animation speed: Instant');
+    });
+
+    it('slides the hand in the time of the speed', async () => {
+      const props = { hand: { pit: 8, seeds: 2 }, activePit: 8, animating: true };
+      const w = board({ ...props, speed: 'normal' });
+      expect(w.get('[data-test="sowing-hand"]').attributes('style')).toContain('180ms');
+      await w.setProps({ speed: 'fast' });
+      expect(w.get('[data-test="sowing-hand"]').attributes('style')).toContain('90ms');
+    });
+  });
+
+  it('flags the pit the opponent chose', () => {
+    const w = board({ chosenPit: 8, animating: true, hand: { pit: 8, seeds: 2 } });
+    expect(pit(w, 'a2').attributes('data-chosen')).toBe('true');
+    expect(w.findAll('[data-chosen="true"]')).toHaveLength(1);
+    expect(board().findAll('[data-chosen="true"]')).toHaveLength(0);
+  });
+});

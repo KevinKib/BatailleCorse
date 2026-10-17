@@ -14,6 +14,7 @@ import { END_SCREEN_DELAY_MS } from '../../composables/useEndScreen';
 import webSocketService from '../../service/WebSocketService';
 import { setConnectionOnline } from '../../composables/useConnectionStatus';
 import { messagesEn } from '../../locales/en';
+import { ANIMATION_SPEED_KEY } from '../../composables/useAnimationSpeed';
 
 const ui = messagesEn.mangolaUi;
 
@@ -445,6 +446,132 @@ describe('MangolaGameScreen', () => {
       await wrapper.get('[data-test="leave-lobby"]').trigger('click');
       await flushPromises();
       expect(router.currentRoute.value.fullPath).toBe('/games');
+    });
+  });
+
+  describe('the animation speed', () => {
+    const speedButton = (w: VueWrapper) => w.get('[data-test="speed-button"]');
+
+    it('has a speed button under the board, on Normal at first', async () => {
+      const { wrapper } = await mountScreen(mangolaState());
+      expect(speedButton(wrapper).attributes('aria-label')).toBe('Animation speed: Normal');
+    });
+
+    it('each tap goes Normal, Fast, Instant, Normal, and the choice is kept in the browser', async () => {
+      const { wrapper } = await mountScreen(mangolaState());
+      await speedButton(wrapper).trigger('click');
+      expect(speedButton(wrapper).attributes('aria-label')).toBe('Animation speed: Fast');
+      await speedButton(wrapper).trigger('click');
+      expect(speedButton(wrapper).attributes('aria-label')).toBe('Animation speed: Instant');
+      expect(wrapper.get('[data-test="speed-live"]').text()).toBe('Animation speed: Instant');
+      expect(localStorage.getItem(ANIMATION_SPEED_KEY)).toBe('instant');
+      await speedButton(wrapper).trigger('click');
+      expect(speedButton(wrapper).attributes('aria-label')).toBe('Animation speed: Normal');
+    });
+
+    it('starts on the speed the player chose last time', async () => {
+      localStorage.setItem(ANIMATION_SPEED_KEY, 'fast');
+      const { wrapper } = await mountScreen(mangolaState());
+      expect(speedButton(wrapper).attributes('aria-label')).toBe('Animation speed: Fast');
+    });
+
+    it('Instant: the opponent move lands on the final board and its marks at once', async () => {
+      localStorage.setItem(ANIMATION_SPEED_KEY, 'instant');
+      vi.useFakeTimers();
+      const { wrapper, store } = await mountScreen(beforeOpponentMove());
+      store.applyEvent({ type: 'state-update', state: afterOpponentMove() });
+      await flushPromises();
+      expect(wrapper.find('[data-test="sowing-hand"]').exists()).toBe(false);
+      expect(pit(wrapper, 'h4').attributes('data-last-start')).toBe('true');
+      expect(pit(wrapper, 'a1').attributes('data-selectable')).toBe('true');
+    });
+
+    it('a tap on the button while the seeds travel applies at once: Instant ends the sowing', async () => {
+      localStorage.setItem(ANIMATION_SPEED_KEY, 'fast');
+      vi.useFakeTimers();
+      const { wrapper, store } = await mountScreen(beforeOpponentMove());
+      store.applyEvent({ type: 'state-update', state: afterOpponentMove() });
+      await flushPromises();
+      await vi.advanceTimersByTimeAsync(600);
+      expect(wrapper.find('[data-test="sowing-hand"]').exists()).toBe(true);
+      await speedButton(wrapper).trigger('click'); // Fast -> Instant
+      expect(wrapper.find('[data-test="sowing-hand"]').exists()).toBe(false);
+      expect(pit(wrapper, 'h4').attributes('data-last-start')).toBe('true');
+    });
+  });
+
+  describe('the decision of the opponent', () => {
+    it('shows the pit the opponent chose, the hand resting on it, before the seeds leave', async () => {
+      vi.useFakeTimers();
+      const { wrapper, store } = await mountScreen(beforeOpponentMove());
+      store.applyEvent({ type: 'state-update', state: afterOpponentMove() });
+      await flushPromises();
+      expect(pit(wrapper, 'h4').attributes('data-chosen')).toBe('true');
+      expect(wrapper.get('[data-test="sowing-hand"]').attributes('data-pit')).toBe('31');
+      expect(pit(wrapper, 'h4').attributes('aria-label')).toContain('2 seeds'); // not picked up yet
+      await vi.advanceTimersByTimeAsync(499);
+      expect(pit(wrapper, 'h4').attributes('data-chosen')).toBe('true');
+      await vi.advanceTimersByTimeAsync(2);
+      expect(pit(wrapper, 'h4').attributes('data-chosen')).toBeUndefined();
+      expect(pit(wrapper, 'h4').attributes('aria-label')).toContain('0 seeds'); // the seeds have left
+    });
+
+    it('does not pause my own move', async () => {
+      vi.useFakeTimers();
+      const before = mangolaState({ version: 1, board: boardOf('a2:2 c2:1 c3:2 c4:3 h1:2'), legalPits: [8], availableActions: ['SOW'] });
+      const { wrapper, store } = await mountScreen(before);
+      const sown = sow(before.board as number[], 'a2');
+      store.applyEvent({ type: 'state-update', state: {
+        ...before, version: 2, currentSeat: 1, board: sown.board, legalPits: [],
+        lastMove: { seat: 0, pit: 8, trace: sown.trace },
+      } });
+      await flushPromises();
+      expect(wrapper.find('[data-chosen="true"]').exists()).toBe(false);
+      expect(pit(wrapper, 'a2').attributes('data-active')).toBe('true');
+    });
+  });
+
+  describe('"is thinking" for a computer opponent', () => {
+    const botLobby = () => lobbyView({
+      players: [{ seat: 0, name: 'Alice', joined: true }, { seat: 1, name: 'Bob', joined: true, bot: true }],
+    });
+    const thinking = (w: VueWrapper) => w.get('[data-test="thinking"]');
+
+    it('says it politely, in the place of the turn cue, while the computer chooses', async () => {
+      const { wrapper, store } = await mountScreen(botLobby());
+      store.applyEvent({ type: 'state-update', state: beforeOpponentMove() });
+      await flushPromises();
+      expect(thinking(wrapper).text()).toBe('Bob is thinking…');
+      expect(thinking(wrapper).attributes('aria-live')).toBe('polite');
+      expect(thinking(wrapper).attributes('role')).toBe('status');
+      expect(wrapper.get('[data-test="turn-indicator"]').element.parentElement)
+        .toBe(thinking(wrapper).element.parentElement);
+    });
+
+    it('keeps its place when empty, so the board does not move', async () => {
+      const { wrapper, store } = await mountScreen(botLobby());
+      store.applyEvent({ type: 'state-update', state: mangolaState() }); // my turn
+      await flushPromises();
+      expect(thinking(wrapper).exists()).toBe(true);
+      expect(thinking(wrapper).text()).toBe('');
+    });
+
+    it('goes away when the move arrives and the seeds travel, and does not come back on my turn', async () => {
+      vi.useFakeTimers();
+      const { wrapper, store } = await mountScreen(botLobby());
+      store.applyEvent({ type: 'state-update', state: beforeOpponentMove() });
+      await flushPromises();
+      store.applyEvent({ type: 'state-update', state: afterOpponentMove() });
+      await flushPromises();
+      expect(thinking(wrapper).text()).toBe('');
+      await vi.advanceTimersByTimeAsync(30_000);
+      expect(thinking(wrapper).text()).toBe('');
+    });
+
+    it('says nothing against a human: the hint already says we are waiting', async () => {
+      const { wrapper } = await mountScreen(beforeOpponentMove());
+      expect(thinking(wrapper).text()).toBe('');
+      expect(wrapper.get('[data-test="phase-hint"]').text()).toBe('Waiting for Bob');
     });
   });
 });
