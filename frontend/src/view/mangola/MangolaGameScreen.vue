@@ -5,6 +5,7 @@ import { useRouter } from 'vue-router';
 import { useMangolaStore, STUCK_START_KEY } from '../../state/Mangola.store';
 import { useMangolaBootstrap } from '../../composables/useMangolaBootstrap';
 import { useSowingAnimation } from '../../composables/useSowingAnimation';
+import { useAnimationSpeed } from '../../composables/useAnimationSpeed';
 import { useEndScreen } from '../../composables/useEndScreen';
 import { useSeatDisconnectCountdown } from '../../composables/useSeatDisconnectCountdown';
 import { useLeaveGuard } from '../../composables/useLeaveGuard';
@@ -49,7 +50,8 @@ watch(online, (isOnline, wasOnline) => {
 });
 
 // Each state the store receives goes through the animation, which says what the board shows right now.
-const animation = useSowingAnimation();
+const { speed, cycle: cycleSpeed } = useAnimationSpeed();
+const animation = useSowingAnimation({ speed: () => speed.value, mySeat: () => store.mySeat });
 watch(() => store.game, state => animation.push(state), { immediate: true, flush: 'sync' });
 const animating = computed(() => animation.animating.value);
 
@@ -73,6 +75,14 @@ const seedsText = (seeds: number | null) => (seeds === null ? '' : plural(ui.tab
 
 const placementError = computed(() => (store.placementError === STUCK_START_KEY ? ui.errors.stuckStart : null));
 const boardDisabled = computed(() => !online.value || store.phase !== 'playing');
+
+// A computer opponent chooses after a delay of its own; the game view does not say which seat is a computer, so the
+// store remembers it from the lobby. Silent while the move plays and for a human, whose "Waiting for" line says it.
+const thinkingText = computed(() => {
+  if (store.phase !== 'playing' || store.isMyTurn || animating.value) return '';
+  const current = store.game?.players.find(p => p.current);
+  return current && store.botSeats.includes(current.seat) ? format(ui.table.thinking, { player: displayName(current.seat) }) : '';
+});
 
 const phaseHint = computed(() => {
   if (store.phase !== 'playing') return '';
@@ -233,15 +243,22 @@ function leaveLobby() {
             :hand="animation.hand.value"
             :active-pit="animation.activePit.value"
             :capturing="animation.capturing.value"
+            :chosen-pit="animation.chosenPit.value"
+            :speed="speed"
             @sow="pit => store.sow(pit)"
-            @skip="animation.skip()" />
+            @skip="animation.skip()"
+            @cycle-speed="cycleSpeed()" />
 
           <div v-if="store.me" class="tag" data-test="player-tag" :data-active="store.isMyTurn">
             <span class="tag__name" data-test="tag-name">{{ displayName(store.me.seat) }}</span>
             <span class="tag__seeds" data-test="tag-seeds">{{ seedsText(mySeeds) }}</span>
           </div>
 
-          <YourTurnIndicator class="turn-slot" :active="store.isMyTurn && !animating" />
+          <!-- One reserved place for both cues, so that neither moves the board: "Your turn", or "Bob is thinking…". -->
+          <div class="turn-slot">
+            <YourTurnIndicator :active="store.isMyTurn && !animating" />
+            <p class="thinking" data-test="thinking" role="status" aria-live="polite">{{ thinkingText }}</p>
+          </div>
           <p v-if="store.phase === 'playing'" class="phase-hint" data-test="phase-hint">{{ phaseHint }}</p>
           <p v-if="store.repeatedTwice" class="repetition-hint" data-test="repetition-hint" role="status">
             {{ ui.table.repetition }}
@@ -351,7 +368,16 @@ function leaveLobby() {
 .tag__name { font-weight: 700; overflow-wrap: anywhere; }
 .tag__seeds { font-size: 0.8rem; opacity: 0.8; }
 
-.turn-slot { flex: none; min-height: 1.2em; }
+.turn-slot { flex: none; display: grid; min-height: 1.2em; }
+.turn-slot > * { grid-area: 1 / 1; }
+.thinking {
+  margin: 0;
+  text-align: center;
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.78);
+  overflow-wrap: anywhere;
+}
 .phase-hint,
 .repetition-hint {
   flex: none;

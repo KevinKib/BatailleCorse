@@ -551,6 +551,8 @@ export interface MangolaUiMessages {
     yourSide: string;                  // legend of the viewer's half (bottom)
     opponentSide: string;              // legend of the opponent's half (top)
     skip: string;                      // button that jumps to the end of the sowing animation
+    speed: string;                     // '{speed}': name of the button that cycles the animation speed (states are read out)
+    speeds: { normal: string; fast: string; instant: string }; // the three speeds, as '{speed}' and on the button
   };
   move: {
     sowed: string;                     // '{player}', '{pit}': the live-region sentence of a move
@@ -562,6 +564,7 @@ export interface MangolaUiMessages {
     seeds: PluralForms;                // '{n}' = seeds in the pit
     hidden: string;                    // the pit is hidden from me
     canSow: string;                    // I may sow from this pit now
+    chosen: string;                    // the opponent has just chosen this pit and is about to sow it
     lastStart: string;                 // the opponent's last move started here
     lastEnd: string;                   // the opponent's last move ended here
     captured: PluralForms;             // '{n}' = seeds the opponent's last move took from this pit
@@ -603,6 +606,7 @@ export interface MangolaUiMessages {
   connecting: string;                  // shown while the first server state is on its way
   table: {
     waitingFor: string;                // '{player}': not my turn
+    thinking: string;                  // '{player}': a computer opponent is choosing its move
     hintSow: string;                   // my turn
     seeds: PluralForms;                // '{n}' = seeds on a player's side (the tag)
     forfeited: string;                 // '{player}'

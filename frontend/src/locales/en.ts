@@ -596,7 +596,14 @@ export const messagesEn: Messages = {
     ],
   },
   mangolaUi: {
-    board: { label: 'Mangola board', yourSide: 'Your side', opponentSide: "Opponent's side", skip: 'Skip' },
+    board: {
+      label: 'Mangola board',
+      yourSide: 'Your side',
+      opponentSide: "Opponent's side",
+      skip: 'Skip',
+      speed: 'Animation speed: {speed}',
+      speeds: { normal: 'Normal', fast: 'Fast', instant: 'Instant' },
+    },
     move: {
       sowed: '{player} sowed from {pit}',
       relays: { one: '{n} relay', other: '{n} relays' },
@@ -607,6 +614,7 @@ export const messagesEn: Messages = {
       seeds: { one: '{n} seed', other: '{n} seeds' },
       hidden: 'hidden',
       canSow: 'can sow',
+      chosen: 'just chosen',
       lastStart: 'last move started here',
       lastEnd: 'last move ended here',
       captured: { one: 'captured, {n} seed taken', other: 'captured, {n} seeds taken' },
@@ -647,6 +655,7 @@ export const messagesEn: Messages = {
     connecting: 'Joining the table…',
     table: {
       waitingFor: 'Waiting for {player}',
+      thinking: '{player} is thinking…',
       hintSow: 'Choose one of your pits with at least two seeds',
       seeds: { one: '{n} seed', other: '{n} seeds' },
       forfeited: '{player} forfeited',

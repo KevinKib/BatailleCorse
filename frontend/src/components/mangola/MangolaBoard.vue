@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { computed, nextTick, ref, useTemplateRef } from 'vue';
+import { computed, nextTick, ref, useTemplateRef, watch } from 'vue';
 import { useI18n } from '../../composables/useI18n';
 import type { MangolaCell } from '../../model/mangola/board';
 import { NO_BOARD_MARKS, type BoardMarks } from '../../model/mangola/marks';
 import type { HandPosition } from '../../model/mangola/replay';
+import { SPEED_PROFILES } from '../../model/mangola/trace';
+import type { AnimationSpeed } from '../../composables/useAnimationSpeed';
+import { format } from '../../locales/format';
 import MangolaPit from './MangolaPit.vue';
 
 // The Mangola board, presentational only: the 4 x 8 grid exactly as the viewer sees it (`rows` comes from the
@@ -23,6 +26,8 @@ const props = withDefaults(defineProps<{
   hand?: HandPosition | null;       // the travelling hand: the pit it is over and the seeds it holds
   activePit?: number | null;        // the pit the hand is over
   capturing?: readonly number[];    // pits whose seeds the hand is taking now
+  chosenPit?: number | null;        // the pit the opponent chose, shown before the seeds leave it
+  speed?: AnimationSpeed;           // the animation speed, named on the button under the board
 }>(), {
   interactive: true,
   disabled: false,
@@ -32,11 +37,19 @@ const props = withDefaults(defineProps<{
   hand: null,
   activePit: null,
   capturing: () => [],
+  chosenPit: null,
+  speed: 'normal',
 });
 
-const emit = defineEmits<{ sow: [pit: number]; skip: [] }>();
+const emit = defineEmits<{ sow: [pit: number]; skip: []; 'cycle-speed': [] }>();
 
 const ui = useI18n().mangolaUi;
+
+const speedName = computed(() => ui.board.speeds[props.speed]);
+const speedLabel = computed(() => format(ui.board.speed, { speed: speedName.value }));
+// A change of speed is read out (the button's own name changes silently): not at first, only after a tap.
+const speedAnnouncement = ref('');
+watch(() => props.speed, () => { speedAnnouncement.value = speedLabel.value; });
 
 const inert = computed(() => props.disabled || !props.interactive || props.animating);
 const canSow = (cell: MangolaCell): boolean => !inert.value && cell.legal;
@@ -103,7 +116,13 @@ const handStyle = computed(() => {
   if (!props.hand) return null;
   for (let r = 0; r < props.rows.length; r++) {
     const c = props.rows[r].findIndex(cell => cell.pit === props.hand!.pit);
-    if (c >= 0) return { left: `${(c * 100) / COLUMN_COUNT}%`, top: `${(r * 100) / ROW_COUNT}%` };
+    if (c >= 0) {
+      return {
+        left: `${(c * 100) / COLUMN_COUNT}%`,
+        top: `${(r * 100) / ROW_COUNT}%`,
+        '--mg-slide': `${SPEED_PROFILES[props.speed].handSlideMs}ms`,
+      };
+    }
   }
   return null;
 });
@@ -125,6 +144,7 @@ const handStyle = computed(() => {
           :last-start="marks.start === cell.pit"
           :last-end="marks.end === cell.pit"
           :active="animating && activePit === cell.pit"
+          :chosen="animating && chosenPit === cell.pit"
           :capturing="capturing.includes(cell.pit)"
           :captured="capturedOf(cell.pit) !== undefined"
           :captured-seeds="capturedOf(cell.pit)?.seeds ?? null"
@@ -144,10 +164,23 @@ const handStyle = computed(() => {
       </span>
     </div>
     <div class="mg-board__footer">
+      <button
+        type="button"
+        class="mg-board__speed"
+        data-test="speed-button"
+        :aria-label="speedLabel"
+        @click="emit('cycle-speed')"
+      >
+        <span class="mg-board__speed-chevrons" aria-hidden="true" :data-speed="speed">
+          <i></i><i></i><i></i>
+        </span>
+        <span aria-hidden="true">{{ speedName }}</span>
+      </button>
       <p class="mg-board__legend mg-board__legend--bottom">{{ ui.board.yourSide }}</p>
       <button v-if="animating" type="button" class="mg-board__skip" data-test="skip-sowing" @click="emit('skip')">{{ ui.board.skip }}</button>
     </div>
     <div class="mg-live" role="status" data-test="board-live">{{ announcement }}</div>
+    <div class="mg-live" role="status" data-test="speed-live">{{ speedAnnouncement }}</div>
   </div>
 </template>
 
@@ -171,7 +204,42 @@ const handStyle = computed(() => {
   font-size: 0.8rem;
   cursor: pointer;
 }
-.mg-board__skip:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.mg-board__skip:focus-visible,
+.mg-board__speed:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+/* The speed button faces Skip: at the left of the same line, the same 44 px target. */
+.mg-board__speed {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 var(--space-3, 0.75rem);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.55);
+  color: inherit;
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+/* Three small chevrons, lit one more at each speed: a glyph that does not need a language. */
+.mg-board__speed-chevrons { display: inline-flex; gap: 2px; }
+.mg-board__speed-chevrons i {
+  width: 0.45em;
+  height: 0.45em;
+  border-top: 2px solid currentColor;
+  border-right: 2px solid currentColor;
+  transform: rotate(45deg) scale(0.9);
+  opacity: 0.25;
+}
+.mg-board__speed-chevrons i:nth-child(1) { opacity: 1; }
+.mg-board__speed-chevrons[data-speed='fast'] i:nth-child(-n + 2),
+.mg-board__speed-chevrons[data-speed='instant'] i { opacity: 1; }
 
 /* The hand covers exactly one cell and slides to the next one: it never takes a tap. */
 .mg-board__hand {
@@ -197,7 +265,7 @@ const handStyle = computed(() => {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.55);
 }
 @media (prefers-reduced-motion: no-preference) {
-  .mg-board__hand { transition: left 90ms linear, top 90ms linear; }
+  .mg-board__hand { transition: left var(--mg-slide, 90ms) linear, top var(--mg-slide, 90ms) linear; }
 }
 .mg-board {
   /* The screen gutter is 4 px a side, so eight cells are 45.9 px wide at 375 px. */

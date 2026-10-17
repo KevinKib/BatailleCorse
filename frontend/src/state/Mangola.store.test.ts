@@ -473,4 +473,26 @@ describe('Mangola store', () => {
       expect(store.gameId).toBeNull();
     });
   });
+
+  describe('computer seats', () => {
+    it('remembers the computer seats of the lobby once the game has started (the game view does not say)', () => {
+      const store = seated(0);
+      store.applyEvent({ type: 'state-update', state: lobbyView({
+        players: [{ seat: 0, name: 'Alice', joined: true }, { seat: 1, name: 'Bot 1', joined: true, bot: true }],
+      }) });
+      expect(store.botSeats).toEqual([1]);
+      store.applyEvent({ type: 'state-update', state: mangolaState() });
+      expect(store.botSeats).toEqual([1]);
+    });
+
+    it('knows none when the game was joined after the lobby (a reload), or against a human', () => {
+      const store = seated(0);
+      store.applyEvent({ type: 'state-update', state: mangolaState() });
+      expect(store.botSeats).toEqual([]);
+      store.applyEvent({ type: 'state-update', state: lobbyView({
+        players: [{ seat: 0, name: 'Alice', joined: true }, { seat: 1, name: 'Bob', joined: true }],
+      }) });
+      expect(store.botSeats).toEqual([]);
+    });
+  });
 });

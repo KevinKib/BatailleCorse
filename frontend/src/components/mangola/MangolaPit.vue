@@ -21,6 +21,7 @@ const props = withDefaults(defineProps<{
   capturedSeeds?: number | null;      // seeds it took from it, when known
   tabbable?: boolean;                 // the one pit of the board that is a tab stop
   active?: boolean;                   // the travelling hand is over this pit (sowing animation)
+  chosen?: boolean;                   // the opponent has just chosen this pit: the hand rests on it before the seeds leave
   capturing?: boolean;                // the hand is taking this pit's seeds (sowing animation)
 }>(), {
   mine: false,
@@ -32,6 +33,7 @@ const props = withDefaults(defineProps<{
   capturedSeeds: null,
   tabbable: true,
   active: false,
+  chosen: false,
   capturing: false,
 });
 
@@ -54,6 +56,7 @@ const label = computed(() => {
   if (props.selectable && props.hint === null) words.push(ui.pit.canSow);
   if (props.hint === 'add') words.push(ui.pit.tapToAdd);
   if (props.hint === 'remove') words.push(ui.pit.tapToRemove);
+  if (props.chosen) words.push(ui.pit.chosen);
   if (props.lastStart) words.push(ui.pit.lastStart);
   if (props.lastEnd) words.push(ui.pit.lastEnd);
   if (props.captured) {
@@ -79,6 +82,7 @@ function press(): void {
     :data-last-end="lastEnd ? 'true' : undefined"
     :data-captured="captured ? 'true' : undefined"
     :data-active="active ? 'true' : undefined"
+    :data-chosen="chosen ? 'true' : undefined"
     :data-capturing="capturing ? 'true' : undefined"
     :aria-label="label"
     :aria-disabled="selectable ? undefined : 'true'"
@@ -193,6 +197,13 @@ function press(): void {
 .mg-pit[data-last-end='true'] .mg-pit__bowl { outline: 2.5px double #fff; outline-offset: 1px; }
 .mg-pit[data-captured='true'] .mg-pit__bowl { outline: 2px dashed rgb(var(--accent-negative-rgb)); outline-offset: 1px; }
 .mg-pit[data-active='true'] .mg-pit__bowl { box-shadow: inset 0 0 0 2.5px var(--gold), 0 0 10px rgba(var(--accent-active-rgb), 0.7); }
+/* The pit the opponent chose: the same gold ring as an active pit, with a ring around it that pulses (a fixed ring
+   under reduced motion), so the decision is seen before the seeds leave. */
+.mg-pit[data-chosen='true'] .mg-pit__bowl {
+  box-shadow: inset 0 0 0 2.5px var(--gold), 0 0 10px rgba(var(--accent-active-rgb), 0.7);
+  outline: 3px solid var(--gold);
+  outline-offset: 2px;
+}
 .mg-pit[data-capturing='true'] .mg-pit__bowl { outline: 2px dashed rgb(var(--accent-negative-rgb)); outline-offset: 1px; }
 .mg-pit__taken {
   position: absolute;
@@ -217,5 +228,10 @@ function press(): void {
 
 @media (prefers-reduced-motion: no-preference) {
   .mg-pit__count { transition: opacity 120ms ease-out; }
+  .mg-pit[data-chosen='true'] .mg-pit__bowl { animation: mg-chosen-pulse 700ms ease-in-out infinite; }
+}
+@keyframes mg-chosen-pulse {
+  0%, 100% { outline-offset: 2px; outline-color: var(--gold); }
+  50% { outline-offset: 5px; outline-color: rgba(255, 255, 255, 0.55); }
 }
 </style>
