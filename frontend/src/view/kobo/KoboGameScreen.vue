@@ -38,6 +38,7 @@ import { findGame } from '../../model/games';
 import { seatDisplayName } from '../../model/table/displayName';
 import { opponentsInPlayOrder } from '../../model/table/opponentOrder';
 import { seatPositions } from '../../model/table/seatRing';
+import { koboCardWidths } from '../../model/kobo/cardSizes';
 import { opponentColumns } from '../../model/kobo/faces';
 import { eventHighlights, headlineEvent } from '../../model/kobo/eventLog';
 import { endSummary } from '../../model/kobo/endSummary';
@@ -104,6 +105,7 @@ const opponents = computed(() => opponentsInPlayOrder(
   .filter(p => p.seat !== store.mySeat));
 const narrow = useNarrowScreen();
 const compactOpponents = computed(() => narrow.value || opponents.value.length >= 4);
+const cardWidths = computed(() => koboCardWidths(opponents.value.length, narrow.value));
 const ring = computed(() => seatPositions(opponents.value.length));
 const columns = computed(() => opponentColumns(opponents.value.length));
 
@@ -428,6 +430,7 @@ watch(() => [store.game?.round, store.game?.phase, store.game?.currentSeat, live
               :picked="pickedRivalSlot(opponent.seat)"
               :highlighted="highlighted"
               :compact="compactOpponents"
+              :card-width="cardWidths.opponent"
               @pick="pick" />
           </div>
         </div>
@@ -445,7 +448,8 @@ watch(() => [store.game?.round, store.game?.phase, store.game?.currentSeat, live
           @next-round="store.ready()" />
       </div>
 
-      <div v-if="!sheetOpen" class="my-zone" data-test="my-zone" role="region" :aria-label="ui.regions.yours">
+      <div v-if="!sheetOpen" class="my-zone" data-test="my-zone" role="region" :aria-label="ui.regions.yours"
+           :style="cardWidths.mine ? { '--kobo-card-w': `${cardWidths.mine}px` } : undefined">
         <KoboSeat
           v-if="me"
           :player="me"
@@ -513,9 +517,8 @@ watch(() => [store.game?.round, store.game?.phase, store.game?.currentSeat, live
   height: 100dvh;
   overflow: hidden;
   padding: var(--space-2) var(--space-2) calc(var(--space-2) + env(safe-area-inset-bottom, 0px));
-  background:
-    radial-gradient(ellipse at 50% 42%, transparent 15%, rgba(0, 0, 0, 0.62) 100%),
-    radial-gradient(ellipse at 50% 38%, var(--felt-center) 0%, var(--felt-mid) 48%, var(--felt-edge) 100%);
+  /* A neutral room (anthracite, no green): the felt of the table stands out by its hue alone. */
+  background: radial-gradient(ellipse at 50% 40%, #1d201f 0%, #121414 55%, #0a0b0b 100%);
 }
 /* The lobby is a title-style screen: it sits on the shared felt background instead. */
 .kobo-screen--lobby {
@@ -622,9 +625,7 @@ watch(() => [store.game?.round, store.game?.phase, store.game?.currentSeat, live
   margin: 0 auto;
   padding: var(--space-2) var(--space-2) 0;
   box-sizing: border-box;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.30) 0%, rgba(0, 0, 0, 0.04) 100%);
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 14px 14px 0 0;
+  /* No panel around my zone (no fill, no border): the grid, the plate and the turn marker stand on the page. */
   --kobo-card-w: clamp(48px, 8vh, 64px);
   --kobo-gap: 6px;
 }
