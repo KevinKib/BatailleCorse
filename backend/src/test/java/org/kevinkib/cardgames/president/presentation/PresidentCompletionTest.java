@@ -177,6 +177,23 @@ class PresidentCompletionTest {
     }
 
     @Test
+    void aQuadPlayedAtOnceIsAnOrdinaryPlayEventThatClosesTheTrickWithQuad() throws Exception {
+        President game = table.install(aPresident().leader(0)
+                .withHand("5S 5H 5D 5C 3C").withHand("9H 4C").withHand("10H 6C").build());
+        table.messaging.clear();
+
+        table.actions.play(game.getId(), seat(0), cards("5S 5H 5D 5C"));
+
+        Response first = table.messaging.payloads.get(0);
+        assertThat(first.getEventType(), is("PLAY"));
+        PresidentEventData data = (PresidentEventData) first.getEventData();
+        assertThat(data.trickEndReason(), is("QUAD"));
+        assertThat(data.trickWinner(), is(0));
+        assertThat(((PresidentDto) first.getState()).currentSeat(), is(0));
+        assertThat(((PresidentDto) first.getState()).trick().plays().isEmpty(), is(true));
+    }
+
+    @Test
     void aCompletionInTurnIsAnOrdinaryPlayThatClosesTheTrick() throws Exception {
         President game = windowOpenForC();
 

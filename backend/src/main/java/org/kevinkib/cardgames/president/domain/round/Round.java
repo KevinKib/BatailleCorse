@@ -127,8 +127,11 @@ public final class Round {
             }
         }
         Chain chain = trick.chain();
-        if (equalPlay() && chain.plays() >= 2 && chain.cards().size() == Completion.RANK_SIZE) {
-            // the four cards of a rank played in succession close the trick; whoever played the last ones leads
+        boolean quadAtOnce = play.cards().size() == Completion.RANK_SIZE;
+        boolean quadInSuccession = equalPlay() && chain.plays() >= 2 && chain.cards().size() == Completion.RANK_SIZE;
+        if (quadAtOnce || quadInSuccession) {
+            // four cards of a rank, in one play or in succession, close the trick; whoever played the last ones
+            // leads. V2's quadClears option will gate the first case; V1 has no way to turn it off.
             completeTrick(events, TrickEndReason.QUAD);
             return events;
         }

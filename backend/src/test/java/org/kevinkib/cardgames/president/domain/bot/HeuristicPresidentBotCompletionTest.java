@@ -51,6 +51,20 @@ class HeuristicPresidentBotCompletionTest {
     }
 
     @Test
+    void aBotThatLeadsAQuadPlaysItAndTheGameClosesTheTrick() throws Exception {
+        President game = aPresident().leader(0)
+                .withHand("5S 5H 5D 5C").withHand("KC 4C").withHand("QC 6C").build();
+        PresidentBotView view = PresidentBotView.forSeat(game, seat(0));
+
+        PresidentBotDecision decision = decide(PresidentBotLevel.HARD, ALWAYS_LOW, view);
+
+        assertThat(decision, instanceOf(PresidentBotDecision.Play.class));
+        assertThat(((PresidentBotDecision.Play) decision).cards(), containsInAnyOrder(cards("5S 5H 5D 5C").toArray()));
+        game.play(seat(0), ((PresidentBotDecision.Play) decision).cards());
+        assertThat(game.trick().plays().isEmpty(), is(true));
+    }
+
+    @Test
     void aBoundBotThatHoldsTheCompletionCompletesRatherThanMatchingOneCard() throws Exception {
         President game = cBoundHoldingTheCompletion();
         PresidentBotView view = PresidentBotView.forSeat(game, seat(2));
