@@ -12,7 +12,8 @@ import org.kevinkib.cardgames.presentation.dto.event.EventData;
 import java.util.List;
 
 /**
- * Public description of what a command did. Only the cards played are named; a give back carries a count and
+ * Public description of what a command did. {@code outForbidden} is set when the command made the seat go out. Only
+ * the cards played are named; a give back carries a count and
  * never its cards. {@code action} is the command even when the broadcast event is a ROUND_END or GAME_OVER
  * caused by it.
  */
@@ -22,6 +23,7 @@ public record PresidentEventData(
         List<CardDto> cards,
         Integer count,
         Integer outPlace,
+        Boolean outForbidden,
         Integer trickWinner,
         String trickEndReason,
         Boolean barrierOpened) implements EventData {
@@ -31,6 +33,7 @@ public record PresidentEventData(
         List<CardDto> cards = null;
         Integer count = null;
         Integer outPlace = null;
+        Boolean outForbidden = null;
         Integer trickWinner = null;
         String trickEndReason = null;
         Boolean barrierOpened = null;
@@ -38,7 +41,9 @@ public record PresidentEventData(
             if (event instanceof Played e) {
                 cards = e.cards().stream().map(CardDto::from).toList();
             } else if (event instanceof PlayerOut e) {
-                outPlace = e.place();
+                // a forbidden finisher has no place yet: they are placed last when the round ends
+                outPlace = e.forbidden() ? null : e.place();
+                outForbidden = e.forbidden();
             } else if (event instanceof TrickWon e) {
                 trickWinner = e.seat().id();
                 trickEndReason = e.reason().name();
@@ -48,8 +53,8 @@ public record PresidentEventData(
                 barrierOpened = e.opened();
             }
         }
-        return new PresidentEventData(seat, action.name(), cards, count, outPlace, trickWinner, trickEndReason,
-                barrierOpened);
+        return new PresidentEventData(seat, action.name(), cards, count, outPlace, outForbidden, trickWinner,
+                trickEndReason, barrierOpened);
     }
 
     /** Whether the events of a ready opened the barrier, so the next round started. */

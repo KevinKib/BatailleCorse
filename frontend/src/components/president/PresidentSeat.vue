@@ -19,6 +19,11 @@ const props = defineProps<{
   secondsRemaining?: number | null;
 }>();
 const ui = useI18n().presidentUi;
+const outText = computed(() => {
+  const place = props.player.place;
+  if (!props.player.forbiddenFinish) return format(ui.table.out, { n: place ?? '' });
+  return place === null ? ui.table.outForbidden : format(ui.table.outForbiddenPlace, { n: place });
+});
 const title = computed(() => props.player.title ? ui.titles[titleKey(props.player.title) as PresidentTitleKey] : null);
 </script>
 
@@ -30,7 +35,8 @@ const title = computed(() => props.player.title ? ui.titles[titleKey(props.playe
     <span class="seat-stats" data-test="seat-cards">{{ plural(ui.table.cards, player.handSize) }}</span>
     <span v-if="current || player.out || player.passed || (showReady && player.ready)" class="seat-markers">
       <span v-if="current" class="marker marker--current" data-test="seat-current">{{ ui.table.current }}</span>
-      <span v-if="player.out" class="marker marker--out" data-test="seat-out">{{ format(ui.table.out, { n: player.place ?? '' }) }}</span>
+      <span v-if="player.out" class="marker marker--out" :class="{ 'marker--forbidden': player.forbiddenFinish }"
+            data-test="seat-out">{{ outText }}</span>
       <span v-else-if="player.passed" class="marker" data-test="seat-passed">{{ ui.table.passed }}</span>
       <span v-if="showReady && player.ready" class="marker marker--ready" data-test="seat-ready"><i class="pi pi-check" aria-hidden="true"></i>{{ ui.table.ready }}</span>
     </span>
@@ -112,6 +118,7 @@ const title = computed(() => props.player.title ? ui.titles[titleKey(props.playe
 .marker--current { color: rgb(var(--accent-active-rgb)); }
 .marker--ready { color: rgb(var(--accent-positive-rgb)); }
 .marker--out { color: var(--gold); }
+.marker--forbidden { color: rgb(var(--accent-negative-rgb)); }
 .president-seat--out .seat-label { opacity: 0.7; }
 .president-seat--disconnected .seat-label { opacity: 0.6; }
 

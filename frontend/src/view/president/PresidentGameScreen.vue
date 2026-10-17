@@ -93,6 +93,19 @@ const narrow = useNarrowScreen();
 const ring = computed(() => seatPositions(opponents.value.length));
 const columns = computed(() => Math.min(Math.max(opponents.value.length, 1), 4));
 const chips = computed(() => store.game ? ruleChips(store.game) : []);
+// What the last command did to the trick: who took it and why, and a forbidden finish. The text is the client's;
+// the facts (winner, reason, forbidden) are the server's event.
+const trickNotes = computed(() => {
+  const data = store.lastEvent?.data;
+  if (!data) return [];
+  const notes: string[] = [];
+  if (data.trickWinner !== null && data.trickWinner !== undefined && data.trickEndReason) {
+    const template = ui.trickEnd[data.trickEndReason];
+    if (template) notes.push(format(template, { player: displayName(data.trickWinner) }));
+  }
+  if (data.outForbidden) notes.push(format(ui.trickEnd.forbidden, { player: displayName(data.seat) }));
+  return notes;
+});
 
 const roundText = computed(() => {
   const g = store.game;
@@ -241,7 +254,7 @@ const rematchButton = computed(() =>
           </div>
         </div>
         <div class="table-center" role="region" :aria-label="ui.table.pile">
-          <PresidentTrick :trick="store.game.trick" :my-seat="store.mySeat" :name-of="displayName" :chips="chips" />
+          <PresidentTrick :trick="store.game.trick" :my-seat="store.mySeat" :name-of="displayName" :chips="chips" :notes="trickNotes" />
         </div>
       </div>
 

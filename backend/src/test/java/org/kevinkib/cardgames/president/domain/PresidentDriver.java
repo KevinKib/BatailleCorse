@@ -3,6 +3,7 @@ package org.kevinkib.cardgames.president.domain;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.president.domain.exchange.PendingReturn;
 import org.kevinkib.cardgames.president.domain.play.Play;
+import org.kevinkib.cardgames.president.domain.round.Action;
 import org.kevinkib.cards.domain.Card;
 
 import java.util.ArrayList;
@@ -66,8 +67,8 @@ final class PresidentDriver {
                 }
                 PlayerId seat = game.currentSeat();
                 List<Play> options = game.legalPlays(seat);
-                boolean leading = game.trick().plays().isEmpty();
-                if (!leading && (options.isEmpty() || random.nextInt(4) == 0)) {
+                boolean canPass = game.availableActions(seat).contains(Action.PASS);
+                if (canPass && (options.isEmpty() || random.nextInt(4) == 0)) {
                     game.pass(seat);
                 } else {
                     game.play(seat, options.get(random.nextInt(options.size())).cards());

@@ -84,7 +84,7 @@ players) get distinct names (today all "Neutral").
 | B2 | `feat: President bots at the table` | M | B1, P3 | coordinator with a manual scheduler, broadcaster skips bots, bot game IT | stale tasks | done (#251) |
 | B3 | `feat: play President against bots` | S-M | B2, F2 | Vitest; Cypress lobby with bots, a round against a hard bot | shared lobby specs | done (#252) |
 | V1 | `feat: President equal play, the four and completion out of turn` | L | P3, B2 (F2 for the UI part) | worked examples of spec §3.1.2 as parameterised rows; ordering of a completion against the next play and against passes; DTO `completion` lifetime; bot completion; Cypress "Complete the four" | the first out-of-turn command of the game | done (#253) |
-| V2 | `feat: President cuts, quad, forbidden finish and must play` | M | V1 | beat and effect matrix per option value, parameterised; Cypress per visible indicator | cuts against the equal-play binding | - |
+| V2 | `feat: President cuts, quad, forbidden finish and must play` | M | V1 | beat and effect matrix per option value, parameterised; Cypress per visible indicator | cuts against the equal-play binding | done (#256) |
 | V3 | `feat: President revolution and aces high` | M | V2 | rank order under each option and revolution state; exchange best cards under each order | revolution timing | - |
 | V4 | `feat: President runs and suit lock` | M-L | V3 | run parsing and beating tables; lock tables; `LegalPlays` enumeration size | `LegalPlays` growth with runs | - |
 | E1 | `test: President end-to-end matrix` | M | V4, B3 | Cypress: the Classic preset through a scripted round, a completion out of turn, rematch, disconnect and forfeit | e2e duration | - |
@@ -308,7 +308,8 @@ binding) and O4 (a single lead does not open the window) are decided.
 
 ## V2 `feat: President cuts, quad, forbidden finish and must play` (M)
 
-Keys `twoCuts`, `quadClears` (a quad played at once closes the trick; `on` by default, O5), `forbiddenFinish` (default `lastPlace`), `mustPlay`.
+Keys `forbiddenFinish` (default `lastPlace`) and `mustPlay`. The 2 that closes the trick (a lone 2, on any play, under the
+equal-play binding too, as a lead) and the quad that closes it (O5) are **fixed rules**, not options (owner, 2026-10-17).
 Domain: `BeatRule` cut cases, `PlayEffects` clears with reasons, forbidden finish places (a forbidden
 finisher out first does not close the trick, O3 decided; only the player taking 1st place does, so the
 `FIRST_OUT` rule of P2/P3 keys on 1st place; worked example 9 of spec §3.1.2 as a test row), `mustPlay` in `pass` (a completion is never

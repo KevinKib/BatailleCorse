@@ -2,12 +2,17 @@ package org.kevinkib.cardgames.president.domain;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.president.domain.play.Play;
+import org.kevinkib.cardgames.president.domain.round.Action;
 import org.kevinkib.cardgames.president.domain.round.Phase;
 import org.kevinkib.cardgames.president.domain.rules.AfterPass;
+import org.kevinkib.cardgames.president.domain.rules.EqualPlay;
+import org.kevinkib.cardgames.president.domain.rules.ForbiddenFinish;
 import org.kevinkib.cardgames.president.domain.rules.PresidentOptions;
 import org.kevinkib.cards.domain.Card;
 
@@ -16,6 +21,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -53,8 +59,8 @@ class PresidentRandomGamesTest {
         for (int step = 0; step < 5000 && game.phase() == Phase.PLAYING; step++) {
             PlayerId seat = game.currentSeat();
             List<Play> options = game.legalPlays(seat);
-            boolean leading = game.trick().plays().isEmpty();
-            boolean pass = !leading && (options.isEmpty() || random.nextInt(4) == 0);
+            boolean pass = game.availableActions(seat).contains(Action.PASS)
+                    && (options.isEmpty() || random.nextInt(4) == 0);
             if (pass) {
                 game.pass(seat);
             } else {
@@ -87,17 +93,48 @@ class PresidentRandomGamesTest {
         }
     }
 
+    static Stream<Arguments> variantOptions() {
+        PresidentOptions d = PresidentOptions.defaults();
+        return Stream.of(
+                Arguments.of("forbiddenFinish off", d.withForbiddenFinish(ForbiddenFinish.OFF)),
+                Arguments.of("mustPlay on", d.withMustPlay(true)),
+                Arguments.of("mustPlay, equal play off", d.withMustPlay(true).withEqualPlay(EqualPlay.OFF)),
+                Arguments.of("mustPlay, afterPass out", d.withMustPlay(true).withAfterPass(AfterPass.OUT)));
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("variantOptions")
+    void seededGamesWithEachVariantKeepTheWholeDeckEndAndPlaceEveryone(String name, PresidentOptions options)
+            throws Exception {
+        for (int players = 3; players <= 8; players++) {
+            for (long seed = 0; seed < 20; seed++) {
+                President game = new President(GameId.generate(), players, seed, new RandomDeckSource(), options);
+
+                playToTheEnd(game, new Random(seed * 17 + players));
+
+                assertThat(game.phase(), is(Phase.ROUND_OVER));
+                assertThat(new HashSet<>(game.finishingOrder()).size(), is(players));
+                assertThat(distinctCards(game).size(), is(52));
+                // the forbidden finishers hold the last places, the seat left with cards is just above them
+                List<PlayerId> order = game.finishingOrder();
+                List<PlayerId> forbidden = game.forbiddenFinishers();
+                assertThat(order.subList(players - forbidden.size(), players), is(forbidden));
+            }
+        }
+    }
+
     @Test
     void theLastPlayerKeepsTheirCardsAndEveryoneElseEmptiedTheirHand() throws Exception {
         President game = new President(GameId.generate(), 5, 99L);
 
         playToTheEnd(game, new Random(5));
 
+        List<PlayerId> withCards = game.getPlayerIds().stream().filter(seat -> !game.hand(seat).isEmpty()).toList();
+        assertThat(withCards.size(), is(1));
         List<PlayerId> order = new ArrayList<>(game.finishingOrder());
-        PlayerId last = order.remove(order.size() - 1);
+        order.removeAll(withCards);
         for (PlayerId seat : order) {
             assertThat(game.hand(seat).isEmpty(), is(true));
         }
-        assertThat(game.hand(last).isEmpty(), is(false));
     }
 }

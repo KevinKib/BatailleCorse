@@ -15,6 +15,8 @@ export interface PresidentEventData {
   count: number | null;
   /** The place taken when the command made the seat go out. */
   outPlace: number | null;
+  /** Set when the command made the seat go out: true for a forbidden finish (no place yet). */
+  outForbidden: boolean | null;
   trickWinner: number | null;
   trickEndReason: string | null;
   barrierOpened: boolean | null;

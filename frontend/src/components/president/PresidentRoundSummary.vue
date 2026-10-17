@@ -31,6 +31,7 @@ interface Row {
   total: number | null;
   change: { direction: 'up' | 'down' | 'same'; text: string } | null;
   ready: boolean;
+  forbidden: boolean;
 }
 
 // A seat's own `title` is the one it played this round with (null in round 1); the one earned is in `lastRound`.
@@ -50,10 +51,12 @@ const rows = computed<Row[]>(() => {
       seat: r.seat, place: r.place, title: r.title, points: r.points, total: r.total,
       change: changeOf(byseat.get(r.seat)?.title ?? null, r.title),
       ready: byseat.get(r.seat)?.ready ?? false,
+      forbidden: r.forbiddenFinish,
     }));
   }
   return seatsByPlace(props.players).map(p => ({
     seat: p.seat, place: p.place, title: p.title, points: null, total: null, change: null, ready: p.ready,
+    forbidden: p.forbiddenFinish,
   }));
 });
 const ICONS = { up: 'pi-arrow-up', down: 'pi-arrow-down', same: 'pi-minus' } as const;
@@ -65,7 +68,11 @@ const ICONS = { up: 'pi-arrow-up', down: 'pi-arrow-down', same: 'pi-minus' } as 
     <ol class="places">
       <li v-for="r in rows" :key="r.seat" class="place" data-test="round-over-place">
         <span class="place-label" data-test="place-label">{{ format(ui.roundOver.place, { n: r.place ?? '', player: nameOf(r.seat) }) }}</span>
-        <span class="place-title" data-test="place-title">{{ titleText(r.title) }}</span>
+        <span class="place-tags">
+          <span class="place-title" data-test="place-title">{{ titleText(r.title) }}</span>
+          <span v-if="r.forbidden" class="place-forbidden" data-test="place-forbidden"
+                :title="ui.summary.forbiddenLabel">{{ ui.summary.forbidden }}</span>
+        </span>
         <span v-if="r.change" class="place-change" :class="`place-change--${r.change.direction}`"
               data-test="place-change" :data-change="r.change.direction">
           <i class="pi" :class="ICONS[r.change.direction]" aria-hidden="true"></i>
@@ -97,7 +104,12 @@ const ICONS = { up: 'pi-arrow-up', down: 'pi-arrow-down', same: 'pi-minus' } as 
   column-gap: var(--space-1); padding: 3px 0;
 }
 .place-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.place-tags { display: inline-flex; align-items: center; gap: 4px; }
 .place-title { color: var(--gold); font-size: 0.75rem; }
+.place-forbidden {
+  font-size: 0.62rem; font-weight: 700; text-transform: uppercase; white-space: nowrap;
+  color: rgb(var(--accent-negative-rgb)); border: 1px solid currentColor; border-radius: 999px; padding: 0 5px;
+}
 .place-change--up { color: #7bd88f; }
 .place-change--down { color: #ff8f8f; }
 .place-change--same { color: rgba(255, 255, 255, 0.5); }

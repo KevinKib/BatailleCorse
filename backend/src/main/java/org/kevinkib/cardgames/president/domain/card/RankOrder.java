@@ -41,6 +41,11 @@ public final class RankOrder {
         return Integer.compare(strength(a), strength(b));
     }
 
+    /** The strongest rank: the one that cuts and the one a player may not go out on. */
+    public FrenchRank topRank() {
+        return ascending.get(ascending.size() - 1);
+    }
+
     /** The ranks from the weakest to the strongest. */
     public List<FrenchRank> ranksAscending() {
         return ascending;

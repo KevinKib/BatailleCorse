@@ -50,6 +50,17 @@ describe('PresidentSeat', () => {
     expect(wrapper.find('[data-test="seat-passed"]').exists()).toBe(false);
   });
 
+  it('givenAForbiddenFinisher_thenItIsOutOnATwoWithoutAPlace', () => {
+    const wrapper = mountSeat({ player: buildPresidentPlayer(1, { out: true, place: null, handSize: 0, forbiddenFinish: true }) });
+    expect(wrapper.get('[data-test="seat-out"]').text()).toBe('Out on a 2');
+    expect(wrapper.get('[data-test="seat-out"]').classes()).toContain('marker--forbidden');
+  });
+
+  it('givenAForbiddenFinisherOnceTheRoundIsOver_thenItKeepsTheMarkerAndShowsItsPlace', () => {
+    const wrapper = mountSeat({ player: buildPresidentPlayer(1, { out: true, place: 4, handSize: 0, forbiddenFinish: true }) });
+    expect(wrapper.get('[data-test="seat-out"]').text()).toBe('Out on a 2, place 4');
+  });
+
   it('givenAReadySeatAtTheRoundEnd_thenItSaysReady', () => {
     const wrapper = mountSeat({ player: buildPresidentPlayer(1, { ready: true }), showReady: true });
     expect(wrapper.get('[data-test="seat-ready"]').text()).toBe('Ready');

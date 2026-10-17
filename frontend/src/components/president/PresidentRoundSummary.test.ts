@@ -13,9 +13,9 @@ const players = [
 const lastRound: PresidentRound = {
   round: 2, finishingOrder: [1, 0, 2],
   players: [
-    { seat: 1, place: 1, title: 'PRESIDENT', points: 3, total: 4 },
-    { seat: 0, place: 2, title: 'NEUTRAL', points: 2, total: 7 },
-    { seat: 2, place: 3, title: 'SCUM', points: 1, total: 2 },
+    { seat: 1, place: 1, title: 'PRESIDENT', points: 3, total: 4, forbiddenFinish: false },
+    { seat: 0, place: 2, title: 'NEUTRAL', points: 2, total: 7, forbiddenFinish: false },
+    { seat: 2, place: 3, title: 'SCUM', points: 1, total: 2, forbiddenFinish: false },
   ],
 };
 
@@ -27,6 +27,29 @@ function mountSummary(props: Record<string, unknown> = {}) {
 const rows = (w: ReturnType<typeof mountSummary>) => w.findAll('[data-test="round-over-place"]');
 const cell = (row: ReturnType<ReturnType<typeof mountSummary>['findAll']>[number], name: string) =>
   row.get(`[data-test="place-${name}"]`).text();
+
+describe('PresidentRoundSummary, forbidden finishes', () => {
+  const forbidden: PresidentRound = {
+    round: 2, finishingOrder: [1, 0, 2],
+    players: [
+      { seat: 1, place: 1, title: 'PRESIDENT', points: 3, total: 4, forbiddenFinish: false },
+      { seat: 0, place: 2, title: 'NEUTRAL', points: 2, total: 7, forbiddenFinish: false },
+      { seat: 2, place: 3, title: 'SCUM', points: 1, total: 2, forbiddenFinish: true },
+    ],
+  };
+
+  it('marksTheSeatThatWentOutOnATwoWithAVisibleLabel', () => {
+    const r = rows(mountSummary({ lastRound: forbidden }));
+    expect(r.map(row => row.find('[data-test="place-forbidden"]').exists())).toEqual([false, false, true]);
+    const marker = r[2].get('[data-test="place-forbidden"]');
+    expect(marker.text()).toBe('On a 2');
+    expect(marker.attributes('title')).toBe('Went out on a 2: placed last');
+  });
+
+  it('givenNoForbiddenFinish_thenNoRowIsMarked', () => {
+    expect(rows(mountSummary()).some(row => row.find('[data-test="place-forbidden"]').exists())).toBe(false);
+  });
+});
 
 describe('PresidentRoundSummary', () => {
   it('saysWhichRoundIsOver', () => {
