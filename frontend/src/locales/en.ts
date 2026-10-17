@@ -181,10 +181,10 @@ export const messagesEn: Messages = {
       },
       {
         kind: 'text',
-        title: 'Cuts, the four and compulsory play',
+        title: 'The 2, the four and compulsory play',
         body: [
-          'Cuts (host option): a 2 can cut any play and closes the trick at once, or, in the ladder variant, k twos cut a set of k + 1 cards. A 2 on a 2 is an equal play, not a cut.',
-          'The host can also decide that four of a kind does not close the trick, and that a player who can play may not pass.',
+          'A 2 played alone closes the trick as soon as it is played, from the first 2: the player of the 2 leads next. It can be played on any play, including a "9 or nothing" run. Four of a kind played at once closes the trick too.',
+          'The host can decide that a player who can play may not pass.',
         ],
       },
       {
@@ -269,16 +269,13 @@ export const messagesEn: Messages = {
       'firstLead.random': 'Random first lead',
       'afterPass.reenter': 'After a pass: play again',
       'afterPass.out': 'After a pass: out of the trick',
-      'forbiddenFinish.lastPlace': 'Going out on a 2: last place',
-      'quadClears.on': 'Four of a kind closes the trick',
-      'twoCuts.single': 'A 2 cuts any play',
-      'twoCuts.ladder': 'Twos cut: one more than the set',
+      'forbiddenFinish.lastPlace': 'Out on a 2: last place',
       'mustPlay.on': 'Compulsory play',
     },
     trickEnd: {
       ALL_PASSED: '{player} won the trick: everyone else passed.',
       FIRST_OUT: '{player} went out and the trick is closed.',
-      CUT: '{player} cut the trick with 2s.',
+      CUT: '{player} closed the trick with a 2.',
       QUAD: '{player} closed the trick with four of a kind.',
       forbidden: '{player} went out on a 2 and will finish last.',
     },
@@ -1065,8 +1062,6 @@ export const messagesEn: Messages = {
       level: { label: 'Level', easy: 'Easy', medium: 'Medium', hard: 'Hard' },
       afterPass: { label: 'After a pass', reenter: 'Play again', out: 'Out of the trick' },
       equalPlay: { label: 'Equal play', on: 'Allowed', off: 'Not allowed' },
-      twoCuts: { label: '2 cuts', off: 'No cut', single: 'One 2 cuts any play', ladder: 'Twos cut: one more card' },
-      quadClears: { label: 'Four of a kind', on: 'Closes the trick', off: 'Does not close it' },
       forbiddenFinish: { label: 'Finishing on a 2', lastPlace: 'Last place', off: 'Allowed' },
       mustPlay: { label: 'Compulsory play', off: 'No, you may pass', on: 'Yes, no pass if you can play' },
       firstLead: {

@@ -39,10 +39,10 @@ describe('President fixtures', () => {
   it('the default options are the full set of the server descriptors, defaults filled', () => {
     expect(Object.keys(CLASSIC_PRESIDENT_OPTIONS).sort())
       .toEqual(['afterPass', 'equalPlay', 'exchange', 'firstLead', 'forbiddenFinish', 'giveBack', 'length', 'mustPlay',
-        'nextLead', 'quadClears', 'scoring', 'twoCuts']);
+        'nextLead', 'scoring']);
     // the Classic preset is the plan's defaults
     expect(CLASSIC_PRESIDENT_OPTIONS).toMatchObject({
-      twoCuts: 'off', quadClears: 'on', forbiddenFinish: 'lastPlace', mustPlay: 'off',
+      forbiddenFinish: 'lastPlace', mustPlay: 'off',
     });
     expect(buildPresidentState().options).toEqual(CLASSIC_PRESIDENT_OPTIONS);
   });

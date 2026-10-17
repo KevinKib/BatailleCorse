@@ -13,8 +13,6 @@ const VALUES: Record<string, string[]> = {
   scoring: ['rank', 'titles', 'zeroSum'],
   length: ['rounds-5', 'rounds-3', 'rounds-10', 'points-11', 'points-21', 'endless'],
   equalPlay: ['on', 'off'],
-  twoCuts: ['off', 'single', 'ladder'],
-  quadClears: ['on', 'off'],
   forbiddenFinish: ['lastPlace', 'off'],
   mustPlay: ['off', 'on'],
 };
@@ -64,18 +62,19 @@ describe('PresidentLobbyOptions', () => {
   it('givenTheTrickVariants_thenEachHasALabelledGroupInTheCustomisePanel', async () => {
     const wrapper = mountOptions();
     await wrapper.get('[data-test="customise"]').trigger('click');
-    expect(wrapper.get('[data-test="option-twoCuts"]').text()).toContain('2 cuts');
-    expect(wrapper.get('[data-test="option-quadClears"]').text()).toContain('Four of a kind');
+    // the 2 that closes the trick and the four are fixed rules: no option for them
+    expect(wrapper.find('[data-test="option-twoCuts"]').exists()).toBe(false);
+    expect(wrapper.find('[data-test="option-quadClears"]').exists()).toBe(false);
     expect(wrapper.get('[data-test="option-forbiddenFinish"]').text()).toContain('Finishing on a 2');
     expect(wrapper.get('[data-test="option-mustPlay"]').text()).toContain('Compulsory play');
   });
 
-  it('givenTheHostPicksACut_thenSetOptionIsEmittedAndTheCardSaysCustom', async () => {
+  it('givenTheHostPicksCompulsoryPlay_thenSetOptionIsEmittedAndTheCardSaysCustom', async () => {
     const wrapper = mountOptions();
     await wrapper.get('[data-test="customise"]').trigger('click');
-    await wrapper.get('[data-test="option-twoCuts-ladder"]').setValue(true);
-    expect(wrapper.emitted('set-option')).toEqual([['twoCuts', 'ladder']]);
-    await wrapper.setProps({ options: { ...CLASSIC_PRESIDENT_OPTIONS, twoCuts: 'ladder' } });
+    await wrapper.get('[data-test="option-mustPlay-on"]').setValue(true);
+    expect(wrapper.emitted('set-option')).toEqual([['mustPlay', 'on']]);
+    await wrapper.setProps({ options: { ...CLASSIC_PRESIDENT_OPTIONS, mustPlay: 'on' } });
     expect(wrapper.get('[data-test="preset-title"]').text()).toBe('Custom');
   });
 

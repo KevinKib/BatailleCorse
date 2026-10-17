@@ -238,8 +238,6 @@ describe('President messages', () => {
       scoring: ['rank', 'titles', 'zeroSum'],
       length: ['rounds-5', 'rounds-3', 'rounds-10', 'points-11', 'points-21', 'endless'],
       equalPlay: ['on', 'off'],
-      twoCuts: ['off', 'single', 'ladder'],
-      quadClears: ['on', 'off'],
       forbiddenFinish: ['lastPlace', 'off'],
       mustPlay: ['off', 'on'],
     };
@@ -252,7 +250,7 @@ describe('President messages', () => {
 
   it('givenTheTrickVariants_thenTheirChipsEndReasonsAndMarkersAreWritten', () => {
     const ui = messagesEn.presidentUi;
-    for (const chip of ['twoCuts.single', 'twoCuts.ladder', 'quadClears.on', 'forbiddenFinish.lastPlace',
+    for (const chip of ['forbiddenFinish.lastPlace',
       'mustPlay.on']) expect(ui.chips[chip], chip).toBeTruthy();
     for (const reason of ['ALL_PASSED', 'FIRST_OUT', 'CUT', 'QUAD']) expect(ui.trickEnd[reason], reason).toContain('{player}');
     expect(ui.trickEnd.forbidden).toContain('{player}');

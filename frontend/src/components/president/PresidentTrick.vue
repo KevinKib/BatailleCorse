@@ -70,7 +70,7 @@ const chipTexts = computed(() => props.chips.flatMap((chip) => {
 .trick-card :deep(.playing_card) { display: block; width: 100%; height: auto; aspect-ratio: 167.575 / 243.1375; }
 .trick-by, .trick-empty { margin: 0; font-size: 0.75rem; color: rgba(255, 255, 255, 0.85); text-align: center; }
 .trick-empty { align-self: center; padding: 10px 0; }
-.chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; }
+.chips { max-width: 15rem; list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; }
 .chip {
   font-size: 0.7rem;
   font-weight: 600;

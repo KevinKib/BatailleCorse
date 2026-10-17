@@ -11,8 +11,6 @@ export const CLASSIC_PRESIDENT_OPTIONS: Record<string, string> = {
   scoring: 'rank',
   length: 'rounds-5',
   equalPlay: 'on',
-  twoCuts: 'off',
-  quadClears: 'on',
   forbiddenFinish: 'lastPlace',
   mustPlay: 'off',
 };

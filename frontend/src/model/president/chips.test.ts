@@ -11,13 +11,12 @@ describe('ruleChips', () => {
       { key: 'firstLead.kingOfHearts' },
       { key: 'afterPass.reenter' },
       { key: 'forbiddenFinish.lastPlace' },
-      { key: 'quadClears.on' },
     ]);
   });
 
   it('givenAnEmptyTrickAfterRoundOne_thenNoLeadRuleIsShown', () => {
     const chips = ruleChips({ options: classic, trick: buildPresidentTrick(), round: 2 });
-    expect(chips.map(c => c.key)).toEqual(['afterPass.reenter', 'forbiddenFinish.lastPlace', 'quadClears.on']);
+    expect(chips.map(c => c.key)).toEqual(['afterPass.reenter', 'forbiddenFinish.lastPlace']);
   });
 
   it('givenATopPlay_thenTheChipSaysWhatToBeat', () => {
@@ -34,7 +33,7 @@ describe('ruleChips', () => {
 
   it('givenAnOptionValueTheClientDoesNotKnow_thenItGetsNoChip', () => {
     const chips = ruleChips({
-      options: { afterPass: 'sideways', twoCuts: 'triple', mustPlay: 'maybe' }, trick: buildPresidentTrick(), round: 2,
+      options: { afterPass: 'sideways', forbiddenFinish: 'sometimes', mustPlay: 'maybe' }, trick: buildPresidentTrick(), round: 2,
     });
     expect(chips).toEqual([]);
   });
@@ -59,7 +58,7 @@ describe('ruleChips, equal play', () => {
   it('givenAFreeTrick_thenNoMatchChipIsShown', () => {
     const trick = buildPresidentTrick({ top: { kind: 'SET', rank: 'NINE', count: 1 }, constraint: 'BEAT' });
     expect(ruleChips({ options: classic, trick, round: 3 }).map(c => c.key))
-      .toEqual(['beat', 'afterPass.reenter', 'forbiddenFinish.lastPlace', 'quadClears.on']);
+      .toEqual(['beat', 'afterPass.reenter', 'forbiddenFinish.lastPlace']);
   });
 });
 
@@ -67,15 +66,8 @@ describe('ruleChips, the trick variants', () => {
   const keys = (options: Record<string, string>) =>
     ruleChips({ options, trick: buildPresidentTrick(), round: 3 }).map(c => c.key);
 
-  it('givenTheClassicDefaults_thenTheForbiddenFinishAndTheFourAreShownAndNoCutOrCompulsoryPlay', () => {
-    expect(keys(classic)).toEqual(['afterPass.reenter', 'forbiddenFinish.lastPlace', 'quadClears.on']);
-  });
-
-  it.each([
-    ['single', 'twoCuts.single'],
-    ['ladder', 'twoCuts.ladder'],
-  ])('givenTwoCuts_%s_thenItsChipIsShown', (value, chip) => {
-    expect(keys({ ...classic, twoCuts: value })).toContain(chip);
+  it('givenTheClassicDefaults_thenTheForbiddenFinishIsShownAndNoCompulsoryPlay', () => {
+    expect(keys(classic)).toEqual(['afterPass.reenter', 'forbiddenFinish.lastPlace']);
   });
 
   it('givenCompulsoryPlay_thenItsChipIsShown', () => {
@@ -83,7 +75,7 @@ describe('ruleChips, the trick variants', () => {
   });
 
   it('givenTheVariantsSwitchedOff_thenTheirChipsGoAway', () => {
-    const chips = keys({ ...classic, quadClears: 'off', forbiddenFinish: 'off', twoCuts: 'off', mustPlay: 'off' });
+    const chips = keys({ ...classic, forbiddenFinish: 'off', mustPlay: 'off' });
     expect(chips).toEqual(['afterPass.reenter']);
   });
 });
