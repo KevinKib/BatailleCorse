@@ -6,6 +6,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.kevinkib.cardgames.president.domain.rules.ForbiddenFinish;
 import org.kevinkib.cardgames.president.domain.rules.PresidentOptions;
+import org.kevinkib.cardgames.president.domain.rules.TwoCuts;
 import org.kevinkib.cards.domain.Card;
 
 import java.util.List;
@@ -128,10 +129,46 @@ class HeuristicPresidentBotTest {
 
     @Test
     void withoutTheForbiddenFinishItGoesOutOnATwo() {
-        PresidentBotDecision decision = decide(CAUTIOUS, following("2C", "9H"),
+        PresidentOptions open = PresidentOptions.defaults().withForbiddenFinish(ForbiddenFinish.OFF);
+        PresidentBotDecision decision = decide(CAUTIOUS, following("2C", "9H", open),
                 new PresidentBotMemory(PresidentBotFixtures.BOT_FOLLOWING));
 
         assertThat(shown(decision), is("2"));
+    }
+
+    // ----- cuts, forbidden finish on a cut, compulsory play (PR V2) -----
+
+    private static final PresidentOptions SINGLE_CUT = PresidentOptions.defaults().withTwoCuts(TwoCuts.SINGLE);
+    private static final PresidentOptions LADDER_CUT = PresidentOptions.defaults().withTwoCuts(TwoCuts.LADDER);
+    private static final PresidentOptions MUST_PLAY = PresidentOptions.defaults().withMustPlay(true);
+
+    static Stream<Arguments> cutsAndCompulsoryPlay() {
+        return Stream.of(
+                Arguments.of("keeps its cutting two rather than spend it on a low pair (long hand)",
+                        "2H 6C 7C 8C 9C", "4C 4D", SINGLE_CUT, "pass"),
+                Arguments.of("spends the cutting two when the hand is short", "2H 6C", "4C 4D", SINGLE_CUT, "2"),
+                Arguments.of("keeps a pair of twos that would cut a triple under the ladder (long hand)",
+                        "2H 2D 6C 7C 8C 9C", "4C 4D 4H", LADDER_CUT, "pass"),
+                Arguments.of("plays an ordinary higher pair before thinking of a cut",
+                        "2H 6C 6D 8C 9C", "4C 4D", SINGLE_CUT, "6 6"),
+                Arguments.of("never goes out on a cutting two when that finish is forbidden",
+                        "2H", "4C 4D", SINGLE_CUT, "pass"),
+                Arguments.of("compulsory play: it must play even its control card", "AC 5C 6C 7C 8C", "KC",
+                        MUST_PLAY, "A"),
+                Arguments.of("compulsory play: a forced forbidden finish is played, there is no pass", "2C", "9H",
+                        MUST_PLAY, "2"),
+                Arguments.of("compulsory play: it still passes when nothing can play", "3H 4D 5C 6H 7D", "9H",
+                        MUST_PLAY, "pass"));
+    }
+
+    @ParameterizedTest(name = "{0}: {1} on {2} gives {4}")
+    @MethodSource("cutsAndCompulsoryPlay")
+    void itKeepsItsCutsAndNeverPassesWhenThePassIsRefused(String rule, String hand, String top,
+                                                          PresidentOptions options, String expected) {
+        PresidentBotDecision decision = decide(CAUTIOUS, following(hand, top, options),
+                new PresidentBotMemory(PresidentBotFixtures.BOT_FOLLOWING));
+
+        assertThat(shown(decision), is(expected));
     }
 
     @Test

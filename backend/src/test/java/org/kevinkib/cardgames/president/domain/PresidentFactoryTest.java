@@ -66,7 +66,8 @@ class PresidentFactoryTest {
         List<OptionDescriptor> descriptors = factory.optionDescriptors();
 
         assertThat(descriptors.stream().map(OptionDescriptor::key).toList(), is(List.of(
-                "afterPass", "firstLead", "exchange", "giveBack", "nextLead", "scoring", "length", "equalPlay")));
+                "afterPass", "firstLead", "exchange", "giveBack", "nextLead", "scoring", "length", "equalPlay",
+                "twoCuts", "quadClears", "forbiddenFinish", "mustPlay")));
         assertThat(descriptors.stream().allMatch(d -> d.type() == OptionType.CHOICE), is(true));
         for (OptionDescriptor descriptor : descriptors) {
             assertThat(descriptor.labelKey(), is("options.president." + descriptor.key()));
@@ -82,6 +83,10 @@ class PresidentFactoryTest {
         assertThat(byKey.get("nextLead").values(), is(List.of("scum", "president")));
         assertThat(byKey.get("scoring").values(), is(List.of("rank", "titles", "zeroSum")));
         assertThat(byKey.get("equalPlay").values(), is(List.of("on", "off")));
+        assertThat(byKey.get("twoCuts").values(), is(List.of("off", "single", "ladder")));
+        assertThat(byKey.get("quadClears").values(), is(List.of("on", "off")));
+        assertThat(byKey.get("forbiddenFinish").values(), is(List.of("lastPlace", "off")));
+        assertThat(byKey.get("mustPlay").values(), is(List.of("off", "on")));
         assertThat(byKey.get("length").values(),
                 is(List.of("rounds-5", "rounds-3", "rounds-10", "points-11", "points-21", "endless")));
     }
@@ -90,9 +95,26 @@ class PresidentFactoryTest {
     void validateFillsTheDefaultsOfTheKeysTheHostDidNotSet() {
         GameOptions validated = factory.validate(GameOptions.of(Map.of("afterPass", "out")));
 
-        assertThat(validated.values(), is(Map.of(
-                "afterPass", "out", "firstLead", "kingOfHearts", "exchange", "two", "giveBack", "free",
-                "nextLead", "scum", "scoring", "rank", "length", "rounds-5", "equalPlay", "on")));
+        Map<String, String> expected = new java.util.HashMap<>(Map.ofEntries(
+                Map.entry("afterPass", "reenter"), Map.entry("firstLead", "kingOfHearts"), Map.entry("exchange", "two"),
+                Map.entry("giveBack", "free"), Map.entry("nextLead", "scum"), Map.entry("scoring", "rank"),
+                Map.entry("length", "rounds-5"), Map.entry("equalPlay", "on"), Map.entry("twoCuts", "off"),
+                Map.entry("quadClears", "on"), Map.entry("forbiddenFinish", "lastPlace"), Map.entry("mustPlay", "off")));
+        expected.put("afterPass", "out");
+        assertThat(validated.values(), is(expected));
+    }
+
+    @Test
+    void validateAcceptsTheTrickVariantsAndStillRefusesTheOthers() {
+        GameOptions validated = factory.validate(GameOptions.of(Map.of(
+                "twoCuts", "ladder", "quadClears", "off", "forbiddenFinish", "off", "mustPlay", "on")));
+
+        assertThat(validated.values().get("twoCuts"), is("ladder"));
+        assertThat(validated.values().get("mustPlay"), is("on"));
+        for (String key : List.of("revolution", "ranking", "runs", "suitLock")) {
+            assertThrows(InvalidOptionException.class,
+                    () -> factory.validate(GameOptions.of(Map.of(key, "on"))));
+        }
     }
 
     @ParameterizedTest
