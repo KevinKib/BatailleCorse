@@ -38,7 +38,8 @@ describe('Kobo phase title', () => {
           expect(Math.abs(textCentre(phase) - zone.c), 'phase title off-centre (px)').to.be.at.most(2);
           // The event line is empty until an event names a slot: only a line that is there is measured.
           if (log.textContent) expect(Math.abs(textCentre(log) - zone.c), 'event line off-centre (px)').to.be.at.most(2);
-          expect(barBox.h, 'bar height at rest').to.be.at.most(44);
+          // The bar keeps its reserved height (see kobo-stable-layout): it neither grows nor shrinks with the text.
+          expect(barBox.h, 'bar height at rest').to.eq(label === 'phone' ? 64 : 52);
         });
       });
     });

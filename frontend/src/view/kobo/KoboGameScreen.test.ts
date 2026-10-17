@@ -151,6 +151,15 @@ describe('KoboGameScreen', () => {
       expect(wrapper.findAll('[data-test="my-zone"] button')).toHaveLength(4);
     });
 
+    it('givenTwoPlayers_thenTheCardsAreLargerAndThreePlayersKeepTheDefaultSize', async () => {
+      const duel = (await started({}, 2, 0)).wrapper;
+      expect(duel.get('[data-test="my-zone"]').attributes('style')).toContain('--kobo-card-w: 68px');
+      expect(duel.get('[data-test="opponent-seat"] .tableau').attributes('style')).toContain('--card-w: 52px');
+      const trio = (await started({}, 3, 0)).wrapper;
+      expect(trio.get('[data-test="my-zone"]').attributes('style') ?? '').not.toContain('--kobo-card-w');
+      expect(trio.get('[data-test="opponent-seat"] .tableau').attributes('style') ?? '').not.toContain('--card-w');
+    });
+
     it('givenNamesAndNoName_thenTheLabelsFollowTheSharedRule', async () => {
       const { wrapper } = await started({
         players: [buildKoboPlayer(0, { name: 'Alice' }), buildKoboPlayer(1, { name: '  ' }), buildKoboPlayer(2, { name: 'Cleo' })],

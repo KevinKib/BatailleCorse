@@ -34,6 +34,9 @@ const buttons = computed(() => barButtons(props.game).filter(id => id !== 'match
 // No button, no column: an empty one would still cost the row gap and push the title off the centre of the bar.
 const hasButtons = computed(() => buttons.value.length > 0 || props.pending.kind !== 'none' || props.canHide);
 
+// "I have memorised" alone: the button goes under the text, so the text is centred in the whole bar.
+const readyOnly = computed(() => buttons.value.length === 1 && buttons.value[0] === 'ready' && props.pending.kind === 'none' && !props.canHide);
+
 const EVENT: Record<KoboBarButton, 'ready' | 'draw' | 'discard' | 'skip' | 'end-turn' | 'announce' | 'match'> = {
   ready: 'ready', draw: 'draw', discard: 'discard', skip: 'skip', endTurn: 'end-turn', announce: 'announce',
   match: 'match',
@@ -47,10 +50,11 @@ const armed = computed(() => props.pending.kind === 'match-armed' || props.pendi
 </script>
 
 <template>
-  <div class="kobo-actions" data-test="kobo-actions">
-    <p v-if="notice" class="notice" data-test="notice" role="alert">{{ ui.notice[notice] }}</p>
+  <div class="kobo-actions" :class="{ 'kobo-actions--ready': readyOnly }" data-test="kobo-actions">
     <div class="actions-row">
       <div class="actions-text">
+        <!-- Floats over the text of the bar (never over its buttons) instead of pushing the table. -->
+        <p v-if="notice" class="notice" data-test="notice" role="alert">{{ ui.notice[notice] }}</p>
         <YourTurnIndicator :active="yourTurn" />
         <!-- Not live themselves: the screen's one live region says what I am to do (no sentence twice). -->
         <p v-if="prompt" class="line prompt" data-test="prompt">{{ ui.prompt[prompt] }}</p>
@@ -95,13 +99,33 @@ const armed = computed(() => props.pending.kind === 'match-armed' || props.pendi
 </template>
 
 <style scoped>
+/* The bar keeps one height in every state of the turn: the turn cue (1 line), the phase or prompt (2 lines on a
+   phone, 1 wide) and the log (1 line) are all reserved, so a line that comes or goes moves nothing above it. A
+   notice floats over the bar instead of pushing it. The memorise state (text, then its button) has the same height. */
 .kobo-actions {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: stretch;
   gap: 2px;
   width: 100%;
+  min-height: var(--kobo-bar-min, 64px);
 }
+.actions-text :deep(.turn-indicator) { min-height: 1rem; }
+.actions-text .line { min-height: calc(var(--kobo-bar-lines, 2) * 1.25em); }
+@media (min-width: 768px) {
+  .kobo-actions { min-height: 52px; }
+  .actions-text .line { min-height: 1.25em; }
+  /* Wide: there is room at the side, so the button leaves the flow and the text stays centred in the whole bar. */
+  .kobo-actions--ready .actions-row { position: static; }
+  .kobo-actions--ready .actions-buttons { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); }
+}
+/* Memorising: nothing to log and no turn cue; the text is centred in the bar and the button sits under it. */
+.kobo-actions--ready .actions-row { flex-direction: column; justify-content: flex-start; gap: 0; }
+.kobo-actions--ready .actions-text { flex: none; width: 100%; }
+.kobo-actions--ready .actions-text :deep(.turn-indicator),
+.kobo-actions--ready .actions-text :deep(.event-log) { display: none; }
+.kobo-actions--ready .actions-text .line { min-height: 1.25em; }
 .actions-row {
   display: flex;
   flex-wrap: wrap;
@@ -112,6 +136,7 @@ const armed = computed(() => props.pending.kind === 'match-armed' || props.pendi
 }
 /* The text takes what the buttons leave and wraps; the buttons keep their size and wrap below it if they must. */
 .actions-text {
+  position: relative;
   flex: 1 1 8rem;
   min-width: 0;
   display: flex;
@@ -134,13 +159,18 @@ const armed = computed(() => props.pending.kind === 'match-armed' || props.pendi
 }
 .prompt { color: var(--gold); font-weight: 600; }
 .notice {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
   margin: 0;
   padding: 4px 12px;
   font-size: 0.8rem;
   font-weight: 700;
   text-align: center;
   color: #fff;
-  background: rgba(var(--accent-negative-rgb), 0.35);
+  background: color-mix(in srgb, rgb(var(--accent-negative-rgb)) 45%, #121414);
   border: 1px solid rgba(var(--accent-negative-rgb), 0.7);
   border-radius: 999px;
 }

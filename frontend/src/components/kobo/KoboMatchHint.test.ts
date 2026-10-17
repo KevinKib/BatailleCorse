@@ -39,6 +39,12 @@ describe('KoboMatchHint', () => {
     expect(wrapper.find('[data-test="match-coach"]').exists()).toBe(true);
   });
 
+  it('givenAReservedZoneAndNothingToSay_thenTheZoneStaysAndHoldsNoText', () => {
+    const wrapper = mount(KoboMatchHint, { props: { hint: false, coach: false, reserve: true }, global: { plugins: [PrimeVue] } });
+    expect(wrapper.find('.match-hint-zone--reserved').exists()).toBe(true);
+    expect(wrapper.text()).toBe('');
+  });
+
   it('givenNeitherTheHintNorTheCue_thenNothingIsRendered', () => {
     const wrapper = mountHint({ hint: false, coach: false });
     expect(wrapper.find('[data-test="match-hint"]').exists()).toBe(false);

@@ -3,7 +3,10 @@
 // fixed (test profile): seat 0 holds the first four cards, seat 1 the next four, then the draw pile follows.
 // Two rooms only: a spec that opens many leaves connections behind that starve the next ones.
 import { awaitState, scriptedDiscardTurn, startKoboTable } from '../support/koboRoom';
-import { actionBarIsReachable, expectNoOverlap, measureTable, tableDoesNotScrollSideways } from '../support/koboGeometry';
+import {
+  actionBarIsReachable, expectNoOverlap, expectSameRects, measureTable, snapshotRects, tableDoesNotScrollSideways,
+  type Rects,
+} from '../support/koboGeometry';
 
 const slot = (seat: number, n: number) => `[data-test="slot-${seat}-${n}"]`;
 const empty = (seat: number, n: number) => `[data-test="slot-empty-${seat}-${n}"]`;
@@ -43,6 +46,8 @@ describe('Kobo actions on direct clicks', () => {
         .and('have.attr', 'aria-label').and('match', /^Discard the drawn card/);
       cy.get('[data-test="discard-count"]').should('be.visible');
       cy.get('[data-test="discard-pile"]').should('contain.text', 'Discard');
+      let holding: Rects;
+      snapshotRects().then((r) => { holding = r; });
       cy.get('[data-test="discard-pile"]').click();
       discardTop('3 of spade');
       cy.get('[data-test="discard-count"]').should('have.text', '1');
@@ -61,13 +66,27 @@ describe('Kobo actions on direct clicks', () => {
       // A tap is the match, so there is no Match button: the hint line (or the first-time note) says how.
       cy.get('[data-test="action-match"]').should('not.exist');
       cy.get('[data-test="match-hint"], [data-test="match-coach"]').should('be.visible');
+      // The hint line or the first-time note appears without moving the piles or my grid (the grids of the others: see kobo-stable-layout).
+      snapshotRects().then((r) => expectSameRects(holding, r, ['myGrid']));
       actionBarIsReachable();
       measureTable('one-click match, 2 players');
 
       // My second card is a 3 like the top: one click matches it, no Match button needed.
+      let beforeMatch: Rects;
+      snapshotRects().then((r) => { beforeMatch = r; });
       cy.get(slot(0, 1)).click();
       discardTop('3 of heart');
       cy.get(empty(0, 1)).should('exist').and('have.attr', 'data-highlighted', 'true');
+      // An emptied slot keeps the size of a card slot (its row and its column do not shrink); nothing moves.
+      cy.get(slot(0, 0)).then(($full) => {
+        cy.get(empty(0, 1)).then(($empty) => {
+          const f = $full[0].getBoundingClientRect();
+          const e = $empty[0].getBoundingClientRect();
+          expect(e.width, 'empty slot width').to.eq(f.width);
+          expect(e.height, 'empty slot height').to.eq(f.height);
+        });
+      });
+      snapshotRects().then((r) => expectSameRects(beforeMatch, r, ['myGrid']));
       cy.get(logLine).should('have.text', 'You matched card 2 (3 of heart)');
       cy.get('[data-test="event-log"]').should('have.attr', 'data-outcome', 'good');
       awaitState(bob, 'Bob sees my card gone', (s) => s.players[0].slots[1].occupied === false && s.discardTop.rank === '3');
@@ -129,9 +148,14 @@ describe('Kobo actions on direct clicks', () => {
 
       // The turn ends; Bob discards a 4, which is on top of the pile at the start of my turn.
       cy.get('[data-test="action-endTurn"]').click();
+      let waiting: Rects;
+      snapshotRects().then((r) => { waiting = r; });
       scriptedDiscardTurn(bob);
       discardTop('4 of spade');
       cy.get('[data-test="slot-1-2"]').should('have.attr', 'data-match', 'true');
+      cy.get('[data-test="match-hint"], [data-test="match-coach"]').should('be.visible');
+      // The hint line comes without moving the piles or the grids (wide table).
+      snapshotRects().then((r) => expectSameRects(waiting, r, ['draw', 'discard', 'drawn', 'opponentGrid', 'myGrid']));
 
       // Bob's third card is a 4: one click on it, then one click on the card I give.
       cy.get(slot(1, 2)).click();

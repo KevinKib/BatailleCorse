@@ -38,6 +38,7 @@ import { findGame } from '../../model/games';
 import { seatDisplayName } from '../../model/table/displayName';
 import { opponentsInPlayOrder } from '../../model/table/opponentOrder';
 import { seatPositions } from '../../model/table/seatRing';
+import { koboCardWidths } from '../../model/kobo/cardSizes';
 import { opponentColumns } from '../../model/kobo/faces';
 import { eventHighlights, headlineEvent } from '../../model/kobo/eventLog';
 import { endSummary } from '../../model/kobo/endSummary';
@@ -104,6 +105,9 @@ const opponents = computed(() => opponentsInPlayOrder(
   .filter(p => p.seat !== store.mySeat));
 const narrow = useNarrowScreen();
 const compactOpponents = computed(() => narrow.value || opponents.value.length >= 4);
+// A crowded table on a phone (3 opponents or more) has no height to spare: the bar reserves one line of text there.
+const crowdedPhone = computed(() => narrow.value && opponents.value.length >= 3);
+const cardWidths = computed(() => koboCardWidths(opponents.value.length, narrow.value));
 const ring = computed(() => seatPositions(opponents.value.length));
 const columns = computed(() => opponentColumns(opponents.value.length));
 
@@ -323,7 +327,7 @@ watch(() => [store.game?.round, store.game?.phase, store.game?.currentSeat, live
 </script>
 
 <template>
-  <div ref="screenEl" class="kobo-screen" :class="{ 'kobo-screen--lobby': store.screen === 'lobby' }">
+  <div ref="screenEl" class="kobo-screen" :class="{ 'kobo-screen--lobby': store.screen === 'lobby', 'kobo-screen--duel': opponents.length === 1 }">
     <GameLobby
       v-if="store.screen === 'lobby' && store.lobby"
       :game="game"
@@ -386,6 +390,7 @@ watch(() => [store.game?.round, store.game?.phase, store.game?.currentSeat, live
       <div class="table-frame" data-test="kobo-table" role="region" :aria-label="ui.regions.table"
            :class="{
              'table-frame--compact': compactOpponents, 'table-frame--round-end': sheetOpen,
+             'table-frame--duel': opponents.length === 1,
              'table-frame--hint': store.interaction.matchHint, 'table-frame--coach': showsCoachRing,
            }"
            :style="{ '--opponent-columns': columns }">
@@ -396,6 +401,7 @@ watch(() => [store.game?.round, store.game?.phase, store.game?.currentSeat, live
             @draw="store.pickPile('draw')" @discard="store.pickPile('discard')" />
           <!-- On a wide table there is no height to spare under the piles: the first-time note goes beside my hand. -->
           <KoboMatchHint
+            :reserve="!crowdedPhone"
             :hint="store.interaction.matchHint && !(showsCoachRing && !narrow)"
             :coach="showsCoachRing && narrow"
             @dismiss="matchCoach.dismiss()" />
@@ -428,6 +434,7 @@ watch(() => [store.game?.round, store.game?.phase, store.game?.currentSeat, live
               :picked="pickedRivalSlot(opponent.seat)"
               :highlighted="highlighted"
               :compact="compactOpponents"
+              :card-width="cardWidths.opponent"
               @pick="pick" />
           </div>
         </div>
@@ -445,7 +452,8 @@ watch(() => [store.game?.round, store.game?.phase, store.game?.currentSeat, live
           @next-round="store.ready()" />
       </div>
 
-      <div v-if="!sheetOpen" class="my-zone" data-test="my-zone" role="region" :aria-label="ui.regions.yours">
+      <div v-if="!sheetOpen" class="my-zone" :class="{ 'my-zone--duel': opponents.length === 1 }" data-test="my-zone" role="region" :aria-label="ui.regions.yours"
+           :style="{ ...(cardWidths.mine ? { '--kobo-card-w': `${cardWidths.mine}px` } : {}), ...(crowdedPhone ? { '--kobo-bar-min': '48px', '--kobo-bar-lines': 1 } : {}) }">
         <KoboSeat
           v-if="me"
           :player="me"
@@ -513,9 +521,8 @@ watch(() => [store.game?.round, store.game?.phase, store.game?.currentSeat, live
   height: 100dvh;
   overflow: hidden;
   padding: var(--space-2) var(--space-2) calc(var(--space-2) + env(safe-area-inset-bottom, 0px));
-  background:
-    radial-gradient(ellipse at 50% 42%, transparent 15%, rgba(0, 0, 0, 0.62) 100%),
-    radial-gradient(ellipse at 50% 38%, var(--felt-center) 0%, var(--felt-mid) 48%, var(--felt-edge) 100%);
+  /* A neutral room (anthracite, no green): the felt of the table stands out by its hue alone. */
+  background: radial-gradient(ellipse at 50% 40%, #1d201f 0%, #121414 55%, #0a0b0b 100%);
 }
 /* The lobby is a title-style screen: it sits on the shared felt background instead. */
 .kobo-screen--lobby {
@@ -584,12 +591,13 @@ watch(() => [store.game?.round, store.game?.phase, store.game?.currentSeat, live
   isolation: isolate;
   --kobo-pile-card-w: clamp(48px, 7.5vh, 60px);
   --ring-top: 88px;
-  --ring-bottom: 112px;
+  --ring-bottom: 128px;
   --ring-h: 70px;
 }
 .table-frame--compact { --ring-top: 78px; --ring-h: 56px; }
+/* A crowded phone reserves no hint zone under the piles, so its ring keeps the original room. */
+@media (max-width: 767px) { .table-frame--compact { --ring-bottom: 112px; } }
 /* The match hint (one or two lines) or the first-time note sits under the piles: the ring leaves room for it. */
-.table-frame--hint { --ring-bottom: 130px; }
 
 /* Wide screens: opponents on the ellipse, in an inner box so a whole tableau stays inside the frame. */
 .opponents-ring { position: absolute; inset: var(--ring-top) var(--ring-h) var(--ring-bottom); }
@@ -606,7 +614,7 @@ watch(() => [store.game?.round, store.game?.phase, store.game?.currentSeat, live
 .table-center {
   position: absolute;
   left: 50%;
-  bottom: 8px;
+  bottom: 0;
   transform: translateX(-50%);
   z-index: 1;
 }
@@ -622,18 +630,20 @@ watch(() => [store.game?.round, store.game?.phase, store.game?.currentSeat, live
   margin: 0 auto;
   padding: var(--space-2) var(--space-2) 0;
   box-sizing: border-box;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.30) 0%, rgba(0, 0, 0, 0.04) 100%);
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 14px 14px 0 0;
+  /* No panel around my zone (no fill, no border): the grid, the plate and the turn marker stand on the page. */
   --kobo-card-w: clamp(48px, 8vh, 64px);
   --kobo-gap: 6px;
 }
 /* Beside my hand, in the room the wide layout leaves free: it takes no height from the table above. */
 .my-zone { position: relative; }
+/* Two players: the bigger cards take height, which the table above gives back from my zone's top margin. */
+.my-zone--duel { padding-top: 0; }
 .my-zone .coach-side { position: absolute; left: 8px; top: 40px; width: 280px; margin: 0; z-index: 2; }
 .my-hand { border-radius: 14px; padding: 2px; }
 .my-hand.coach-ring { outline: 2px solid var(--gold); outline-offset: 0; box-shadow: 0 0 0 5px rgba(245, 200, 66, 0.2); }
 .my-zone :deep(.seat-label) { font-size: 0.8rem; padding: 4px 14px; }
+/* The dot of the turn ring sits clear of the name. */
+.my-zone :deep(.seat-label--active) { padding-left: 22px; }
 
 .table-footer { flex: none; display: flex; align-items: center; }
 
@@ -690,6 +700,12 @@ watch(() => [store.game?.round, store.game?.phase, store.game?.currentSeat, live
 .forfeit-fade-enter-from,
 .forfeit-fade-leave-to { opacity: 0; transform: translate(-50%, -8px); }
 
+/* Two players on a wide screen: the bigger cards need the height, so the lone opponent and the piles each move a few
+   pixels toward their edge of the table (the layout is the same). */
+@media (min-width: 768px) {
+  .table-frame--duel .seat-slot { transform: translate(-50%, calc(-50% - 16px)); }
+}
+
 /* Phones: no ring. The piles stay at the top of the table, the opponents wrap into a compact grid below and
    scroll vertically inside the frame when there are many (or when a tableau grows). */
 @media (max-width: 767px) {
@@ -717,6 +733,14 @@ watch(() => [store.game?.round, store.game?.phase, store.game?.currentSeat, live
     padding: var(--space-2) var(--space-1);
     align-items: start;
   }
+  /* Two players: the cards are bigger, so the frame trims its own margins to keep the whole grid in view. */
+  .table-frame--duel .table-center { padding-top: 0; }
+  .kobo-screen--duel { gap: var(--space-1); }
+  .kobo-screen--duel .my-zone { gap: 2px; }
+  .table-frame--duel .seat-slot :deep(.kobo-seat) { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 2px 8px; }
+  .table-frame--duel .seat-slot { gap: 2px; }
+  .kobo-screen--duel .my-zone :deep(.seat-label) { padding-top: 2px; padding-bottom: 2px; }
+  .table-frame--duel .opponents-ring { padding-top: 0; padding-bottom: 0; }
   .seat-slot {
     position: static;
     transform: none;

@@ -21,6 +21,8 @@ const props = withDefaults(defineProps<{
   faces: Record<string, Card>;
   clickable?: Record<string, boolean>;
   compact?: boolean;
+  /** Card width in px, replacing the one of the variant (a table of two players has room for bigger cards). */
+  cardWidth?: number | null;
   /** The slot the player already picked in a two-click action (the first card of a blind swap). */
   selected?: number | null;
   /** Slots (by `slotKey`) named by the last event: marked until the next event replaces them. */
@@ -32,7 +34,7 @@ const props = withDefaults(defineProps<{
   /** The slot of this (rival) grid picked for a match, waiting for the card I give. */
   picked?: number | null;
 }>(), {
-  clickable: () => ({}), compact: false, selected: null, highlighted: () => [], matchMode: false, rival: false,
+  clickable: () => ({}), compact: false, cardWidth: null, selected: null, highlighted: () => [], matchMode: false, rival: false,
   picked: null,
 });
 const emit = defineEmits<{ pick: [seat: number, slot: number] }>();
@@ -65,7 +67,7 @@ const isMarked = (slot: number): boolean => props.selected === slot || props.pic
 
 <template>
   <div class="tableau" :class="{ 'tableau--compact': compact }" role="group" :aria-label="groupLabel"
-       :style="{ '--columns': columns }">
+       :style="{ '--columns': columns, ...(cardWidth ? { '--card-w': `${cardWidth}px` } : {}) }">
     <template v-for="cell in cells" :key="cell.slot">
       <button
         v-if="cell.occupied"
@@ -104,6 +106,8 @@ const isMarked = (slot: number): boolean => props.selected === slot || props.pic
   justify-content: center;
 }
 .tableau--compact { --card-w: 34px; }
+/* Capped by the width: a grid with penalty cards (many columns) shrinks its cards rather than the page scrolling. */
+.tableau { --card-fit: min(var(--card-w), calc((min(100vw, 1100px) - 64px) / var(--columns) - 10px)); }
 
 .slot, .slot-empty {
   box-sizing: border-box;
@@ -138,10 +142,16 @@ const isMarked = (slot: number): boolean => props.selected === slot || props.pic
   .slot.slot--match:hover { border-color: color-mix(in srgb, var(--gold) 70%, transparent); background: rgba(255, 255, 255, 0.06); }
 }
 .slot:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
-.slot-empty { border: 1px dashed rgba(255, 255, 255, 0.25); }
+/* An emptied slot keeps the size of a slot holding a card (its row and its column do not shrink, the grid does not
+   move): the card box plus the slot's padding and border. */
+.slot-empty {
+  border: 1px dashed rgba(255, 255, 255, 0.25);
+  width: calc(var(--card-fit) + 6px);
+  height: calc(var(--card-fit) * 243.1375 / 167.575 + 6px);
+}
 
 .slot :deep(.playing_card) {
-  width: var(--card-w);
+  width: var(--card-fit);
   height: auto;
   aspect-ratio: 167.575 / 243.1375;
   display: block;
