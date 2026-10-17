@@ -237,12 +237,28 @@ describe('President messages', () => {
       nextLead: ['scum', 'president'],
       scoring: ['rank', 'titles', 'zeroSum'],
       length: ['rounds-5', 'rounds-3', 'rounds-10', 'points-11', 'points-21', 'endless'],
+      equalPlay: ['on', 'off'],
+      twoCuts: ['off', 'single', 'ladder'],
+      quadClears: ['on', 'off'],
+      forbiddenFinish: ['lastPlace', 'off'],
+      mustPlay: ['off', 'on'],
     };
     for (const [key, list] of Object.entries(values)) {
       expect(o[key].label, key).toBeTruthy();
       for (const value of list) expect(o[key][value], `${key}.${value}`).toBeTruthy();
     }
     expect(o.preset.classic).toBeTruthy();
+  });
+
+  it('givenTheTrickVariants_thenTheirChipsEndReasonsAndMarkersAreWritten', () => {
+    const ui = messagesEn.presidentUi;
+    for (const chip of ['twoCuts.single', 'twoCuts.ladder', 'quadClears.on', 'quadClears.off', 'forbiddenFinish.lastPlace',
+      'mustPlay.on']) expect(ui.chips[chip], chip).toBeTruthy();
+    for (const reason of ['ALL_PASSED', 'FIRST_OUT', 'CUT', 'QUAD']) expect(ui.trickEnd[reason], reason).toContain('{player}');
+    expect(ui.trickEnd.led).toContain('{player}');
+    expect(ui.table.outForbidden).toBeTruthy();
+    expect(ui.summary.forbidden).toBeTruthy();
+    expect(ui.summary.forbiddenLabel).toBeTruthy();
   });
 
   it('givenABotSeat_thenItsPresidentLevelsAreNamed', () => {

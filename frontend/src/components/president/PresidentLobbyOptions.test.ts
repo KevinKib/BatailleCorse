@@ -12,6 +12,11 @@ const VALUES: Record<string, string[]> = {
   nextLead: ['scum', 'president'],
   scoring: ['rank', 'titles', 'zeroSum'],
   length: ['rounds-5', 'rounds-3', 'rounds-10', 'points-11', 'points-21', 'endless'],
+  equalPlay: ['on', 'off'],
+  twoCuts: ['off', 'single', 'ladder'],
+  quadClears: ['on', 'off'],
+  forbiddenFinish: ['lastPlace', 'off'],
+  mustPlay: ['off', 'on'],
 };
 const descriptors: OptionDescriptor[] = Object.entries(VALUES).map(([key, values]) => ({
   key, type: 'CHOICE', values, defaultValue: CLASSIC_PRESIDENT_OPTIONS[key], labelKey: `options.president.${key}`,
@@ -56,12 +61,30 @@ describe('PresidentLobbyOptions', () => {
     expect(wrapper.emitted('set-option')).toEqual([['length', 'endless']]);
   });
 
+  it('givenTheTrickVariants_thenEachHasALabelledGroupInTheCustomisePanel', async () => {
+    const wrapper = mountOptions();
+    await wrapper.get('[data-test="customise"]').trigger('click');
+    expect(wrapper.get('[data-test="option-twoCuts"]').text()).toContain('2 cuts');
+    expect(wrapper.get('[data-test="option-quadClears"]').text()).toContain('Four of a kind');
+    expect(wrapper.get('[data-test="option-forbiddenFinish"]').text()).toContain('Finishing on a 2');
+    expect(wrapper.get('[data-test="option-mustPlay"]').text()).toContain('Compulsory play');
+  });
+
+  it('givenTheHostPicksACut_thenSetOptionIsEmittedAndTheCardSaysCustom', async () => {
+    const wrapper = mountOptions();
+    await wrapper.get('[data-test="customise"]').trigger('click');
+    await wrapper.get('[data-test="option-twoCuts-ladder"]').setValue(true);
+    expect(wrapper.emitted('set-option')).toEqual([['twoCuts', 'ladder']]);
+    await wrapper.setProps({ options: { ...CLASSIC_PRESIDENT_OPTIONS, twoCuts: 'ladder' } });
+    expect(wrapper.get('[data-test="preset-title"]').text()).toBe('Custom');
+  });
+
   it('givenAKeyTheClientHasNoTextFor_thenTheGenericGroupShowsItsRawKeyAndValues', async () => {
-    const future: OptionDescriptor = { key: 'twoCuts', type: 'CHOICE', values: ['off', 'single'], defaultValue: 'off', labelKey: 'options.president.twoCuts' };
+    const future: OptionDescriptor = { key: 'suitLock', type: 'CHOICE', values: ['off', 'on'], defaultValue: 'off', labelKey: 'options.president.suitLock' };
     const wrapper = mountOptions({ ...CLASSIC_PRESIDENT_OPTIONS }, true, [...descriptors, future]);
     await wrapper.get('[data-test="customise"]').trigger('click');
-    expect(wrapper.get('[data-test="option-twoCuts"]').text()).toContain('twoCuts');
-    expect(wrapper.get('[data-test="option-twoCuts-single"]').exists()).toBe(true);
+    expect(wrapper.get('[data-test="option-suitLock"]').text()).toContain('suitLock');
+    expect(wrapper.get('[data-test="option-suitLock-on"]').exists()).toBe(true);
   });
 
   it('givenAGuest_thenTheOptionsAreReadOnlyAndThereIsNoReset', async () => {
