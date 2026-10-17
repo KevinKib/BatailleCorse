@@ -20,5 +20,6 @@ export function hintText(refusal: SelectionRefusal | null, ui: PresidentUiMessag
     case 'notPlayable': return ui.hint.notPlayable;
     case 'wrongCount': return format(ui.hint.wrongCount, { counts: listOr(refusal.counts) });
     case 'notHigher': return plural(ui.hint.notHigher, refusal.count, { rank: rankLabel(refusal.rank, ui) });
+    case 'matchOnly': return plural(ui.hint.matchOnly, refusal.count, { rank: rankLabel(refusal.rank, ui) });
   }
 }

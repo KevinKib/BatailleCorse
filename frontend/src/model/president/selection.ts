@@ -13,7 +13,8 @@ export type SelectionContext = Pick<PresidentState, 'legalPlays' | 'availableAct
 
 /**
  * Why a selection cannot be played. `code` is a key for the locales; the other fields fill its text:
- * `counts` the numbers of cards the server accepts, `rank` and `count` the pattern to beat.
+ * `counts` the numbers of cards the server accepts, `rank` and `count` the pattern to beat (`notHigher`) or, under
+ * equal play, the only pattern allowed (`matchOnly`).
  */
 export type SelectionRefusal =
   | { code: 'cannotPlay' }
@@ -22,6 +23,7 @@ export type SelectionRefusal =
   | { code: 'mustPass' }
   | { code: 'wrongCount'; counts: number[] }
   | { code: 'notHigher'; rank: string; count: number }
+  | { code: 'matchOnly'; rank: string; count: number }
   | { code: 'notPlayable' };
 
 export interface SelectionAnalysis {
@@ -47,15 +49,29 @@ function canPlay(actions: readonly PresidentAction[]): boolean {
   return actions.includes('PLAY');
 }
 
+/** My turn with no legal play: the server lists PASS but not PLAY. */
+function mustPassNow(actions: readonly PresidentAction[]): boolean {
+  return !actions.includes('PLAY') && actions.includes('PASS');
+}
+
 export function analyseSelection(context: SelectionContext, selected: readonly Card[]): SelectionAnalysis {
   const pattern = patternOf(selected);
   const refuse = (reason: SelectionRefusal): SelectionAnalysis => ({ pattern, legal: false, reason });
 
-  if (!canPlay(context.availableActions)) return refuse({ code: 'cannotPlay' });
+  if (!canPlay(context.availableActions)) {
+    return refuse({ code: mustPassNow(context.availableActions) ? 'mustPass' : 'cannotPlay' });
+  }
   if (selected.length === 0) return refuse({ code: 'nothingSelected' });
   if (!pattern) return refuse({ code: 'mixedRanks' });
   if (context.legalPlays.some(p => samePattern(p, pattern))) return { pattern, legal: true, reason: null };
   if (context.legalPlays.length === 0) return refuse({ code: 'mustPass' });
+
+  const trick = context.trick;
+  if (trick.constraint === 'MATCH_OR_PASS' && trick.requiredRank) {
+    // Equal play: the same rank and count, or nothing. "Higher" would mislead, whatever the selection got wrong.
+    const count = trick.requiredCount ?? trick.top?.count ?? 1;
+    return refuse({ code: 'matchOnly', rank: canonicalRank(trick.requiredRank), count });
+  }
 
   const counts = [...new Set(context.legalPlays.map(p => p.count))].sort((a, b) => a - b);
   if (!counts.includes(pattern.count)) return refuse({ code: 'wrongCount', counts });

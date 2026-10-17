@@ -266,6 +266,7 @@ export const messagesEn: Messages = {
       mustPass: 'Nothing you hold can play: pass.',
       wrongCount: 'Number of cards to play: {counts}.',
       notHigher: { one: 'Play a card higher than {rank}.', other: 'Play {n} cards higher than {rank}.' },
+      matchOnly: { one: 'Play a {rank} or nothing.', other: 'Play {n} {rank}s or nothing.' },
       notPlayable: 'This play is not allowed.',
       cannotPlay: 'Wait for your turn.',
     },

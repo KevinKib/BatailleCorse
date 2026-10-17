@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { analyseSelection, completingCards, patternOf, type SelectionContext } from './selection';
-import type { PresidentPattern } from './PresidentState';
+import type { PresidentPattern, PresidentTrick } from './PresidentState';
 import { buildPresidentCard as card, buildPresidentTrick } from '../fixtures/president';
 
 const set = (rank: string, count: number): PresidentPattern => ({ kind: 'SET', rank, count });
@@ -8,16 +8,23 @@ const set = (rank: string, count: number): PresidentPattern => ({ kind: 'SET', r
 const NINE_H = card('9', 'HEART');
 const NINE_S = card('9', 'SPADE');
 const NINE_C = card('9', 'CLUB');
+const JACK_H = card('JACK', 'HEART');
+const JACK_S = card('JACK', 'SPADE');
+const QUEEN_H = card('QUEEN', 'HEART');
+const QUEEN_S = card('QUEEN', 'SPADE');
 const KING_H = card('KING', 'HEART');
 const KING_S = card('KING', 'SPADE');
 const FOUR_D = card('4', 'DIAMOND');
 
 /** The viewer to act: `legalPlays` as the server lists them, a trick whose top is `top`. */
-function ctx(legalPlays: PresidentPattern[], top: PresidentPattern | null, actions: string[] = ['PLAY', 'PASS']): SelectionContext {
+function ctx(
+  legalPlays: PresidentPattern[], top: PresidentPattern | null, actions: string[] = ['PLAY', 'PASS'],
+  trick: Partial<PresidentTrick> = {},
+): SelectionContext {
   return {
     legalPlays,
     availableActions: actions as SelectionContext['availableActions'],
-    trick: buildPresidentTrick({ top, leader: 1 }),
+    trick: buildPresidentTrick({ top, leader: 1, ...trick }),
   };
 }
 
@@ -37,6 +44,9 @@ describe('patternOf', () => {
 describe('analyseSelection', () => {
   const leading = ctx([set('9', 1), set('9', 2), set('KING', 2), set('4', 1)], null);
   const followingPair = ctx([set('KING', 2)], set('9', 2));
+  const equalPair = ctx([set('JACK', 2)], set('JACK', 2), ['PLAY', 'PASS'],
+    { constraint: 'MATCH_OR_PASS', requiredRank: 'JACK', requiredCount: 2 });
+  const equalNone = ctx([], set('JACK', 2), ['PASS'], { constraint: 'MATCH_OR_PASS', requiredRank: 'JACK', requiredCount: 2 });
   const followingSingle = ctx([set('KING', 1), set('ACE', 1)], set('9', 1));
 
   it.each<[string, SelectionContext, typeof NINE_H[], boolean, object | null]>([
@@ -48,6 +58,11 @@ describe('analyseSelection', () => {
     ['following a pair with a single', followingPair, [KING_H], false, { code: 'wrongCount', counts: [2] }],
     ['following a single with a pair', followingSingle, [KING_H, KING_S], false, { code: 'wrongCount', counts: [1] }],
     ['following a single with a lower single', followingSingle, [FOUR_D], false, { code: 'notHigher', rank: '9', count: 1 }],
+    ['equal play, the right rank and count', equalPair, [JACK_H, JACK_S], true, null],
+    ['equal play, a higher rank', equalPair, [QUEEN_H, QUEEN_S], false, { code: 'matchOnly', rank: 'JACK', count: 2 }],
+    ['equal play, a lower rank', equalPair, [NINE_H, NINE_S], false, { code: 'matchOnly', rank: 'JACK', count: 2 }],
+    ['equal play, the right rank and the wrong count', equalPair, [JACK_H], false, { code: 'matchOnly', rank: 'JACK', count: 2 }],
+    ['equal play, nothing of the required rank', equalNone, [QUEEN_H, QUEEN_S], false, { code: 'mustPass' }],
     ['mixed ranks', leading, [NINE_H, KING_H], false, { code: 'mixedRanks' }],
     ['nothing selected', leading, [], false, { code: 'nothingSelected' }],
   ])('%s', (_name, context, selected, legal, reason) => {
