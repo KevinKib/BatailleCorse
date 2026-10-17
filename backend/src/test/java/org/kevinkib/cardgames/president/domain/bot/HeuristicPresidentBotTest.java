@@ -6,7 +6,6 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.kevinkib.cardgames.president.domain.rules.ForbiddenFinish;
 import org.kevinkib.cardgames.president.domain.rules.PresidentOptions;
-import org.kevinkib.cardgames.president.domain.rules.TwoCuts;
 import org.kevinkib.cards.domain.Card;
 
 import java.util.List;
@@ -42,7 +41,7 @@ class HeuristicPresidentBotTest {
             PresidentOptions.defaults().exchange(), PresidentOptions.defaults().giveBack(),
             PresidentOptions.defaults().nextLead(), PresidentOptions.defaults().scoring(),
             PresidentOptions.defaults().length(), PresidentOptions.defaults().equalPlay(),
-            PresidentOptions.defaults().twoCuts(), false, ForbiddenFinish.LAST_PLACE, false,
+            ForbiddenFinish.LAST_PLACE, false,
             PresidentOptions.defaults().revolution(), PresidentOptions.defaults().ranking(),
             PresidentOptions.defaults().runs(), false);
 
@@ -115,7 +114,7 @@ class HeuristicPresidentBotTest {
         return Stream.of(
                 Arguments.of("passes rather than going out on a two", "2C", "9H", "pass"),
                 Arguments.of("a two that leaves a card is fine", "2C 5D", "9H", "2"),
-                Arguments.of("a pair of twos that empties the hand is refused", "2C 2D", "9H 9D", "pass"));
+                Arguments.of("a lone two that leaves a card is fine", "2C 2D", "9H 9D", "2"));
     }
 
     @ParameterizedTest(name = "{0}: {1} on {2} gives {3}")
@@ -138,8 +137,7 @@ class HeuristicPresidentBotTest {
 
     // ----- cuts, forbidden finish on a cut, compulsory play (PR V2) -----
 
-    private static final PresidentOptions SINGLE_CUT = PresidentOptions.defaults().withTwoCuts(TwoCuts.SINGLE);
-    private static final PresidentOptions LADDER_CUT = PresidentOptions.defaults().withTwoCuts(TwoCuts.LADDER);
+    private static final PresidentOptions SINGLE_CUT = PresidentOptions.defaults();
     private static final PresidentOptions MUST_PLAY = PresidentOptions.defaults().withMustPlay(true);
 
     static Stream<Arguments> cutsAndCompulsoryPlay() {
@@ -147,8 +145,6 @@ class HeuristicPresidentBotTest {
                 Arguments.of("keeps its cutting two rather than spend it on a low pair (long hand)",
                         "2H 6C 7C 8C 9C", "4C 4D", SINGLE_CUT, "pass"),
                 Arguments.of("spends the cutting two when the hand is short", "2H 6C", "4C 4D", SINGLE_CUT, "2"),
-                Arguments.of("keeps a pair of twos that would cut a triple under the ladder (long hand)",
-                        "2H 2D 6C 7C 8C 9C", "4C 4D 4H", LADDER_CUT, "pass"),
                 Arguments.of("plays an ordinary higher pair before thinking of a cut",
                         "2H 6C 6D 8C 9C", "4C 4D", SINGLE_CUT, "6 6"),
                 Arguments.of("never goes out on a cutting two when that finish is forbidden",

@@ -24,8 +24,8 @@ import static org.kevinkib.cardgames.president.domain.PresidentFixtures.cards;
 
 /**
  * A quad played at once closes the trick like the four completed in succession (spec 3.1.1, owner decision O5):
- * the same reason {@code QUAD}, the same next leader, whatever the equal-play option says. The
- * {@code quadClears} option (V2, on by default) is exactly this behaviour: the tests here run with the default.
+ * the same reason {@code QUAD}, the same next leader, whatever the equal-play option says. A fixed
+ * rule, with no option (owner decision).
  */
 class QuadAtOnceTest {
 

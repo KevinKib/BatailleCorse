@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.kevinkib.cardgames.president.domain.card.RankOrder;
-import org.kevinkib.cardgames.president.domain.rules.TwoCuts;
 
 import java.util.List;
 
@@ -82,42 +81,33 @@ class LegalPlaysTest {
         assertThat(legal("5D 5S 5H KC", "5C 5H", Constraint.MATCH_OR_PASS, true), contains("5D 5S"));
         assertThat(legal("5D 5S 5H KC", "5C 5H 5D 5S", Constraint.MATCH_OR_PASS, true), empty());
         assertThat(legal("KC KD", "5C", Constraint.MATCH_OR_PASS, true), empty());
-        assertThat(legal("5D 2S", "5C", Constraint.MATCH_OR_PASS, true), contains("5D"));
+        assertThat(legal("5D 2S", "5C", Constraint.MATCH_OR_PASS, true), contains("5D", "2S"));
     }
 
-    private static List<String> legal(String hand, String top, Constraint constraint, TwoCuts twoCuts)
-            throws Exception {
-        return LegalPlays.of(cards(hand), PlayParser.parse(cards(top)), RankOrder.standard(), constraint, true,
-                twoCuts).stream().map(p -> codes(p.cards())).toList();
+    private static List<String> legal(String hand, String top, Constraint constraint) throws Exception {
+        return LegalPlays.of(cards(hand), PlayParser.parse(cards(top)), RankOrder.standard(), constraint, true)
+                .stream().map(p -> codes(p.cards())).toList();
     }
 
-    @ParameterizedTest(name = "cuts={0}: {2} on {1} holding {3} -> {4}")
+    @ParameterizedTest(name = "{1}: {0} holding {2} -> {3}")
     @CsvSource(delimiter = '|', value = {
-            // a single 2 answers any count; the other sets must still beat by count and rank
-            "single | 7C 7D 7H | BEAT          | 2D 2H 9C 9D   | 2D",
-            "single | 7C 7D    | BEAT          | 2D 2H 9C 9D   | 9C 9D, 2D, 2D 2H",
-            "single | 7C       | BEAT          | 2D 2H 9C 9D   | 9C, 2D",
-            "single | 7C 7D 7H 7S | BEAT        | 2D 2H 9C 9D   | 2D",
-            // ladder: k twos on k+1 cards
-            "ladder | 7C 7D 7H | BEAT          | 2D 2H 9C 9D   | 2D 2H",
-            "ladder | 7C 7D    | BEAT          | 2D 2H 9C 9D   | 9C 9D, 2D, 2D 2H",
-            "ladder | 7C 7D 7H 7S | BEAT        | 2D 2H 2S 9C   | 2D 2H 2S",
-            "ladder | 7C 7D 7H 7S | BEAT        | 2D 2H 9C 9D   | ",
-            // no cut
-            "off    | 7C 7D 7H | BEAT          | 2D 2H 9C 9D   | ",
-            "off    | 7C 7D    | BEAT          | 2D 2H 9C 9D   | 9C 9D, 2D 2H",
-            // a cut never answers the binding
-            "single | 7C       | MATCH_OR_PASS | 2D 7D         | 7D",
-            "ladder | 7C 7D    | MATCH_OR_PASS | 2D 7H 7S      | 7H 7S",
-            "single | 7C 7D    | MATCH_OR_PASS | 2D 9C         | ",
+            // a lone 2 answers any count; the other sets must still beat by count and rank
+            "7C 7D 7H    | BEAT          | 2D 2H 9C 9D   | 2D",
+            "7C 7D       | BEAT          | 2D 2H 9C 9D   | 9C 9D, 2D, 2D 2H",
+            "7C          | BEAT          | 2D 2H 9C 9D   | 9C, 2D",
+            "7C 7D 7H 7S | BEAT          | 2D 2H 9C 9D   | 2D",
+            // a lone 2 answers a play of 2s too
+            "2C 2S       | BEAT          | 2D 2H 9C 9D   | 2D, 2D 2H",
+            // the binding asks for the same rank and count, but a lone 2 is always allowed
+            "7C          | MATCH_OR_PASS | 2D 7D         | 7D, 2D",
+            "7C 7D       | MATCH_OR_PASS | 2D 7H 7S      | 7H 7S, 2D",
+            "7C 7D       | MATCH_OR_PASS | 2D 9C         | 2D",
     })
-    void cutsJoinTheLegalPlaysUnlessTheBindingHolds(String cuts, String top, String constraint, String hand,
-                                                    String expected) throws Exception {
-        TwoCuts twoCuts = TwoCuts.valueOf(cuts.trim().toUpperCase());
-        List<String> wanted = expected == null || expected.isBlank() ? List.of()
-                : java.util.Arrays.stream(expected.split(",")).map(String::trim).toList();
+    void aLoneTwoJoinsTheLegalPlaysEvenUnderTheBinding(String top, String constraint, String hand, String expected)
+            throws Exception {
+        List<String> wanted = java.util.Arrays.stream(expected.split(",")).map(String::trim).toList();
 
-        assertThat(legal(hand.trim(), top.trim(), Constraint.valueOf(constraint.trim()), twoCuts), is(wanted));
+        assertThat(legal(hand.trim(), top.trim(), Constraint.valueOf(constraint.trim())), is(wanted));
     }
 
     @Test

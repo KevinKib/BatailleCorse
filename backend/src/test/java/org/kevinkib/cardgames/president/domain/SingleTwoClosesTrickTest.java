@@ -5,17 +5,15 @@ import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.president.domain.event.PresidentEvent;
 import org.kevinkib.cardgames.president.domain.event.TrickEndReason;
 import org.kevinkib.cardgames.president.domain.event.TrickWon;
-import org.kevinkib.cardgames.president.domain.play.PlayDoesNotBeatException;
+import org.kevinkib.cardgames.president.domain.event.PlayerOut;
 import org.kevinkib.cardgames.president.domain.rules.EqualPlay;
 import org.kevinkib.cardgames.president.domain.rules.PresidentOptions;
-import org.kevinkib.cardgames.president.domain.rules.TwoCuts;
 
 import java.util.List;
 import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.kevinkib.cardgames.president.domain.PresidentBuilder.aPresident;
 import static org.kevinkib.cardgames.president.domain.PresidentFixtures.cards;
 
@@ -33,11 +31,6 @@ class SingleTwoClosesTrickTest {
 
     private static Optional<TrickWon> closed(List<PresidentEvent> events) {
         return events.stream().filter(e -> e instanceof TrickWon).map(e -> (TrickWon) e).findFirst();
-    }
-
-    @Test
-    void classicHasTheSingleTwoOn() {
-        assertThat(PresidentOptions.defaults().twoCuts(), is(TwoCuts.SINGLE));
     }
 
     @Test
@@ -80,12 +73,36 @@ class SingleTwoClosesTrickTest {
     }
 
     @Test
-    void aSingleTwoDoesNotAnswerTheEqualPlayBinding() throws Exception {
-        // 9 then 9: the third player must match the 9 or pass, a 2 included (a cut never answers the binding)
-        President game = aPresident().leader(0).options(PresidentOptions.defaults())
+    void aSingleTwoClosesTheTrickEvenUnderTheEqualPlayBinding() throws Exception {
+        President game = aPresident().leader(0)
                 .withHand("9S 3C").withHand("9H 4C").withHand("2S KD 5C").withHand("QC QD 6C").build();
         game.play(seat(0), cards("9S"));
         game.play(seat(1), cards("9H"));
-        assertThrows(PlayDoesNotBeatException.class, () -> game.play(seat(2), cards("2S")));
+        Optional<TrickWon> won = closed(game.play(seat(2), cards("2S")));
+        assertThat(won.map(TrickWon::reason), is(Optional.of(TrickEndReason.CUT)));
+        assertThat(game.currentSeat(), is(seat(2)));
+    }
+
+    @Test
+    void aSingleTwoClosesTheTrickAfterAChain() throws Exception {
+        President game = aPresident().leader(0)
+                .withHand("9S 3C").withHand("9H 4C").withHand("9D 5C").withHand("2S QD 6C").build();
+        game.play(seat(0), cards("9S"));
+        game.play(seat(1), cards("9H"));
+        game.play(seat(2), cards("9D"));
+        assertThat(closed(game.play(seat(3), cards("2S"))).isPresent(), is(true));
+        assertThat(game.currentSeat(), is(seat(3)));
+    }
+
+    @Test
+    void aSingleTwoAsTheLastCardIsAForbiddenFinishAndStillClosesTheTrick() throws Exception {
+        President game = aPresident().leader(0)
+                .withHand("9S 3C").withHand("9H 4C").withHand("2S").withHand("QC QD 6C").build();
+        game.play(seat(0), cards("9S"));
+        game.play(seat(1), cards("9H"));
+        List<PresidentEvent> events = game.play(seat(2), cards("2S"));
+        assertThat(events.stream().anyMatch(e -> e instanceof PlayerOut o && o.forbidden()), is(true));
+        assertThat(closed(events).map(TrickWon::reason), is(Optional.of(TrickEndReason.CUT)));
+        assertThat(game.currentSeat(), is(seat(3)));
     }
 }

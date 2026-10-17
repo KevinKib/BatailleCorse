@@ -18,7 +18,6 @@ import org.kevinkib.cardgames.president.domain.rules.MatchLength;
 import org.kevinkib.cardgames.president.domain.rules.NextLead;
 import org.kevinkib.cardgames.president.domain.rules.PresidentOptions;
 import org.kevinkib.cardgames.president.domain.rules.Scoring;
-import org.kevinkib.cardgames.president.domain.rules.TwoCuts;
 
 import java.util.Arrays;
 import java.util.List;
@@ -92,8 +91,6 @@ public class PresidentFactory implements GameFactory {
                 descriptor(PresidentOptions.SCORING_KEY, Scoring.values(), defaults.scoring()),
                 descriptor(PresidentOptions.LENGTH_KEY, MatchLength.values(), defaults.length()),
                 descriptor(PresidentOptions.EQUAL_PLAY_KEY, EqualPlay.values(), defaults.equalPlay()),
-                descriptor(PresidentOptions.TWO_CUTS_KEY, TwoCuts.values(), defaults.twoCuts()),
-                flag(PresidentOptions.QUAD_CLEARS_KEY, defaults.quadClears()),
                 descriptor(PresidentOptions.FORBIDDEN_FINISH_KEY, ForbiddenFinish.values(),
                         defaults.forbiddenFinish()),
                 flag(PresidentOptions.MUST_PLAY_KEY, defaults.mustPlay()));

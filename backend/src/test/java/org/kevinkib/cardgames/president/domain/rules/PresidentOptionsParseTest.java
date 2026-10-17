@@ -28,8 +28,8 @@ class PresidentOptionsParseTest {
         assertThat(parsed.toGameOptions().values(), is(Map.ofEntries(
                 Map.entry("afterPass", "reenter"), Map.entry("firstLead", "kingOfHearts"), Map.entry("exchange", "two"),
                 Map.entry("giveBack", "free"), Map.entry("nextLead", "scum"), Map.entry("scoring", "rank"),
-                Map.entry("length", "rounds-5"), Map.entry("equalPlay", "on"), Map.entry("twoCuts", "off"),
-                Map.entry("quadClears", "on"), Map.entry("forbiddenFinish", "lastPlace"), Map.entry("mustPlay", "off"))));
+                Map.entry("length", "rounds-5"), Map.entry("equalPlay", "on"),
+                Map.entry("forbiddenFinish", "lastPlace"), Map.entry("mustPlay", "off"))));
     }
 
     /** One row per value of every option the P3 server declares. */
@@ -43,8 +43,6 @@ class PresidentOptionsParseTest {
             "scoring, rank", "scoring, titles", "scoring, zeroSum",
             "length, rounds-5", "length, rounds-3", "length, rounds-10", "length, points-11", "length, points-21",
             "length, endless", "equalPlay, on", "equalPlay, off",
-            "twoCuts, off", "twoCuts, single", "twoCuts, ladder",
-            "quadClears, on", "quadClears, off",
             "forbiddenFinish, lastPlace", "forbiddenFinish, off",
             "mustPlay, off", "mustPlay, on",
     })
@@ -69,10 +67,8 @@ class PresidentOptionsParseTest {
     @Test
     void theVariantKeysOfThisPrAreParsedIntoTheRecord() {
         PresidentOptions parsed = PresidentOptions.parseStrict(GameOptions.of(Map.of(
-                "twoCuts", "ladder", "quadClears", "off", "forbiddenFinish", "off", "mustPlay", "on")));
+                "forbiddenFinish", "off", "mustPlay", "on")));
 
-        assertThat(parsed.twoCuts(), is(TwoCuts.LADDER));
-        assertThat(parsed.quadClears(), is(false));
         assertThat(parsed.forbiddenFinish(), is(ForbiddenFinish.OFF));
         assertThat(parsed.mustPlay(), is(true));
     }
@@ -90,7 +86,7 @@ class PresidentOptionsParseTest {
             "afterPass, maybe", "afterPass, REENTER", "firstLead, 3C", "firstLead, KING_OF_HEARTS",
             "exchange, three", "giveBack, high", "nextLead, nobody", "scoring, points", "length, rounds-4",
             "length, ENDLESS", "length, ''",
-            "twoCuts, double", "twoCuts, SINGLE", "quadClears, yes", "quadClears, true", "forbiddenFinish, on",
+            "twoCuts, single", "quadClears, on", "forbiddenFinish, on",
             "forbiddenFinish, LAST_PLACE", "mustPlay, yes", "mustPlay, ON", "mustPlay, ''",
     })
     void anUnknownValueIsRefusedNotReplacedByTheDefault(String key, String value) {

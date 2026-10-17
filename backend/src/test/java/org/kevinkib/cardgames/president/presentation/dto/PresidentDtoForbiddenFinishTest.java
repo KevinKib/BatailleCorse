@@ -5,7 +5,6 @@ import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.president.domain.President;
 import org.kevinkib.cardgames.president.domain.event.PresidentEvent;
 import org.kevinkib.cardgames.president.domain.rules.PresidentOptions;
-import org.kevinkib.cardgames.president.domain.rules.TwoCuts;
 import org.kevinkib.cardgames.president.presentation.dto.event.PresidentEventData;
 import org.kevinkib.cardgames.president.presentation.dto.event.PresidentEventType;
 
@@ -37,12 +36,12 @@ class PresidentDtoForbiddenFinishTest {
     @Test
     void theOptionsInForceCarryTheTrickVariants() {
         President game = aPresident().withHand("4C 9C").withHand("5C JC").withHand("6C QC").leader(0)
-                .options(PresidentOptions.defaults().withTwoCuts(TwoCuts.LADDER).withMustPlay(true)).build();
+                .options(PresidentOptions.defaults().withMustPlay(true)).build();
 
         Map<String, String> options = view(game, 0).options();
 
-        assertThat(options.get("twoCuts"), is("ladder"));
-        assertThat(options.get("quadClears"), is("on"));
+        assertThat(options.containsKey("twoCuts"), is(false));
+        assertThat(options.containsKey("quadClears"), is(false));
         assertThat(options.get("forbiddenFinish"), is("lastPlace"));
         assertThat(options.get("mustPlay"), is("on"));
     }
@@ -70,9 +69,7 @@ class PresidentDtoForbiddenFinishTest {
     void theRoundSummaryPlacesTheForbiddenFinisherLastAndFlagsThem() throws Exception {
         President game = aPresident().leader(0)
                 .withHand("2S").withHand("3C 4C").withHand("5C 6C").build();
-        game.play(p(0), cards("2S"));
-        game.pass(p(1));
-        game.pass(p(2));
+        game.play(p(0), cards("2S"));   // a lone 2 closes the trick: B leads
         game.play(p(1), cards("3C"));
         game.pass(p(2));
         game.play(p(1), cards("4C"));
@@ -94,7 +91,7 @@ class PresidentDtoForbiddenFinishTest {
 
     @Test
     void aTrickTakenByACutNamesTheReasonAndAForbiddenFinishNamesNoPlace() throws Exception {
-        President game = aPresident().leader(0).options(PresidentOptions.defaults().withTwoCuts(TwoCuts.SINGLE))
+        President game = aPresident().leader(0)
                 .withHand("9S 9H 3C").withHand("2S").withHand("KC KD").withHand("QC 6C").build();
         game.play(p(0), cards("9S 9H"));
 

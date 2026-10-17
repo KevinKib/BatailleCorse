@@ -4,8 +4,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.kevinkib.cardgames.president.domain.card.RankOrder;
 import org.kevinkib.cardgames.president.domain.event.TrickEndReason;
-import org.kevinkib.cardgames.president.domain.rules.PresidentOptions;
-import org.kevinkib.cardgames.president.domain.rules.TwoCuts;
 
 import java.util.Optional;
 
@@ -14,9 +12,10 @@ import static org.hamcrest.Matchers.is;
 import static org.kevinkib.cardgames.president.domain.PresidentFixtures.cards;
 
 /**
- * The effects of a play on the trick (spec catalogue V4 and V5): which plays close it at once, and why. The matrix is
- * the option value (twoCuts, quadClears) x the play x the top. {@code -} as a top is a lead. The four cards of a
- * rank completed in succession belong to equal play and are not decided here.
+ * The effects of a play on the trick (spec catalogue V4 and V5): which plays close it at once, and why. Both rules are
+ * fixed (owner decision): one 2 closes the trick, and so does a quad played at once. The matrix is the play x the top;
+ * {@code -} as a top is a lead. The four cards of a rank completed in succession belong to equal play and are not
+ * decided here.
  */
 class PlayEffectsTest {
 
@@ -24,51 +23,34 @@ class PlayEffectsTest {
         return PlayParser.parse(cards(codes));
     }
 
-    @ParameterizedTest(name = "cuts={0} quadClears={1}: {3} on {2} -> {4}")
+    @ParameterizedTest(name = "{1} on {0} -> {2}")
     @CsvSource(delimiter = '|', value = {
-            // a quad played at once (quadClears)
-            "off    | true  | -           | 9C 9D 9H 9S | QUAD",
-            "off    | false | -           | 9C 9D 9H 9S | NONE",
-            "off    | true  | 5C 5D 5H 5S | 9C 9D 9H 9S | QUAD",
-            "off    | false | 5C 5D 5H 5S | 9C 9D 9H 9S | NONE",
-            "off    | true  | -           | 2C 2D 2H 2S | QUAD",
-            "single | true  | -           | 2C 2D 2H 2S | QUAD",
-            "ladder | true  | 9C 9D 9H 9S | 2C 2D 2H     | CUT",
+            // a quad played at once
+            "-           | 9C 9D 9H 9S | QUAD",
+            "5C 5D 5H 5S | 9C 9D 9H 9S | QUAD",
+            "-           | 2C 2D 2H 2S | QUAD",
             // a quad is not a quad with fewer cards
-            "off    | true  | -           | 9C 9D 9H    | NONE",
-            "off    | true  | -           | 9C          | NONE",
-            // single cut: one 2, on anything, even as a lead
-            "single | true  | 9C          | 2D          | CUT",
-            "single | true  | 9C 9D       | 2D          | CUT",
-            "single | true  | 9C 9D 9H    | 2D          | CUT",
-            "single | true  | 9C 9D 9H 9S | 2D          | CUT",
-            "single | false | 9C 9D       | 2D          | CUT",
-            "single | true  | -           | 2D          | CUT",
-            "single | true  | 2C          | 2D          | NONE",
-            "single | true  | -           | 2D 2H       | NONE",
-            "single | true  | 9C          | 10D         | NONE",
-            "single | true  | 9C 9D       | 2D 2H       | NONE",
-            // ladder: k twos on k+1 cards
-            "ladder | true  | 9C 9D       | 2D          | CUT",
-            "ladder | true  | 9C 9D 9H    | 2D 2H       | CUT",
-            "ladder | true  | 9C 9D 9H 9S | 2D 2H 2S    | CUT",
-            "ladder | true  | 9C          | 2D          | NONE",
-            "ladder | true  | -           | 2D          | NONE",
-            "ladder | true  | 9C 9D       | 2D 2H       | NONE",
-            "ladder | true  | 2C 2D       | 2H          | NONE",
-            // no cut
-            "off    | true  | 9C 9D       | 2D          | NONE",
-            "off    | true  | -           | 2D          | NONE",
-            "off    | true  | 9C          | 2D          | NONE",
+            "-           | 9C 9D 9H    | NONE",
+            "-           | 9C          | NONE",
+            // one 2, on anything, even as a lead
+            "9C          | 2D          | CUT",
+            "9C 9D       | 2D          | CUT",
+            "9C 9D 9H    | 2D          | CUT",
+            "9C 9D 9H 9S | 2D          | CUT",
+            "-           | 2D          | CUT",
+            "2C          | 2D          | CUT",
+            "2C 2D       | 2H          | CUT",
+            // anything else goes on
+            "-           | 2D 2H       | NONE",
+            "9C          | 10D         | NONE",
+            "9C 9D       | 2D 2H       | NONE",
+            "9C          | 2D 2H       | NONE",
+            "9C 9D 9H    | 2D 2H 2S    | NONE",
     })
-    void theEffectOfAPlayOnTheTrick(String cuts, boolean quadClears, String top, String candidate, String expected)
-            throws Exception {
-        PresidentOptions options = PresidentOptions.defaults()
-                .withTwoCuts(TwoCuts.valueOf(cuts.trim().toUpperCase())).withQuadClears(quadClears);
+    void theEffectOfAPlayOnTheTrick(String top, String candidate, String expected) throws Exception {
         Play topPlay = top.trim().equals("-") ? null : play(top);
 
-        Optional<TrickEndReason> reason =
-                PlayEffects.clearReason(play(candidate), topPlay, RankOrder.standard(), options);
+        Optional<TrickEndReason> reason = PlayEffects.clearReason(play(candidate), topPlay, RankOrder.standard());
 
         assertThat(reason.map(Enum::name).orElse("NONE"), is(expected.trim()));
     }

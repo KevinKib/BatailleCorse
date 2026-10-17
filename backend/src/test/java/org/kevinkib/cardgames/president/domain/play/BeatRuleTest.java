@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.kevinkib.cardgames.president.domain.card.RankOrder;
-import org.kevinkib.cardgames.president.domain.rules.TwoCuts;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -68,7 +67,7 @@ class BeatRuleTest {
 
     /**
      * The constraint decides what answers the top: BEAT takes a higher play of the same count and, with equal play
-     * on, an equal one; MATCH_OR_PASS takes only the same rank and count (nothing higher, no cut); equal play off
+     * on, an equal one; MATCH_OR_PASS takes only the same rank and count (nothing higher; only a lone 2 may come in); equal play off
      * leaves the base game. Rows: constraint, equalPlay, top, candidate, accepted.
      */
     @ParameterizedTest(name = "{0} equalPlay={1}: {3} on {2} -> {4}")
@@ -83,7 +82,7 @@ class BeatRuleTest {
             "MATCH_OR_PASS | true  | 9C       | 9D       | true",
             "MATCH_OR_PASS | true  | 9C 9D    | 9H 9S    | true",
             "MATCH_OR_PASS | true  | 9C       | 10D      | false",
-            "MATCH_OR_PASS | true  | 9C       | 2D       | false",
+            "MATCH_OR_PASS | true  | 9C       | 2D       | true",
             "MATCH_OR_PASS | true  | 9C       | 9D 9H    | false",
             "MATCH_OR_PASS | true  | 9C 9D    | 10C 10D  | false",
             "MATCH_OR_PASS | true  | 9C       | 8D       | false",
@@ -102,83 +101,58 @@ class BeatRuleTest {
     }
 
     /**
-     * The 2 cuts (spec catalogue V4): under {@code single} one 2 answers any play whatever its count, under
-     * {@code ladder} k twos answer a set of k+1 cards of a lower rank, and a cut never answers the equal-play
-     * binding. A pair of 2s on a pair, or a 2 on a single, is an ordinary higher play whatever the option.
-     * Rows: twoCuts, constraint, equalPlay, top, candidate, accepted.
+     * The lone 2 (a fixed rule, owner decision): one 2 answers any play whatever its count, a play of 2s included,
+     * and also the equal-play binding, because it closes the trick. Pairs of 2s are ordinary plays.
+     * Rows: constraint, equalPlay, top, candidate, accepted.
      */
-    @ParameterizedTest(name = "cuts={0} {1} equalPlay={2}: {4} on {3} -> {5}")
+    @ParameterizedTest(name = "{0} equalPlay={1}: {3} on {2} -> {4}")
     @CsvSource(delimiter = '|', value = {
-            "single | BEAT          | true  | 9C          | 2D       | true",
-            "single | BEAT          | true  | 9C 9D       | 2D       | true",
-            "single | BEAT          | true  | 9C 9D 9H    | 2D       | true",
-            "single | BEAT          | true  | 9C 9D 9H 9S | 2D       | true",
-            "single | BEAT          | true  | 9C          | 2D 2H    | false",
-            "single | BEAT          | true  | 9C 9D 9H    | 2D 2H    | false",
-            "single | BEAT          | true  | 9C 9D       | 2D 2H    | true",
-            "single | BEAT          | true  | 2C          | 2D       | true",
-            "single | BEAT          | false | 2C          | 2D       | false",
-            "single | MATCH_OR_PASS | true  | 9C          | 2D       | false",
-            "single | MATCH_OR_PASS | true  | 9C 9D       | 2D       | false",
-            "single | MATCH_OR_PASS | true  | 2C          | 2D       | true",
-            "ladder | BEAT          | true  | 9C 9D       | 2D       | true",
-            "ladder | BEAT          | true  | 9C 9D 9H    | 2D 2H    | true",
-            "ladder | BEAT          | true  | 9C 9D 9H 9S | 2D 2H 2S | true",
-            "ladder | BEAT          | true  | 9C 9D 9H    | 2D       | false",
-            "ladder | BEAT          | true  | 9C 9D 9H 9S | 2D 2H    | false",
-            "ladder | BEAT          | true  | 9C 9D 9H 9S | 2D       | false",
-            "ladder | BEAT          | true  | 9C          | 2D       | true",
-            "ladder | BEAT          | true  | 9C 9D       | 2D 2H    | true",
-            "ladder | BEAT          | true  | 9C 9D 9H    | 2D 2H 2S | true",
-            "ladder | BEAT          | true  | 2C 2D       | 2H       | false",
-            "ladder | BEAT          | true  | 2C 2D 2H    | 2S       | false",
-            "ladder | MATCH_OR_PASS | true  | 9C 9D       | 2D       | false",
-            "ladder | MATCH_OR_PASS | true  | 9C 9D 9H    | 2D 2H    | false",
-            "off    | BEAT          | true  | 9C 9D       | 2D       | false",
-            "off    | BEAT          | true  | 9C 9D 9H    | 2D 2H    | false",
-            "off    | BEAT          | true  | 9C          | 2D       | true",
+            "BEAT          | true  | 9C          | 2D       | true",
+            "BEAT          | true  | 9C 9D       | 2D       | true",
+            "BEAT          | true  | 9C 9D 9H    | 2D       | true",
+            "BEAT          | true  | 9C 9D 9H 9S | 2D       | true",
+            "BEAT          | false | 9C 9D 9H    | 2D       | true",
+            "BEAT          | true  | 9C          | 2D 2H    | false",
+            "BEAT          | true  | 9C 9D 9H    | 2D 2H    | false",
+            "BEAT          | true  | 9C 9D       | 2D 2H    | true",
+            "BEAT          | true  | 2C          | 2D       | true",
+            "BEAT          | false | 2C          | 2D       | true",
+            "BEAT          | false | 2C 2D       | 2H       | true",
+            "MATCH_OR_PASS | true  | 9C          | 2D       | true",
+            "MATCH_OR_PASS | true  | 9C 9D       | 2D       | true",
+            "MATCH_OR_PASS | true  | 9C 9D       | 2D 2H    | false",
+            "MATCH_OR_PASS | true  | 9C 9D       | 10D 10H  | false",
+            "MATCH_OR_PASS | true  | 2C          | 2D       | true",
     })
-    void aCutAnswersAnyPlayOfItsKindButNeverTheBinding(String cuts, String constraint, boolean equalPlay, String top,
-                                                       String candidate, boolean accepted) throws Exception {
-        TwoCuts twoCuts = TwoCuts.valueOf(cuts.trim().toUpperCase());
+    void aLoneTwoAnswersAnyPlayEvenTheBinding(String constraint, boolean equalPlay, String top, String candidate,
+                                              boolean accepted) throws Exception {
         Constraint c = Constraint.valueOf(constraint.trim());
         Play candidatePlay = play(candidate);
         Play topPlay = play(top);
-        assertThat(BeatRule.answers(candidatePlay, topPlay, RankOrder.standard(), c, equalPlay, twoCuts),
-                is(accepted));
+        assertThat(BeatRule.answers(candidatePlay, topPlay, RankOrder.standard(), c, equalPlay), is(accepted));
         if (accepted) {
-            assertDoesNotThrow(() -> BeatRule.check(candidatePlay, topPlay, RankOrder.standard(), c, equalPlay,
-                    twoCuts));
+            assertDoesNotThrow(() -> BeatRule.check(candidatePlay, topPlay, RankOrder.standard(), c, equalPlay));
         } else {
             assertThrows(PlayDoesNotBeatException.class,
-                    () -> BeatRule.check(candidatePlay, topPlay, RankOrder.standard(), c, equalPlay, twoCuts));
+                    () -> BeatRule.check(candidatePlay, topPlay, RankOrder.standard(), c, equalPlay));
         }
     }
 
-    /** Which plays are cuts (they end the trick), as opposed to ordinary higher plays. Rows: twoCuts, top, candidate. */
-    @ParameterizedTest(name = "cuts={0}: {2} on {1} -> {3}")
+    /** Which plays are cuts (they end the trick): one 2 on anything, and nothing else. Rows: top, candidate. */
+    @ParameterizedTest(name = "{1} on {0} -> {2}")
     @CsvSource(delimiter = '|', value = {
-            "single | 9C          | 2D       | true",
-            "single | 9C 9D       | 2D       | true",
-            "single | 9C 9D 9H 9S | 2D       | true",
-            "single | 2C          | 2D       | false",
-            "single | 9C          | 2D 2H    | false",
-            "single | 9C 9D       | 2D 2H    | false",
-            "single | 9C          | 10D      | false",
-            "ladder | 9C          | 2D       | false",
-            "ladder | 9C 9D       | 2D       | true",
-            "ladder | 9C 9D 9H    | 2D 2H    | true",
-            "ladder | 9C 9D 9H 9S | 2D 2H 2S | true",
-            "ladder | 9C 9D       | 2D 2H    | false",
-            "ladder | 2C 2D       | 2H       | false",
-            "ladder | 9C 9D 9H    | 2D       | false",
-            "off    | 9C 9D       | 2D       | false",
-            "off    | 9C          | 2D       | false",
+            "9C          | 2D       | true",
+            "9C 9D       | 2D       | true",
+            "9C 9D 9H 9S | 2D       | true",
+            "2C          | 2D       | true",
+            "2C 2D       | 2H       | true",
+            "9C          | 2D 2H    | false",
+            "9C 9D       | 2D 2H    | false",
+            "9C          | 10D      | false",
+            "9C 9D       | 9H 9S    | false",
     })
-    void whichPlaysAreCuts(String cuts, String top, String candidate, boolean cut) throws Exception {
-        TwoCuts twoCuts = TwoCuts.valueOf(cuts.trim().toUpperCase());
-
-        assertThat(BeatRule.isCut(play(candidate), play(top), RankOrder.standard(), twoCuts), is(cut));
+    void whichPlaysAreCuts(String top, String candidate, boolean cut) throws Exception {
+        assertThat(BeatRule.isCut(play(candidate), play(top), RankOrder.standard()), is(cut));
     }
 
     @ParameterizedTest(name = "{0} equals {1}: {2}")

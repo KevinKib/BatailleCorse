@@ -1,7 +1,6 @@
 package org.kevinkib.cardgames.president.domain.play;
 
 import org.kevinkib.cardgames.president.domain.card.RankOrder;
-import org.kevinkib.cardgames.president.domain.rules.TwoCuts;
 import org.kevinkib.cards.domain.Card;
 import org.kevinkib.cards.domain.deck.french.FrenchRank;
 
@@ -27,17 +26,11 @@ public final class LegalPlays {
     /**
      * @param top        the play to beat, or {@code null} when leading (any set is legal)
      * @param constraint what the next play must answer; under {@link Constraint#MATCH_OR_PASS} only the set of the
-     *                   same rank and count as the top is listed
+     *                   same rank and count as the top is listed, and a lone 2 (it always closes the trick)
      * @param equalPlay  whether an equal set also answers a {@link Constraint#BEAT}
      */
     public static List<Play> of(List<Card> hand, Play top, RankOrder order, Constraint constraint,
                                 boolean equalPlay) {
-        return of(hand, top, order, constraint, equalPlay, TwoCuts.OFF);
-    }
-
-    /** As above, and the 2 cuts of {@code twoCuts} join the plays that answer a {@link Constraint#BEAT}. */
-    public static List<Play> of(List<Card> hand, Play top, RankOrder order, Constraint constraint,
-                                boolean equalPlay, TwoCuts twoCuts) {
         Map<FrenchRank, List<Card>> byRank = new LinkedHashMap<>();
         for (Card card : hand) {
             byRank.computeIfAbsent((FrenchRank) card.getRank(), r -> new ArrayList<>()).add(card);
@@ -50,7 +43,7 @@ public final class LegalPlays {
             }
             for (int count = 1; count <= group.size(); count++) {
                 Play candidate = new Play(group.subList(0, count), rank);
-                if (top == null || BeatRule.answers(candidate, top, order, constraint, equalPlay, twoCuts)) {
+                if (top == null || BeatRule.answers(candidate, top, order, constraint, equalPlay)) {
                     plays.add(candidate);
                 }
             }

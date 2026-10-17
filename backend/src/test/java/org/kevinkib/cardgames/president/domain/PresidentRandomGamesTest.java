@@ -14,7 +14,6 @@ import org.kevinkib.cardgames.president.domain.rules.AfterPass;
 import org.kevinkib.cardgames.president.domain.rules.EqualPlay;
 import org.kevinkib.cardgames.president.domain.rules.ForbiddenFinish;
 import org.kevinkib.cardgames.president.domain.rules.PresidentOptions;
-import org.kevinkib.cardgames.president.domain.rules.TwoCuts;
 import org.kevinkib.cards.domain.Card;
 
 import java.util.ArrayList;
@@ -97,15 +96,10 @@ class PresidentRandomGamesTest {
     static Stream<Arguments> variantOptions() {
         PresidentOptions d = PresidentOptions.defaults();
         return Stream.of(
-                Arguments.of("twoCuts single", d.withTwoCuts(TwoCuts.SINGLE)),
-                Arguments.of("twoCuts ladder", d.withTwoCuts(TwoCuts.LADDER)),
-                Arguments.of("quadClears off", d.withQuadClears(false)),
                 Arguments.of("forbiddenFinish off", d.withForbiddenFinish(ForbiddenFinish.OFF)),
                 Arguments.of("mustPlay on", d.withMustPlay(true)),
-                Arguments.of("ladder, mustPlay, equal play off", d.withTwoCuts(TwoCuts.LADDER).withMustPlay(true)
-                        .withEqualPlay(EqualPlay.OFF)),
-                Arguments.of("single cut, mustPlay, afterPass out", d.withTwoCuts(TwoCuts.SINGLE).withMustPlay(true)
-                        .withAfterPass(AfterPass.OUT)));
+                Arguments.of("mustPlay, equal play off", d.withMustPlay(true).withEqualPlay(EqualPlay.OFF)),
+                Arguments.of("mustPlay, afterPass out", d.withMustPlay(true).withAfterPass(AfterPass.OUT)));
     }
 
     @ParameterizedTest(name = "{0}")

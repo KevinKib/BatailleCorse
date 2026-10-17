@@ -11,11 +11,11 @@ import java.util.function.Consumer;
 /**
  * The host options in force, as data: the aggregate reads them and holds no rule switch of its own.
  *
- * <p>The sixteen keys of the spec exist here. The round and match keys (the first seven), {@code equalPlay} (V1) and
- * the trick variants {@code twoCuts}, {@code quadClears}, {@code forbiddenFinish} and {@code mustPlay} (V2) are
- * declared to the lobby and parsed; the four other variant keys exist as their "off" value and get their parsing,
- * descriptor and behaviour from the PR that ships them (V3, V4). {@code quadClears} and {@code forbiddenFinish}
- * default to on (the Classic preset); the on/off keys travel as {@code "on"} and {@code "off"}.
+ * <p>The round and match keys (the first seven), {@code equalPlay} (V1) and the trick variants
+ * {@code forbiddenFinish} and {@code mustPlay} (V2) are declared to the lobby and parsed; the other variant keys
+ * exist as their "off" value and get their parsing, descriptor and behaviour from the PR that ships them (V3, V4).
+ * The 2 that closes the trick and the quad that closes it are fixed rules, not options. {@code forbiddenFinish}
+ * defaults to on (the Classic preset); the on/off keys travel as {@code "on"} and {@code "off"}.
  */
 public record PresidentOptions(
         AfterPass afterPass,
@@ -26,8 +26,6 @@ public record PresidentOptions(
         Scoring scoring,
         MatchLength length,
         EqualPlay equalPlay,
-        TwoCuts twoCuts,
-        boolean quadClears,
         ForbiddenFinish forbiddenFinish,
         boolean mustPlay,
         Revolution revolution,
@@ -43,14 +41,12 @@ public record PresidentOptions(
     public static final String SCORING_KEY = "scoring";
     public static final String LENGTH_KEY = "length";
     public static final String EQUAL_PLAY_KEY = "equalPlay";
-    public static final String TWO_CUTS_KEY = "twoCuts";
-    public static final String QUAD_CLEARS_KEY = "quadClears";
     public static final String FORBIDDEN_FINISH_KEY = "forbiddenFinish";
     public static final String MUST_PLAY_KEY = "mustPlay";
 
     /** The keys the lobby may set, in display order. */
     public static final List<String> KEYS = List.of(AFTER_PASS_KEY, FIRST_LEAD_KEY, EXCHANGE_KEY, GIVE_BACK_KEY,
-            NEXT_LEAD_KEY, SCORING_KEY, LENGTH_KEY, EQUAL_PLAY_KEY, TWO_CUTS_KEY, QUAD_CLEARS_KEY,
+            NEXT_LEAD_KEY, SCORING_KEY, LENGTH_KEY, EQUAL_PLAY_KEY,
             FORBIDDEN_FINISH_KEY, MUST_PLAY_KEY);
     private static final String ON = "on";
     private static final String OFF = "off";
@@ -59,7 +55,7 @@ public record PresidentOptions(
         return new PresidentOptions(
                 AfterPass.REENTER, FirstLead.KING_OF_HEARTS,
                 ExchangeAmount.TWO, GiveBack.FREE, NextLead.SCUM, Scoring.RANK, MatchLength.ROUNDS_5,
-                EqualPlay.ON, TwoCuts.OFF, true, ForbiddenFinish.LAST_PLACE, false,
+                EqualPlay.ON, ForbiddenFinish.LAST_PLACE, false,
                 Revolution.OFF, Ranking.TWO_HIGH, Runs.OFF, false);
     }
 
@@ -74,8 +70,6 @@ public record PresidentOptions(
                 .withScoring(lenient(options, SCORING_KEY, Scoring.class, d.scoring()))
                 .withLength(lenient(options, LENGTH_KEY, MatchLength.class, d.length()))
                 .withEqualPlay(lenient(options, EQUAL_PLAY_KEY, EqualPlay.class, d.equalPlay()))
-                .withTwoCuts(lenient(options, TWO_CUTS_KEY, TwoCuts.class, d.twoCuts()))
-                .withQuadClears(lenientFlag(options, QUAD_CLEARS_KEY, d.quadClears()))
                 .withForbiddenFinish(lenient(options, FORBIDDEN_FINISH_KEY, ForbiddenFinish.class,
                         d.forbiddenFinish()))
                 .withMustPlay(lenientFlag(options, MUST_PLAY_KEY, d.mustPlay()));
@@ -102,8 +96,6 @@ public record PresidentOptions(
                 .withScoring(strict(options, SCORING_KEY, Scoring.class, d.scoring()))
                 .withLength(strict(options, LENGTH_KEY, MatchLength.class, d.length()))
                 .withEqualPlay(strict(options, EQUAL_PLAY_KEY, EqualPlay.class, d.equalPlay()))
-                .withTwoCuts(strict(options, TWO_CUTS_KEY, TwoCuts.class, d.twoCuts()))
-                .withQuadClears(strictFlag(options, QUAD_CLEARS_KEY, d.quadClears()))
                 .withForbiddenFinish(strict(options, FORBIDDEN_FINISH_KEY, ForbiddenFinish.class,
                         d.forbiddenFinish()))
                 .withMustPlay(strictFlag(options, MUST_PLAY_KEY, d.mustPlay()));
@@ -152,8 +144,6 @@ public record PresidentOptions(
         values.put(SCORING_KEY, scoring.key());
         values.put(LENGTH_KEY, length.key());
         values.put(EQUAL_PLAY_KEY, equalPlay.key());
-        values.put(TWO_CUTS_KEY, twoCuts.key());
-        values.put(QUAD_CLEARS_KEY, quadClears ? ON : OFF);
         values.put(FORBIDDEN_FINISH_KEY, forbiddenFinish.key());
         values.put(MUST_PLAY_KEY, mustPlay ? ON : OFF);
         return GameOptions.of(values);
@@ -197,14 +187,6 @@ public record PresidentOptions(
         return with(b -> b.equalPlay = value);
     }
 
-    public PresidentOptions withTwoCuts(TwoCuts value) {
-        return with(b -> b.twoCuts = value);
-    }
-
-    public PresidentOptions withQuadClears(boolean value) {
-        return with(b -> b.quadClears = value);
-    }
-
     public PresidentOptions withForbiddenFinish(ForbiddenFinish value) {
         return with(b -> b.forbiddenFinish = value);
     }
@@ -223,8 +205,6 @@ public record PresidentOptions(
         Scoring scoring;
         MatchLength length;
         EqualPlay equalPlay;
-        TwoCuts twoCuts;
-        boolean quadClears;
         ForbiddenFinish forbiddenFinish;
         boolean mustPlay;
         private final PresidentOptions from;
@@ -239,15 +219,13 @@ public record PresidentOptions(
             this.scoring = from.scoring;
             this.length = from.length;
             this.equalPlay = from.equalPlay;
-            this.twoCuts = from.twoCuts;
-            this.quadClears = from.quadClears;
             this.forbiddenFinish = from.forbiddenFinish;
             this.mustPlay = from.mustPlay;
         }
 
         PresidentOptions build() {
             return new PresidentOptions(afterPass, firstLead, exchange, giveBack, nextLead, scoring, length,
-                    equalPlay, twoCuts, quadClears, forbiddenFinish, mustPlay,
+                    equalPlay, forbiddenFinish, mustPlay,
                     from.revolution, from.ranking, from.runs, from.suitLock);
         }
     }

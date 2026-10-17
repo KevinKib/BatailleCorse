@@ -15,7 +15,6 @@ import org.kevinkib.cardgames.president.domain.rules.EqualPlay;
 import org.kevinkib.cardgames.president.domain.rules.ForbiddenFinish;
 import org.kevinkib.cardgames.president.domain.rules.PresidentException;
 import org.kevinkib.cardgames.president.domain.rules.PresidentOptions;
-import org.kevinkib.cardgames.president.domain.rules.TwoCuts;
 import org.kevinkib.cards.domain.Card;
 
 import java.util.ArrayList;
@@ -201,13 +200,9 @@ class PresidentBotSelfPlayTest {
     static Stream<Arguments> variants() {
         PresidentOptions d = PresidentOptions.defaults();
         return Stream.of(
-                Arguments.of("twoCuts single", d.withTwoCuts(TwoCuts.SINGLE)),
-                Arguments.of("twoCuts ladder", d.withTwoCuts(TwoCuts.LADDER)),
-                Arguments.of("quadClears off", d.withQuadClears(false)),
                 Arguments.of("forbiddenFinish off", d.withForbiddenFinish(ForbiddenFinish.OFF)),
                 Arguments.of("mustPlay on", d.withMustPlay(true)),
-                Arguments.of("everything on", d.withTwoCuts(TwoCuts.LADDER).withMustPlay(true)
-                        .withQuadClears(false)));
+                Arguments.of("everything on", d.withMustPlay(true).withEqualPlay(EqualPlay.OFF)));
     }
 
     /** Each trick variant on its own, then together: the bots finish the match and the game refuses nothing. */
