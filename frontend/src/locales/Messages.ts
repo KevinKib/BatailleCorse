@@ -301,6 +301,7 @@ export interface PresidentUiMessages {
     mustPass: string;
     wrongCount: string;                // '{counts}' = "1 or 2"
     notHigher: PluralForms;            // '{n}' = cards to beat, '{rank}'
+    matchOnly: PluralForms;            // equal play: '{n}' = cards required, '{rank}' (an "s" makes the plural)
     notPlayable: string;
     cannotPlay: string;
   };

@@ -196,6 +196,35 @@ describe('PresidentGameScreen', () => {
     expect(wrapper.get('[data-test="play-hint"]').text()).toBe('Cards of one rank only.');
   });
 
+  describe('equal play', () => {
+    const equal = (overrides: Partial<PresidentState> = {}) => playing({
+      trick: buildPresidentTrick({
+        leader: 1, top: { kind: 'SET', rank: '9', count: 2 }, constraint: 'MATCH_OR_PASS', requiredRank: '9', requiredCount: 2,
+      }),
+      legalPlays: [{ kind: 'SET', rank: '9', count: 2 }],
+      availableActions: ['PLAY', 'PASS'],
+      ...overrides,
+    });
+
+    it.each([
+      ['a higher rank', ['HEART_KING']],
+      ['a lower rank', ['CLUB_3']],
+      ['the right rank in the wrong number', ['HEART_9']],
+    ])('givenAnIllegalSelection_%s_thenTheHintSaysToMatchOrNothing', async (_name, cards) => {
+      const { wrapper } = await mountRoom(room(equal()));
+      for (const card of cards) await wrapper.get(`[data-card="${card}"]`).trigger('click');
+      expect(wrapper.get('[data-test="play-hint"]').text()).toBe('Play 2 9s or nothing.');
+      expect(wrapper.get('[data-test="play-hint"]').text()).not.toContain('higher');
+    });
+
+    it('givenNoCardOfTheRequiredRank_thenTheHintTellsMeToPass', async () => {
+      const { wrapper } = await mountRoom(room(equal({ legalPlays: [], availableActions: ['PASS'] })));
+      await wrapper.get('[data-card="HEART_KING"]').trigger('click');
+      expect(wrapper.get('[data-test="play"]').attributes('disabled')).toBeDefined();
+      expect(wrapper.get('[data-test="play-hint"]').text()).toBe('Nothing you hold can play: pass.');
+    });
+  });
+
   it('whenClearIsPressed_thenTheSelectionIsEmpty', async () => {
     const { wrapper } = await mountRoom(room(playing()));
     await wrapper.get('[data-card="CLUB_3"]').trigger('click');
