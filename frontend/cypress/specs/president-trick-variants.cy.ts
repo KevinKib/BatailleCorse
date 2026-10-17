@@ -67,6 +67,7 @@ const texts = (selector: string) => cy.get(selector).then(($e) => [...$e].map((e
           scriptedPass(carol);
           cy.get('[data-test="phase-text"]').should('have.text', 'Your turn');
           cy.get('[data-test="trick-card"]').should('have.length', 2);
+          cy.screenshot(`president-variants-${width}`, { capture: 'viewport' });
           // 4. Alice answers the pair of 2s with a lone 2: it closes the trick at once and she leads.
           cy.get('[data-card="CLUB_2"]').click({ force: true });
           cy.get('[data-test="play"]').should('not.be.disabled').click();

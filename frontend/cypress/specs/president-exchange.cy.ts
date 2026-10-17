@@ -4,7 +4,7 @@
 //  - as the Scum, the browser sees its best cards leave, waits, and gets the President's return.
 // Everything is waited on through DOM states and frames, never a fixed delay.
 import {
-  awaitState, hostLobby, joinGuests, noHorizontalScroll, scriptedPass, scriptedPlay, scriptedReady, threePlayerDeal,
+  awaitState, hostLobby, openFinish, joinGuests, noHorizontalScroll, scriptedPass, scriptedPlay, scriptedReady, threePlayerDeal,
 } from '../support/presidentRoom';
 
 const SUITS = ['HEART', 'DIAMOND', 'CLUB'];
@@ -66,6 +66,7 @@ function browserPass() {
     it('as the President: tagged cards, Suggest, Give', () => {
       hostLobby('Alice').then((id) => {
         joinGuests(id, ['Bob', 'Carol']).then(([bob, carol]) => {
+          openFinish();
           // Round 2: Carol (Scum) deals, so the browser is dealt first and holds 18 cards. Carol holds the 2s of
           // clubs and spades (her two best); the browser's low cards are 3C, a pair of 4s, a pair of 5s, a triple of
           // 6s, a pair of 9s, then 10C: Suggest keeps every pair and picks 3C and 10C.
@@ -145,6 +146,7 @@ function browserPass() {
     it('as the Scum: the best cards leave, then the return arrives', () => {
       hostLobby('Alice').then((id) => {
         joinGuests(id, ['Bob', 'Carol']).then(([bob, carol]) => {
+          openFinish();
           // Round 2: the browser (Scum) deals, so Bob (President) is dealt first and holds 18 cards. The browser
           // holds the 2s of clubs and spades, its best two cards, which move to Bob at once.
           const mine = ['2C', '2S', '4C', '5C', '6C', '7C', '8C', '9C', '10C', 'JC', 'QC', 'KC', 'AC', '3S', '4S', '5S', '6S'];
