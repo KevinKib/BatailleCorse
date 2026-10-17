@@ -49,6 +49,7 @@ describe('Kobo round end and game end', () => {
       });
       cy.get(row(1)).within(() => {
         cy.get('[data-test="score-name"]').should(($n) => expect($n.text()).to.eq(bobName));
+        cy.get('[data-test="score-name"]').should(($n) => expect($n[0].getBoundingClientRect().width).to.be.greaterThan(24));
         cy.get('[data-test="score-hand"]').should('have.text', '30');
         cy.get('[data-test="score-round"]').should('have.text', '30');
         cy.get('[data-test="score-total"]').should('have.text', '0 → 30');
@@ -91,6 +92,9 @@ describe('Kobo round end and game end', () => {
       cy.get('[data-test="final-row-0"]').within(() => {
         cy.get('[data-test="final-rank"]').should('have.text', '1');
         cy.get('[data-test="final-total"]').should('contain.text', '0');
+        // The name is actually seen (not just in the DOM): it has room in the row.
+        cy.get('[data-test="final-name"]').should('be.visible').and('have.text', 'You')
+          .and(($n) => expect($n[0].getBoundingClientRect().width).to.be.greaterThan(24));
       });
       cy.get('[data-test="pill-over"]').should('not.exist');
       noHorizontalScroll();

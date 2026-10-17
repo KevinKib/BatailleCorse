@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
 import KoboFinalTotals from './KoboFinalTotals.vue';
+import { seatDisplayName } from '../../model/table/displayName';
 import type { StandingRow } from '../../model/kobo/roundScores';
 
 const NAMES = ['Alice', 'Bob', 'Carol'];
@@ -36,5 +37,20 @@ describe('KoboFinalTotals', () => {
     const wrapper = mountTotals([standing(0, 10, 1)]);
     expect(wrapper.get('[data-test="final-totals"]').attributes('aria-label')).toBe('Final totals');
     expect(wrapper.findAll('thead th').map(h => h.text())).toEqual(['Rank', 'Player', 'Total']);
+  });
+
+  it('givenAnamedAnUnnamedAndABotPlayer_thenEachRowShowsItsName', () => {
+    const players = [
+      { id: '0', name: 'Alice' }, { id: '1', name: '' }, { id: '2', name: 'Robo', bot: true },
+    ];
+    const labels = { player: 'Player {n}', bot: 'Bot {n}' };
+    const wrapper = mount(KoboFinalTotals, {
+      props: {
+        rows: [standing(2, 5, 1), standing(1, 20, 2), standing(0, 30, 3)],
+        nameOf: (seat: number) => seatDisplayName(players, seat, labels),
+        mySeat: 0,
+      },
+    });
+    expect(wrapper.findAll('[data-test="final-name"]').map(n => n.text())).toEqual(['Bot 1', 'Player 2', 'You']);
   });
 });

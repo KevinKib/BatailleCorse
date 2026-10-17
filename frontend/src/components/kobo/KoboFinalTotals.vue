@@ -40,7 +40,7 @@ const totals = ui.end.totals;
 </template>
 
 <style scoped>
-.totals { width: 100%; border-collapse: collapse; font-size: 0.9rem; color: rgba(255, 255, 255, 0.92); }
+.totals { width: min(17rem, calc(100vw - 8rem)); table-layout: fixed; border-collapse: collapse; font-size: 0.9rem; color: rgba(255, 255, 255, 0.92); }
 th, td { padding: 4px 8px; font-weight: 600; text-align: left; vertical-align: middle; }
 thead th {
   font-size: 0.68rem;
@@ -50,8 +50,8 @@ thead th {
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 }
 .col-rank { width: 3rem; text-align: center; font-variant-numeric: tabular-nums; }
-.col-name { max-width: 0; }
-.col-total { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.col-name { overflow: hidden; }
+.col-total { width: 6.5rem; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .final-row { border-bottom: 1px solid rgba(255, 255, 255, 0.06); }
 .final-row--me { background: rgba(var(--accent-active-rgb), 0.12); }
 .name { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
