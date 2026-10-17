@@ -2,11 +2,12 @@
 // `test` profile (zero delay, constant generator). Every wait is on a DOM state, never on a delay. Pits are numbered
 // row * 8 + column (a1 = 0 ... h4 = 31), see support/mangolaPlayer.ts.
 
+import { startWithAnimationSpeed } from '../support/mangolaPlayer';
+
 const SIZES: Array<[number, number]> = [[375, 667], [1280, 800]];
 const MAX_MOVES = 150;
 
 const level = () => cy.get('[data-test="seat-option-1-level"]');
-const live = () => cy.get('[data-test="board-live"]');
 
 /** The host's lobby with a bot on seat 1, the host to move first (the set-up is always free placement). */
 function lobbyWithBot() {
@@ -23,8 +24,8 @@ const boardSignature = ($body: JQuery<HTMLElement>) =>
   [...$body.find('[data-test^="pit-"]')].map((el) => el.getAttribute('aria-label')).join('|');
 
 /**
- * Plays the first sowable pit each turn until the end screen shows. After each move it waits for the bot's answer to
- * be read out (the announcement names the bot), so a move is never sent while the previous one is still unanswered.
+ * Plays the first sowable pit each turn until the end screen shows. After each move it waits for the bot's answer (my
+ * turn again), so a move is never sent while the previous one is still unanswered.
  */
 function playUntilTheEnd(moves = MAX_MOVES) {
   cy.get('[data-test="end"], [data-test^="pit-"][data-selectable="true"]', { timeout: 30000 }).then(($found) => {
@@ -33,18 +34,22 @@ function playUntilTheEnd(moves = MAX_MOVES) {
     cy.get('body').then(($body) => {
       const before = boardSignature($body);
       cy.wrap($found.first()).click();
-      live().should('contain.text', 'Alice sowed');
-      cy.get('[data-test="end"], [data-test="board-live"]:contains("Bot 1 sowed")', { timeout: 30000 }).should('exist');
+      // My move is on the board (or the game is over)...
       cy.get('body').should(($b) => {
-        // The board changed under my hands (mine, then the bot's answer), or the game is over.
-        expect($b.find('[data-test="end"]').length > 0 || boardSignature($b) !== before).to.eq(true);
+        expect($b.find('[data-test="end"]').length > 0 || boardSignature($b) !== before, 'my move reached the board').to.eq(true);
       });
+      // ...and the bot answered: it is my turn again (a pit is playable) or the game is over. Waiting on the
+      // announcement would race the instant boards, and an older bot sentence stays in the region.
+      cy.get('[data-test="end"], [data-test^="pit-"][data-selectable="true"]', { timeout: 30000 }).should('exist');
       playUntilTheEnd(moves - 1);
     });
   });
 }
 
 describe('Mangola against a bot', () => {
+  // A whole game against the bot: nothing here needs to watch a sowing, so the boards come at once.
+  beforeEach(() => startWithAnimationSpeed('instant'));
+
   it('offers Add bot, puts the bot on the seat at the Medium level, and lets the host change it', () => {
     lobbyWithBot();
     cy.get('[data-test="player-count"]').should('contain.text', '2 / 2');

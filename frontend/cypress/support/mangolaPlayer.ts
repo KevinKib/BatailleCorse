@@ -64,6 +64,18 @@ export function tapDraft(pits: Array<[number, number]>) {
   });
 }
 
+/** The localStorage key the app keeps the animation speed under (`useAnimationSpeed`). */
+export const ANIMATION_SPEED_KEY = 'animationSpeed';
+
+/**
+ * Sets the animation speed the app starts with, on each page load of the test (call it first thing in the test or in
+ * a `beforeEach`). The specs that do not need to watch a sowing use `'instant'`; the others keep the default (Normal)
+ * and watch it, or skip it with the Skip button.
+ */
+export const startWithAnimationSpeed = (speed: 'normal' | 'fast' | 'instant') => {
+  cy.on('window:before:load', (win) => win.localStorage.setItem(ANIMATION_SPEED_KEY, speed));
+};
+
 /** The aria-labels of my 16 pits in the placement editor, read as one string to compare two moments. */
 export const myHalfSignature = ($half: JQuery<HTMLElement>) =>
   [...$half.find('button')].map((el) => el.getAttribute('aria-label')).join('|');

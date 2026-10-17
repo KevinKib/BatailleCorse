@@ -6,7 +6,7 @@
 // wins in five plies: a2 (three captures), a4, f1, a3, b2; and loses in six when it plays a2, h2, c1 against the
 // guest's a4, d4 (six pits captured), h3.
 import {
-  arrange, asHostInPlacement, canSow, confirmLayout, pitEl, playFromTwoPerPit, sow, TWO_PER_PIT,
+  arrange, asHostInPlacement, canSow, confirmLayout, pitEl, playFromTwoPerPit, sow, startWithAnimationSpeed, TWO_PER_PIT,
 } from '../support/mangolaPlayer';
 
 // pits: a2 8, b2 9, h2 15, c1 2, f1 5 (host); a3 16, h3 23, a4 24, d4 27 (guest).
@@ -53,6 +53,10 @@ describe('Mangola placement', () => {
 });
 
 describe('Mangola game', () => {
+  // These games watch the sowing through Skip and the marks, at the rhythm they were written for (Fast); the
+  // default Normal speed and its pause before the seeds leave are covered by mangola-animation-speed.cy.ts.
+  beforeEach(() => startWithAnimationSpeed('fast'));
+
   it('wins in five plies: a capture on the board, the move read out, the end screen, then Play again', () => {
     playFromTwoPerPit().then(({ bob }) => {
       cy.get('[data-test="turn-hint"]').should('contain.text', 'Your turn');
