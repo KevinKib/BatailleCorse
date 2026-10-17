@@ -91,7 +91,7 @@ const ui = useI18n().koboUi.table;
   color: rgba(255, 255, 255, 0.75);
   white-space: nowrap;
 }
-.seat-markers { display: inline-flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 2px 4px; min-height: 1.1rem; }
+.seat-markers { display: inline-flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 2px 4px; }
 .marker {
   font-size: 0.6rem;
   font-weight: 700;
@@ -110,17 +110,14 @@ const ui = useI18n().koboUi.table;
 .marker--final { color: rgb(var(--accent-negative-rgb)); }
 .kobo-seat--disconnected .seat-label { opacity: 0.6; }
 
-/* Wide: the stats and the markers are two lines of the plate. Phone: one line (markers beside the stats), reserved. */
-.seat-line { display: contents; }
+/* The stats and the markers share one line (its height is reserved: a marker that comes or goes moves nothing). */
+.seat-line { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 2px 4px; min-height: 1.1rem; }
+.seat-markers:empty { display: none; }
 @media (max-width: 767px) {
-  .seat-line {
-    display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 2px 4px; min-height: 1.1rem;
-  }
-  .seat-markers { min-height: 0; }
-  .seat-markers:empty { display: none; }
   .seat-label { font-size: 0.62rem; letter-spacing: 0.02em; padding: 2px 6px; }
   .seat-label--active { padding-left: 18px; }
   .seat-label--active::before { left: 6px; }
   .seat-stats { font-size: 0.6rem; }
+  .seat-line { min-height: 0.9rem; }
 }
 </style>

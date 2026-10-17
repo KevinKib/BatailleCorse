@@ -105,6 +105,8 @@ const opponents = computed(() => opponentsInPlayOrder(
   .filter(p => p.seat !== store.mySeat));
 const narrow = useNarrowScreen();
 const compactOpponents = computed(() => narrow.value || opponents.value.length >= 4);
+// A crowded table on a phone (3 opponents or more) has no height to spare: the bar reserves one line of text there.
+const crowdedPhone = computed(() => narrow.value && opponents.value.length >= 3);
 const cardWidths = computed(() => koboCardWidths(opponents.value.length, narrow.value));
 const ring = computed(() => seatPositions(opponents.value.length));
 const columns = computed(() => opponentColumns(opponents.value.length));
@@ -399,7 +401,7 @@ watch(() => [store.game?.round, store.game?.phase, store.game?.currentSeat, live
             @draw="store.pickPile('draw')" @discard="store.pickPile('discard')" />
           <!-- On a wide table there is no height to spare under the piles: the first-time note goes beside my hand. -->
           <KoboMatchHint
-            reserve
+            :reserve="!crowdedPhone"
             :hint="store.interaction.matchHint && !(showsCoachRing && !narrow)"
             :coach="showsCoachRing && narrow"
             @dismiss="matchCoach.dismiss()" />
@@ -451,7 +453,7 @@ watch(() => [store.game?.round, store.game?.phase, store.game?.currentSeat, live
       </div>
 
       <div v-if="!sheetOpen" class="my-zone" :class="{ 'my-zone--duel': opponents.length === 1 }" data-test="my-zone" role="region" :aria-label="ui.regions.yours"
-           :style="cardWidths.mine ? { '--kobo-card-w': `${cardWidths.mine}px` } : undefined">
+           :style="{ ...(cardWidths.mine ? { '--kobo-card-w': `${cardWidths.mine}px` } : {}), ...(crowdedPhone ? { '--kobo-bar-min': '48px', '--kobo-bar-lines': 1 } : {}) }">
         <KoboSeat
           v-if="me"
           :player="me"
@@ -589,10 +591,12 @@ watch(() => [store.game?.round, store.game?.phase, store.game?.currentSeat, live
   isolation: isolate;
   --kobo-pile-card-w: clamp(48px, 7.5vh, 60px);
   --ring-top: 88px;
-  --ring-bottom: 130px;
+  --ring-bottom: 128px;
   --ring-h: 70px;
 }
 .table-frame--compact { --ring-top: 78px; --ring-h: 56px; }
+/* A crowded phone reserves no hint zone under the piles, so its ring keeps the original room. */
+@media (max-width: 767px) { .table-frame--compact { --ring-bottom: 112px; } }
 /* The match hint (one or two lines) or the first-time note sits under the piles: the ring leaves room for it. */
 
 /* Wide screens: opponents on the ellipse, in an inner box so a whole tableau stays inside the frame. */
@@ -610,7 +614,7 @@ watch(() => [store.game?.round, store.game?.phase, store.game?.currentSeat, live
 .table-center {
   position: absolute;
   left: 50%;
-  bottom: 8px;
+  bottom: 0;
   transform: translateX(-50%);
   z-index: 1;
 }
@@ -699,7 +703,6 @@ watch(() => [store.game?.round, store.game?.phase, store.game?.currentSeat, live
 /* Two players on a wide screen: the bigger cards need the height, so the lone opponent and the piles each move a few
    pixels toward their edge of the table (the layout is the same). */
 @media (min-width: 768px) {
-  .table-frame--duel .table-center { bottom: 0; }
   .table-frame--duel .seat-slot { transform: translate(-50%, calc(-50% - 16px)); }
 }
 

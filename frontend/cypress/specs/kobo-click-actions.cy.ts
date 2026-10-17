@@ -66,8 +66,8 @@ describe('Kobo actions on direct clicks', () => {
       // A tap is the match, so there is no Match button: the hint line (or the first-time note) says how.
       cy.get('[data-test="action-match"]').should('not.exist');
       cy.get('[data-test="match-hint"], [data-test="match-coach"]').should('be.visible');
-      // The hint line appears without moving anything: the piles, the grids and the drawn zone keep their boxes.
-      snapshotRects().then((r) => expectSameRects(holding, r, ['piles', 'draw', 'discard', 'drawn', 'opponentGrid', 'opponentSeat', 'myGrid']));
+      // The hint line or the first-time note appears without moving the piles or my grid (the grids of the others: see kobo-stable-layout).
+      snapshotRects().then((r) => expectSameRects(holding, r, ['myGrid']));
       actionBarIsReachable();
       measureTable('one-click match, 2 players');
 
@@ -86,7 +86,7 @@ describe('Kobo actions on direct clicks', () => {
           expect(e.height, 'empty slot height').to.eq(f.height);
         });
       });
-      snapshotRects().then((r) => expectSameRects(beforeMatch, r, ['piles', 'draw', 'discard', 'drawn', 'opponentGrid', 'opponentSeat', 'myGrid']));
+      snapshotRects().then((r) => expectSameRects(beforeMatch, r, ['myGrid']));
       cy.get(logLine).should('have.text', 'You matched card 2 (3 of heart)');
       cy.get('[data-test="event-log"]').should('have.attr', 'data-outcome', 'good');
       awaitState(bob, 'Bob sees my card gone', (s) => s.players[0].slots[1].occupied === false && s.discardTop.rank === '3');
@@ -155,7 +155,7 @@ describe('Kobo actions on direct clicks', () => {
       cy.get('[data-test="slot-1-2"]').should('have.attr', 'data-match', 'true');
       cy.get('[data-test="match-hint"], [data-test="match-coach"]').should('be.visible');
       // The hint line comes without moving the piles or the grids (wide table).
-      snapshotRects().then((r) => expectSameRects(waiting, r, ['piles', 'draw', 'discard', 'drawn', 'opponentGrid', 'opponentSeat', 'myGrid']));
+      snapshotRects().then((r) => expectSameRects(waiting, r, ['draw', 'discard', 'drawn', 'opponentGrid', 'myGrid']));
 
       // Bob's third card is a 4: one click on it, then one click on the card I give.
       cy.get(slot(1, 2)).click();

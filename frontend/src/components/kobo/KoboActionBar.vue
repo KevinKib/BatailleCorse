@@ -51,9 +51,10 @@ const armed = computed(() => props.pending.kind === 'match-armed' || props.pendi
 
 <template>
   <div class="kobo-actions" :class="{ 'kobo-actions--ready': readyOnly }" data-test="kobo-actions">
-    <p v-if="notice" class="notice" data-test="notice" role="alert">{{ ui.notice[notice] }}</p>
     <div class="actions-row">
       <div class="actions-text">
+        <!-- Floats over the text of the bar (never over its buttons) instead of pushing the table. -->
+        <p v-if="notice" class="notice" data-test="notice" role="alert">{{ ui.notice[notice] }}</p>
         <YourTurnIndicator :active="yourTurn" />
         <!-- Not live themselves: the screen's one live region says what I am to do (no sentence twice). -->
         <p v-if="prompt" class="line prompt" data-test="prompt">{{ ui.prompt[prompt] }}</p>
@@ -108,10 +109,10 @@ const armed = computed(() => props.pending.kind === 'match-armed' || props.pendi
   align-items: stretch;
   gap: 2px;
   width: 100%;
-  min-height: 64px;
+  min-height: var(--kobo-bar-min, 64px);
 }
 .actions-text :deep(.turn-indicator) { min-height: 1rem; }
-.actions-text .line { min-height: 2.5em; }
+.actions-text .line { min-height: calc(var(--kobo-bar-lines, 2) * 1.25em); }
 @media (min-width: 768px) {
   .kobo-actions { min-height: 52px; }
   .actions-text .line { min-height: 1.25em; }
@@ -135,6 +136,7 @@ const armed = computed(() => props.pending.kind === 'match-armed' || props.pendi
 }
 /* The text takes what the buttons leave and wraps; the buttons keep their size and wrap below it if they must. */
 .actions-text {
+  position: relative;
   flex: 1 1 8rem;
   min-width: 0;
   display: flex;

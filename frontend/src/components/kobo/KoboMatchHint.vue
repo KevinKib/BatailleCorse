@@ -6,7 +6,7 @@ import { useI18n } from '../../composables/useI18n';
 // live region of the screen is not repeated here. Where it sits (under the piles, or beside my hand on a wide
 // table that has no height to spare) is the screen's choice.
 // With `reserve` the zone is always there, empty when there is nothing to say, so a line that comes or goes moves
-// nothing around it (the screen sizes the zone); the first-time note then floats over what is under it.
+// nothing around it (the screen sizes the zone); the first-time note, shown once, may grow it.
 defineProps<{ hint: boolean; coach: boolean; reserve?: boolean }>();
 defineEmits<{ dismiss: [] }>();
 const ui = useI18n().koboUi.match;
@@ -27,9 +27,8 @@ const ui = useI18n().koboUi.match;
 <style scoped>
 /* One line on a wide table, two on a phone. */
 .match-hint-zone { display: flex; justify-content: center; max-width: min(560px, 100%); margin: 0 auto; }
-/* Reserved: the height of the line (two lines on a phone), whatever is shown; the note floats over the table. */
+/* Reserved: the height of the line (two lines on a phone), whatever is shown; the first-time note may grow it, once. */
 .match-hint-zone--reserved { position: relative; box-sizing: border-box; min-height: calc(4px + 1.3 * 0.75rem); }
-.match-hint-zone--reserved .coach { position: absolute; top: 0; left: 0; right: 0; z-index: 3; }
 @media (max-width: 767px) {
   .match-hint-zone--reserved { min-height: calc(2px + 2 * 1.25 * 0.7rem); }
   .match-hint-zone--reserved .match-hint { margin-top: 2px; font-size: 0.7rem; line-height: 1.25; }

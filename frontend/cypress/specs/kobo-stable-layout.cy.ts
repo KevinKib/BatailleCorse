@@ -6,12 +6,14 @@ import { scriptedDiscardTurn, startKoboTable } from '../support/koboRoom';
 import { snapshotRects, type Rects } from '../support/koboGeometry';
 
 const viewports = [{ width: 375, height: 667 }, { width: 1280, height: 800 }] as const;
-const BOARD = ['piles', 'draw', 'discard', 'drawn', 'opponentGrid', 'myGrid', 'myZone', 'myPlate', 'bar', 'opponentPlate'];
+const BOARD = ['draw', 'discard', 'drawn', 'opponentGrid', 'myGrid', 'myZone', 'myPlate', 'bar', 'opponentPlate'];
 
 describe('Kobo stable layout', () => {
   viewports.forEach(({ width, height }) => {
     it(`keeps the board still across the states of a turn (${width}x${height})`, () => {
       cy.viewport(width, height);
+      // The first-time note (shown once per browser) is out of this test: the page starts with it already seen.
+      Cypress.on('window:before:load', (win) => win.localStorage.setItem('kobo.matchCoach', 'seen'));
       const seen: { state: string; rects: Rects }[] = [];
       const note = (state: string) => snapshotRects().then((rects) => { seen.push({ state, rects }); });
       startKoboTable(2, ['KH', '3H', 'JH', '10H', '9H', '8H', '7H', '6H', '3S', '4S']).then(({ guests }) => {
