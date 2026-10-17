@@ -388,6 +388,7 @@ watch(() => [store.game?.round, store.game?.phase, store.game?.currentSeat, live
       <div class="table-frame" data-test="kobo-table" role="region" :aria-label="ui.regions.table"
            :class="{
              'table-frame--compact': compactOpponents, 'table-frame--round-end': sheetOpen,
+             'table-frame--duel': opponents.length === 1,
              'table-frame--hint': store.interaction.matchHint, 'table-frame--coach': showsCoachRing,
            }"
            :style="{ '--opponent-columns': columns }">
@@ -448,7 +449,7 @@ watch(() => [store.game?.round, store.game?.phase, store.game?.currentSeat, live
           @next-round="store.ready()" />
       </div>
 
-      <div v-if="!sheetOpen" class="my-zone" data-test="my-zone" role="region" :aria-label="ui.regions.yours"
+      <div v-if="!sheetOpen" class="my-zone" :class="{ 'my-zone--duel': opponents.length === 1 }" data-test="my-zone" role="region" :aria-label="ui.regions.yours"
            :style="cardWidths.mine ? { '--kobo-card-w': `${cardWidths.mine}px` } : undefined">
         <KoboSeat
           v-if="me"
@@ -631,6 +632,8 @@ watch(() => [store.game?.round, store.game?.phase, store.game?.currentSeat, live
 }
 /* Beside my hand, in the room the wide layout leaves free: it takes no height from the table above. */
 .my-zone { position: relative; }
+/* Two players: the bigger cards take height, which the table above gives back from my zone's top margin. */
+.my-zone--duel { padding-top: 0; }
 .my-zone .coach-side { position: absolute; left: 8px; top: 40px; width: 280px; margin: 0; z-index: 2; }
 .my-hand { border-radius: 14px; padding: 2px; }
 .my-hand.coach-ring { outline: 2px solid var(--gold); outline-offset: 0; box-shadow: 0 0 0 5px rgba(245, 200, 66, 0.2); }
@@ -691,6 +694,13 @@ watch(() => [store.game?.round, store.game?.phase, store.game?.currentSeat, live
 .forfeit-fade-enter-from,
 .forfeit-fade-leave-to { opacity: 0; transform: translate(-50%, -8px); }
 
+/* Two players on a wide screen: the bigger cards need the height, so the lone opponent and the piles each move a few
+   pixels toward their edge of the table (the layout is the same). */
+@media (min-width: 768px) {
+  .table-frame--duel .table-center { bottom: 0; }
+  .table-frame--duel .seat-slot { transform: translate(-50%, calc(-50% - 8px)); }
+}
+
 /* Phones: no ring. The piles stay at the top of the table, the opponents wrap into a compact grid below and
    scroll vertically inside the frame when there are many (or when a tableau grows). */
 @media (max-width: 767px) {
@@ -718,6 +728,9 @@ watch(() => [store.game?.round, store.game?.phase, store.game?.currentSeat, live
     padding: var(--space-2) var(--space-1);
     align-items: start;
   }
+  /* Two players: the cards are bigger, so the frame trims its own margins to keep the whole grid in view. */
+  .table-frame--duel .table-center { padding-top: var(--space-1); }
+  .table-frame--duel .opponents-ring { padding-bottom: 0; }
   .seat-slot {
     position: static;
     transform: none;
