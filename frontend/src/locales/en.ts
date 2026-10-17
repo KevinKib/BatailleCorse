@@ -181,9 +181,18 @@ export const messagesEn: Messages = {
       },
       {
         kind: 'text',
+        title: 'Cuts, the four and compulsory play',
+        body: [
+          'Cuts (host option): a 2 can cut any play and closes the trick at once, or, in the ladder variant, k twos cut a set of k + 1 cards. A 2 on a 2 is an equal play, not a cut.',
+          'The host can also decide that four of a kind does not close the trick, and that a player who can play may not pass.',
+        ],
+      },
+      {
+        kind: 'text',
         title: 'Going out and titles',
         body: [
           'Whoever plays their last card is out of the round. The last player holding cards is the Scum.',
+          'Going out on a 2 is forbidden by default: that player is placed last, below the others, and the trick is not closed by it.',
           'Titles: President, Vice-President, Neutral, Vice-Scum, Scum (with three players: President, Neutral, Scum).',
         ],
       },
@@ -238,6 +247,8 @@ export const messagesEn: Messages = {
       current: 'Playing',
       passed: 'Passed',
       out: 'Out, place {n}',
+      outForbidden: 'Out on a 2',
+      outForbiddenPlace: 'Out on a 2, place {n}',
       ready: 'Ready',
       emptyTrick: 'Nothing played yet',
       playedBy: '{player} played',
@@ -258,6 +269,18 @@ export const messagesEn: Messages = {
       'firstLead.random': 'Random first lead',
       'afterPass.reenter': 'After a pass: play again',
       'afterPass.out': 'After a pass: out of the trick',
+      'forbiddenFinish.lastPlace': 'Going out on a 2: last place',
+      'quadClears.on': 'Four of a kind closes the trick',
+      'twoCuts.single': 'A 2 cuts any play',
+      'twoCuts.ladder': 'Twos cut: one more than the set',
+      'mustPlay.on': 'Compulsory play',
+    },
+    trickEnd: {
+      ALL_PASSED: '{player} won the trick: everyone else passed.',
+      FIRST_OUT: '{player} went out and the trick is closed.',
+      CUT: '{player} cut the trick with 2s.',
+      QUAD: '{player} closed the trick with four of a kind.',
+      forbidden: '{player} went out on a 2 and will finish last.',
     },
     actions: { play: 'Play', complete: 'Complete the four', pass: 'Pass', clear: 'Clear' },
     hint: {
@@ -317,6 +340,8 @@ export const messagesEn: Messages = {
       down: 'Down from {title}',
       same: 'Same title',
       ready: 'Ready',
+      forbidden: 'On a 2',
+      forbiddenLabel: 'Went out on a 2: placed last',
     },
     standings: { title: 'Standings', scores: 'Scores', close: 'Close' },
     notice: {
@@ -1040,6 +1065,10 @@ export const messagesEn: Messages = {
       level: { label: 'Level', easy: 'Easy', medium: 'Medium', hard: 'Hard' },
       afterPass: { label: 'After a pass', reenter: 'Play again', out: 'Out of the trick' },
       equalPlay: { label: 'Equal play', on: 'Allowed', off: 'Not allowed' },
+      twoCuts: { label: '2 cuts', off: 'No cut', single: 'One 2 cuts any play', ladder: 'Twos cut: one more card' },
+      quadClears: { label: 'Four of a kind', on: 'Closes the trick', off: 'Does not close it' },
+      forbiddenFinish: { label: 'Finishing on a 2', lastPlace: 'Last place', off: 'Allowed' },
+      mustPlay: { label: 'Compulsory play', off: 'No, you may pass', on: 'Yes, no pass if you can play' },
       firstLead: {
         label: 'First lead', kingOfHearts: 'King of hearts', lowestClub: 'Lowest club',
         queenOfHearts: 'Queen of hearts', random: 'Random',

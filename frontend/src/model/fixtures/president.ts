@@ -11,6 +11,10 @@ export const CLASSIC_PRESIDENT_OPTIONS: Record<string, string> = {
   scoring: 'rank',
   length: 'rounds-5',
   equalPlay: 'on',
+  twoCuts: 'off',
+  quadClears: 'on',
+  forbiddenFinish: 'lastPlace',
+  mustPlay: 'off',
 };
 
 /** A card shaped like the backend `CardDto`: upper-case labels (`3`..`10`, `JACK`, `ACE`...) and a `SUIT_RANK` name. */
@@ -35,6 +39,7 @@ export function buildPresidentPlayer(seat: number, overrides: Partial<PresidentP
     passed: false,
     points: 0,
     ready: false,
+    forbiddenFinish: false,
     ...overrides,
   };
 }

@@ -252,11 +252,12 @@ describe('President messages', () => {
 
   it('givenTheTrickVariants_thenTheirChipsEndReasonsAndMarkersAreWritten', () => {
     const ui = messagesEn.presidentUi;
-    for (const chip of ['twoCuts.single', 'twoCuts.ladder', 'quadClears.on', 'quadClears.off', 'forbiddenFinish.lastPlace',
+    for (const chip of ['twoCuts.single', 'twoCuts.ladder', 'quadClears.on', 'forbiddenFinish.lastPlace',
       'mustPlay.on']) expect(ui.chips[chip], chip).toBeTruthy();
     for (const reason of ['ALL_PASSED', 'FIRST_OUT', 'CUT', 'QUAD']) expect(ui.trickEnd[reason], reason).toContain('{player}');
-    expect(ui.trickEnd.led).toContain('{player}');
+    expect(ui.trickEnd.forbidden).toContain('{player}');
     expect(ui.table.outForbidden).toBeTruthy();
+    expect(ui.table.outForbiddenPlace).toContain('{n}');
     expect(ui.summary.forbidden).toBeTruthy();
     expect(ui.summary.forbiddenLabel).toBeTruthy();
   });

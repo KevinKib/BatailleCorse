@@ -14,6 +14,8 @@ const props = defineProps<{
   mySeat: number;
   nameOf: (seat: number) => string;
   chips: PresidentChip[];
+  /** Short lines under the pile: who took the trick and why, a forbidden finish. Announced to screen readers. */
+  notes?: string[];
 }>();
 const ui = useI18n().presidentUi;
 
@@ -47,6 +49,9 @@ const chipTexts = computed(() => props.chips.flatMap((chip) => {
       </template>
       <p v-else class="trick-empty" data-test="trick-empty">{{ ui.table.emptyTrick }}</p>
     </div>
+    <ul class="trick-notes" data-test="trick-notes" aria-live="polite">
+      <li v-for="note in notes ?? []" :key="note" class="trick-note" data-test="trick-note">{{ note }}</li>
+    </ul>
     <ul v-if="chipTexts.length" class="chips" data-test="rule-chips">
       <li v-for="chip in chipTexts" :key="chip.key" class="chip" data-test="rule-chip">{{ chip.text }}</li>
     </ul>
@@ -56,6 +61,9 @@ const chipTexts = computed(() => props.chips.flatMap((chip) => {
 <style scoped>
 .trick { display: flex; flex-direction: column; align-items: center; gap: var(--space-1); min-width: 0; }
 .trick-plate { display: flex; flex-direction: column; align-items: center; gap: 2px; min-height: 40px; }
+.trick-notes { margin: 0; padding: 0; list-style: none; text-align: center; }
+.trick-notes:empty { display: none; }
+.trick-note { font-size: 0.75rem; line-height: 1.1rem; color: var(--gold); }
 .trick-cards { display: flex; justify-content: center; }
 .trick-card { display: block; width: var(--president-pile-card-w, 52px); }
 .trick-card + .trick-card { margin-left: calc(var(--president-pile-card-w, 52px) * -0.45); }

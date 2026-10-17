@@ -283,6 +283,8 @@ export interface PresidentUiMessages {
     current: string;                   // the seat to play
     passed: string;
     out: string;                       // '{n}' = place taken
+    outForbidden: string;              // went out on a forbidden finish, no place until the round ends
+    outForbiddenPlace: string;         // the same once the round is over, with the place '{n}'
     ready: string;
     emptyTrick: string;                // nothing on the table
     playedBy: string;                  // '{player}': who made the top play
@@ -294,6 +296,8 @@ export interface PresidentUiMessages {
     offline: string;
   };
   chips: Record<string, string>;       // by chip key (see `ruleChips`); '{count}', '{rank}' in `beat`
+  /** Who took the trick and why, by `TrickEndReason` ('{player}'), and the note of a forbidden finish. */
+  trickEnd: Record<string, string>;
   actions: { play: string; complete: string; pass: string; clear: string; };
   hint: {
     nothingSelected: string;
@@ -335,6 +339,8 @@ export interface PresidentUiMessages {
     down: string;
     same: string;
     ready: string;
+    forbidden: string;                 // marker of a seat that went out on a forbidden finish
+    forbiddenLabel: string;            // its tooltip
   };
   standings: { title: string; scores: string; close: string };
   notice: { moveImpossible: string; connection: string };

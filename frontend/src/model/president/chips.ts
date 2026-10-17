@@ -3,8 +3,8 @@ import type { PresidentState } from './PresidentState';
 /**
  * The rule chips next to the pile (owner decision 6C, provisional). A chip is a key into
  * `presidentUi.chips` and the values its text quotes. Only what the DTO sends today is shown: the game options in
- * force and the top play. The constraint, the required rank, the chain and the revolution have no field yet; the
- * variant PRs add their chips here when the server sends them.
+ * force and the trick's binding. The revolution has no field yet; the variant PRs add their chips here when the
+ * server sends them.
  */
 export interface PresidentChip {
   key: string;
@@ -17,6 +17,11 @@ type ChipContext = Pick<PresidentState, 'options' | 'trick' | 'round'>;
 const KNOWN: Record<string, readonly string[]> = {
   afterPass: ['reenter', 'out'],
   firstLead: ['kingOfHearts', 'lowestClub', 'queenOfHearts', 'random'],
+  // the variants that change the table get a chip; their default-off values (no cut, no compulsory play) do not
+  forbiddenFinish: ['lastPlace'],
+  quadClears: ['on'],
+  twoCuts: ['single', 'ladder'],
+  mustPlay: ['on'],
 };
 
 function known(options: Record<string, string>, name: string): string | null {
@@ -41,5 +46,9 @@ export function ruleChips(state: ChipContext): PresidentChip[] {
   if (state.round === 1 && state.trick.plays.length === 0 && firstLead) chips.push({ key: `firstLead.${firstLead}` });
   const afterPass = known(state.options, 'afterPass');
   if (afterPass) chips.push({ key: `afterPass.${afterPass}` });
+  for (const name of ['forbiddenFinish', 'quadClears', 'twoCuts', 'mustPlay']) {
+    const value = known(state.options, name);
+    if (value) chips.push({ key: `${name}.${value}` });
+  }
   return chips;
 }
