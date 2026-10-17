@@ -77,7 +77,11 @@ const drawnLabel = computed(() => {
   justify-content: center;
   gap: var(--kobo-pile-gap, 14px);
 }
-.pile { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+/* A fixed width, wider than any caption: a pile that turns into a button (or back) never changes the row. */
+.pile {
+  margin: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; flex: none;
+  width: max(var(--kobo-pile-card-w, 72px), 3.6rem);
+}
 /* A pile a click acts on: a plain button around the same picture (no border, no background of its own). The cue is
    the pointer, a caption in gold and a slight lift under the pointer; the focus ring is the browser's. */
 button.pile { padding: 0; border: 0; background: transparent; font: inherit; color: inherit; cursor: default; }

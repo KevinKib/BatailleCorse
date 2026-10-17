@@ -325,7 +325,7 @@ watch(() => [store.game?.round, store.game?.phase, store.game?.currentSeat, live
 </script>
 
 <template>
-  <div ref="screenEl" class="kobo-screen" :class="{ 'kobo-screen--lobby': store.screen === 'lobby' }">
+  <div ref="screenEl" class="kobo-screen" :class="{ 'kobo-screen--lobby': store.screen === 'lobby', 'kobo-screen--duel': opponents.length === 1 }">
     <GameLobby
       v-if="store.screen === 'lobby' && store.lobby"
       :game="game"
@@ -399,6 +399,7 @@ watch(() => [store.game?.round, store.game?.phase, store.game?.currentSeat, live
             @draw="store.pickPile('draw')" @discard="store.pickPile('discard')" />
           <!-- On a wide table there is no height to spare under the piles: the first-time note goes beside my hand. -->
           <KoboMatchHint
+            reserve
             :hint="store.interaction.matchHint && !(showsCoachRing && !narrow)"
             :coach="showsCoachRing && narrow"
             @dismiss="matchCoach.dismiss()" />
@@ -588,12 +589,11 @@ watch(() => [store.game?.round, store.game?.phase, store.game?.currentSeat, live
   isolation: isolate;
   --kobo-pile-card-w: clamp(48px, 7.5vh, 60px);
   --ring-top: 88px;
-  --ring-bottom: 112px;
+  --ring-bottom: 130px;
   --ring-h: 70px;
 }
 .table-frame--compact { --ring-top: 78px; --ring-h: 56px; }
 /* The match hint (one or two lines) or the first-time note sits under the piles: the ring leaves room for it. */
-.table-frame--hint { --ring-bottom: 130px; }
 
 /* Wide screens: opponents on the ellipse, in an inner box so a whole tableau stays inside the frame. */
 .opponents-ring { position: absolute; inset: var(--ring-top) var(--ring-h) var(--ring-bottom); }
@@ -638,6 +638,8 @@ watch(() => [store.game?.round, store.game?.phase, store.game?.currentSeat, live
 .my-hand { border-radius: 14px; padding: 2px; }
 .my-hand.coach-ring { outline: 2px solid var(--gold); outline-offset: 0; box-shadow: 0 0 0 5px rgba(245, 200, 66, 0.2); }
 .my-zone :deep(.seat-label) { font-size: 0.8rem; padding: 4px 14px; }
+/* The dot of the turn ring sits clear of the name. */
+.my-zone :deep(.seat-label--active) { padding-left: 22px; }
 
 .table-footer { flex: none; display: flex; align-items: center; }
 
@@ -698,7 +700,7 @@ watch(() => [store.game?.round, store.game?.phase, store.game?.currentSeat, live
    pixels toward their edge of the table (the layout is the same). */
 @media (min-width: 768px) {
   .table-frame--duel .table-center { bottom: 0; }
-  .table-frame--duel .seat-slot { transform: translate(-50%, calc(-50% - 8px)); }
+  .table-frame--duel .seat-slot { transform: translate(-50%, calc(-50% - 16px)); }
 }
 
 /* Phones: no ring. The piles stay at the top of the table, the opponents wrap into a compact grid below and
@@ -729,8 +731,13 @@ watch(() => [store.game?.round, store.game?.phase, store.game?.currentSeat, live
     align-items: start;
   }
   /* Two players: the cards are bigger, so the frame trims its own margins to keep the whole grid in view. */
-  .table-frame--duel .table-center { padding-top: var(--space-1); }
-  .table-frame--duel .opponents-ring { padding-bottom: 0; }
+  .table-frame--duel .table-center { padding-top: 0; }
+  .kobo-screen--duel { gap: var(--space-1); }
+  .kobo-screen--duel .my-zone { gap: 2px; }
+  .table-frame--duel .seat-slot :deep(.kobo-seat) { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 2px 8px; }
+  .table-frame--duel .seat-slot { gap: 2px; }
+  .kobo-screen--duel .my-zone :deep(.seat-label) { padding-top: 2px; padding-bottom: 2px; }
+  .table-frame--duel .opponents-ring { padding-top: 0; padding-bottom: 0; }
   .seat-slot {
     position: static;
     transform: none;

@@ -2,7 +2,7 @@
 // panel around my zone. The browser is the host (seat 0). Screenshots go to the `screenshotsFolder`, named after
 // the `SHOT_PREFIX` env var when given (used to compare before and after).
 import { DECK_CODES, startKoboTable } from '../support/koboRoom';
-import { everySlotAtLeast44, expectNoOverlap, tableDoesNotScrollSideways } from '../support/koboGeometry';
+import { everySlotAtLeast44, expectCentred, expectNoOverlap, expectUnframed, tableDoesNotScrollSideways } from '../support/koboGeometry';
 
 const viewports = [
   { width: 375, height: 667, label: 'phone', card: { 2: { opponent: 44, mine: 54 }, 3: { opponent: 34, mine: 46 } } },
@@ -51,6 +51,21 @@ describe('Kobo visual polish', () => {
           cy.get('[data-test="my-zone"] [data-test="seat-label"]').should('be.visible');
           cy.get('[data-test="my-zone"] [data-test="seat-total"]').should('be.visible');
           cy.get('[data-test="my-zone"] [data-test="seat-cards"]').should('be.visible');
+          // Memorising: "Memorise your two cards" is centred in my zone whatever the button beside it, and nothing
+          // around my zone (the zone, the bar, its row, the hand) has a frame, outline or shadow.
+          cy.get('[data-test="phase"]').should('have.text', 'Memorise your two cards').then(($p) => {
+            expectCentred($p[0], $p[0].closest('[data-test="my-zone"]')!, 'phase text');
+          });
+          cy.get('[data-test="my-zone"]').then(($z) => {
+            const parts = [$z[0], ...Array.from($z[0].querySelectorAll('.kobo-actions, .actions-row, .actions-text, .actions-buttons, .my-hand, .my-tableau, .kobo-seat'))];
+            parts.forEach((el, i) => expectUnframed(el, `my zone part ${i} (${el.className})`));
+          });
+          cy.get('[data-test="action-ready"]').then(($b) => {
+            const z = $b[0].closest('[data-test="my-zone"]')!.getBoundingClientRect();
+            const r = $b[0].getBoundingClientRect();
+            expect(r.left, 'ready button inside the zone').to.be.at.least(z.left);
+            expect(r.right, 'ready button inside the zone').to.be.at.most(z.right);
+          });
           cy.screenshot(`${Cypress.env('SHOT_PREFIX') ?? 'shot'}-${players}p-${width}`, { capture: 'viewport', overwrite: true });
 
           // My turn: the "Playing now" marker and the ring on my plate stay readable without a panel.
@@ -60,6 +75,13 @@ describe('Kobo visual polish', () => {
           cy.get('[data-test="my-zone"] [data-test="seat-current"]').should('be.visible');
           cy.get('[data-test="my-zone"] [data-test="seat-label"]').then(($l) => {
             expect(getComputedStyle($l[0]).borderTopColor, 'turn ring').to.not.eq('rgba(255, 255, 255, 0.1)');
+          });
+          // The dot of the turn ring is clear of the name, mine and the others'.
+          cy.get('[data-test="seat-label"]').each(($l) => {
+            if (!$l.hasClass('seat-label--active')) return;
+            const dot = getComputedStyle($l[0], '::before');
+            const gap = parseFloat(getComputedStyle($l[0]).paddingLeft) - parseFloat(dot.left) - parseFloat(dot.width);
+            expect(gap, 'gap between the turn dot and the name').to.be.at.least(6);
           });
           expectNoOverlap();
           tableDoesNotScrollSideways();

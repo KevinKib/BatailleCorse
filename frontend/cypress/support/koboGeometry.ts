@@ -121,3 +121,59 @@ export function actionBarIsReachable() {
     expect(Math.round(r.width), 'button width').to.be.at.least(44);
   });
 }
+
+/** No fill, border, outline or shadow on the element (a pill or a card inside it is not meant). */
+export function expectUnframed(el: Element, name: string) {
+  const s = getComputedStyle(el);
+  expect(s.backgroundImage, `${name} background image`).to.eq('none');
+  expect(s.backgroundColor, `${name} background colour`).to.be.oneOf(['rgba(0, 0, 0, 0)', 'transparent']);
+  for (const side of ['Top', 'Right', 'Bottom', 'Left'] as const) {
+    expect(s[`border${side}Width`], `${name} border ${side}`).to.eq('0px');
+  }
+  expect(s.boxShadow, `${name} shadow`).to.eq('none');
+  expect(s.outlineStyle === 'none' || s.outlineWidth === '0px', `${name} outline`).to.eq(true);
+}
+
+export type Rects = Record<string, { left: number; top: number; width: number; height: number }>;
+
+/** The boxes of the table's fixed parts: nothing may move when a text line or a card comes and goes. */
+export function snapshotRects(): Cypress.Chainable<Rects> {
+  return cy.document().then((doc) => {
+    const out: Rects = {};
+    const targets: Record<string, string> = {
+      piles: '[data-test="kobo-piles"]',
+      draw: '[data-test="draw-pile"]',
+      discard: '[data-test="discard-pile"]',
+      drawn: '[data-test="drawn-zone"]',
+      opponentGrid: '[data-test="opponent-seat"] .tableau',
+      opponentSeat: '[data-test="opponent-seat"]',
+      myGrid: '[data-test="my-zone"] .tableau',
+      myZone: '[data-test="my-zone"]',
+      myPlate: '[data-test="my-zone"] .kobo-seat',
+      bar: '[data-test="kobo-actions"]',
+      opponentPlate: '[data-test="opponent-seat"] .kobo-seat',
+    };
+    for (const [name, sel] of Object.entries(targets)) {
+      const el = doc.querySelector(sel);
+      if (!el) continue;
+      const r = el.getBoundingClientRect();
+      const round = (n: number) => Math.round(n * 10) / 10;
+      out[name] = { left: round(r.left), top: round(r.top), width: round(r.width), height: round(r.height) };
+    }
+    return out;
+  });
+}
+
+export function expectSameRects(before: Rects, after: Rects, only?: string[]) {
+  for (const name of Object.keys(before)) {
+    if (only && !only.includes(name)) continue;
+    expect(after[name], name).to.deep.eq(before[name]);
+  }
+}
+
+/** Centres of two boxes differ by at most `tolerance` px horizontally. */
+export function expectCentred(inner: Element, outer: Element, name: string, tolerance = 2) {
+  const a = inner.getBoundingClientRect();
+  const b = outer.getBoundingClientRect();
+  expect(Math.abs((a.left + a.right) / 2 - (b.left + b.right) / 2), `${name} centre offset`).to.be.at.most(tolerance);
+}
