@@ -294,7 +294,7 @@ export interface PresidentUiMessages {
     offline: string;
   };
   chips: Record<string, string>;       // by chip key (see `ruleChips`); '{count}', '{rank}' in `beat`
-  actions: { play: string; pass: string; clear: string; };
+  actions: { play: string; complete: string; pass: string; clear: string; };
   hint: {
     nothingSelected: string;
     mixedRanks: string;

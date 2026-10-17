@@ -494,4 +494,107 @@ class PresidentBotCoordinatorTest {
         assertThat(messaging.payloads.size(), is(2)); // one frame per human seat
         assertThat(messaging.payloads.get(0).getEventType(), is("PLAY"));
     }
+
+    // ------------------------------------------------------------------ completion of the four
+
+    private static final PlayerId COMPLETER = new PlayerId(2);
+
+    /**
+     * Seats 0, 1 and 3 are humans, seat 2 is the computer and holds the two missing 9s. After A's 9S and B's 9H
+     * the computer is on turn and bound; once it passes it is out of turn with the completion on offer.
+     */
+    private President completionTable() throws Exception {
+        President game = register(aPresident().leader(0).withHand("9S 3C").withHand("9H 4C")
+                .withHand("9D 9C 5C").withHand("10H 6C").build(), 2);
+        start(game);
+        actions.play(game.getId(), HUMAN, cards("9S"));
+        actions.play(game.getId(), BOT, cards("9H"));
+        return game;
+    }
+
+    @Test
+    void aBotOnTurnThatHoldsTheCompletionPlaysItInTurn() throws Exception {
+        President game = completionTable();
+        assertThat(scheduler.pending().size(), is(1));
+
+        scheduler.runNext();
+
+        assertThat(game.trick().plays(), is(empty()));
+        assertThat(game.currentSeat(), is(COMPLETER));
+        assertThat(game.hand(COMPLETER), is(cards("5C")));
+    }
+
+    @Test
+    void aBotNotOnTurnThatHoldsTheCompletionGetsATaskAndCompletesAfterTheDelay() throws Exception {
+        President game = completionTable();
+        actions.pass(game.getId(), COMPLETER); // the computer passed: it is out of turn, the window stays open
+        assertThat(game.currentSeat(), is(new PlayerId(3)));
+        assertThat(scheduler.pending().size(), is(1));
+        assertThat(scheduler.pending().get(0).delay(), is(DELAY));
+        messaging.clear();
+
+        scheduler.runNext();
+
+        assertThat(game.trick().plays(), is(empty()));
+        assertThat(game.currentSeat(), is(COMPLETER));
+        assertThat(game.hand(COMPLETER), is(cards("5C")));
+        assertThat(messaging.payloads.get(0).getEventType(), is("COMPLETION"));
+    }
+
+    @Test
+    void aCompletionTaskIsCancelledWhenAHumanPlaysFirst() throws Exception {
+        President game = completionTable();
+        actions.pass(game.getId(), COMPLETER);
+        ManualBotScheduler.Entry task = scheduler.pending().get(0);
+
+        actions.play(game.getId(), new PlayerId(3), cards("10H")); // a play closes the window
+
+        assertThat(task.isCancelled(), is(true));
+        assertThat(scheduler.pending(), is(empty()));
+        assertThat(game.hand(COMPLETER).size(), is(3));
+    }
+
+    @Test
+    void aCompletionRefusedByTheGameIsAbandonedWithoutAFallback() throws Exception {
+        President game = completionTable();
+        actions.pass(game.getId(), COMPLETER);
+        bot.answer = view -> new PresidentBotDecision.Complete(cards("9D")); // one of the two missing cards
+        int version = game.version();
+
+        scheduler.runNext();
+
+        assertThat(game.version(), is(version));
+        assertThat(game.hand(COMPLETER).size(), is(3));
+        assertThat(scheduler.pending(), is(empty()));
+    }
+
+    @Test
+    void aBotThatKeepsTheCompletionDoesNothingAndIsAskedAgainAfterTheNextChange() throws Exception {
+        President game = completionTable();
+        actions.pass(game.getId(), COMPLETER);
+        bot.answer = view -> new PresidentBotDecision.Keep();
+        int version = game.version();
+
+        scheduler.runNext();
+
+        assertThat(game.version(), is(version));
+        assertThat(bot.views.size(), is(1));
+        actions.pass(game.getId(), new PlayerId(3)); // another pass: the window is still open
+        assertThat(scheduler.pending().size(), is(1));
+        scheduler.runNext();
+        assertThat(bot.views.size(), is(2));
+        assertThat(game.version(), is(version + 1));
+    }
+
+    @Test
+    void aCompletionTaskThatFiresAfterAPlayWithoutABroadcastIsDropped() throws Exception {
+        President game = completionTable();
+        actions.pass(game.getId(), COMPLETER);
+
+        game.play(new PlayerId(3), cards("10H")); // the state moved and nobody broadcast
+        scheduler.runAllPending();
+
+        assertThat(bot.views, is(empty()));
+        assertThat(game.hand(COMPLETER).size(), is(3));
+    }
 }

@@ -18,8 +18,19 @@ public final class LegalPlays {
     private LegalPlays() {
     }
 
-    /** @param top the play to beat, or {@code null} when leading (any set is legal) */
+    /** The base game: a higher set of the same count, or any set when leading. */
     public static List<Play> of(List<Card> hand, Play top, RankOrder order) {
+        return of(hand, top, order, top == null ? Constraint.FREE : Constraint.BEAT, false);
+    }
+
+    /**
+     * @param top        the play to beat, or {@code null} when leading (any set is legal)
+     * @param constraint what the next play must answer; under {@link Constraint#MATCH_OR_PASS} only the set of the
+     *                   same rank and count as the top is listed
+     * @param equalPlay  whether an equal set also answers a {@link Constraint#BEAT}
+     */
+    public static List<Play> of(List<Card> hand, Play top, RankOrder order, Constraint constraint,
+                                boolean equalPlay) {
         Map<FrenchRank, List<Card>> byRank = new LinkedHashMap<>();
         for (Card card : hand) {
             byRank.computeIfAbsent((FrenchRank) card.getRank(), r -> new ArrayList<>()).add(card);
@@ -32,7 +43,7 @@ public final class LegalPlays {
             }
             for (int count = 1; count <= group.size(); count++) {
                 Play candidate = new Play(group.subList(0, count), rank);
-                if (top == null || BeatRule.beats(candidate, top, order)) {
+                if (top == null || BeatRule.answers(candidate, top, order, constraint, equalPlay)) {
                     plays.add(candidate);
                 }
             }

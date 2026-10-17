@@ -50,6 +50,15 @@ describe('PresidentActionBar', () => {
     expect(wrapper.emitted('clear')).toHaveLength(1);
   });
 
+  it('givenACompletionOnOffer_thenTheCompleteButtonShowsAndEmitsComplete', async () => {
+    expect(mountBar().find('[data-test="complete"]').exists()).toBe(false);
+    const wrapper = mountBar({ canComplete: true, canPass: false });
+    const button = wrapper.get('[data-test="complete"]');
+    expect(button.text()).toBe('Complete the four');
+    await button.trigger('click');
+    expect(wrapper.emitted('complete')).toHaveLength(1);
+  });
+
   it('givenARefusalNotice_thenItIsAnnounced', () => {
     const wrapper = mountBar({ notice: 'That play was refused. Check your cards.' });
     expect(wrapper.get('[data-test="notice"]').attributes('role')).toBe('alert');

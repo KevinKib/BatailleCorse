@@ -11,17 +11,21 @@ import org.kevinkib.cardgames.president.domain.event.RoundOver;
 import org.kevinkib.cardgames.president.domain.event.TrickEndReason;
 import org.kevinkib.cardgames.president.domain.event.TrickWon;
 import org.kevinkib.cardgames.president.domain.play.BeatRule;
+import org.kevinkib.cardgames.president.domain.play.Completion;
 import org.kevinkib.cardgames.president.domain.play.IllegalPlayException;
 import org.kevinkib.cardgames.president.domain.play.LegalPlays;
 import org.kevinkib.cardgames.president.domain.play.Play;
 import org.kevinkib.cardgames.president.domain.play.PlayParser;
 import org.kevinkib.cardgames.president.domain.rules.AfterPass;
+import org.kevinkib.cardgames.president.domain.rules.EqualPlay;
 import org.kevinkib.cardgames.president.domain.rules.PresidentException;
 import org.kevinkib.cardgames.president.domain.rules.PresidentOptions;
+import org.kevinkib.cardgames.president.domain.trick.Chain;
 import org.kevinkib.cardgames.president.domain.trick.MustLeadException;
 import org.kevinkib.cardgames.president.domain.trick.Trick;
 import org.kevinkib.cardgames.president.domain.trick.TrickView;
 import org.kevinkib.cards.domain.Card;
+import org.kevinkib.cards.domain.deck.french.FrenchRank;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,6 +44,8 @@ public final class Round {
     private final List<Card> discard = new ArrayList<>();
     private final PlayerId dealer;
     private Trick trick;
+    /** The rank of the last chain whose completion window closed (a play came, or the trick ended); null if none. */
+    private FrenchRank closedWindowRank;
     private int current;
     private Phase phase;
 
@@ -67,22 +73,46 @@ public final class Round {
 
     // ----- commands -----
 
+    /**
+     * A play in turn, or the completion of the four out of turn (the only command accepted from a seat that is
+     * not the one to act): every other out-of-turn play is refused with {@code NotPlayersTurnException}, a
+     * completion that arrives too late or with the wrong cards with {@code CompletionClosedException}.
+     */
     public List<PresidentEvent> play(PlayerId who, List<Card> cards) throws PresidentException {
-        checkTurn(who);
+        requirePlaying();
+        if (who == null || who.id() == null || who.id() < 0 || who.id() >= hands.size()) {
+            throw new NotPlayersTurnException();
+        }
         if (cards == null || cards.isEmpty()) {
             throw new IllegalPlayException("A play holds at least one card");
         }
-        int seat = current;
+        int seat = who.id();
+        boolean inTurn = seat == current;
         List<Card> remaining = removeFromHand(seat, cards);
-        Play play = PlayParser.parse(cards);
-        if (trick.top() != null) {
-            BeatRule.check(play, trick.top(), order);
+        Play play;
+        try {
+            play = PlayParser.parse(cards);
+        } catch (IllegalPlayException e) {
+            if (inTurn) {
+                throw e;
+            }
+            throw new NotPlayersTurnException();
+        }
+        boolean completion = isCompletion(play);
+        if (!inTurn && !completion) {
+            throw refusalOutOfTurn(play);
+        }
+        if (!completion && trick.top() != null) {
+            BeatRule.check(play, trick.top(), order, trick.constraint(), equalPlay());
         }
 
+        boolean equal = equalPlay() && trick.top() != null && BeatRule.isEqual(play, trick.top());
+        Chain before = trick.chain();
         hands.set(seat, remaining);
-        trick.play(seat, play);
+        trick.play(seat, play, equal);
+        noteWindow(before);
         List<PresidentEvent> events = new ArrayList<>();
-        events.add(new Played(who, play.cards()));
+        events.add(new Played(who, play.cards(), !inTurn));
         if (remaining.isEmpty()) {
             finishing.add(seat);
             events.add(new PlayerOut(who, finishing.size()));
@@ -95,6 +125,15 @@ public final class Round {
                 completeTrick(events, TrickEndReason.FIRST_OUT);
                 return events;
             }
+        }
+        Chain chain = trick.chain();
+        boolean quadAtOnce = play.cards().size() == Completion.RANK_SIZE;
+        boolean quadInSuccession = equalPlay() && chain.plays() >= 2 && chain.cards().size() == Completion.RANK_SIZE;
+        if (quadAtOnce || quadInSuccession) {
+            // four cards of a rank, in one play or in succession, close the trick; whoever played the last ones
+            // leads. V2's quadClears option will gate the first case; V1 has no way to turn it off.
+            completeTrick(events, TrickEndReason.QUAD);
+            return events;
         }
         afterAction(events);
         return events;
@@ -206,17 +245,76 @@ public final class Round {
         if (phase != Phase.PLAYING || seat == null || seat.id() == null || seat.id() != current) {
             return List.of();
         }
-        return LegalPlays.of(hands.get(current), trick.top(), order);
+        return LegalPlays.of(hands.get(current), trick.top(), order, trick.constraint(), equalPlay());
+    }
+
+    /**
+     * The cards that complete the four when the seat holds all of them and the window is open (the chain at the
+     * top of the trick holds two plays or more), in turn or out of turn; nothing otherwise.
+     */
+    public List<Card> completion(PlayerId seat) {
+        if (phase != Phase.PLAYING || !equalPlay() || seat == null || seat.id() == null
+                || seat.id() < 0 || seat.id() >= hands.size()) {
+            return List.of();
+        }
+        Chain chain = trick.chain();
+        if (chain == null || chain.plays() < 2) {
+            return List.of();
+        }
+        return HandSort.sorted(Completion.heldBy(hands.get(seat.id()), chain.rank(), chain.cards()), order);
     }
 
     // ----- internals -----
 
-    private void checkTurn(PlayerId who) throws PresidentException {
+    private boolean equalPlay() {
+        return options.equalPlay() == EqualPlay.ON;
+    }
+
+    private void requirePlaying() throws WrongPhaseException {
         if (phase != Phase.PLAYING) {
             throw new WrongPhaseException(phase, "PLAYING");
         }
+    }
+
+    private void checkTurn(PlayerId who) throws PresidentException {
+        requirePlaying();
         if (who == null || who.id() == null || who.id() != current) {
             throw new NotPlayersTurnException();
+        }
+    }
+
+    /** Whether the cards are exactly the ones that complete the four, with the window open. */
+    private boolean isCompletion(Play play) {
+        if (!equalPlay()) {
+            return false;
+        }
+        Chain chain = trick.chain();
+        return chain != null && chain.plays() >= 2 && play.rank() == chain.rank()
+                && Completion.isCompletion(play.cards(), chain.rank(), chain.cards());
+    }
+
+    /**
+     * Why an out-of-turn play that is not a completion is refused: a set of the rank whose window is open (the
+     * wrong cards) or was open and closed (too late) is a failed completion; anything else is just not the seat's
+     * turn.
+     */
+    private PresidentException refusalOutOfTurn(Play play) {
+        if (!equalPlay()) {
+            return new NotPlayersTurnException();
+        }
+        Chain chain = trick.chain();
+        FrenchRank windowRank = chain != null && chain.plays() >= 2 ? chain.rank() : closedWindowRank;
+        return play.rank() == windowRank ? new CompletionClosedException() : new NotPlayersTurnException();
+    }
+
+    /** Remembers the window a play closed, and forgets the old one when a new window opens. */
+    private void noteWindow(Chain before) {
+        Chain after = trick.chain();
+        if (before != null && before.plays() >= 2 && after.rank() != before.rank()) {
+            closedWindowRank = before.rank();
+        }
+        if (after.plays() == 2) {
+            closedWindowRank = null;
         }
     }
 
@@ -279,6 +377,10 @@ public final class Round {
     private void completeTrick(List<PresidentEvent> events, TrickEndReason reason) {
         int last = trick.lastPlayer();
         int winner = hands.get(last).isEmpty() ? nextSeatWithCards(last) : last;
+        Chain chain = trick.chain();
+        if (chain != null && chain.plays() >= 2) {
+            closedWindowRank = chain.rank();
+        }
         discard.addAll(trick.cards());
         trick = new Trick(winner);
         current = winner;

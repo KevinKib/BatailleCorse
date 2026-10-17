@@ -15,17 +15,18 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class PresidentBotLevelTest {
 
     static Stream<Arguments> tuningTable() {
-        // level, random play, random pass, counted ranks, control ranks, short hand, plans the end game
+        // level, random play, random pass, counted ranks, control ranks, short hand, plans the end game,
+        // chance of taking a completion, keeps a completion that would be a forbidden finish
         return Stream.of(
-                Arguments.of(PresidentBotLevel.EASY, 0.30, 0.20, 0, 2, 6, false),
-                Arguments.of(PresidentBotLevel.MEDIUM, 0.0, 0.0, 3, 2, 52, false),
-                Arguments.of(PresidentBotLevel.HARD, 0.0, 0.0, 13, 2, 52, true));
+                Arguments.of(PresidentBotLevel.EASY, 0.30, 0.20, 0, 2, 6, false, 0.5, false),
+                Arguments.of(PresidentBotLevel.MEDIUM, 0.0, 0.0, 3, 2, 52, false, 1.0, false),
+                Arguments.of(PresidentBotLevel.HARD, 0.0, 0.0, 13, 2, 52, true, 1.0, true));
     }
 
     @ParameterizedTest
     @MethodSource("tuningTable")
     void eachLevelHasItsTuning(PresidentBotLevel level, double randomPlay, double randomPass, int counted,
-                               int control, int shortHand, boolean plans) {
+                               int control, int shortHand, boolean plans, double completes, boolean keeps) {
         PresidentBotTuning tuning = level.tuning();
 
         assertThat(tuning.randomPlayProbability(), is(randomPlay));
@@ -34,6 +35,8 @@ class PresidentBotLevelTest {
         assertThat(tuning.controlRanks(), is(control));
         assertThat(tuning.shortHand(), is(shortHand));
         assertThat(tuning.plansEndGame(), is(plans));
+        assertThat(tuning.completionProbability(), is(completes));
+        assertThat(tuning.keepsDangerousCompletion(), is(keeps));
     }
 
     @Test
@@ -62,6 +65,8 @@ class PresidentBotLevelTest {
     void aTuningRefusesAProbabilityOutsideZeroToOne() {
         assertThrows(IllegalArgumentException.class, () -> new PresidentBotTuning(1.5, 0, 0, 2, 3, false));
         assertThrows(IllegalArgumentException.class, () -> new PresidentBotTuning(0, -0.1, 0, 2, 3, false));
+        assertThrows(IllegalArgumentException.class,
+                () -> new PresidentBotTuning(0, 0, 0, 2, 3, false, 1.2, false));
     }
 
     @Test

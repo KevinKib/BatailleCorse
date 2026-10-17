@@ -13,8 +13,10 @@ defineProps<{
   hasSelection: boolean;
   hint: string;
   notice: string;
+  /** The completion window is open for me, in turn or out of it. */
+  canComplete?: boolean;
 }>();
-const emit = defineEmits<{ primary: []; pass: []; clear: [] }>();
+const emit = defineEmits<{ primary: []; pass: []; clear: []; complete: [] }>();
 
 const ui = useI18n().presidentUi.actions;
 const hintId = `president-hint-${useId()}`;
@@ -26,6 +28,8 @@ const hintId = `president-hint-${useId()}`;
     <p :id="hintId" class="play-hint" data-test="play-hint">{{ hint }}</p>
     <p v-if="notice" class="notice" data-test="notice" role="alert">{{ notice }}</p>
     <div class="buttons">
+      <Button v-if="canComplete" data-test="complete" class="action action--complete" :label="ui.complete"
+              severity="warn" rounded @click="emit('complete')" />
       <Button data-test="play" class="action action--play" :label="primaryLabel" severity="success" rounded
               :disabled="!canPrimary" :aria-describedby="hintId" @click="emit('primary')" />
       <Button data-test="pass" class="action" :label="ui.pass" severity="secondary" rounded

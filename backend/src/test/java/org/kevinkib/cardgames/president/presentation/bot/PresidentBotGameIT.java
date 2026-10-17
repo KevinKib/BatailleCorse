@@ -77,6 +77,15 @@ class PresidentBotGameIT {
                 if (!view.can(Action.PLAY) || !legal) {
                     violations.add("illegal play " + play.cards() + " in " + view.phase());
                 }
+            } else if (decision instanceof PresidentBotDecision.Complete complete) {
+                if (!view.can(Action.COMPLETE) || !new HashSet<>(complete.cards())
+                        .equals(new HashSet<>(view.completion()))) {
+                    violations.add("illegal completion " + complete.cards() + " in " + view.phase());
+                }
+            } else if (decision instanceof PresidentBotDecision.Keep) {
+                if (!view.can(Action.COMPLETE)) {
+                    violations.add("keeps a completion it does not hold in " + view.phase());
+                }
             } else if (decision instanceof PresidentBotDecision.Pass) {
                 if (!view.can(Action.PASS)) {
                     violations.add("illegal pass in " + view.phase());

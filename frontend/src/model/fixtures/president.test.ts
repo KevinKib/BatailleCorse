@@ -10,7 +10,7 @@ const PRESIDENT_DTO_FIELDS = [
   'availableActions',
 ];
 const PLAYER_DTO_FIELDS = ['seat', 'name', 'handSize', 'title', 'place', 'out', 'passed', 'points', 'ready'];
-const TRICK_DTO_FIELDS = ['leader', 'plays', 'top', 'lastPlayer', 'passed'];
+const TRICK_DTO_FIELDS = ['leader', 'plays', 'top', 'lastPlayer', 'passed', 'constraint', 'requiredRank', 'requiredCount', 'chain'];
 
 describe('President fixtures', () => {
   it('buildPresidentState has exactly the fields of PresidentDto', () => {
@@ -38,7 +38,7 @@ describe('President fixtures', () => {
 
   it('the default options are the full set of the server descriptors, defaults filled', () => {
     expect(Object.keys(CLASSIC_PRESIDENT_OPTIONS).sort())
-      .toEqual(['afterPass', 'exchange', 'firstLead', 'giveBack', 'length', 'nextLead', 'scoring']);
+      .toEqual(['afterPass', 'equalPlay', 'exchange', 'firstLead', 'giveBack', 'length', 'nextLead', 'scoring']);
     expect(buildPresidentState().options).toEqual(CLASSIC_PRESIDENT_OPTIONS);
   });
 });

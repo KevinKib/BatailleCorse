@@ -497,8 +497,20 @@ public class President implements Game {
     }
 
     /**
-     * What the seat may do now: play (and pass unless it leads) when it is its turn, give back while a return
-     * is owed, say it is ready at the barrier; nothing for any other seat, a seat that left, or once finished.
+     * The cards that complete the four when the seat holds all of them and the window is open (the chain at the
+     * top of the trick holds two plays or more), whether or not it is the seat's turn; nothing otherwise.
+     */
+    public synchronized List<Card> completion(PlayerId seat) {
+        if (finished || !isActive(seat)) {
+            return List.of();
+        }
+        return round.completion(seat);
+    }
+
+    /**
+     * What the seat may do now: play (and pass unless it leads) when it is its turn, complete the four whenever
+     * it holds the missing cards and the window is open (the only action of a seat that is not on turn), give back
+     * while a return is owed, say it is ready at the barrier; nothing for a seat that left, or once finished.
      */
     public synchronized List<Action> availableActions(PlayerId seat) {
         if (finished || !isActive(seat)) {
@@ -506,15 +518,17 @@ public class President implements Game {
         }
         return switch (round.phase()) {
             case PLAYING -> {
-                if (!seat.equals(round.currentSeat()) || round.hand(seat).isEmpty()) {
-                    yield List.of();
-                }
                 List<Action> actions = new ArrayList<>();
-                if (!round.legalPlays(seat).isEmpty()) {
-                    actions.add(Action.PLAY);
+                if (seat.equals(round.currentSeat()) && !round.hand(seat).isEmpty()) {
+                    if (!round.legalPlays(seat).isEmpty()) {
+                        actions.add(Action.PLAY);
+                    }
+                    if (!round.trick().plays().isEmpty()) {
+                        actions.add(Action.PASS);
+                    }
                 }
-                if (!round.trick().plays().isEmpty()) {
-                    actions.add(Action.PASS);
+                if (!round.completion(seat).isEmpty()) {
+                    actions.add(Action.COMPLETE);
                 }
                 yield actions;
             }

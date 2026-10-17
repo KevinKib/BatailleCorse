@@ -64,4 +64,52 @@ class BeatRuleTest {
 
         assertThrows(PlayDoesNotBeatException.class, () -> BeatRule.check(candidate, top, RankOrder.standard()));
     }
+
+    /**
+     * The constraint decides what answers the top: BEAT takes a higher play of the same count and, with equal play
+     * on, an equal one; MATCH_OR_PASS takes only the same rank and count (nothing higher, no cut); equal play off
+     * leaves the base game. Rows: constraint, equalPlay, top, candidate, accepted.
+     */
+    @ParameterizedTest(name = "{0} equalPlay={1}: {3} on {2} -> {4}")
+    @CsvSource(delimiter = '|', value = {
+            "BEAT          | true  | 9C       | 9D       | true",
+            "BEAT          | true  | 9C 9D    | 9H 9S    | true",
+            "BEAT          | true  | 9C       | 10C      | true",
+            "BEAT          | true  | 9C       | 9D 9H    | false",
+            "BEAT          | true  | 9C       | 8D       | false",
+            "BEAT          | false | 9C       | 9D       | false",
+            "BEAT          | false | 9C       | 10D      | true",
+            "MATCH_OR_PASS | true  | 9C       | 9D       | true",
+            "MATCH_OR_PASS | true  | 9C 9D    | 9H 9S    | true",
+            "MATCH_OR_PASS | true  | 9C       | 10D      | false",
+            "MATCH_OR_PASS | true  | 9C       | 2D       | false",
+            "MATCH_OR_PASS | true  | 9C       | 9D 9H    | false",
+            "MATCH_OR_PASS | true  | 9C 9D    | 10C 10D  | false",
+            "MATCH_OR_PASS | true  | 9C       | 8D       | false",
+    })
+    void theConstraintDecidesWhatAnswersTheTop(String constraint, boolean equalPlay, String top, String candidate,
+                                               boolean accepted) throws Exception {
+        Constraint c = Constraint.valueOf(constraint.trim());
+        Play candidatePlay = play(candidate);
+        Play topPlay = play(top);
+        if (accepted) {
+            assertDoesNotThrow(() -> BeatRule.check(candidatePlay, topPlay, RankOrder.standard(), c, equalPlay));
+        } else {
+            assertThrows(PlayDoesNotBeatException.class,
+                    () -> BeatRule.check(candidatePlay, topPlay, RankOrder.standard(), c, equalPlay));
+        }
+    }
+
+    @ParameterizedTest(name = "{0} equals {1}: {2}")
+    @CsvSource(delimiter = '|', value = {
+            "9C       | 9D       | true",
+            "9C 9D    | 9H 9S    | true",
+            "9C       | 10D      | false",
+            "9C       | 9D 9H    | false",
+            "9C 9D    | 10H 10S  | false",
+    })
+    void twoPlaysAreEqualWhenTheyHoldTheSameRankAndCount(String top, String candidate, boolean equal)
+            throws Exception {
+        assertThat(BeatRule.isEqual(play(candidate), play(top)), is(equal));
+    }
 }

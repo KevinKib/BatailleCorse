@@ -5,8 +5,7 @@ import org.kevinkib.cards.domain.Card;
 import java.util.List;
 
 /**
- * What a bot wants to do; each case maps to one President command (the caller applies it). The completion of
- * the four out of turn joins them with the equal-play PR.
+ * What a bot wants to do; each case but {@link Keep} maps to one President command (the caller applies it).
  */
 public sealed interface PresidentBotDecision {
 
@@ -15,6 +14,17 @@ public sealed interface PresidentBotDecision {
         public Play {
             cards = List.copyOf(cards);
         }
+    }
+
+    /** Play the cards that complete the four, in turn or out of turn (the same command as a play). */
+    record Complete(List<Card> cards) implements PresidentBotDecision {
+        public Complete {
+            cards = List.copyOf(cards);
+        }
+    }
+
+    /** Keep the cards of a completion that is on offer: nothing to send (completion is optional). */
+    record Keep() implements PresidentBotDecision {
     }
 
     record Pass() implements PresidentBotDecision {

@@ -7,7 +7,7 @@ export type PresidentPhase = 'EXCHANGE' | 'PLAYING' | 'ROUND_OVER' | 'FINISHED';
 
 export type PresidentTitle = 'PRESIDENT' | 'VICE_PRESIDENT' | 'NEUTRAL' | 'VICE_SCUM' | 'SCUM';
 
-export type PresidentAction = 'PLAY' | 'PASS' | 'GIVE_BACK' | 'READY';
+export type PresidentAction = 'PLAY' | 'PASS' | 'COMPLETE' | 'GIVE_BACK' | 'READY';
 
 /** A set of `count` cards of one rank. The only kind of play for now (runs come with their own PR). */
 export interface PresidentPattern {
@@ -45,6 +45,20 @@ export interface PresidentTrick {
   top: PresidentPattern | null;
   lastPlayer: number | null;
   passed: number[];
+  /** BEAT (play higher), MATCH_OR_PASS (equal play: the same rank and count, or pass) or FREE (a lead). */
+  constraint: 'FREE' | 'BEAT' | 'MATCH_OR_PASS';
+  /** The rank and count the next play must match; only under MATCH_OR_PASS. */
+  requiredRank?: string | null;
+  requiredCount?: number | null;
+  /** The run of equal plays so far (public); null when no play is on the table. */
+  chain?: PresidentChain | null;
+}
+
+export interface PresidentChain {
+  rank: string;
+  cards: Card[];
+  /** How many plays make the chain. */
+  plays: number;
 }
 
 /** A title pair of the exchange: seats and a count only, so every player may see it. */
@@ -109,6 +123,8 @@ export interface PresidentState {
   toGiveBack: number;
   /** What the viewer may play right now; empty unless it is the viewer's turn. */
   legalPlays: PresidentPattern[];
+  /** The cards that complete the four, only for the seat that holds them while the window is open. */
+  completion?: Card[];
   availableActions: PresidentAction[];
 }
 

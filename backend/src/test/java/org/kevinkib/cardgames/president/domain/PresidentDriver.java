@@ -57,6 +57,13 @@ final class PresidentDriver {
                 }
             }
             case PLAYING -> {
+                for (PlayerId holder : game.getPlayerIds()) {
+                    List<Card> completion = game.completion(holder);
+                    if (!completion.isEmpty() && random.nextInt(3) == 0) {
+                        game.play(holder, completion);
+                        return true;
+                    }
+                }
                 PlayerId seat = game.currentSeat();
                 List<Play> options = game.legalPlays(seat);
                 boolean leading = game.trick().plays().isEmpty();

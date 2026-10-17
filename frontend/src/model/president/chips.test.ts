@@ -34,3 +34,25 @@ describe('ruleChips', () => {
     expect(chips).toEqual([]);
   });
 });
+
+describe('ruleChips, equal play', () => {
+  const bound = buildPresidentTrick({
+    top: { kind: 'SET', rank: 'NINE', count: 1 }, plays: [{ seat: 1, cards: [] }],
+    constraint: 'MATCH_OR_PASS', requiredRank: 'NINE', requiredCount: 1,
+    chain: { rank: 'NINE', cards: [], plays: 2 },
+  });
+
+  it('givenTheBinding_thenTheMatchChipReplacesTheBeatChipAndTheChainIsShown', () => {
+    const chips = ruleChips({ options: classic, trick: bound, round: 3 });
+    expect(chips.slice(0, 2)).toEqual([
+      { key: 'match', vars: { rank: 'NINE' } },
+      { key: 'chain', vars: { count: 2, rank: 'NINE' } },
+    ]);
+    expect(chips.map(c => c.key)).not.toContain('beat');
+  });
+
+  it('givenAFreeTrick_thenNoMatchChipIsShown', () => {
+    const trick = buildPresidentTrick({ top: { kind: 'SET', rank: 'NINE', count: 1 }, constraint: 'BEAT' });
+    expect(ruleChips({ options: classic, trick, round: 3 }).map(c => c.key)).toEqual(['beat', 'afterPass.reenter']);
+  });
+});

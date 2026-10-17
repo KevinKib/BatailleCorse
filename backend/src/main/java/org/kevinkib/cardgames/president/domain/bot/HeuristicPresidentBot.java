@@ -27,7 +27,9 @@ import java.util.random.RandomGenerator;
  *       control card, unless the hand is short or the play goes out;</li>
  *   <li>never go out on a two when that finish is forbidden; the hard level also leads its twos first so that a
  *       low set stays for last;</li>
- *   <li>give back the lowest cards of the exchange without breaking a pair.</li>
+ *   <li>give back the lowest cards of the exchange without breaking a pair;</li>
+ *   <li>under the equal-play binding the candidates are the matching sets and a pass (the domain lists them);
+ *       a completion of the four is taken, in turn or out of turn, unless the level declines it.</li>
  * </ul>
  *
  * The easy level sometimes plays a random legal set or passes at random.
@@ -76,7 +78,15 @@ public final class HeuristicPresidentBot implements PresidentBotStrategy {
     private PresidentBotDecision decideTurn(PresidentBotView view, PresidentBotMemory memory) {
         boolean canPlay = view.can(Action.PLAY);
         boolean canPass = view.can(Action.PASS);
+        boolean canComplete = view.can(Action.COMPLETE);
+        if (canComplete && takesCompletion(view)) {
+            // it closes the trick and gives the lead, in turn or out of turn
+            return new PresidentBotDecision.Complete(view.completion());
+        }
         if (!canPlay && !canPass) {
+            if (canComplete) {
+                return new PresidentBotDecision.Keep(); // out of turn, and the cards are kept
+            }
             throw new IllegalStateException("Seat " + view.seat() + " has nothing to do");
         }
         if (!canPlay) {
@@ -91,6 +101,19 @@ public final class HeuristicPresidentBot implements PresidentBotStrategy {
             return play(legal.get(random.nextInt(legal.size())));
         }
         return leading ? lead(view, memory, legal) : follow(view, legal);
+    }
+
+    /**
+     * Completion is optional (spec 3.1.1). The level decides how often it is taken; the hard level also keeps
+     * the cards that would be its last ones and a forbidden finish (twos).
+     */
+    private boolean takesCompletion(PresidentBotView view) {
+        if (tuning.keepsDangerousCompletion() && view.options().forbiddenFinish() == ForbiddenFinish.LAST_PLACE
+                && view.completion().size() == view.hand().size()
+                && view.completion().get(0).getRank() == FrenchRank.TWO) {
+            return false;
+        }
+        return tuning.completionProbability() >= 1 || chance(tuning.completionProbability());
     }
 
     private static PresidentBotDecision play(Play play) {

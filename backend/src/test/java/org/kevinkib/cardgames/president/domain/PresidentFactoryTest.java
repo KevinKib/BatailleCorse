@@ -66,7 +66,7 @@ class PresidentFactoryTest {
         List<OptionDescriptor> descriptors = factory.optionDescriptors();
 
         assertThat(descriptors.stream().map(OptionDescriptor::key).toList(), is(List.of(
-                "afterPass", "firstLead", "exchange", "giveBack", "nextLead", "scoring", "length")));
+                "afterPass", "firstLead", "exchange", "giveBack", "nextLead", "scoring", "length", "equalPlay")));
         assertThat(descriptors.stream().allMatch(d -> d.type() == OptionType.CHOICE), is(true));
         for (OptionDescriptor descriptor : descriptors) {
             assertThat(descriptor.labelKey(), is("options.president." + descriptor.key()));
@@ -81,6 +81,7 @@ class PresidentFactoryTest {
         assertThat(byKey.get("giveBack").values(), is(List.of("free", "lowest")));
         assertThat(byKey.get("nextLead").values(), is(List.of("scum", "president")));
         assertThat(byKey.get("scoring").values(), is(List.of("rank", "titles", "zeroSum")));
+        assertThat(byKey.get("equalPlay").values(), is(List.of("on", "off")));
         assertThat(byKey.get("length").values(),
                 is(List.of("rounds-5", "rounds-3", "rounds-10", "points-11", "points-21", "endless")));
     }
@@ -91,11 +92,11 @@ class PresidentFactoryTest {
 
         assertThat(validated.values(), is(Map.of(
                 "afterPass", "out", "firstLead", "kingOfHearts", "exchange", "two", "giveBack", "free",
-                "nextLead", "scum", "scoring", "rank", "length", "rounds-5")));
+                "nextLead", "scum", "scoring", "rank", "length", "rounds-5", "equalPlay", "on")));
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"jokers", "decks", "eightClears", "putsch", "presidentFall", "equalPlay", "bogus"})
+    @ValueSource(strings = {"jokers", "decks", "eightClears", "putsch", "presidentFall", "bogus"})
     void validateRefusesAnUnknownKeyIncludingThePrunedOnes(String key) {
         assertThrows(InvalidOptionException.class,
                 () -> factory.validate(GameOptions.of(Map.of(key, "on"))));
