@@ -11,7 +11,6 @@ import org.kevinkib.cardgames.president.domain.event.TrickWon;
 import org.kevinkib.cardgames.president.domain.play.PlayDoesNotBeatException;
 import org.kevinkib.cardgames.president.domain.round.Action;
 import org.kevinkib.cardgames.president.domain.round.Phase;
-import org.kevinkib.cardgames.president.domain.rules.ForbiddenFinish;
 import org.kevinkib.cardgames.president.domain.rules.PresidentOptions;
 import org.kevinkib.cardgames.president.domain.trick.MustPlayException;
 
@@ -181,7 +180,7 @@ class TrickVariantsTest {
     }
 
     @Test
-    void aLoneTwoThatEmptiesTheHandIsAForbiddenFinishAndStillClosesTheTrick() throws Exception {
+    void aLoneTwoThatEmptiesTheHandIsAForbiddenFinishAndDoesNotCloseTheTrick() throws Exception {
         President game = aPresident().leader(0)
                 .withHand("9S 9H 3C").withHand("2S").withHand("KC KD").withHand("QC 6C").build();
         play(game, 0, "9S 9H");
@@ -189,23 +188,9 @@ class TrickVariantsTest {
         List<PresidentEvent> events = play(game, 1, "2S");
 
         assertThat(events, hasItem(new PlayerOut(seat(1), 0, true)));
-        assertThat(events, hasItem(new TrickWon(seat(2), TrickEndReason.CUT)));
+        assertThat(closed(events).isPresent(), is(false));
         assertThat(game.currentSeat(), is(seat(2)));
         assertThat(game.finishingOrder(), is(List.of()));
-    }
-
-    @Test
-    void aLoneTwoThatEmptiesTheHandTakesFirstPlaceWhenTheFinishIsNotForbidden() throws Exception {
-        PresidentOptions open = PresidentOptions.defaults().withForbiddenFinish(ForbiddenFinish.OFF);
-        President game = aPresident().leader(0).options(open)
-                .withHand("9S 9H 3C").withHand("2S").withHand("KC KD").withHand("QC 6C").build();
-        play(game, 0, "9S 9H");
-
-        List<PresidentEvent> events = play(game, 1, "2S");
-
-        assertThat(events, hasItem(new PlayerOut(seat(1), 1)));
-        assertThat(events, hasItem(new TrickWon(seat(2), TrickEndReason.FIRST_OUT)));
-        assertThat(game.finishingOrder(), contains(seat(1)));
     }
 
     // ----- V5: the four closes the trick -----
@@ -277,10 +262,12 @@ class TrickVariantsTest {
         President game = aPresident().leader(0)
                 .withHand("2S 2H").withHand("2D").withHand("3C").withHand("4C").build();
         play(game, 0, "2S 2H");                    // A out, forbidden, first; the trick stays open
-        List<PresidentEvent> cut = play(game, 1, "2D");   // B out, forbidden, second: a lone 2 closes the trick
-        assertThat(cut, hasItem(new PlayerOut(seat(1), 0, true)));
-        assertThat(cut, hasItem(new TrickWon(seat(2), TrickEndReason.CUT)));
+        List<PresidentEvent> second = play(game, 1, "2D");   // B out, forbidden, second: no cut, the trick stays open
+        assertThat(second, hasItem(new PlayerOut(seat(1), 0, true)));
+        assertThat(closed(second).isPresent(), is(false));
         assertThat(game.forbiddenFinishers(), contains(seat(0), seat(1)));
+        game.pass(seat(2));
+        game.pass(seat(3));                                  // nobody holds a 2: C leads
 
         List<PresidentEvent> last = play(game, 2, "3C");   // C goes out normally: 1st place, D keeps its card
 
@@ -291,31 +278,17 @@ class TrickVariantsTest {
     }
 
     @Test
-    void aQuadOfTwosPlayedAtOnceThatEmptiesTheHandIsAForbiddenFinishToo() throws Exception {
+    void aQuadOfTwosPlayedAtOnceThatEmptiesTheHandIsAForbiddenFinishThatDoesNotCloseTheTrick() throws Exception {
         President game = aPresident().leader(0)
                 .withHand("2S 2H 2D 2C").withHand("4C 4D").withHand("5C 6C").build();
 
         List<PresidentEvent> events = play(game, 0, "2S 2H 2D 2C");
 
         assertThat(events, hasItem(new PlayerOut(seat(0), 0, true)));
-        assertThat(events, hasItem(new TrickWon(seat(1), TrickEndReason.QUAD)));
+        assertThat(closed(events).isPresent(), is(false));
+        assertThat(game.currentSeat(), is(seat(1)));
     }
 
-    @Test
-    void withTheOptionOffTheTwoTakesFirstPlaceAndClosesTheTrick() throws Exception {
-        PresidentOptions off = PresidentOptions.defaults().withForbiddenFinish(ForbiddenFinish.OFF);
-        President game = aPresident().leader(0).options(off)
-                .withHand("KS 3C").withHand("AS 4C").withHand("2S").withHand("3H 5C").build();
-        play(game, 0, "KS");
-        play(game, 1, "AS");
-
-        List<PresidentEvent> events = play(game, 2, "2S");
-
-        assertThat(events, hasItem(new PlayerOut(seat(2), 1)));
-        assertThat(events, hasItem(new TrickWon(seat(3), TrickEndReason.FIRST_OUT)));
-        assertThat(game.finishingOrder(), contains(seat(2)));
-        assertThat(game.forbiddenFinishers(), is(List.of()));
-    }
 
     @Test
     void aTwoPlayedWithOtherCardsLeftInTheHandIsNotAFinish() throws Exception {
@@ -333,7 +306,9 @@ class TrickVariantsTest {
     void aForbiddenFinisherLeftOnTheLastRoundPlacesTheLastHolderAboveThem() throws Exception {
         President game = aPresident().leader(0)
                 .withHand("2S").withHand("3C 4C").withHand("5C 6C").build();
-        play(game, 0, "2S");                       // A leads its last card, a 2: forbidden, the lone 2 closes the trick
+        play(game, 0, "2S");                       // A leads its last card, a 2: forbidden, the trick stays open
+        game.pass(seat(1));
+        game.pass(seat(2));                        // nobody holds a 2: the trick ends and B leads
         play(game, 1, "3C");
         game.pass(seat(2));
 

@@ -9,7 +9,6 @@ import org.kevinkib.cardgames.president.domain.event.PresidentEvent;
 import org.kevinkib.cardgames.president.domain.event.TrickEndReason;
 import org.kevinkib.cardgames.president.domain.event.TrickWon;
 import org.kevinkib.cardgames.president.domain.play.PlayDoesNotBeatException;
-import org.kevinkib.cardgames.president.domain.rules.EqualPlay;
 import org.kevinkib.cardgames.president.domain.rules.PresidentOptions;
 
 import java.util.List;
@@ -37,12 +36,9 @@ class QuadAtOnceTest {
         return game.play(seat(seat), cards(codes));
     }
 
-    @ParameterizedTest(name = "equalPlay {0}")
-    @ValueSource(strings = {"on", "off"})
-    void aQuadLedAtOnceClosesTheTrickAndItsPlayerLeadsAgain(String equalPlay) throws Exception {
-        PresidentOptions options = PresidentOptions.defaults()
-                .withEqualPlay(equalPlay.equals("on") ? EqualPlay.ON : EqualPlay.OFF);
-        President game = aPresident().leader(0).options(options)
+    @Test
+    void aQuadLedAtOnceClosesTheTrickAndItsPlayerLeadsAgain() throws Exception {
+        President game = aPresident().leader(0)
                 .withHand("5S 5H 5D 5C 3C").withHand("KC 4C").withHand("QC 6C").build();
 
         List<PresidentEvent> events = play(game, 0, "5S 5H 5D 5C");

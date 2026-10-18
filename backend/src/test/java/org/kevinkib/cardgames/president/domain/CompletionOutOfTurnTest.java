@@ -11,7 +11,6 @@ import org.kevinkib.cardgames.president.domain.round.Action;
 import org.kevinkib.cardgames.president.domain.round.CompletionClosedException;
 import org.kevinkib.cardgames.president.domain.round.NotPlayersTurnException;
 import org.kevinkib.cardgames.president.domain.rules.AfterPass;
-import org.kevinkib.cardgames.president.domain.rules.EqualPlay;
 import org.kevinkib.cardgames.president.domain.rules.PresidentOptions;
 import org.kevinkib.cards.domain.Card;
 
@@ -199,19 +198,6 @@ class CompletionOutOfTurnTest {
         assertThat(game.availableActions(seat(2)), is(empty()));
     }
 
-    @Test
-    void withEqualPlayOffNothingBindsAndNothingCanBeCompleted() throws Exception {
-        PresidentOptions off = PresidentOptions.defaults().withEqualPlay(EqualPlay.OFF);
-        President game = aPresident().leader(0).options(off)
-                .withHand("9S 3C").withHand("9H 4C").withHand("9D 9C 5C").withHand("10H 6C").build();
-        play(game, 0, "9S");
-
-        assertThrows(org.kevinkib.cardgames.president.domain.play.PlayDoesNotBeatException.class,
-                () -> play(game, 1, "9H"));
-        game.pass(seat(1));
-        assertThat(game.completion(seat(2)), is(empty()));
-        assertThrows(NotPlayersTurnException.class, () -> play(game, 3, "10H"));
-    }
 
     @Test
     void aCurrentPlayerWhoHoldsTheMissingCardsMayCompleteInTurnWhateverTheCount() throws Exception {

@@ -11,8 +11,6 @@ import org.kevinkib.cardgames.president.domain.President;
 import org.kevinkib.cardgames.president.domain.RandomDeckSource;
 import org.kevinkib.cardgames.president.domain.round.Action;
 import org.kevinkib.cardgames.president.domain.round.Phase;
-import org.kevinkib.cardgames.president.domain.rules.EqualPlay;
-import org.kevinkib.cardgames.president.domain.rules.ForbiddenFinish;
 import org.kevinkib.cardgames.president.domain.rules.PresidentException;
 import org.kevinkib.cardgames.president.domain.rules.PresidentOptions;
 import org.kevinkib.cards.domain.Card;
@@ -52,11 +50,7 @@ class PresidentBotSelfPlayTest {
         int outOfTurnCompletions;
 
         Match(int seats, long seed, List<PresidentBotLevel> levels) {
-            this(seats, seed, levels, EqualPlay.ON);
-        }
-
-        Match(int seats, long seed, List<PresidentBotLevel> levels, EqualPlay equalPlay) {
-            this(seats, seed, levels, PresidentOptions.defaults().withEqualPlay(equalPlay));
+            this(seats, seed, levels, PresidentOptions.defaults());
         }
 
         Match(int seats, long seed, List<PresidentBotLevel> levels, PresidentOptions options) {
@@ -163,11 +157,11 @@ class PresidentBotSelfPlayTest {
         return levels;
     }
 
-    private int playMatches(int seats, EqualPlay equalPlay) throws PresidentException {
+    private int playMatches(int seats) throws PresidentException {
         int completions = 0;
         for (int index = 0; index < 8; index++) {
             long seed = 1000L * seats + index;
-            Match match = new Match(seats, seed, mixed(seats, index), equalPlay);
+            Match match = new Match(seats, seed, mixed(seats, index));
 
             boolean finished = match.run();
 
@@ -179,30 +173,26 @@ class PresidentBotSelfPlayTest {
         return completions;
     }
 
-    @ParameterizedTest
-    @EnumSource(EqualPlay.class)
-    void threeBotsFinishTheMatch(EqualPlay equalPlay) throws PresidentException {
-        playMatches(3, equalPlay);
+    @Test
+    void threeBotsFinishTheMatch() throws PresidentException {
+        playMatches(3);
     }
 
-    @ParameterizedTest
-    @EnumSource(EqualPlay.class)
-    void fiveBotsFinishTheMatch(EqualPlay equalPlay) throws PresidentException {
-        playMatches(5, equalPlay);
+    @Test
+    void fiveBotsFinishTheMatch() throws PresidentException {
+        playMatches(5);
     }
 
-    @ParameterizedTest
-    @EnumSource(EqualPlay.class)
-    void eightBotsFinishTheMatch(EqualPlay equalPlay) throws PresidentException {
-        playMatches(8, equalPlay);
+    @Test
+    void eightBotsFinishTheMatch() throws PresidentException {
+        playMatches(8);
     }
 
     static Stream<Arguments> variants() {
         PresidentOptions d = PresidentOptions.defaults();
         return Stream.of(
-                Arguments.of("forbiddenFinish off", d.withForbiddenFinish(ForbiddenFinish.OFF)),
                 Arguments.of("mustPlay on", d.withMustPlay(true)),
-                Arguments.of("everything on", d.withMustPlay(true).withEqualPlay(EqualPlay.OFF)));
+                Arguments.of("mustPlay, afterPass out", d.withMustPlay(true).withAfterPass(org.kevinkib.cardgames.president.domain.rules.AfterPass.OUT)));
     }
 
     /** Each trick variant on its own, then together: the bots finish the match and the game refuses nothing. */
@@ -222,12 +212,10 @@ class PresidentBotSelfPlayTest {
     }
 
     @Test
-    void withEqualPlayOnTheBotsTakeCompletionsOutOfTurnAndWithItOffNever() throws PresidentException {
-        int on = playMatches(5, EqualPlay.ON) + playMatches(8, EqualPlay.ON) + playMatches(3, EqualPlay.ON);
-        int off = playMatches(5, EqualPlay.OFF);
+    void theBotsTakeCompletionsOutOfTurn() throws PresidentException {
+        int completions = playMatches(5) + playMatches(8) + playMatches(3);
 
-        assertThat(on, greaterThan(0));
-        assertThat(off, is(0));
+        assertThat(completions, greaterThan(0));
     }
 
     @Test

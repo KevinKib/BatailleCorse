@@ -86,7 +86,7 @@ class PresidentRestAndLifecycleTest {
         LobbyView lobby = (LobbyView) response.getBody();
         assertThat(lobby.minPlayers(), is(3));
         assertThat(lobby.maxPlayers(), is(8));
-        assertThat(lobby.options().get("firstLead"), is("kingOfHearts"));
+        assertThat(lobby.options().containsKey("firstLead"), is(false));
         assertThat(lobby.options().get("length"), is("rounds-5"));
     }
 

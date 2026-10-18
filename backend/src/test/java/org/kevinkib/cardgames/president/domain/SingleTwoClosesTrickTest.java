@@ -6,7 +6,6 @@ import org.kevinkib.cardgames.president.domain.event.PresidentEvent;
 import org.kevinkib.cardgames.president.domain.event.TrickEndReason;
 import org.kevinkib.cardgames.president.domain.event.TrickWon;
 import org.kevinkib.cardgames.president.domain.event.PlayerOut;
-import org.kevinkib.cardgames.president.domain.rules.EqualPlay;
 import org.kevinkib.cardgames.president.domain.rules.PresidentOptions;
 
 import java.util.List;
@@ -55,15 +54,6 @@ class SingleTwoClosesTrickTest {
     }
 
     @Test
-    void theSingleTwoOnAPairOfTwosDoesNotNeedEqualPlay() throws Exception {
-        President game = aPresident().leader(0)
-                .options(PresidentOptions.defaults().withEqualPlay(EqualPlay.OFF))
-                .withHand("2S 2H 3C").withHand("2D 4C").withHand("KC KD 5C").withHand("QC QD 6C").build();
-        game.play(seat(0), cards("2S 2H"));
-        assertThat(closed(game.play(seat(1), cards("2D"))).isPresent(), is(true));
-    }
-
-    @Test
     void aSingleTwoLedClosesTheTrickAtOnce() throws Exception {
         President game = aPresident().leader(0).options(PresidentOptions.defaults())
                 .withHand("2S 3C").withHand("4C 4D").withHand("KC KD 5C").withHand("QC QD 6C").build();
@@ -95,14 +85,40 @@ class SingleTwoClosesTrickTest {
     }
 
     @Test
-    void aSingleTwoAsTheLastCardIsAForbiddenFinishAndStillClosesTheTrick() throws Exception {
+    void aSingleTwoAsTheLastCardIsAForbiddenFinishAndDoesNotCloseTheTrick() throws Exception {
         President game = aPresident().leader(0)
                 .withHand("9S 3C").withHand("9H 4C").withHand("2S").withHand("QC QD 6C").build();
         game.play(seat(0), cards("9S"));
         game.play(seat(1), cards("9H"));
         List<PresidentEvent> events = game.play(seat(2), cards("2S"));
         assertThat(events.stream().anyMatch(e -> e instanceof PlayerOut o && o.forbidden()), is(true));
-        assertThat(closed(events).map(TrickWon::reason), is(Optional.of(TrickEndReason.CUT)));
+        assertThat(closed(events).isPresent(), is(false));
         assertThat(game.currentSeat(), is(seat(3)));
+        assertThat(game.trick().plays().size(), is(3));
+    }
+
+    /** The lone 2 stays the play to beat: only another lone 2 answers it, so the others pass and the trick ends. */
+    @Test
+    void theTrickOfAForbiddenLoneTwoEndsByThePassesAndTheNextSeatWithCardsLeads() throws Exception {
+        President game = aPresident().leader(0)
+                .withHand("9S 3C").withHand("9H 4C").withHand("2S").withHand("QC QD 6C").build();
+        game.play(seat(0), cards("9S"));
+        game.play(seat(1), cards("9H"));
+        game.play(seat(2), cards("2S"));
+        game.pass(seat(3));
+        game.pass(seat(0));
+        List<PresidentEvent> events = game.pass(seat(1));
+        assertThat(closed(events).map(TrickWon::reason), is(Optional.of(TrickEndReason.ALL_PASSED)));
+        assertThat(game.currentSeat(), is(seat(3)));
+    }
+
+    @Test
+    void aForbiddenQuadOfTwosPlayedAtOnceDoesNotCloseTheTrickEither() throws Exception {
+        President game = aPresident().leader(0)
+                .withHand("2S 2H 2D 2C").withHand("4C 4D").withHand("5C 6C").build();
+        List<PresidentEvent> events = game.play(seat(0), cards("2S 2H 2D 2C"));
+        assertThat(events.stream().anyMatch(e -> e instanceof PlayerOut o && o.forbidden()), is(true));
+        assertThat(closed(events).isPresent(), is(false));
+        assertThat(game.currentSeat(), is(seat(1)));
     }
 }

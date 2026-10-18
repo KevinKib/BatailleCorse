@@ -18,8 +18,6 @@ import org.kevinkib.cardgames.president.domain.play.Play;
 import org.kevinkib.cardgames.president.domain.play.PlayEffects;
 import org.kevinkib.cardgames.president.domain.play.PlayParser;
 import org.kevinkib.cardgames.president.domain.rules.AfterPass;
-import org.kevinkib.cardgames.president.domain.rules.EqualPlay;
-import org.kevinkib.cardgames.president.domain.rules.ForbiddenFinish;
 import org.kevinkib.cardgames.president.domain.rules.PresidentException;
 import org.kevinkib.cardgames.president.domain.rules.PresidentOptions;
 import org.kevinkib.cardgames.president.domain.trick.Chain;
@@ -110,11 +108,11 @@ public final class Round {
             throw refusalOutOfTurn(play);
         }
         if (!completion && trick.top() != null) {
-            BeatRule.check(play, trick.top(), order, trick.constraint(), equalPlay());
+            BeatRule.check(play, trick.top(), order, trick.constraint());
         }
 
         Play top = trick.top();
-        boolean equal = equalPlay() && top != null && BeatRule.isEqual(play, top);
+        boolean equal = top != null && BeatRule.isEqual(play, top);
         Chain before = trick.chain();
         hands.set(seat, remaining);
         trick.play(seat, play, equal);
@@ -124,7 +122,7 @@ public final class Round {
         if (remaining.isEmpty()) {
             boolean forbiddenFinish = isForbiddenFinish(play);
             if (forbiddenFinish) {
-                // placed last when the round ends; the trick is not closed on their account (spec 3.1, O3)
+                // placed last when the round ends (spec 3.1, O3)
                 forbidden.add(seat);
                 events.add(new PlayerOut(who, 0, true));
             } else {
@@ -135,14 +133,20 @@ public final class Round {
                 endRound(events);
                 return events;
             }
-            if (!forbiddenFinish && finishing.size() == 1) {
+            if (forbiddenFinish) {
+                // a forbidden finisher never closes the trick, whatever the play (a lone 2, a pair, a quad of 2s):
+                // it stays open on their play and ends by the passes or by the next play that closes it
+                afterAction(events);
+                return events;
+            }
+            if (finishing.size() == 1) {
                 // the owner's rule: the player who takes 1st place closes the trick, the next seat with cards leads
                 completeTrick(events, TrickEndReason.FIRST_OUT);
                 return events;
             }
         }
         Chain chain = trick.chain();
-        boolean quadInSuccession = equalPlay() && chain.plays() >= 2 && chain.cards().size() == Completion.RANK_SIZE;
+        boolean quadInSuccession = chain.plays() >= 2 && chain.cards().size() == Completion.RANK_SIZE;
         Optional<TrickEndReason> cleared = quadInSuccession ? Optional.of(TrickEndReason.QUAD)
                 : PlayEffects.clearReason(play, top, order);
         if (cleared.isPresent()) {
@@ -274,7 +278,7 @@ public final class Round {
         if (phase != Phase.PLAYING || seat == null || seat.id() == null || seat.id() != current) {
             return List.of();
         }
-        return LegalPlays.of(hands.get(current), trick.top(), order, trick.constraint(), equalPlay());
+        return LegalPlays.of(hands.get(current), trick.top(), order, trick.constraint());
     }
 
     /**
@@ -282,7 +286,7 @@ public final class Round {
      * top of the trick holds two plays or more), in turn or out of turn; nothing otherwise.
      */
     public List<Card> completion(PlayerId seat) {
-        if (phase != Phase.PLAYING || !equalPlay() || seat == null || seat.id() == null
+        if (phase != Phase.PLAYING || seat == null || seat.id() == null
                 || seat.id() < 0 || seat.id() >= hands.size()) {
             return List.of();
         }
@@ -295,13 +299,9 @@ public final class Round {
 
     // ----- internals -----
 
-    private boolean equalPlay() {
-        return options.equalPlay() == EqualPlay.ON;
-    }
-
-    /** Going out on a top-rank card is forbidden under {@code lastPlace}: the player is placed last. */
+    /** Going out on a top-rank card is forbidden (a fixed rule): the player is placed last. */
     private boolean isForbiddenFinish(Play play) {
-        return options.forbiddenFinish() == ForbiddenFinish.LAST_PLACE && play.cards().stream()
+        return play.cards().stream()
                 .anyMatch(card -> card.getRank() == order.topRank());
     }
 
@@ -320,9 +320,6 @@ public final class Round {
 
     /** Whether the cards are exactly the ones that complete the four, with the window open. */
     private boolean isCompletion(Play play) {
-        if (!equalPlay()) {
-            return false;
-        }
         Chain chain = trick.chain();
         return chain != null && chain.plays() >= 2 && play.rank() == chain.rank()
                 && Completion.isCompletion(play.cards(), chain.rank(), chain.cards());
@@ -334,9 +331,6 @@ public final class Round {
      * turn.
      */
     private PresidentException refusalOutOfTurn(Play play) {
-        if (!equalPlay()) {
-            return new NotPlayersTurnException();
-        }
         Chain chain = trick.chain();
         FrenchRank windowRank = chain != null && chain.plays() >= 2 ? chain.rank() : closedWindowRank;
         return play.rank() == windowRank ? new CompletionClosedException() : new NotPlayersTurnException();

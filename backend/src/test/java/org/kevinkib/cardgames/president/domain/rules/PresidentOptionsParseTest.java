@@ -26,24 +26,21 @@ class PresidentOptionsParseTest {
 
         assertThat(parsed, is(PresidentOptions.defaults()));
         assertThat(parsed.toGameOptions().values(), is(Map.ofEntries(
-                Map.entry("afterPass", "reenter"), Map.entry("firstLead", "kingOfHearts"), Map.entry("exchange", "two"),
+                Map.entry("afterPass", "reenter"), Map.entry("exchange", "two"),
                 Map.entry("giveBack", "free"), Map.entry("nextLead", "scum"), Map.entry("scoring", "rank"),
-                Map.entry("length", "rounds-5"), Map.entry("equalPlay", "on"),
-                Map.entry("forbiddenFinish", "lastPlace"), Map.entry("mustPlay", "off"))));
+                Map.entry("length", "rounds-5"), Map.entry("mustPlay", "off"))));
     }
 
-    /** One row per value of every option the P3 server declares. */
+    /** One row per value of every option the server declares. */
     @ParameterizedTest(name = "{0} = {1}")
     @CsvSource({
             "afterPass, reenter", "afterPass, out",
-            "firstLead, kingOfHearts", "firstLead, lowestClub", "firstLead, queenOfHearts", "firstLead, random",
             "exchange, two", "exchange, one", "exchange, scaled", "exchange, none",
             "giveBack, free", "giveBack, lowest",
             "nextLead, scum", "nextLead, president",
             "scoring, rank", "scoring, titles", "scoring, zeroSum",
             "length, rounds-5", "length, rounds-3", "length, rounds-10", "length, points-11", "length, points-21",
-            "length, endless", "equalPlay, on", "equalPlay, off",
-            "forbiddenFinish, lastPlace", "forbiddenFinish, off",
+            "length, endless",
             "mustPlay, off", "mustPlay, on",
     })
     void everyValueIsAcceptedAndRoundTrips(String key, String value) {
@@ -65,12 +62,28 @@ class PresidentOptionsParseTest {
     }
 
     @Test
-    void theVariantKeysOfThisPrAreParsedIntoTheRecord() {
-        PresidentOptions parsed = PresidentOptions.parseStrict(GameOptions.of(Map.of(
-                "forbiddenFinish", "off", "mustPlay", "on")));
+    void theMustPlayKeyIsParsedIntoTheRecord() {
+        PresidentOptions parsed = PresidentOptions.parseStrict(with("mustPlay", "on"));
 
-        assertThat(parsed.forbiddenFinish(), is(ForbiddenFinish.OFF));
         assertThat(parsed.mustPlay(), is(true));
+    }
+
+    /** Equal play, the king of hearts lead and the forbidden finish are fixed rules: their former keys are unknown. */
+    @ParameterizedTest
+    @CsvSource({"equalPlay, on", "equalPlay, off", "firstLead, kingOfHearts", "firstLead, random",
+            "forbiddenFinish, lastPlace", "forbiddenFinish, off"})
+    void theKeysOfTheFixedRulesAreRefusedLikeAnyUnknownKey(String key, String value) {
+        InvalidOptionException refused = assertThrows(InvalidOptionException.class,
+                () -> PresidentOptions.parseStrict(with(key, value)));
+
+        assertThat(refused.getMessage(), is("Unknown option " + key));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"equalPlay", "firstLead", "forbiddenFinish"})
+    void theLenientParseIgnoresTheKeysOfTheFixedRules(String key) {
+        assertThat(PresidentOptions.from(with(key, "off")), is(PresidentOptions.defaults()));
+        assertThat(PresidentOptions.defaults().toGameOptions().values().containsKey(key), is(false));
     }
 
     /** The pruned options (jokers, decks, eight stops, putsch, fall) and the variants not shipped yet are unknown keys. */
@@ -83,11 +96,11 @@ class PresidentOptionsParseTest {
 
     @ParameterizedTest
     @CsvSource({
-            "afterPass, maybe", "afterPass, REENTER", "firstLead, 3C", "firstLead, KING_OF_HEARTS",
+            "afterPass, maybe", "afterPass, REENTER",
             "exchange, three", "giveBack, high", "nextLead, nobody", "scoring, points", "length, rounds-4",
             "length, ENDLESS", "length, ''",
-            "twoCuts, single", "quadClears, on", "forbiddenFinish, on",
-            "forbiddenFinish, LAST_PLACE", "mustPlay, yes", "mustPlay, ON", "mustPlay, ''",
+            "twoCuts, single", "quadClears, on",
+            "mustPlay, yes", "mustPlay, ON", "mustPlay, ''",
     })
     void anUnknownValueIsRefusedNotReplacedByTheDefault(String key, String value) {
         assertThrows(InvalidOptionException.class, () -> PresidentOptions.parseStrict(with(key, value)));

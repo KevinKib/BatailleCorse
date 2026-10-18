@@ -5,7 +5,6 @@ import org.kevinkib.cardgames.president.domain.card.RankOrder;
 import org.kevinkib.cardgames.president.domain.exchange.PendingReturn;
 import org.kevinkib.cardgames.president.domain.play.Play;
 import org.kevinkib.cardgames.president.domain.round.Action;
-import org.kevinkib.cardgames.president.domain.rules.ForbiddenFinish;
 import org.kevinkib.cards.domain.Card;
 import org.kevinkib.cards.domain.deck.french.FrenchRank;
 
@@ -119,7 +118,7 @@ public final class HeuristicPresidentBot implements PresidentBotStrategy {
      * the cards that would be its last ones and a forbidden finish (twos).
      */
     private boolean takesCompletion(PresidentBotView view) {
-        if (tuning.keepsDangerousCompletion() && view.options().forbiddenFinish() == ForbiddenFinish.LAST_PLACE
+        if (tuning.keepsDangerousCompletion()
                 && view.completion().size() == view.hand().size()
                 && view.completion().get(0).getRank() == FrenchRank.TWO) {
             return false;
@@ -145,7 +144,7 @@ public final class HeuristicPresidentBot implements PresidentBotStrategy {
         if (sets.isEmpty()) {
             return play(allowed.get(0));
         }
-        if (tuning.plansEndGame() && view.options().forbiddenFinish() == ForbiddenFinish.LAST_PLACE) {
+        if (tuning.plansEndGame()) {
             Play twos = keepLowCardForLast(sets, groups);
             if (twos != null) {
                 return play(twos);
@@ -194,9 +193,6 @@ public final class HeuristicPresidentBot implements PresidentBotStrategy {
 
     /** Going out on a two is refused by the forbidden-finish rule: those plays are never candidates. */
     private static List<Play> withoutForbiddenFinish(PresidentBotView view, List<Play> plays) {
-        if (view.options().forbiddenFinish() != ForbiddenFinish.LAST_PLACE) {
-            return plays;
-        }
         return plays.stream()
                 .filter(p -> !(p.count() == view.hand().size() && p.rank() == FrenchRank.TWO))
                 .toList();

@@ -9,10 +9,7 @@ import org.kevinkib.cardgames.game.OptionType;
 import org.kevinkib.cardgames.president.domain.bot.PresidentBotLevel;
 import org.kevinkib.cardgames.president.domain.rules.AfterPass;
 import org.kevinkib.cardgames.president.domain.rules.ChoiceOption;
-import org.kevinkib.cardgames.president.domain.rules.EqualPlay;
 import org.kevinkib.cardgames.president.domain.rules.ExchangeAmount;
-import org.kevinkib.cardgames.president.domain.rules.FirstLead;
-import org.kevinkib.cardgames.president.domain.rules.ForbiddenFinish;
 import org.kevinkib.cardgames.president.domain.rules.GiveBack;
 import org.kevinkib.cardgames.president.domain.rules.MatchLength;
 import org.kevinkib.cardgames.president.domain.rules.NextLead;
@@ -78,21 +75,17 @@ public class PresidentFactory implements GameFactory {
         return new President(id, nbPlayers, new Random().nextLong(), deckSource, PresidentOptions.from(options));
     }
 
-    /** The round and match keys, equal play and the trick variants, default first; the other variant keys wait for their PRs. */
+    /** The round and match keys and the must-play variant, default first; the other variant keys wait for their PRs. */
     @Override
     public List<OptionDescriptor> optionDescriptors() {
         PresidentOptions defaults = PresidentOptions.defaults();
         return List.of(
                 descriptor(PresidentOptions.AFTER_PASS_KEY, AfterPass.values(), defaults.afterPass()),
-                descriptor(PresidentOptions.FIRST_LEAD_KEY, FirstLead.values(), defaults.firstLead()),
                 descriptor(PresidentOptions.EXCHANGE_KEY, ExchangeAmount.values(), defaults.exchange()),
                 descriptor(PresidentOptions.GIVE_BACK_KEY, GiveBack.values(), defaults.giveBack()),
                 descriptor(PresidentOptions.NEXT_LEAD_KEY, NextLead.values(), defaults.nextLead()),
                 descriptor(PresidentOptions.SCORING_KEY, Scoring.values(), defaults.scoring()),
                 descriptor(PresidentOptions.LENGTH_KEY, MatchLength.values(), defaults.length()),
-                descriptor(PresidentOptions.EQUAL_PLAY_KEY, EqualPlay.values(), defaults.equalPlay()),
-                descriptor(PresidentOptions.FORBIDDEN_FINISH_KEY, ForbiddenFinish.values(),
-                        defaults.forbiddenFinish()),
                 flag(PresidentOptions.MUST_PLAY_KEY, defaults.mustPlay()));
     }
 

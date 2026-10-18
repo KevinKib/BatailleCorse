@@ -11,8 +11,6 @@ import org.kevinkib.cardgames.president.domain.play.Play;
 import org.kevinkib.cardgames.president.domain.round.Action;
 import org.kevinkib.cardgames.president.domain.round.Phase;
 import org.kevinkib.cardgames.president.domain.rules.AfterPass;
-import org.kevinkib.cardgames.president.domain.rules.EqualPlay;
-import org.kevinkib.cardgames.president.domain.rules.ForbiddenFinish;
 import org.kevinkib.cardgames.president.domain.rules.PresidentOptions;
 import org.kevinkib.cards.domain.Card;
 
@@ -96,9 +94,7 @@ class PresidentRandomGamesTest {
     static Stream<Arguments> variantOptions() {
         PresidentOptions d = PresidentOptions.defaults();
         return Stream.of(
-                Arguments.of("forbiddenFinish off", d.withForbiddenFinish(ForbiddenFinish.OFF)),
                 Arguments.of("mustPlay on", d.withMustPlay(true)),
-                Arguments.of("mustPlay, equal play off", d.withMustPlay(true).withEqualPlay(EqualPlay.OFF)),
                 Arguments.of("mustPlay, afterPass out", d.withMustPlay(true).withAfterPass(AfterPass.OUT)));
     }
 

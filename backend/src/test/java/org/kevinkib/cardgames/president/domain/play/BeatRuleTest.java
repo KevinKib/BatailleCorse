@@ -66,75 +66,70 @@ class BeatRuleTest {
     }
 
     /**
-     * The constraint decides what answers the top: BEAT takes a higher play of the same count and, with equal play
-     * on, an equal one; MATCH_OR_PASS takes only the same rank and count (nothing higher; only a lone 2 may come in); equal play off
-     * leaves the base game. Rows: constraint, equalPlay, top, candidate, accepted.
+     * The constraint decides what answers the top: BEAT takes a higher play of the same count and an equal one (equal
+     * play is a fixed rule); MATCH_OR_PASS takes only the same rank and count (nothing higher; only a lone 2 may come
+     * in). Rows: constraint, top, candidate, accepted.
      */
-    @ParameterizedTest(name = "{0} equalPlay={1}: {3} on {2} -> {4}")
+    @ParameterizedTest(name = "{0}: {2} on {1} -> {3}")
     @CsvSource(delimiter = '|', value = {
-            "BEAT          | true  | 9C       | 9D       | true",
-            "BEAT          | true  | 9C 9D    | 9H 9S    | true",
-            "BEAT          | true  | 9C       | 10C      | true",
-            "BEAT          | true  | 9C       | 9D 9H    | false",
-            "BEAT          | true  | 9C       | 8D       | false",
-            "BEAT          | false | 9C       | 9D       | false",
-            "BEAT          | false | 9C       | 10D      | true",
-            "MATCH_OR_PASS | true  | 9C       | 9D       | true",
-            "MATCH_OR_PASS | true  | 9C 9D    | 9H 9S    | true",
-            "MATCH_OR_PASS | true  | 9C       | 10D      | false",
-            "MATCH_OR_PASS | true  | 9C       | 2D       | true",
-            "MATCH_OR_PASS | true  | 9C       | 9D 9H    | false",
-            "MATCH_OR_PASS | true  | 9C 9D    | 10C 10D  | false",
-            "MATCH_OR_PASS | true  | 9C       | 8D       | false",
+            "BEAT          | 9C       | 9D       | true",
+            "BEAT          | 9C 9D    | 9H 9S    | true",
+            "BEAT          | 9C       | 10C      | true",
+            "BEAT          | 9C       | 9D 9H    | false",
+            "BEAT          | 9C       | 8D       | false",
+            "MATCH_OR_PASS | 9C       | 9D       | true",
+            "MATCH_OR_PASS | 9C 9D    | 9H 9S    | true",
+            "MATCH_OR_PASS | 9C       | 10D      | false",
+            "MATCH_OR_PASS | 9C       | 2D       | true",
+            "MATCH_OR_PASS | 9C       | 9D 9H    | false",
+            "MATCH_OR_PASS | 9C 9D    | 10C 10D  | false",
+            "MATCH_OR_PASS | 9C       | 8D       | false",
     })
-    void theConstraintDecidesWhatAnswersTheTop(String constraint, boolean equalPlay, String top, String candidate,
+    void theConstraintDecidesWhatAnswersTheTop(String constraint, String top, String candidate,
                                                boolean accepted) throws Exception {
         Constraint c = Constraint.valueOf(constraint.trim());
         Play candidatePlay = play(candidate);
         Play topPlay = play(top);
         if (accepted) {
-            assertDoesNotThrow(() -> BeatRule.check(candidatePlay, topPlay, RankOrder.standard(), c, equalPlay));
+            assertDoesNotThrow(() -> BeatRule.check(candidatePlay, topPlay, RankOrder.standard(), c));
         } else {
             assertThrows(PlayDoesNotBeatException.class,
-                    () -> BeatRule.check(candidatePlay, topPlay, RankOrder.standard(), c, equalPlay));
+                    () -> BeatRule.check(candidatePlay, topPlay, RankOrder.standard(), c));
         }
     }
 
     /**
      * The lone 2 (a fixed rule, owner decision): one 2 answers any play whatever its count, a play of 2s included,
      * and also the equal-play binding, because it closes the trick. Pairs of 2s are ordinary plays.
-     * Rows: constraint, equalPlay, top, candidate, accepted.
+     * Rows: constraint, top, candidate, accepted.
      */
-    @ParameterizedTest(name = "{0} equalPlay={1}: {3} on {2} -> {4}")
+    @ParameterizedTest(name = "{0}: {2} on {1} -> {3}")
     @CsvSource(delimiter = '|', value = {
-            "BEAT          | true  | 9C          | 2D       | true",
-            "BEAT          | true  | 9C 9D       | 2D       | true",
-            "BEAT          | true  | 9C 9D 9H    | 2D       | true",
-            "BEAT          | true  | 9C 9D 9H 9S | 2D       | true",
-            "BEAT          | false | 9C 9D 9H    | 2D       | true",
-            "BEAT          | true  | 9C          | 2D 2H    | false",
-            "BEAT          | true  | 9C 9D 9H    | 2D 2H    | false",
-            "BEAT          | true  | 9C 9D       | 2D 2H    | true",
-            "BEAT          | true  | 2C          | 2D       | true",
-            "BEAT          | false | 2C          | 2D       | true",
-            "BEAT          | false | 2C 2D       | 2H       | true",
-            "MATCH_OR_PASS | true  | 9C          | 2D       | true",
-            "MATCH_OR_PASS | true  | 9C 9D       | 2D       | true",
-            "MATCH_OR_PASS | true  | 9C 9D       | 2D 2H    | false",
-            "MATCH_OR_PASS | true  | 9C 9D       | 10D 10H  | false",
-            "MATCH_OR_PASS | true  | 2C          | 2D       | true",
+            "BEAT          | 9C          | 2D       | true",
+            "BEAT          | 9C 9D       | 2D       | true",
+            "BEAT          | 9C 9D 9H    | 2D       | true",
+            "BEAT          | 9C 9D 9H 9S | 2D       | true",
+            "BEAT          | 9C          | 2D 2H    | false",
+            "BEAT          | 9C 9D 9H    | 2D 2H    | false",
+            "BEAT          | 9C 9D       | 2D 2H    | true",
+            "BEAT          | 2C          | 2D       | true",
+            "MATCH_OR_PASS | 9C          | 2D       | true",
+            "MATCH_OR_PASS | 9C 9D       | 2D       | true",
+            "MATCH_OR_PASS | 9C 9D       | 2D 2H    | false",
+            "MATCH_OR_PASS | 9C 9D       | 10D 10H  | false",
+            "MATCH_OR_PASS | 2C          | 2D       | true",
     })
-    void aLoneTwoAnswersAnyPlayEvenTheBinding(String constraint, boolean equalPlay, String top, String candidate,
+    void aLoneTwoAnswersAnyPlayEvenTheBinding(String constraint, String top, String candidate,
                                               boolean accepted) throws Exception {
         Constraint c = Constraint.valueOf(constraint.trim());
         Play candidatePlay = play(candidate);
         Play topPlay = play(top);
-        assertThat(BeatRule.answers(candidatePlay, topPlay, RankOrder.standard(), c, equalPlay), is(accepted));
+        assertThat(BeatRule.answers(candidatePlay, topPlay, RankOrder.standard(), c), is(accepted));
         if (accepted) {
-            assertDoesNotThrow(() -> BeatRule.check(candidatePlay, topPlay, RankOrder.standard(), c, equalPlay));
+            assertDoesNotThrow(() -> BeatRule.check(candidatePlay, topPlay, RankOrder.standard(), c));
         } else {
             assertThrows(PlayDoesNotBeatException.class,
-                    () -> BeatRule.check(candidatePlay, topPlay, RankOrder.standard(), c, equalPlay));
+                    () -> BeatRule.check(candidatePlay, topPlay, RankOrder.standard(), c));
         }
     }
 
