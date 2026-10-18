@@ -54,7 +54,8 @@ const title = computed(() => props.player.title ? ui.titles[titleKey(props.playe
     <PresidentHandFan v-if="fan" :count="shownCount" :narrow="narrow" />
     <span v-else class="seat-stats" data-test="seat-cards">{{ plural(ui.table.cards, shownCount) }}</span>
     <span v-if="current || player.out || player.passed || (showReady && player.ready)" class="seat-markers">
-      <span v-if="current" class="marker marker--current" data-test="seat-current">{{ ui.table.current }}</span>
+      <!-- A narrow plate has no room for it: the lit name says it on screen, the marker stays for screen readers. -->
+      <span v-if="current" class="marker marker--current" :class="{ 'sr-only': narrow }" data-test="seat-current">{{ ui.table.current }}</span>
       <span v-if="player.out" class="marker marker--out" :class="{ 'marker--forbidden': player.forbiddenFinish }"
             data-test="seat-out">{{ outText }}</span>
       <span v-else-if="player.passed" class="marker" data-test="seat-passed">{{ ui.table.passed }}</span>
@@ -136,6 +137,10 @@ const title = computed(() => props.player.title ? ui.titles[titleKey(props.playe
   white-space: nowrap;
 }
 .marker .pi { font-size: 0.55rem; margin-right: 3px; }
+.sr-only {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
 .marker--current { color: rgb(var(--accent-active-rgb)); }
 .marker--ready { color: rgb(var(--accent-positive-rgb)); }
 .marker--out { color: var(--gold); }

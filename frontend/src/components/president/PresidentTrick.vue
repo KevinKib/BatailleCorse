@@ -72,21 +72,27 @@ const chipTexts = computed(() => props.chips.flatMap((chip) => {
             <PlayingCard :rank="card.rank" :suit="card.suit" />
           </span>
         </div>
-        <p class="trick-by" data-test="trick-by">{{ by }}</p>
+        <!-- A closed trick: one line in place of who played (who leads says it), clear of the rings on the cards. -->
+        <p v-if="closure" class="trick-closed trick-closed--line" data-test="trick-closed" :data-reason="closure.reason">
+          <span class="trick-closed-reason" data-test="trick-closed-reason">{{ closedReason }}</span>
+          <span class="trick-closed-leader" data-test="trick-closed-leader">{{ closedLeader }}</span>
+        </p>
+        <p v-else class="trick-by" data-test="trick-by">{{ by }}</p>
       </template>
       <p v-else-if="!closure" class="trick-empty" data-test="trick-empty">{{ ui.table.emptyTrick }}</p>
-      <p v-if="closure" class="trick-closed" data-test="trick-closed" :data-reason="closure.reason">
+      <p v-else class="trick-closed trick-closed--line" data-test="trick-closed" :data-reason="closure.reason">
         <span class="trick-closed-reason" data-test="trick-closed-reason">{{ closedReason }}</span>
         <span class="trick-closed-leader" data-test="trick-closed-leader">{{ closedLeader }}</span>
       </p>
     </div>
-    <p v-if="view.count > 0" class="trick-count" data-test="trick-count">
-      <span class="trick-count-icon" aria-hidden="true"><i></i><i></i></span>{{ plural(ui.motion.trickCount, view.count) }}
-    </p>
     <ul class="trick-notes sr-only" data-test="trick-notes" aria-live="polite">
       <li v-for="note in notes ?? []" :key="note" class="trick-note" data-test="trick-note">{{ note }}</li>
     </ul>
-    <ul v-if="chipTexts.length" class="chips" data-test="rule-chips">
+    <!-- One row of chips: how many cards the trick holds first, then the rules in force. -->
+    <ul v-if="view.count > 0 || chipTexts.length" class="chips" data-test="trick-chips">
+      <li v-if="view.count > 0" class="chip trick-count" data-test="trick-count">
+        <span class="trick-count-icon" aria-hidden="true"><i></i><i></i></span>{{ plural(ui.motion.trickCount, view.count) }}
+      </li>
       <li v-for="chip in chipTexts" :key="chip.key" class="chip" data-test="rule-chip">{{ chip.text }}</li>
     </ul>
   </div>
@@ -95,7 +101,7 @@ const chipTexts = computed(() => props.chips.flatMap((chip) => {
 <style scoped>
 .trick { display: flex; flex-direction: column; align-items: center; gap: var(--space-1); min-width: 0; }
 .trick-plate { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; min-height: 40px; }
-.trick-cards { display: flex; justify-content: center; }
+.trick-cards { position: relative; display: flex; justify-content: center; }
 .trick-card { display: block; width: var(--president-pile-card-w, 52px); }
 .trick-card + .trick-card { margin-left: calc(var(--president-pile-card-w, 52px) * -0.45); }
 .trick-card :deep(.playing_card) { display: block; width: 100%; height: auto; aspect-ratio: 167.575 / 243.1375; }
@@ -103,7 +109,7 @@ const chipTexts = computed(() => props.chips.flatMap((chip) => {
 .trick-empty { align-self: center; padding: 10px 0; }
 
 /* A closed trick: the closing play sits back (it is not the play to beat), the badge says why and who leads. */
-.trick-plate--closed .trick-cards { filter: saturate(0.5) brightness(0.7); }
+.trick-plate--closed .trick-card { filter: saturate(0.5) brightness(0.7); }
 .trick-plate--closed .trick-by { opacity: 0.7; }
 .trick-closed {
   margin: 2px 0 0;
@@ -118,6 +124,18 @@ const chipTexts = computed(() => props.chips.flatMap((chip) => {
   border-radius: 10px;
   box-shadow: 0 3px 12px rgba(0, 0, 0, 0.5);
 }
+/* One line: the reason, a dot, who leads. The gap keeps it clear of the ring drawn around the pile. */
+.trick-closed--line {
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px 8px;
+  margin-top: 6px;
+  padding: 3px 12px;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.trick-closed--line .trick-closed-leader::before { content: "·"; margin-right: 8px; font-weight: 800; }
 .trick-closed-reason { font-size: 0.8rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; }
 .trick-closed-leader { font-size: 0.7rem; font-weight: 700; }
 /* The closing flash: a gold glow around the closed play, once. */
@@ -148,18 +166,12 @@ const chipTexts = computed(() => props.chips.flatMap((chip) => {
 
 /* The trick indicator: how many cards the trick holds. */
 .trick-count {
-  margin: 0;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.7rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  color: rgba(255, 255, 255, 0.9);
-  background: rgba(0, 0, 0, 0.45);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 999px;
-  padding: 2px 10px 2px 8px;
+  padding-left: 8px;
 }
 .trick-count-icon { position: relative; display: inline-block; width: 12px; height: 13px; }
 .trick-count-icon i {
@@ -178,7 +190,7 @@ const chipTexts = computed(() => props.chips.flatMap((chip) => {
   position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
   overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
 }
-.chips { max-width: 15rem; list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; }
+.chips { max-width: min(22rem, 100%); list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; }
 .chip {
   font-size: 0.7rem;
   font-weight: 600;

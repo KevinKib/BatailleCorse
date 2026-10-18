@@ -30,7 +30,8 @@ const width = computed(() => layout.value.backs > 0
 </template>
 
 <style scoped>
-.hand-fan { display: inline-flex; flex-direction: column; align-items: center; gap: 2px; max-width: 100%; }
+/* The gap keeps the count clear of the ring drawn around the backs. */
+.hand-fan { display: inline-flex; flex-direction: column; align-items: center; gap: 5px; max-width: 100%; }
 .fan-picture { display: inline-flex; align-items: center; }
 .fan-backs { position: relative; display: block; height: calc(var(--fan-card-w) * 1.451); }
 .fan-back { position: absolute; top: 0; width: var(--fan-card-w); transform-origin: 50% 100%; }

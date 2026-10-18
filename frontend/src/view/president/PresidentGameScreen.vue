@@ -184,7 +184,8 @@ function resolveAnchor(anchor: PresidentAnchor): MotionTarget | null {
       }
       const slot = find(`.seat-slot[data-seat="${anchor.seat}"]`);
       const fan = visibleRect(slot?.querySelector('.fan-backs'));
-      if (fan) return { rect: cardAt(fan, Math.min(fan.width, 24)), cards: [] };
+      // A card the height of the fan, so that the rings stay on the backs and never cover the count under them.
+      if (fan) return { rect: cardAt(fan, Math.min(fan.width, fan.height / CARD_RATIO)), cards: [] };
       const box = visibleRect(slot);
       return box ? { rect: cardAt(box, 24), cards: [] } : null;
     }
