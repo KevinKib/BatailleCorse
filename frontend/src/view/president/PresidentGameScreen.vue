@@ -17,6 +17,7 @@ import EndGameOverlay from '../../components/EndGameOverlay.vue';
 import ForfeitBanner from '../../components/ForfeitBanner.vue';
 import RulesPanel from '../../components/RulesPanel.vue';
 import GameTimer from '../../components/GameTimer.vue';
+import PresidentExchangeRecap from '../../components/president/PresidentExchangeRecap.vue';
 import PresidentExchangePanel from '../../components/president/PresidentExchangePanel.vue';
 import PresidentActionBar from '../../components/president/PresidentActionBar.vue';
 import PresidentHand from '../../components/president/PresidentHand.vue';
@@ -46,8 +47,11 @@ import { eventSpanMs } from '../../model/table/motion';
 import {
   planBubbles, planMovements, speedFactor, type PresidentAnchor, type PresidentMovement,
 } from '../../model/president/motion';
+import { planExchangeFlights } from '../../model/president/exchangeMotion';
+import { exchangeRecap } from '../../model/president/exchangeRecap';
 import { PRESIDENT_TEMPO } from '../../model/president/tempo';
 import type { PresidentLogEntry } from '../../model/president/eventLog';
+import type { PresidentState } from '../../model/president/PresidentState';
 
 // The President table: the opponents around the trick (a ring on a wide screen, a compact grid on a phone), my hand,
 // and what I can do with it. Every rule is the server's (`legalPlays`): the screen only shows and sends. The exchange
@@ -162,7 +166,10 @@ const screenEl = ref<HTMLElement | null>(null);
 const motionLayer = ref<{ play: (m: PresidentMovement[], o?: { marksOnly?: boolean; startInMs?: number; still?: boolean }) => void } | null>(null);
 const bubbles = useSeatBubbles({ gapMs: PRESIDENT_TEMPO.bubbleGapMs });
 const inFlight = useInFlightCounts({ maxLagMs: PRESIDENT_TEMPO.countLagMaxMs });
-onBeforeUnmount(() => { bubbles.cancel(); inFlight.cancel(); });
+// The cards of the exchange still flying into my hand: their place in the hand waits for them.
+const landing = ref<string[]>([]);
+const landingTimers = new Set<ReturnType<typeof setTimeout>>();
+onBeforeUnmount(() => { bubbles.cancel(); inFlight.cancel(); landingTimers.forEach(clearTimeout); });
 const tempoQueue = createTempoQueue(() => Date.now(), PRESIDENT_TEMPO.queue);
 const CARD_RATIO = 243.1375 / 167.575;
 
@@ -228,6 +235,45 @@ watch(() => store.events, (events, previous) => {
   }
   fresh.reverse().forEach(entry => { void playEntry(entry); });
 });
+
+// The exchange (spec §11 decision 7): the cards the exchange moved fly between the hands, from the two successive
+// states (the events carry counts, never cards). The state already has them in their new hand: the seats' counts and
+// my own hand wait for the landing. Same queue, speed and rings as the plays.
+async function playExchange(change: { before: PresidentState; after: PresidentState }) {
+  const factor = speedFactor(speed.value);
+  const isStill = still.value;
+  const moves = planExchangeFlights(change.before, change.after, store.mySeat, factor || 1);
+  if (moves.length === 0) return;
+  await nextTick();
+  const admission = isStill ? { startInMs: 0, motion: false } : tempoQueue.admit(eventSpanMs(moves));
+  if (admission.motion) {
+    const flights = moves.filter(m => m.kind === 'travel');
+    const mine: string[] = [];
+    for (const m of flights) {
+      const landsInMs = admission.startInMs + m.delayMs + m.durationMs;
+      if (m.from.kind === 'seat' && m.from.seat !== store.mySeat) inFlight.add(m.from.seat, 1, landsInMs);
+      if (m.to.kind === 'seat' && m.to.seat !== store.mySeat) inFlight.add(m.to.seat, -1, landsInMs);
+      if (m.to.kind === 'seat' && m.to.seat === store.mySeat && m.card) {
+        const name = m.card.name;
+        mine.push(name);
+        landing.value = [...landing.value, name];
+        const timer = setTimeout(() => {
+          landingTimers.delete(timer);
+          const at = landing.value.indexOf(name);
+          if (at >= 0) landing.value = landing.value.filter((_, i) => i !== at);
+        }, Math.min(landsInMs, PRESIDENT_TEMPO.countLagMaxMs));
+        landingTimers.add(timer);
+      }
+    }
+  }
+  motionLayer.value?.play(moves, { marksOnly: !admission.motion, startInMs: admission.startInMs, still: isStill });
+}
+watch(() => store.stateChange, change => { if (change) void playExchange(change); });
+
+// The summary of the exchange stays over the action bar until it is closed (once per round).
+const closedRecapRound = ref<number | null>(null);
+const recap = computed(() => store.game ? exchangeRecap(store.game, store.mySeat) : []);
+const showRecap = computed(() => recap.value.length > 0 && closedRecapRound.value !== store.game?.round);
 
 // --- The end -------------------------------------------------------------------------------------------------------
 const endScreen = useEndScreen(() => store.screen === 'finished', () => false);
@@ -368,7 +414,7 @@ const rematchButton = computed(() =>
           :show-ready="isRoundOver"
           :bubble="bubbles.bySeat.value[store.mySeat] ?? null"
           :still="still" />
-        <PresidentHand :cards="store.hand" :selected="selectedNames" :received="receivedNames" @toggle="name => store.toggleCard(name)" />
+        <PresidentHand :cards="store.hand" :selected="selectedNames" :received="receivedNames" :landing="landing" @toggle="name => store.toggleCard(name)" />
         <PresidentRoundSummary
           v-if="isRoundOver"
           :players="store.game.players"
@@ -389,8 +435,10 @@ const rematchButton = computed(() =>
           @give="store.giveBack()"
           @suggest="store.suggestGiveBack()"
           @clear="store.clearSelection()" />
+        <PresidentExchangeRecap v-if="showRecap" :lines="recap" :name-of="displayName"
+                                @close="closedRecapRound = store.game.round" />
         <PresidentActionBar
-          v-else
+          v-if="!isRoundOver && !isExchange"
           :phase-text="phaseText"
           :primary-label="ui.actions.play"
           :can-primary="store.canPlay"

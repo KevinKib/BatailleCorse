@@ -291,6 +291,45 @@ describe('PresidentGameScreen', () => {
       expect(wrapper.get('[data-test="exchange-instruction"]').text()).toBe('Your 2 best cards went to P0. Waiting for them to give 2 back.');
       expect(wrapper.find('[data-test="exchange-give"]').exists()).toBe(false);
     });
+
+    it('givenTheDealOfAnExchangeRound_thenTheCardsIReceiveWaitInFlightBeforeShowingInMyHand', async () => {
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+      try {
+        const over = playing({ round: 1, phase: 'ROUND_OVER', legalPlays: [], availableActions: ['READY'] });
+        const { wrapper, store } = await mountRoom(room(over));
+        store.applyEvent({ type: 'state-update', state: exchanging({ version: 2 }) });
+        await flushPromises();
+        expect(wrapper.get('[data-card="HEART_KING"]').classes()).toContain('landing');
+        expect(wrapper.get('[data-card="CLUB_3"]').classes()).not.toContain('landing');
+        vi.advanceTimersByTime(2500);
+        await flushPromises();
+        expect(wrapper.get('[data-card="HEART_KING"]').classes()).not.toContain('landing');
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('givenTheLastGiveBack_thenThePlayBeginsAndTheSummaryTellsWhoGaveWhatToWhom_untilItIsClosed', async () => {
+      const done = exchanging({
+        phase: 'PLAYING', availableActions: ['PLAY'], toGiveBack: 0, exchange: [{ high: 0, low: 2, count: 2, done: true }],
+        received: buildPresidentHand(['KING', 'HEART'], ['ACE', 'CLUB']), given: buildPresidentHand(['3', 'CLUB'], ['9', 'HEART']),
+      });
+      const { wrapper } = await mountRoom(room(done));
+      expect(wrapper.find('[data-test="exchange-panel"]').exists()).toBe(false);
+      expect(wrapper.find('[data-test="action-bar"]').exists()).toBe(true);
+      const lines = wrapper.findAll('[data-test="recap-line"]');
+      expect(lines).toHaveLength(1);
+      expect(lines[0].get('[data-test="recap-given"]').text()).toBe('P2 gave P0:');
+      expect(lines[0].get('[data-test="recap-given-cards"]').findAll('img').map(i => i.attributes('alt'))).toEqual(['King of hearts', 'Ace of clubs']);
+      expect(lines[0].get('[data-test="recap-returned-cards"]').findAll('img').map(i => i.attributes('alt'))).toEqual(['3 of clubs', '9 of hearts']);
+      await wrapper.get('[data-test="recap-close"]').trigger('click');
+      expect(wrapper.find('[data-test="exchange-recap"]').exists()).toBe(false);
+    });
+
+    it('givenNoExchangeThisRound_thenThereIsNoSummary', async () => {
+      const { wrapper } = await mountRoom(room(playing()));
+      expect(wrapper.find('[data-test="exchange-recap"]').exists()).toBe(false);
+    });
   });
 
   const roundOverState = () => playing({

@@ -14,12 +14,19 @@ import { PRESIDENT_TEMPO } from './tempo';
 export function planExchangeFlights(
   before: PresidentState | null, after: PresidentState, mySeat: number, factor = 1,
 ): PresidentMovement[] {
-  if (!before || after.phase !== 'EXCHANGE') return [];
+  // The pairs stay listed all round (the server leaves the exchange as soon as the last one is done), so the phase
+  // says nothing: a new round says "dealt", a pair newly done says "given back".
+  if (!before || after.exchange.length === 0) return [];
   const moves: PresidentMovement[] = [];
-  const dealt = before.phase !== 'EXCHANGE' || before.round !== after.round;
+  const dealt = before.round !== after.round;
   for (const pair of after.exchange) {
     if (dealt) {
       moves.push(...flights(pair.low, pair.high, pair, faces(after, mySeat, pair, 'taken'), mySeat, moves.length));
+      // giveBack=lowest: the returns are made at the deal, right behind the first cards
+      if (pair.done) {
+        const wait = PRESIDENT_TEMPO.opponent.flightMs;
+        moves.push(...flights(pair.high, pair.low, pair, faces(after, mySeat, pair, 'returned'), mySeat, moves.length, wait));
+      }
     } else if (pair.done && !before.exchange.some(p => p.high === pair.high && p.low === pair.low && p.done)) {
       moves.push(...flights(pair.high, pair.low, pair, faces(after, mySeat, pair, 'returned'), mySeat, moves.length));
     }
@@ -35,7 +42,7 @@ function faces(state: PresidentState, mySeat: number, pair: PresidentExchangePai
 }
 
 function flights(
-  from: number, to: number, pair: PresidentExchangePair, seen: Card[], mySeat: number, offset: number,
+  from: number, to: number, pair: PresidentExchangePair, seen: Card[], mySeat: number, offset: number, waitMs = 0,
 ): PresidentMovement[] {
   const byOpponent = from !== mySeat;
   const leg = byOpponent ? PRESIDENT_TEMPO.opponent : PRESIDENT_TEMPO.own;
@@ -43,7 +50,7 @@ function flights(
   const target: PresidentAnchor = { kind: 'seat', seat: to };
   return Array.from({ length: pair.count }, (_, i) => ({
     kind: 'travel' as const, from: source, to: target, card: seen[i] ?? null, flip: false, turnDown: false,
-    actor: from, byOpponent, delayMs: leg.holdBeforeMs + (offset + i) * PRESIDENT_TEMPO.cardStaggerMs,
+    actor: from, byOpponent, delayMs: waitMs + leg.holdBeforeMs + (offset + i) * PRESIDENT_TEMPO.cardStaggerMs,
     durationMs: leg.flightMs, holdAfterMs: leg.holdAfterMs, marks: [source, target],
   }));
 }

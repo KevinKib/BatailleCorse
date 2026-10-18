@@ -57,4 +57,11 @@ describe('PresidentHand', () => {
     const wrapper = mountHand(['SPADE_ACE'], ['SPADE_ACE']);
     expect(wrapper.get('[data-card="SPADE_ACE"]').attributes('aria-label')).toBe('Ace of spades, selected, received');
   });
+  it('givenACardStillFlyingIn_thenItsPlaceIsKeptButItIsHiddenUntilItLands', async () => {
+    const wrapper = mount(PresidentHand, { props: { cards: hand, selected: [], received: [], landing: ['HEART_QUEEN'] } });
+    expect(wrapper.get('[data-card="HEART_QUEEN"]').classes()).toContain('landing');
+    expect(wrapper.get('[data-card="CLUB_3"]').classes()).not.toContain('landing');
+    await wrapper.setProps({ landing: [] });
+    expect(wrapper.get('[data-card="HEART_QUEEN"]').classes()).not.toContain('landing');
+  });
 });

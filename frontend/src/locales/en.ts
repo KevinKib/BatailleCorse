@@ -324,6 +324,16 @@ export const messagesEn: Messages = {
       pair: { one: '{high} and {low}: {n} card, {state}', other: '{high} and {low}: {n} cards, {state}' },
       pending: 'pending',
       done: 'done',
+      recap: {
+        title: 'The exchange',
+        given: '{low} gave {high}:',
+        returned: '{high} gave back:',
+        counts: {
+          one: '{low} gave their best card to {high}, who gave one back.',
+          other: '{low} gave their {n} best cards to {high}, who gave {n} back.',
+        },
+        close: 'Close the exchange summary',
+      },
     },
     roundOver: { ready: 'Next round', waiting: 'Waiting for the others', place: '{n}. {player}' },
     summary: {
