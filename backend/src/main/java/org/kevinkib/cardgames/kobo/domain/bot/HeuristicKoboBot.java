@@ -206,24 +206,14 @@ public final class HeuristicKoboBot implements KoboBotStrategy {
                 return opponent;
             }
         }
-        // otherwise the lowest total, unless the 10 points would reset it to 50 (that would help it)
+        // otherwise the lowest total
         return others.stream()
-                .filter(opponent -> !resets(provisional.get(opponent) + KoboRules.GIFT_POINTS))
                 .min(Comparator.comparingInt(provisional::get))
                 .orElse(others.get(0));
     }
 
     private static int totalAfterGift(int total, PlayerId player, PlayerId receiver) {
         return player.equals(receiver) ? total + KoboRules.GIFT_POINTS : total;
-    }
-
-    private static boolean resets(int total) {
-        for (int threshold : KoboRules.RESET_TOTALS) {
-            if (total == threshold) {
-                return true;
-            }
-        }
-        return false;
     }
 
     // ------------------------------------------------------------------- match

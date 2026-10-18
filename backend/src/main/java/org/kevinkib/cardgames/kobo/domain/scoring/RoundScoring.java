@@ -3,12 +3,10 @@ package org.kevinkib.cardgames.kobo.domain.scoring;
 import org.kevinkib.cardgames.kobo.domain.rules.KoboRules;
 import org.kevinkib.cardgames.game.PlayerId;
 
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
 
-/** Pure scoring of a round: round points, then the 10 given points, then the 75/100 reset. */
+/** Pure scoring of a round: round points, then the 10 given points. */
 public final class RoundScoring {
 
     private RoundScoring() {
@@ -24,7 +22,7 @@ public final class RoundScoring {
 
     /**
      * The round as scored before a winning announcer has chosen who takes the 10 points: the hand values and the
-     * round points, the totals as they stand plus those points, no gift and no reset yet. The final {@link #score}
+     * round points, the totals as they stand plus those points, no gift yet. The final {@link #score}
      * replaces it once the gift is given.
      */
     public static RoundResult provisional(Map<PlayerId, Integer> handValues, PlayerId announcer,
@@ -37,7 +35,7 @@ public final class RoundScoring {
             totals.put(hand.getKey(), totalsBefore.get(hand.getKey()) + points);
         }
         return new RoundResult(Map.copyOf(handValues), roundPoints, Map.copyOf(totalsBefore), totals,
-                announcer, announcerWins(handValues, announcer), null, Set.of());
+                announcer, announcerWins(handValues, announcer), null);
     }
 
     public static RoundResult score(Map<PlayerId, Integer> handValues, PlayerId announcer, PlayerId giftTo,
@@ -65,16 +63,7 @@ public final class RoundScoring {
         if (won) {
             totals.merge(giftTo, KoboRules.GIFT_POINTS, Integer::sum);
         }
-        Set<PlayerId> reset = new HashSet<>();
-        for (Map.Entry<PlayerId, Integer> total : totals.entrySet()) {
-            for (int threshold : KoboRules.RESET_TOTALS) {
-                if (total.getValue() == threshold) {
-                    total.setValue(KoboRules.RESET_TO);
-                    reset.add(total.getKey());
-                }
-            }
-        }
         return new RoundResult(Map.copyOf(handValues), roundPoints, Map.copyOf(totalsBefore), totals,
-                announcer, won, won ? giftTo : null, reset);
+                announcer, won, won ? giftTo : null);
     }
 }

@@ -142,7 +142,7 @@ export const messagesEn: Messages = {
         title: 'Points',
         body: [
           'Ace is worth 1, 2 to 10 their number, Jack 11, Queen 12, a black King 13 and a red King 0.',
-          'A total of exactly 75 or 100 drops to 50. The game ends when a total goes above 100.',
+          'The game ends when a total goes above 100.',
         ],
       },
     ],
@@ -906,8 +906,6 @@ export const messagesEn: Messages = {
         kobo: 'Kobo!',
         gift: '+10',
         giftLabel: '{player} received 10 points',
-        reset: '{from} → {to}',
-        resetLabel: 'Total reset from {from} to {to}',
       },
       ready: 'Ready',
       giveTen: 'Give 10 to {player}',

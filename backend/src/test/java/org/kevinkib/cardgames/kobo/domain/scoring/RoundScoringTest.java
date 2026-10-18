@@ -7,8 +7,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -55,7 +53,6 @@ class RoundScoringTest {
         assertThat(r.roundPoints(), is(of(0, 7, 9)));
         assertThat(r.totalsBefore(), is(of(0, 65, 0)));
         assertThat(r.totalsAfter(), is(of(0, 72, 9)));
-        assertThat(r.reset(), is(empty()));
     }
 
     @Test
@@ -76,11 +73,10 @@ class RoundScoringTest {
     }
 
     @Test
-    void givenTotalExactly75Or100_thenDropsTo50() {
+    void givenTotalExactly75Or100_thenKeptAsIs() {
         RoundResult r = RoundScoring.score(of(5, 5, 5), null, null, of(70, 95, 74));
 
-        assertThat(r.totalsAfter(), is(of(50, 50, 79)));
-        assertThat(r.reset(), org.hamcrest.Matchers.containsInAnyOrder(P0, P1));
+        assertThat(r.totalsAfter(), is(of(75, 100, 79)));
     }
 
     @Test
@@ -91,18 +87,10 @@ class RoundScoringTest {
     }
 
     @Test
-    void givenGiftReachesExactly100_thenResetAfterTheGift() {
+    void givenGiftReachesExactly100_thenTheTotalStaysAt100() {
         RoundResult r = RoundScoring.score(of(1, 5, 5), P0, P1, of(0, 85, 0));
 
-        assertThat(r.totalsAfter(), is(of(0, 50, 5)));
-        assertThat(r.reset(), contains(P1));
-    }
-
-    @Test
-    void givenResetApplies_thenItIsNotLimitedToAnnouncerOrGifted() {
-        RoundResult r = RoundScoring.score(of(1, 5, 5), P0, P1, of(0, 0, 70));
-
-        assertThat(r.totalsAfter(), is(of(0, 15, 50)));
+        assertThat(r.totalsAfter(), is(of(0, 100, 5)));
     }
 
     @Test
@@ -112,10 +100,5 @@ class RoundScoringTest {
         assertThrows(IllegalArgumentException.class,
                 () -> RoundScoring.score(of(1, 5, 5), P0, new PlayerId(9), of(0, 0, 0)));
         assertThrows(IllegalArgumentException.class, () -> RoundScoring.score(of(9, 5, 5), P0, P1, of(0, 0, 0)));
-    }
-
-    @Test
-    void givenNoResetNeeded_thenResetSetIsEmpty() {
-        assertThat(RoundScoring.score(of(1, 1, 1), null, null, of(0, 0, 0)).reset(), empty());
     }
 }

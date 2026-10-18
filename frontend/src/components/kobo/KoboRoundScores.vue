@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { resetFrom, type RoundRow } from '../../model/kobo/roundScores';
+import type { RoundRow } from '../../model/kobo/roundScores';
 import { useI18n } from '../../composables/useI18n';
 import { format } from '../../locales/format';
 
 // The scores of the round that just ended, one row per player: hand value, round points, total before → after,
-// and the markers of the round (who called Kobo, who received the 10 points, whose total was reset). Everything
+// and the markers of the round (who called Kobo, who received the 10 points, who is ready). Everything
 // comes from the server's `lastRound`; names are user input, only ever rendered as text.
 const props = defineProps<{
   rows: RoundRow[];
@@ -13,22 +13,15 @@ const props = defineProps<{
   mySeat: number;
   /** The seats ready for the next round; null when nobody is being waited for (no ticks). */
   readySeats: number[] | null;
-  /** The 50 a reset total falls to. */
-  resetTo?: number;
 }>();
 const ui = useI18n().koboUi;
 const sheet = ui.sheet;
 
-const lines = computed(() => props.rows.map(r => {
-  const from = resetFrom(r, r.gift);
-  return {
-    ...r,
-    name: r.seat === props.mySeat ? ui.you : props.nameOf(r.seat),
-    ready: props.readySeats?.includes(r.seat) ?? false,
-    resetFrom: from,
-  };
-}));
-const resetTo = computed(() => props.resetTo ?? 50);
+const lines = computed(() => props.rows.map(r => ({
+  ...r,
+  name: r.seat === props.mySeat ? ui.you : props.nameOf(r.seat),
+  ready: props.readySeats?.includes(r.seat) ?? false,
+})));
 </script>
 
 <template>
@@ -59,10 +52,6 @@ const resetTo = computed(() => props.resetTo ?? 50);
         <td class="col-num" data-test="score-round">{{ line.roundPoints }}</td>
         <td class="col-total">
           <span data-test="score-total">{{ format(sheet.totalChange, { before: line.totalBefore, after: line.totalAfter }) }}</span>
-          <span v-if="line.resetFrom !== null" class="pill pill--reset" data-test="pill-reset"
-                :aria-label="format(sheet.pills.resetLabel, { from: line.resetFrom, to: resetTo })">
-            {{ format(sheet.pills.reset, { from: line.resetFrom, to: resetTo }) }}
-          </span>
         </td>
       </tr>
     </tbody>
@@ -106,6 +95,5 @@ thead th {
 }
 .pill--kobo { color: var(--gold); border-color: var(--gold); }
 .pill--gift { color: #fff; background: rgba(var(--accent-negative-rgb), 0.45); border-color: rgba(var(--accent-negative-rgb), 0.8); }
-.pill--reset { color: #fff; background: rgba(255, 255, 255, 0.14); }
 .pill--ready { color: #9be3b0; border-color: rgba(155, 227, 176, 0.6); }
 </style>

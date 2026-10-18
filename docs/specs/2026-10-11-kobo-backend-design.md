@@ -74,8 +74,11 @@ cards are revealed and counted.
   points to another player of their choice **[H7]**; the others score the value of their hand.
 - Otherwise the announcer scores their hand plus 20; the others score their hand.
 
-Order of computation, always: (1) round points, (2) the 10 given points, (3) every player whose
-total is exactly 75 or exactly 100 drops to 50. Points accumulate across rounds.
+Order of computation, always: (1) round points, (2) the 10 given points. Points accumulate across rounds.
+
+> **Superseded (2026-10-18):** the original rule "a total of exactly 75 or 100 drops to 50" was removed by the
+> owner; totals are kept as they are, and the game still ends only when a total goes strictly above 100. The other
+> mentions of the 75/100 reset in this document and in the Kobo plans and specs are historical.
 
 ### End of the game
 

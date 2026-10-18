@@ -167,17 +167,24 @@ class KoboRoundTest {
     }
 
     @Test
-    void totalsExactly75Or100DropTo50_andOnly101EndsTheGame() throws Exception {
-        Kobo reset = atTurnEnd().withTotals(0, 42, 100 - 22).build();
-        reset.announceKobo(seat(0));
-        playQuickTurn(reset, 1);
-        playQuickTurn(reset, 2);
-        reset.giveTen(seat(0), seat(1));
+    void totalsExactly75Or100AreKept_100DoesNotEndTheGame_andOnly101Does() throws Exception {
+        Kobo kept = atTurnEnd().withTotals(0, 42, 100 - 22).build();
+        kept.announceKobo(seat(0));
+        playQuickTurn(kept, 1);
+        playQuickTurn(kept, 2);
+        kept.giveTen(seat(0), seat(1));
 
-        // seat 1: 42 + 33 + 10 = 85; seat 2: 78 + 22 = 100 -> 50
-        assertThat(reset.totals().get(seat(1)), is(85));
-        assertThat(reset.totals().get(seat(2)), is(50));
-        assertThat(reset.phase(), is(Phase.ROUND_OVER));
+        // seat 1: 42 + 33 + 10 = 85; seat 2: 78 + 22 = 100, kept, and 100 does not end the game
+        assertThat(kept.totals().get(seat(1)), is(85));
+        assertThat(kept.totals().get(seat(2)), is(100));
+        assertThat(kept.phase(), is(Phase.ROUND_OVER));
+
+        Kobo seventyFive = atTurnEnd().withTotals(0, 0, 75 - 22).build();
+        seventyFive.announceKobo(seat(0));
+        playQuickTurn(seventyFive, 1);
+        playQuickTurn(seventyFive, 2);
+        seventyFive.giveTen(seat(0), seat(1));
+        assertThat(seventyFive.totals().get(seat(2)), is(75));
 
         Kobo over = atTurnEnd().withTotals(0, 69, 0).build();
         over.announceKobo(seat(0));

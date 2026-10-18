@@ -100,7 +100,6 @@ class KoboBotViewParityTest {
                 assertThat(context, round.roundPoints().get(id), is(line.roundPoints()));
                 assertThat(context, round.totalsBefore().get(id), is(line.totalBefore()));
                 assertThat(context, round.totalsAfter().get(id), is(line.totalAfter()));
-                assertThat(context, round.reset().contains(id), is(line.reset()));
             }
         } else {
             assertThat(context, human.lastRound(), is(nullValue()));

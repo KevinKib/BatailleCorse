@@ -406,16 +406,6 @@ class HeuristicKoboBotTest {
     }
 
     @Test
-    void theTenPointsAvoidATotalOfSeventyFiveOrOneHundred() throws Exception {
-        // provisional totals: seat 1 = 55 + 10 = 65 (+10 would be 75), seat 2 = 48 + 22 = 70
-        Kobo kobo = gift(new int[]{90, 55, 48},
-                hand("AH", "2H", "3H", "4H"), hand("AS", "2S", "3S", "4S"), hand("5S", "6S", "4D", "7S"));
-
-        assertThat(decide(KoboBotLevel.MEDIUM, kobo, memory(0, KoboBotLevel.MEDIUM)),
-                is(new KoboBotDecision.GiveTen(seat(2))));
-    }
-
-    @Test
     void theTenPointsGoToTheLowestProvisionalTotalOtherwise() throws Exception {
         Kobo kobo = gift(new int[]{90, 30, 48},
                 hand("AH", "2H", "3H", "4H"), hand("AS", "2S", "3S", "4S"), hand("5S", "6S", "4D", "7S"));
@@ -425,9 +415,9 @@ class HeuristicKoboBotTest {
     }
 
     @Test
-    void whenEveryTargetIsBlockedTheFirstOtherSeatGetsTheTen() throws Exception {
-        // provisional totals: seat 1 = 55 + 10 = 65, seat 2 = 68 + 22 = 90: both would reset to 50
-        Kobo kobo = gift(new int[]{10, 55, 68},
+    void theTenPointsMayLandOnExactlySeventyFiveWhenThatIsTheLowestTotal() throws Exception {
+        // provisional totals: seat 1 = 55 + 10 = 65 (+10 makes 75, which is no longer special), seat 2 = 48 + 22 = 70
+        Kobo kobo = gift(new int[]{90, 55, 48},
                 hand("AH", "2H", "3H", "4H"), hand("AS", "2S", "3S", "4S"), hand("5S", "6S", "4D", "7S"));
 
         assertThat(decide(KoboBotLevel.MEDIUM, kobo, memory(0, KoboBotLevel.MEDIUM)),
