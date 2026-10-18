@@ -343,7 +343,7 @@ export interface PresidentUiMessages {
     forbidden: string;                 // marker of a seat that went out on a forbidden finish
     forbiddenLabel: string;            // its tooltip
   };
-  standings: { title: string; scores: string; close: string };
+  standings: { title: string; scores: string; close: string; rank: string; player: string; points: string }; // the last three: column headers
   notice: { moveImpossible: string; connection: string };
   end: {
     winner: string;                    // '{players}'

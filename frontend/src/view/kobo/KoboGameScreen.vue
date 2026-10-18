@@ -526,8 +526,8 @@ watch(() => [store.game?.round, store.game?.phase, store.game?.currentSeat, live
   height: 100dvh;
   overflow: hidden;
   padding: var(--space-2) var(--space-2) calc(var(--space-2) + env(safe-area-inset-bottom, 0px));
-  /* A neutral room (anthracite, no green): the felt of the table stands out by its hue alone. */
-  background: radial-gradient(ellipse at 50% 40%, #1d201f 0%, #121414 55%, #0a0b0b 100%);
+  /* A neutral room (anthracite, no green): the felt of the table stands out by its hue alone (shared tokens). */
+  background: var(--table-room-bg);
 }
 /* The lobby is a title-style screen: it sits on the shared felt background instead. */
 .kobo-screen--lobby {
@@ -588,11 +588,9 @@ watch(() => [store.game?.round, store.game?.phase, store.game?.currentSeat, live
   margin: 0 auto;
   box-sizing: border-box;
   border-radius: 50% / 42%;
-  background:
-    radial-gradient(ellipse at 50% 46%, transparent 18%, rgba(0, 0, 0, 0.55) 100%),
-    radial-gradient(ellipse at 50% 42%, var(--felt-center) 0%, var(--felt-mid) 52%, var(--felt-edge) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow: inset 0 2px 30px rgba(0, 0, 0, 0.55), 0 10px 40px rgba(0, 0, 0, 0.45);
+  background: var(--table-felt-bg);
+  border: var(--table-felt-border);
+  box-shadow: var(--table-felt-shadow);
   isolation: isolate;
   --kobo-pile-card-w: clamp(48px, 7.5vh, 60px);
   --ring-top: 88px;

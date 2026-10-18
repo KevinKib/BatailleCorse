@@ -24,7 +24,7 @@ import { autoplay, connectMyself } from '../support/presidentAutoplay';
 
           // The Scores button opens the standings at any time (all at zero before the first round).
           cy.get('[data-test="scores"]').click();
-          cy.get('[data-test="standing-row"]').should('have.length', 3);
+          cy.get('[data-test^="final-row-"]').should('have.length', 3);
           cy.get('[data-test="scores-close"]').click();
 
           [1, 2].forEach((round) => {
@@ -45,7 +45,7 @@ import { autoplay, connectMyself } from '../support/presidentAutoplay';
           cy.get('[data-cy="end-overlay"]', { timeout: 60000 }).should('be.visible');
           cy.get('[data-test="end-winner"]').invoke('text').should('match', /^Winners?: /);
           cy.get('[data-test="end-sub"]').invoke('text').should('match', /^\d+ points$/);
-          cy.get('[data-test="end-extra"] [data-test="standing-row"]').should('have.length', 3);
+          cy.get('[data-test="end-extra"] [data-test^="final-row-"]').should('have.length', 3);
           noHorizontalScroll();
 
           cy.get('[data-cy="play-again"]').click();

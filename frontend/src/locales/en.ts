@@ -336,7 +336,7 @@ export const messagesEn: Messages = {
       forbidden: 'On a 2',
       forbiddenLabel: 'Went out on a 2: placed last',
     },
-    standings: { title: 'Standings', scores: 'Scores', close: 'Close' },
+    standings: { title: 'Standings', scores: 'Scores', close: 'Close', rank: 'Rank', player: 'Player', points: 'Points' },
     notice: {
       moveImpossible: 'That play was refused. Check your cards.',
       connection: 'Could not reach the server. Try again.',

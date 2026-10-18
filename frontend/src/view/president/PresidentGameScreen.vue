@@ -321,9 +321,8 @@ const rematchButton = computed(() =>
   height: 100dvh;
   overflow: hidden;
   padding: var(--space-2) var(--space-2) calc(var(--space-2) + env(safe-area-inset-bottom, 0px));
-  background:
-    radial-gradient(ellipse at 50% 42%, transparent 15%, rgba(0, 0, 0, 0.62) 100%),
-    radial-gradient(ellipse at 50% 38%, var(--felt-center) 0%, var(--felt-mid) 48%, var(--felt-edge) 100%);
+  /* The room and the felt are the shared ones (Kobo's): one look for every card table. */
+  background: var(--table-room-bg);
 }
 .president-screen--lobby { display: block; padding: 0; background: none; }
 .connecting {
@@ -377,11 +376,9 @@ const rematchButton = computed(() =>
   margin: 0 auto;
   box-sizing: border-box;
   border-radius: 50% / 42%;
-  background:
-    radial-gradient(ellipse at 50% 46%, transparent 18%, rgba(0, 0, 0, 0.55) 100%),
-    radial-gradient(ellipse at 50% 42%, var(--felt-center) 0%, var(--felt-mid) 52%, var(--felt-edge) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow: inset 0 2px 30px rgba(0, 0, 0, 0.55), 0 10px 40px rgba(0, 0, 0, 0.45);
+  background: var(--table-felt-bg);
+  border: var(--table-felt-border);
+  box-shadow: var(--table-felt-shadow);
   isolation: isolate;
   --president-pile-card-w: clamp(48px, 7.5vh, 62px);
 }
@@ -415,9 +412,7 @@ const rematchButton = computed(() =>
   margin: 0 auto;
   padding: var(--space-2) var(--space-2) 0;
   box-sizing: border-box;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.30) 0%, rgba(0, 0, 0, 0.04) 100%);
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 14px 14px 0 0;
+  /* No panel around my zone (as Kobo's): the hand, the plate and the bar stand on the room. */
 }
 .my-zone :deep(.seat-label) { font-size: 0.8rem; padding: 4px 14px; }
 
