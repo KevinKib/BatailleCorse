@@ -53,10 +53,13 @@ class MorrisBotCoordinatorTest {
     private final List<Boolean> offersAnswered = new ArrayList<>();
     private MorrisDecision scripted;
 
+    /** When set, runs instead of the script (a test that acts while the bot thinks). */
+    private MorrisBot during;
+
     /** The strategy the coordinator is given for every level: plays what the test scripts. */
     private final MorrisBot scriptedBot = (position, seat, offerPending) -> {
         offersAnswered.add(offerPending);
-        return scripted;
+        return during != null ? during.decide(position, seat, offerPending) : scripted;
     };
 
     @BeforeEach
@@ -353,5 +356,99 @@ class MorrisBotCoordinatorTest {
 
         assertThat(coordinator.trackedGameCount(), is(0));
         assertThat(scheduler.all(), is(empty()));
+    }
+
+    // ---- Six Men's Morris: removals, and thinking outside the monitor ---------------------------------
+
+    /** Six, the bot is white: it placed 0, the human 8, the bot 1, the human 10; the bot is about to close 0-1-2. */
+    private ThreeMenMorris sixGameBotAboutToMill() throws Exception {
+        ThreeMenMorris game = register(new ThreeMenMorris(GameId.generate(), MorrisRules.SIX_MEN, BOT));
+        start(game);
+        scripted = new MorrisDecision.Place(0);
+        scheduler.runNext();
+        actions.place(game.getId(), HUMAN, 8);
+        scripted = new MorrisDecision.Place(1);
+        scheduler.runNext();
+        actions.place(game.getId(), HUMAN, 10);
+        return game;
+    }
+
+    @Test
+    void aBotThatClosesAMillIsScheduledAgainAndRemovesAPiece() throws Exception {
+        ThreeMenMorris game = sixGameBotAboutToMill();
+        scripted = new MorrisDecision.Place(2);
+        scheduler.runNext();
+        assertThat(game.pendingRemoval(), is(BOT));
+        assertThat(game.currentSeat(), is(BOT));
+        assertThat(scheduler.pending().size(), is(1)); // the bot owes a removal: it is scheduled again
+        scripted = new MorrisDecision.Remove(10);
+
+        scheduler.runNext();
+
+        assertThat(game.owner(10), is(nullValue()));
+        assertThat(game.pendingRemoval(), is(nullValue()));
+        assertThat(game.currentSeat(), is(HUMAN));
+    }
+
+    @Test
+    void aFailingStrategyFallsBackToTheFirstLegalRemoval() throws Exception {
+        ThreeMenMorris game = sixGameBotAboutToMill();
+        scripted = new MorrisDecision.Place(2);
+        scheduler.runNext();
+        scripted = new MorrisDecision.Remove(99); // not a point: the game refuses it
+
+        scheduler.runNext();
+
+        assertThat(game.owner(8), is(nullValue())); // the first legal removal
+        assertThat(game.owner(10), is(HUMAN));
+        assertThat(game.currentSeat(), is(HUMAN));
+    }
+
+    @Test
+    void aRemovalOfAProtectedPieceFallsBackToALegalOne() throws Exception {
+        ThreeMenMorris game = sixGameBotAboutToMill();
+        scripted = new MorrisDecision.Place(2);
+        scheduler.runNext();
+        scripted = new MorrisDecision.Remove(2); // its own piece: refused
+
+        scheduler.runNext();
+
+        assertThat(game.owner(8), is(nullValue()));
+        assertThat(game.pendingRemoval(), is(nullValue()));
+    }
+
+    @Test
+    void theBotThinksWithoutHoldingTheMonitorOfTheGame() throws Exception {
+        ThreeMenMorris game = movementGame();
+        List<Boolean> held = new ArrayList<>();
+        during = (position, seat, offerPending) -> {
+            held.add(Thread.holdsLock(game));
+            return new MorrisDecision.Step(1, 4);
+        };
+        actions.move(game.getId(), HUMAN, 0, 3);
+
+        scheduler.runNext();
+
+        assertThat(held, is(List.of(false)));
+        assertThat(game.owner(4), is(BOT));
+    }
+
+    @Test
+    void aHumanActionDuringTheThinkingDropsTheStaleDecision() throws Exception {
+        ThreeMenMorris game = movementGame();
+        during = (position, seat, offerPending) -> {
+            try {
+                game.offerDraw(HUMAN); // the human acts while the bot thinks: the version moves
+            } catch (Exception e) {
+                throw new AssertionError(e);
+            }
+            return new MorrisDecision.Step(1, 4);
+        };
+        actions.move(game.getId(), HUMAN, 0, 3);
+
+        scheduler.runNext();
+
+        assertThat(game.owner(4), is(nullValue())); // the decision was about the previous state
+        assertThat(game.currentSeat(), is(BOT));
     }
 }
