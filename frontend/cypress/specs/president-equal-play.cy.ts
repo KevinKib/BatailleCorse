@@ -70,8 +70,8 @@ const chipTexts = () => cy.get('[data-test="rule-chip"]').then(($c) => [...$c].m
             expect(texts).to.include('9 or nothing');
             expect(texts).to.include('2 plays of 9 in a row');
           });
-          // A wrong rank is refused with the equal-play wording, never "higher than".
-          cy.get('[data-card="HEART_2"]').click({ force: true });
+          // A wrong rank (not a lone 2, which always closes the trick) is refused with the equal-play wording.
+          cy.get('[data-card="HEART_3"]').click({ force: true });
           cy.get('[data-test="play-hint"]').should('have.text', 'Play a 9 or nothing.');
           noHorizontalScroll();
           cy.get('[data-test="clear"]').click();
