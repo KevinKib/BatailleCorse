@@ -19,6 +19,16 @@ export function noHorizontalScroll() {
   });
 }
 
+/**
+ * The host switches the forbidden finish off in the lobby. The scripted rounds of the older specs end on a pair of 2s,
+ * which the Classic rules place last; those specs are about something else, so they keep the open finish.
+ */
+export function openFinish() {
+  cy.get('[data-test="customise"]').click();
+  cy.get('[data-test="option-forbiddenFinish-off"]').check({ force: true });
+  cy.get('[data-test="option-forbiddenFinish-off"]').should('be.checked');
+}
+
 /** Joins `names` as scripted guests (seats 1..) and waits for the lobby to count them. */
 export function joinGuests(id: string, names: string[]) {
   const guests: Guest[] = [];

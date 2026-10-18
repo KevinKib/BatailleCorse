@@ -9,7 +9,7 @@ const PRESIDENT_DTO_FIELDS = [
   'exchange', 'lastRound', 'standings', 'outcome', 'hand', 'received', 'given', 'toGiveBack', 'legalPlays',
   'availableActions',
 ];
-const PLAYER_DTO_FIELDS = ['seat', 'name', 'handSize', 'title', 'place', 'out', 'passed', 'points', 'ready'];
+const PLAYER_DTO_FIELDS = ['seat', 'name', 'handSize', 'title', 'place', 'out', 'passed', 'points', 'ready', 'forbiddenFinish'];
 const TRICK_DTO_FIELDS = ['leader', 'plays', 'top', 'lastPlayer', 'passed', 'constraint', 'requiredRank', 'requiredCount', 'chain'];
 
 describe('President fixtures', () => {
@@ -38,7 +38,12 @@ describe('President fixtures', () => {
 
   it('the default options are the full set of the server descriptors, defaults filled', () => {
     expect(Object.keys(CLASSIC_PRESIDENT_OPTIONS).sort())
-      .toEqual(['afterPass', 'equalPlay', 'exchange', 'firstLead', 'giveBack', 'length', 'nextLead', 'scoring']);
+      .toEqual(['afterPass', 'equalPlay', 'exchange', 'firstLead', 'forbiddenFinish', 'giveBack', 'length', 'mustPlay',
+        'nextLead', 'scoring']);
+    // the Classic preset is the plan's defaults
+    expect(CLASSIC_PRESIDENT_OPTIONS).toMatchObject({
+      forbiddenFinish: 'lastPlace', mustPlay: 'off',
+    });
     expect(buildPresidentState().options).toEqual(CLASSIC_PRESIDENT_OPTIONS);
   });
 });

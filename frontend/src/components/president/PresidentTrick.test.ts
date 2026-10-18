@@ -43,6 +43,17 @@ describe('PresidentTrick', () => {
     expect(chips).toEqual(['To beat: 2 × Jack', 'After a pass: play again']);
   });
 
+  it('givenNoNote_thenNoNoteLineIsShown', () => {
+    expect(mountTrick().find('[data-test="trick-note"]').exists()).toBe(false);
+  });
+
+  it('givenNotes_thenEachIsAnAnnouncedLineUnderThePile', () => {
+    const wrapper = mountTrick(buildPresidentTrick(), { notes: ['A 2 cut the trick.', 'Seat 1 leads.'] });
+    const notes = wrapper.findAll('[data-test="trick-note"]');
+    expect(notes.map(n => n.text())).toEqual(['A 2 cut the trick.', 'Seat 1 leads.']);
+    expect(wrapper.get('[data-test="trick-notes"]').attributes('aria-live')).toBe('polite');
+  });
+
   it('givenAnUnknownChipKey_thenNothingIsShownForIt', () => {
     const wrapper = mountTrick(buildPresidentTrick(), { chips: [{ key: 'nope' }] });
     expect(wrapper.findAll('[data-test="rule-chip"]')).toHaveLength(0);

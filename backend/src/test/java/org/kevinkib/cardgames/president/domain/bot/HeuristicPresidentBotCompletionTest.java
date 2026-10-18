@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.president.domain.President;
 import org.kevinkib.cardgames.president.domain.round.Action;
-import org.kevinkib.cardgames.president.domain.rules.ForbiddenFinish;
 import org.kevinkib.cardgames.president.domain.rules.PresidentOptions;
 
 import java.util.List;
@@ -149,37 +148,5 @@ class HeuristicPresidentBotCompletionTest {
         assertThat(decide(PresidentBotLevel.HARD, ALWAYS_HIGH, view), instanceOf(PresidentBotDecision.Pass.class));
     }
 
-    private static PresidentOptions withForbiddenFinish() {
-        PresidentOptions d = PresidentOptions.defaults();
-        return new PresidentOptions(d.afterPass(), d.firstLead(), d.exchange(), d.giveBack(), d.nextLead(),
-                d.scoring(), d.length(), d.equalPlay(), d.twoCuts(), false, ForbiddenFinish.LAST_PLACE, false,
-                d.revolution(), d.ranking(), d.runs(), false);
-    }
 
-    @Test
-    void theHardLevelKeepsTwosThatWouldBeItsForbiddenFinishAndOtherLevelsTakeThem() throws Exception {
-        President game = aPresident().leader(0).options(withForbiddenFinish())
-                .withHand("2S 3C").withHand("2H 4C").withHand("2D 2C").withHand("6C 7C").build();
-        play(game, 0, "2S");
-        play(game, 1, "2H");
-        game.pass(seat(2));
-        PresidentBotView view = PresidentBotView.forSeat(game, seat(2));
-
-        assertThat(view.actions(), is(List.of(Action.COMPLETE)));
-        assertThat(decide(PresidentBotLevel.HARD, ALWAYS_HIGH, view), instanceOf(PresidentBotDecision.Keep.class));
-        assertThat(decide(PresidentBotLevel.MEDIUM, ALWAYS_HIGH, view),
-                instanceOf(PresidentBotDecision.Complete.class));
-    }
-
-    @Test
-    void theHardLevelStillTakesTwosThatLeaveCardsInItsHand() throws Exception {
-        President game = aPresident().leader(0).options(withForbiddenFinish())
-                .withHand("2S 3C").withHand("2H 4C").withHand("2D 2C 5C").withHand("6C 7C").build();
-        play(game, 0, "2S");
-        play(game, 1, "2H");
-        game.pass(seat(2));
-
-        assertThat(decide(PresidentBotLevel.HARD, ALWAYS_HIGH, PresidentBotView.forSeat(game, seat(2))),
-                instanceOf(PresidentBotDecision.Complete.class));
-    }
 }

@@ -181,9 +181,18 @@ export const messagesEn: Messages = {
       },
       {
         kind: 'text',
+        title: 'The 2, the four and compulsory play',
+        body: [
+          'A 2 played alone closes the trick as soon as it is played, from the first 2: the player of the 2 leads next. It can be played on any play, including a "9 or nothing" run. Four of a kind played at once closes the trick too.',
+          'The host can decide that a player who can play may not pass.',
+        ],
+      },
+      {
+        kind: 'text',
         title: 'Going out and titles',
         body: [
           'Whoever plays their last card is out of the round. The last player holding cards is the Scum.',
+          'Going out on a 2 is forbidden by default: that player is placed last, below the others, and the trick is not closed by it.',
           'Titles: President, Vice-President, Neutral, Vice-Scum, Scum (with three players: President, Neutral, Scum).',
         ],
       },
@@ -238,6 +247,8 @@ export const messagesEn: Messages = {
       current: 'Playing',
       passed: 'Passed',
       out: 'Out, place {n}',
+      outForbidden: 'Out on a 2',
+      outForbiddenPlace: 'Out on a 2, place {n}',
       ready: 'Ready',
       emptyTrick: 'Nothing played yet',
       playedBy: '{player} played',
@@ -258,6 +269,15 @@ export const messagesEn: Messages = {
       'firstLead.random': 'Random first lead',
       'afterPass.reenter': 'After a pass: play again',
       'afterPass.out': 'After a pass: out of the trick',
+      'forbiddenFinish.lastPlace': 'Out on a 2: last place',
+      'mustPlay.on': 'Compulsory play',
+    },
+    trickEnd: {
+      ALL_PASSED: '{player} won the trick: everyone else passed.',
+      FIRST_OUT: '{player} went out and the trick is closed.',
+      CUT: '{player} closed the trick with a 2.',
+      QUAD: '{player} closed the trick with four of a kind.',
+      forbidden: '{player} went out on a 2 and will finish last.',
     },
     actions: { play: 'Play', complete: 'Complete the four', pass: 'Pass', clear: 'Clear' },
     hint: {
@@ -318,6 +338,8 @@ export const messagesEn: Messages = {
       down: 'Down from {title}',
       same: 'Same title',
       ready: 'Ready',
+      forbidden: 'On a 2',
+      forbiddenLabel: 'Went out on a 2: placed last',
     },
     standings: { title: 'Standings', scores: 'Scores', close: 'Close' },
     notice: {
@@ -1050,6 +1072,8 @@ export const messagesEn: Messages = {
       level: { label: 'Level', easy: 'Easy', medium: 'Medium', hard: 'Hard' },
       afterPass: { label: 'After a pass', reenter: 'Play again', out: 'Out of the trick' },
       equalPlay: { label: 'Equal play', on: 'Allowed', off: 'Not allowed' },
+      forbiddenFinish: { label: 'Finishing on a 2', lastPlace: 'Last place', off: 'Allowed' },
+      mustPlay: { label: 'Compulsory play', off: 'No, you may pass', on: 'Yes, no pass if you can play' },
       firstLead: {
         label: 'First lead', kingOfHearts: 'King of hearts', lowestClub: 'Lowest club',
         queenOfHearts: 'Queen of hearts', random: 'Random',

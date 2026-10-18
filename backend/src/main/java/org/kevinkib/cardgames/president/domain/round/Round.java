@@ -15,13 +15,16 @@ import org.kevinkib.cardgames.president.domain.play.Completion;
 import org.kevinkib.cardgames.president.domain.play.IllegalPlayException;
 import org.kevinkib.cardgames.president.domain.play.LegalPlays;
 import org.kevinkib.cardgames.president.domain.play.Play;
+import org.kevinkib.cardgames.president.domain.play.PlayEffects;
 import org.kevinkib.cardgames.president.domain.play.PlayParser;
 import org.kevinkib.cardgames.president.domain.rules.AfterPass;
 import org.kevinkib.cardgames.president.domain.rules.EqualPlay;
+import org.kevinkib.cardgames.president.domain.rules.ForbiddenFinish;
 import org.kevinkib.cardgames.president.domain.rules.PresidentException;
 import org.kevinkib.cardgames.president.domain.rules.PresidentOptions;
 import org.kevinkib.cardgames.president.domain.trick.Chain;
 import org.kevinkib.cardgames.president.domain.trick.MustLeadException;
+import org.kevinkib.cardgames.president.domain.trick.MustPlayException;
 import org.kevinkib.cardgames.president.domain.trick.Trick;
 import org.kevinkib.cardgames.president.domain.trick.TrickView;
 import org.kevinkib.cards.domain.Card;
@@ -29,6 +32,7 @@ import org.kevinkib.cards.domain.deck.french.FrenchRank;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * The rules of one round, seats being indexes from 0 in play order. Every command validates first and only
@@ -40,7 +44,10 @@ public final class Round {
     private final PresidentOptions options;
     private final RankOrder order = RankOrder.standard();
     private final List<List<Card>> hands = new ArrayList<>();
+    /** The seats out with a normal finish, in the order they went out: places 1, 2, 3 ... */
     private final List<Integer> finishing = new ArrayList<>();
+    /** The seats out with a forbidden finish, in the order they went out; they fill the bottom places. */
+    private final List<Integer> forbidden = new ArrayList<>();
     private final List<Card> discard = new ArrayList<>();
     private final PlayerId dealer;
     private Trick trick;
@@ -106,7 +113,8 @@ public final class Round {
             BeatRule.check(play, trick.top(), order, trick.constraint(), equalPlay());
         }
 
-        boolean equal = equalPlay() && trick.top() != null && BeatRule.isEqual(play, trick.top());
+        Play top = trick.top();
+        boolean equal = equalPlay() && top != null && BeatRule.isEqual(play, top);
         Chain before = trick.chain();
         hands.set(seat, remaining);
         trick.play(seat, play, equal);
@@ -114,25 +122,33 @@ public final class Round {
         List<PresidentEvent> events = new ArrayList<>();
         events.add(new Played(who, play.cards(), !inTurn));
         if (remaining.isEmpty()) {
-            finishing.add(seat);
-            events.add(new PlayerOut(who, finishing.size()));
+            boolean forbiddenFinish = isForbiddenFinish(play);
+            if (forbiddenFinish) {
+                // placed last when the round ends; the trick is not closed on their account (spec 3.1, O3)
+                forbidden.add(seat);
+                events.add(new PlayerOut(who, 0, true));
+            } else {
+                finishing.add(seat);
+                events.add(new PlayerOut(who, finishing.size()));
+            }
             if (seatsWithCards() == 1) {
                 endRound(events);
                 return events;
             }
-            if (finishing.size() == 1) {
-                // the owner's rule: the first player out closes the trick, the next seat with cards leads
+            if (!forbiddenFinish && finishing.size() == 1) {
+                // the owner's rule: the player who takes 1st place closes the trick, the next seat with cards leads
                 completeTrick(events, TrickEndReason.FIRST_OUT);
                 return events;
             }
         }
         Chain chain = trick.chain();
-        boolean quadAtOnce = play.cards().size() == Completion.RANK_SIZE;
         boolean quadInSuccession = equalPlay() && chain.plays() >= 2 && chain.cards().size() == Completion.RANK_SIZE;
-        if (quadAtOnce || quadInSuccession) {
-            // four cards of a rank, in one play or in succession, close the trick; whoever played the last ones
-            // leads. V2's quadClears option will gate the first case; V1 has no way to turn it off.
-            completeTrick(events, TrickEndReason.QUAD);
+        Optional<TrickEndReason> cleared = quadInSuccession ? Optional.of(TrickEndReason.QUAD)
+                : PlayEffects.clearReason(play, top, order);
+        if (cleared.isPresent()) {
+            // the four in succession, a quad played at once or a lone 2 close the trick; whoever played
+            // the last cards leads (the next seat with cards when they went out)
+            completeTrick(events, cleared.get());
             return events;
         }
         afterAction(events);
@@ -143,6 +159,10 @@ public final class Round {
         checkTurn(who);
         if (trick.isEmpty()) {
             throw new MustLeadException();
+        }
+        if (options.mustPlay() && !legalPlays(who).isEmpty()) {
+            // compulsory play counts the plays of legalPlays (cuts and equal plays included); a completion is not one
+            throw new MustPlayException();
         }
         int seat = current;
         trick.pass(seat, options.afterPass() == AfterPass.OUT);
@@ -228,7 +248,16 @@ public final class Round {
     }
 
     public List<PlayerId> finishingOrder() {
-        return finishing.stream().map(PlayerId::new).toList();
+        List<PlayerId> order = new ArrayList<>(finishing.stream().map(PlayerId::new).toList());
+        if (phase == Phase.ROUND_OVER) {
+            forbidden.forEach(seat -> order.add(new PlayerId(seat)));
+        }
+        return order;
+    }
+
+    /** The seats that went out on a forbidden finish, the earliest first; they take the last places. */
+    public List<PlayerId> forbiddenFinishers() {
+        return forbidden.stream().map(PlayerId::new).toList();
     }
 
     public TrickView trick() {
@@ -268,6 +297,12 @@ public final class Round {
 
     private boolean equalPlay() {
         return options.equalPlay() == EqualPlay.ON;
+    }
+
+    /** Going out on a top-rank card is forbidden under {@code lastPlace}: the player is placed last. */
+    private boolean isForbiddenFinish(Play play) {
+        return options.forbiddenFinish() == ForbiddenFinish.LAST_PLACE && play.cards().stream()
+                .anyMatch(card -> card.getRank() == order.topRank());
     }
 
     private void requirePlaying() throws WrongPhaseException {

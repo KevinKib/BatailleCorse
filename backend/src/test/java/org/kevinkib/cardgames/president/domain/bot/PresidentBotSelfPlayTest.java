@@ -2,7 +2,9 @@ package org.kevinkib.cardgames.president.domain.bot;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.president.domain.President;
@@ -10,6 +12,7 @@ import org.kevinkib.cardgames.president.domain.RandomDeckSource;
 import org.kevinkib.cardgames.president.domain.round.Action;
 import org.kevinkib.cardgames.president.domain.round.Phase;
 import org.kevinkib.cardgames.president.domain.rules.EqualPlay;
+import org.kevinkib.cardgames.president.domain.rules.ForbiddenFinish;
 import org.kevinkib.cardgames.president.domain.rules.PresidentException;
 import org.kevinkib.cardgames.president.domain.rules.PresidentOptions;
 import org.kevinkib.cards.domain.Card;
@@ -21,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
@@ -52,8 +56,11 @@ class PresidentBotSelfPlayTest {
         }
 
         Match(int seats, long seed, List<PresidentBotLevel> levels, EqualPlay equalPlay) {
-            game = new President(GameId.generate(), seats, seed, new RandomDeckSource(),
-                    PresidentOptions.defaults().withEqualPlay(equalPlay));
+            this(seats, seed, levels, PresidentOptions.defaults().withEqualPlay(equalPlay));
+        }
+
+        Match(int seats, long seed, List<PresidentBotLevel> levels, PresidentOptions options) {
+            game = new President(GameId.generate(), seats, seed, new RandomDeckSource(), options);
             for (int seat = 0; seat < seats; seat++) {
                 bots.add(new HeuristicPresidentBot(levels.get(seat).tuning(), new Random(seed * 31 + seat)));
                 memories.add(new PresidentBotMemory(new PlayerId(seat)));
@@ -188,6 +195,30 @@ class PresidentBotSelfPlayTest {
     @EnumSource(EqualPlay.class)
     void eightBotsFinishTheMatch(EqualPlay equalPlay) throws PresidentException {
         playMatches(8, equalPlay);
+    }
+
+    static Stream<Arguments> variants() {
+        PresidentOptions d = PresidentOptions.defaults();
+        return Stream.of(
+                Arguments.of("forbiddenFinish off", d.withForbiddenFinish(ForbiddenFinish.OFF)),
+                Arguments.of("mustPlay on", d.withMustPlay(true)),
+                Arguments.of("everything on", d.withMustPlay(true).withEqualPlay(EqualPlay.OFF)));
+    }
+
+    /** Each trick variant on its own, then together: the bots finish the match and the game refuses nothing. */
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("variants")
+    void botsFinishMatchesWithEachTrickVariant(String name, PresidentOptions options) throws PresidentException {
+        for (int seats : new int[] {3, 5, 8}) {
+            for (int index = 0; index < 4; index++) {
+                Match match = new Match(seats, 7000L + 100L * seats + index, mixed(seats, index), options);
+
+                boolean finished = match.run();
+
+                assertThat(name + " with " + seats + " bots, match " + index, finished, is(true));
+                assertThat(match.commands, lessThan(MAX_COMMANDS));
+            }
+        }
     }
 
     @Test

@@ -55,7 +55,7 @@ public record PresidentDto(
     /** {@code bot} is true for a computer seat and omitted from the JSON otherwise. */
     public record PlayerDto(int seat, String name, @JsonInclude(JsonInclude.Include.NON_DEFAULT) boolean bot,
                             int handSize, String title, Integer place, boolean out, boolean passed, int points,
-                            boolean ready) {
+                            boolean ready, boolean forbiddenFinish) {
     }
 
     /** A set of {@code count} cards of one rank. */
@@ -82,7 +82,8 @@ public record PresidentDto(
     public record PairDto(int high, int low, int count, boolean done) {
     }
 
-    public record PlayerRoundDto(int seat, int place, String title, int points, int total) {
+    public record PlayerRoundDto(int seat, int place, String title, int points, int total,
+                                 boolean forbiddenFinish) {
     }
 
     public record RoundDto(int round, List<Integer> finishingOrder, List<PlayerRoundDto> players) {
@@ -116,15 +117,18 @@ public record PresidentDto(
                                          Set<PlayerId> bots) {
         synchronized (game) {
             List<PlayerId> finishing = game.finishingOrder();
+            List<PlayerId> forbidden = game.forbiddenFinishers();
             Map<PlayerId, Title> titles = game.titles();
             TrickView trick = game.trick();
             Set<PlayerId> ready = game.readySeats();
             List<PlayerDto> players = game.getPlayerIds().stream().map(p -> {
                 int index = finishing.indexOf(p);
                 Title title = titles.get(p);
+                // a forbidden finisher is out at once but has no place until the round ends
                 return new PlayerDto(p.id(), names.get(p), bots.contains(p), game.hand(p).size(),
-                        title == null ? null : title.name(), index < 0 ? null : index + 1, index >= 0,
-                        trick.passed().contains(p), game.standings().points(p), ready.contains(p));
+                        title == null ? null : title.name(), index < 0 ? null : index + 1,
+                        index >= 0 || forbidden.contains(p), trick.passed().contains(p),
+                        game.standings().points(p), ready.contains(p), forbidden.contains(p));
             }).toList();
             boolean toAct = viewer.equals(game.currentSeat());
             int rounds = game.options().length().rounds();
@@ -197,7 +201,8 @@ public record PresidentDto(
             PlayerId p = result.finishingOrder().get(i);
             Title title = result.titles().get(p);
             players.add(new PlayerRoundDto(p.id(), i + 1, title == null ? null : title.name(),
-                    result.points().getOrDefault(p, 0), result.totals().getOrDefault(p, 0)));
+                    result.points().getOrDefault(p, 0), result.totals().getOrDefault(p, 0),
+                    result.forbiddenFinishers().contains(p)));
         }
         return new RoundDto(result.round(), result.finishingOrder().stream().map(PlayerId::id).toList(), players);
     }

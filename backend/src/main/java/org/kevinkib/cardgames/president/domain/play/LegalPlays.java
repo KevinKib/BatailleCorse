@@ -26,7 +26,7 @@ public final class LegalPlays {
     /**
      * @param top        the play to beat, or {@code null} when leading (any set is legal)
      * @param constraint what the next play must answer; under {@link Constraint#MATCH_OR_PASS} only the set of the
-     *                   same rank and count as the top is listed
+     *                   same rank and count as the top is listed, and a lone 2 (it always closes the trick)
      * @param equalPlay  whether an equal set also answers a {@link Constraint#BEAT}
      */
     public static List<Play> of(List<Card> hand, Play top, RankOrder order, Constraint constraint,

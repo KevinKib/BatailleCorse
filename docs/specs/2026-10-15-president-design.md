@@ -131,8 +131,7 @@ The owner's rules, all on by default with `equalPlay = on` (decided 2026-10-15):
   needs four cards in one play [D].
 - **A quad played at once closes the trick** [O, decided 2026-10-15, section 13.1 item 21]: four cards of one
   rank in a single play (lead or follow) end the trick like the four completed in succession, and that
-  player leads. This is the `quadClears` option, **on by default** (V5); `off` makes the quad an ordinary
-  four-card play that others must beat with a higher quad. If the quad empties the hand, the player goes
+  player leads. This is a fixed rule (V5), not an option (owner, 2026-10-17). If the quad empties the hand, the player goes
   out and the lead passes to the next seat with cards (a forbidden finish, 4 twos, places them last as
   usual). With a revolution (V8) both apply: the order reverses, the trick closes and the player leads.
 - **Completion out of turn** [O]: while a chain of rank r is the top of the trick, the player who holds
@@ -224,8 +223,8 @@ together with others in the sources. Defaults are those of the "Classic" preset,
 |---|---------|-------|------|----------|--------------------------|---------|--------|-----------|
 | V1 | Re-entry after passing | "passer plusieurs fois son tour"; Australian "no playing after passing" is the opposite | `reenter`: a player who passed may play again when the turn comes back in the same trick. `out`: a pass is final until the trick ends | always one of the two | With `out`, the trick ends as soon as nobody but the last player is still in it. A pass forced by the equal-play binding is an ordinary pass | `reenter` | Offered (`afterPass`), P1 | [O] decided 2026-10-15 (sources split: pagat and regles-du-jeu.net allow re-entry, regles.com memo says a passer "generally does not come back") |
 | V2 | Equal play binds the next player ("X or nothing"), the four closes the trick, completion out of turn | "X ou rien", "carte égale ou rien", "égaler", "carré qui coupe" | A play of the same count and the **same** rank as the top is legal; the player after it must play that rank and count, or pass, and the binding repeats; the four cards of a rank played in succession close the trick, the completing player leads; the holder of the missing cards may complete out of turn (3.1.1) | very common in French play | The first pass ends the binding (O1 decided). A single lead does not open the completion window (O4 decided). A cut (V4) cannot answer the binding. Two players left: the binding falls back on the first player, no special case. A run chain (V12) never completes a four | `on` | Offered (`equalPlay = on|off`), V1 | [O] the owner's rules (decided 2026-10-15); fr.wikipedia describes "or nothing" as a sub-variant of "passage de tour"; the name "ou rien" and the completion out of turn are not found in any written source; the four completed by equal plays is Danish Røvhul (pagat) |
-| V4 | The 2 cuts | "le 2 coupe", "2 utilisé comme atout", "single two wins", "bomb" | `single`: a single top card (2) may be played on any play (any count) and ends the trick at once; the player leads. `ladder`: k twos beat a set of k+1 cards of a lower rank (a 2 beats a pair, two 2s a triple, three 2s a quad), and end the trick | common | Under a revolution the cutting card is the top rank in force (the 3) [O]. A cut cannot answer the equal-play binding [O]; a chain of 2s can still be completed (it is a completion, not a cut). Leading with a 2 is allowed (it simply wins the trick at once) [U: en.wikipedia mentions groups that forbid leading a 2] | off | Offered (`twoCuts = off|single|ladder`), V2 | [S] single: fr.wikipedia, pagat, 10h26, officialgamerules; ladder: fr.wikipedia example "two 2s beat a triple of jacks", pagat Sofia/Toronto |
-| V5 | A quad played at once clears the trick | "carré qui coupe", "bombe", Danish Røvhul "four of a rank clear the pile" | `on`: a single play of four cards of one rank ends the trick; that player leads. `off`: the quad is an ordinary four-card play, beaten only by a higher quad. The four completed in succession is not this option: it is part of `equalPlay = on` (V2) and stays on whatever `quadClears` says | regional | With revolution (V8) both apply: order reversed, then a fresh lead. Independent of `equalPlay`. A quad that empties the hand: going out, then the lead passes to the next seat with cards | `on` | Offered (`quadClears = on|off`), V2 | [O] on by default, decided 2026-10-15 (O5); [S] pagat (Røvhul), gathertogethergames |
+| V4 | The 2 closes the trick | "le 2 coupe", "2 utilisé comme atout", "single two wins", "bomb" | A single top card (2) may be played on any play (any count, a play of 2s included) and ends the trick at once; the player of the 2 leads. A **fixed rule, not an option** (owner, 2026-10-17: "le 2 ferme le pli dès qu'il est joué, dès le premier 2") | common | Under a revolution the cutting card is the top rank in force (the 3) [O]. A lone 2 is always allowed, under the equal-play binding too (it closes the trick, so there is no binding left); it is not a completion, so out of turn it is refused. A pair of 2s is an ordinary play. Leading with a 2 is allowed (it simply wins the trick at once). A lone 2 that is the last card is a forbidden finish that still closes the trick | fixed | Fixed rule (no key), V2 | [S] single: fr.wikipedia, pagat, 10h26, officialgamerules; ladder: fr.wikipedia example "two 2s beat a triple of jacks", pagat Sofia/Toronto |
+| V5 | A quad played at once clears the trick | "carré qui coupe", "bombe", Danish Røvhul "four of a rank clear the pile" | A single play of four cards of one rank ends the trick; that player leads. A **fixed rule, not an option** (owner, 2026-10-17; V1 already wires it). The four completed in succession is part of `equalPlay = on` (V2) | regional | With revolution (V8) both apply: order reversed, then a fresh lead. Independent of `equalPlay`. A quad that empties the hand: going out, then the lead passes to the next seat with cards | fixed | Fixed rule (no key), V2 | [O] decided 2026-10-15 (O5), fixed 2026-10-17; [S] pagat (Røvhul), gathertogethergames |
 | V7 | Forbidden finish | "interdiction de terminer par un 2", "on ne finit pas sur un 2", "cannot go out with the highest card" | A player whose last play contains a top-rank card (2; the 3 under a revolution) goes out but is placed **last**; among several such players the later one is lower [S, pagat Røvhul] | very common in French play | Under a revolution the forbidden card is the top rank in force (3) [O; S fr.wikipedia, pagat Daifugō]. A completion of 2s that empties the hand is a forbidden finish too. A forbidden finisher out first does not close the trick (O3 decided, 3.1). Alternative "the play is refused" not offered [U] | `lastPlace` | Offered (`forbiddenFinish = lastPlace|off`), V2 | [O] always on in the owner's rules, kept as a cheap host option; [S] regles-du-jeu.net, fr.wikipedia, 10h26, pagat Daifugō |
 | V8 | Revolution | "révolution", "contre-révolution", "four of a kind inverts ranks", "kakumei" | A quad (four of a rank in one play) reverses the ranking (3 high, 2 low); a later quad reverses it back (counter-revolution). Duration: `round` (until the end of the round) [S, fr.wikipedia, pagat Daifugō], `persistent` (carries over to later rounds until a new quad) [S, fr.wikipedia variant] | common | Effect is **immediate**: the next player must beat the quad in the reversed order, i.e. with a lower quad [O; S, fr.wikipedia "must follow the newly established order"; pagat Daifugō says "from the next clearing"]. The cutting card and the forbidden finish follow the top rank in force (3). A four completed in succession is no revolution. Exchange "best cards" follow the order in force at the deal | off | Offered (`revolution = off|round|persistent`), V3 | [O] decided 2026-10-15 as specified |
 | V10 | Aces high, 2 low | "Aces high", West Coast | Ranking A K Q ... 3 2 | rare | First lead `lowestClub` becomes the 2 of clubs; `kingOfHearts` and `queenOfHearts` are unaffected | `twoHigh` | Offered (`ranking = twoHigh|aceHigh`), V3 | [S] pagat, en.wikipedia |
@@ -283,10 +282,10 @@ research. None has a card, a key, a PR or a test; all are a single change map ov
 
 | Former preset | Values (only those that differ from the Classic defaults) |
 |---------------|-----------------------------------------------------------|
-| Pagat basic | `firstLead=lowestClub`, `equalPlay=off`, `quadClears=off`, `forbiddenFinish=off`, `exchange=one`, `nextLead=president`, `scoring=titles`, `length=points-11` |
-| Strict | `afterPass=out`, `equalPlay=off`, `quadClears=off`, `forbiddenFinish=off` |
-| Party | `twoCuts=single`, `revolution=round` |
-| Daifugō-like | `equalPlay=off`, `quadClears=off`, `revolution=round`, `runs=sameSuit`, `suitLock=on` (without the jokers, eight stops and fall of the real Daifugō, also out of scope) |
+| Pagat basic | `firstLead=lowestClub`, `equalPlay=off`, `forbiddenFinish=off`, `exchange=one`, `nextLead=president`, `scoring=titles`, `length=points-11` |
+| Strict | `afterPass=out`, `equalPlay=off`, `forbiddenFinish=off` |
+| Party | `revolution=round` |
+| Daifugō-like | `equalPlay=off`, `revolution=round`, `runs=sameSuit`, `suitLock=on` (without the jokers, eight stops and fall of the real Daifugō, also out of scope) |
 
 ## 4. Options (host, game-level)
 
@@ -309,8 +308,6 @@ documented, never refused, so the host can set options in any order [D, O].
 | `scoring` | `rank`, `titles`, `zeroSum` | P2 / P3 |
 | `length` | `rounds-5`, `rounds-3`, `rounds-10`, `points-11`, `points-21`, `endless` | P2 / P3 (`endless` added in P3) |
 | `equalPlay` | `on`, `off` (on: binding, four closes the trick, completion out of turn) | V1 |
-| `twoCuts` | `off`, `single`, `ladder` | V2 |
-| `quadClears` | `on`, `off` (on: a quad played at once closes the trick; the four completed in succession is `equalPlay`'s) | V2 |
 | `forbiddenFinish` | `lastPlace`, `off` | V2 |
 | `mustPlay` | `off`, `on` | V2 |
 | `revolution` | `off`, `round`, `persistent` | V3 |
@@ -318,7 +315,7 @@ documented, never refused, so the host can set options in any order [D, O].
 | `runs` | `off`, `sameSuit` | V4 |
 | `suitLock` | `off`, `on` | V4 |
 
-Sixteen keys. Until a variant's PR ships, its key does not exist (the server refuses it as unknown), and the
+Fourteen keys (the 2 that closes the trick and the quad that closes it are fixed rules, owner 2026-10-17). Until a variant's PR ships, its key does not exist (the server refuses it as unknown), and the
 domain behaves as the "off" value. Defaults are the Classic preset, so a room created without touching
 anything plays the owner's rules.
 
@@ -332,7 +329,7 @@ shows "Classic" while the current values equal it, "Custom" otherwise. The other
 
 | Preset | Values |
 |--------|--------|
-| Classic (the owner's rules) | the defaults: re-entry after a pass, equal play binds the next player (the first pass ends the binding; the four closes the trick, completion out of turn), a quad played at once closes the trick, forbidden finish on a 2, exchange 2/1 with a free return, king of hearts leads round 1, Scum leads rounds 2+, rank points, 5 rounds; every other option off |
+| Classic (the owner's rules) | the defaults: re-entry after a pass, equal play binds the next player (the first pass ends the binding; the four closes the trick, completion out of turn), forbidden finish on a 2, exchange 2/1 with a free return, king of hearts leads round 1, Scum leads rounds 2+, rank points, 5 rounds; every other option off |
 
 Classic changes no key from the defaults, so selecting it is a reset to the defaults. A key not yet shipped is
 simply absent from the change map.
@@ -365,7 +362,7 @@ Sub-packages (each with the exceptions it protects):
 
 | Package | Content |
 |---------|---------|
-| `rules` | `PresidentOptions` (typed options, `from` lenient / `parseStrict` strict, `toGameOptions`), one enum per option (`AfterPass`, `EqualPlay`, `TwoCuts`, `ForbiddenFinish`, `Revolution`, `Ranking`, `Runs`, `ExchangeAmount`, `GiveBack`, `FirstLead`, `NextLead`, `Scoring`, `MatchLength`), `PresidentException` |
+| `rules` | `PresidentOptions` (typed options, `from` lenient / `parseStrict` strict, `toGameOptions`), one enum per option (`AfterPass`, `EqualPlay`, `ForbiddenFinish`, `Revolution`, `Ranking`, `Runs`, `ExchangeAmount`, `GiveBack`, `FirstLead`, `NextLead`, `Scoring`, `MatchLength`), `PresidentException` |
 | `card` | `RankOrder` (strength of a rank under `ranking` and the revolution state), `HandSort` |
 | `play` | `Play` (value object: cards, kind `SET` or `RUN`, effective rank or top, count, suits), `PlayParser` (cards → `Play` or `IllegalPlayException`), `BeatRule` (does a play beat the top, is it equal, is it a cut), `LegalPlays` (every legal play of a hand against the trick state, binding included: used by the DTO hints, `mustPlay` and the bots), `PlayEffects` (clears the trick, reverses, binds the next player), `Completion` (the missing cards of the chain's rank and who holds them; pure) |
 | `trick` | `Trick` (leader, plays, last player, seats that passed since the last play, seats out of the trick under `afterPass = out`, constraint `FREE`, `BEAT`, `MATCH_OR_PASS` with its rank and count, the chain: rank and cards of that rank played in succession at the top, locked suits) |
@@ -595,7 +592,7 @@ titles, a revolution active, an exchange pending). The options are kept for cont
    (B) rank stacks plus a count chip; (C) a bar of suggested plays. In every option, a visible "Complete the
    four" button appears for the holder while `completion` is present, even outside their turn, and plays
    exactly those cards.
-3. **Lobby options (sixteen keys).** **(A) A single Classic preset card (the only preset, owner 2026-10-15)
+3. **Lobby options (fourteen keys).** **(A) A single Classic preset card (the only preset, owner 2026-10-15)
    with a "Customise" disclosure grouping every option. Chosen (owner, 2026-10-15), with a constraint:** the
    owner wants the options customised **through the lobby, with the existing lobby pattern** (host options
    in the shared `GameLobby` / game options mechanism, as the other games do). No new pattern is introduced:
@@ -656,8 +653,8 @@ le plus petit", the king of hearts lead. They are the owner's rules [O], marked 
    on, binding the next player to match or pass (3.1.1); forbidden finish on a 2 always on (`lastPlace`, kept
    as a host option); exchange 2/1, the Scum and Vice-Scum forced to give their best cards, the high ranks
    giving back any cards they choose; the Scum leads rounds 2+; the king of hearts holder leads round 1;
-   points by place (`rank`); match length 5 rounds (`rounds-5`, O2); a quad played at once closes the trick
-   (`quadClears = on`, O5). Everything else off.
+   points by place (`rank`); match length 5 rounds (`rounds-5`, O2). Everything else off. (The lone 2 and the quad
+   that close the trick are fixed rules, not part of the preset.)
 4. **Q4 — Exchange flow.** Decided 2026-10-15: the server takes the low ranks' best cards automatically at the
    deal; the high ranks choose their returns freely, all pairs at once, with no timeout (the disconnect
    forfeit covers an absent player); a "Suggest" helper in the UI, not a server rule.
@@ -715,8 +712,8 @@ le plus petit", the king of hearts lead. They are the owner's rules [O], marked 
     next seat with cards). Only the player who actually takes 1st place closes the trick on going out
     (`FIRST_OUT`). A four completed in succession still closes it. Worked example 9.
 21. **O5 — A quad played at once closes the trick.** Decided 2026-10-15: a play of four cards of one rank
-    closes the trick and its player leads. This is `quadClears`, which becomes **`on` by default** (values
-    `on`, `off`; in the Classic preset it is on). It is independent of `equalPlay` (the four completed in succession
+    closes the trick and its player leads. This is a fixed rule since 2026-10-17 (it was the
+    `quadClears` option, on by default). It is independent of `equalPlay` (the four completed in succession
     stays under `equalPlay`) and combines with a revolution as in V5.
 22. **O2 — Default match length.** Decided 2026-10-15: `rounds-5` is the default; `endless` stays an option.
 23. **P2 scoring and exchange rules accepted.** Decided 2026-10-15 (P2 merged in #223): the owner confirmed

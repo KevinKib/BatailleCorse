@@ -31,6 +31,8 @@ export interface PresidentPlayer {
   points: number;
   /** Has pressed "ready" on the round-over barrier. */
   ready: boolean;
+  /** Went out on a forbidden finish: out at once, but placed last when the round ends (`place` stays null until then). */
+  forbiddenFinish: boolean;
 }
 
 export interface PresidentTrickPlay {
@@ -75,6 +77,7 @@ export interface PresidentRoundPlayer {
   title: PresidentTitle | null;
   points: number;
   total: number;
+  forbiddenFinish: boolean;
 }
 
 export interface PresidentRound {

@@ -19,14 +19,29 @@ class PresidentOptionsTest {
     }
 
     @Test
-    void theKeysOfTheVariantPrsNotShippedYetExistAndBehaveAsOff() {
+    void theClassicDefaultsOfTheTrickVariants() {
         PresidentOptions options = PresidentOptions.defaults();
 
         assertThat(options.equalPlay(), is(EqualPlay.ON));
-        assertThat(options.twoCuts(), is(TwoCuts.OFF));
-        assertThat(options.quadClears(), is(false));
-        assertThat(options.forbiddenFinish(), is(ForbiddenFinish.OFF));
+        assertThat(options.forbiddenFinish(), is(ForbiddenFinish.LAST_PLACE));
         assertThat(options.mustPlay(), is(false));
+    }
+
+    @Test
+    void theNewWithersReplaceOneKeyAndKeepTheOthers() {
+        PresidentOptions options = PresidentOptions.defaults()
+                .withForbiddenFinish(ForbiddenFinish.OFF).withMustPlay(true);
+
+        assertThat(options.forbiddenFinish(), is(ForbiddenFinish.OFF));
+        assertThat(options.mustPlay(), is(true));
+        assertThat(options.equalPlay(), is(EqualPlay.ON));
+        assertThat(options.afterPass(), is(AfterPass.REENTER));
+    }
+
+    @Test
+    void theKeysOfTheVariantPrsNotShippedYetExistAndBehaveAsOff() {
+        PresidentOptions options = PresidentOptions.defaults();
+
         assertThat(options.revolution(), is(Revolution.OFF));
         assertThat(options.ranking(), is(Ranking.TWO_HIGH));
         assertThat(options.runs(), is(Runs.OFF));
@@ -58,6 +73,7 @@ class PresidentOptionsTest {
     @Test
     void theDroppedValuesAreGone() {
         assertThat(names(EqualPlay.values()), is(List.of("ON", "OFF")));
+        assertThat(names(ForbiddenFinish.values()), is(List.of("LAST_PLACE", "OFF")));
         assertThat(names(Revolution.values()), is(List.of("OFF", "ROUND", "PERSISTENT")));
         assertThat(names(Runs.values()), is(List.of("OFF", "SAME_SUIT")));
         assertThat(names(FirstLead.values()),
@@ -72,7 +88,7 @@ class PresidentOptionsTest {
                 .map(java.lang.reflect.RecordComponent::getName).toList();
 
         assertThat(components, is(List.of("afterPass", "firstLead", "exchange", "giveBack", "nextLead", "scoring",
-                "length", "equalPlay", "twoCuts", "quadClears", "forbiddenFinish", "mustPlay", "revolution",
+                "length", "equalPlay", "forbiddenFinish", "mustPlay", "revolution",
                 "ranking", "runs", "suitLock")));
     }
 

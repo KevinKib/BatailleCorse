@@ -3,7 +3,7 @@
 // 2nd seat 1, 3rd seat 2; both sides press Ready and round 2 opens on the exchange, where the browser (President)
 // gives back two cards with the minimal control. Everything is waited on through DOM states and frames.
 import {
-  awaitState, hostLobby, joinGuests, noHorizontalScroll, scriptedPass, scriptedPlay, scriptedReady, threePlayerDeal,
+  awaitState, hostLobby, openFinish, joinGuests, noHorizontalScroll, scriptedPass, scriptedPlay, scriptedReady, threePlayerDeal,
 } from '../support/presidentRoom';
 
 const SUITS = ['HEART', 'DIAMOND', 'CLUB'];
@@ -27,6 +27,7 @@ function playTriple(rank: string, goesOut = false) {
       cy.viewport(width, width === 375 ? 667 : 800);
       hostLobby('Alice').then((id) => {
         joinGuests(id, ['Bob', 'Carol']).then(([bob, carol]) => {
+          openFinish();
           cy.request('PUT', `/api/test/president/${id}/deal`, { round: 1, cards: threePlayerDeal() });
           cy.get('[data-test="start"]').should('not.be.disabled').click();
           cy.get('[data-test="president-table"]', { timeout: 10000 }).should('be.visible');

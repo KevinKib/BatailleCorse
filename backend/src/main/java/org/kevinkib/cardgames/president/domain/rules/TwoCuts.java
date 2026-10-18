@@ -1,4 +1,2 @@
-package org.kevinkib.cardgames.president.domain.rules;
-
-/** V4 (PR V1): the 2 cuts. Until V1 ships the domain behaves as {@link #OFF}. */
-public enum TwoCuts { OFF, SINGLE, LADDER }
+// Removed: the 2 that closes the trick is a fixed rule (see BeatRule.isCut and PlayEffects), not an option.
+// This empty file is to be deleted with git rm.
