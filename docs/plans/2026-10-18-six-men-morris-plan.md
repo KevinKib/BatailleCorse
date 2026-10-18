@@ -50,7 +50,7 @@ or a small change of the removal rule.
 
 | Chunk | Title | Cost | Needs | Parallel with | State |
 |-------|-------|------|-------|---------------|-------|
-| C1 | `refactor: remove the Picaria variant of Three Men's Morris` | M | - | D | [ ] |
+| C1 | `refactor: remove the Picaria variant of Three Men's Morris` (+ the host colour defaults to random) | M | - | D | [ ] |
 | C2 | `feat: Six Men's Morris rules as data (interfaces)` | S | C1 | D | [ ] |
 | C3 | `feat: mills, removal and Six Men's Morris in the Morris engine` | L | C2 | C4, C5, F1 | [ ] |
 | C4 | `feat: Six Men's Morris transitions and bots` | M-L | C2 | C3, C5, F1 | [ ] |

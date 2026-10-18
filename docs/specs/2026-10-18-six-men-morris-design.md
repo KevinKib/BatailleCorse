@@ -142,8 +142,7 @@ the same order (point `i + 8` is the inner twin of `i`).
 
 ### The rule set we pick
 
-1. Two players, White starts (as every variant here; the sources do not say) [Q10]. The host colour option
-   applies unchanged.
+1. Two players, White starts (as every variant here; the sources do not say) [Q10, decided 2026-10-18]. The host colour option applies, but its DEFAULT becomes `random` (the host is drawn White or Black once at creation, so who starts is random by default) for every Morris variant; the host can still pick White or Black. This changes `HostColour.DEFAULT` from `WHITE` to `RANDOM` (lobby default, wire, Cypress that relied on the host being White must choose it explicitly); it is done in chunk C1.
 2. **Placement:** each player holds 6 pieces and places one per turn on any free point, White, Black, White...
    until both hands are empty (Black places last). No piece moves while a hand is not empty (unlike Lasker
    Morris).
@@ -412,5 +411,5 @@ lobby components' logic, to the other games; no rename of the game type, route o
 - **Q7 The `picaria` key.** Recommend refusing it (unknown value), no alias.
 - **Q8 Default variant.** Recommend Tapatan stays the default.
 - **Q9 Diagonals.** Recommend none.
-- **Q10 Who starts.** Recommend White, as in the other variants (the host colour option decides who is White).
+- **Q10 Who starts.** DECIDED (owner, 2026-10-18): White starts, and the host colour defaults to `random` for every Morris variant, with the usual choice still available. All other questions Q1-Q9 and Q11: recommendations accepted by the owner.
 - **Q11 Bot and draw offers on Six.** Recommend: accept when not ahead in pieces left, never offer.
