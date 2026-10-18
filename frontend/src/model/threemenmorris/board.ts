@@ -2,7 +2,8 @@ import type { MorrisColour, MorrisState } from './MorrisState';
 
 /**
  * Pure selection logic of the Three Men's Morris board. The server is the only source of the rules: what may be
- * played comes from `availableActions`, `legalPlacements` and `legalMoves`, and no adjacency is known here. The
+ * played comes from `availableActions`, `legalPlacements`, `legalMoves` and (after a mill) `legalRemovals`, and no
+ * adjacency is known here. The
  * drawing of each variant is in `geometries.ts`.
  */
 
@@ -21,6 +22,10 @@ function myTurn(state: MorrisState, mySeat: number): boolean {
 /** The points the viewer may click now: where a piece may be placed, or the pieces that have a legal move. */
 export function selectable(state: MorrisState, mySeat: number): number[] {
   if (!myTurn(state, mySeat)) return [];
+  if (state.availableActions.includes('REMOVE')) {
+    // After a mill: only the pieces the server lists (those in a mill are left out while others can be taken).
+    return state.legalRemovals ?? [];
+  }
   if (state.availableActions.includes('PLACE')) {
     // The server lists the placements for the variants that restrict them; for Tapatan it leaves them out
     // and every free point is open.
@@ -42,6 +47,7 @@ export type PointIntent =
   | { kind: 'place'; point: number }
   | { kind: 'select'; point: number }
   | { kind: 'move'; from: number; to: number }
+  | { kind: 'remove'; point: number }
   | { kind: 'clear' }
   | { kind: 'none' };
 
@@ -49,6 +55,9 @@ export type PointIntent =
 export function onPoint(state: MorrisState, mySeat: number, selected: number | null, point: number): PointIntent {
   const clickable = selectable(state, mySeat);
   if (clickable.length === 0) return { kind: 'none' };
+  if (state.availableActions.includes('REMOVE')) {
+    return clickable.includes(point) ? { kind: 'remove', point } : { kind: 'none' };
+  }
   if (state.availableActions.includes('PLACE')) {
     return clickable.includes(point) ? { kind: 'place', point } : { kind: 'none' };
   }

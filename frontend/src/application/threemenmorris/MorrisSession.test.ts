@@ -103,6 +103,13 @@ describe('MorrisSession', () => {
     expect(published).toEqual([{ dest: '/app/three-men-morris/move', body: JSON.stringify({ gameId: 'g1', token: 'tok-0', from: 1, to: 2 }) }]);
   });
 
+  it('remove publishes {gameId, token, point} to /app/three-men-morris/remove', () => {
+    const { session, published } = makeSession();
+    session.restore('g1', 0, 'tok-0');
+    session.remove(12);
+    expect(published).toEqual([{ dest: '/app/three-men-morris/remove', body: JSON.stringify({ gameId: 'g1', token: 'tok-0', point: 12 }) }]);
+  });
+
   it.each([
     ['offerDraw', '/app/three-men-morris/offerDraw'],
     ['acceptDraw', '/app/three-men-morris/acceptDraw'],

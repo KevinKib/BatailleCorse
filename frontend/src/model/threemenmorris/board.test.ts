@@ -59,6 +59,54 @@ describe('placement with legalPlacements', () => {
   });
 });
 
+// Six Men's Morris: White (seat 0) closed a mill on 0-1-2 and must take a Black piece. Black holds 8, 9, 10 (a mill,
+// protected) and 12; the server lists only 12 as removable.
+const removal = (overrides = {}) => morrisState({
+  variant: 'six',
+  phase: 'MOVEMENT',
+  board: [0, 0, 0, N, N, N, N, N, 1, 1, 1, N, 1, N, N, N],
+  availableActions: ['REMOVE'],
+  legalMoves: [],
+  removal: { seat: 0, mill: [0, 1, 2] },
+  legalRemovals: [12],
+  ...overrides,
+});
+
+describe('removal', () => {
+  it('makes selectable exactly the pieces the server lists, not the protected ones', () => {
+    const s = removal();
+    expect(selectable(s, 0)).toEqual([12]);
+    expect(selectable(s, 0)).not.toContain(8);
+  });
+
+  it('turns a click on a removable piece into a remove intent', () => {
+    expect(onPoint(removal(), 0, null, 12)).toEqual({ kind: 'remove', point: 12 });
+  });
+
+  it('ignores a click on a protected piece, an own piece or a free point', () => {
+    const s = removal();
+    expect(onPoint(s, 0, null, 8)).toEqual({ kind: 'none' });
+    expect(onPoint(s, 0, null, 0)).toEqual({ kind: 'none' });
+    expect(onPoint(s, 0, null, 5)).toEqual({ kind: 'none' });
+  });
+
+  it('offers nothing to the player who is waiting for the other one to take a piece', () => {
+    const waiting = removal({ availableActions: [], legalRemovals: undefined });
+    expect(selectable(waiting, 1)).toEqual([]);
+    expect(onPoint(waiting, 1, null, 0)).toEqual({ kind: 'none' });
+    expect(selectable(removal(), 1)).toEqual([]);
+  });
+
+  it('trusts an absent legalRemovals over the board: nothing is selectable', () => {
+    expect(selectable(removal({ legalRemovals: undefined }), 0)).toEqual([]);
+  });
+
+  it('offers nothing once the game is over', () => {
+    const over = removal({ outcome: { status: 'FINISHED', winner: 0, reason: 'REDUCED' }, availableActions: [] });
+    expect(selectable(over, 0)).toEqual([]);
+  });
+});
+
 describe('colours', () => {
   it('gives White to seat 0 and Black to seat 1 when the server leaves the colours out', () => {
     const s = morrisState();

@@ -47,7 +47,7 @@ describe('GamePickerView', () => {
     expect(buttons[0].attributes('aria-label')).toBe('Play Bataille Corse');
     expect(buttons[1].attributes('aria-label')).toBe('Play Bullshit');
     expect(buttons[2].attributes('aria-label')).toBe('Play Kobo');
-    expect(buttons[3].attributes('aria-label')).toBe("Play Three Men's Morris");
+    expect(buttons[3].attributes('aria-label')).toBe('Play Morris');
     expect(buttons[4].attributes('aria-label')).toBe('Play President');
     expect(buttons[5].attributes('aria-label')).toBe('Play Mangola');
   });

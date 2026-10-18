@@ -330,6 +330,100 @@ describe('ThreeMenMorris store', () => {
     expect(store.selected).toBeNull();
   });
 
+  describe('removal after a mill (Six Men\'s Morris)', () => {
+    // White (seat 0) closed a mill on 0-1-2 and must take a Black piece: 8 9 10 form a mill, only 12 can be taken.
+    const removalState = (overrides: Partial<MorrisState> = {}) => morrisState({
+      variant: 'six',
+      phase: 'MOVEMENT',
+      board: [0, 0, 0, N, N, N, N, N, 1, 1, 1, N, 1, N, N, N],
+      players: [
+        { seat: 0, name: 'Alice', current: true, piecesToPlace: 0, lost: 0 },
+        { seat: 1, name: 'Bob', current: false, piecesToPlace: 0, lost: 2 },
+      ],
+      availableActions: ['REMOVE'],
+      removal: { seat: 0, mill: [0, 1, 2] },
+      legalRemovals: [12],
+      ...overrides,
+    });
+
+    it('offers the removable pieces only, and no destination', () => {
+      const store = seated(0);
+      store.applyEvent({ type: 'state-update', state: removalState() });
+      expect(store.selectablePoints).toEqual([12]);
+      expect(store.targetPoints).toEqual([]);
+    });
+
+    it('a click on a removable piece publishes the remove command, nothing is changed locally', () => {
+      const publish = vi.spyOn(webSocketService, 'publish').mockImplementation(() => {});
+      const store = seated(0);
+      store.restore('g1', 0, 'tok-0');
+      store.applyEvent({ type: 'state-update', state: removalState() });
+      store.pointClicked(12);
+      expect(publish).toHaveBeenCalledWith('/app/three-men-morris/remove', JSON.stringify({ gameId: 'g1', token: 'tok-0', point: 12 }));
+      expect(store.game!.board[12]).toBe(1);
+    });
+
+    it('sends nothing for a click on a protected piece', () => {
+      const publish = vi.spyOn(webSocketService, 'publish').mockImplementation(() => {});
+      const store = seated(0);
+      store.restore('g1', 0, 'tok-0');
+      store.applyEvent({ type: 'state-update', state: removalState() });
+      store.pointClicked(9);
+      expect(publish).not.toHaveBeenCalled();
+    });
+
+    it('does not throw when the remove command cannot be sent (socket down)', () => {
+      vi.spyOn(webSocketService, 'publish').mockImplementation(() => { throw new Error('down'); });
+      const store = seated(0);
+      store.restore('g1', 0, 'tok-0');
+      store.applyEvent({ type: 'state-update', state: removalState() });
+      expect(() => store.pointClicked(12)).not.toThrow();
+    });
+
+    it('keeps the last removal for the captured marker, from REMOVE and from the GAME_OVER it caused', () => {
+      const store = seated(0);
+      expect(store.capturedPoint).toBeNull();
+      store.applyEvent({ type: 'event', eventType: 'REMOVE', message: '', eventData: { seat: 1, action: 'REMOVE', point: 6 } });
+      expect(store.lastRemoval).toEqual({ seat: 1, action: 'REMOVE', point: 6 });
+      expect(store.capturedPoint).toBe(6);
+      store.applyEvent({ type: 'event', eventType: 'GAME_OVER', message: '', eventData: { seat: 0, action: 'REMOVE', point: 13 } });
+      expect(store.capturedPoint).toBe(13);
+    });
+
+    it('does not take a removal for a move, so the last-move ring stays on the mill', () => {
+      const store = seated(0);
+      store.applyEvent({ type: 'event', eventType: 'MOVE', message: '', eventData: { seat: 1, action: 'MOVE', point: null, from: 3, to: 4, mill: [4, 5, 6] } });
+      store.applyEvent({ type: 'event', eventType: 'REMOVE', message: '', eventData: { seat: 1, action: 'REMOVE', point: 6 } });
+      expect(store.lastMove).toEqual({ seat: 1, action: 'MOVE', point: null, from: 3, to: 4, mill: [4, 5, 6] });
+      expect(store.opponentLastMove).toEqual([3, 4]);
+    });
+
+    it('drops the captured marker at the next placement or move, and when the room goes back to a lobby', () => {
+      const store = seated(0);
+      store.applyEvent({ type: 'event', eventType: 'REMOVE', message: '', eventData: { seat: 1, action: 'REMOVE', point: 6 } });
+      store.applyEvent({ type: 'state-update', state: removalState() });
+      expect(store.capturedPoint).toBe(6);
+      store.applyEvent({ type: 'event', eventType: 'MOVE', message: '', eventData: { seat: 0, action: 'MOVE', point: null, from: 1, to: 2 } });
+      expect(store.capturedPoint).toBeNull();
+      store.applyEvent({ type: 'event', eventType: 'REMOVE', message: '', eventData: { seat: 1, action: 'REMOVE', point: 6 } });
+      store.applyEvent({ type: 'state-update', state: lobbyView() });
+      expect(store.capturedPoint).toBeNull();
+    });
+
+    it('tells whose removal is pending: mine, or the one I am waiting for', () => {
+      const store = seated(0);
+      store.applyEvent({ type: 'state-update', state: removalState() });
+      expect(store.removalPending).toBe(true);
+      expect(store.iMustRemove).toBe(true);
+      store.applyEvent({ type: 'seat-change', seat: 1 });
+      store.applyEvent({ type: 'state-update', state: removalState({ availableActions: [], legalRemovals: undefined }) });
+      expect(store.removalPending).toBe(true);
+      expect(store.iMustRemove).toBe(false);
+      store.applyEvent({ type: 'state-update', state: morrisState() });
+      expect(store.removalPending).toBe(false);
+    });
+  });
+
   it('changes and clears the selection on clicks and with clearSelection', () => {
     const store = seated(0);
     store.applyEvent({ type: 'state-update', state: movementState() });

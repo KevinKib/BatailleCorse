@@ -4,7 +4,7 @@ const GAMES = [
   { key: 'bataillecorse', title: 'Bataille Corse', joinError: 'No game found' },
   { key: 'bullshit', title: 'Bullshit', joinError: 'No game found' },
   { key: 'kobo', title: 'Kobo', joinError: 'No game found' },
-  { key: 'three-men-morris', title: "Three Men's Morris", joinError: 'No game found' },
+  { key: 'three-men-morris', title: 'Morris', joinError: 'No game found' },
   { key: 'president', title: 'President', joinError: 'No game found' },
   { key: 'mangola', title: 'Mangola', joinError: 'No game found' },
 ];

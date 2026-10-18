@@ -54,4 +54,46 @@ describe('MorrisPlayerTag', () => {
   it('is named for screen readers by name and colour', () => {
     expect(tag().attributes('aria-label')).toBe('Alice, White');
   });
+
+  it('shows no counts on Tapatan and Achi', () => {
+    const w = tag();
+    expect(w.find('[data-test="tag-on-board"]').exists()).toBe(false);
+    expect(w.find('[data-test="tag-lost"]').exists()).toBe(false);
+    expect(w.find('[data-test="tag-counts"]').exists()).toBe(false);
+  });
+
+  describe('with counts (Six Men\'s Morris)', () => {
+    const counts = (props: Record<string, unknown> = {}) => tag({ onBoard: 5, lost: 1, piecesToPlace: 0, ...props });
+
+    it('shows the pieces on the board and the pieces lost, next to the reserve discs', () => {
+      const w = counts({ piecesToPlace: 2 });
+      expect(w.get('[data-test="tag-on-board"]').text()).toBe('5 on board');
+      expect(w.get('[data-test="tag-lost"]').text()).toBe('1 lost');
+      expect(w.findAll('[data-test="reserve-piece"]')).toHaveLength(2);
+      expect(w.get('[data-test="tag-on-board"] b').text()).toBe('5');
+    });
+
+    it('shows zero lost at the start, not nothing', () => {
+      expect(counts({ onBoard: 0, lost: 0, piecesToPlace: 6 }).get('[data-test="tag-lost"]').text()).toBe('0 lost');
+    });
+
+    it('has no empty reserve once every piece is down', () => {
+      const w = counts();
+      expect(w.find('[data-test="tag-reserve"]').exists()).toBe(false);
+    });
+
+    it('is named with every count', () => {
+      expect(counts({ piecesToPlace: 2, onBoard: 3, lost: 1 }).attributes('aria-label'))
+        .toBe('Alice, White: 3 on board, 2 in hand, 1 lost');
+    });
+
+    it('flags the count at three pieces left, and only then', () => {
+      expect(counts().get('[data-test="tag-on-board"]').attributes('data-warn')).toBeUndefined();
+      expect(counts({ warn: true }).get('[data-test="tag-on-board"]').attributes('data-warn')).toBe('true');
+    });
+
+    it('keeps the colour mark on the chip when asked, with the counts', () => {
+      expect(counts({ marked: true }).get('[data-test="tag-mark"]').attributes('data-mark')).toBe('ring');
+    });
+  });
 });

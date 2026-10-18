@@ -5,14 +5,15 @@ import {
 import { morrisState } from './morrisFixtures';
 
 describe('variants', () => {
-  it('lists Tapatan first (the default), then Achi, and no Picaria', () => {
-    expect(VARIANT_KEYS).toEqual(['tapatan', 'achi']);
+  it('lists Tapatan first (the default), then Achi, then Six, and no Picaria', () => {
+    expect(VARIANT_KEYS).toEqual(['tapatan', 'achi', 'six']);
     expect(VARIANT_KEYS).not.toContain('picaria');
   });
 
   it('reads an absent variant as Tapatan, as the server omits it for the default', () => {
     expect(variantKeyOf(morrisState())).toBe('tapatan');
     expect(variantKeyOf(morrisState({ variant: 'achi' }))).toBe('achi');
+    expect(variantKeyOf(morrisState({ variant: 'six' }))).toBe('six');
   });
 
   it('falls back to Tapatan for a variant it does not know, the removed Picaria included', () => {
@@ -47,21 +48,97 @@ describe('geometries', () => {
     }
   });
 
-  it('has no Picaria geometry, and Tapatan and Achi are not refined', () => {
-    expect(Object.keys(GEOMETRIES)).toEqual(['tapatan', 'achi']);
+  it('has no Picaria geometry, and only Six is refined', () => {
+    expect(Object.keys(GEOMETRIES)).toEqual(['tapatan', 'achi', 'six']);
+    expect(GEOMETRIES.six.refined).toBe(true);
     for (const key of ['tapatan', 'achi'] as const) {
       expect(GEOMETRIES[key].refined, key).toBe(false);
     }
   });
 
-  it('holds the pieces each player has: 3, 4 for Achi', () => {
+  it('holds the pieces each player has: 3, 4 for Achi, 6 for Six', () => {
     expect(GEOMETRIES.tapatan.pieces).toBe(3);
     expect(GEOMETRIES.achi.pieces).toBe(4);
+    expect(GEOMETRIES.six.pieces).toBe(6);
   });
 
   it('finds the geometry of a state from its variant, Tapatan when it is absent', () => {
     expect(geometryOf(morrisState())).toBe(GEOMETRIES.tapatan);
     expect(geometryOf(morrisState({ variant: 'achi' }))).toBe(GEOMETRIES.achi);
+    expect(geometryOf(morrisState({ variant: 'six' }))).toBe(GEOMETRIES.six);
+  });
+});
+
+describe('Six Men\'s Morris geometry', () => {
+  const six = GEOMETRIES.six;
+
+  it('places 16 points on two squares: outer at 8/50/92, inner at 29/50/71, numbered clockwise from the top left', () => {
+    expect(six.points).toHaveLength(16);
+    expect(six.points.slice(0, 8)).toEqual([
+      { x: 8, y: 8 }, { x: 50, y: 8 }, { x: 92, y: 8 }, { x: 92, y: 50 },
+      { x: 92, y: 92 }, { x: 50, y: 92 }, { x: 8, y: 92 }, { x: 8, y: 50 },
+    ]);
+    expect(six.points.slice(8)).toEqual([
+      { x: 29, y: 29 }, { x: 50, y: 29 }, { x: 71, y: 29 }, { x: 71, y: 50 },
+      { x: 71, y: 71 }, { x: 50, y: 71 }, { x: 29, y: 71 }, { x: 29, y: 50 },
+    ]);
+  });
+
+  it('draws 20 segments: each of the 8 sides cut at its middle, and the 4 joins; no diagonal', () => {
+    expect(six.segments).toHaveLength(20);
+    expect(six.segments.every((s) => s.length === 2)).toBe(true);
+    // Every segment joins two points of the same row or column (no diagonal) and no two segments repeat.
+    for (const [a, b] of six.segments) {
+      const [p, q] = [six.points[a], six.points[b]];
+      expect(p.x === q.x || p.y === q.y, `${a}-${b}`).toBe(true);
+    }
+    expect(new Set(six.segments.map((s) => [...s].sort((a, b) => a - b).join('-'))).size).toBe(20);
+    for (const join of [[1, 9], [3, 11], [5, 13], [7, 15]]) expect(six.segments).toContainEqual(join);
+  });
+
+  it('gives a corner two segments and a middle three', () => {
+    const degree = (n: number) => six.segments.filter((s) => s.includes(n)).length;
+    for (const corner of [0, 2, 4, 6, 8, 10, 12, 14]) expect(degree(corner), `corner ${corner}`).toBe(2);
+    for (const middle of [1, 3, 5, 7, 9, 11, 13, 15]) expect(degree(middle), `middle ${middle}`).toBe(3);
+  });
+
+  it('is reachable by the arrows: from every point, every other can be visited', () => {
+    const arrows = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+    for (let start = 0; start < 16; start++) {
+      const seen = new Set([start]);
+      const queue = [start];
+      while (queue.length) {
+        const at = queue.shift()!;
+        for (const key of arrows) {
+          const next = neighbourByArrow(six, at, key);
+          if (next !== null && !seen.has(next)) { seen.add(next); queue.push(next); }
+        }
+      }
+      expect([...seen].sort((a, b) => a - b), `from ${start}`).toEqual(Array.from({ length: 16 }, (_, n) => n));
+    }
+  });
+
+  it('is reachable by Page Down from the first point and by Page Up from the last, in the server numbering', () => {
+    let at: number | null = 0;
+    const down: number[] = [];
+    while (at !== null) { down.push(at); at = neighbourByPage(six, at, 'PageDown'); }
+    expect(down).toEqual(Array.from({ length: 16 }, (_, n) => n));
+    expect(neighbourByPage(six, 15, 'PageDown')).toBeNull();
+    expect(neighbourByPage(six, 15, 'PageUp')).toBe(14);
+  });
+
+  it('moves the arrows along the sides and across the joins', () => {
+    expect(neighbourByArrow(six, 0, 'ArrowRight')).toBe(1);
+    expect(neighbourByArrow(six, 1, 'ArrowDown')).toBe(9);
+    expect(neighbourByArrow(six, 9, 'ArrowDown')).toBe(13);
+    expect(neighbourByArrow(six, 7, 'ArrowRight')).toBe(15);
+    expect(neighbourByArrow(six, 0, 'ArrowUp')).toBeNull();
+  });
+
+  it('starts the keyboard focus on a corner, not on the centre of a 3x3 grid', () => {
+    expect(six.focusStart).toBe(0);
+    expect(GEOMETRIES.tapatan.focusStart).toBe(4);
+    expect(GEOMETRIES.achi.focusStart).toBe(4);
   });
 });
 
@@ -80,8 +157,8 @@ describe('arrow navigation', () => {
     expect(neighbourByArrow(tapatan, 4, 'Enter')).toBeNull();
   });
 
-  it('goes to the nearest point in the direction of the arrow, whatever the variant', () => {
-    for (const key of VARIANT_KEYS) {
+  it('goes to the nearest point in the direction of the arrow, on both 3x3 variants', () => {
+    for (const key of ['tapatan', 'achi'] as const) {
       const g = GEOMETRIES[key];
       expect(neighbourByArrow(g, 0, 'ArrowRight'), key).toBe(1);
       expect(neighbourByArrow(g, 1, 'ArrowRight'), key).toBe(2);
@@ -111,5 +188,18 @@ describe('segmentsOnLine', () => {
     expect(segmentsOnLine(GEOMETRIES.tapatan, [2, 4, 6]).map(key)).toEqual(['2-4-6']);
     expect(segmentsOnLine(GEOMETRIES.tapatan, [3, 4, 5]).map(key)).toEqual(['3-4-5']);
     expect(segmentsOnLine(GEOMETRIES.tapatan, [])).toEqual([]);
+  });
+
+  it('finds the two half-sides of a mill on Six, whatever the order of its points', () => {
+    expect(segmentsOnLine(GEOMETRIES.six, [0, 1, 2]).map(key).sort()).toEqual(['0-1', '1-2']);
+    expect(segmentsOnLine(GEOMETRIES.six, [2, 0, 1]).map(key).sort()).toEqual(['0-1', '1-2']);
+    expect(segmentsOnLine(GEOMETRIES.six, [6, 7, 0]).map(key).sort()).toEqual(['6-7', '7-0']);
+    expect(segmentsOnLine(GEOMETRIES.six, [14, 15, 8]).map(key).sort()).toEqual(['14-15', '15-8']);
+  });
+
+  it('does not light a join or a neighbouring side with a mill', () => {
+    const lit = segmentsOnLine(GEOMETRIES.six, [8, 9, 10]).map(key);
+    expect(lit).not.toContain('1-9');
+    expect(lit).not.toContain('10-11');
   });
 });

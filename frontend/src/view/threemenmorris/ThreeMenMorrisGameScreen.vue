@@ -24,7 +24,7 @@ import { findGame } from '../../model/games';
 import MorrisLobbyOptions from '../../components/morris/MorrisLobbyOptions.vue';
 import { WINNING_LINE_HOLD_MS } from '../../model/threemenmorris/board';
 import { rematchButtonFor } from '../../model/RematchButton';
-import { format } from '../../locales/format';
+import { format, plural } from '../../locales/format';
 
 const props = defineProps<{ gameId: string }>();
 const messages = useI18n();
@@ -44,10 +44,48 @@ const opponent = computed(() => store.game?.players.find(p => p.seat !== store.m
 
 const cells = computed(() => (store.game?.board ?? Array(store.geometry.points.length).fill(null))
   .map((owner: number | null) => (owner === null ? null : colourOf(owner))));
-// What a click is accepted on: my free points or movable pieces, then the destinations of the selection.
-// The same points are drawn as playable: the server decides, the board only shows.
+// What a click is accepted on: my free points or movable pieces, then the destinations of the selection, or the pieces
+// I may take after a mill. The same points are drawn as playable: the server decides, the board only shows.
 const playable = computed(() => Array.from({ length: store.geometry.points.length }, (_, n) =>
   store.selectablePoints.includes(n) || store.targetPoints.includes(n)));
+
+// Six Men's Morris. During my removal the pieces I may take get a ring instead of the playable mark, and the
+// opponent's pieces left out of the server's list are the ones a mill protects (the list holds them all when every
+// piece is in a mill, so then none is shielded). While the opponent takes a piece, the mill it closed stays lit.
+const isSix = computed(() => store.variant === 'six');
+const removable = computed(() => (store.iMustRemove ? store.selectablePoints : []));
+const protectedPoints = computed(() => {
+  if (removable.value.length === 0) return [];
+  return (store.game?.board ?? []).flatMap((owner: number | null, n: number) =>
+    owner !== null && owner !== store.mySeat && !removable.value.includes(n) ? [n] : []);
+});
+const highlighted = computed(() => (store.iMustRemove ? playable.value.map(() => false) : playable.value));
+const millPoints = computed(() => (store.removalPending ? store.game?.removal?.mill ?? [] : []));
+const piecesOnBoard = (seat: number): number => store.game?.board.filter((owner: number | null) => owner === seat).length ?? 0;
+const piecesLeft = (seat: number, inHand: number): number => piecesOnBoard(seat) + inHand;
+const countsOf = (player: { seat: number; piecesToPlace: number; lost?: number }) => isSix.value
+  ? { onBoard: piecesOnBoard(player.seat), lost: player.lost ?? 0, warn: piecesLeft(player.seat, player.piecesToPlace) === 3 }
+  : {};
+const removableCount = computed(() => removable.value.length);
+const removalOpponentName = computed(() => (opponent.value ? displayName(opponent.value.seat) : ''));
+const removerName = computed(() => {
+  const seat = store.game?.removal?.seat;
+  return seat === undefined ? '' : displayName(seat);
+});
+// "One more loss and Bob loses." for each player down to three pieces; "N moves without a capture before a draw".
+const lastPiecesNames = computed(() => {
+  if (!isSix.value || store.phase !== 'playing') return [];
+  return [opponent.value, me.value].flatMap(p => (p && piecesLeft(p.seat, p.piecesToPlace) === 3 ? [displayName(p.seat)] : []));
+});
+const quietMovesLeft = computed<number | null>(() => {
+  const g = store.game;
+  if (!isSix.value || store.phase !== 'playing' || g?.quietPlies === undefined || g.quietPlyLimit === undefined) return null;
+  return Math.max(g.quietPlyLimit - g.quietPlies, 0);
+});
+// A lot to say under the board (the banner, or two warnings and more): the board keeps its smaller size on tall screens too.
+const crowded = computed(() =>
+  store.removalPending
+  || lastPiecesNames.value.length + (quietMovesLeft.value !== null ? 1 : 0) + (store.repeatedTwice ? 1 : 0) >= 2);
 
 const { online } = useConnectionStatus();
 watch(online, (isOnline, wasOnline) => {
@@ -73,14 +111,17 @@ const announcement = computed(() => {
   if (notice) {
     return format(notice.kind === 'offered' ? ui.draw.offeredBy : ui.draw.declinedBy, { player: displayName(notice.seat) });
   }
+  const names = isSix.value ? messages.morrisBoard.sixPointNames : messages.morrisBoard.pointNames;
+  const removal = store.lastRemoval;
+  if (removal) return format(ui.table.removed, { player: displayName(removal.seat), point: names[removal.point] });
   const move = store.lastMove;
   if (!move) return '';
-  const names = messages.morrisBoard.pointNames;
+  const closed = move.mill && move.mill.length > 0 ? ` ${format(ui.table.closedMill, { player: displayName(move.seat) })}` : '';
   if (move.action === 'PLACE' && move.point !== null) {
-    return format(ui.table.placed, { player: displayName(move.seat), point: names[move.point] });
+    return format(ui.table.placed, { player: displayName(move.seat), point: names[move.point] }) + closed;
   }
   if (move.action === 'MOVE' && move.from !== null && move.to !== null) {
-    return format(ui.table.moved, { player: displayName(move.seat), from: names[move.from], to: names[move.to] });
+    return format(ui.table.moved, { player: displayName(move.seat), from: names[move.from], to: names[move.to] }) + closed;
   }
   return '';
 });
@@ -115,8 +156,8 @@ useLeaveGuard({
   forfeit: () => store.forfeit(),
 });
 
-// A game won by a line keeps the table, with the line drawn, for a moment before the end screen. A game found
-// already over (a reload) shows the end screen at once.
+// A game won by a line, or by taking a piece down to two (Six), keeps the table, with the line or the capture drawn, for
+// a moment before the end screen. A game found already over (a reload) shows the end screen at once.
 const holdingLine = ref(false);
 let holdTimer: ReturnType<typeof setTimeout> | null = null;
 function stopHold() {
@@ -125,7 +166,9 @@ function stopHold() {
 }
 watch(() => store.phase, (phase) => {
   stopHold();
-  if (phase !== 'finished' || (store.game?.winningLine.length ?? 0) === 0) return;
+  const outcome = store.game?.outcome;
+  const reduced = outcome?.status === 'FINISHED' && outcome.reason === 'REDUCED';
+  if (phase !== 'finished' || ((store.game?.winningLine.length ?? 0) === 0 && !reduced)) return;
   holdingLine.value = true;
   holdTimer = setTimeout(stopHold, WINNING_LINE_HOLD_MS);
 });
@@ -136,7 +179,10 @@ onBeforeUnmount(() => { stopHold(); endScreen.cancel(); });
 const endSubtitle = computed(() => {
   const outcome = store.game?.outcome;
   if (outcome?.status !== 'FINISHED') return '';
-  if (outcome.winner === null) return outcome.reason === 'DRAW_REPETITION' ? ui.draw.byRepetition : ui.draw.agreed;
+  if (outcome.winner === null) {
+    if (outcome.reason === 'DRAW_REPETITION') return ui.draw.byRepetition;
+    return outcome.reason === 'DRAW_MOVE_LIMIT' ? ui.draw.byMoveLimit : ui.draw.agreed;
+  }
   const winner = displayName(outcome.winner);
   const loserSeat = outcome.winner === store.mySeat ? opponent.value?.seat ?? 0 : store.mySeat;
   if (outcome.reason === 'LINE') {
@@ -146,6 +192,9 @@ const endSubtitle = computed(() => {
     return store.iWon
       ? format(ui.end.blockedWon, { player: displayName(loserSeat) })
       : format(ui.end.blockedLost, { player: winner });
+  }
+  if (outcome.reason === 'REDUCED') {
+    return store.iWon ? format(ui.end.reducedWon, { player: displayName(loserSeat) }) : format(ui.end.reducedLost, { player: winner });
   }
   if (!store.iWon) return ui.end.youLostForfeit;
   const left = store.lastForfeit;
@@ -237,7 +286,14 @@ function leaveLobby() {
         {{ ui.table.offline }}
       </div>
 
-      <div class="table" :class="{ 'table--draw-bar': showDrawBar, 'table--draw-incoming': store.incomingDrawOffer }">
+      <div
+        class="table"
+        :class="{
+          'table--draw-bar': showDrawBar,
+          'table--draw-incoming': store.incomingDrawOffer,
+          'table--six': isSix,
+          'table--crowded': crowded,
+        }">
         <MorrisPlayerTag
           v-if="opponent"
           class="tag-slot"
@@ -245,6 +301,7 @@ function leaveLobby() {
           :colour="colourOf(opponent.seat)"
           :pieces-to-place="opponent.piecesToPlace"
           :marked="store.geometry.refined"
+          v-bind="countsOf(opponent)"
           :active="opponent.current && store.phase === 'playing'" />
 
         <MorrisBoard
@@ -252,10 +309,13 @@ function leaveLobby() {
           :geometry="store.geometry"
           :last-move="store.opponentLastMove"
           :selectable="playable"
-          :highlighted="playable"
+          :highlighted="highlighted"
           :selected="store.selected"
-          :targets="store.targetPoints"
           :winning-line="store.game?.winningLine ?? []"
+          :mill="millPoints"
+          :removable="removable"
+          :protected-points="protectedPoints"
+          :captured="store.capturedPoint"
           :disabled="boardDisabled"
           :interactive="store.isMyTurn"
           :announcement="announcement"
@@ -269,15 +329,46 @@ function leaveLobby() {
           :colour="colourOf(me.seat)"
           :pieces-to-place="me.piecesToPlace"
           :marked="store.geometry.refined"
+          v-bind="countsOf(me)"
           :active="store.isMyTurn" />
 
         <YourTurnIndicator class="turn-slot" :active="store.isMyTurn" />
-        <p v-if="store.phase === 'playing'" class="phase-hint" data-test="phase-hint">{{ phaseHint }}</p>
+        <div
+          v-if="store.removalPending && store.phase === 'playing'"
+          class="removal-banner"
+          :class="{ 'removal-banner--info': !store.iMustRemove }"
+          data-test="removal-banner"
+          role="status">
+          <svg class="removal-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true" focusable="false">
+            <circle cx="12" cy="12" r="8" stroke-dasharray="3 3" />
+            <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
+          </svg>
+          <div class="removal-text">
+            <template v-if="store.iMustRemove">
+              <div class="removal-title" data-test="removal-title">{{ format(ui.table.removeTitleMine, { player: removalOpponentName }) }}</div>
+              <div class="removal-sub">
+                <span data-test="removal-can-take">{{ plural(ui.table.removeCanTake, removableCount) }}</span>
+                <span v-if="protectedPoints.length > 0" data-test="removal-protected">{{ format(ui.table.removeProtected, { player: removalOpponentName }) }}</span>
+              </div>
+            </template>
+            <template v-else>
+              <div class="removal-title" data-test="removal-title">{{ format(ui.table.removeTitleTheirs, { player: removerName }) }}</div>
+              <div class="removal-sub" data-test="removal-sub">{{ ui.table.removeSubTheirs }}</div>
+            </template>
+          </div>
+        </div>
+        <p v-if="store.phase === 'playing' && !store.removalPending" class="phase-hint" data-test="phase-hint">{{ phaseHint }}</p>
         <p v-if="noPieceDownYet && store.phase === 'playing'" class="colour-hint" data-test="colour-hint">
           {{ format(ui.table.youPlay, { colour: store.myColour === 'WHITE' ? ui.white : ui.black }) }}
         </p>
         <p v-if="store.repeatedTwice" class="repetition-hint" data-test="repetition-hint" role="status">
           {{ ui.draw.repetition }}
+        </p>
+        <p v-for="name in lastPiecesNames" :key="name" class="warning-hint" data-test="last-pieces" role="status">
+          {{ format(ui.table.lastPieces, { player: name }) }}
+        </p>
+        <p v-if="quietMovesLeft !== null" class="warning-hint" data-test="quiet-warning" role="status">
+          {{ plural(ui.table.quietMoves, quietMovesLeft) }}
         </p>
       </div>
 
@@ -401,7 +492,8 @@ function leaveLobby() {
 }
 .colour-hint { font-size: 0.75rem; color: rgba(255, 255, 255, 0.6); }
 
-.repetition-hint {
+.repetition-hint,
+.warning-hint {
   flex: none;
   margin: 0;
   text-align: center;
@@ -410,9 +502,37 @@ function leaveLobby() {
   overflow-wrap: anywhere;
 }
 
+/* After a mill (Six): the instruction under my tag, in a banner; the other player reads who is taking a piece. */
+.removal-banner {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-sizing: border-box;
+  max-width: 100%;
+  padding: 8px 14px;
+  border-radius: 14px;
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(245, 200, 66, 0.55);
+}
+.removal-banner--info { border-color: rgba(255, 255, 255, 0.22); }
+.removal-icon { flex: none; width: 22px; height: 22px; color: var(--gold); }
+.removal-text { min-width: 0; }
+.removal-title { font-weight: 700; font-size: 0.9rem; overflow-wrap: anywhere; }
+.removal-sub { margin-top: 2px; font-size: 0.78rem; color: rgba(255, 255, 255, 0.75); overflow-wrap: anywhere; }
+.removal-sub span + span { margin-left: 0.35em; }
+
 /* The draw bar sits under the table, above Back (the validated "Table A" layout). The board gives it room. */
 .table--draw-bar { --morris-board-vh: 46vh; }
 .table--draw-incoming { --morris-board-vh: 36vh; }
+/* Six has more to say under the board (the banner, the warnings): the board gives the room. On a tall screen a calm
+   table gets the 416 px board of the design (52vh at 800 px); a crowded one, and every phone, keep 40vh. */
+.table--six.table--draw-bar { --morris-board-vh: 40vh; }
+.table--six.table--draw-incoming { --morris-board-vh: 36vh; }
+@media (min-height: 780px) {
+  .table--six.table--draw-bar:not(.table--crowded):not(.table--draw-incoming) { --morris-board-vh: 52vh; }
+}
 .table--draw-incoming .turn-slot { display: none; }
 .draw-bar {
   flex: none;

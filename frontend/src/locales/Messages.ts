@@ -234,7 +234,7 @@ export interface OptionsMessages {
     vars: Record<string, Record<string, Record<string, string>>>;
   };
   threeMenMorris: {
-    variant: OptionTexts;              // `label`, then `tapatan` / `achi`
+    variant: OptionTexts;              // `label`, then `tapatan` / `achi` / `six`
     hostColour: OptionTexts;           // `label`, then `white` / `black` / `random`
     level: OptionTexts;                // a bot seat's level: `label`, then `random` (Easy) / `greedy` (Medium) / `perfect` (Expert)
   };
@@ -541,7 +541,7 @@ export interface TurnMessages {
 
 // What a Three Men's Morris variant is called, said in a few words, and its rule in one line.
 export interface MorrisVariantTexts {
-  name: string;                        // Tapatan, Achi
+  name: string;                        // Tapatan, Achi, Six Men's Morris
   summary: string;                     // under the name on its lobby card
   rule: string;                        // the rule line shown under the choice
 }
@@ -551,7 +551,7 @@ export interface MorrisLobbyMessages {
   variantLabel: string;                // group name of the variant cards
   colourLabel: string;                 // group name of the colour buttons, for the host
   hostPlays: string;                   // the same choice, read by the others
-  variants: Record<'tapatan' | 'achi', MorrisVariantTexts>;
+  variants: Record<'tapatan' | 'achi' | 'six', MorrisVariantTexts>;
   colours: { white: string; black: string; random: string };
 }
 
@@ -559,7 +559,12 @@ export interface MorrisLobbyMessages {
 export interface MorrisBoardMessages {
   boardLabel: string;                  // name of the board group
   pointNames: string[];                // the nine points, row by row (0 1 2 / 3 4 5 / 6 7 8)
+  sixPointNames: string[];             // the 16 points of Six Men's Morris: outer square 0..7, inner square 8..15, clockwise
   white: string;                       // a White piece is on the point
+  inMill: string;                      // the point is in the mill just closed
+  canTake: string;                     // I may take this piece now
+  protectedPiece: string;              // this piece is protected by a mill: it cannot be taken now
+  justTaken: string;                   // a piece was just taken from this point
   black: string;                       // a Black piece is on the point
   free: string;                        // the point is empty
   canMove: string;                     // I may select this piece
@@ -668,8 +673,20 @@ export interface ThreeMenMorrisUiMessages {
     waitingFor: string;                // '{player}': not my turn
     piecesLeft: PluralForms;           // '{n}' = pieces still to place (accessible name of the discs)
     colourTag: string;                 // '{name}', '{colour}': accessible name of a player tag
+    countsTag: string;                 // '{name}', '{colour}', '{board}', '{hand}', '{lost}': accessible name of a tag with counts
+    onBoard: string;                   // '{n}': pieces on the board, in the player tag
+    lost: string;                      // '{n}': pieces taken so far, in the player tag
     placed: string;                    // '{player}', '{point}': live region after a placement
     moved: string;                     // '{player}', '{from}', '{to}': live region after a move
+    closedMill: string;                // '{player}': added to the live region when a move closed a mill
+    removed: string;                   // '{player}', '{point}': live region after a removal
+    lastPieces: string;                // '{player}': at three pieces left, one more loss ends the game
+    quietMoves: PluralForms;           // '{n}' = moves left without a capture before a draw
+    removeTitleMine: string;           // '{player}' (the opponent): banner of my removal
+    removeCanTake: PluralForms;        // '{n}' = pieces I can take
+    removeProtected: string;           // '{player}': pieces in a mill are safe while the opponent has others
+    removeTitleTheirs: string;         // '{player}': banner while the opponent takes a piece of mine
+    removeSubTheirs: string;           // the rest of the sentence
     forfeited: string;                 // '{player}'
     offline: string;                   // my own connection is down; the socket retries by itself
   };
@@ -685,6 +702,7 @@ export interface ThreeMenMorrisUiMessages {
     declinedBy: string;                // '{player}': live region
     agreed: string;                    // end screen subtitle
     byRepetition: string;              // end screen subtitle
+    byMoveLimit: string;               // end screen subtitle (Six): too long without a capture
   };
   end: {
     winner: string;                    // '{player}': names the winner on the end screen
@@ -692,6 +710,8 @@ export interface ThreeMenMorrisUiMessages {
     youLostLine: string;               // '{player}' lined up three
     blockedWon: string;                // '{player}' (the loser) cannot move
     blockedLost: string;               // '{player}' (the winner)
+    reducedWon: string;                // '{player}' (the loser) has only two pieces left
+    reducedLost: string;               // '{player}' (the winner); I have only two pieces left
     youWonResigned: string;            // '{player}'
     youWonDisconnected: string;        // '{player}'
     youWonForfeit: string;             // the opponent left, reason unknown (event missed after a reload)
@@ -718,7 +738,7 @@ export interface Messages {
   mangolaUi: MangolaUiMessages; // Mangola screen, board and placement editor
   threeMenMorrisUi: ThreeMenMorrisUiMessages; // Three Men's Morris screens
   morrisLobby: MorrisLobbyMessages; // Three Men's Morris lobby options
-  morrisVariantRules: Record<'achi', RulesMessages>; // rules panel of the variants (Tapatan: threeMenMorris)
+  morrisVariantRules: Record<'achi' | 'six', RulesMessages>; // rules panel of the variants (Tapatan: threeMenMorris)
   bullshitUi: BullshitUiMessages; // Bullshit screens
   koboUi: KoboUiMessages;   // Kobo screens
   batailleCorseUi: BatailleCorseUiMessages; // Bataille Corse table

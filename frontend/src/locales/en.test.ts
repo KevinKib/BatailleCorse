@@ -335,8 +335,8 @@ describe("Three Men's Morris messages", () => {
 
   it('givenThePicker_thenMorrisIsNamedWithAShortPitchAndItsTwoPlayers', () => {
     expect(messagesEn.gamePicker.games['three-men-morris']).toEqual({
-      name: "Three Men's Morris",
-      description: 'Line up your three pieces. Place, then slide.',
+      name: 'Morris',
+      description: "Tapatan, Achi or Six Men's Morris. Place, then slide.",
       players: '2 players',
       play: 'Play',
     });
@@ -354,6 +354,27 @@ describe("Three Men's Morris messages", () => {
     }
     expect(text).toContain('cannot move');
     expect(text).toContain('white');
+  });
+
+  it('givenTheSixRules_thenTheyCoverMillsRemovalDrawsAndTheBots', () => {
+    const rules = messagesEn.morrisVariantRules.six;
+    expect(rules.panelTitle).toBe("Six Men's Morris");
+    for (const topic of ['goal', 'board', 'placement', 'movement', 'mills', 'blocked', 'draws', 'bots', 'forfeit']) {
+      expect(rules.sections.some(s => s.title.toLowerCase().includes(topic)), topic).toBe(true);
+    }
+    const text = rules.sections.map(s => (s.kind === 'text' ? s.body : []).join(' ')).join(' ').toLowerCase();
+    expect(text).toContain('two pieces');
+    expect(text).toContain('never jump');
+    expect(text).toContain('fifty moves');
+    expect(text).toContain('three moves ahead');
+    expect(emptyLeaves(messagesEn.morrisVariantRules, 'morrisVariantRules')).toEqual([]);
+  });
+
+  it('givenTheSixBoard_thenItNamesSixteenPointsAndTheMillStates', () => {
+    const board = messagesEn.morrisBoard;
+    expect(board.sixPointNames).toHaveLength(16);
+    expect(new Set(board.sixPointNames).size).toBe(16);
+    expect(emptyLeaves(board, 'morrisBoard')).toEqual([]);
   });
 
   it('givenTheTableMessages_thenEveryLeafStringIsNonEmpty', () => {

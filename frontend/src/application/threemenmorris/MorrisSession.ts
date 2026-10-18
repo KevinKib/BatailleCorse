@@ -31,6 +31,11 @@ export default class MorrisSession extends SeatGameSession<MorrisView, MorrisRes
     this.publishAction('/app/three-men-morris/move', { from, to });
   }
 
+  /** After a mill (Six Men's Morris): take the opponent piece on `point`, one the server listed as removable. */
+  remove(point: number): void {
+    this.publishAction('/app/three-men-morris/remove', { point });
+  }
+
   /** Movement phase: propose a draw. The opponent answers, or a move by either player withdraws it. */
   offerDraw(): void {
     this.publishAction('/app/three-men-morris/offerDraw');

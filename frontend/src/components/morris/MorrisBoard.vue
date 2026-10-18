@@ -7,11 +7,13 @@ import {
 } from '../../model/threemenmorris/geometries';
 
 // The Three Men's Morris board, presentational only: one real button per point of the variant's geometry, placed from
-// its coordinates over a decorative SVG of its lines. Points are numbered row by row (0 1 2 / 3 4 5 / 6 7 8, the
-// centre is 4), like the backend. A geometry flagged `refined` gets a plaque under the lines, the moves lit along the
-// line from the selected piece and a mark on the pieces besides their colour (no variant is refined for now). It knows
-// nothing of sessions or stores: the table passes what to show and decides what an event means (place, select, move,
-// deselect).
+// its coordinates over a decorative SVG of its lines. The 3x3 boards number their points row by row (0 1 2 / 3 4 5 /
+// 6 7 8, the centre is 4), Six Men's Morris its 16 points clockwise on each square (see geometries.ts), like the
+// backend. A geometry flagged `refined` (Six) gets a plaque under the lines, smaller points (18% of the board, 44 px at
+// least: a third of the board would overlap on 16 points) and a mark on the pieces besides their colour. After a mill
+// the board lights the mill, rings the pieces that can be taken (a dashed ring that turns) and shields those a mill
+// protects; a piece just taken leaves a mark. It knows nothing of sessions or stores: the table passes what to show and
+// decides what an event means (place, select, move, remove, deselect).
 type Owner = 'white' | 'black' | null;
 
 const props = withDefaults(defineProps<{
@@ -20,8 +22,11 @@ const props = withDefaults(defineProps<{
   selectable?: boolean[];        // points a click or Enter is accepted on (own movable pieces, free points, destinations)
   highlighted?: boolean[];       // points drawn as playable: free points, playable pieces, then the destinations
   selected?: number | null;      // the selected piece
-  targets?: number[];            // the legal destinations of the selected piece (a refined board lights a path to each)
   winningLine?: number[];        // the points of the winning line, held on screen at the end
+  mill?: number[];               // the three points of the mill just closed, lit while its owner takes a piece
+  removable?: number[];          // the pieces the viewer may take now (a dashed ring that turns)
+  protectedPoints?: number[];    // the pieces a mill protects from this removal (a shield)
+  captured?: number | null;      // the point a piece was just taken from, marked until the next move
   lastMove?: number[];           // the points of the opponent's last move, faintly ringed until the next state
   disabled?: boolean;            // game over or offline: readable but inert
   interactive?: boolean;         // false while it is not my turn: readable, nothing highlighted, inert
@@ -31,8 +36,11 @@ const props = withDefaults(defineProps<{
   selectable: () => [],
   highlighted: () => [],
   selected: null,
-  targets: () => [],
   winningLine: () => [],
+  mill: () => [],
+  removable: () => [],
+  protectedPoints: () => [],
+  captured: null,
   lastMove: () => [],
   disabled: false,
   interactive: true,
@@ -46,6 +54,7 @@ const emit = defineEmits<{
 
 const ui = useI18n().morrisBoard;
 
+const pointNames = computed(() => (props.geometry.key === 'six' ? ui.sixPointNames : ui.pointNames));
 const POINTS = computed(() => Array.from({ length: props.geometry.points.length }, (_, n) => n));
 const refined = computed(() => props.geometry.refined);
 const lineKey = (segment: readonly number[]): string => segment.join('-');
@@ -67,15 +76,19 @@ const inert = computed(() => props.disabled || !props.interactive);
 const winningSegments = computed(() => new Set(segmentsOnLine(props.geometry, props.winningLine).map(lineKey)));
 const isWinningPoint = (n: number): boolean => props.winningLine.includes(n);
 
-// The line from the selected piece to each of its destinations, lit on the refined board.
-const litPaths = computed(() => {
-  const from = props.selected;
-  if (!refined.value || inert.value || from === null) return [];
-  const { points } = props.geometry;
-  return props.targets.map((to) => ({
-    to, x1: points[from].x, y1: points[from].y, x2: points[to].x, y2: points[to].y,
-  }));
+// The sides of the mill just closed, lit like a winning line; they are drawn last, on top of the others.
+const millSegments = computed(() => new Set(segmentsOnLine(props.geometry, props.mill).map(lineKey)));
+const isMillPoint = (n: number): boolean => props.mill.includes(n);
+const drawnSegments = computed(() => {
+  const lit = (segment: readonly number[]) =>
+    millSegments.value.has(lineKey(segment)) || winningSegments.value.has(lineKey(segment));
+  return [...props.geometry.segments.filter((s) => !lit(s)), ...props.geometry.segments.filter(lit)];
 });
+
+// The pieces to take and the protected ones only show while the board answers (not while the other player is taking).
+const isRemovable = (n: number): boolean => !inert.value && props.removable.includes(n);
+const isProtected = (n: number): boolean => !inert.value && props.protectedPoints.includes(n);
+const isCaptured = (n: number): boolean => props.captured === n;
 const canAct = (n: number): boolean => !inert.value && props.selectable[n] === true;
 
 function stateOf(n: number): 'selected' | 'highlighted' | 'idle' {
@@ -87,8 +100,11 @@ function labelOf(n: number): string {
   const owner = props.cells[n];
   const words = [owner === 'white' ? ui.white : owner === 'black' ? ui.black : ui.free];
   if (props.selected === n) words.push(ui.selected);
-  if (canAct(n) && props.selected !== n) words.push(owner ? ui.canMove : ui.canPlace);
-  return format(ui.pointLabel, { point: ui.pointNames[n], state: words.join(', ') });
+  if (canAct(n) && props.selected !== n) words.push(isRemovable(n) ? ui.canTake : owner ? ui.canMove : ui.canPlace);
+  if (isProtected(n)) words.push(ui.protectedPiece);
+  if (isMillPoint(n)) words.push(ui.inMill);
+  if (isCaptured(n)) words.push(ui.justTaken);
+  return format(ui.pointLabel, { point: pointNames.value[n], state: words.join(', ') });
 }
 
 // One tab stop for the whole board (roving tabindex): where focus last was, else the first point to act
@@ -97,7 +113,7 @@ const roving = ref<number | null>(null);
 const tabStop = computed(() => {
   if (roving.value !== null) return roving.value;
   const first = POINTS.value.find((n) => canAct(n));
-  return first ?? props.selected ?? 4;
+  return first ?? props.selected ?? props.geometry.focusStart;
 });
 
 const buttons = useTemplateRef<HTMLButtonElement[]>('buttons');
@@ -158,23 +174,17 @@ function onKeyup(event: KeyboardEvent): void {
     <div v-if="refined" class="morris-plaque" data-test="plaque" aria-hidden="true"></div>
     <svg class="morris-lines" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
       <line
-        v-for="segment in geometry.segments"
+        v-for="segment in drawnSegments"
         :key="lineKey(segment)"
         class="morris-line"
-        :class="{ 'morris-line--winning': winningSegments.has(lineKey(segment)) }"
+        :class="{
+          'morris-line--winning': winningSegments.has(lineKey(segment)),
+          'morris-line--mill': millSegments.has(lineKey(segment)),
+        }"
         :data-line="lineKey(segment)"
         :data-winning="winningSegments.has(lineKey(segment)) ? 'true' : undefined"
+        :data-mill="millSegments.has(lineKey(segment)) ? 'true' : undefined"
         v-bind="lineEnds(segment)"
-      />
-    </svg>
-    <svg v-if="litPaths.length" class="morris-lines" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
-      <line
-        v-for="path in litPaths"
-        :key="path.to"
-        class="morris-path"
-        data-test="lit-path"
-        :data-to="path.to"
-        :x1="path.x1" :y1="path.y1" :x2="path.x2" :y2="path.y2"
       />
     </svg>
     <div class="morris-grid">
@@ -189,6 +199,10 @@ function onKeyup(event: KeyboardEvent): void {
         :data-owner="cells[n] ?? 'none'"
         :data-state="stateOf(n)"
         :data-winning="isWinningPoint(n) ? 'true' : undefined"
+        :data-mill="isMillPoint(n) ? 'true' : undefined"
+        :data-removable="isRemovable(n) ? 'true' : undefined"
+        :data-protected="isProtected(n) ? 'true' : undefined"
+        :data-captured="isCaptured(n) ? 'true' : undefined"
         :data-last="isLastMove(n) ? 'true' : undefined"
         :aria-label="labelOf(n)"
         :aria-pressed="selected === n ? 'true' : 'false'"
@@ -208,6 +222,17 @@ function onKeyup(event: KeyboardEvent): void {
               :data-mark="cells[n] === 'white' ? 'ring' : 'diamond'"></span>
           </span>
         </Transition>
+        <span v-if="isCaptured(n)" class="morris-captured" data-test="captured-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" focusable="false">
+            <path d="M6 6l12 12M18 6L6 18" />
+          </svg>
+        </span>
+        <span v-if="isRemovable(n)" class="morris-removal-ring" data-test="removal-ring" aria-hidden="true"></span>
+        <span v-if="isProtected(n)" class="morris-shield" data-test="shield" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round" focusable="false">
+            <path d="M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6z" />
+          </svg>
+        </span>
       </button>
     </div>
     <div class="morris-live" role="status" data-test="board-live">{{ announcement }}</div>
@@ -242,7 +267,8 @@ function onKeyup(event: KeyboardEvent): void {
   stroke-width: 1.4;
   stroke-linecap: round;
 }
-.morris-line--winning {
+.morris-line--winning,
+.morris-line--mill {
   stroke: var(--gold);
   stroke-width: 3;
   filter: drop-shadow(0 0 3px rgba(var(--accent-active-rgb), 0.8));
@@ -335,7 +361,8 @@ function onKeyup(event: KeyboardEvent): void {
   background: radial-gradient(circle at 35% 30%, #4a433d 0%, var(--morris-ebony) 60%, #0d0b0a 100%);
   box-shadow: var(--card-shadow), inset 0 0 0 1.5px var(--morris-ebony-edge);
 }
-.morris-point[data-winning='true'] .morris-piece {
+.morris-point[data-winning='true'] .morris-piece,
+.morris-point[data-mill='true'] .morris-piece {
   box-shadow: var(--card-shadow), 0 0 0 3px var(--gold), 0 0 16px rgba(var(--accent-active-rgb), 0.7);
 }
 
@@ -343,54 +370,93 @@ function onKeyup(event: KeyboardEvent): void {
 .piece-enter-active { transition: opacity 150ms ease-out, transform 150ms ease-out; }
 .piece-enter-from { opacity: 0; transform: scale(0.6); }
 
-/* The refined table (for a board with more points than nine). A point is a circle of 23% of the board (at least
-   44 px from a board of 191 px) and a piece 18%. Sizes below are percentages of that circle: 14.8% is a 3.4% dot,
-   56.5% a 13% ring, 78.3% an 18% piece. */
+/* The refined table (Six Men's Morris: 16 points). A point is a circle of 18% of the board (at least 44 px from a board
+   of 244 px) and a piece 75% of that circle. The sizes below are percentages of the circle: 16% a dot, 52% a ring,
+   96% the selection, 94% the last-move ring. */
 .morris-plaque {
   position: absolute;
-  inset: 4%;
+  inset: 1.5%;
   border-radius: 6%;
   background: rgba(0, 0, 0, 0.28);
   box-shadow: inset 0 0 0 1px rgba(var(--accent-active-rgb), 0.24), inset 0 2px 14px rgba(0, 0, 0, 0.4);
   pointer-events: none;
 }
-.morris-board[data-refined='true'] .morris-line:not(.morris-line--winning) {
-  stroke: rgba(var(--accent-active-rgb), 0.62);
-  stroke-width: 1;
+.morris-board[data-refined='true'] .morris-line:not(.morris-line--winning):not(.morris-line--mill) {
+  stroke: rgba(var(--accent-active-rgb), 0.55);
+  stroke-width: 0.9;
 }
-/* The move from the selected piece to a destination, lit along its line. */
-.morris-path {
-  stroke: var(--gold);
+.morris-board[data-refined='true'] .morris-line--winning,
+.morris-board[data-refined='true'] .morris-line--mill {
   stroke-width: 2.4;
-  stroke-linecap: round;
-  opacity: 0.95;
 }
 .morris-board[data-refined='true'] .morris-point {
-  width: 23%;
-  height: 23%;
+  width: 18%;
+  height: 18%;
+  min-width: 44px;
+  min-height: 44px;
 }
-.morris-board[data-refined='true'] .morris-point::before { width: 14.8%; }
+.morris-board[data-refined='true'] .morris-point::before { width: 16%; }
 .morris-board[data-refined='true'] .morris-point[data-state='highlighted']::before {
-  width: 56.5%;
-  border-radius: 50%;
-  transform: none;
+  width: 52%;
   background: rgba(var(--accent-active-rgb), 0.18);
   opacity: 1;
 }
 .morris-board[data-refined='true'] .morris-point[data-owner='white'][data-state='highlighted']::before,
 .morris-board[data-refined='true'] .morris-point[data-owner='black'][data-state='highlighted']::before {
-  width: 93.5%;
+  width: 89%;
   background: none;
 }
 .morris-board[data-refined='true'] .morris-point[data-state='selected']::before {
-  width: 97.8%;
-  border-radius: 50%;
-  transform: none;
+  width: 96%;
   background: none;
   opacity: 1;
 }
-.morris-board[data-refined='true'] .morris-point[data-last='true']::after { width: 89%; }
-.morris-board[data-refined='true'] .morris-piece { width: 78.3%; }
+.morris-board[data-refined='true'] .morris-point[data-last='true']::after { width: 94%; }
+.morris-board[data-refined='true'] .morris-point[data-captured='true']::before { display: none; }
+.morris-board[data-refined='true'] .morris-piece { width: 75%; }
+
+/* After a mill: a dashed white ring that turns slowly on each piece that can be taken. It keeps turning under reduced
+   motion (slow, small, and the only mark of what is playable); a shield marks a piece a mill protects. */
+.morris-removal-ring {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  border-radius: 50%;
+  border: 3px dashed #ffffff;
+  pointer-events: none;
+  animation: ring-turn 8s linear infinite;
+}
+@keyframes ring-turn { to { transform: rotate(360deg); } }
+.morris-shield {
+  position: absolute;
+  right: 2%;
+  bottom: 2%;
+  width: 32%;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  border-radius: 50%;
+  background: var(--felt-edge, #0d2e18);
+  border: 1.5px solid rgba(255, 255, 255, 0.75);
+  color: #ffffff;
+  pointer-events: none;
+}
+.morris-shield svg { width: 62%; height: 62%; }
+/* The point a piece was just taken from: a dashed ring with a cross, until the next move. */
+.morris-captured {
+  position: absolute;
+  width: 46%;
+  aspect-ratio: 1;
+  box-sizing: border-box;
+  border-radius: 50%;
+  border: 2px dashed rgba(255, 255, 255, 0.55);
+  display: grid;
+  place-items: center;
+  color: rgba(255, 255, 255, 0.75);
+  pointer-events: none;
+}
+.morris-captured svg { width: 55%; height: 55%; }
 
 /* Besides their colour, White has an engraved ring and Black a small light diamond. */
 .morris-piece-mark {
@@ -426,6 +492,7 @@ function onKeyup(event: KeyboardEvent): void {
 
 @media (prefers-reduced-motion: reduce) {
   .piece-enter-active { transition: none; }
-  .morris-line--winning { animation: none; }
+  .morris-line--winning,
+  .morris-line--mill { animation: none; }
 }
 </style>
