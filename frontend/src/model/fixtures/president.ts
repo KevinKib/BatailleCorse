@@ -4,14 +4,11 @@ import type { PresidentPlayer, PresidentState, PresidentTrick } from '../preside
 /** The options of a fresh room as the server fills them in (`PresidentOptions.defaults()`). */
 export const CLASSIC_PRESIDENT_OPTIONS: Record<string, string> = {
   afterPass: 'reenter',
-  firstLead: 'kingOfHearts',
   exchange: 'two',
   giveBack: 'free',
   nextLead: 'scum',
   scoring: 'rank',
   length: 'rounds-5',
-  equalPlay: 'on',
-  forbiddenFinish: 'lastPlace',
   mustPlay: 'off',
 };
 

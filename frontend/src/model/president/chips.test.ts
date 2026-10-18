@@ -5,18 +5,16 @@ import { buildPresidentTrick, CLASSIC_PRESIDENT_OPTIONS } from '../fixtures/pres
 const classic = { ...CLASSIC_PRESIDENT_OPTIONS };
 
 describe('ruleChips', () => {
-  it('givenAnEmptyTrickInRoundOne_thenTheLeadRuleAndThePassRuleAreShown', () => {
+  it('givenAnEmptyTrickInRoundOne_thenOnlyThePassRuleIsShown', () => {
     const chips = ruleChips({ options: classic, trick: buildPresidentTrick(), round: 1 });
     expect(chips).toEqual([
-      { key: 'firstLead.kingOfHearts' },
       { key: 'afterPass.reenter' },
-      { key: 'forbiddenFinish.lastPlace' },
     ]);
   });
 
   it('givenAnEmptyTrickAfterRoundOne_thenNoLeadRuleIsShown', () => {
     const chips = ruleChips({ options: classic, trick: buildPresidentTrick(), round: 2 });
-    expect(chips.map(c => c.key)).toEqual(['afterPass.reenter', 'forbiddenFinish.lastPlace']);
+    expect(chips.map(c => c.key)).toEqual(['afterPass.reenter']);
   });
 
   it('givenATopPlay_thenTheChipSaysWhatToBeat', () => {
@@ -33,7 +31,7 @@ describe('ruleChips', () => {
 
   it('givenAnOptionValueTheClientDoesNotKnow_thenItGetsNoChip', () => {
     const chips = ruleChips({
-      options: { afterPass: 'sideways', forbiddenFinish: 'sometimes', mustPlay: 'maybe' }, trick: buildPresidentTrick(), round: 2,
+      options: { afterPass: 'sideways', mustPlay: 'maybe' }, trick: buildPresidentTrick(), round: 2,
     });
     expect(chips).toEqual([]);
   });
@@ -58,7 +56,7 @@ describe('ruleChips, equal play', () => {
   it('givenAFreeTrick_thenNoMatchChipIsShown', () => {
     const trick = buildPresidentTrick({ top: { kind: 'SET', rank: 'NINE', count: 1 }, constraint: 'BEAT' });
     expect(ruleChips({ options: classic, trick, round: 3 }).map(c => c.key))
-      .toEqual(['beat', 'afterPass.reenter', 'forbiddenFinish.lastPlace']);
+      .toEqual(['beat', 'afterPass.reenter']);
   });
 });
 
@@ -66,16 +64,16 @@ describe('ruleChips, the trick variants', () => {
   const keys = (options: Record<string, string>) =>
     ruleChips({ options, trick: buildPresidentTrick(), round: 3 }).map(c => c.key);
 
-  it('givenTheClassicDefaults_thenTheForbiddenFinishIsShownAndNoCompulsoryPlay', () => {
-    expect(keys(classic)).toEqual(['afterPass.reenter', 'forbiddenFinish.lastPlace']);
+  it('givenTheClassicDefaults_thenNoCompulsoryPlayChipIsShown', () => {
+    expect(keys(classic)).toEqual(['afterPass.reenter']);
   });
 
   it('givenCompulsoryPlay_thenItsChipIsShown', () => {
     expect(keys({ ...classic, mustPlay: 'on' })).toContain('mustPlay.on');
   });
 
-  it('givenTheVariantsSwitchedOff_thenTheirChipsGoAway', () => {
-    const chips = keys({ ...classic, forbiddenFinish: 'off', mustPlay: 'off' });
+  it('givenCompulsoryPlaySwitchedOff_thenItsChipGoesAway', () => {
+    const chips = keys({ ...classic, mustPlay: 'off' });
     expect(chips).toEqual(['afterPass.reenter']);
   });
 });

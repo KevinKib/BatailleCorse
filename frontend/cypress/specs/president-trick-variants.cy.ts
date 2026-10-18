@@ -36,7 +36,8 @@ const texts = (selector: string) => cy.get(selector).then(($e) => [...$e].map((e
 
           // The rules in force are on the table.
           texts('[data-test="rule-chip"]').then((chips) => {
-            expect(chips).to.include('Out on a 2: last place');
+            expect(chips).to.include('After a pass: play again');
+            expect(chips).not.to.include('Out on a 2: last place');
           });
 
           // 1. The cut.
