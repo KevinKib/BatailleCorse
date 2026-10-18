@@ -36,8 +36,8 @@ describe('Game picker', () => {
       cy.contains('button', 'Play');
     });
     cy.get('[data-test="choice-three-men-morris"]').within(() => {
-      cy.contains('h2', "Three Men's Morris");
-      cy.contains('Line up your three pieces. Place, then slide.');
+      cy.contains('h2', 'Morris');
+      cy.contains("Tapatan, Achi or Six Men's Morris. Place, then slide.");
       cy.contains('2 players');
       cy.contains('button', 'Play');
     });

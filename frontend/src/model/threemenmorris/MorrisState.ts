@@ -16,7 +16,7 @@ export type MorrisReason =
   | 'DRAW_MOVE_LIMIT';
 
 /** The variants a lobby offers; the server leaves `variant` out of the state for the default, Tapatan. */
-export type MorrisVariantKey = 'tapatan' | 'achi';
+export type MorrisVariantKey = 'tapatan' | 'achi' | 'six';
 
 export type MorrisColour = 'WHITE' | 'BLACK';
 

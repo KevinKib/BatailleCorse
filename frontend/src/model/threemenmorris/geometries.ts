@@ -15,20 +15,23 @@ export interface MorrisPointPosition {
 export interface MorrisGeometry {
   key: MorrisVariantKey;
   /**
-   * The points as the server numbers them: the nine of the grid row by row (0 1 2 / 3 4 5 / 6 7 8, the centre is 4).
+   * The points as the server numbers them: the nine of the grid row by row (0 1 2 / 3 4 5 / 6 7 8, the centre is 4),
+   * or the 16 of Six Men's Morris (outer square 0..7, inner square 8..15, clockwise from the top left).
    */
   points: readonly MorrisPointPosition[];
   /**
-   * What is drawn: the three points of each line.
+   * What is drawn: the three points of each line on the 3x3 boards, the two ends of each half-side or join on Six.
    */
   segments: readonly (readonly number[])[];
   /** Pieces each player holds. */
   pieces: number;
-  /** The refined table: a plaque under the lines, lit paths, and a mark on the pieces besides colour. */
+  /** The refined table (Six): a plaque under the lines, smaller points, and a mark on the pieces and tags besides colour. */
   refined: boolean;
+  /** The point holding the single tab stop of the board when nothing else claims it: the centre of a 3x3 grid. */
+  focusStart: number;
 }
 
-export const VARIANT_KEYS: readonly MorrisVariantKey[] = ['tapatan', 'achi'];
+export const VARIANT_KEYS: readonly MorrisVariantKey[] = ['tapatan', 'achi', 'six'];
 
 const coordinate = (n: number): number => Math.round(((n * 2 + 1) * 100 / 6) * 100) / 100;
 const GRID: readonly MorrisPointPosition[] = Array.from({ length: 9 }, (_, i) => ({
@@ -43,9 +46,28 @@ const LINES: readonly (readonly number[])[] = [
   [0, 4, 8], [2, 4, 6],
 ];
 
+/**
+ * Six Men's Morris: two concentric squares joined at the middles of their sides, numbered like the server (outer
+ * square 0..7 clockwise from the top left, inner square 8..15 in the same order, `i + 8` is the inner twin of `i`).
+ */
+const SIX_POINTS: readonly MorrisPointPosition[] = [
+  { x: 8, y: 8 }, { x: 50, y: 8 }, { x: 92, y: 8 }, { x: 92, y: 50 },
+  { x: 92, y: 92 }, { x: 50, y: 92 }, { x: 8, y: 92 }, { x: 8, y: 50 },
+  { x: 29, y: 29 }, { x: 50, y: 29 }, { x: 71, y: 29 }, { x: 71, y: 50 },
+  { x: 71, y: 71 }, { x: 50, y: 71 }, { x: 29, y: 71 }, { x: 29, y: 50 },
+];
+
+/** Each side of a square cut at its middle (16 half-sides), then the four joins between the squares: 20 segments. */
+const SIX_SEGMENTS: readonly (readonly number[])[] = [
+  ...Array.from({ length: 8 }, (_, i) => [i, (i + 1) % 8]),
+  ...Array.from({ length: 8 }, (_, i) => [8 + i, 8 + ((i + 1) % 8)]),
+  [1, 9], [3, 11], [5, 13], [7, 15],
+];
+
 export const GEOMETRIES: Record<MorrisVariantKey, MorrisGeometry> = {
-  tapatan: { key: 'tapatan', points: GRID, segments: LINES, pieces: 3, refined: false },
-  achi: { key: 'achi', points: GRID, segments: LINES, pieces: 4, refined: false },
+  tapatan: { key: 'tapatan', points: GRID, segments: LINES, pieces: 3, refined: false, focusStart: 4 },
+  achi: { key: 'achi', points: GRID, segments: LINES, pieces: 4, refined: false, focusStart: 4 },
+  six: { key: 'six', points: SIX_POINTS, segments: SIX_SEGMENTS, pieces: 6, refined: true, focusStart: 0 },
 };
 
 /** The variant of a state; an absent or unknown one is Tapatan, which the server leaves out. */

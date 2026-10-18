@@ -3,7 +3,10 @@ import { ref, computed, watch } from 'vue';
 
 import webSocketService from '../service/WebSocketService';
 import MorrisSession, { type MorrisSessionEvent } from '../application/threemenmorris/MorrisSession';
-import type { MorrisColour, MorrisDrawEventData, MorrisEventData, MorrisPhase, MorrisState, MorrisVariantKey, MorrisView } from '../model/threemenmorris/MorrisState';
+import type {
+  MorrisColour, MorrisDrawEventData, MorrisEventData, MorrisPhase, MorrisRemovalEventData, MorrisState, MorrisVariantKey,
+  MorrisView,
+} from '../model/threemenmorris/MorrisState';
 import type { LobbyView } from '../model/lobby/LobbyView';
 import { colourOf as colourOfSeat, onPoint, selectable, targets } from '../model/threemenmorris/board';
 import { geometryOf, variantKeyOf, type MorrisGeometry } from '../model/threemenmorris/geometries';
@@ -18,6 +21,10 @@ export type { MorrisColour };
 function isMoveData(data: unknown): data is MorrisEventData {
   const action = (data as { action?: unknown } | null)?.action;
   return action === 'PLACE' || action === 'MOVE';
+}
+
+function isRemovalData(data: unknown): data is MorrisRemovalEventData {
+  return (data as { action?: unknown } | null)?.action === 'REMOVE';
 }
 
 function isDrawData(data: unknown): data is MorrisDrawEventData {
@@ -39,6 +46,8 @@ export const useThreeMenMorrisStore = defineStore('three-men-morris-store', () =
   const selected = ref<number | null>(null);
   // What the last PLACE / MOVE (or the GAME_OVER it caused) did, for the live region and the board.
   const lastMove = ref<MorrisEventData | null>(null);
+  // The last REMOVE (or the GAME_OVER it caused), until the next placement or move: the point is marked as captured.
+  const lastRemoval = ref<MorrisRemovalEventData | null>(null);
   // The last draw offer or refusal, until the next move (which ends any offer) or a new game.
   const drawNotice = ref<MorrisDrawNotice | null>(null);
 
@@ -69,7 +78,7 @@ export const useThreeMenMorrisStore = defineStore('three-men-morris-store', () =
         selected.value = null;
         state.value = event.state;
         room.onStateUpdate(event.state.started);
-        if (!event.state.started) { lastMove.value = null; drawNotice.value = null; }
+        if (!event.state.started) { lastMove.value = null; lastRemoval.value = null; drawNotice.value = null; }
         break;
       case 'game-id-change': gameId.value = event.gameId; break;
       case 'error':
@@ -79,6 +88,7 @@ export const useThreeMenMorrisStore = defineStore('three-men-morris-store', () =
         state.value = null;
         selected.value = null;
         lastMove.value = null;
+        lastRemoval.value = null;
         drawNotice.value = null;
         gameId.value = null;
         room.onRemoved();
@@ -87,7 +97,11 @@ export const useThreeMenMorrisStore = defineStore('three-men-morris-store', () =
       case 'event':
         if (isMoveData(event.eventData)) {
           lastMove.value = event.eventData;
+          lastRemoval.value = null;
           drawNotice.value = null;
+        } else if (isRemovalData(event.eventData)) {
+          // The mill-closing move stays the last move (its ring stays on the board); the removal is announced and marked.
+          lastRemoval.value = event.eventData;
         } else if (isDrawData(event.eventData)) {
           drawNotice.value = {
             kind: event.eventData.action === 'OFFER_DRAW' ? 'offered' : 'declined',
@@ -147,6 +161,11 @@ export const useThreeMenMorrisStore = defineStore('three-men-morris-store', () =
     return 'playing';
   });
 
+  // A mill was closed and its owner has yet to take a piece (Six Men's Morris); the turn has not passed.
+  const removalPending = computed(() => game.value?.removal !== undefined && !isOver.value);
+  const iMustRemove = computed(() => removalPending.value && game.value?.removal?.seat === mySeat.value);
+  const capturedPoint = computed<number | null>(() => lastRemoval.value?.point ?? null);
+
   const selectablePoints = computed(() => (game.value ? selectable(game.value, mySeat.value) : []));
   const targetPoints = computed(() => (game.value ? targets(game.value, selected.value) : []));
 
@@ -157,6 +176,7 @@ export const useThreeMenMorrisStore = defineStore('three-men-morris-store', () =
     state.value = null;
     selected.value = null;
     lastMove.value = null;
+    lastRemoval.value = null;
     drawNotice.value = null;
     gameId.value = null;
   });
@@ -185,6 +205,9 @@ export const useThreeMenMorrisStore = defineStore('three-men-morris-store', () =
           selected.value = null;
         } catch { /* socket down: keep the selection so that the player can retry */ }
         break;
+      case 'remove':
+        try { session.remove(intent.point); } catch { /* socket down: the screen shows it, the board stays as it is */ }
+        break;
       case 'select': selected.value = intent.point; break;
       case 'clear': selected.value = null; break;
       case 'none': break;
@@ -193,7 +216,7 @@ export const useThreeMenMorrisStore = defineStore('three-men-morris-store', () =
 
   return {
     state, game, lobby, lobbyError, removedByHost, starting, gameId, mySeat, rematch, lastForfeit,
-    selected, lastMove, drawNotice, gamePhase,
+    selected, lastMove, lastRemoval, capturedPoint, removalPending, iMustRemove, drawNotice, gamePhase,
     disconnections: presence.disconnections,
     liveDisconnections: presence.liveDisconnections,
     forfeitNotice: presence.forfeitNotice,

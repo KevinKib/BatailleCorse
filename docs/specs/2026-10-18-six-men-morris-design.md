@@ -441,6 +441,23 @@ in the player tags**. The frontend chunk (F1) builds exactly this:
 - The app is dark-only (no `prefers-color-scheme`), so only the felt is designed; the "light and dark" wording
   above does not apply.
 
+Built in F1 (what the code does where the canvas left a choice):
+
+- **Shield and ring come from the server's list.** While I take a piece, my opponent's pieces that are not in
+  `legalRemovals` get the shield, and only when the list is not empty; when every piece is in a mill the list holds
+  them all and nothing is shielded (the "safe while Bob has others" sentence is then left out).
+- **Mill lit during the pending removal only** (`removal.mill`), for both players; no fade after it. The last
+  capture mark (a dashed ring with a cross, from the `REMOVE` or `GAME_OVER` event) stays until the next placement
+  or move; a game ended by `REDUCED` is held on the board for the same beat as a line before the end screen, so the
+  capture shows.
+- **Counts:** "on board" is counted from `board`, "in hand" from `piecesToPlace`, "lost" from `players[].lost`; the
+  three-pieces warning counts board plus hand. The quiet-move warning reads `quietPlies` and `quietPlyLimit` (both
+  written by the server from 40), so it never shows without them.
+- **Board size:** 40vh with the draw bar open (phones), 36vh while a draw offer is pending, 52vh on a tall screen
+  (416 px at 800 px) when nothing else crowds the table (no banner, fewer than two warnings).
+- The removed lit-path drawing of the `refined` flag (not in option A) and the `targets` prop of the board are gone;
+  the ring and diamond marks, the plaque and the 18% points are the `refined` look of Six.
+
 ## What we do not do
 
 No Nine (or Five, Seven, Twelve) Men's Morris; no flying unless [Q2] says so; no lobby option for the rule

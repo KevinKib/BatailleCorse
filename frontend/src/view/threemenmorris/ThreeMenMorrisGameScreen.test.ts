@@ -84,7 +84,7 @@ describe('ThreeMenMorrisGameScreen', () => {
     it('shows the shared lobby for two players, with Add bot for the host', async () => {
       const { wrapper } = await mountScreen(lobbyView({ players: [{ seat: 0, name: 'Alice', joined: true }, { seat: 1, name: null, joined: false }] }));
       expect(wrapper.find('[data-test="lobby"]').exists()).toBe(true);
-      expect(wrapper.text()).toContain("Three Men's Morris");
+      expect(wrapper.text()).toContain('Morris');
       expect(wrapper.find('[data-test="add-bot"]').exists()).toBe(true);
       expect(wrapper.find('[data-test="morris-board"]').exists()).toBe(false);
     });
@@ -641,6 +641,330 @@ describe('ThreeMenMorrisGameScreen', () => {
       expect(point(wrapper, 0).attributes('aria-disabled')).toBe('true');
       expect(point(wrapper, 0).attributes('data-owner')).toBe('white');
       expect(wrapper.find('[data-test="turn-hint"]').exists()).toBe(false);
+    });
+  });
+
+  // Six Men's Morris (design option A): counts in the tags, the removal step, the warnings, the end screens.
+  describe("Six Men's Morris", () => {
+    const six = (board: (number | null)[], overrides: Partial<MorrisState> = {}) => morrisState({
+      variant: 'six',
+      phase: 'MOVEMENT',
+      board,
+      players: [
+        { seat: 0, name: 'Alice', current: true, piecesToPlace: 0, lost: 1 },
+        { seat: 1, name: 'Bob', current: false, piecesToPlace: 0, lost: 1 },
+      ],
+      availableActions: ['MOVE'],
+      legalMoves: [{ from: 0, to: 7 }],
+      ...overrides,
+    });
+    //  White (Alice) on 0 1 2 6 7; Black (Bob) on 8 9 10 12 14: Black holds a mill on the inner top side.
+    const BOARD = [0, 0, 0, N, N, N, 0, 0, 1, 1, 1, N, 1, N, 1, N];
+    const removalMine = (overrides: Partial<MorrisState> = {}) => six(BOARD, {
+      availableActions: ['REMOVE'], legalMoves: [],
+      removal: { seat: 0, mill: [0, 1, 2] }, legalRemovals: [12, 14], ...overrides,
+    });
+    const removalTheirs = (overrides: Partial<MorrisState> = {}) => six(BOARD, {
+      currentSeat: 1, availableActions: [], legalMoves: [],
+      players: [
+        { seat: 0, name: 'Alice', current: false, piecesToPlace: 0, lost: 1 },
+        { seat: 1, name: 'Bob', current: true, piecesToPlace: 0, lost: 1 },
+      ],
+      removal: { seat: 1, mill: [8, 9, 10] }, ...overrides,
+    });
+    const tagOf = (w: VueWrapper, i: number) => w.findAll('[data-test="player-tag"]')[i];
+
+    it('names the variant, draws 16 points with the marks on the pieces and on the tags', async () => {
+      const { wrapper } = await mountScreen(six(BOARD));
+      expect(wrapper.get('[data-test="variant-name"]').text()).toBe("Six Men's Morris");
+      expect(wrapper.get('[data-test="morris-board"]').attributes('data-variant')).toBe('six');
+      expect(wrapper.findAll('[data-test^="point-"]')).toHaveLength(16);
+      expect(wrapper.findAll('[data-test="piece"]')).toHaveLength(10);
+      expect(wrapper.findAll('[data-test="piece-mark"]').length).toBe(10);
+      expect(wrapper.findAll('[data-test="tag-mark"]')).toHaveLength(2);
+    });
+
+    it('shows in each tag the pieces in hand, on the board and lost', async () => {
+      const { wrapper } = await mountScreen(six(BOARD, {
+        phase: 'PLACEMENT',
+        players: [
+          { seat: 0, name: 'Alice', current: true, piecesToPlace: 2, lost: 0 },
+          { seat: 1, name: 'Bob', current: false, piecesToPlace: 1, lost: 3 },
+        ],
+      }));
+      // The opponent is on top, then me.
+      expect(tagOf(wrapper, 0).get('[data-test="tag-on-board"]').text()).toBe('5 on board');
+      expect(tagOf(wrapper, 0).get('[data-test="tag-lost"]').text()).toBe('3 lost');
+      expect(tagOf(wrapper, 0).findAll('[data-test="reserve-piece"]')).toHaveLength(1);
+      expect(tagOf(wrapper, 1).get('[data-test="tag-on-board"]').text()).toBe('5 on board');
+      expect(tagOf(wrapper, 1).get('[data-test="tag-lost"]').text()).toBe('0 lost');
+      expect(tagOf(wrapper, 1).findAll('[data-test="reserve-piece"]')).toHaveLength(2);
+      expect(tagOf(wrapper, 1).attributes('aria-label')).toBe('Alice, White: 5 on board, 2 in hand, 0 lost');
+    });
+
+    it('keeps Tapatan and Achi as they were: no counts, no banner, no warning', async () => {
+      for (const variant of [undefined, 'achi'] as const) {
+        setActivePinia(createPinia());
+        document.body.innerHTML = '';
+        const { wrapper } = await mountScreen(movementState({ variant }));
+        expect(wrapper.find('[data-test="tag-on-board"]').exists()).toBe(false);
+        expect(wrapper.find('[data-test="tag-lost"]').exists()).toBe(false);
+        expect(wrapper.find('[data-test="removal-banner"]').exists()).toBe(false);
+        expect(wrapper.find('[data-test="last-pieces"]').exists()).toBe(false);
+        expect(wrapper.find('[data-test="quiet-warning"]').exists()).toBe(false);
+        expect(tagOf(wrapper, 1).attributes('aria-label')).toBe('Alice, White');
+      }
+    });
+
+    describe('my removal', () => {
+      it('shows the banner under my tag: the instruction and how many pieces can be taken', async () => {
+        const { wrapper } = await mountScreen(removalMine());
+        const banner = wrapper.get('[data-test="removal-banner"]');
+        expect(banner.attributes('role')).toBe('status');
+        expect(banner.get('[data-test="removal-title"]').text()).toBe('Mill! Take one of Bob’s pieces.');
+        expect(banner.get('[data-test="removal-can-take"]').text()).toBe('2 can be taken.');
+        expect(banner.get('[data-test="removal-protected"]').text()).toBe('Pieces in a mill are safe while Bob has others.');
+        // Under my tag, which is the second one.
+        const kids = Array.from(wrapper.get('.table').element.children);
+        expect(kids.indexOf(banner.element)).toBeGreaterThan(kids.indexOf(tagOf(wrapper, 1).element));
+      });
+
+      it('rings the pieces that can be taken and shields those a mill protects', async () => {
+        const { wrapper } = await mountScreen(removalMine({ legalRemovals: [12, 14] }));
+        expect(wrapper.findAll('[data-test="removal-ring"]')).toHaveLength(2);
+        expect(point(wrapper, 12).find('[data-test="removal-ring"]').exists()).toBe(true);
+        expect(point(wrapper, 14).find('[data-test="removal-ring"]').exists()).toBe(true);
+        expect(wrapper.findAll('[data-test="shield"]')).toHaveLength(3);
+        for (const n of [8, 9, 10]) expect(point(wrapper, n).find('[data-test="shield"]').exists()).toBe(true);
+        // Not the opponent's pieces: none of mine is ringed or shielded.
+        expect(point(wrapper, 0).find('[data-test="shield"]').exists()).toBe(false);
+        expect(point(wrapper, 0).find('[data-test="removal-ring"]').exists()).toBe(false);
+      });
+
+      it('lights the mill I just closed', async () => {
+        const { wrapper } = await mountScreen(removalMine());
+        expect(wrapper.findAll('line[data-mill="true"]').map((l) => l.attributes('data-line')).sort()).toEqual(['0-1', '1-2']);
+        expect(point(wrapper, 1).attributes('data-mill')).toBe('true');
+      });
+
+      it('makes only the listed pieces playable: a protected piece does nothing', async () => {
+        const publish = vi.spyOn(webSocketService, 'publish').mockImplementation(() => {});
+        const { wrapper, store } = await mountScreen(removalMine());
+        store.restore('g1', 0, 'tok');
+        await point(wrapper, 9).trigger('click');
+        await point(wrapper, 0).trigger('click');
+        await point(wrapper, 5).trigger('click');
+        expect(publish).not.toHaveBeenCalled();
+        await point(wrapper, 12).trigger('click');
+        expect(publish).toHaveBeenCalledWith('/app/three-men-morris/remove', JSON.stringify({ gameId: 'g1', token: 'tok', point: 12 }));
+      });
+
+      it('when every piece can be taken (all in mills) there is no shield and no protection sentence', async () => {
+        const { wrapper } = await mountScreen(removalMine({ legalRemovals: [8, 9, 10, 12, 14] }));
+        expect(wrapper.findAll('[data-test="removal-ring"]')).toHaveLength(5);
+        expect(wrapper.findAll('[data-test="shield"]')).toHaveLength(0);
+        expect(wrapper.find('[data-test="removal-protected"]').exists()).toBe(false);
+        expect(wrapper.get('[data-test="removal-can-take"]').text()).toBe('5 can be taken.');
+      });
+
+      it('replaces the place / move hint, and the keyboard reaches the removable pieces', async () => {
+        const { wrapper } = await mountScreen(removalMine());
+        expect(wrapper.find('[data-test="phase-hint"]').exists()).toBe(false);
+        expect(point(wrapper, 12).attributes('tabindex')).toBe('0');
+        expect(point(wrapper, 12).attributes('aria-label')).toContain('can be taken');
+        expect(point(wrapper, 9).attributes('aria-label')).toContain('protected in a mill');
+      });
+    });
+
+    describe('the opponent removal', () => {
+      it('says that Bob closed a mill and is taking one of my pieces; nothing is ringed or playable', async () => {
+        const { wrapper } = await mountScreen(removalTheirs());
+        const banner = wrapper.get('[data-test="removal-banner"]');
+        expect(banner.get('[data-test="removal-title"]').text()).toBe('Bob closed a mill');
+        expect(banner.get('[data-test="removal-sub"]').text()).toBe('and is taking one of your pieces.');
+        expect(wrapper.findAll('[data-test="removal-ring"]')).toHaveLength(0);
+        expect(wrapper.findAll('[data-test="shield"]')).toHaveLength(0);
+        expect(point(wrapper, 0).attributes('aria-disabled')).toBe('true');
+        expect(wrapper.find('[data-test="removal-can-take"]').exists()).toBe(false);
+      });
+
+      it('lights the mill Bob closed', async () => {
+        const { wrapper } = await mountScreen(removalTheirs());
+        expect(wrapper.findAll('line[data-mill="true"]')).toHaveLength(2);
+        expect(point(wrapper, 9).attributes('data-mill')).toBe('true');
+      });
+
+      it('shows the banner in the same slot as mine, under my tag, and no waiting hint', async () => {
+        const { wrapper } = await mountScreen(removalTheirs());
+        const banner = wrapper.get('[data-test="removal-banner"]');
+        const kids = Array.from(wrapper.get('.table').element.children);
+        expect(kids.indexOf(banner.element)).toBeGreaterThan(kids.indexOf(tagOf(wrapper, 1).element));
+        expect(wrapper.find('[data-test="phase-hint"]').exists()).toBe(false);
+        expect(wrapper.get('[data-test="removal-banner"]').attributes('role')).toBe('status');
+      });
+    });
+
+    it('shows no banner without a pending removal', async () => {
+      const { wrapper } = await mountScreen(six(BOARD));
+      expect(wrapper.find('[data-test="removal-banner"]').exists()).toBe(false);
+      expect(wrapper.find('[data-mill="true"]').exists()).toBe(false);
+    });
+
+    describe('warnings', () => {
+      it('warns at three pieces left that one more loss ends the game, and flags the count', async () => {
+        const { wrapper } = await mountScreen(six([0, 0, 0, N, N, N, N, N, 1, 1, 1, N, N, N, N, N], {
+          players: [
+            { seat: 0, name: 'Alice', current: true, piecesToPlace: 0, lost: 3 },
+            { seat: 1, name: 'Bob', current: false, piecesToPlace: 0, lost: 3 },
+          ],
+        }));
+        const warnings = wrapper.findAll('[data-test="last-pieces"]').map((w) => w.text()).sort();
+        expect(warnings).toEqual(['One more loss and Alice loses.', 'One more loss and Bob loses.']);
+        expect(tagOf(wrapper, 0).get('[data-test="tag-on-board"]').attributes('data-warn')).toBe('true');
+      });
+
+      it('counts the pieces in hand: three on the board and one to place is not the last stand', async () => {
+        const { wrapper } = await mountScreen(six([0, 0, 0, N, N, N, N, N, 1, 1, 1, N, N, N, N, N], {
+          phase: 'PLACEMENT',
+          players: [
+            { seat: 0, name: 'Alice', current: true, piecesToPlace: 1, lost: 0 },
+            { seat: 1, name: 'Bob', current: false, piecesToPlace: 1, lost: 0 },
+          ],
+        }));
+        expect(wrapper.findAll('[data-test="last-pieces"]')).toHaveLength(0);
+      });
+
+      it('has no warning with more than three pieces', async () => {
+        const { wrapper } = await mountScreen(six(BOARD));
+        expect(wrapper.findAll('[data-test="last-pieces"]')).toHaveLength(0);
+      });
+
+      it('counts the moves left without a capture, from the first warning', async () => {
+        const { wrapper } = await mountScreen(six(BOARD, { quietPlies: 42, quietPlyLimit: 50 }));
+        expect(wrapper.get('[data-test="quiet-warning"]').text()).toBe('8 moves without a capture before a draw.');
+        expect(wrapper.get('[data-test="quiet-warning"]').attributes('role')).toBe('status');
+      });
+
+      it('says "1 move" in the singular', async () => {
+        const { wrapper } = await mountScreen(six(BOARD, { quietPlies: 49, quietPlyLimit: 50 }));
+        expect(wrapper.get('[data-test="quiet-warning"]').text()).toBe('1 move without a capture before a draw.');
+      });
+
+      it('shows no quiet warning while the server sends no count', async () => {
+        const { wrapper } = await mountScreen(six(BOARD));
+        expect(wrapper.find('[data-test="quiet-warning"]').exists()).toBe(false);
+      });
+
+      it('sits next to the repetition hint without replacing it', async () => {
+        const { wrapper } = await mountScreen(six(BOARD, { quietPlies: 44, quietPlyLimit: 50, repetitions: 2 }));
+        expect(wrapper.find('[data-test="repetition-hint"]').exists()).toBe(true);
+        expect(wrapper.find('[data-test="quiet-warning"]').exists()).toBe(true);
+      });
+    });
+
+    describe('the live region and the capture mark', () => {
+      it('announces a mill closed by a move, and the removal that follows', async () => {
+        const { wrapper, store } = await mountScreen(six(BOARD));
+        store.applyEvent({ type: 'event', eventType: 'MOVE', message: '',
+          eventData: { seat: 1, action: 'MOVE', point: null, from: 11, to: 10, mill: [8, 9, 10] } });
+        await flushPromises();
+        expect(wrapper.get('[data-test="board-live"]').text()).toBe('Bob moved from Inner right to Inner top right. Bob closed a mill.');
+        store.applyEvent({ type: 'event', eventType: 'REMOVE', message: '', eventData: { seat: 1, action: 'REMOVE', point: 6 } });
+        await flushPromises();
+        expect(wrapper.get('[data-test="board-live"]').text()).toBe('Bob took the piece on Outer bottom left.');
+      });
+
+      it('announces a mill closed by a placement', async () => {
+        const { wrapper, store } = await mountScreen(six(BOARD));
+        store.applyEvent({ type: 'event', eventType: 'PLACE', message: '',
+          eventData: { seat: 1, action: 'PLACE', point: 10, from: null, to: null, mill: [8, 9, 10] } });
+        await flushPromises();
+        expect(wrapper.get('[data-test="board-live"]').text()).toBe('Bob placed a piece on Inner top right. Bob closed a mill.');
+      });
+
+      it('marks the point of the capture until the next move', async () => {
+        const { wrapper, store } = await mountScreen(six(BOARD));
+        store.applyEvent({ type: 'event', eventType: 'REMOVE', message: '', eventData: { seat: 1, action: 'REMOVE', point: 5 } });
+        await flushPromises();
+        expect(point(wrapper, 5).find('[data-test="captured-mark"]').exists()).toBe(true);
+        store.applyEvent({ type: 'event', eventType: 'MOVE', message: '',
+          eventData: { seat: 0, action: 'MOVE', point: null, from: 0, to: 7 } });
+        await flushPromises();
+        expect(wrapper.find('[data-test="captured-mark"]').exists()).toBe(false);
+      });
+    });
+
+    describe('the end', () => {
+      const afterHold = () => vi.advanceTimersByTimeAsync(WINNING_LINE_HOLD_MS + END_SCREEN_DELAY_MS + 50);
+      const reduced = (winner: number) => six([0, 0, 0, N, N, N, N, N, 1, 1, N, N, N, N, N, N], {
+        phase: 'FINISHED', availableActions: [], legalMoves: [],
+        outcome: { status: 'FINISHED', winner, reason: 'REDUCED' },
+        players: [
+          { seat: 0, name: 'Alice', current: false, piecesToPlace: 0, lost: 4 },
+          { seat: 1, name: 'Bob', current: false, piecesToPlace: 0, lost: 4 },
+        ],
+      });
+
+      it('REDUCED, I win: Bob has only two pieces left', async () => {
+        vi.useFakeTimers();
+        const { wrapper, store } = await mountScreen(six(BOARD));
+        store.applyEvent({ type: 'state-update', state: reduced(0) });
+        await afterHold();
+        expect(wrapper.get('.end-sub').text()).toBe('Bob has only two pieces left.');
+        expect(wrapper.get('[data-test="end-winner"]').text()).toBe('Winner: Alice');
+      });
+
+      it('REDUCED, I lose: I have only two pieces left and Bob wins', async () => {
+        vi.useFakeTimers();
+        const { wrapper, store } = await mountScreen(six(BOARD));
+        store.applyEvent({ type: 'state-update', state: reduced(1) });
+        await afterHold();
+        expect(wrapper.get('.end-sub').text()).toBe('You have only two pieces left: Bob wins.');
+      });
+
+      it('holds the table with the capture mark for a moment before the end screen', async () => {
+        vi.useFakeTimers();
+        const { wrapper, store } = await mountScreen(six(BOARD));
+        store.applyEvent({ type: 'event', eventType: 'GAME_OVER', message: '', eventData: { seat: 0, action: 'REMOVE', point: 10 } });
+        store.applyEvent({ type: 'state-update', state: reduced(0) });
+        await flushPromises();
+        expect(wrapper.find('[data-test="end"]').exists()).toBe(false);
+        expect(point(wrapper, 10).find('[data-test="captured-mark"]').exists()).toBe(true);
+        await afterHold();
+        expect(wrapper.find('[data-test="end"]').exists()).toBe(true);
+      });
+
+      it('DRAW_MOVE_LIMIT: a draw with no winner, said as too many moves without a capture', async () => {
+        vi.useFakeTimers();
+        const { wrapper, store } = await mountScreen(six(BOARD));
+        store.applyEvent({ type: 'state-update', state: six(BOARD, {
+          phase: 'FINISHED', availableActions: [], legalMoves: [], drawActions: [],
+          outcome: { status: 'FINISHED', winner: null, reason: 'DRAW_MOVE_LIMIT' },
+        }) });
+        await vi.advanceTimersByTimeAsync(END_SCREEN_DELAY_MS + 50);
+        expect(wrapper.get('.end-title').text()).toBe('DRAW');
+        expect(wrapper.get('.end-sub').text()).toBe('Draw: too many moves without a capture.');
+      });
+
+      it('shows no removal banner nor warning once the game is over', async () => {
+        const { wrapper } = await mountScreen(reduced(0));
+        expect(wrapper.find('[data-test="removal-banner"]').exists()).toBe(false);
+        expect(wrapper.find('[data-test="last-pieces"]').exists()).toBe(false);
+        expect(wrapper.find('[data-test="quiet-warning"]').exists()).toBe(false);
+      });
+    });
+
+    it('opens the rules of Six: mills, no flying, the bots', async () => {
+      const { wrapper } = await mountScreen(six(BOARD));
+      const text = wrapper.get('[data-cy="rules-panel"]').text();
+      expect(text).toContain('mill');
+      expect(text).toContain('never jump');
+      expect(text).toContain('three moves ahead');
+    });
+
+    it('keeps the draw controls of the movement phase', async () => {
+      const { wrapper } = await mountScreen(six(BOARD));
+      expect(wrapper.find('[data-test="draw-offer"]').exists()).toBe(true);
     });
   });
 });

@@ -7,7 +7,7 @@ import type { OptionDescriptor } from '../../model/lobby/LobbyView';
 const ui = messagesEn.morrisLobby;
 
 const descriptors: OptionDescriptor[] = [
-  { key: 'variant', type: 'CHOICE', values: ['tapatan', 'achi'], defaultValue: 'tapatan', labelKey: 'options.threeMenMorris.variant' },
+  { key: 'variant', type: 'CHOICE', values: ['tapatan', 'achi', 'six'], defaultValue: 'tapatan', labelKey: 'options.threeMenMorris.variant' },
   { key: 'hostColour', type: 'CHOICE', values: ['white', 'black', 'random'], defaultValue: 'random', labelKey: 'options.threeMenMorris.hostColour' },
 ];
 
@@ -17,17 +17,17 @@ function mountOptions(props: { options?: Record<string, string>; editable?: bool
 const t = (w: ReturnType<typeof mountOptions>, key: string) => w.get(`[data-test="${key}"]`);
 
 describe('MorrisLobbyOptions for the host', () => {
-  it('offers the two variants as cards with a mini board, a name and a summary, and no Picaria card', () => {
+  it('offers the three variants as cards with a mini board, a name and a summary, and no Picaria card', () => {
     const w = mountOptions();
-    for (const key of ['tapatan', 'achi'] as const) {
+    for (const key of ['tapatan', 'achi', 'six'] as const) {
       const card = t(w, `variant-card-${key}`);
       expect(card.text()).toContain(ui.variants[key].name);
       expect(card.text()).toContain(ui.variants[key].summary);
       expect(card.find('svg').exists(), key).toBe(true);
-      expect(card.findAll('circle'), key).toHaveLength(9);
-      expect(card.findAll('line'), key).toHaveLength(8);
+      expect(card.findAll('circle'), key).toHaveLength(key === 'six' ? 16 : 9);
+      expect(card.findAll('line'), key).toHaveLength(key === 'six' ? 20 : 8);
     }
-    expect(w.findAll('[data-test^="variant-card-"]')).toHaveLength(2);
+    expect(w.findAll('[data-test^="variant-card-"]')).toHaveLength(3);
     expect(w.find('[data-test="variant-card-picaria"]').exists()).toBe(false);
   });
 
@@ -41,6 +41,23 @@ describe('MorrisLobbyOptions for the host', () => {
     const w = mountOptions({ options: { variant: 'achi' } });
     expect((t(w, 'option-variant-achi').element as HTMLInputElement).checked).toBe(true);
     expect(t(w, 'variant-rule').text()).toBe(ui.variants.achi.rule);
+  });
+
+  it('shows the rule line of Six and asks for it', async () => {
+    const w = mountOptions({ options: { variant: 'six' } });
+    expect(t(w, 'variant-rule').text()).toBe(ui.variants.six.rule);
+    expect(ui.variants.six.name).toBe("Six Men's Morris");
+    const fromTapatan = mountOptions();
+    await t(fromTapatan, 'option-variant-six').setValue(true);
+    expect(fromTapatan.emitted('set-option')).toEqual([['variant', 'six']]);
+  });
+
+  it('shows only the cards the server offers: Six is hidden while the descriptor lacks it', () => {
+    const w = mount(MorrisLobbyOptions, {
+      props: { descriptors: [{ ...descriptors[0], values: ['tapatan', 'achi'] }, descriptors[1]], options: {}, editable: true },
+    });
+    expect(w.findAll('[data-test^="variant-card-"]')).toHaveLength(2);
+    expect(w.find('[data-test="variant-card-six"]').exists()).toBe(false);
   });
 
   it('asks for a variant when a card is picked', async () => {
