@@ -11,19 +11,25 @@ import java.util.random.RandomGenerator;
  * Level {@code perfect}: reads the solved table of the variant ({@link MorrisSolver}). It plays the fastest
  * win if the position is won, else a move that keeps the draw, else the move that loses the slowest. Equal
  * moves are chosen through the generator. A position the solver does not know (none arises in a real game)
- * is played as the greedy level would.
+ * is played as the greedy level would. Rules the solver cannot handle (Six Men's Morris) are played by the
+ * depth-limited {@link SearchBot} instead: no table fits in the app.
  */
 public final class PerfectBot extends AbstractMorrisBot {
 
     private final GreedyBot fallback;
+    private final SearchBot search;
 
     public PerfectBot(RandomGenerator random) {
         super(random);
         this.fallback = new GreedyBot(random);
+        this.search = new SearchBot(random);
     }
 
     @Override
     MorrisDecision play(MorrisPosition position, PlayerId seat) {
+        if (!position.rules().solvable()) {
+            return search.play(position, seat);
+        }
         MorrisSolver solver = MorrisSolver.forRules(position.rules());
         if (!solver.contains(position)) {
             return fallback.play(position, seat);

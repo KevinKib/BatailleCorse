@@ -11,9 +11,10 @@ import java.util.random.RandomGenerator;
  * What the three levels share: the one rule for answering a draw offer, and the choice among equal
  * candidates through an injected generator (so a game is reproducible in tests).
  *
- * <p>Draw rule, the same at every level: accept when the solver says the position is a draw or a loss for
- * the bot, decline when it is a win (or when the position is unknown to the solver). Bots never offer a
- * draw: the repetition rule already ends endless games.
+ * <p>Draw rule, the same at every level: on solvable rules, accept when the solver says the position is a
+ * draw or a loss for the bot, decline when it is a win (or when the position is unknown to the solver); on
+ * the other rules (Six Men's Morris, no table), accept unless the bot is ahead in pieces left. Bots never
+ * offer a draw: the repetition rule already ends endless games.
  */
 abstract class AbstractMorrisBot implements MorrisBot {
 
@@ -36,6 +37,12 @@ abstract class AbstractMorrisBot implements MorrisBot {
     }
 
     static MorrisDecision answerDrawOffer(MorrisPosition position, PlayerId seat) {
+        if (!position.rules().solvable()) {
+            // No solved table (Six Men's Morris): accept unless ahead in pieces left (board plus hand).
+            boolean ahead = MorrisTransitions.piecesLeft(position, seat.id())
+                    > MorrisTransitions.piecesLeft(position, 1 - seat.id());
+            return ahead ? new MorrisDecision.DeclineDraw() : new MorrisDecision.AcceptDraw();
+        }
         Optional<MorrisSolver.Solution> solution = MorrisSolver.forRules(position.rules()).find(position);
         boolean winning = solution.isPresent() && solution.get().outcome() == valueWonBy(position, seat);
         return winning ? new MorrisDecision.DeclineDraw() : new MorrisDecision.AcceptDraw();

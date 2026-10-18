@@ -311,6 +311,12 @@ All in `threemenmorris/domain` (pure; ArchUnit unchanged; no new game package).
     would be a drawing wall, not fun. An opt-in benchmark (C4) records search vs greedy and greedy vs random
     over 100 games each, like `ExpertStrengthBenchmark` for Mangola; expected: Expert beats Medium most of
     the time, Medium beats Easy nearly always **[H]**.
+  - **Measured (C4, `SixMenStrengthBenchmark`, 100 games per pairing, colours alternating, draw after 50
+    quiet movement plies or 400 plies, JDK 22 on the developer machine):** Expert (search) against Medium:
+    93 wins, 3 losses, 4 draws; Medium against Easy: 93 wins, 0 losses, 7 draws; Expert against Easy: 99
+    wins, 0 losses, 1 draw. Expert decision time: mean 1.5 ms, worst 159 ms (cold JIT, early in the run), over
+    3,330 decisions; the node cap of 200,000 stays. Expert beats Medium more clearly than the "most of the
+    time" expected, which is still a modest bot: a careful human is not tested by this benchmark.
   - **Draw offers on Six:** a bot accepts when it is not ahead in pieces left (its count is at most the
     opponent's), declines otherwise; bots never offer [Q11]. The 3x3 variants keep the solver rule.
 - **Coordinator (C6):** a bot that closes a mill gets a new broadcast with `REMOVE` as its action and is
