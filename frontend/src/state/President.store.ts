@@ -13,6 +13,8 @@ import {
   analyseSelection, completingCards, type SelectionAnalysis, type SelectionRefusal,
 } from '../model/president/selection';
 import { suggestGiveBack as lowestUnpaired } from '../model/president/exchange';
+import { appendEntry, toLogEntry, type PresidentLogEntry } from '../model/president/eventLog';
+import { pileView, type PileView } from '../model/president/trickView';
 import { useSeatPresence, FORFEIT_NOTICE_HOLD_MS } from '../composables/useSeatPresence';
 import { useSeatRoom } from '../composables/useSeatRoom';
 import type { ForfeitEventData } from '../model/SeatLifecycleEvents';
@@ -54,6 +56,11 @@ export const usePresidentStore = defineStore('president-store', () => {
   const busy = ref(false);
   const notice = ref<PresidentNotice | null>(null);
   const lastEvent = ref<PresidentTableEvent | null>(null);
+  // The moves at the table, newest first, for the pictures (flights, bubbles, the closed trick on the pile). Each
+  // is the server's event plus the state that came before it. Empty after a first state: nothing is replayed.
+  const events = ref<PresidentLogEntry[]>([]);
+  let previousGame: PresidentState | null = null;
+  let entryId = 0;
 
   const game = computed<PresidentState | null>(() =>
     state.value && state.value.started ? state.value : null);
@@ -81,6 +88,7 @@ export const usePresidentStore = defineStore('president-store', () => {
       case 'state-update': {
         const next = event.state;
         const nextGame = next.started ? next : null;
+        previousGame = game.value;
         if (!nextGame || trickKey(nextGame) !== trickKey(game.value)) {
           selectedNames.value = [];
         } else {
@@ -97,6 +105,8 @@ export const usePresidentStore = defineStore('president-store', () => {
           roster.value = {};
           lastEvent.value = null;
           notice.value = null;
+          events.value = [];
+          previousGame = null;
         }
         break;
       }
@@ -127,6 +137,8 @@ export const usePresidentStore = defineStore('president-store', () => {
           lastEvent.value = event.eventType === 'ROUND_START' || event.eventType === 'START'
             ? null
             : { eventType: event.eventType, data: (event.eventData as PresidentEventData | null) ?? null };
+          events.value = appendEntry(events.value,
+            toLogEntry(++entryId, event.eventType, (event.eventData as PresidentEventData | null) ?? null, previousGame));
         }
         break;
     }
@@ -138,6 +150,8 @@ export const usePresidentStore = defineStore('president-store', () => {
     busy.value = false;
     notice.value = null;
     lastEvent.value = null;
+    events.value = [];
+    previousGame = null;
     gameId.value = null;
     roster.value = {};
   }
@@ -148,6 +162,9 @@ export const usePresidentStore = defineStore('president-store', () => {
   // The rules in force, for the rule chips; empty in a lobby.
   const options = computed<Record<string, string>>(() => game.value?.options ?? {});
   const hand = computed<Card[]>(() => game.value?.hand ?? []);
+  // The pile: the top play, or the trick the latest move closed (with why) until the next play.
+  const pile = computed<PileView>(() =>
+    game.value ? pileView(game.value, events.value[0] ?? null) : { play: null, closure: null, count: 0 });
   const screen = computed<'connecting' | 'lobby' | 'playing' | 'finished'>(() => {
     if (!state.value) return 'connecting';
     if (!state.value.started) return 'lobby';
@@ -249,7 +266,7 @@ export const usePresidentStore = defineStore('president-store', () => {
     disconnections: presence.disconnections,
     liveDisconnections: presence.liveDisconnections,
     forfeitNotice: presence.forfeitNotice,
-    busy, notice, lastEvent,
+    busy, notice, lastEvent, events, pile,
     me, isMyTurn, can, options, hand, screen,
     selectedCards, selectedPattern, canPlay, playHint, completions, canGiveBack, canComplete,
     applyEvent, toggleCard, clearSelection, play, complete, pass, giveBack, ready,
