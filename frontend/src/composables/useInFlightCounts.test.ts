@@ -25,6 +25,14 @@ describe('useInFlightCounts', () => {
     expect(flights.shown(1, 3)).toBe(3);
   });
 
+  it('givenAFlightQueuedFarAhead_thenTheCountCatchesUpWithTheStateAfterTheLongestLag', () => {
+    const flights = useInFlightCounts({ maxLagMs: 2000 });
+    flights.add(1, 2, 5000);
+    expect(flights.shown(1, 0)).toBe(2);
+    vi.advanceTimersByTime(2000);
+    expect(flights.shown(1, 0)).toBe(0);
+  });
+
   it('givenCancel_thenNothingIsInFlight', () => {
     const flights = useInFlightCounts();
     flights.add(1, 2, 800);
