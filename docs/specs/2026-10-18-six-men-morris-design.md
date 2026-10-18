@@ -375,6 +375,29 @@ then adds a short "UI" addendum to this spec. What every option must show:
 - Picaria's crossings, padlock and `closedWhilePlacing` go in C1; the `refined` look and the marked chips stay
   as generic geometry flags until the canvas says whether Six uses them (the frontend chunk deletes them if not).
 
+### UI addendum: design option A (chosen by the owner, 2026-10-18)
+
+Canvas: https://claude.ai/artifact/55NXvJBwcgXTtax6JKasCD (private; options A, B, C). The owner chose **A, counts
+in the player tags**. The frontend chunk (F1) builds exactly this:
+
+- **Player tags** (`MorrisPlayerTag`) carry the counts: pieces in hand as discs, then "N on board" and "N lost".
+  The colour marks stay (ring for White, diamond for Black).
+- **Mill:** lit with a solid gold line plus a gold ring on its three pieces, reusing `segmentsOnLine` and the
+  winning-line style.
+- **Removal step:** pieces that can be taken get a dashed white ring that turns slowly (still turning under
+  reduced motion); pieces protected by a mill carry a small shield badge. The instruction is a banner under the
+  remover's tag ("Mill! Take one of Bob's pieces."); the other player reads "Bob closed a mill and is taking one
+  of your pieces." The short sentence "N can be taken" of option C is added to the instruction.
+- **Warnings:** "One more loss and Bob loses." at three pieces; the quiet-move warning from 40 plies ("N moves
+  without a capture before a draw"). End screen: "Bob has only two pieces left." and a mark on the point of the
+  last capture.
+- **Tap targets:** Six needs its own button size (18% of the board width, `min-width: 44px`): the 33.333% of the
+  3x3 boards would overlap on 16 points. 330 px board at 375x812: 59 px buttons, 69 px between neighbours; with
+  the draw offer open on a 667 px phone the board is 240 px and the floor of 44 px holds.
+- **Desktop:** the same centred column (416 px board at 1280x800).
+- The app is dark-only (no `prefers-color-scheme`), so only the felt is designed; the "light and dark" wording
+  above does not apply.
+
 ## What we do not do
 
 No Nine (or Five, Seven, Twelve) Men's Morris; no flying unless [Q2] says so; no lobby option for the rule
