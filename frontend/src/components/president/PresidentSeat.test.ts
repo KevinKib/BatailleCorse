@@ -39,6 +39,13 @@ describe('PresidentSeat', () => {
     expect(wrapper.get('[data-test="seat-current"]').text()).toBe('Playing');
   });
 
+  it('givenANarrowPlate_thenThePlayingMarkerIsOnlyForScreenReaders_theLitNameSaysItOnScreen', () => {
+    const wrapper = mountSeat({ current: true, narrow: true, fan: true });
+    expect(wrapper.get('[data-test="seat-current"]').classes()).toContain('sr-only');
+    expect(wrapper.get('[data-test="seat-label"]').classes()).toContain('seat-label--active');
+    expect(mountSeat({ current: true }).get('[data-test="seat-current"]').classes()).not.toContain('sr-only');
+  });
+
   it('givenAPassedSeat_thenItSaysPassed', () => {
     const wrapper = mountSeat({ player: buildPresidentPlayer(1, { passed: true }) });
     expect(wrapper.get('[data-test="seat-passed"]').text()).toBe('Passed');

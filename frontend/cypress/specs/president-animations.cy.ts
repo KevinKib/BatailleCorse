@@ -23,10 +23,40 @@ function deal(): string[] {
 const bob = '.seat-slot[data-seat="1"]';
 const carol = '.seat-slot[data-seat="2"]';
 
+/** The felt holds the seats, the closed pile and its chips without scrolling inside itself, every chip on it. */
+function feltFits() {
+  cy.get('[data-test="president-table"]').should(($felt) => {
+    const felt = $felt[0];
+    expect(felt.scrollHeight, 'felt content height').to.be.at.most(felt.clientHeight + 1);
+    const box = felt.getBoundingClientRect();
+    felt.querySelectorAll('[data-test="trick-chips"] li, [data-test="trick-closed"]').forEach((el) => {
+      const r = el.getBoundingClientRect();
+      expect(r.bottom, `${el.textContent} inside the felt`).to.be.at.most(box.bottom);
+      expect(r.top, `${el.textContent} inside the felt`).to.be.at.least(box.top);
+    });
+  });
+}
+
+/** No ring covers the count written under a fan, nor the badge of a closed trick. */
+function countsReadable() {
+  // Measured at once (no retry): a retry would pass as soon as the rings fade out.
+  cy.get('body').then(($body) => {
+    const marks = [...$body[0].querySelectorAll('[data-test="motion-mark"]')].map((m) => m.getBoundingClientRect());
+    $body[0].querySelectorAll('[data-test="opponent-seat"] [data-test="seat-cards"], [data-test="trick-closed"]').forEach((el) => {
+      const t = el.getBoundingClientRect();
+      marks.forEach((m) => {
+        const overlaps = m.left < t.right && m.right > t.left && m.top < t.bottom && m.bottom > t.top;
+        expect(overlaps, `a ring covers "${el.textContent}"`).to.eq(false);
+      });
+    });
+  });
+}
+
 [375, 1280].forEach((width) => {
   describe(`President table pictures at ${width} px`, () => {
     it('shows plays flying, passes as bubbles, closed tricks with their reason and the hands as fans', () => {
-      cy.viewport(width, width === 375 ? 667 : 800);
+      // 1280x720: the size of the runner's window, so that a screenshot does not resize the page under the rings.
+      cy.viewport(width, width === 375 ? 667 : 720);
       // Normal speed, whatever an earlier spec left in the browser.
       cy.window().then((win) => win.localStorage.removeItem('animationSpeed'));
       hostLobby('Alice').then((id) => {
@@ -52,13 +82,17 @@ const carol = '.seat-slot[data-seat="2"]';
           // 2. Bob's cut: the card flies from his fan (an arrow for an opponent), the pile says why and who leads.
           scriptedPlay(bobPlayer, '2', 1);
           cy.get('[data-test="motion-arrow"]').should('exist');
+          cy.get('[data-test="motion-mark"]').should('exist');
+          countsReadable();
           cy.get('[data-test="trick-closed-reason"]').should('have.text', 'Closed by a 2');
           cy.get('[data-test="trick-closed-leader"]').should('have.text', 'Bob leads');
+          countsReadable();
           cy.get('[data-test="closed-trick-card"]').should('have.length', 1);
           cy.get('[data-test="trick-count"]').should('have.text', '2 cards in the trick');
           // The count drops when the card has landed (the state already says 16).
           cy.get(`${bob} [data-test="seat-cards"]`).should('have.text', '16 cards');
           cy.get('[data-test="motion-card"]').should('not.exist');
+          feltFits();
           cy.screenshot(`president-animations-cut-${width}`, { capture: 'viewport' });
           noHorizontalScroll();
 
@@ -74,6 +108,7 @@ const carol = '.seat-slot[data-seat="2"]';
           scriptedPass(carolPlayer);
           cy.get(`${carol} [data-test="seat-bubble"]`).should('have.text', 'Pass').and('be.visible');
           cy.get(`${carol} .president-seat`).should('have.class', 'president-seat--passed');
+          feltFits();
           cy.screenshot(`president-animations-pass-${width}`, { capture: 'viewport' });
           // The bubble goes after a moment; the "Passed" marker stays while the trick lasts.
           cy.get(`${carol} [data-test="seat-bubble"]`).should('not.exist');

@@ -1,12 +1,16 @@
 // What 3 to 8 players need on a phone (spec section 11, decision 1: the ring of opponents; the arc is the fallback):
 // every plate stays inside the screen, nothing scrolls sideways, the page never scrolls, the buttons and the hand keep
-// 44 px targets, the opponents never hide the trick.
+// 44 px targets, the opponents never hide the trick, the felt never scrolls inside itself.
 import { hostLobby, joinGuests, noHorizontalScroll } from '../support/presidentRoom';
 
 const NAMES = ['Bob', 'Carol', 'Dan', 'Erin', 'Fay', 'Gus', 'Hal'];
 
-[[375, 667], [360, 640], [1280, 720]].forEach(([width, height]) => {
-  [3, 5, 8].forEach((players) => {
+const CASES: Array<[number, number, number[]]> = [
+  [375, 667, [3, 4, 5, 8]], [375, 812, [8]], [360, 640, [3, 5, 8]], [1280, 720, [3, 5, 8]],
+];
+
+CASES.forEach(([width, height, counts]) => {
+  counts.forEach((players) => {
     it(`fits ${players} players at ${width}x${height}`, () => {
       cy.viewport(width, height);
       hostLobby('Alice').then((id) => {
@@ -18,6 +22,10 @@ const NAMES = ['Bob', 'Carol', 'Dan', 'Erin', 'Fay', 'Gus', 'Hal'];
           cy.window().then((win) => {
             const doc = win.document.documentElement;
             expect(doc.scrollHeight, 'page height').to.be.at.most(win.innerHeight);
+          });
+          // The felt holds the opponents and the trick without scrolling inside itself (as Kobo's).
+          cy.get('[data-test="president-table"]').should(($felt) => {
+            expect($felt[0].scrollHeight, 'felt content height').to.be.at.most($felt[0].clientHeight + 1);
           });
           // Every opponent plate is wholly on screen, and none covers the pile.
           cy.get('[data-test="opponent-seat"]').then(($seats) => {

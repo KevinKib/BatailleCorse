@@ -62,6 +62,20 @@ describe('PresidentTrick', () => {
       expect(mountTrick(trick).get('[data-test="trick-count"]').text()).toBe('3 cards in the trick');
     });
 
+    it('putsTheIndicatorFirstInTheRowOfChips_soThePileTakesOneRowLess', () => {
+      const trick = buildPresidentTrick({ plays: [{ seat: 1, cards: [nine('CLUB')] }] });
+      const row = mountTrick(trick, { chips: [{ key: 'afterPass.reenter' }] }).get('[data-test="trick-chips"]');
+      expect(row.element.firstElementChild?.getAttribute('data-test')).toBe('trick-count');
+      expect(row.findAll('[data-test="rule-chip"]')).toHaveLength(1);
+    });
+
+    it('givenAClosedTrick_thenTheBadgeTakesThePlaceOfWhoPlayed_outsideTheCards', () => {
+      const wrapper = mountTrick(buildPresidentTrick(), { pile: { play: { seat: 2, cards: cut.cards }, closure: cut, count: 3 } });
+      expect(wrapper.find('[data-test="trick-by"]').exists()).toBe(false);
+      expect(wrapper.find('[data-test="trick-cards"] [data-test="trick-closed"]').exists()).toBe(false);
+      expect(wrapper.get('[data-test="trick-closed"]').classes()).toContain('trick-closed--line');
+    });
+
     it('givenAnEmptyTrick_thenNoIndicator', () => {
       expect(mountTrick().find('[data-test="trick-count"]').exists()).toBe(false);
     });
