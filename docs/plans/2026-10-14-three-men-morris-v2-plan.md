@@ -1,5 +1,7 @@
 # Three Men's Morris v2: plan
 
+> **Removed 2026-10-18 (owner decision, PR #271).** The Picaria variant no longer exists in the code: White wins it with perfect play, even on the 13-point board (solver result below), so it is replaced by Six Men's Morris (`docs/specs/2026-10-18-six-men-morris-design.md`). A request with `variant=picaria` is refused as an unknown value, with no alias. This text is kept as history. Every Picaria item below is history.
+
 Issue #147. Spec: `docs/specs/2026-10-14-three-men-morris-v2-design.md` (key decisions, variant rules with
 sources, contract, room for Six/Nine Men's Morris, product questions). Written by Claude Opus 5.5.
 
@@ -72,6 +74,8 @@ No behaviour, wire or test change for v1: every existing test passes unchanged.
   `MorrisPositionTest` (keys equal for equal boards and side, differ otherwise).
 
 ## M2 `feat: Achi and Picaria variants of Three Men's Morris` (M)
+
+> The Picaria parts of this chunk were removed on 2026-10-18 (PR #271): White wins with perfect play, even on the 13-point board.
 
 - `domain/MorrisVariant.java` (`TAPATAN`, `ACHI`, `PICARIA`; option key, rules). `Geometry.PICARIA` (Tapatan
   plus 1-3, 3-7, 7-5, 5-1; **superseded 2026-10-18 by the 13-point board, PR #265**: grid 0..8 plus crossings 9..12, 16 lines). `MorrisRules.ACHI` (4 pieces), `MorrisRules.PICARIA` (3 pieces,
