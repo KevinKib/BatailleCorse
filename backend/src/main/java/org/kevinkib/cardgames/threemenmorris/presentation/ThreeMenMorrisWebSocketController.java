@@ -12,6 +12,7 @@ import org.kevinkib.cardgames.threemenmorris.domain.ThreeMenMorris;
 import org.kevinkib.cardgames.threemenmorris.domain.ThreeMenMorrisFactory;
 import org.kevinkib.cardgames.threemenmorris.presentation.api.ThreeMenMorrisMovePayload;
 import org.kevinkib.cardgames.threemenmorris.presentation.api.ThreeMenMorrisPlacePayload;
+import org.kevinkib.cardgames.threemenmorris.presentation.api.ThreeMenMorrisRemovePayload;
 import org.kevinkib.cardgames.threemenmorris.presentation.dto.event.ThreeMenMorrisEventType;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -63,6 +64,12 @@ public class ThreeMenMorrisWebSocketController {
     public void move(@Payload ThreeMenMorrisMovePayload p) {
         handle(p.gameId(), p.token(), ThreeMenMorrisEventType.MOVE,
                 (id, seat) -> actions.move(id, seat, required(p.from(), "from"), required(p.to(), "to")));
+    }
+
+    @MessageMapping("/three-men-morris/remove")
+    public void remove(@Payload ThreeMenMorrisRemovePayload p) {
+        handle(p.gameId(), p.token(), ThreeMenMorrisEventType.REMOVE,
+                (id, seat) -> actions.remove(id, seat, required(p.point(), "point")));
     }
 
     @MessageMapping("/three-men-morris/offerDraw")

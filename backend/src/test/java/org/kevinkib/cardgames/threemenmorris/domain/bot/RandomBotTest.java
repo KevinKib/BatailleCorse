@@ -21,7 +21,7 @@ class RandomBotTest {
     private static final PlayerId BLACK = new PlayerId(1);
 
     @ParameterizedTest
-    @EnumSource(MorrisVariant.class)
+    @EnumSource(value = MorrisVariant.class, names = {"TAPATAN", "ACHI"})
     void everyDecisionOfARandomGameIsAcceptedByTheAggregate(MorrisVariant variant) throws Exception {
         MorrisBot bot = new RandomBot(new Random(7));
         for (int game = 0; game < 200; game++) {

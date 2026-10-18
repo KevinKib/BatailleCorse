@@ -27,7 +27,7 @@ class ThreeMenMorrisFactoryOptionsTest {
     @Test
     void theOptionsAreTheVariantDefaultingToTapatanThenTheHostColourAndTheSeatOptionIsTheBotLevel() {
         assertThat(factory.optionDescriptors(), is(List.of(new OptionDescriptor("variant", OptionType.CHOICE,
-                List.of("tapatan", "achi"), "tapatan", "options.threeMenMorris.variant"),
+                List.of("tapatan", "achi", "six"), "tapatan", "options.threeMenMorris.variant"),
                 new OptionDescriptor("hostColour", OptionType.CHOICE,
                         List.of("white", "black", "random"), "random", "options.threeMenMorris.hostColour"))));
         assertThat(factory.seatOptionDescriptors().stream().map(OptionDescriptor::key).toList(), is(List.of("level")));
@@ -51,6 +51,21 @@ class ThreeMenMorrisFactoryOptionsTest {
 
         assertThat(achi.rules(), is(MorrisRules.ACHI));
         assertThat(achi.piecesToPlace(new PlayerId(0)), is(4));
+    }
+
+    @Test
+    void sixBuildsItsRulesAndIsAcceptedByTheStrictValidation() {
+        ThreeMenMorris six = create(GameOptions.of(Map.of("variant", "six")));
+
+        assertThat(six.rules(), is(MorrisRules.SIX_MEN));
+        assertThat(six.piecesToPlace(new PlayerId(0)), is(6));
+        assertThat(six.board().size(), is(16));
+        assertThat(factory.validate(GameOptions.of(Map.of("variant", "six"))),
+                is(GameOptions.of(Map.of("variant", "six", "hostColour", "random"))));
+        assertThrows(InvalidOptionException.class,
+                () -> factory.validate(GameOptions.of(Map.of("variant", "Six"))));
+        assertThrows(InvalidOptionException.class,
+                () -> factory.validate(GameOptions.of(Map.of("variant", "six "))));
     }
 
     @Test

@@ -53,6 +53,45 @@ class ThreeMenMorrisGameActionsTest {
     }
 
     @Test
+    void aMillBroadcastsTheMillAndTheRemovalIsAnnouncedAsARemoveEvent() throws Exception {
+        ThreeMenMorris game = table.install(new ThreeMenMorris(org.kevinkib.cardgames.game.GameId.generate(),
+                org.kevinkib.cardgames.threemenmorris.domain.MorrisRules.SIX_MEN, WHITE));
+        for (int[] placement : new int[][]{{0, 0}, {1, 8}, {0, 1}, {1, 10}}) {
+            table.actions.place(game.getId(), new PlayerId(placement[0]), placement[1]);
+        }
+        table.messaging.clear();
+
+        table.actions.place(game.getId(), WHITE, 2);
+
+        Response mill = table.messaging.payloads.get(0);
+        assertThat(mill.getEventType(), is("PLACE"));
+        assertThat(((ThreeMenMorrisEventData) mill.getEventData()).mill(), is(List.of(0, 1, 2)));
+        assertThat(((ThreeMenMorrisDto) mill.getState()).availableActions(), is(List.of("REMOVE")));
+        table.messaging.clear();
+
+        table.actions.remove(game.getId(), WHITE, 8);
+
+        Response removal = table.messaging.payloads.get(0);
+        assertThat(removal.getEventType(), is("REMOVE"));
+        ThreeMenMorrisEventData data = (ThreeMenMorrisEventData) removal.getEventData();
+        assertThat(data.seat(), is(0));
+        assertThat(data.action(), is("REMOVE"));
+        assertThat(data.point(), is(8));
+        assertThat(data.mill(), is((List<Integer>) null));
+        assertThat(((ThreeMenMorrisDto) removal.getState()).currentSeat(), is(1));
+    }
+
+    @Test
+    void aRejectedRemovalBroadcastsNothingAndPropagates() throws Exception {
+        ThreeMenMorris game = table.newGame();
+
+        assertThrows(org.kevinkib.cardgames.threemenmorris.domain.NoRemovalPendingException.class,
+                () -> table.actions.remove(game.getId(), WHITE, 0));
+
+        assertThat(table.messaging.payloads.isEmpty(), is(true));
+    }
+
+    @Test
     void aMoveIsBroadcastWithItsEndpoints() throws Exception {
         ThreeMenMorris game = table.newGame();
         for (int[] placement : new int[][]{{0, 0}, {1, 1}, {0, 2}, {1, 4}, {0, 7}, {1, 8}}) {

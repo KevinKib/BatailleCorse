@@ -20,6 +20,16 @@ class MorrisVariantTest {
     }
 
     @Test
+    void sixHasItsKeyItsRulesAndIsNotSolvable() {
+        assertThat(MorrisVariant.SIX.key(), is("six"));
+        assertThat(MorrisVariant.SIX.rules(), is(MorrisRules.SIX_MEN));
+        assertThat(MorrisVariant.fromKey("six"), is(MorrisVariant.SIX));
+        assertThat(MorrisVariant.of(MorrisRules.SIX_MEN), is(MorrisVariant.SIX));
+        assertThat(MorrisVariant.SIX.rules().solvable(), is(false));
+        assertThat(MorrisVariant.values().length, is(3));
+    }
+
+    @Test
     void aKeyIsResolvedAndAnUnknownKeyIsRefused() {
         assertThat(MorrisVariant.fromKey("achi"), is(MorrisVariant.ACHI));
         assertThrows(IllegalArgumentException.class, () -> MorrisVariant.fromKey("picaria"));
@@ -45,10 +55,22 @@ class MorrisVariantTest {
 
         assertThat(new Move(0, 15).to(), is(15));
         assertThat(new MorrisEvent.Placed(white, 23).point(), is(23));
+        assertThat(new MorrisEvent.Placed(white, 23).mill(), is(java.util.List.of()));
         assertThat(new MorrisEvent.Moved(white, 3, 12).to(), is(12));
         assertThrows(IllegalArgumentException.class, () -> new Move(-1, 2));
         assertThrows(IllegalArgumentException.class, () -> new Move(2, -1));
         assertThrows(IllegalArgumentException.class, () -> new MorrisEvent.Placed(white, -1));
         assertThrows(IllegalArgumentException.class, () -> new MorrisEvent.Moved(white, -1, 0));
+    }
+
+    @Test
+    void placedAndMovedCarryTheMillTheyClosedAndRemovedNamesThePoint() {
+        PlayerId white = new PlayerId(0);
+
+        assertThat(new MorrisEvent.Placed(white, 2, java.util.List.of(0, 1, 2)).mill(), is(java.util.List.of(0, 1, 2)));
+        assertThat(new MorrisEvent.Moved(white, 3, 2, java.util.List.of(0, 1, 2)).mill(), is(java.util.List.of(0, 1, 2)));
+        assertThat(new MorrisEvent.Moved(white, 3, 2).mill(), is(java.util.List.of()));
+        assertThat(new MorrisEvent.Removed(white, 9).point(), is(9));
+        assertThrows(IllegalArgumentException.class, () -> new MorrisEvent.Removed(white, -1));
     }
 }

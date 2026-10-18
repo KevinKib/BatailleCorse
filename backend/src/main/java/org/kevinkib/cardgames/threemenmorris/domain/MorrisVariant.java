@@ -6,7 +6,8 @@ import java.util.Arrays;
 public enum MorrisVariant {
 
     TAPATAN("tapatan", MorrisRules.TAPATAN),
-    ACHI("achi", MorrisRules.ACHI);
+    ACHI("achi", MorrisRules.ACHI),
+    SIX("six", MorrisRules.SIX_MEN);
 
     public static final MorrisVariant DEFAULT = TAPATAN;
 

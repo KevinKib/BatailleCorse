@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.threemenmorris.domain.Action;
 import org.kevinkib.cardgames.threemenmorris.domain.MorrisResult;
+import org.kevinkib.cardgames.threemenmorris.domain.MorrisRules;
 import org.kevinkib.cardgames.threemenmorris.domain.MorrisVariant;
 import org.kevinkib.cardgames.threemenmorris.domain.Phase;
 import org.kevinkib.cardgames.threemenmorris.domain.ThreeMenMorris;
@@ -39,11 +40,26 @@ public record ThreeMenMorrisDto(
         @JsonInclude(JsonInclude.Include.NON_NULL) Integer whiteSeat,
         @JsonInclude(JsonInclude.Include.NON_NULL) DrawOfferDto drawOffer,
         @JsonInclude(JsonInclude.Include.NON_NULL) Integer repetitions,
-        @JsonInclude(JsonInclude.Include.NON_NULL) List<String> drawActions) {
+        @JsonInclude(JsonInclude.Include.NON_NULL) List<String> drawActions,
+        @JsonInclude(JsonInclude.Include.NON_NULL) RemovalDto removal,
+        @JsonInclude(JsonInclude.Include.NON_NULL) List<Integer> legalRemovals,
+        @JsonInclude(JsonInclude.Include.NON_NULL) Integer quietPlies,
+        @JsonInclude(JsonInclude.Include.NON_NULL) Integer quietPlyLimit) {
 
-    /** {@code colour} (WHITE or BLACK) is left out while seat 0 plays White, like {@code whiteSeat}. */
+    /** From this many quiet plies the state carries the count, so the client can warn before the draw. */
+    static final int QUIET_WARNING_FROM = 40;
+
+    /**
+     * {@code colour} (WHITE or BLACK) is left out while seat 0 plays White, like {@code whiteSeat}; {@code lost}
+     * (pieces removed so far) is written only for the mill variants.
+     */
     public record PlayerDto(int seat, String name, boolean current, int piecesToPlace,
-                            @JsonInclude(JsonInclude.Include.NON_NULL) String colour) {
+                            @JsonInclude(JsonInclude.Include.NON_NULL) String colour,
+                            @JsonInclude(JsonInclude.Include.NON_NULL) Integer lost) {
+    }
+
+    /** A pending removal: {@code seat} closed the mill {@code mill} (three points) and must take a piece. */
+    public record RemovalDto(int seat, List<Integer> mill) {
     }
 
     /** The pending draw offer: who made it. */
@@ -86,9 +102,11 @@ public record ThreeMenMorrisDto(
         synchronized (game) {
             List<Integer> board = game.board().stream().map(owner -> owner == null ? null : owner.id()).toList();
             boolean seatZeroWhite = game.whiteSeat().id() == 0;
+            boolean mills = game.rules().lineRule() == MorrisRules.LineRule.MILL;
             List<PlayerDto> players = game.getPlayerIds().stream()
                     .map(p -> new PlayerDto(p.id(), names.get(p), p.equals(game.currentSeat()),
-                            game.piecesToPlace(p), seatZeroWhite ? null : game.colourOf(p).name()))
+                            game.piecesToPlace(p), seatZeroWhite ? null : game.colourOf(p).name(),
+                            mills ? game.lost(p) : null))
                     .toList();
             MorrisResult result = game.result();
             Outcome outcome = result.isFinished()
@@ -114,7 +132,13 @@ public record ThreeMenMorrisDto(
                     seatZeroWhite ? null : game.whiteSeat().id(),
                     game.drawOffer() == null ? null : new DrawOfferDto(game.drawOffer().id()),
                     game.repetitions() >= 2 ? game.repetitions() : null,
-                    drawActions(game, viewer));
+                    drawActions(game, viewer),
+                    mills && game.pendingRemoval() != null
+                            ? new RemovalDto(game.pendingRemoval().id(), game.lastMill()) : null,
+                    mills && viewer.equals(game.pendingRemoval()) ? game.legalRemovals(viewer) : null,
+                    mills && game.quietPlies() >= QUIET_WARNING_FROM && !game.isFinished()
+                            ? game.quietPlies() : null,
+                    mills ? game.rules().quietPlyLimit() : null);
         }
     }
 }

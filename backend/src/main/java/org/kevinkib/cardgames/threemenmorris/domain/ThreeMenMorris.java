@@ -16,14 +16,21 @@ import java.util.Map;
  * (3x3 plus the two diagonals through the centre). The white seat starts (seat 0 by default), the
  * other seat is black. Each player has the rules' number of pieces: they are placed one per turn
  * (PLACEMENT), then moved one step per turn along a line to a free neighbouring point (MOVEMENT).
- * The first to align their pieces on a line wins, in either phase. A player with no legal move
- * loses. Every mutating method is synchronized, validates, mutates, bumps the version and returns
+ * Under {@code WIN} rules the first to align their pieces on a line wins, in either phase. Under {@code MILL}
+ * rules (Six Men's Morris) a line closed by a placement or a move is a mill: the mover keeps the turn and must
+ * {@link #remove} an opponent piece (mills are protected while another piece is not), a player left with two
+ * pieces loses, and 50 movement plies without a removal draw. A player with no legal move loses.
+ * Every mutating method is synchronized, validates, mutates, bumps the version and returns
  * what happened; a rejected command changes nothing.
  */
 public class ThreeMenMorris implements Game {
 
     static final int PLAYERS = 2;
     private static final int REPETITIONS_TO_DRAW = 3;
+    /** A player left with fewer pieces than this (board plus hand) loses, under mill rules. */
+    private static final int MINIMUM_PIECES = 3;
+    /** Under {@code AT_THREE} flying, a player with this many pieces on the board (and none in hand) flies. */
+    private static final int FLYING_PIECES = 3;
 
     private static final PlayerId SEAT_0 = new PlayerId(0);
     private static final PlayerId SEAT_1 = new PlayerId(1);
@@ -42,6 +49,12 @@ public class ThreeMenMorris implements Game {
     private PlayerId drawOffer;
     private final boolean[] offeredSinceOwnMove = new boolean[PLAYERS];
     private final Map<MorrisPosition.Key, Integer> occurrences = new HashMap<>();
+    /** The seat that closed a mill and must now remove an opponent piece, null when no removal is pending. */
+    private PlayerId pendingRemoval;
+    /** The three points of the mill just closed while a removal is pending, empty otherwise. */
+    private List<Integer> lastMill = List.of();
+    /** Movement plies since the movement phase began or since the last removal. */
+    private int quietPlies;
 
     /** A game of Tapatan, seat 0 white. */
     public ThreeMenMorris(GameId id) {
@@ -51,10 +64,6 @@ public class ThreeMenMorris implements Game {
     public ThreeMenMorris(GameId id, MorrisRules rules, PlayerId whiteSeat) {
         if (!SEAT_0.equals(whiteSeat) && !SEAT_1.equals(whiteSeat)) {
             throw new IllegalArgumentException("No such seat: " + whiteSeat);
-        }
-        if (rules.lineRule() != MorrisRules.LineRule.WIN) {
-            // Mills, removals, flying and the quiet-move limit are data only until the engine reads them.
-            throw new UnsupportedOperationException("Mill rules are not playable yet");
         }
         this.id = id;
         this.rules = rules;
@@ -84,7 +93,17 @@ public class ThreeMenMorris implements Game {
      */
     static ThreeMenMorris fromLayout(GameId id, String layout, int whiteInHand, int blackInHand,
                                      int whitePieces, int blackPieces, PlayerId current) {
-        ThreeMenMorris game = new ThreeMenMorris(id);
+        return fromLayout(id, MorrisRules.TAPATAN, layout, whiteInHand, blackInHand, whitePieces, blackPieces,
+                current);
+    }
+
+    /**
+     * Like the other overloads for any rules: the layout has one character per point of the rules' geometry
+     * (16 for Six Men's Morris). No mill is looked for in the layout and no removal is pending.
+     */
+    static ThreeMenMorris fromLayout(GameId id, MorrisRules rules, String layout, int whiteInHand, int blackInHand,
+                                     int whitePieces, int blackPieces, PlayerId current) {
+        ThreeMenMorris game = new ThreeMenMorris(id, rules, SEAT_0);
         int points = game.geometry.points();
         if (layout == null || layout.length() != points) {
             throw new IllegalArgumentException("A layout has exactly " + points + " characters");
@@ -118,6 +137,7 @@ public class ThreeMenMorris implements Game {
 
     public synchronized MorrisEvent place(PlayerId seat, int point) throws ThreeMenMorrisException {
         requireTurn(seat);
+        requireNoRemovalPending();
         if (phase != Phase.PLACEMENT) {
             throw new WrongPhaseException(Phase.PLACEMENT, phase);
         }
@@ -129,20 +149,23 @@ public class ThreeMenMorris implements Game {
         inHand[seat.id()]--;
         version++;
         moved(seat);
-        if (!finishIfLine(seat)) {
-            current = other(seat);
-            if (inHand[0] == 0 && inHand[1] == 0) {
-                phase = Phase.MOVEMENT;
-                if (!finishIfBlocked(seat)) {
-                    countPosition();
-                }
+        List<Integer> mill = List.of();
+        if (rules.lineRule() == MorrisRules.LineRule.WIN) {
+            if (!finishIfLine(seat)) {
+                endTurn(seat);
+            }
+        } else {
+            mill = openRemovalIfMill(seat, point);
+            if (mill.isEmpty()) {
+                endTurn(seat);
             }
         }
-        return new MorrisEvent.Placed(seat, point);
+        return new MorrisEvent.Placed(seat, point, mill);
     }
 
     public synchronized MorrisEvent move(PlayerId seat, int from, int to) throws ThreeMenMorrisException {
         requireTurn(seat);
+        requireNoRemovalPending();
         if (phase != Phase.MOVEMENT) {
             throw new WrongPhaseException(Phase.MOVEMENT, phase);
         }
@@ -154,20 +177,61 @@ public class ThreeMenMorris implements Game {
         if (board[to] != null) {
             throw new PointOccupiedException(to);
         }
-        if (!geometry.areAdjacent(from, to)) {
+        if (!geometry.areAdjacent(from, to) && !flies(seat)) {
             throw new NotAdjacentException(from, to);
         }
         board[from] = null;
         board[to] = seat;
         version++;
         moved(seat);
-        if (!finishIfLine(seat)) {
-            current = other(seat);
-            if (!finishIfBlocked(seat) && countPosition() >= REPETITIONS_TO_DRAW) {
-                finish(null, MorrisResult.Reason.DRAW_REPETITION, List.of());
+        quietPlies++;
+        List<Integer> mill = List.of();
+        if (rules.lineRule() == MorrisRules.LineRule.WIN) {
+            if (!finishIfLine(seat)) {
+                endTurn(seat);
+            }
+        } else {
+            mill = openRemovalIfMill(seat, to);
+            if (mill.isEmpty()) {
+                endTurn(seat);
             }
         }
-        return new MorrisEvent.Moved(seat, from, to);
+        return new MorrisEvent.Moved(seat, from, to, mill);
+    }
+
+    /**
+     * Takes the opponent piece on {@code point} after the seat closed a mill. The piece must be one the seat may
+     * take now ({@link #legalRemovals}): a piece in a mill is protected unless every opponent piece is in one.
+     * The removal clears the repetition counts (a position with more pieces cannot come back) and the quiet-ply
+     * count, cancels a pending draw offer, and either ends the game (the opponent is down to two pieces) or
+     * passes the turn.
+     */
+    public synchronized MorrisEvent remove(PlayerId seat, int point) throws ThreeMenMorrisException {
+        requireTurn(seat);
+        if (pendingRemoval == null) {
+            throw new NoRemovalPendingException();
+        }
+        requirePoint(point);
+        PlayerId opponent = other(seat);
+        if (!opponent.equals(board[point])) {
+            throw new NotOpponentPieceException(point);
+        }
+        if (!removablePoints(seat).contains(point)) {
+            throw new PieceInMillException(point);
+        }
+        board[point] = null;
+        pendingRemoval = null;
+        lastMill = List.of();
+        occurrences.clear();
+        quietPlies = 0;
+        version++;
+        moved(seat);
+        if (piecesLeft(opponent) < MINIMUM_PIECES) {
+            finish(seat, MorrisResult.Reason.REDUCED, List.of());
+        } else {
+            endTurn(seat);
+        }
+        return new MorrisEvent.Removed(seat, point);
     }
 
     /**
@@ -295,7 +359,7 @@ public class ThreeMenMorris implements Game {
 
     /** The free points the seat may place on now: none outside its turn or outside the placement phase. */
     public synchronized List<Integer> legalPlacements(PlayerId seat) {
-        if (phase != Phase.PLACEMENT || !seat.equals(current)) {
+        if (phase != Phase.PLACEMENT || !seat.equals(current) || pendingRemoval != null) {
             return List.of();
         }
         List<Integer> points = new ArrayList<>();
@@ -312,12 +376,13 @@ public class ThreeMenMorris implements Game {
         return new MorrisPosition(rules,
                 Arrays.stream(board).map(owner -> owner == null ? null : owner.id()).toList(),
                 List.of(inHand[0], inHand[1]),
-                current.id());
+                current.id(),
+                pendingRemoval != null);
     }
 
-    /** The moves the seat may play now: none outside its turn or outside the movement phase. */
+    /** The moves the seat may play now: none outside its turn, outside the movement phase or during a removal. */
     public synchronized List<Move> legalMoves(PlayerId seat) {
-        if (phase != Phase.MOVEMENT || !seat.equals(current)) {
+        if (phase != Phase.MOVEMENT || !seat.equals(current) || pendingRemoval != null) {
             return List.of();
         }
         return movesOf(seat);
@@ -333,7 +398,40 @@ public class ThreeMenMorris implements Game {
      * phase; 0 during placement and once the game is finished.
      */
     public synchronized int repetitions() {
-        return phase == Phase.MOVEMENT ? occurrences.getOrDefault(position().key(), 0) : 0;
+        return phase == Phase.MOVEMENT && pendingRemoval == null ? occurrences.getOrDefault(position().key(), 0) : 0;
+    }
+
+    /** The seat that closed a mill and has yet to remove an opponent piece, null when no removal is pending. */
+    public synchronized PlayerId pendingRemoval() {
+        return pendingRemoval;
+    }
+
+    /** The three points of the mill that opened the pending removal, empty when none is pending. */
+    public synchronized List<Integer> lastMill() {
+        return lastMill;
+    }
+
+    /** Movement plies since the movement phase began or since the last removal. */
+    public synchronized int quietPlies() {
+        return quietPlies;
+    }
+
+    /** The opponent pieces the seat may take now: empty unless the seat has a removal pending. */
+    public synchronized List<Integer> legalRemovals(PlayerId seat) {
+        if (isFinished() || pendingRemoval == null || !pendingRemoval.equals(seat)) {
+            return List.of();
+        }
+        return removablePoints(seat);
+    }
+
+    /** The pieces of the seat still in the game: on the board plus in hand. */
+    public synchronized int piecesLeft(PlayerId seat) {
+        return piecesToPlace(seat) + piecesOnBoard(seat);
+    }
+
+    /** The pieces the seat has lost to removals so far. */
+    public synchronized int lost(PlayerId seat) {
+        return rules.piecesPerPlayer() - piecesLeft(seat);
     }
 
     /** The draw actions the seat may take now, at any time of the game, whoever's turn it is. */
@@ -352,10 +450,19 @@ public class ThreeMenMorris implements Game {
         if (isFinished() || !seat.equals(current)) {
             return List.of();
         }
+        if (pendingRemoval != null) {
+            return List.of(Action.REMOVE);
+        }
         return List.of(phase == Phase.PLACEMENT ? Action.PLACE : Action.MOVE);
     }
 
     // --------------------------------------------------------------- helpers
+
+    private void requireNoRemovalPending() throws RemovalPendingException {
+        if (pendingRemoval != null) {
+            throw new RemovalPendingException();
+        }
+    }
 
     private void requireTurn(PlayerId seat) throws ThreeMenMorrisException {
         if (isFinished()) {
@@ -408,8 +515,17 @@ public class ThreeMenMorris implements Game {
 
     private List<Move> movesOf(PlayerId seat) {
         List<Move> moves = new ArrayList<>();
+        boolean flying = flies(seat);
         for (int from = 0; from < geometry.points(); from++) {
             if (seat.equals(board[from])) {
+                if (flying) {
+                    for (int to = 0; to < geometry.points(); to++) {
+                        if (board[to] == null) {
+                            moves.add(new Move(from, to));
+                        }
+                    }
+                    continue;
+                }
                 for (int to : geometry.neighbours(from)) {
                     if (board[to] == null) {
                         moves.add(new Move(from, to));
@@ -418,6 +534,94 @@ public class ThreeMenMorris implements Game {
             }
         }
         return moves;
+    }
+
+    /** Under {@code AT_THREE} rules, a seat with three pieces on the board and none in hand moves to any free point. */
+    private boolean flies(PlayerId seat) {
+        return rules.flying() == MorrisRules.FlyingRule.AT_THREE && inHand[seat.id()] == 0
+                && piecesOnBoard(seat) == FLYING_PIECES;
+    }
+
+    private int piecesOnBoard(PlayerId seat) {
+        int count = 0;
+        for (PlayerId owner : board) {
+            if (seat.equals(owner)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    /**
+     * Under mill rules, looks for a line through {@code point} made of the seat's pieces. When there is one and the
+     * opponent has a piece on the board, the seat must remove one: the removal is made pending and the turn stays.
+     * Returns the mill (the first in geometry order if two were closed), empty when there is no removal to make.
+     */
+    private List<Integer> openRemovalIfMill(PlayerId seat, int point) {
+        if (piecesOnBoard(other(seat)) == 0) {
+            return List.of();
+        }
+        for (List<Integer> line : geometry.lines()) {
+            if (line.contains(point) && ownsAll(seat, line)) {
+                pendingRemoval = seat;
+                lastMill = List.copyOf(line);
+                return lastMill;
+            }
+        }
+        return List.of();
+    }
+
+    private boolean ownsAll(PlayerId seat, List<Integer> line) {
+        return line.stream().allMatch(p -> seat.equals(board[p]));
+    }
+
+    private boolean inMill(PlayerId owner, int point) {
+        return geometry.lines().stream().anyMatch(line -> line.contains(point) && ownsAll(owner, line));
+    }
+
+    /**
+     * The opponent pieces the seat may take: those outside every mill, or every opponent piece when all of them
+     * are in a mill.
+     */
+    private List<Integer> removablePoints(PlayerId seat) {
+        PlayerId opponent = other(seat);
+        List<Integer> all = new ArrayList<>();
+        List<Integer> unprotected = new ArrayList<>();
+        for (int point = 0; point < board.length; point++) {
+            if (opponent.equals(board[point])) {
+                all.add(point);
+                if (!inMill(opponent, point)) {
+                    unprotected.add(point);
+                }
+            }
+        }
+        return unprotected.isEmpty() ? all : unprotected;
+    }
+
+    /**
+     * The mover's ply is over: pass the turn, then the end-of-turn checks. The end of the placement phase when both
+     * hands are empty (White moves first, since Black places last); in the movement phase, a blocked opponent, a
+     * threefold repetition, then the quiet-ply limit.
+     */
+    private void endTurn(PlayerId mover) {
+        current = other(mover);
+        if (phase == Phase.PLACEMENT) {
+            if (inHand[0] == 0 && inHand[1] == 0) {
+                phase = Phase.MOVEMENT;
+                if (!finishIfBlocked(mover)) {
+                    countPosition();
+                }
+            }
+            return;
+        }
+        if (finishIfBlocked(mover)) {
+            return;
+        }
+        if (countPosition() >= REPETITIONS_TO_DRAW) {
+            finish(null, MorrisResult.Reason.DRAW_REPETITION, List.of());
+        } else if (rules.quietPlyLimit() > 0 && quietPlies >= rules.quietPlyLimit()) {
+            finish(null, MorrisResult.Reason.DRAW_MOVE_LIMIT, List.of());
+        }
     }
 
     private boolean finishIfLine(PlayerId seat) {
@@ -442,6 +646,8 @@ public class ThreeMenMorris implements Game {
     private void finish(PlayerId winner, MorrisResult.Reason reason, List<Integer> line) {
         phase = Phase.FINISHED;
         drawOffer = null;
+        pendingRemoval = null;
+        lastMill = List.of();
         result = new MorrisResult(winner, reason);
         winningLine = List.copyOf(line);
     }

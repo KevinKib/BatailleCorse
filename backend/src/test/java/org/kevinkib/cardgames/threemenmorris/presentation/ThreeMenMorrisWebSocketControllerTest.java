@@ -13,6 +13,7 @@ import org.kevinkib.cardgames.threemenmorris.domain.ThreeMenMorris;
 import org.kevinkib.cardgames.threemenmorris.domain.ThreeMenMorrisFactory;
 import org.kevinkib.cardgames.threemenmorris.presentation.api.ThreeMenMorrisMovePayload;
 import org.kevinkib.cardgames.threemenmorris.presentation.api.ThreeMenMorrisPlacePayload;
+import org.kevinkib.cardgames.threemenmorris.presentation.api.ThreeMenMorrisRemovePayload;
 import org.kevinkib.cardgames.threemenmorris.presentation.dto.ThreeMenMorrisDto;
 
 import java.util.List;
@@ -132,6 +133,30 @@ class ThreeMenMorrisWebSocketControllerTest {
         assertThat(table.messaging.payloads, hasSize(3));
         assertThat(table.messaging.payloads.stream().noneMatch(Response::isSuccess), is(true));
         assertThat(game.version(), is(0));
+    }
+
+    @Test
+    void remove_isAuthenticatedByTheSeatTokenAndAMissingPointIsRejected() throws Exception {
+        ThreeMenMorris game = table.install(new ThreeMenMorris(GameId.generate(),
+                org.kevinkib.cardgames.threemenmorris.domain.MorrisRules.SIX_MEN, WHITE));
+        String gameId = game.getId().uuid().toString();
+        for (int[] placement : new int[][]{{0, 0}, {1, 8}, {0, 1}, {1, 10}, {0, 2}}) {
+            game.place(new PlayerId(placement[0]), placement[1]);
+        }
+        table.messaging.clear();
+
+        table.ws.remove(new ThreeMenMorrisRemovePayload(gameId, table.token(game, 1), 8));
+        table.ws.remove(new ThreeMenMorrisRemovePayload(gameId, table.token(game, 0), null));
+        table.ws.remove(new ThreeMenMorrisRemovePayload(gameId, "not-a-token", 8));
+        assertThat(table.messaging.payloads.stream().noneMatch(Response::isSuccess), is(true));
+        assertThat(game.owner(8), is(BLACK));
+        table.messaging.clear();
+
+        table.ws.remove(new ThreeMenMorrisRemovePayload(gameId, table.token(game, 0), 8));
+
+        assertThat(game.owner(8), is(nullValue()));
+        assertThat(table.messaging.payloads.get(0).getEventType(), is("REMOVE"));
+        assertThat(table.messaging.payloads.get(0).isSuccess(), is(true));
     }
 
     @Test
