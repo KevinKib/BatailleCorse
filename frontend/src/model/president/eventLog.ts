@@ -15,6 +15,8 @@ export interface PresidentTrickClosure {
   cards: Card[];
   /** How many cards the closed trick held. */
   size: number;
+  /** Every card of the closed trick, in sweep order: the closing play first, then the earlier plays, newest first. */
+  trickCards: Card[];
 }
 
 /**
@@ -61,6 +63,11 @@ export function toLogEntry(
       closer: action === 'PLAY' ? data.seat : top?.seat ?? data.trickWinner,
       cards: action === 'PLAY' ? cards : top?.cards ?? [],
       size: plays.reduce((n, p) => n + p.cards.length, 0) + cards.length,
+      // A pass closes on the play already on top (its cards lead the sweep once, not twice).
+      trickCards: [
+        ...(action === 'PLAY' ? cards : []),
+        ...[...plays].reverse().flatMap(p => p.cards),
+      ],
     }
     : null;
   return {

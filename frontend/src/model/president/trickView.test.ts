@@ -6,7 +6,7 @@ import { buildPresidentCard as card, buildPresidentState, buildPresidentTrick } 
 const closing = (over: Partial<PresidentLogEntry> = {}): PresidentLogEntry => ({
   id: 3, eventType: 'PLAY', action: 'PLAY', seat: 1, cards: [card('2', 'SPADE')], round: 1, outOfTurn: false,
   outForbidden: false, outPlace: null,
-  closure: { winner: 1, reason: 'CUT', closer: 1, cards: [card('2', 'SPADE')], size: 3 },
+  closure: { winner: 1, reason: 'CUT', closer: 1, cards: [card('2', 'SPADE')], size: 3, trickCards: [card('2', 'SPADE')] },
   ...over,
 });
 
@@ -42,7 +42,7 @@ describe('pileView', () => {
   });
 
   it('givenAClosureWithoutCards_thenOnlyTheBadgeWithNoPlay', () => {
-    const entry = closing({ closure: { winner: 0, reason: 'ALL_PASSED', closer: 0, cards: [], size: 0 } });
+    const entry = closing({ closure: { winner: 0, reason: 'ALL_PASSED', closer: 0, cards: [], size: 0, trickCards: [] } });
     expect(pileView(buildPresidentState(), entry)).toEqual({ play: null, closure: entry.closure, count: 0 });
   });
 });

@@ -62,6 +62,7 @@ describe('toLogEntry', () => {
     const entry = toLogEntry(1, 'PLAY', data({ cards: [card('2', 'SPADE'), card('2', 'CLUB')], trickWinner: 1, trickEndReason: 'CUT' }), before);
     expect(entry?.closure).toEqual({
       winner: 1, reason: 'CUT', closer: 1, cards: [card('2', 'SPADE'), card('2', 'CLUB')], size: 4,
+      trickCards: [card('2', 'SPADE'), card('2', 'CLUB'), card('7', 'HEART'), card('7', 'CLUB')],
     });
   });
 
@@ -69,7 +70,20 @@ describe('toLogEntry', () => {
     const entry = toLogEntry(1, 'PASS', data({ action: 'PASS', cards: null, trickWinner: 0, trickEndReason: 'ALL_PASSED' }), before);
     expect(entry?.closure).toEqual({
       winner: 0, reason: 'ALL_PASSED', closer: 0, cards: [card('7', 'HEART'), card('7', 'CLUB')], size: 2,
+      trickCards: [card('7', 'HEART'), card('7', 'CLUB')],
     });
+  });
+
+  it('givenSeveralPlaysInTheClosedTrick_thenTrickCardsListTheClosingPlayFirstThenTheEarlierPlaysNewestFirst', () => {
+    const longTrick = buildPresidentState({
+      round: 2, currentSeat: 2,
+      trick: buildPresidentTrick({
+        leader: 0,
+        plays: [{ seat: 0, cards: [card('5', 'HEART')] }, { seat: 1, cards: [card('8', 'CLUB')] }],
+      }),
+    });
+    const entry = toLogEntry(1, 'PLAY', data({ seat: 2, cards: [card('2', 'SPADE')], trickWinner: 2, trickEndReason: 'CUT' }), longTrick);
+    expect(entry?.closure?.trickCards.map(c => c.name)).toEqual(['SPADE_2', 'CLUB_8', 'HEART_5']);
   });
 
   it('givenNoPreviousState_thenTheClosureCountsTheClosingPlayOnly', () => {

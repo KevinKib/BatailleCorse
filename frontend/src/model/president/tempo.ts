@@ -22,6 +22,17 @@ export const PRESIDENT_TEMPO = {
   bubbleGapMs: 200,
   /** A seat's card count waits for its flights to land, but never longer than this behind the state. */
   countLagMaxMs: 2000,
+  /** The sweep of a closed trick toward its winner (chunk 3). */
+  sweep: {
+    /** The closing badge sits on the pile this long, after the closing play has landed, before the cards leave. */
+    badgeHoldMs: 800,
+    /** One card's flight to the winner's seat. */
+    flightMs: 620,
+    /** The cards leave this far apart. */
+    staggerMs: 90,
+    /** At most this many cards sweep (the latest ones): the layer stays light on a very long trick. */
+    maxCards: 10,
+  },
   /** The burst bounds, as Kobo's. */
   queue: { maxQueued: 4, maxLagMs: 3500 },
 } as const;
