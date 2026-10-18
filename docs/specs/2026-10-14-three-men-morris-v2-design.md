@@ -13,6 +13,12 @@ the solver's unit tests in plan PR M5 re-check it; **corrected in M5**: the firs
 centre open from the first placement, see the Picaria row); **[H]** hypothesis to confirm in the PR that relies on it;
 **[Q]** product question, listed at the end with a recommendation.
 
+> **Update 2026-10-18 (owner decision, PR #265): Picaria is played on the 13-point board and the 9-point
+> Picaria is removed** (Tapatan and Achi unchanged). Every statement below about Picaria's "nine points",
+> "short diagonals" and its 7-ply / draw results describes the superseded 9-point board; the current board,
+> rules and solver result are in the section "Picaria on the 13-point board" at the end of the design
+> (before the product questions).
+
 ## Key decisions
 
 1. **Rules become data, one engine.** The geometry (points, adjacency, winning lines) and the rule set
@@ -97,11 +103,11 @@ sources: White starts, as in v1.
 | | Tapatan (today, default) | Achi | Picaria |
 |-|--------------------------|------|---------|
 | Pieces each | 3 | **4** (8 on 9 points: one hole) | 3 |
-| Adjacency | orthogonal + centre (the two long diagonals) | same as Tapatan | Tapatan's **plus the four short diagonals between side middles** (1-3, 3-7, 7-5, 5-1) |
-| Winning lines | the 8 | the 8 | the 8 (the short diagonals join only two points, so they never make a line) |
+| Adjacency | orthogonal + centre (the two long diagonals) | same as Tapatan | ~~Tapatan's plus the four short diagonals~~ **superseded: 13-point board, see "Picaria on the 13-point board"** |
+| Winning lines | the 8 | the 8 | ~~the 8~~ **superseded: 16 lines on 13 points** |
 | Placement restriction | none | none | **no piece may be placed on the centre (owner decision, whatdowedoallday.com/picaria); it is reached by a move** |
 | Blocked player | practically unreachable (0 reachable blocked positions **[C]**) | **reachable** (12 reachable blocked positions **[C]**): the `BLOCKED` reason becomes a real ending | unreachable **[C]** |
-| Perfect play from the start | **White wins in 9 plies [C]** | **White wins in 11 plies [C]** | **White wins in 7 plies [C, corrected in M5]** (the first draft said draw: it was computed with the centre open from the first placement, which is a draw) |
+| Perfect play from the start | **White wins in 9 plies [C]** | **White wins in 11 plies [C]** | ~~White wins in 7 plies (9-point board)~~ **superseded**: 13-point board, White wins in 7 plies with the lock and in 5 without it [C], see the comparison table |
 | Source | v1 source (Locus Ludi PDF, board B) | Wikipedia "Achi (game)", which cites Claudia Zaslavsky, *Tic Tac Toe and Other Three-in-a-Row Games* (1982) **[H: book not read]** | Wikipedia "Picaria", citing Merilyn Simonds Mohr, *The Games Treasury* (1993), p. 28 **[H: book not read]** |
 
 Details and choices:
@@ -111,8 +117,8 @@ Details and choices:
   without diagonal wins exists; not offered **[Q3]**. After the 8th placement Black has placed last, so White
   moves first; if White then has no piece next to the hole, White loses at once (the v1 code already checks
   the blocked rule right after the last placement, `ThreeMenMorris.java:101-104`).
-- **Picaria.** Played on a 9-point or a 13-point board; v2 plays the 9-point board (same numbering, so the
-  board, the DTO and the bot keep 9 points). The source calls "a player cannot move" a draw *or* a loss by
+- **Picaria.** *(Superseded 2026-10-18: Picaria now plays the 13-point board, see the dedicated section.)*
+  Played on a 9-point or a 13-point board; this first version played the 9-point board. The source calls "a player cannot move" a draw *or* a loss by
   house rule; it is unreachable here **[C]**, so v2 keeps "blocked loses" for one rule everywhere. The
   centre lock does not remove a forced win here, it creates one (**corrected in M5**): with the centre
   closed for the whole placement phase White wins in 7 plies, the first move into the centre completing a
@@ -120,7 +126,7 @@ Details and choices:
   The lock follows the owner's decision (#194); that it makes the variant a White win is a consequence the
   owner may want to know before keeping it **[Q11]**.
 - **Names.** The game card stays "Three Men's Morris"; the variant picker says "Tapatan (3 pieces)",
-  "Achi (4 pieces)", "Picaria (3 pieces, more diagonals)" **[Q1]**.
+  "Achi (4 pieces)", "Picaria (3 pieces, 13-point board)" **[Q1]**.
 
 ## Domain design
 
@@ -128,7 +134,7 @@ Package `threemenmorris/domain` (pure, ArchUnit unchanged).
 
 - `Geometry` (record, replaces the static `Board`): `points` (count), `adjacency` (list of neighbour lists),
   `lines` (list of point lists). Constants `Geometry.TAPATAN` (today's `Board`, also used by Achi) and
-  `Geometry.PICARIA` (Tapatan plus the four short diagonals). Point validation goes through the geometry
+  `Geometry.PICARIA` (the 13-point board: the 3x3 grid plus four crossings, see "Picaria on the 13-point board"). Point validation goes through the geometry
   (`isPoint`, `neighbours`, `areAdjacent`).
 - `MorrisRules` (record): `geometry`, `piecesPerPlayer`, `PlacementRule` (`FREE` or
   `CENTRE_FORBIDDEN_DURING_PLACEMENT`). Constants `TAPATAN`, `ACHI`, `PICARIA`; `MorrisVariant` enum
@@ -249,7 +255,7 @@ Every addition is additive; no destination, payload or field is renamed or remov
   (point coordinates in a 0-100 box, segments to draw, point names, arrow navigation computed from the
   coordinates: nearest point in the arrow's direction). `MorrisBoard.vue` takes a `geometry` prop instead of
   its constants and positions points absolutely from the coordinates rather than with a 3×3 grid. Picaria
-  draws the diamond. The client still knows no adjacency for play: legal moves come from the server.
+  draws its 13-point board (grid, corner diagonals and the diamond; see the 13-point section). The client still knows no adjacency for play: legal moves come from the server.
 - **Last move:** the opponent's (or bot's) last move is marked on the board (a faint ring on the origin and
   the destination) until the next state, so a quick bot move is visible; under reduced motion it is static.
 - **Draw:** a "Offer a draw" button under my tag when `OFFER_DRAW` is available; a pending offer of mine
@@ -330,7 +336,7 @@ copy the engine. One context with two factories is allowed and shares everything
 
 ## What we do not do
 
-No Six or Nine Men's Morris, no capture, no flying; no 13-point Picaria; no Achi without diagonals; no bot
+No Six or Nine Men's Morris, no capture, no flying; no 9-point Picaria (the 13-point one is the only Picaria since 2026-10-18); no Achi without diagonals; no bot
 draw offers; no chat or takeback; no time control; no automatic colour alternation; no change to the session
 core, the lobby components' logic, or Bataille Corse, Bullshit and Kobo (only the additive end-screen prop);
 no extraction of a shared bot driver; no change to Kobo's in-flight frontend (PR #186).
@@ -351,12 +357,78 @@ no extraction of a shared bot driver; no change to Kobo's in-flight frontend (PR
   not "any action"; covered by Vitest.
 - **Cypress flakiness:** zero bot delay and a constant generator under `test`; every wait on a DOM state.
 
+## Picaria on the 13-point board (owner decision 2026-10-18, PR #265)
+
+The 9-point Picaria is removed; Picaria is the Zuni board of 13 points. Tapatan and Achi are unchanged.
+
+**The board.** A Zuni Picaria board is a 3x3 grid (3 horizontal and 3 vertical lines), the 2 corner-to-corner
+diagonals, and the 4 diagonals joining the midpoints of the sides (a diamond). Pieces sit on the 4 crossings
+where the diamond's edges cut the corner diagonals, plus the 9 grid points: 13 points.
+
+**Numbering.** The grid keeps its numbering (0 1 2 / 3 4 5 / 6 7 8, the centre is 4); the crossings are
+9..12, clockwise from the top left: **9** between corner 0 and the centre, **10** between 2 and the centre,
+**11** between 8 and the centre, **12** between 6 and the centre. The back end only reads `Geometry`, so the
+`board` array of the DTO has 13 entries for Picaria (9 for Tapatan and Achi).
+
+**Adjacency** is "consecutive along a drawn line" (no jump):
+- grid rows and columns: 0-1, 1-2, 3-4, 4-5, 6-7, 7-8, 0-3, 3-6, 1-4, 4-7, 2-5, 5-8;
+- corner diagonals 0-9-4-11-8 and 2-10-4-12-6: 0-9, 9-4, 4-11, 11-8, 2-10, 10-4, 4-12, 12-6 (a corner is no
+  longer next to the centre: a crossing sits between);
+- diamond edges: 1-9, 9-3, 1-10, 10-5, 5-11, 11-7, 7-12, 12-3.
+
+The centre (4) has 8 neighbours (1, 3, 5, 7, 9, 10, 11, 12); a side middle has 5; a corner 3; a crossing 4.
+
+**Winning lines (16):** the 3 rows and 3 columns of the grid; on each corner diagonal the 3 triplets of
+consecutive points (0-9-4, 9-4-11, 4-11-8 and 2-10-4, 10-4-12, 4-12-6); and the 4 diamond edges
+(1-9-3, 1-10-5, 5-11-7, 7-12-3). Three pieces that are not consecutive (9 and 11 without 4) do not count.
+
+**Rules.** 3 pieces each; placement on any empty point except the centre (the lock is kept as is,
+`CENTRE_FORBIDDEN_DURING_PLACEMENT`: 12 placeable points); a move is one step along a line to an adjacent
+empty point; three in a row wins during placement or movement; a blocked player loses (existing rule).
+
+**Solver result** (retrograde analysis, committed as `PicariaSolverResultTest`). Outcome and depth are for the
+opening position, seen from White (the seat to move).
+
+| | Tapatan | Achi | **Picaria 13, centre locked (the rule)** | Picaria 13, no lock | Picaria 9, locked (superseded) | Picaria 9, open (superseded) |
+|-|---------|------|------|------|------|------|
+| Points / pieces each | 9 / 3 | 9 / 4 | 13 / 3 | 13 / 3 | 9 / 3 | 9 / 3 |
+| Perfect play | White wins | White wins | **White wins** | White wins | White wins | draw |
+| Depth (plies) | 9 | 11 | **7** | 5 | 7 | n/a (draw) |
+| Reachable positions (seat to move normalised) | 3,602 | 4,512 | **41,983** | 48,044 | 2,545 | not recorded |
+| Blocked position reachable | no (0) | yes (12) | **no (0)** | no (0) | no | no |
+| First placements that keep the win | centre | centre | **1, 3, 5, 7 (side middles)** | not computed | not recorded | n/a |
+
+Findings:
+- With the lock Picaria 13 is still a forced White win in 7 plies, like the old 9-point board: White opens on
+  a side middle and the first move into the centre completes a line. Without the lock White wins faster, in
+  5 plies (a double threat after three placements). Unlike the old 9-point board without lock (a draw), the
+  13-point board is a White win either way: the crossings and the 16 lines give White more threats than
+  Black can parry.
+- Of the 12 placeable first points only the four side middles keep the win; a corner or a crossing opening
+  does not (so the perfect bot with a fixed generator opens on point 1).
+- A blocked position is not reachable by any legal play (BFS over every placement and move, locked or not):
+  with 6 pieces on 13 points no move blocks the opponent without also making a line, so "blocked loses" never
+  fires on this board; it stays as the common rule.
+- Cost: the solver takes about 3.5 s to solve Picaria 13 from scratch (42k positions) against under 1 s for
+  Tapatan and Achi. It runs once per JVM (cached per `MorrisRules`) on the first Picaria bot decision or draw
+  answer. `eachVariantIsSolvedFromScratchInReasonableTime` now allows 15 s. If this is felt in play, warm the
+  solver at start-up or at game creation; not done here.
+
+**Frontend (pending: a design canvas is made separately).** The server sends `board` with 13 entries,
+`legalPlacements` / `legalMoves` / `winningLine` with indices 0..12, and `Placed` / `Moved` events with points
+up to 12. The client must (a) draw 13 points (the 9 grid points where they are today, plus crossings 9..12 at
+the middle of the segment from each corner to the centre), (b) draw the segments: grid rows and columns, the
+two corner diagonals through the crossings, the 4 diamond edges, (c) take its arrow-key navigation from the
+new coordinates, and (d) update the Picaria Cypress specs (`morris-variants.cy.ts`, `morris-bot.cy.ts`) and
+the rules text ("four short diagonals", "more diagonals"). Until then `geometries.ts` still draws 9 points, so
+crossings cannot be seen or clicked.
+
 ## Product questions (owner) with a recommendation
 
 - **Q1 Variant names in the picker.** Recommend "Tapatan (3 pieces)", "Achi (4 pieces)", "Picaria (3 pieces,
-  more diagonals)", with one sentence each in the rules panel; the game card keeps "Three Men's Morris".
+  13-point board)", with one sentence each in the rules panel; the game card keeps "Three Men's Morris".
 - **Q2 Level names.** Recommend "Easy" (random), "Medium" (greedy, default), "Expert" (perfect), with a
-  rules-panel note that White wins every variant with perfect play (Picaria with the centre locked: in 7 plies).
+  rules-panel note that White wins every variant with perfect play (Picaria with the centre locked: in 7 plies, also on the 13-point board).
 - **Q3 Achi without diagonals.** Recommend not now (a fourth option for a rarely played variant).
 - **Q4 When can a draw be offered?** Recommend from the movement phase only (placement lasts at most 8 plies
   and offering before any move is meaningless), once between two of one's own moves.
@@ -371,6 +443,6 @@ no extraction of a shared bot driver; no change to Kobo's in-flight frontend (PR
   movement phase only (the placement phase cannot repeat), with a warning at two.
 - **Q10 Show the colour on lobby seats?** Recommend no: colours exist only after the start (and `random` has
   none before); the option line says who plays what when it is fixed.
-- **Q11 Picaria with the centre locked is a forced White win (M5).** Recommend asking the owner whether the lock
+- **Q11 Picaria with the centre locked is a forced White win (M5, still true on the 13-point board).** Recommend asking the owner whether the lock
   (#194) should stay: with it, Picaria is the shortest and most lopsided variant (the first move into the centre
   wins); the old rule (centre open) gives a draw. Domain data only: a different `PlacementRule` would change it.

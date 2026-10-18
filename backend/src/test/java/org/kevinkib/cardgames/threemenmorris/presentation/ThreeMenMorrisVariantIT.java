@@ -105,7 +105,8 @@ class ThreeMenMorrisVariantIT {
 
         assertThat(state(start).get("variant"), is("picaria"));
         assertThat(players(start).get(0).get("piecesToPlace"), is(3));
-        assertThat(state(start).get("legalPlacements"), is(List.of(0, 1, 2, 3, 5, 6, 7, 8)));
+        assertThat(state(start).get("legalPlacements"), is(List.of(0, 1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12)));
+        assertThat(((List<?>) state(start).get("board")).size(), is(13));
     }
 
     @Test
