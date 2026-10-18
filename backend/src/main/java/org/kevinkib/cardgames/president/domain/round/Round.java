@@ -108,7 +108,7 @@ public final class Round {
             throw refusalOutOfTurn(play);
         }
         if (!completion && trick.top() != null) {
-            BeatRule.check(play, trick.top(), order, trick.constraint());
+            BeatRule.check(play, trick.top(), order, trick.constraint(), options.reducedCut());
         }
 
         Play top = trick.top();
@@ -148,7 +148,7 @@ public final class Round {
         Chain chain = trick.chain();
         boolean quadInSuccession = chain.plays() >= 2 && chain.cards().size() == Completion.RANK_SIZE;
         Optional<TrickEndReason> cleared = quadInSuccession ? Optional.of(TrickEndReason.QUAD)
-                : PlayEffects.clearReason(play, top, order);
+                : PlayEffects.clearReason(play, top, order, options.reducedCut());
         if (cleared.isPresent()) {
             // the four in succession, a quad played at once or a lone 2 close the trick; whoever played
             // the last cards leads (the next seat with cards when they went out)
@@ -278,7 +278,7 @@ public final class Round {
         if (phase != Phase.PLAYING || seat == null || seat.id() == null || seat.id() != current) {
             return List.of();
         }
-        return LegalPlays.of(hands.get(current), trick.top(), order, trick.constraint());
+        return LegalPlays.of(hands.get(current), trick.top(), order, trick.constraint(), options.reducedCut());
     }
 
     /**

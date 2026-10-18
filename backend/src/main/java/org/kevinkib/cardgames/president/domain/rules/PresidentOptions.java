@@ -11,7 +11,8 @@ import java.util.function.Consumer;
 /**
  * The host options in force, as data: the aggregate reads them and holds no rule switch of its own.
  *
- * <p>The round and match keys (the first six) and {@code mustPlay} are declared to the lobby and parsed; the other
+ * <p>The round and match keys (the first six), {@code mustPlay} and {@code reducedCut} are declared to the lobby and
+ * parsed; the other
  * variant keys exist as their "off" value and get their parsing, descriptor and behaviour from the PR that ships
  * them (V3, V4). Equal play, the king of hearts lead of round 1, the forbidden finish (a last play holding a 2
  * gives no place), the 2 that closes the trick and the quad that closes it are fixed rules, not options: their
@@ -25,6 +26,7 @@ public record PresidentOptions(
         Scoring scoring,
         MatchLength length,
         boolean mustPlay,
+        boolean reducedCut,
         Revolution revolution,
         Ranking ranking,
         Runs runs,
@@ -37,10 +39,11 @@ public record PresidentOptions(
     public static final String SCORING_KEY = "scoring";
     public static final String LENGTH_KEY = "length";
     public static final String MUST_PLAY_KEY = "mustPlay";
+    public static final String REDUCED_CUT_KEY = "reducedCut";
 
     /** The keys the lobby may set, in display order. */
     public static final List<String> KEYS = List.of(AFTER_PASS_KEY, EXCHANGE_KEY, GIVE_BACK_KEY,
-            NEXT_LEAD_KEY, SCORING_KEY, LENGTH_KEY, MUST_PLAY_KEY);
+            NEXT_LEAD_KEY, SCORING_KEY, LENGTH_KEY, MUST_PLAY_KEY, REDUCED_CUT_KEY);
     private static final String ON = "on";
     private static final String OFF = "off";
 
@@ -48,7 +51,7 @@ public record PresidentOptions(
         return new PresidentOptions(
                 AfterPass.REENTER,
                 ExchangeAmount.TWO, GiveBack.FREE, NextLead.SCUM, Scoring.RANK, MatchLength.ROUNDS_5,
-                false,
+                false, false,
                 Revolution.OFF, Ranking.TWO_HIGH, Runs.OFF, false);
     }
 
@@ -61,7 +64,8 @@ public record PresidentOptions(
                 .withNextLead(lenient(options, NEXT_LEAD_KEY, NextLead.class, d.nextLead()))
                 .withScoring(lenient(options, SCORING_KEY, Scoring.class, d.scoring()))
                 .withLength(lenient(options, LENGTH_KEY, MatchLength.class, d.length()))
-                .withMustPlay(lenientFlag(options, MUST_PLAY_KEY, d.mustPlay()));
+                .withMustPlay(lenientFlag(options, MUST_PLAY_KEY, d.mustPlay()))
+                .withReducedCut(lenientFlag(options, REDUCED_CUT_KEY, d.reducedCut()));
     }
 
     /**
@@ -84,7 +88,8 @@ public record PresidentOptions(
                 .withNextLead(strict(options, NEXT_LEAD_KEY, NextLead.class, d.nextLead()))
                 .withScoring(strict(options, SCORING_KEY, Scoring.class, d.scoring()))
                 .withLength(strict(options, LENGTH_KEY, MatchLength.class, d.length()))
-                .withMustPlay(strictFlag(options, MUST_PLAY_KEY, d.mustPlay()));
+                .withMustPlay(strictFlag(options, MUST_PLAY_KEY, d.mustPlay()))
+                .withReducedCut(strictFlag(options, REDUCED_CUT_KEY, d.reducedCut()));
     }
 
     private static <E extends Enum<E> & ChoiceOption> E lenient(GameOptions options, String key, Class<E> type,
@@ -129,6 +134,7 @@ public record PresidentOptions(
         values.put(SCORING_KEY, scoring.key());
         values.put(LENGTH_KEY, length.key());
         values.put(MUST_PLAY_KEY, mustPlay ? ON : OFF);
+        values.put(REDUCED_CUT_KEY, reducedCut ? ON : OFF);
         return GameOptions.of(values);
     }
 
@@ -166,6 +172,11 @@ public record PresidentOptions(
         return with(b -> b.mustPlay = value);
     }
 
+    /** With it on, one 2 less also cuts a pair or a triple (one 2 on a pair, two 2s on a triple). */
+    public PresidentOptions withReducedCut(boolean value) {
+        return with(b -> b.reducedCut = value);
+    }
+
     /** A mutable copy used by the withers, so each one names only the key it changes. */
     private static final class Builder {
         AfterPass afterPass;
@@ -175,6 +186,7 @@ public record PresidentOptions(
         Scoring scoring;
         MatchLength length;
         boolean mustPlay;
+        boolean reducedCut;
         private final PresidentOptions from;
 
         Builder(PresidentOptions from) {
@@ -186,10 +198,11 @@ public record PresidentOptions(
             this.scoring = from.scoring;
             this.length = from.length;
             this.mustPlay = from.mustPlay;
+            this.reducedCut = from.reducedCut;
         }
 
         PresidentOptions build() {
-            return new PresidentOptions(afterPass, exchange, giveBack, nextLead, scoring, length, mustPlay,
+            return new PresidentOptions(afterPass, exchange, giveBack, nextLead, scoring, length, mustPlay, reducedCut,
                     from.revolution, from.ranking, from.runs, from.suitLock);
         }
     }

@@ -84,7 +84,7 @@ class PresidentDtoTest {
         assertThat(dto.options(), is(Map.ofEntries(
                 Map.entry("afterPass", "reenter"), Map.entry("exchange", "two"),
                 Map.entry("giveBack", "free"), Map.entry("nextLead", "scum"), Map.entry("scoring", "rank"),
-                Map.entry("length", "rounds-5"), Map.entry("mustPlay", "off"))));
+                Map.entry("length", "rounds-5"), Map.entry("mustPlay", "off"), Map.entry("reducedCut", "off"))));
         assertThat(dto.players().size(), is(3));
         PresidentDto.PlayerDto bob = dto.players().get(1);
         assertThat(bob.seat(), is(1));

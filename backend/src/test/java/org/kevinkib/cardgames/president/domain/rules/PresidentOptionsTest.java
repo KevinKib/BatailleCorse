@@ -16,6 +16,7 @@ class PresidentOptionsTest {
 
         assertThat(options.afterPass(), is(AfterPass.REENTER));
         assertThat(options.mustPlay(), is(false));
+        assertThat(options.reducedCut(), is(false));
     }
 
     @Test
@@ -64,7 +65,7 @@ class PresidentOptionsTest {
                 .map(java.lang.reflect.RecordComponent::getName).toList();
 
         assertThat(components, is(List.of("afterPass", "exchange", "giveBack", "nextLead", "scoring",
-                "length", "mustPlay", "revolution", "ranking", "runs", "suitLock")));
+                "length", "mustPlay", "reducedCut", "revolution", "ranking", "runs", "suitLock")));
     }
 
     private static List<String> names(Enum<?>[] values) {

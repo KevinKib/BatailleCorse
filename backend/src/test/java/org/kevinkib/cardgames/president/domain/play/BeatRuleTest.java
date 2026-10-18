@@ -67,8 +67,8 @@ class BeatRuleTest {
 
     /**
      * The constraint decides what answers the top: BEAT takes a higher play of the same count and an equal one (equal
-     * play is a fixed rule); MATCH_OR_PASS takes only the same rank and count (nothing higher; only a lone 2 may come
-     * in). Rows: constraint, top, candidate, accepted.
+     * play is a fixed rule); MATCH_OR_PASS takes only the same rank and count (nothing higher, a 2 included unless 2
+     * is the bound rank). Rows: constraint, top, candidate, accepted.
      */
     @ParameterizedTest(name = "{0}: {2} on {1} -> {3}")
     @CsvSource(delimiter = '|', value = {
@@ -80,7 +80,7 @@ class BeatRuleTest {
             "MATCH_OR_PASS | 9C       | 9D       | true",
             "MATCH_OR_PASS | 9C 9D    | 9H 9S    | true",
             "MATCH_OR_PASS | 9C       | 10D      | false",
-            "MATCH_OR_PASS | 9C       | 2D       | true",
+            "MATCH_OR_PASS | 9C       | 2D       | false",
             "MATCH_OR_PASS | 9C       | 9D 9H    | false",
             "MATCH_OR_PASS | 9C 9D    | 10C 10D  | false",
             "MATCH_OR_PASS | 9C       | 8D       | false",
@@ -99,27 +99,30 @@ class BeatRuleTest {
     }
 
     /**
-     * The lone 2 (a fixed rule, owner decision): one 2 answers any play whatever its count, a play of 2s included,
-     * and also the equal-play binding, because it closes the trick. Pairs of 2s are ordinary plays.
-     * Rows: constraint, top, candidate, accepted.
+     * The 2 cuts with the same number of cards as the play it answers (a fixed rule, owner feedback of 2026-10-18):
+     * n twos on n cards beat it for any n, a lone 2 can no longer cut a pair or a triple, and the equal-play binding
+     * accepts a 2 only when 2 is the bound rank. Rows: constraint, top, candidate, accepted.
      */
     @ParameterizedTest(name = "{0}: {2} on {1} -> {3}")
     @CsvSource(delimiter = '|', value = {
             "BEAT          | 9C          | 2D       | true",
-            "BEAT          | 9C 9D       | 2D       | true",
-            "BEAT          | 9C 9D 9H    | 2D       | true",
-            "BEAT          | 9C 9D 9H 9S | 2D       | true",
+            "BEAT          | 9C 9D       | 2D       | false",
+            "BEAT          | 9C 9D 9H    | 2D       | false",
+            "BEAT          | 9C 9D 9H 9S | 2D       | false",
             "BEAT          | 9C          | 2D 2H    | false",
-            "BEAT          | 9C 9D 9H    | 2D 2H    | false",
             "BEAT          | 9C 9D       | 2D 2H    | true",
+            "BEAT          | 9C 9D 9H    | 2D 2H    | false",
+            "BEAT          | 9C 9D 9H    | 2D 2H 2S | true",
             "BEAT          | 2C          | 2D       | true",
-            "MATCH_OR_PASS | 9C          | 2D       | true",
-            "MATCH_OR_PASS | 9C 9D       | 2D       | true",
+            "BEAT          | 2C 2D       | 2H       | false",
+            "BEAT          | 2C 2D       | 2H 2S    | true",
+            "MATCH_OR_PASS | 9C          | 2D       | false",
+            "MATCH_OR_PASS | 9C 9D       | 2D       | false",
             "MATCH_OR_PASS | 9C 9D       | 2D 2H    | false",
             "MATCH_OR_PASS | 9C 9D       | 10D 10H  | false",
             "MATCH_OR_PASS | 2C          | 2D       | true",
     })
-    void aLoneTwoAnswersAnyPlayEvenTheBinding(String constraint, String top, String candidate,
+    void aTwoCutsOnlyWithTheSameNumberOfCards(String constraint, String top, String candidate,
                                               boolean accepted) throws Exception {
         Constraint c = Constraint.valueOf(constraint.trim());
         Play candidatePlay = play(candidate);
@@ -133,16 +136,41 @@ class BeatRuleTest {
         }
     }
 
-    /** Which plays are cuts (they end the trick): one 2 on anything, and nothing else. Rows: top, candidate. */
+    /**
+     * With {@code reducedCut} on, n-1 twos also cut a group of n for n = 2 and 3. A single 2 never cuts a triple.
+     * Rows: top, candidate, accepted with the option on.
+     */
+    @ParameterizedTest(name = "reducedCut: {1} on {0} -> {2}")
+    @CsvSource(delimiter = '|', value = {
+            "9C 9D       | 2D       | true",
+            "9C 9D 9H    | 2D 2H    | true",
+            "9C 9D 9H    | 2D       | false",
+            "9C          | 2D       | true",
+            "9C 9D 9H 9S | 2D 2H 2S | false",
+            "9C 9D 9H 9S | 2D       | false",
+            "9C 9D       | 2D 2H    | true",
+            "9C 9D 9H    | 2D 2H 2S | true",
+    })
+    void reducedCutAddsOneTwoLessForPairsAndTriples(String top, String candidate, boolean accepted)
+            throws Exception {
+        assertThat(BeatRule.answers(play(candidate), play(top), RankOrder.standard(), Constraint.BEAT, true),
+                is(accepted));
+        // the binding still takes a 2 only when 2 is the bound rank, whatever the option
+        assertThat(BeatRule.answers(play(candidate), play(top), RankOrder.standard(),
+                Constraint.MATCH_OR_PASS, true), is(false));
+    }
+
+    /** Which plays are cuts (they end the trick): n twos on n cards, nothing else. Rows: top, candidate. */
     @ParameterizedTest(name = "{1} on {0} -> {2}")
     @CsvSource(delimiter = '|', value = {
             "9C          | 2D       | true",
-            "9C 9D       | 2D       | true",
-            "9C 9D 9H 9S | 2D       | true",
+            "9C 9D       | 2D       | false",
+            "9C 9D 9H 9S | 2D       | false",
             "2C          | 2D       | true",
-            "2C 2D       | 2H       | true",
+            "2C 2D       | 2H       | false",
             "9C          | 2D 2H    | false",
-            "9C 9D       | 2D 2H    | false",
+            "9C 9D       | 2D 2H    | true",
+            "9C 9D 9H    | 2D 2H 2S | true",
             "9C          | 10D      | false",
             "9C 9D       | 9H 9S    | false",
     })

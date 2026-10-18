@@ -5,8 +5,10 @@ import org.kevinkib.cardgames.president.domain.card.RankOrder;
 /**
  * Does a play answer the top of the trick: the same number of cards of a strictly higher rank, or (equal play, a fixed
  * rule) a play of the same rank and count, which binds the next player to match it or pass
- * (the {@link Constraint#MATCH_OR_PASS} constraint, which accepts nothing higher). The 2 cuts answer any play of their
- * kind under {@link Constraint#BEAT} (never the binding); what a cut or a quad does to the trick is {@link PlayEffects}'s.
+ * (the {@link Constraint#MATCH_OR_PASS} constraint, which accepts nothing higher, a 2 included unless 2 is the bound
+ * rank). The 2 cuts as a group of the same size as the play it answers (n twos on n cards, any n), and, with the
+ * {@code reducedCut} option, with one 2 less on a pair or a triple; a cut never answers the binding. What a cut or a
+ * quad does to the trick is {@link PlayEffects}'s.
  */
 public final class BeatRule {
 
@@ -22,34 +24,54 @@ public final class BeatRule {
         return candidate.count() == top.count() && candidate.rank() == top.rank();
     }
 
-    /**
-     * A cut: under {@code single} one top-rank card on a play of any count, under {@code ladder} k top-rank cards on a
-     * set of k+1 cards of a lower rank. Under {@code single} a lone top-rank card is a cut on a top-rank play too (owner feedback);
-     * under {@code ladder} a top-rank card on a top-rank play is an equal play, not a cut.
-     */
+    /** A cut without the reduced-cut option. */
     public static boolean isCut(Play candidate, Play top, RankOrder order) {
-        // a fixed rule: one 2 played alone closes the trick, on any play (a play of 2s included)
-        return top != null && candidate.rank() == order.topRank() && candidate.count() == 1;
+        return isCut(candidate, top, order, false);
     }
 
-    /** Whether the candidate is a legal answer to the top under the constraint, without cuts. */
+    /**
+     * A cut: top-rank cards (2s) as many as the cards of the top, whatever their rank (a lone 2 on a lone card, a pair
+     * of 2s on a pair, a triple on a triple). With {@code reducedCut}, one 2 less also cuts a pair or a triple (one 2
+     * on a pair, two 2s on a triple). A single 2 never cuts a triple.
+     */
+    public static boolean isCut(Play candidate, Play top, RankOrder order, boolean reducedCut) {
+        if (top == null || candidate.rank() != order.topRank()) {
+            return false;
+        }
+        if (candidate.count() == top.count()) {
+            return true;
+        }
+        return reducedCut && (top.count() == 2 || top.count() == 3) && candidate.count() == top.count() - 1;
+    }
+
+    /** Whether the candidate is a legal answer to the top under the constraint, without the reduced cut. */
     public static boolean answers(Play candidate, Play top, RankOrder order, Constraint constraint) {
+        return answers(candidate, top, order, constraint, false);
+    }
+
+    public static boolean answers(Play candidate, Play top, RankOrder order, Constraint constraint,
+                                  boolean reducedCut) {
         return switch (constraint) {
             case FREE -> true;
             case BEAT -> beats(candidate, top, order) || isEqual(candidate, top)
-                    || isCut(candidate, top, order);
-            // the binding asks for the same rank and count, but a lone 2 is always allowed: it closes the trick
-            case MATCH_OR_PASS -> isEqual(candidate, top) || isCut(candidate, top, order);
+                    || isCut(candidate, top, order, reducedCut);
+            // the binding asks for the same rank and count: a 2 is playable only when it is the bound rank
+            case MATCH_OR_PASS -> isEqual(candidate, top);
         };
     }
 
     public static void check(Play candidate, Play top, RankOrder order) throws PlayDoesNotBeatException {
-        check(candidate, top, order, Constraint.BEAT);
+        check(candidate, top, order, Constraint.BEAT, false);
     }
 
     public static void check(Play candidate, Play top, RankOrder order, Constraint constraint)
             throws PlayDoesNotBeatException {
-        if (answers(candidate, top, order, constraint)) {
+        check(candidate, top, order, constraint, false);
+    }
+
+    public static void check(Play candidate, Play top, RankOrder order, Constraint constraint, boolean reducedCut)
+            throws PlayDoesNotBeatException {
+        if (answers(candidate, top, order, constraint, reducedCut)) {
             return;
         }
         if (constraint == Constraint.MATCH_OR_PASS) {

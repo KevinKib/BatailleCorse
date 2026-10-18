@@ -95,7 +95,7 @@ class PresidentDtoForbiddenFinishTest {
     void aForbiddenFinishNamesNoPlaceAndClosesNoTrick() throws Exception {
         President game = aPresident().leader(0)
                 .withHand("9S 9H 3C").withHand("2S").withHand("KC KD").withHand("QC 6C").build();
-        game.play(p(0), cards("9S 9H"));
+        game.play(p(0), cards("9S"));
 
         List<PresidentEvent> events = game.play(p(1), cards("2S"));
         PresidentEventData data = PresidentEventData.from(PresidentEventType.PLAY, 1, events);

@@ -55,10 +55,11 @@ class TrickVariantsTest {
     @ParameterizedTest(name = "{1} on {0} -> {2}, trick closed by {3}")
     @CsvSource(delimiter = '|', value = {
             "9S          | 2S          | ok                       | CUT",
-            "9S 9H       | 2S          | ok                       | CUT",
-            "9S 9H 9D    | 2S          | ok                       | CUT",
+            "9S 9H       | 2S          | PlayDoesNotBeatException | NONE",
+            "9S 9H 9D    | 2S          | PlayDoesNotBeatException | NONE",
             "9S          | 2S 2H       | PlayDoesNotBeatException | NONE",
-            "9S 9H       | 2S 2H       | ok                       | NONE",
+            "9S 9H       | 2S 2H       | ok                       | CUT",
+            "9S 9H 9D    | 2S 2H 2D    | ok                       | CUT",
             "9S 9H 9D    | 2S 2H       | PlayDoesNotBeatException | NONE",
             "9S          | JS          | ok                       | NONE",
     })
@@ -93,13 +94,13 @@ class TrickVariantsTest {
     void aLoneTwoClosesTheTrickAndItsPlayerLeadsTheNextTrick() throws Exception {
         President game = aPresident().leader(0)
                 .withHand("9S 9H 3C").withHand("2S 4C").withHand("KC KD").withHand("QC 6C").build();
-        play(game, 0, "9S 9H");
+        play(game, 0, "9S");
 
         List<PresidentEvent> events = play(game, 1, "2S");
 
         assertThat(events, hasItem(new TrickWon(seat(1), TrickEndReason.CUT)));
         assertThat(game.currentSeat(), is(seat(1)));
-        assertThat(game.discard().size(), is(3));
+        assertThat(game.discard().size(), is(2));
         assertThat(game.trick().plays().isEmpty(), is(true));
     }
 
@@ -115,52 +116,69 @@ class TrickVariantsTest {
     }
 
     @Test
-    void aLoneTwoOnAPairOfTwosClosesTheTrick() throws Exception {
+    void aPairOfTwosOnAPairOfTwosCompletesTheFourAndClosesTheTrick() throws Exception {
         President game = aPresident().leader(0)
-                .withHand("2S 2H 3C").withHand("2D 4C").withHand("KC KD").withHand("QC 6C").build();
-        play(game, 0, "2S 2H");
+                .withHand("2S 2H").withHand("2D 2C 4C").withHand("KC KD").withHand("QC 6C").build();
+        play(game, 0, "2S 2H");                    // the lead empties A's hand: a forbidden finish closes nothing
 
-        List<PresidentEvent> events = play(game, 1, "2D");
+        List<PresidentEvent> events = play(game, 1, "2D 2C");
 
-        assertThat(events, hasItem(new TrickWon(seat(1), TrickEndReason.CUT)));
+        // the four 2s are down: closed as the four completed in succession (QUAD), not as a CUT
+        assertThat(events, hasItem(new TrickWon(seat(1), TrickEndReason.QUAD)));
         assertThat(game.currentSeat(), is(seat(1)));
     }
 
     @Test
-    void aPairOfTwosIsAnOrdinaryPlayThatDoesNotCloseTheTrick() throws Exception {
+    void aPairOfTwosLedClosesTheTrickAtOnce() throws Exception {
         President game = aPresident().leader(0)
-                .withHand("9S 9H 3C").withHand("2S 2H 4C").withHand("KC KD").withHand("QC 6C").build();
-        play(game, 0, "9S 9H");
+                .withHand("2S 2H 3C").withHand("2D 4C").withHand("KC KD").withHand("QC 6C").build();
 
-        List<PresidentEvent> events = play(game, 1, "2S 2H");
+        List<PresidentEvent> events = play(game, 0, "2S 2H");
 
-        assertThat(closed(events).isPresent(), is(false));
-        assertThat(game.currentSeat(), is(seat(2)));
+        assertThat(events, hasItem(new TrickWon(seat(0), TrickEndReason.CUT)));
+        assertThat(game.currentSeat(), is(seat(0)));
     }
 
     @Test
-    void aLoneTwoClosesTheTrickEvenUnderTheEqualPlayBinding() throws Exception {
+    void aLoneTwoCannotAnswerAPairOfTwosAnyMore() throws Exception {
         President game = aPresident().leader(0)
-                .withHand("9S 3C").withHand("9H 4C").withHand("2S 5C").withHand("2H 6C").build();
+                .withHand("2S 2H").withHand("2D 4C").withHand("KC KD").withHand("QC 6C").build();
+        play(game, 0, "2S 2H");
+
+        assertThrows(PlayDoesNotBeatException.class, () -> play(game, 1, "2D"));
+    }
+
+    @Test
+    void aTwoIsNotPlayableUnderTheEqualPlayBinding() throws Exception {
+        President game = aPresident().leader(0)
+                .withHand("9S 3C").withHand("9H 4C").withHand("2S 9D 5C").withHand("2H 6C").build();
         play(game, 0, "9S");
         play(game, 1, "9H");
         assertThat(game.trick().constraint().name(), is("MATCH_OR_PASS"));
 
-        // C is bound to a 9 or a pass, but a lone 2 always closes the trick
+        // C is bound to a 9 or a pass: the 2 is not the bound rank
         assertThat(game.legalPlays(seat(2)).stream().map(p -> p.count() + ":" + p.rank()).toList().size(), is(1));
-        List<PresidentEvent> events = play(game, 2, "2S");
-
-        assertThat(events, hasItem(new TrickWon(seat(2), TrickEndReason.CUT)));
-        assertThat(game.currentSeat(), is(seat(2)));
+        assertThrows(PlayDoesNotBeatException.class, () -> play(game, 2, "2S"));
     }
 
     @Test
-    void aLoneTwoClosesTheTrickAfterAChainOfEqualPlays() throws Exception {
+    void aTwoIsNotPlayableAfterAChainOfEqualPlaysEither() throws Exception {
         President game = aPresident().leader(0)
                 .withHand("9S 3C").withHand("9H 4C").withHand("9D 5C").withHand("2H 6C").build();
         play(game, 0, "9S");
         play(game, 1, "9H");
         play(game, 2, "9D");
+
+        assertThrows(PlayDoesNotBeatException.class, () -> play(game, 3, "2H"));
+    }
+
+    @Test
+    void afterTheBindingEndsByAPassALoneTwoClosesTheTrickAgain() throws Exception {
+        President game = aPresident().leader(0)
+                .withHand("9S 3C").withHand("9H 4C").withHand("5C 6C").withHand("2H 7C").build();
+        play(game, 0, "9S");
+        play(game, 1, "9H");
+        game.pass(seat(2));                       // the first pass ends the binding
 
         List<PresidentEvent> events = play(game, 3, "2H");
 
@@ -183,7 +201,7 @@ class TrickVariantsTest {
     void aLoneTwoThatEmptiesTheHandIsAForbiddenFinishAndDoesNotCloseTheTrick() throws Exception {
         President game = aPresident().leader(0)
                 .withHand("9S 9H 3C").withHand("2S").withHand("KC KD").withHand("QC 6C").build();
-        play(game, 0, "9S 9H");
+        play(game, 0, "9S");
 
         List<PresidentEvent> events = play(game, 1, "2S");
 
@@ -227,7 +245,7 @@ class TrickVariantsTest {
         assertThat(game.currentSeat(), is(seat(3)));
         assertThat(game.trick().plays().size(), is(3));
 
-        // nothing but a lone 2 beats a pair of 2s: D, A and B pass, the trick closes on C's play
+        // nobody holds a pair of 2s to answer: D, A and B pass, the trick closes on C's play
         game.pass(seat(3));
         game.pass(seat(0));
         List<PresidentEvent> end = game.pass(seat(1));
@@ -260,9 +278,9 @@ class TrickVariantsTest {
     @Test
     void twoForbiddenFinishersTheLaterOneIsLowerAndBothFollowTheOthers() throws Exception {
         President game = aPresident().leader(0)
-                .withHand("2S 2H").withHand("2D").withHand("3C").withHand("4C").build();
+                .withHand("2S 2H").withHand("2D 2C").withHand("3C").withHand("4C").build();
         play(game, 0, "2S 2H");                    // A out, forbidden, first; the trick stays open
-        List<PresidentEvent> second = play(game, 1, "2D");   // B out, forbidden, second: no cut, the trick stays open
+        List<PresidentEvent> second = play(game, 1, "2D 2C");   // B out, forbidden, second: no cut, the trick stays open
         assertThat(second, hasItem(new PlayerOut(seat(1), 0, true)));
         assertThat(closed(second).isPresent(), is(false));
         assertThat(game.forbiddenFinishers(), contains(seat(0), seat(1)));
@@ -374,13 +392,23 @@ class TrickVariantsTest {
     void aLoneTwoCountsAsALegalPlayForMustPlay() throws Exception {
         President game = aPresident().leader(0).options(mustPlay())
                 .withHand("9S 9H 3C").withHand("2H 4C").withHand("KC KD").withHand("QC 6D").build();
-        play(game, 0, "9S 9H");
+        play(game, 0, "9S");
 
         assertThrows(MustPlayException.class, () -> game.pass(seat(1)));
     }
 
     @Test
-    void underTheBindingOnlyAMatchingPlayOrALoneTwoCountsForMustPlay() throws Exception {
+    void aLoneTwoOnAPairIsNoLegalPlayForMustPlay() throws Exception {
+        President game = aPresident().leader(0).options(mustPlay())
+                .withHand("9S 9H 3C").withHand("2H 4C").withHand("KC KD").withHand("QC 6D").build();
+        play(game, 0, "9S 9H");
+
+        assertThat(game.availableActions(seat(1)), is(List.of(Action.PASS)));
+        game.pass(seat(1));
+    }
+
+    @Test
+    void underTheBindingOnlyAMatchingPlayCountsForMustPlay() throws Exception {
         President game = aPresident().leader(0).options(mustPlay())
                 .withHand("9S 3C").withHand("9H 4C").withHand("10C KC").withHand("QC 6D").build();
         play(game, 0, "9S");
@@ -394,7 +422,9 @@ class TrickVariantsTest {
                 .withHand("9S 3C").withHand("9H 4C").withHand("2C KC").withHand("QC 6D").build();
         play(withTwo, 0, "9S");
         play(withTwo, 1, "9H");
-        assertThrows(MustPlayException.class, () -> withTwo.pass(seat(2)));
+        // a 2 is not the bound rank, so it is no legal play: the pass is allowed
+        assertThat(withTwo.availableActions(seat(2)), is(List.of(Action.PASS)));
+        withTwo.pass(seat(2));
     }
 
     @Test

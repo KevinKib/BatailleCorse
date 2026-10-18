@@ -86,7 +86,8 @@ public class PresidentFactory implements GameFactory {
                 descriptor(PresidentOptions.NEXT_LEAD_KEY, NextLead.values(), defaults.nextLead()),
                 descriptor(PresidentOptions.SCORING_KEY, Scoring.values(), defaults.scoring()),
                 descriptor(PresidentOptions.LENGTH_KEY, MatchLength.values(), defaults.length()),
-                flag(PresidentOptions.MUST_PLAY_KEY, defaults.mustPlay()));
+                flag(PresidentOptions.MUST_PLAY_KEY, defaults.mustPlay()),
+                flag(PresidentOptions.REDUCED_CUT_KEY, defaults.reducedCut()));
     }
 
     @Override

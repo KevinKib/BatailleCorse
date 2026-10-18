@@ -28,7 +28,7 @@ class PresidentOptionsParseTest {
         assertThat(parsed.toGameOptions().values(), is(Map.ofEntries(
                 Map.entry("afterPass", "reenter"), Map.entry("exchange", "two"),
                 Map.entry("giveBack", "free"), Map.entry("nextLead", "scum"), Map.entry("scoring", "rank"),
-                Map.entry("length", "rounds-5"), Map.entry("mustPlay", "off"))));
+                Map.entry("length", "rounds-5"), Map.entry("mustPlay", "off"), Map.entry("reducedCut", "off"))));
     }
 
     /** One row per value of every option the server declares. */
@@ -41,7 +41,7 @@ class PresidentOptionsParseTest {
             "scoring, rank", "scoring, titles", "scoring, zeroSum",
             "length, rounds-5", "length, rounds-3", "length, rounds-10", "length, points-11", "length, points-21",
             "length, endless",
-            "mustPlay, off", "mustPlay, on",
+            "mustPlay, off", "mustPlay, on", "reducedCut, off", "reducedCut, on",
     })
     void everyValueIsAcceptedAndRoundTrips(String key, String value) {
         PresidentOptions parsed = PresidentOptions.parseStrict(with(key, value));
@@ -66,6 +66,15 @@ class PresidentOptionsParseTest {
         PresidentOptions parsed = PresidentOptions.parseStrict(with("mustPlay", "on"));
 
         assertThat(parsed.mustPlay(), is(true));
+    }
+
+    @Test
+    void theReducedCutKeyIsParsedIntoTheRecordAndTheLenientParseToo() {
+        assertThat(PresidentOptions.parseStrict(with("reducedCut", "on")).reducedCut(), is(true));
+        assertThat(PresidentOptions.from(with("reducedCut", "on")).reducedCut(), is(true));
+        assertThat(PresidentOptions.from(with("reducedCut", "maybe")).reducedCut(), is(false));
+        assertThat(PresidentOptions.defaults().withReducedCut(true).toGameOptions().values().get("reducedCut"),
+                is("on"));
     }
 
     /** Equal play, the king of hearts lead and the forbidden finish are fixed rules: their former keys are unknown. */
@@ -100,7 +109,7 @@ class PresidentOptionsParseTest {
             "exchange, three", "giveBack, high", "nextLead, nobody", "scoring, points", "length, rounds-4",
             "length, ENDLESS", "length, ''",
             "twoCuts, single", "quadClears, on",
-            "mustPlay, yes", "mustPlay, ON", "mustPlay, ''",
+            "mustPlay, yes", "mustPlay, ON", "mustPlay, ''", "reducedCut, yes", "reducedCut, ON",
     })
     void anUnknownValueIsRefusedNotReplacedByTheDefault(String key, String value) {
         assertThrows(InvalidOptionException.class, () -> PresidentOptions.parseStrict(with(key, value)));
