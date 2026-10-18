@@ -131,7 +131,21 @@ MID_CASES.forEach(([width, height, counts]) => {
               label.after(title);
             });
           });
-          feltNeverScrolls('with a title on every plate');
+          // The most chips the table can show at once (six): how many cards the trick holds, the trick's binding, its chain, then the three variants that get
+          // a chip. The Classic rules show three (the count, what to beat, the rule after a pass); three more are added here.
+          cy.get('[data-test="trick-chips"]').then(($list) => {
+            const first = $list[0].querySelector('.chip')!;
+            ['3 plays of 9 in a row', 'Compulsory play', 'Reduced cut'].forEach((text) => {
+              const chip = first.ownerDocument.createElement('li');
+              chip.className = 'chip';
+              chip.setAttribute('data-test', 'rule-chip-simulated');
+              chip.textContent = text;
+              [...first.attributes].filter((a) => a.name.startsWith('data-v-')).forEach((a) => chip.setAttribute(a.name, a.value));
+              $list[0].appendChild(chip);
+            });
+          });
+          feltNeverScrolls('with a title on every plate and every rule chip');
+          cy.get('[data-test="rule-chip-simulated"]').then(($chips) => { $chips.remove(); });
           cy.get('[data-test="seat-title-simulated"]').then(($titles) => { $titles.remove(); });
 
           if (players === 8) {

@@ -705,8 +705,8 @@ const rematchButton = computed(() =>
     position: static;
     display: grid;
     grid-template-columns: repeat(var(--opponent-columns), minmax(0, 1fr));
-    gap: var(--space-2) var(--space-1);
-    padding: var(--space-2) var(--space-1) 0;
+    gap: 2px var(--space-1);
+    padding: var(--space-1) var(--space-1) 0;
     align-items: start;
     flex: none;
   }
@@ -715,7 +715,7 @@ const rematchButton = computed(() =>
   .my-zone :deep(.president-seat), .my-zone :deep(.seat-hand) {
     flex-direction: row; flex-wrap: wrap; justify-content: center; align-items: center; gap: 2px 8px;
   }
-  .table-center { position: static; transform: none; flex: 1 1 auto; display: flex; align-items: center; justify-content: center; padding: var(--space-2); }
+  .table-center { position: static; transform: none; flex: 1 1 auto; display: flex; align-items: center; justify-content: center; padding: var(--space-1) var(--space-2); }
 }
 
 @media (prefers-reduced-motion: reduce) {

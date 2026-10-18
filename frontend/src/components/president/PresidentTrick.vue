@@ -206,14 +206,35 @@ const chipTexts = computed(() => props.chips.flatMap((chip) => {
   white-space: nowrap;
 }
 
-/* A phone is wide but short: the cards on the left, the chips stacked on their right (one row of height for both instead of
-   a pile of rows), the closed badge under the cards. The felt never scrolls inside itself. */
+/* A phone is wide but short: the cards on the left, the chips on their right (a column of up to three, a second column
+   past that), the closed badge under the cards. The felt never scrolls inside itself, whatever the rules in force. */
 @media (max-width: 767px) {
   .trick { flex-direction: row; justify-content: center; align-items: center; gap: var(--space-2); width: 100%; }
-  .trick-plate { flex: 0 1 auto; min-width: 0; max-width: 64%; }
-  .trick-closed--line { gap: 0 6px; padding: 3px 10px; margin-top: 10px; }
-  .trick-closed--line .trick-closed-leader::before { margin-right: 6px; }
-  .chips { flex: 1 1 0; min-width: 0; max-width: none; flex-direction: column; flex-wrap: nowrap; align-items: flex-start; justify-content: center; gap: 3px; }
-  .chip { max-width: 100%; box-sizing: border-box; white-space: normal; border-radius: 10px; padding: 1px 8px; line-height: 1.25; }
+  /* The plate keeps one size whatever it shows (cards and who played, or cards and the closed badge), so that the cards
+     never move when a trick closes: the rings drawn on them a moment earlier stay on them. */
+  .trick-plate {
+    flex: 0 0 124px;
+    width: 124px;
+    min-width: 0;
+    justify-content: flex-start;
+    min-height: calc(var(--president-pile-card-w, 44px) * 1.451 + 40px);
+  }
+  .trick-closed--line { flex-direction: column; gap: 0; padding: 2px 6px; }
+  .trick-closed--line .trick-closed-leader::before { content: none; }
+  .trick-closed-reason { font-size: 0.66rem; letter-spacing: 0; }
+  .trick-closed-leader { font-size: 0.62rem; }
+  .chips {
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: none;
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-rows: repeat(3, auto);
+    grid-auto-columns: minmax(0, 1fr);
+    align-content: center;
+    justify-items: start;
+    gap: 3px 4px;
+  }
+  .chip { max-width: 100%; box-sizing: border-box; white-space: normal; border-radius: 10px; padding: 1px 7px; line-height: 1.2; }
 }
 </style>
