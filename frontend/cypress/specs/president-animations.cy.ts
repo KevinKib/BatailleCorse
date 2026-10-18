@@ -96,6 +96,15 @@ function countsReadable() {
           cy.screenshot(`president-animations-cut-${width}`, { capture: 'viewport' });
           noHorizontalScroll();
 
+          // The closed trick's cards sweep to Bob (copies fly from the pile), then the pile holds no card, only the badge.
+          cy.get('[data-test="trick-cards"].trick-cards--swept', { timeout: 10000 }).should('exist');
+          cy.get('[data-test="trick-closed-reason"]').should('have.text', 'Closed by a 2');
+          cy.get('[data-test="trick-count"]').should('have.text', '2 cards in the trick');
+          cy.get('[data-test="motion-card"]', { timeout: 10000 }).should('not.exist');
+          cy.get('[data-test="trick-closed"]').should('be.visible');
+          cy.screenshot(`president-animations-swept-${width}`, { capture: 'viewport' });
+          feltFits();
+
           // 3. A four of a kind closes the trick too.
           scriptedPlay(bobPlayer, '3', 4);
           cy.get('[data-test="trick-closed-reason"]').should('have.text', 'Four of a kind');
@@ -104,7 +113,7 @@ function countsReadable() {
 
           // 4. Carol passes on the pair of 6s: a bubble over her seat, which sits back.
           scriptedPlay(bobPlayer, '6', 2);
-          cy.get('[data-test="trick-closed"]').should('not.exist');
+          cy.get('[data-test="trick-closed"]', { timeout: 20000 }).should('not.exist');
           scriptedPass(carolPlayer);
           cy.get(`${carol} [data-test="seat-bubble"]`).should('have.text', 'Pass').and('be.visible');
           cy.get(`${carol} .president-seat`).should('have.class', 'president-seat--passed');

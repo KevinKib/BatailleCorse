@@ -25,6 +25,8 @@ const props = defineProps<{
   count?: number | null;
   /** Phone layout: a smaller fan. */
   narrow?: boolean;
+  /** Phone layout, tight: the markers (Passed, Out, Ready) sit on the fan instead of a line of their own. */
+  compact?: boolean;
   /** A bubble over the plate ("Pass"...); a new `key` pops it again. */
   bubble?: { kind: SeatBubble['kind']; key: number } | null;
   /** No pop (reduced motion, Instant). */
@@ -51,15 +53,19 @@ const title = computed(() => props.player.title ? ui.titles[titleKey(props.playe
           data-test="seat-bubble" :data-kind="bubble.kind" aria-hidden="true">{{ ui.motion.bubbles[bubble.kind] }}</span>
     <span class="seat-label" :class="{ 'seat-label--active': current }" data-test="seat-label" :title="label">{{ label }}</span>
     <span v-if="title" class="seat-title" data-test="seat-title">{{ title }}</span>
-    <PresidentHandFan v-if="fan" :count="shownCount" :narrow="narrow" />
-    <span v-else class="seat-stats" data-test="seat-cards">{{ plural(ui.table.cards, shownCount) }}</span>
-    <span v-if="current || player.out || player.passed || (showReady && player.ready)" class="seat-markers">
-      <!-- A narrow plate has no room for it: the lit name says it on screen, the marker stays for screen readers. -->
-      <span v-if="current" class="marker marker--current" :class="{ 'sr-only': narrow }" data-test="seat-current">{{ ui.table.current }}</span>
-      <span v-if="player.out" class="marker marker--out" :class="{ 'marker--forbidden': player.forbiddenFinish }"
-            data-test="seat-out">{{ outText }}</span>
-      <span v-else-if="player.passed" class="marker" data-test="seat-passed">{{ ui.table.passed }}</span>
-      <span v-if="showReady && player.ready" class="marker marker--ready" data-test="seat-ready"><i class="pi pi-check" aria-hidden="true"></i>{{ ui.table.ready }}</span>
+    <span class="seat-hand">
+      <PresidentHandFan v-if="fan" :count="shownCount" :narrow="narrow" :reserve="compact" />
+      <span v-else class="seat-stats" data-test="seat-cards">{{ plural(ui.table.cards, shownCount) }}</span>
+      <!-- A compact plate (a phone) has no line for the markers: they sit on the fan, which a seat that is out no longer has. -->
+      <span v-if="current || player.out || player.passed || (showReady && player.ready)" class="seat-markers"
+            :class="{ 'seat-markers--overlay': compact }">
+        <!-- A narrow plate has no room for it: the lit name says it on screen, the marker stays for screen readers. -->
+        <span v-if="current" class="marker marker--current" :class="{ 'sr-only': narrow }" data-test="seat-current">{{ ui.table.current }}</span>
+        <span v-if="player.out" class="marker marker--out" :class="{ 'marker--forbidden': player.forbiddenFinish }"
+              data-test="seat-out">{{ outText }}</span>
+        <span v-else-if="player.passed" class="marker" data-test="seat-passed">{{ ui.table.passed }}</span>
+        <span v-if="showReady && player.ready" class="marker marker--ready" data-test="seat-ready"><i class="pi pi-check" aria-hidden="true"></i><span class="ready-text" :class="{ 'sr-only': compact }">{{ ui.table.ready }}</span></span>
+      </span>
     </span>
     <SeatDisconnectBadge v-if="disconnected" :seconds-remaining="secondsRemaining ?? null" />
   </div>
@@ -124,7 +130,34 @@ const title = computed(() => props.player.title ? ui.titles[titleKey(props.playe
   color: rgba(255, 255, 255, 0.8);
   white-space: nowrap;
 }
+.seat-hand { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; max-width: 100%; }
 .seat-markers { display: inline-flex; flex-wrap: wrap; justify-content: center; gap: 2px 4px; }
+/* On the fan: as tall as the backs, centred on them, opaque enough to read over them; the count stays under it. */
+.seat-markers--overlay {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: var(--seat-label-max, 5.5rem);
+  height: 24px;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 2px;
+  pointer-events: none;
+}
+.seat-markers--overlay .marker {
+  max-width: 100%;
+  box-sizing: border-box;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.1;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.82);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+.seat-markers--overlay .marker--ready { padding: 1px 3px; }
+.seat-markers--overlay .marker--ready .pi { margin-right: 0; }
 .marker {
   font-size: 0.62rem;
   font-weight: 700;
@@ -194,7 +227,8 @@ const title = computed(() => props.player.title ? ui.titles[titleKey(props.playe
   .seat-label { font-size: 0.62rem; letter-spacing: 0.02em; padding: 2px 6px; }
   .seat-label--active { padding-left: 14px; }
   .seat-label--active::before { left: 5px; }
-  .seat-title, .seat-stats { font-size: 0.6rem; }
+  .seat-title, .seat-stats { font-size: 0.6rem; line-height: 1.1; }
+  .president-seat { gap: 1px; }
   .marker { font-size: 0.56rem; padding: 1px 4px; }
   /* No room above a seat at the top of the felt: the bubble sits over the fan instead. */
   .seat-bubble { bottom: auto; top: 14px; font-size: 0.68rem; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.6); }
