@@ -20,13 +20,7 @@ const recap = ui.exchange.recap;
 
 <template>
   <section class="recap" data-test="exchange-recap" role="region" :aria-label="recap.title">
-    <header class="head">
-      <h3 class="title">{{ recap.title }}</h3>
-      <button type="button" class="close" data-test="recap-close" :aria-label="recap.close" :title="recap.close"
-              @click="emit('close')">
-        <i class="pi pi-times" aria-hidden="true"></i>
-      </button>
-    </header>
+    <h3 class="title">{{ recap.title }}</h3>
     <ul class="lines">
       <li v-for="line in lines" :key="`${line.high}-${line.low}`" class="line" :class="{ mine: line.mine }"
           data-test="recap-line">
@@ -49,28 +43,42 @@ const recap = ui.exchange.recap;
         </span>
       </li>
     </ul>
+    <button type="button" class="close" data-test="recap-close" :aria-label="recap.close" :title="recap.close"
+            @click="emit('close')">
+      <i class="pi pi-times" aria-hidden="true"></i>
+    </button>
   </section>
 </template>
 
 <style scoped>
+/* Compact: on a phone the table above gives up every pixel this takes, so the title is only a name for assistive
+   technology there and the close button sits in the corner instead of a row of its own. */
 .recap {
-  display: flex; flex-direction: column; gap: 4px; width: 100%; box-sizing: border-box; padding: 6px 10px;
+  position: relative; display: flex; align-items: center; gap: 4px 10px; width: 100%; box-sizing: border-box;
+  padding: 4px 38px 4px 8px; min-height: 40px;
   background: rgba(0, 0, 0, 0.45); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 12px;
 }
-.head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .title {
   margin: 0; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--gold);
+  position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
 }
 .close {
-  display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 28px; margin: -4px -8px -4px 0;
-  border: 0; background: none; color: rgba(255, 255, 255, 0.8); cursor: pointer; font-size: 0.8rem;
+  position: absolute; top: 50%; right: -4px; transform: translateY(-50%); display: inline-flex; align-items: center;
+  justify-content: center; width: 44px; height: 44px; border: 0; background: none; color: rgba(255, 255, 255, 0.8); cursor: pointer;
+  font-size: 0.8rem;
 }
-.lines { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.lines { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .line {
-  display: flex; flex-wrap: wrap; align-items: center; gap: 2px 14px; font-size: 0.75rem; color: rgba(255, 255, 255, 0.75);
+  display: flex; flex-wrap: wrap; align-items: center; gap: 2px 10px; font-size: 0.7rem; color: rgba(255, 255, 255, 0.75);
 }
 .line.mine { color: #fff; font-weight: 700; }
-.leg { display: inline-flex; align-items: center; gap: 6px; }
-.cards { display: inline-flex; gap: 3px; }
-.cards :deep(.playing_card) { display: block; width: 26px; height: auto; aspect-ratio: 167.575 / 243.1375; }
+.leg { display: inline-flex; align-items: center; gap: 4px; }
+.cards { display: inline-flex; gap: 2px; }
+.cards :deep(.playing_card) { display: block; width: 22px; height: auto; aspect-ratio: 167.575 / 243.1375; }
+@media (min-width: 768px) {
+  .title { position: static; width: auto; height: auto; margin: 0; clip: auto; overflow: visible; }
+  .recap { padding-left: 12px; }
+  .line { font-size: 0.75rem; }
+  .cards :deep(.playing_card) { width: 26px; }
+}
 </style>

@@ -326,6 +326,27 @@ describe('PresidentGameScreen', () => {
       expect(wrapper.find('[data-test="exchange-recap"]').exists()).toBe(false);
     });
 
+    it('givenTheLastGiveBackJustLanded_thenTheSummaryWaitsForTheFlightsToEnd', async () => {
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+      try {
+        const { wrapper, store } = await mountRoom(room(exchanging({ availableActions: [], toGiveBack: 0 }), 2));
+        store.applyEvent({
+          type: 'state-update',
+          state: exchanging({
+            version: 2, phase: 'PLAYING', availableActions: [], toGiveBack: 0, exchange: [{ high: 0, low: 2, count: 2, done: true }],
+            received: buildPresidentHand(['3', 'CLUB'], ['9', 'HEART']), given: buildPresidentHand(['KING', 'HEART'], ['ACE', 'CLUB']),
+          }),
+        });
+        await flushPromises();
+        expect(wrapper.find('[data-test="exchange-recap"]').exists()).toBe(false);
+        vi.advanceTimersByTime(4000);
+        await flushPromises();
+        expect(wrapper.find('[data-test="exchange-recap"]').exists()).toBe(true);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
     it('givenNoExchangeThisRound_thenThereIsNoSummary', async () => {
       const { wrapper } = await mountRoom(room(playing()));
       expect(wrapper.find('[data-test="exchange-recap"]').exists()).toBe(false);

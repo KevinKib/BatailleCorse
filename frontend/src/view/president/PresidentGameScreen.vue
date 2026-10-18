@@ -244,18 +244,23 @@ async function playExchange(change: { before: PresidentState; after: PresidentSt
   const isStill = still.value;
   const moves = planExchangeFlights(change.before, change.after, store.mySeat, factor || 1);
   if (moves.length === 0) return;
+  // The summary comes in once the flights and their rings are over: it moves the hand, which the flights and the rings
+  // were measured on.
+  recapHeld.value = true;
   await nextTick();
   const admission = isStill ? { startInMs: 0, motion: false } : tempoQueue.admit(eventSpanMs(moves));
+  const endMs = isStill ? PRESIDENT_TEMPO.markReducedMs
+    : Math.max(PRESIDENT_TEMPO.markMs, eventSpanMs(moves) + Math.max(...moves.map(m => m.holdAfterMs)));
+  const release = setTimeout(() => { landingTimers.delete(release); recapHeld.value = false; }, admission.startInMs + endMs);
+  landingTimers.add(release);
   if (admission.motion) {
     const flights = moves.filter(m => m.kind === 'travel');
-    const mine: string[] = [];
     for (const m of flights) {
       const landsInMs = admission.startInMs + m.delayMs + m.durationMs;
       if (m.from.kind === 'seat' && m.from.seat !== store.mySeat) inFlight.add(m.from.seat, 1, landsInMs);
       if (m.to.kind === 'seat' && m.to.seat !== store.mySeat) inFlight.add(m.to.seat, -1, landsInMs);
       if (m.to.kind === 'seat' && m.to.seat === store.mySeat && m.card) {
         const name = m.card.name;
-        mine.push(name);
         landing.value = [...landing.value, name];
         const timer = setTimeout(() => {
           landingTimers.delete(timer);
@@ -272,8 +277,9 @@ watch(() => store.stateChange, change => { if (change) void playExchange(change)
 
 // The summary of the exchange stays over the action bar until it is closed (once per round).
 const closedRecapRound = ref<number | null>(null);
+const recapHeld = ref(false);
 const recap = computed(() => store.game ? exchangeRecap(store.game, store.mySeat) : []);
-const showRecap = computed(() => recap.value.length > 0 && closedRecapRound.value !== store.game?.round);
+const showRecap = computed(() => recap.value.length > 0 && closedRecapRound.value !== store.game?.round && !recapHeld.value);
 
 // --- The end -------------------------------------------------------------------------------------------------------
 const endScreen = useEndScreen(() => store.screen === 'finished', () => false);
