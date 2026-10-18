@@ -36,22 +36,9 @@ class ThreeMenMorrisVariantDtoTest {
     }
 
     @Test
-    void aPicariaGameLeavesTheLockedCentreOutOfTheLegalPlacements() throws Exception {
-        ThreeMenMorris game = new ThreeMenMorris(GameId.generate(), MorrisRules.PICARIA, WHITE);
-
-        assertThat(ThreeMenMorrisDto.forViewer(game, WHITE).variant(), is("picaria"));
-        assertThat(ThreeMenMorrisDto.forViewer(game, WHITE).legalPlacements(), is(List.of(0, 1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12)));
-
-        game.place(WHITE, 1);
-        game.place(BLACK, 0);
-
-        assertThat(ThreeMenMorrisDto.forViewer(game, WHITE).legalPlacements(), is(List.of(2, 3, 5, 6, 7, 8, 9, 10, 11, 12)));
-    }
-
-    @Test
     void legalPlacementsAreEmptyInMovementAndAfterTheEnd() throws Exception {
-        ThreeMenMorris game = new ThreeMenMorris(GameId.generate(), MorrisRules.PICARIA, WHITE);
-        for (int[] placement : new int[][]{{0, 1}, {1, 0}, {0, 6}, {1, 2}, {0, 8}, {1, 5}}) {
+        ThreeMenMorris game = new ThreeMenMorris(GameId.generate(), MorrisRules.ACHI, WHITE);
+        for (int[] placement : new int[][]{{0, 0}, {1, 1}, {0, 2}, {1, 4}, {0, 7}, {1, 5}, {0, 3}, {1, 6}}) {
             game.place(new PlayerId(placement[0]), placement[1]);
         }
 

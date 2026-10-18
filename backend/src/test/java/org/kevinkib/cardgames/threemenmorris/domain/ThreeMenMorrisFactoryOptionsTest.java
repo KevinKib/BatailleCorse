@@ -27,36 +27,45 @@ class ThreeMenMorrisFactoryOptionsTest {
     @Test
     void theOptionsAreTheVariantDefaultingToTapatanThenTheHostColourAndTheSeatOptionIsTheBotLevel() {
         assertThat(factory.optionDescriptors(), is(List.of(new OptionDescriptor("variant", OptionType.CHOICE,
-                List.of("tapatan", "achi", "picaria"), "tapatan", "options.threeMenMorris.variant"),
+                List.of("tapatan", "achi"), "tapatan", "options.threeMenMorris.variant"),
                 new OptionDescriptor("hostColour", OptionType.CHOICE,
-                        List.of("white", "black", "random"), "white", "options.threeMenMorris.hostColour"))));
+                        List.of("white", "black", "random"), "random", "options.threeMenMorris.hostColour"))));
         assertThat(factory.seatOptionDescriptors().stream().map(OptionDescriptor::key).toList(), is(List.of("level")));
     }
 
     @Test
-    void noOptionsOrTheDefaultBuildTapatanWithSeatZeroWhite() {
+    void noOptionsOrTheDefaultBuildTapatan() {
         assertThat(create(GameOptions.none()).rules(), is(MorrisRules.TAPATAN));
         assertThat(create(GameOptions.of(Map.of("variant", "tapatan"))).rules(), is(MorrisRules.TAPATAN));
         assertThat(((ThreeMenMorris) factory.create(GameId.generate(), 2)).rules(), is(MorrisRules.TAPATAN));
-        assertThat(create(GameOptions.none()).whiteSeat(), is(new PlayerId(0)));
     }
 
     @Test
-    void achiAndPicariaBuildTheirRules() {
+    void anExplicitWhiteHostColourKeepsSeatZeroWhite() {
+        assertThat(create(GameOptions.of(Map.of("hostColour", "white"))).whiteSeat(), is(new PlayerId(0)));
+    }
+
+    @Test
+    void achiBuildsItsRules() {
         ThreeMenMorris achi = create(GameOptions.of(Map.of("variant", "achi")));
-        ThreeMenMorris picaria = create(GameOptions.of(Map.of("variant", "picaria")));
 
         assertThat(achi.rules(), is(MorrisRules.ACHI));
         assertThat(achi.piecesToPlace(new PlayerId(0)), is(4));
-        assertThat(picaria.rules(), is(MorrisRules.PICARIA));
-        assertThat(picaria.piecesToPlace(new PlayerId(1)), is(3));
+    }
+
+    @Test
+    void theRemovedPicariaVariantIsRefusedAsAnUnknownValueWithNoAlias() {
+        assertThrows(InvalidOptionException.class,
+                () -> factory.validate(GameOptions.of(Map.of("variant", "picaria"))));
+        assertThrows(IllegalArgumentException.class,
+                () -> create(GameOptions.of(Map.of("variant", "picaria"))));
     }
 
     @Test
     void validateCompletesTheDefaultAndRefusesUnknownKeysAndValues() {
-        assertThat(factory.validate(GameOptions.none()), is(GameOptions.of(Map.of("variant", "tapatan", "hostColour", "white"))));
+        assertThat(factory.validate(GameOptions.none()), is(GameOptions.of(Map.of("variant", "tapatan", "hostColour", "random"))));
         assertThat(factory.validate(GameOptions.of(Map.of("variant", "achi"))),
-                is(GameOptions.of(Map.of("variant", "achi", "hostColour", "white"))));
+                is(GameOptions.of(Map.of("variant", "achi", "hostColour", "random"))));
         assertThrows(InvalidOptionException.class,
                 () -> factory.validate(GameOptions.of(Map.of("variant", "nine"))));
         assertThrows(InvalidOptionException.class,

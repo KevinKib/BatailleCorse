@@ -86,15 +86,4 @@ class MorrisSolverCrossCheckTest {
         assertThat("forced win within the solver's depth", moverForcesWin(opening, solution.depth()), is(true));
         assertThat("no faster forced win", moverForcesWin(opening, solution.depth() - 1), is(false));
     }
-
-    @Test
-    void picariaWithTheCentreLockedIsWonByWhiteInSevenPlies() {
-        // The pinned fact behind the rule change of the centre: the first move into the centre wins.
-        MorrisPosition opening = new ThreeMenMorris(GameId.generate(), MorrisVariant.PICARIA.rules(),
-                new PlayerId(0)).position();
-
-        assertThat(MorrisSolver.forRules(MorrisVariant.PICARIA.rules()).solve(opening),
-                is(new MorrisSolver.Solution(MorrisSolver.Outcome.WIN, 7)));
-        assertThat(List.of(moverForcesWin(opening, 7), moverForcesWin(opening, 6)), is(List.of(true, false)));
-    }
 }

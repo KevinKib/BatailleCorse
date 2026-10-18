@@ -27,14 +27,10 @@ import static org.hamcrest.Matchers.instanceOf;
 class MorrisTransitionsTest {
 
     @Test
-    void theOpeningOffersEveryFreePointExceptPicariasCentre() {
+    void theOpeningOffersEveryFreePoint() {
         MorrisPosition tapatan = new ThreeMenMorris(GameId.generate()).position();
-        MorrisPosition picaria = new ThreeMenMorris(GameId.generate(), MorrisVariant.PICARIA.rules(),
-                new PlayerId(0)).position();
 
         assertThat(MorrisTransitions.legal(tapatan).size(), is(9));
-        assertThat(MorrisTransitions.legal(picaria).size(), is(12));
-        assertThat(MorrisTransitions.legal(picaria).contains(new MorrisDecision.Place(4)), is(false));
     }
 
     @Test

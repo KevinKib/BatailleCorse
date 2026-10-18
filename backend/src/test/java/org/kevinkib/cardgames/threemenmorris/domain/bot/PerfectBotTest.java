@@ -37,10 +37,9 @@ class PerfectBotTest {
         MorrisBot bot = new PerfectBot(Positions.FIRST);
 
         // Tapatan and Achi: the centre is the only first move that does not leave White's win intact for
-        // the opponent; in Picaria (13 points) a corner opening does not win, point 1 is the first placement that does.
+        // the opponent.
         assertThat(bot.decide(open(MorrisRules.TAPATAN), WHITE, false), is(new MorrisDecision.Place(4)));
         assertThat(bot.decide(open(MorrisRules.ACHI), WHITE, false), is(new MorrisDecision.Place(4)));
-        assertThat(bot.decide(open(MorrisRules.PICARIA), WHITE, false), is(new MorrisDecision.Place(1)));
     }
 
     private static MorrisPosition open(MorrisRules rules) {

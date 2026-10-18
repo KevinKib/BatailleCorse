@@ -71,6 +71,7 @@ class ThreeMenMorrisWebSocketControllerIT {
             Map<String, Object> room = objectMapper.readValue(created.body(), Map.class);
             gameId = (String) room.get("gameId");
             tokens[0] = (String) room.get("token");
+            sessionService.updateOptions(new GameId(gameId), tokens[0], Map.of("hostColour", "white"));
             assertThat(sessionService.gameType(new GameId(gameId)), is("three-men-morris"));
 
             HttpResponse<String> joined = post("/api/three-men-morris/game/" + gameId + "/join", "{\"name\":\"Bob\"}");

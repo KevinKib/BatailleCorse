@@ -6,7 +6,7 @@ import java.util.Arrays;
 public enum HostColour {
     WHITE("white"), BLACK("black"), RANDOM("random");
 
-    public static final HostColour DEFAULT = WHITE;
+    public static final HostColour DEFAULT = RANDOM;
 
     private final String key;
 

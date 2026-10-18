@@ -18,7 +18,7 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
 /**
- * Retrograde analysis of the three variants (the Picaria results are pinned in {@link PicariaSolverResultTest}). The values asserted for the opening are what the real rules
+ * Retrograde analysis of the variants. The values asserted for the opening are what the real rules
  * give (they were computed with this solver, then cross-checked by the bot tests that replay them).
  */
 class MorrisSolverTest {
@@ -43,7 +43,6 @@ class MorrisSolverTest {
     void theNumberOfReachablePositionsIsPinned() {
         assertThat(MorrisSolver.forRules(MorrisRules.TAPATAN).size(), is(3602));
         assertThat(MorrisSolver.forRules(MorrisRules.ACHI).size(), is(4512));
-        assertThat(MorrisSolver.forRules(MorrisRules.PICARIA).size(), is(41_983));
     }
 
     @Test
