@@ -1,11 +1,11 @@
 // Kobo's travelling cards, end to end. The animation is a picture over a table whose state is already right, so
 // this spec checks three things: a card flies and lands (a copy exists, then is gone) within the limit; a click
-// never waits for it (a one-click match is sent from inside a flight, a button of the score sheet works while the
-// sheet is still rising); and `prefers-reduced-motion: reduce` shows the state at once with nothing moving.
+// never waits for it (a button of the score sheet works while the sheet is still rising) and is judged on what is
+// displayed (a match tapped from inside a flight sees the old pile and is refused as too late, without penalty); and `prefers-reduced-motion: reduce` shows the state at once with nothing moving.
 // No fixed wait anywhere: flights are observed from the page (a MutationObserver records every copy as it is added),
 // so a short flight cannot be missed by a slow poll. Two rooms only.
 import { MOTION_MAX_MS, TEMPO } from '../../src/model/kobo/tempo';
-import { awaitState, DECK_CODES, scriptedDiscardTurn, startKoboTable } from '../support/koboRoom';
+import { awaitLanded, awaitState, DECK_CODES, scriptedDiscardTurn, startKoboTable } from '../support/koboRoom';
 
 const slot = (seat: number, n: number) => `[data-test="slot-${seat}-${n}"]`;
 const logLine = '[data-test="event-log-line"]';
@@ -27,6 +27,7 @@ interface Spy {
   __live: number;
   __marks: number;
   __clickedInFlight: boolean | null;
+  __notices: string[];
   __clickWhen?: { slot: string; discardAlt: string };
 }
 
@@ -39,6 +40,7 @@ function spyOnMotion() {
     w.__live = 0;
     w.__marks = 0;
     w.__clickedInFlight = null;
+    w.__notices = [];
     const original = win.Element.prototype.animate;
     win.Element.prototype.animate = function (this: Element, frames: any, options: any) {
       if (this.closest?.('[data-test="motion-layer"]') && options && typeof options === 'object') {
@@ -47,6 +49,9 @@ function spyOnMotion() {
       return original.call(this, frames, options);
     } as typeof original;
     const observer = new win.MutationObserver((records) => {
+      // The notice line can be short-lived: keep every text it showed.
+      const notice = win.document.querySelector('[data-test="notice"]');
+      if (notice?.textContent && w.__notices[w.__notices.length - 1] !== notice.textContent) w.__notices.push(notice.textContent);
       for (const record of records) {
         record.addedNodes.forEach((node) => {
           if (node instanceof win.HTMLElement && node.dataset.test === 'motion-mark') w.__marks += 1;
@@ -64,8 +69,8 @@ function spyOnMotion() {
       }
     });
     observer.observe(win.document.body, { childList: true, subtree: true });
-    // A match clicked from inside a flight: as soon as a copy is on the table and the pile shows the wanted card
-    // (and the one-click match is armed), click my card in the same frame.
+    // A match tapped from inside a flight: as soon as a copy is on the table and the pile shows the wanted card
+    // (and the one-click match is armed), tap my card in the same frame.
     const poll = () => {
       const when = w.__clickWhen;
       const button = when ? (win.document.querySelector(when.slot) as HTMLButtonElement | null) : null;
@@ -98,7 +103,7 @@ function memoriseBoth(bob: { publish: (d: string, b: Record<string, unknown>) =>
 describe('Kobo animations', () => {
   afterEach(() => { emulateReducedMotion(false); });
 
-  it('flies the cards of every move, opponents included, without ever making a click wait', () => {
+  it('flies the cards of every move, opponents included; a tap inside a flight is refused without penalty, one after it matches', () => {
     cy.viewport(375, 667);
     // I hold 4H QH JH 10H, Bob 9H 5H 8H 6H. I draw 2S and discard it; Bob then draws 4S and discards it, the
     // card my 4H matches.
@@ -123,23 +128,37 @@ describe('Kobo animations', () => {
       // Once my own command has settled, a click on a card is a one-click match again.
       cy.get(slot(0, 0)).should('have.attr', 'data-match', 'true');
 
-      // Bob's turn is drawn too (that is where reading the table is hardest), and my click is sent from inside
-      // the flight of his discard, not after it.
+      // Bob's turn is drawn too (that is where reading the table is hardest). My tap is sent from inside the
+      // flight of his discard: the pile still shows the 2 of spades there, so the server judges the tap on that
+      // (not a match, no penalty) and says it is too late.
       cy.window({ log: false }).then((win) => {
         const w = win as unknown as Spy;
         w.__seen.length = 0;
         w.__clickWhen = { slot: slot(0, 0), discardAlt: '4 of spade' };
       });
       scriptedDiscardTurn(bob);
+      cy.get('[data-test="discard-pile"] img').should('have.attr', 'alt', '4 of spade');
+      awaitLanded();
+      cy.window().should((win) => {
+        expect((win as unknown as Spy).__notices, 'the tap inside the flight was refused as too late').to.include('Too late, nothing happened');
+      });
+      // Nothing happened to my hand: no match, no penalty card, my first card is still there.
+      cy.get(logLine).should('not.contain.text', 'matched').and('not.contain.text', 'penalty');
+      cy.get(slot(0, 0)).should('exist');
+      cy.get('[data-test^="slot-0-"]').should('have.length', 4);
+      cy.get(slot(0, 4)).should('not.exist');
+      cy.get('[data-test="discard-pile"] img').should('have.attr', 'alt', '4 of spade');
+
+      // Once the flight has landed, the same tap is a match.
+      cy.get(slot(0, 0)).should('have.attr', 'data-match', 'true').click();
       cy.get(logLine).should('have.text', 'You matched card 1 (4 of heart)');
       cy.get(`[data-test="slot-empty-0-0"]`).should('exist');
       cy.get('[data-test="discard-pile"] img').should('have.attr', 'alt', '4 of heart');
-      cy.get('[data-test="motion-card"]').should('not.exist');
-      cy.get('[data-test="discard-pile"] img').should('have.css', 'opacity', '1');
+      awaitLanded();
 
       cy.window().then((win) => {
         const w = win as unknown as Spy;
-        expect(w.__clickedInFlight, 'the match was clicked while a card was flying').to.eq(true);
+        expect(w.__clickedInFlight, 'the tap was sent while a card was flying').to.eq(true);
         const bobs = w.__seen.filter((s) => s.arrows > 0);
         expect(bobs.length, "the opponent's moves came with a faint arrow").to.be.greaterThan(0);
         for (const s of w.__seen) {

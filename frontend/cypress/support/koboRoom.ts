@@ -99,6 +99,16 @@ export function awaitState(
 }
 
 /**
+ * Waits until every flight has landed: the motion layer holds no copy and the discard top is fully shown again.
+ * A tap sent before that is judged on what is displayed (the card still shows its old state) and is refused as
+ * "too late", so a spec that wants its click accepted calls this first.
+ */
+export function awaitLanded() {
+  cy.get('[data-test="motion-card"]').should('not.exist');
+  cy.get('[data-test="discard-pile"] img').should('have.css', 'opacity', '1');
+}
+
+/**
  * One whole turn of a scripted player that draws, discards a card without a power and ends its turn. It waits
  * for its own state at every step (its turn, the drawn card, the end step), so it never races the browser.
  */

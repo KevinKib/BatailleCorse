@@ -2,7 +2,7 @@
 // action of the phase wants it (my own card at once, another player's card then the card I give). The deal is
 // fixed (test profile): seat 0 holds the first four cards, seat 1 the next four, then the draw pile follows.
 // Two rooms only: a spec that opens many leaves connections behind that starve the next ones.
-import { awaitState, scriptedDiscardTurn, startKoboTable } from '../support/koboRoom';
+import { awaitLanded, awaitState, scriptedDiscardTurn, startKoboTable } from '../support/koboRoom';
 import {
   actionBarIsReachable, expectNoOverlap, expectSameRects, measureTable, snapshotRects, tableDoesNotScrollSideways,
   type Rects,
@@ -152,6 +152,8 @@ describe('Kobo actions on direct clicks', () => {
       snapshotRects().then((r) => { waiting = r; });
       scriptedDiscardTurn(bob);
       discardTop('4 of spade');
+      // A tap on a card that still shows its old state is refused ("too late"): wait for the flight to land.
+      awaitLanded();
       cy.get('[data-test="slot-1-2"]').should('have.attr', 'data-match', 'true');
       cy.get('[data-test="match-hint"], [data-test="match-coach"]').should('be.visible');
       // The hint line comes without moving the piles or the grids (wide table).
