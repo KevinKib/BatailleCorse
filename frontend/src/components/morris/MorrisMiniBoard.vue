@@ -19,7 +19,12 @@ const end = (segment: readonly number[], last: boolean) =>
       :y1="end(segment, false).y"
       :x2="end(segment, true).x"
       :y2="end(segment, true).y" />
-    <circle v-for="(p, n) in geometry.points" :key="n" :cx="p.x" :cy="p.y" r="5" />
+    <circle
+      v-for="(p, n) in geometry.points"
+      :key="n"
+      :cx="p.x"
+      :cy="p.y"
+      :r="geometry.crossings.includes(n) ? 3.5 : 5" />
   </svg>
 </template>
 
