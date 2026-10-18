@@ -619,7 +619,54 @@ titles, a revolution active, an exchange pending). The options are kept for cont
    "9s: 2 of 4", "Revolution: 3 high" next to the pile. Chosen (owner, 2026-10-15), but the owner is not
    certain: to be re-evaluated after trying it** (in the F2 playtest, before F3). Not chosen: (A) only the
    top play with a log line; (B) the whole trick fanned with the seat name on each play (the fallback if (C)
-   disappoints).
+   disappoints). **Amended 2026-10-18 by decision 7** (trick indicator, below).
+7. **Animations, visual events and parity with the other tables (owner feedback and canvas choice of
+   2026-10-18).** Canvas: https://claude.ai/artifact/PYAx7CWL4NcxEDXTitPaGT, **option B chosen** ("flight with a
+   trace"). The owner's feedback: (a) too much information goes through text that should be visual (that a 2
+   closed the trick, for example); (b) a play is not visible enough; (c) a pass is unclear; (d) what the other
+   games built must be reused. Plan: `docs/plans/2026-10-18-president-animations-plan.md`.
+   1. **The trick indicator replaces the covered combination (amends 6C).** The pile shows the top play only, as
+      today, plus a small indicator with the number of cards in the trick ("5 cards in the trick"). The covered
+      plays are not drawn (the canvas had proposed them under the top play; the owner chose the indicator instead).
+      The rule chips stay.
+   2. **Shared visuals, one look per table.** President uses the same room and felt as Kobo (since #255: a
+      neutral anthracite page and the green felt table), the same travelling-card layer, the same queue of
+      events, the same rings and arrows, the same speed button as Mangola, and the same score table as Kobo's
+      final totals. The shared parts are extracted into shared components, CSS tokens and models
+      (`components/table/`, `model/table/`, `:root` tokens), never copied; Kobo's and Mangola's look and
+      behaviour do not change (their tests and Cypress specs stay green). A new visual is first looked for in
+      the other tables; only what President alone needs is written for it.
+   3. **Option B, the grammar of a move.** A card that moves waits a moment on its source (dashed ring), flies
+      about 700 ms (an opponent: hold 180 ms, flight 700 ms, hold after 250 ms; me: 100 + 480 + 250 ms), lands
+      with a plain ring on its destination; an opponent's move also gets a faint dotted arrow. Events that come
+      in a burst play one after the other through Kobo's queue (at most 4 waiting, at most 3.5 s late; past that,
+      rings only). Passes and the other seat bubbles are not queued: they show at once, 200 ms apart. Under
+      `prefers-reduced-motion` and at the Instant speed, President behaves like option C: nothing flies, still
+      rings for 1.5 s, the bubbles and badges stay (without their pop). The speed button (Normal, Fast,
+      Instant; Normal by default; the player's choice kept in the browser, shared with Mangola) scales every
+      duration (Fast is twice as fast as Normal).
+   4. **The visual events.** Each comes from the server's event data (`seat`, `cards`, `trickWinner`,
+      `trickEndReason`, `outForbidden`, `outPlace`) and, where the event does not say it, from the previous and
+      the new state (the cards of a trick that the new state shows already empty):
+      - **card play** (`PLAY`): the cards fly from the player's seat (my hand zone for me) to the pile, one copy
+        per card, a few milliseconds apart; rings on the source and the pile; an arrow for an opponent;
+      - **pass** (`PASS`): a "Pass" bubble pops above the seat for a moment, then the seat keeps its "Passed"
+        marker and is dimmed while the trick lasts;
+      - **trick closed, with its reason** (`trickWinner` and `trickEndReason` CUT, QUAD, FIRST_OUT,
+        ALL_PASSED): a closing flash on the pile, the closing play stays on the pile, dimmed, with a badge that
+        says why ("Closed by a 2", "Four of a kind", "Out first", "Everyone passed") and who leads; a ring on
+        the winner's seat. The badge stays until the next play (state, not a timer). The text line under the
+        pile stays as a secondary, screen-reader line. Later (chunk 3), the closed cards sweep card by card
+        toward the winner;
+      - **forbidden finish** ("Out on a 2", `outForbidden`): a red bubble "Out on a 2" on the seat, then the
+        seat's marker;
+      - **completion out of turn** (`COMPLETION`, or a play by a seat that was not the current one): the play
+        flies like any other, with a "Four completed" bubble on its seat, before the closing badge;
+      - later chunks: the exchange flights (face down outside my pair), the round sheet entering from the
+        bottom, the places shown one by one.
+   5. **What never animates.** The first state received (an invite link, a reload, a reconnection) shows as it
+      is: no past event is replayed. The state always wins: Play, Pass and Complete follow the state, never an
+      animation; a copy in flight hides only the place it lands on, shown again whatever happens.
 
 ## 12. Sources
 
