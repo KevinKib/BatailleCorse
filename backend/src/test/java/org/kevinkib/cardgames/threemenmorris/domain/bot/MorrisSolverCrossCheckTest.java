@@ -77,7 +77,7 @@ class MorrisSolverCrossCheckTest {
     }
 
     @ParameterizedTest
-    @EnumSource(MorrisVariant.class)
+    @EnumSource(value = MorrisVariant.class, names = {"TAPATAN", "ACHI"})
     void theOpeningIsAWinForWhiteInExactlyTheDepthTheSolverGives(MorrisVariant variant) {
         MorrisPosition opening = new ThreeMenMorris(GameId.generate(), variant.rules(), new PlayerId(0)).position();
         MorrisSolver.Solution solution = MorrisSolver.forRules(variant.rules()).solve(opening);

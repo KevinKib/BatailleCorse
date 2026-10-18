@@ -83,8 +83,8 @@ class MorrisRulesTest {
     }
 
     @Test
-    void theAggregateRefusesMillRulesUntilTheEngineHandlesThem() {
-        assertThrows(UnsupportedOperationException.class,
-                () -> new ThreeMenMorris(GameId.generate(), MorrisRules.SIX_MEN, new PlayerId(0)));
+    void theAggregateAcceptsMillRules() {
+        assertThat(new ThreeMenMorris(GameId.generate(), MorrisRules.SIX_MEN, new PlayerId(0)).rules(),
+                is(MorrisRules.SIX_MEN));
     }
 }

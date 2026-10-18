@@ -115,7 +115,7 @@ class MorrisBotGameIT {
     }
 
     @ParameterizedTest
-    @EnumSource(MorrisVariant.class)
+    @EnumSource(value = MorrisVariant.class, names = {"TAPATAN", "ACHI"})
     void everyLevelFinishesEveryGameWithoutStallingOrForfeitingTheBot(MorrisVariant variant) throws Exception {
         for (MorrisBotLevel level : MorrisBotLevel.values()) {
             for (String colour : List.of("white", "black")) {
@@ -136,7 +136,7 @@ class MorrisBotGameIT {
     }
 
     @ParameterizedTest
-    @EnumSource(MorrisVariant.class)
+    @EnumSource(value = MorrisVariant.class, names = {"TAPATAN", "ACHI"})
     void thePerfectBotPlayingWhiteWinsEveryGameEvenWhenTheHumanKeepsOfferingADraw(MorrisVariant variant)
             throws Exception {
         for (long seed = 1; seed <= 25; seed++) {

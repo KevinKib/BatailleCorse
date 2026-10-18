@@ -48,7 +48,7 @@ class MorrisSolverTest {
 
     @Test
     void eachVariantIsSolvedFromScratchInReasonableTime() {
-        for (MorrisVariant variant : MorrisVariant.values()) {
+        for (MorrisVariant variant : java.util.Arrays.stream(MorrisVariant.values()).filter(v -> v.rules().solvable()).toList()) {
             // A fresh solver: the cache would hide the cost.
             MorrisSolver solver = assertTimeoutPreemptively(Duration.ofSeconds(15),
                     () -> new MorrisSolver(variant.rules()));

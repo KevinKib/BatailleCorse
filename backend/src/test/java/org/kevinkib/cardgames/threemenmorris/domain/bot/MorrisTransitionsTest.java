@@ -46,7 +46,7 @@ class MorrisTransitionsTest {
     }
 
     @ParameterizedTest
-    @EnumSource(MorrisVariant.class)
+    @EnumSource(value = MorrisVariant.class, names = {"TAPATAN", "ACHI"})
     void randomGamesAgreeWithTheAggregateStepByStep(MorrisVariant variant) throws Exception {
         Random random = new Random(42);
         for (int game = 0; game < 300; game++) {

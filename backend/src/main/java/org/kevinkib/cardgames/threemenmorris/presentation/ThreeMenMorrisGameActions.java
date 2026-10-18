@@ -39,6 +39,10 @@ public class ThreeMenMorrisGameActions {
         run(id, g -> g.move(seat, from, to), "Player " + seat + " moved a piece.");
     }
 
+    public void remove(GameId id, PlayerId seat, int point) throws ThreeMenMorrisException {
+        run(id, g -> g.remove(seat, point), "Player " + seat + " removed a piece.");
+    }
+
     public void offerDraw(GameId id, PlayerId seat) throws ThreeMenMorrisException {
         run(id, g -> g.offerDraw(seat), "Player " + seat + " offered a draw.");
     }

@@ -47,7 +47,7 @@ class PerfectBotTest {
     }
 
     @ParameterizedTest
-    @EnumSource(MorrisVariant.class)
+    @EnumSource(value = MorrisVariant.class, names = {"TAPATAN", "ACHI"})
     void whiteWinsEveryGameAgainstARandomBlackWithinTheSolvedDepth(MorrisVariant variant) throws Exception {
         MorrisBot perfect = new PerfectBot(new Random(3));
         MorrisBot random = new RandomBot(new Random(5));
@@ -67,7 +67,7 @@ class PerfectBotTest {
     }
 
     @ParameterizedTest
-    @EnumSource(MorrisVariant.class)
+    @EnumSource(value = MorrisVariant.class, names = {"TAPATAN", "ACHI"})
     void itNeverThrowsAwayTheValueOfAPositionWhoeverPlaysTheOtherSide(MorrisVariant variant) throws Exception {
         MorrisSolver solver = MorrisSolver.forRules(variant.rules());
         MorrisBot perfect = new PerfectBot(new Random(11));
