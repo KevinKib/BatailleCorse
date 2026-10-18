@@ -330,6 +330,14 @@ export interface PresidentUiMessages {
     pair: PluralForms;                 // '{high}', '{low}', '{n}', '{state}'
     pending: string;
     done: string;
+    /** The summary shown after the exchange, once the play has begun. */
+    recap: {
+      title: string;
+      given: string;                   // '{low}', '{high}': before the cards the low title gave (known in my pair only)
+      returned: string;                // '{high}': before the cards given back
+      counts: PluralForms;             // a pair that is not mine: '{low}', '{high}', '{n}' (cards each way)
+      close: string;                   // tooltip and name of the close button
+    };
   };
   roundOver: { ready: string; waiting: string; place: string };  // place: '{n}', '{player}'
   summary: {                          // the end-of-round sheet

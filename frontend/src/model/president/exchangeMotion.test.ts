@@ -57,4 +57,32 @@ describe('planExchangeFlights', () => {
     const [fast] = planExchangeFlights(roundOver, exchange({}), 1, 0.5);
     expect(fast.durationMs).toBe(PRESIDENT_TEMPO.opponent.flightMs / 2);
   });
+  it('givenTheLastGiveBackThatStartsThePlay_thenTheReturnedCardsStillFly', () => {
+    // the server leaves the exchange as soon as the last pair is done: the state is PLAYING with every pair done
+    const before = exchange({ received: best });
+    const after = buildPresidentState({ round: 2, phase: 'PLAYING', exchange: pair(true), received: best, given: back });
+    expect(planExchangeFlights(before, after, 0).map(m => m.card?.name)).toEqual(['CLUB_3', 'SPADE_4']);
+  });
+
+  it('givenAStateAlreadySeenAgain_thenNothingFliesTwice', () => {
+    const done = buildPresidentState({ round: 2, phase: 'PLAYING', exchange: pair(true), received: best, given: back });
+    expect(planExchangeFlights(done, { ...done, version: 9 }, 0)).toEqual([]);
+  });
+
+  it('givenADealWhoseReturnsAreAlreadyMade_thenBothLegsFly_theReturnAfterTheFirstLeg', () => {
+    // giveBack=lowest: the deal arrives with the pair done and the play started
+    const after = buildPresidentState({ round: 2, phase: 'PLAYING', exchange: pair(true), received: best, given: back });
+    const moves = planExchangeFlights(roundOver, after, 0);
+    expect(moves.map(m => [m.from, m.to, m.card?.name])).toEqual([
+      [{ kind: 'seat', seat: 2 }, { kind: 'seat', seat: 0 }, 'HEART_2'],
+      [{ kind: 'seat', seat: 2 }, { kind: 'seat', seat: 0 }, 'CLUB_ACE'],
+      [{ kind: 'seat', seat: 0 }, { kind: 'seat', seat: 2 }, 'CLUB_3'],
+      [{ kind: 'seat', seat: 0 }, { kind: 'seat', seat: 2 }, 'SPADE_4'],
+    ]);
+    expect(moves[2].delayMs).toBeGreaterThanOrEqual(moves[0].delayMs + moves[0].durationMs);
+  });
+
+  it('givenAStateWithoutAnExchange_thenNothingFlies', () => {
+    expect(planExchangeFlights(roundOver, buildPresidentState({ round: 2 }), 0)).toEqual([]);
+  });
 });

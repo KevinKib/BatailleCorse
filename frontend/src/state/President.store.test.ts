@@ -111,6 +111,25 @@ describe('President store', () => {
     });
   });
 
+  describe('state changes (what the exchange flights are planned from)', () => {
+    it('givenTwoSuccessiveStates_thenTheChangeHoldsBoth_andTheFirstStateAndALobbyHoldNone', () => {
+      const store = boot();
+      expect(store.stateChange).toBeNull();
+      const first = game([]);
+      store.applyEvent({ type: 'state-update', state: first });
+      expect(store.stateChange).toBeNull();
+      const second = game([], { version: 2 });
+      store.applyEvent({ type: 'state-update', state: second });
+      expect(store.stateChange).toMatchObject({ before: first, after: second });
+      const third = game([], { version: 3 });
+      store.applyEvent({ type: 'state-update', state: third });
+      expect(store.stateChange?.before).toEqual(second);
+      expect(store.stateChange?.id).toBeGreaterThan(1);
+      store.applyEvent({ type: 'state-update', state: lobbyView() });
+      expect(store.stateChange).toBeNull();
+    });
+  });
+
   describe('event log (what the table animates)', () => {
     const play = (seat: number, cards = [card('9', 'HEART')], over: Record<string, unknown> = {}) => ({
       seat, action: 'PLAY', cards, count: null, outPlace: null, outForbidden: null, trickWinner: null,

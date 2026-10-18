@@ -61,6 +61,10 @@ export const usePresidentStore = defineStore('president-store', () => {
   const events = ref<PresidentLogEntry[]>([]);
   let previousGame: PresidentState | null = null;
   let entryId = 0;
+  // The last two successive started states, for what the events do not say (the cards of the exchange travel in the
+  // states only). Null after a first state, a lobby or a clear.
+  const stateChange = ref<{ id: number; before: PresidentState; after: PresidentState } | null>(null);
+  let changeId = 0;
 
   const game = computed<PresidentState | null>(() =>
     state.value && state.value.started ? state.value : null);
@@ -97,6 +101,7 @@ export const usePresidentStore = defineStore('president-store', () => {
           selectedNames.value = selectedNames.value.filter(n => held.has(n));
         }
         state.value = next;
+        stateChange.value = nextGame && previousGame ? { id: ++changeId, before: previousGame, after: nextGame } : null;
         busy.value = false;
         room.onStateUpdate(next.started);
         if (nextGame) {
@@ -152,6 +157,7 @@ export const usePresidentStore = defineStore('president-store', () => {
     lastEvent.value = null;
     events.value = [];
     previousGame = null;
+    stateChange.value = null;
     gameId.value = null;
     roster.value = {};
   }
@@ -266,7 +272,7 @@ export const usePresidentStore = defineStore('president-store', () => {
     disconnections: presence.disconnections,
     liveDisconnections: presence.liveDisconnections,
     forfeitNotice: presence.forfeitNotice,
-    busy, notice, lastEvent, events, pile,
+    busy, notice, lastEvent, events, pile, stateChange,
     me, isMyTurn, can, options, hand, screen,
     selectedCards, selectedPattern, canPlay, playHint, completions, canGiveBack, canComplete,
     applyEvent, toggleCard, clearSelection, play, complete, pass, giveBack, ready,

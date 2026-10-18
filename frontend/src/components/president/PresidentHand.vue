@@ -16,6 +16,8 @@ const props = defineProps<{
   selected: string[];
   /** The names of the cards received in the exchange: tagged until the round is played. */
   received?: string[];
+  /** The names of the cards still flying in (an exchange flight): their place is kept, the card shows once it lands. */
+  landing?: string[];
 }>();
 const emit = defineEmits<{ toggle: [name: string] }>();
 
@@ -30,6 +32,7 @@ const rows = computed(() => {
     : [indexed.slice(0, layout.value.perRow), indexed.slice(layout.value.perRow)];
 });
 const isSelected = (card: Card) => props.selected.includes(card.name);
+const isLanding = (card: Card) => props.landing?.includes(card.name) ?? false;
 const isReceived = (card: Card) => props.received?.includes(card.name) ?? false;
 const labelOf = (card: Card) => {
   const label = cardLabel(card, ui, isSelected(card));
@@ -46,7 +49,7 @@ const labelOf = (card: Card) => {
         :data-test="`hand-card-${index}`"
         :data-card="card.name"
         class="hand-card"
-        :class="{ selected: isSelected(card), received: isReceived(card) }"
+        :class="{ selected: isSelected(card), received: isReceived(card), landing: isLanding(card) }"
         type="button"
         :data-received="isReceived(card) ? 'true' : undefined"
         :aria-label="labelOf(card)"
@@ -84,6 +87,7 @@ const labelOf = (card: Card) => {
 }
 .hand-card + .hand-card { margin-left: calc(var(--step) - var(--card-w)); }
 .hand-card:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.hand-card.landing { visibility: hidden; }
 .hand-card.selected {
   transform: translateY(calc(-1 * var(--space-3)));
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);

@@ -3,7 +3,8 @@ import { ref } from 'vue';
 /**
  * The cards still flying from a seat to the pile, so that the seat's count drops when they land rather than when the
  * state arrives (the state already has the new count). Purely visual: the state's count is the truth, this only adds
- * the cards in flight to it for a moment, at most `maxLagMs`: behind a long queue of flights the count catches up with
+ * the cards in flight to it for a moment (a negative `cards`: cards flying TO the seat, which the state already counts
+ * and the seat shows only once they land), at most `maxLagMs`: behind a long queue of flights the count catches up with
  * the state rather than lag behind it.
  */
 export function useInFlightCounts(options: { maxLagMs?: number } = {}): {
@@ -17,11 +18,11 @@ export function useInFlightCounts(options: { maxLagMs?: number } = {}): {
   const change = (seat: number, by: number) => {
     const left = (flying.value[seat] ?? 0) + by;
     const { [seat]: _old, ...rest } = flying.value;
-    flying.value = left > 0 ? { ...rest, [seat]: left } : rest;
+    flying.value = left !== 0 ? { ...rest, [seat]: left } : rest;
   };
 
   function add(seat: number, cards: number, landsInMs: number) {
-    if (cards <= 0) return;
+    if (cards === 0) return;
     change(seat, cards);
     const timer = setTimeout(() => { timers.delete(timer); change(seat, -cards); }, Math.max(0, Math.min(landsInMs, options.maxLagMs ?? Infinity)));
     timers.add(timer);

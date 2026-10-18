@@ -39,4 +39,21 @@ describe('useInFlightCounts', () => {
     flights.cancel();
     expect(flights.shown(1, 5)).toBe(5);
   });
+  it('givenCardsFlyingToASeat_thenTheSeatShowsThemOnlyOnceTheyLand', () => {
+    const flights = useInFlightCounts();
+    flights.add(2, -2, 800);
+    expect(flights.shown(2, 10)).toBe(8);
+    flights.add(2, 0, 800);
+    vi.advanceTimersByTime(800);
+    expect(flights.shown(2, 10)).toBe(10);
+  });
+
+  it('givenAGiverAndAReceiver_thenEachCountFollowsItsOwnFlight', () => {
+    const flights = useInFlightCounts();
+    flights.add(1, 2, 800);
+    flights.add(2, -2, 800);
+    expect([flights.shown(1, 6), flights.shown(2, 10)]).toEqual([8, 8]);
+    vi.advanceTimersByTime(800);
+    expect([flights.shown(1, 6), flights.shown(2, 10)]).toEqual([6, 10]);
+  });
 });
