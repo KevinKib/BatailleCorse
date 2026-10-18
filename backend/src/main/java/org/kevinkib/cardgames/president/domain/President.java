@@ -25,7 +25,6 @@ import org.kevinkib.cardgames.president.domain.round.NotPlayersTurnException;
 import org.kevinkib.cardgames.president.domain.round.Phase;
 import org.kevinkib.cardgames.president.domain.round.Round;
 import org.kevinkib.cardgames.president.domain.round.WrongPhaseException;
-import org.kevinkib.cardgames.president.domain.rules.FirstLead;
 import org.kevinkib.cardgames.president.domain.rules.GiveBack;
 import org.kevinkib.cardgames.president.domain.rules.NextLead;
 import org.kevinkib.cardgames.president.domain.rules.PresidentException;
@@ -113,7 +112,7 @@ public class President implements Game {
         List<Card> deck = deckFor(number);
         int dealer = nbPlayers - 1;
         List<List<Card>> hands = deal(deck, new ArrayList<>(active), dealer, nbPlayers);
-        int leader = firstLead(hands, options.firstLead(), new Random(seed));
+        int leader = holderOf(hands, new Card(FrenchRank.KING, FrenchSuit.HEART));
         this.round = new Round(options, hands, dealer, leader);
     }
 
@@ -172,14 +171,6 @@ public class President implements Game {
         return hands;
     }
 
-    private static int firstLead(List<List<Card>> hands, FirstLead rule, Random random) {
-        return switch (rule) {
-            case KING_OF_HEARTS -> holderOf(hands, new Card(FrenchRank.KING, FrenchSuit.HEART));
-            case LOWEST_CLUB -> holderOf(hands, new Card(FrenchRank.THREE, FrenchSuit.CLUB));
-            case QUEEN_OF_HEARTS -> holderOf(hands, new Card(FrenchRank.QUEEN, FrenchSuit.HEART));
-            case RANDOM -> random.nextInt(hands.size());
-        };
-    }
 
     /** The first holder of the card; the seat after the dealer when nobody holds it (cannot happen with a full deck). */
     private static int holderOf(List<List<Card>> hands, Card card) {

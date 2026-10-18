@@ -6,14 +6,11 @@ import type { OptionDescriptor } from '../../model/lobby/LobbyView';
 
 const VALUES: Record<string, string[]> = {
   afterPass: ['reenter', 'out'],
-  firstLead: ['kingOfHearts', 'lowestClub', 'queenOfHearts', 'random'],
   exchange: ['two', 'one', 'scaled', 'none'],
   giveBack: ['free', 'lowest'],
   nextLead: ['scum', 'president'],
   scoring: ['rank', 'titles', 'zeroSum'],
   length: ['rounds-5', 'rounds-3', 'rounds-10', 'points-11', 'points-21', 'endless'],
-  equalPlay: ['on', 'off'],
-  forbiddenFinish: ['lastPlace', 'off'],
   mustPlay: ['off', 'on'],
 };
 const descriptors: OptionDescriptor[] = Object.entries(VALUES).map(([key, values]) => ({
@@ -59,13 +56,12 @@ describe('PresidentLobbyOptions', () => {
     expect(wrapper.emitted('set-option')).toEqual([['length', 'endless']]);
   });
 
-  it('givenTheTrickVariants_thenEachHasALabelledGroupInTheCustomisePanel', async () => {
+  it('givenTheTrickVariants_thenOnlyCompulsoryPlayHasAGroupInTheCustomisePanel', async () => {
     const wrapper = mountOptions();
     await wrapper.get('[data-test="customise"]').trigger('click');
-    // the 2 that closes the trick and the four are fixed rules: no option for them
+    // equal play, the king of hearts lead, the forbidden finish, the 2 that closes the trick and the four are fixed rules
     expect(wrapper.find('[data-test="option-twoCuts"]').exists()).toBe(false);
     expect(wrapper.find('[data-test="option-quadClears"]').exists()).toBe(false);
-    expect(wrapper.get('[data-test="option-forbiddenFinish"]').text()).toContain('Finishing on a 2');
     expect(wrapper.get('[data-test="option-mustPlay"]').text()).toContain('Compulsory play');
   });
 

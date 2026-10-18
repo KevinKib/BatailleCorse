@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.kevinkib.cardgames.president.domain.rules.ForbiddenFinish;
 import org.kevinkib.cardgames.president.domain.rules.PresidentOptions;
 import org.kevinkib.cards.domain.Card;
 
@@ -35,15 +34,6 @@ class HeuristicPresidentBotTest {
     private static final RandomGenerator ALWAYS_LOW = () -> 0L;
     /** One that always draws just under one: above every probability. */
     private static final RandomGenerator ALWAYS_HIGH = () -> -1L;
-
-    private static final PresidentOptions FORBIDDEN_FINISH = new PresidentOptions(
-            PresidentOptions.defaults().afterPass(), PresidentOptions.defaults().firstLead(),
-            PresidentOptions.defaults().exchange(), PresidentOptions.defaults().giveBack(),
-            PresidentOptions.defaults().nextLead(), PresidentOptions.defaults().scoring(),
-            PresidentOptions.defaults().length(), PresidentOptions.defaults().equalPlay(),
-            ForbiddenFinish.LAST_PLACE, false,
-            PresidentOptions.defaults().revolution(), PresidentOptions.defaults().ranking(),
-            PresidentOptions.defaults().runs(), false);
 
     private static PresidentBotDecision decide(PresidentBotTuning tuning, PresidentBotView view,
                                                PresidentBotMemory memory) {
@@ -96,8 +86,8 @@ class HeuristicPresidentBotTest {
                 Arguments.of("control cards are kept (long hand)", "2C 4D 4H 5C 5D 6H", "9H", "pass"),
                 Arguments.of("an ace is kept too (long hand)", "AC 4D 4H 5C 5D 6H", "9H", "pass"),
                 Arguments.of("a control card is spent when the hand is short", "2C 3D", "9H", "2"),
-                Arguments.of("going out beats keeping the control card", "2C", "9H", "2"),
-                Arguments.of("a control pair goes out", "2C 2D", "9H 9D", "2 2"));
+                Arguments.of("going out on the control card is a forbidden finish", "2C", "9H", "pass"),
+                Arguments.of("a control pair is not a finish to go for", "2C 2D", "9H 9D", "2"));
     }
 
     @ParameterizedTest(name = "{0}: {1} on {2} gives {3}")
@@ -120,19 +110,10 @@ class HeuristicPresidentBotTest {
     @ParameterizedTest(name = "{0}: {1} on {2} gives {3}")
     @MethodSource("forbiddenFinishes")
     void itDoesNotGoOutOnATwoWhenThatFinishIsForbidden(String rule, String hand, String top, String expected) {
-        PresidentBotDecision decision = decide(CAUTIOUS, following(hand, top, FORBIDDEN_FINISH),
+        PresidentBotDecision decision = decide(CAUTIOUS, following(hand, top, PresidentOptions.defaults()),
                 new PresidentBotMemory(PresidentBotFixtures.BOT_FOLLOWING));
 
         assertThat(shown(decision), is(expected));
-    }
-
-    @Test
-    void withoutTheForbiddenFinishItGoesOutOnATwo() {
-        PresidentOptions open = PresidentOptions.defaults().withForbiddenFinish(ForbiddenFinish.OFF);
-        PresidentBotDecision decision = decide(CAUTIOUS, following("2C", "9H", open),
-                new PresidentBotMemory(PresidentBotFixtures.BOT_FOLLOWING));
-
-        assertThat(shown(decision), is("2"));
     }
 
     // ----- cuts, forbidden finish on a cut, compulsory play (PR V2) -----
@@ -169,7 +150,7 @@ class HeuristicPresidentBotTest {
 
     @Test
     void theHardPlannerLeadsTheTwosFirstToKeepALowCardForLast() {
-        PresidentBotView view = leading("2C 2D 5H", FORBIDDEN_FINISH);
+        PresidentBotView view = leading("2C 2D 5H", PresidentOptions.defaults());
 
         assertThat(shown(decide(CAUTIOUS_PLANNER, view, new PresidentBotMemory(PresidentBotFixtures.BOT_LEADING))), is("2 2"));
         assertThat(shown(decide(CAUTIOUS, view, new PresidentBotMemory(PresidentBotFixtures.BOT_LEADING))), is("5"));
@@ -177,7 +158,7 @@ class HeuristicPresidentBotTest {
 
     @Test
     void thePlannerKeepsLeadingLowFirstWhenSeveralLowSetsRemain() {
-        PresidentBotView view = leading("2C 2D 5H 9D", FORBIDDEN_FINISH);
+        PresidentBotView view = leading("2C 2D 5H 9D", PresidentOptions.defaults());
 
         assertThat(shown(decide(CAUTIOUS_PLANNER, view, new PresidentBotMemory(PresidentBotFixtures.BOT_LEADING))), is("5"));
     }

@@ -15,27 +15,7 @@ class PresidentOptionsTest {
         PresidentOptions options = PresidentOptions.defaults();
 
         assertThat(options.afterPass(), is(AfterPass.REENTER));
-        assertThat(options.firstLead(), is(FirstLead.KING_OF_HEARTS));
-    }
-
-    @Test
-    void theClassicDefaultsOfTheTrickVariants() {
-        PresidentOptions options = PresidentOptions.defaults();
-
-        assertThat(options.equalPlay(), is(EqualPlay.ON));
-        assertThat(options.forbiddenFinish(), is(ForbiddenFinish.LAST_PLACE));
         assertThat(options.mustPlay(), is(false));
-    }
-
-    @Test
-    void theNewWithersReplaceOneKeyAndKeepTheOthers() {
-        PresidentOptions options = PresidentOptions.defaults()
-                .withForbiddenFinish(ForbiddenFinish.OFF).withMustPlay(true);
-
-        assertThat(options.forbiddenFinish(), is(ForbiddenFinish.OFF));
-        assertThat(options.mustPlay(), is(true));
-        assertThat(options.equalPlay(), is(EqualPlay.ON));
-        assertThat(options.afterPass(), is(AfterPass.REENTER));
     }
 
     @Test
@@ -61,35 +41,30 @@ class PresidentOptionsTest {
 
     @Test
     void withersReplaceOneKeyAndKeepTheOthers() {
-        PresidentOptions options = PresidentOptions.defaults().withAfterPass(AfterPass.OUT)
-                .withFirstLead(FirstLead.RANDOM);
+        PresidentOptions options = PresidentOptions.defaults().withAfterPass(AfterPass.OUT).withMustPlay(true);
 
         assertThat(options.afterPass(), is(AfterPass.OUT));
-        assertThat(options.firstLead(), is(FirstLead.RANDOM));
+        assertThat(options.mustPlay(), is(true));
         assertThat(options.exchange(), is(ExchangeAmount.TWO));
     }
 
     /** The owner dropped jokers, two decks, eight stops, the skip, the trick revolution, any-suit runs. */
     @Test
     void theDroppedValuesAreGone() {
-        assertThat(names(EqualPlay.values()), is(List.of("ON", "OFF")));
-        assertThat(names(ForbiddenFinish.values()), is(List.of("LAST_PLACE", "OFF")));
         assertThat(names(Revolution.values()), is(List.of("OFF", "ROUND", "PERSISTENT")));
         assertThat(names(Runs.values()), is(List.of("OFF", "SAME_SUIT")));
-        assertThat(names(FirstLead.values()),
-                is(List.of("KING_OF_HEARTS", "LOWEST_CLUB", "QUEEN_OF_HEARTS", "RANDOM")));
         assertThat(names(MatchLength.values()),
                 is(List.of("ROUNDS_5", "ROUNDS_3", "ROUNDS_10", "POINTS_11", "POINTS_21", "ENDLESS")));
     }
 
+    /** Equal play, the king of hearts lead and the forbidden finish are fixed rules, not record components. */
     @Test
-    void theRecordHoldsTheSixteenKeysOfTheSpecAndNothingElse() {
+    void theRecordHoldsTheKeysOfTheSpecAndNothingElse() {
         List<String> components = Arrays.stream(PresidentOptions.class.getRecordComponents())
                 .map(java.lang.reflect.RecordComponent::getName).toList();
 
-        assertThat(components, is(List.of("afterPass", "firstLead", "exchange", "giveBack", "nextLead", "scoring",
-                "length", "equalPlay", "forbiddenFinish", "mustPlay", "revolution",
-                "ranking", "runs", "suitLock")));
+        assertThat(components, is(List.of("afterPass", "exchange", "giveBack", "nextLead", "scoring",
+                "length", "mustPlay", "revolution", "ranking", "runs", "suitLock")));
     }
 
     private static List<String> names(Enum<?>[] values) {

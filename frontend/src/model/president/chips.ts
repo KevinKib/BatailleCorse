@@ -16,9 +16,7 @@ type ChipContext = Pick<PresidentState, 'options' | 'trick' | 'round'>;
 /** The values of an option that have a chip text: any other value (a variant the client does not know) gets none. */
 const KNOWN: Record<string, readonly string[]> = {
   afterPass: ['reenter', 'out'],
-  firstLead: ['kingOfHearts', 'lowestClub', 'queenOfHearts', 'random'],
   // the variants that change the table get a chip; their default-off value (no compulsory play) does not
-  forbiddenFinish: ['lastPlace'],
   mustPlay: ['on'],
 };
 
@@ -39,14 +37,10 @@ export function ruleChips(state: ChipContext): PresidentChip[] {
   } else if (top) {
     chips.push({ key: 'beat', vars: { count: top.count, rank: top.rank } });
   }
-  // The lead rule only matters to the first player of the match.
-  const firstLead = known(state.options, 'firstLead');
-  if (state.round === 1 && state.trick.plays.length === 0 && firstLead) chips.push({ key: `firstLead.${firstLead}` });
+  // Equal play, the king of hearts lead and the forbidden finish are fixed rules: only the options get a chip.
   const afterPass = known(state.options, 'afterPass');
   if (afterPass) chips.push({ key: `afterPass.${afterPass}` });
-  for (const name of ['forbiddenFinish', 'mustPlay']) {
-    const value = known(state.options, name);
-    if (value) chips.push({ key: `${name}.${value}` });
-  }
+  const mustPlay = known(state.options, 'mustPlay');
+  if (mustPlay) chips.push({ key: `mustPlay.${mustPlay}` });
   return chips;
 }

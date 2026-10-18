@@ -3,8 +3,8 @@ package org.kevinkib.cardgames.president.domain.play;
 import org.kevinkib.cardgames.president.domain.card.RankOrder;
 
 /**
- * Does a play answer the top of the trick. Base game: the same number of cards of a strictly higher rank. With
- * equal play on, a play of the same rank and count is also legal, and it binds the next player to match it or pass
+ * Does a play answer the top of the trick: the same number of cards of a strictly higher rank, or (equal play, a fixed
+ * rule) a play of the same rank and count, which binds the next player to match it or pass
  * (the {@link Constraint#MATCH_OR_PASS} constraint, which accepts nothing higher). The 2 cuts answer any play of their
  * kind under {@link Constraint#BEAT} (never the binding); what a cut or a quad does to the trick is {@link PlayEffects}'s.
  */
@@ -33,11 +33,10 @@ public final class BeatRule {
     }
 
     /** Whether the candidate is a legal answer to the top under the constraint, without cuts. */
-    public static boolean answers(Play candidate, Play top, RankOrder order, Constraint constraint,
-                                  boolean equalPlay) {
+    public static boolean answers(Play candidate, Play top, RankOrder order, Constraint constraint) {
         return switch (constraint) {
             case FREE -> true;
-            case BEAT -> beats(candidate, top, order) || (equalPlay && isEqual(candidate, top))
+            case BEAT -> beats(candidate, top, order) || isEqual(candidate, top)
                     || isCut(candidate, top, order);
             // the binding asks for the same rank and count, but a lone 2 is always allowed: it closes the trick
             case MATCH_OR_PASS -> isEqual(candidate, top) || isCut(candidate, top, order);
@@ -45,12 +44,12 @@ public final class BeatRule {
     }
 
     public static void check(Play candidate, Play top, RankOrder order) throws PlayDoesNotBeatException {
-        check(candidate, top, order, Constraint.BEAT, false);
+        check(candidate, top, order, Constraint.BEAT);
     }
 
-    public static void check(Play candidate, Play top, RankOrder order, Constraint constraint, boolean equalPlay)
+    public static void check(Play candidate, Play top, RankOrder order, Constraint constraint)
             throws PlayDoesNotBeatException {
-        if (answers(candidate, top, order, constraint, equalPlay)) {
+        if (answers(candidate, top, order, constraint)) {
             return;
         }
         if (constraint == Constraint.MATCH_OR_PASS) {

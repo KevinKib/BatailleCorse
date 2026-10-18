@@ -14,7 +14,7 @@ import {
 import { messagesEn } from '../../locales/en';
 
 const DESCRIPTORS = Object.entries({
-  afterPass: ['reenter', 'out'], firstLead: ['kingOfHearts', 'lowestClub', 'queenOfHearts', 'random'],
+  afterPass: ['reenter', 'out'],
   exchange: ['two', 'one', 'scaled', 'none'], giveBack: ['free', 'lowest'], nextLead: ['scum', 'president'],
   scoring: ['rank', 'titles', 'zeroSum'], length: ['rounds-5', 'rounds-3', 'rounds-10', 'points-11', 'points-21', 'endless'],
 }).map(([key, values]) => ({

@@ -3,7 +3,7 @@
 // 2nd seat 1, 3rd seat 2; both sides press Ready and round 2 opens on the exchange, where the browser (President)
 // gives back two cards with the minimal control. Everything is waited on through DOM states and frames.
 import {
-  awaitState, hostLobby, openFinish, joinGuests, noHorizontalScroll, scriptedPass, scriptedPlay, scriptedReady, threePlayerDeal,
+  awaitState, hostLobby, joinGuests, noHorizontalScroll, scriptedPass, scriptedPlay, scriptedReady, threePlayerDeal,
 } from '../support/presidentRoom';
 
 const SUITS = ['HEART', 'DIAMOND', 'CLUB'];
@@ -27,7 +27,6 @@ function playTriple(rank: string, goesOut = false) {
       cy.viewport(width, width === 375 ? 667 : 800);
       hostLobby('Alice').then((id) => {
         joinGuests(id, ['Bob', 'Carol']).then(([bob, carol]) => {
-          openFinish();
           cy.request('PUT', `/api/test/president/${id}/deal`, { round: 1, cards: threePlayerDeal() });
           cy.get('[data-test="start"]').should('not.be.disabled').click();
           cy.get('[data-test="president-table"]', { timeout: 10000 }).should('be.visible');
@@ -36,7 +35,7 @@ function playTriple(rank: string, goesOut = false) {
           cy.get('[data-test="phase-text"]').should('have.text', 'Your turn');
           cy.get('[data-test^="hand-card-"]').should('have.length', 18);
           cy.get('[data-test="round"]').should('have.text', 'Round 1 of 5');
-          cy.get('[data-test="rule-chip"]').should('contain.text', 'King of hearts leads');
+          cy.get('[data-test="rule-chip"]').should('contain.text', 'After a pass: play again');
           cy.get('[data-test="play-hint"]').should('have.text', 'Tap the cards you want to play.');
           cy.get('[data-test="play"]').should('be.disabled');
           noHorizontalScroll();
@@ -72,7 +71,7 @@ function playTriple(rank: string, goesOut = false) {
           scriptedPass(carol);
           scriptedPlay(bob, '3', 3);
           scriptedPass(carol);
-          scriptedPlay(bob, '2', 2);
+          scriptedPlay(bob, 'ACE', 2);
 
           // Round over: the placeholder lists the places and Ready is the way on.
           cy.get('[data-test="round-over-title"]', { timeout: 10000 }).should('have.text', 'Round 1 is over');

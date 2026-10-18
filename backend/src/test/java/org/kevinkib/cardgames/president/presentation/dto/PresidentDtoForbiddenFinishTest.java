@@ -42,7 +42,7 @@ class PresidentDtoForbiddenFinishTest {
 
         assertThat(options.containsKey("twoCuts"), is(false));
         assertThat(options.containsKey("quadClears"), is(false));
-        assertThat(options.get("forbiddenFinish"), is("lastPlace"));
+        assertThat(options.keySet().containsAll(List.of("equalPlay", "firstLead", "forbiddenFinish")), is(false));
         assertThat(options.get("mustPlay"), is("on"));
     }
 
@@ -69,7 +69,9 @@ class PresidentDtoForbiddenFinishTest {
     void theRoundSummaryPlacesTheForbiddenFinisherLastAndFlagsThem() throws Exception {
         President game = aPresident().leader(0)
                 .withHand("2S").withHand("3C 4C").withHand("5C 6C").build();
-        game.play(p(0), cards("2S"));   // a lone 2 closes the trick: B leads
+        game.play(p(0), cards("2S"));   // a forbidden finish does not close the trick
+        game.pass(p(1));
+        game.pass(p(2));                // nobody holds a 2: the trick ends and B leads
         game.play(p(1), cards("3C"));
         game.pass(p(2));
         game.play(p(1), cards("4C"));
@@ -90,7 +92,7 @@ class PresidentDtoForbiddenFinishTest {
     }
 
     @Test
-    void aTrickTakenByACutNamesTheReasonAndAForbiddenFinishNamesNoPlace() throws Exception {
+    void aForbiddenFinishNamesNoPlaceAndClosesNoTrick() throws Exception {
         President game = aPresident().leader(0)
                 .withHand("9S 9H 3C").withHand("2S").withHand("KC KD").withHand("QC 6C").build();
         game.play(p(0), cards("9S 9H"));
@@ -98,8 +100,8 @@ class PresidentDtoForbiddenFinishTest {
         List<PresidentEvent> events = game.play(p(1), cards("2S"));
         PresidentEventData data = PresidentEventData.from(PresidentEventType.PLAY, 1, events);
 
-        assertThat(data.trickEndReason(), is("CUT"));
-        assertThat(data.trickWinner(), is(2));
+        assertThat(data.trickEndReason(), is(nullValue()));
+        assertThat(data.trickWinner(), is(nullValue()));
         assertThat(data.outPlace(), is(nullValue()));
         assertThat(data.outForbidden(), is(true));
     }

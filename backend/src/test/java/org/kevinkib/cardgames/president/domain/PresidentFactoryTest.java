@@ -9,8 +9,8 @@ import org.kevinkib.cardgames.game.InvalidOptionException;
 import org.kevinkib.cardgames.game.OptionDescriptor;
 import org.kevinkib.cardgames.game.OptionType;
 import org.kevinkib.cardgames.game.PlayerId;
+import org.kevinkib.cardgames.president.domain.rules.PresidentOptions;
 import org.kevinkib.cardgames.president.domain.rules.AfterPass;
-import org.kevinkib.cardgames.president.domain.rules.FirstLead;
 import org.kevinkib.cardgames.president.domain.rules.MatchLength;
 
 import java.util.List;
@@ -66,8 +66,7 @@ class PresidentFactoryTest {
         List<OptionDescriptor> descriptors = factory.optionDescriptors();
 
         assertThat(descriptors.stream().map(OptionDescriptor::key).toList(), is(List.of(
-                "afterPass", "firstLead", "exchange", "giveBack", "nextLead", "scoring", "length", "equalPlay",
-                "forbiddenFinish", "mustPlay")));
+                "afterPass", "exchange", "giveBack", "nextLead", "scoring", "length", "mustPlay")));
         assertThat(descriptors.stream().allMatch(d -> d.type() == OptionType.CHOICE), is(true));
         for (OptionDescriptor descriptor : descriptors) {
             assertThat(descriptor.labelKey(), is("options.president." + descriptor.key()));
@@ -76,14 +75,10 @@ class PresidentFactoryTest {
         Map<String, OptionDescriptor> byKey = new java.util.HashMap<>();
         descriptors.forEach(d -> byKey.put(d.key(), d));
         assertThat(byKey.get("afterPass").values(), is(List.of("reenter", "out")));
-        assertThat(byKey.get("firstLead").values(),
-                is(List.of("kingOfHearts", "lowestClub", "queenOfHearts", "random")));
         assertThat(byKey.get("exchange").values(), is(List.of("two", "one", "scaled", "none")));
         assertThat(byKey.get("giveBack").values(), is(List.of("free", "lowest")));
         assertThat(byKey.get("nextLead").values(), is(List.of("scum", "president")));
         assertThat(byKey.get("scoring").values(), is(List.of("rank", "titles", "zeroSum")));
-        assertThat(byKey.get("equalPlay").values(), is(List.of("on", "off")));
-        assertThat(byKey.get("forbiddenFinish").values(), is(List.of("lastPlace", "off")));
         assertThat(byKey.get("mustPlay").values(), is(List.of("off", "on")));
         assertThat(byKey.get("length").values(),
                 is(List.of("rounds-5", "rounds-3", "rounds-10", "points-11", "points-21", "endless")));
@@ -94,18 +89,17 @@ class PresidentFactoryTest {
         GameOptions validated = factory.validate(GameOptions.of(Map.of("afterPass", "out")));
 
         Map<String, String> expected = new java.util.HashMap<>(Map.ofEntries(
-                Map.entry("afterPass", "reenter"), Map.entry("firstLead", "kingOfHearts"), Map.entry("exchange", "two"),
+                Map.entry("afterPass", "reenter"), Map.entry("exchange", "two"),
                 Map.entry("giveBack", "free"), Map.entry("nextLead", "scum"), Map.entry("scoring", "rank"),
-                Map.entry("length", "rounds-5"), Map.entry("equalPlay", "on"),
-                Map.entry("forbiddenFinish", "lastPlace"), Map.entry("mustPlay", "off")));
+                Map.entry("length", "rounds-5"), Map.entry("mustPlay", "off")));
         expected.put("afterPass", "out");
         assertThat(validated.values(), is(expected));
     }
 
     @Test
-    void validateAcceptsTheTrickVariantsAndStillRefusesTheOthers() {
+    void validateAcceptsMustPlayAndStillRefusesTheOthers() {
         GameOptions validated = factory.validate(GameOptions.of(Map.of(
-                "forbiddenFinish", "off", "mustPlay", "on")));
+                "mustPlay", "on")));
 
         assertThat(validated.values().get("mustPlay"), is("on"));
         for (String key : List.of("revolution", "ranking", "runs", "suitLock")) {
@@ -115,7 +109,8 @@ class PresidentFactoryTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"jokers", "decks", "eightClears", "putsch", "presidentFall", "bogus"})
+    @ValueSource(strings = {"jokers", "decks", "eightClears", "putsch", "presidentFall", "bogus",
+            "equalPlay", "firstLead", "forbiddenFinish"})
     void validateRefusesAnUnknownKeyIncludingThePrunedOnes(String key) {
         assertThrows(InvalidOptionException.class,
                 () -> factory.validate(GameOptions.of(Map.of(key, "on"))));
@@ -130,18 +125,29 @@ class PresidentFactoryTest {
     @Test
     void createReadsTheOptionsOfTheRoom() {
         President game = (President) factory.create(GameId.generate(), 4,
-                GameOptions.of(Map.of("afterPass", "out", "length", "endless", "firstLead", "random")));
+                GameOptions.of(Map.of("afterPass", "out", "length", "endless")));
 
         assertThat(game.options().afterPass(), is(AfterPass.OUT));
         assertThat(game.options().length(), is(MatchLength.ENDLESS));
-        assertThat(game.options().firstLead(), is(FirstLead.RANDOM));
+    }
+
+    @Test
+    void theFixedRulesHoldWhateverTheRoomAsked() throws Exception {
+        // equal play, the king of hearts lead and the forbidden finish cannot be turned off, even by a stale request
+        President game = (President) factory.create(GameId.generate(), 4, GameOptions.of(
+                Map.of("equalPlay", "off", "firstLead", "random", "forbiddenFinish", "off")));
+
+        PlayerId leader = game.currentSeat();
+        assertThat(game.hand(leader).contains(org.kevinkib.cardgames.president.domain.PresidentFixtures.card("KH")),
+                is(true));
+        assertThat(game.options(), is(PresidentOptions.defaults()));
     }
 
     @Test
     void createWithoutOptionsPlaysTheOwnersDefaults() {
         President game = (President) factory.create(GameId.generate(), 4);
 
-        assertThat(game.options().firstLead(), is(FirstLead.KING_OF_HEARTS));
+        assertThat(game.options().mustPlay(), is(false));
         assertThat(game.options().afterPass(), is(AfterPass.REENTER));
     }
 

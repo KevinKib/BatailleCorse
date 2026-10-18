@@ -35,7 +35,7 @@ describe('President lobby', () => {
       cy.get('[data-test="game-options"]').should('not.exist');
       cy.get('[data-test="customise"]').should('have.attr', 'aria-expanded', 'false').click();
       cy.get('[data-test="customise"]').should('have.attr', 'aria-expanded', 'true');
-      ['afterPass', 'firstLead', 'exchange', 'giveBack', 'nextLead', 'scoring', 'length'].forEach((key) => {
+      ['afterPass', 'exchange', 'giveBack', 'nextLead', 'scoring', 'length'].forEach((key) => {
         cy.get(`[data-test="option-${key}"]`).scrollIntoView().should('be.visible');
       });
       cy.get('[data-test="option-afterPass-out"]').check({ force: true });

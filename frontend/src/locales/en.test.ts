@@ -231,14 +231,11 @@ describe('President messages', () => {
     const o = messagesEn.options.president;
     const values: Record<string, string[]> = {
       afterPass: ['reenter', 'out'],
-      firstLead: ['kingOfHearts', 'lowestClub', 'queenOfHearts', 'random'],
       exchange: ['two', 'one', 'scaled', 'none'],
       giveBack: ['free', 'lowest'],
       nextLead: ['scum', 'president'],
       scoring: ['rank', 'titles', 'zeroSum'],
       length: ['rounds-5', 'rounds-3', 'rounds-10', 'points-11', 'points-21', 'endless'],
-      equalPlay: ['on', 'off'],
-      forbiddenFinish: ['lastPlace', 'off'],
       mustPlay: ['off', 'on'],
     };
     for (const [key, list] of Object.entries(values)) {
@@ -246,12 +243,13 @@ describe('President messages', () => {
       for (const value of list) expect(o[key][value], `${key}.${value}`).toBeTruthy();
     }
     expect(o.preset.classic).toBeTruthy();
+    // equal play, the king of hearts lead and the forbidden finish are fixed rules: no option text for them
+    for (const removed of ['equalPlay', 'firstLead', 'forbiddenFinish']) expect(o[removed], removed).toBeUndefined();
   });
 
   it('givenTheTrickVariants_thenTheirChipsEndReasonsAndMarkersAreWritten', () => {
     const ui = messagesEn.presidentUi;
-    for (const chip of ['forbiddenFinish.lastPlace',
-      'mustPlay.on']) expect(ui.chips[chip], chip).toBeTruthy();
+    for (const chip of ['mustPlay.on']) expect(ui.chips[chip], chip).toBeTruthy();
     for (const reason of ['ALL_PASSED', 'FIRST_OUT', 'CUT', 'QUAD']) expect(ui.trickEnd[reason], reason).toContain('{player}');
     expect(ui.trickEnd.forbidden).toContain('{player}');
     expect(ui.table.outForbidden).toBeTruthy();

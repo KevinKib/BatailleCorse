@@ -4,7 +4,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
-import org.kevinkib.cardgames.president.domain.rules.EqualPlay;
 import org.kevinkib.cardgames.president.domain.rules.ExchangeAmount;
 import org.kevinkib.cardgames.president.domain.rules.GiveBack;
 import org.kevinkib.cardgames.president.domain.rules.MatchLength;
@@ -34,7 +33,6 @@ class PresidentMatchInvariantTest {
                 .withExchange(amounts[(int) (seed % amounts.length)])
                 .withGiveBack(seed % 3 == 0 ? GiveBack.LOWEST : GiveBack.FREE)
                 .withNextLead(seed % 2 == 0 ? NextLead.SCUM : NextLead.PRESIDENT)
-                .withEqualPlay(seed % 4 < 2 ? EqualPlay.ON : EqualPlay.OFF)
                 .withScoring(scorings[(int) (seed % scorings.length)])
                 .withLength(lengths[(int) (seed % lengths.length)]);
     }

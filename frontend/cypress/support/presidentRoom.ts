@@ -19,16 +19,6 @@ export function noHorizontalScroll() {
   });
 }
 
-/**
- * The host switches the forbidden finish off in the lobby. The scripted rounds of the older specs end on a pair of 2s,
- * which the Classic rules place last; those specs are about something else, so they keep the open finish.
- */
-export function openFinish() {
-  cy.get('[data-test="customise"]').click();
-  cy.get('[data-test="option-forbiddenFinish-off"]').check({ force: true });
-  cy.get('[data-test="option-forbiddenFinish-off"]').should('be.checked');
-}
-
 /** Joins `names` as scripted guests (seats 1..) and waits for the lobby to count them. */
 export function joinGuests(id: string, names: string[]) {
   const guests: Guest[] = [];
@@ -82,17 +72,17 @@ export function scriptedReady(player: ScriptedPlayer) {
 /**
  * A full fixed deal of round 1 for three players (the deal goes seat 0, 1, 2, 0, ...):
  *  - seat 0 (the host) holds three each of K, Q, J, 10, 9, 8, king of hearts included, so it leads;
- *  - seat 1 holds three each of 7, 6, 5, 4, 3 and the pair of 2s (hearts, diamonds);
- *  - seat 2 holds what is left (the spades, the 2s of clubs and spades, the four aces).
+ *  - seat 1 holds three each of 7, 6, 5, 4, 3 and the pair of aces (hearts, diamonds);
+ *  - seat 2 holds what is left (the spades, the four 2s, the aces of clubs and spades).
  * Every set is played alone and passed on, whatever the rules of equal play: the round ends 1st seat 0, 2nd seat 1,
  * 3rd seat 2.
  */
 export function threePlayerDeal(): string[] {
   const triple = (rank: string) => [`${rank}H`, `${rank}D`, `${rank}C`];
   const seat0 = ['K', 'Q', 'J', '10', '9', '8'].flatMap(triple);
-  const seat1 = [...['7', '6', '5', '4', '3'].flatMap(triple), '2H', '2D'];
+  const seat1 = [...['7', '6', '5', '4', '3'].flatMap(triple), 'AH', 'AD'];
   const seat2 = [
-    ...['K', 'Q', 'J', '10', '9', '8', '7', '6', '5', '4', '3'].map((r) => `${r}S`), '2C', '2S', 'AH', 'AD', 'AC', 'AS',
+    ...['K', 'Q', 'J', '10', '9', '8', '7', '6', '5', '4', '3'].map((r) => `${r}S`), '2H', '2D', '2C', '2S', 'AC', 'AS',
   ];
   const deal: string[] = [];
   for (let i = 0; i < 17; i++) deal.push(seat0[i], seat1[i], seat2[i]);

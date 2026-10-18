@@ -6,6 +6,13 @@ flags, options, domain model, DTO, bots, UI decisions). Written by Claude Opus 5
 Checklist followed: `docs/architecture/add-a-game.md`; names: `docs/architecture/game-conventions.md`
 (`president` everywhere: id, package, `President` prefix, `president` camel form).
 
+**Amendment 2026-10-18 (owner, spec section 13.1 items 25 and 26):** equal play, the king of hearts lead of
+round 1 and the forbidden finish on a 2 are fixed rules. The keys `equalPlay`, `firstLead` and `forbiddenFinish`
+that the P1, P3, V1 and V2 sections below describe no longer exist (the strict parse refuses them like any unknown
+key; the enums `EqualPlay`, `FirstLead` and `ForbiddenFinish` are gone); where a section below names one of them,
+read the fixed behaviour. A forbidden finisher never closes the trick, a lone 2 or a quad of 2s that empties the
+hand included. Delivered by `feat/president-fixed-rules`.
+
 **Goal:** a fifth game, President (Le Président / Trou du cul), playable with the owner's rules and every
 offered variant, against humans and bots, in a series of small PRs.
 
@@ -14,11 +21,11 @@ offered variant, against humans and bots, in a series of small PRs.
 1. **Identity and titles**: id `president`; English UI titles President / Vice-President / Neutral /
    Vice-Scum / Scum; French names (Trou du cul...) only in the rules text.
 2. **Players and deck**: 3 to 8 players, one 52-card deck, no jokers; no 2-player mode, no two-deck mode.
-3. **Classic defaults (the owner's rules)**: re-entry after a pass; equal play on, binding the next player to
+3. **Classic defaults (the owner's rules)**: re-entry after a pass; equal play (a fixed rule, not an option, since 2026-10-18), binding the next player to
    match or pass, repeating along the chain; the four cards of a rank played in succession close the trick,
    and their last holder may complete them out of turn (optional, window open from the second play of the
    chain until the next play; the first pass ends the binding); a quad played at once closes the trick
-   (`quadClears = on`); forbidden finish on a 2; exchange 2/1 (best cards forced, free return); the king of hearts holder leads round 1 with
+   (`quadClears = on`); forbidden finish on a 2 (a fixed rule since 2026-10-18; it closes nothing, whatever the play); exchange 2/1 (best cards forced, free return); the king of hearts holder leads round 1 (a fixed rule since 2026-10-18) with
    any play; the Scum leads rounds 2+; points by place; the first player out closes the trick, later ones
    do not (a forbidden finisher out first closes nothing: only the player taking 1st place does). The lobby offers one preset, Classic (owner, 2026-10-15; the other presets are out of scope, spec 3.5), plus a "Customise" path; a preset is a lobby convenience, client-side only, unknown to the
    server.
@@ -279,7 +286,7 @@ summary) and `shared-lobby.cy.ts` updated.
 The owner's equal-play rules (spec §3.1.1), the default of the Classic preset. O1 (the first pass ends the
 binding) and O4 (a single lead does not open the window) are decided.
 
-- Key `equalPlay` (`on|off`, default `on`): descriptor, parsing, locales.
+- (Removed 2026-10-18: equal play is a fixed rule, there is no `equalPlay` key.) It shipped as a key `equalPlay` (`on|off`): descriptor, parsing, locales.
 - Domain: `BeatRule` equal case; `Trick` chain (rank, cards in succession) and `MATCH_OR_PASS` binding that
   repeats along the chain (the first pass ends it, O1: the next seat gets the `BEAT` constraint); the four completed in succession closes the trick (reason `QUAD`),
   the completing player leads or, if out, the next seat with cards; `Completion` (missing cards, holder) and
@@ -308,7 +315,7 @@ binding) and O4 (a single lead does not open the window) are decided.
 
 ## V2 `feat: President cuts, quad, forbidden finish and must play` (M)
 
-Keys `forbiddenFinish` (default `lastPlace`) and `mustPlay`. The 2 that closes the trick (a lone 2, on any play, under the
+Key `mustPlay` (and, until 2026-10-18, `forbiddenFinish`, default `lastPlace`, now a fixed rule). The 2 that closes the trick (a lone 2, on any play, under the
 equal-play binding too, as a lead) and the quad that closes it (O5) are **fixed rules**, not options (owner, 2026-10-17).
 Domain: `BeatRule` cut cases, `PlayEffects` clears with reasons, forbidden finish places (a forbidden
 finisher out first does not close the trick, O3 decided; only the player taking 1st place does, so the

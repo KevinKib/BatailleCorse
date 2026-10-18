@@ -4,7 +4,7 @@
 //  - as the Scum, the browser sees its best cards leave, waits, and gets the President's return.
 // Everything is waited on through DOM states and frames, never a fixed delay.
 import {
-  awaitState, hostLobby, openFinish, joinGuests, noHorizontalScroll, scriptedPass, scriptedPlay, scriptedReady, threePlayerDeal,
+  awaitState, hostLobby, joinGuests, noHorizontalScroll, scriptedPass, scriptedPlay, scriptedReady, threePlayerDeal,
 } from '../support/presidentRoom';
 
 const SUITS = ['HEART', 'DIAMOND', 'CLUB'];
@@ -29,15 +29,15 @@ function roundOneDealBrowserFirst() {
 
 /**
  * Round 1 where Bob (seat 1) goes out first, Carol second and the browser last: Bob holds the king of hearts and the
- * high triples, Carol the low ones and the pair of 2s, the browser singles and the aces.
+ * high triples, Carol the low ones and a pair of aces, the browser singles, the 2s and two aces.
  */
 function roundOneDealBrowserLast() {
   const triple = (rank: string) => [`${rank}H`, `${rank}D`, `${rank}C`];
   const bob = [...['K', 'Q', 'J', '10', '9'].flatMap(triple), '8H', '8D'];
-  const carol = [...['7', '6', '5', '4', '3'].flatMap(triple), '2H', '2D'];
+  const carol = [...['7', '6', '5', '4', '3'].flatMap(triple), 'AH', 'AD'];
   const browser = [
     ...['K', 'Q', 'J', '10', '9', '8', '7', '6', '5', '4', '3'].map((r) => `${r}S`),
-    '2C', '2S', 'AH', 'AD', 'AC', 'AS', '8C',
+    '2H', '2D', '2C', '2S', 'AC', 'AS', '8C',
   ];
   return dealFrom(browser, bob, carol);
 }
@@ -66,7 +66,6 @@ function browserPass() {
     it('as the President: tagged cards, Suggest, Give', () => {
       hostLobby('Alice').then((id) => {
         joinGuests(id, ['Bob', 'Carol']).then(([bob, carol]) => {
-          openFinish();
           // Round 2: Carol (Scum) deals, so the browser is dealt first and holds 18 cards. Carol holds the 2s of
           // clubs and spades (her two best); the browser's low cards are 3C, a pair of 4s, a pair of 5s, a triple of
           // 6s, a pair of 9s, then 10C: Suggest keeps every pair and picks 3C and 10C.
@@ -90,7 +89,7 @@ function browserPass() {
             scriptedPlay(bob, rank, 3);
             scriptedPass(carol);
           });
-          scriptedPlay(bob, '2', 2);
+          scriptedPlay(bob, 'ACE', 2);
           cy.get('[data-test="round-over-title"]', { timeout: 10000 }).should('have.text', 'Round 1 is over');
           cy.get('[data-test="ready"]').click();
           scriptedReady(bob);
@@ -146,7 +145,6 @@ function browserPass() {
     it('as the Scum: the best cards leave, then the return arrives', () => {
       hostLobby('Alice').then((id) => {
         joinGuests(id, ['Bob', 'Carol']).then(([bob, carol]) => {
-          openFinish();
           // Round 2: the browser (Scum) deals, so Bob (President) is dealt first and holds 18 cards. The browser
           // holds the 2s of clubs and spades, its best two cards, which move to Bob at once.
           const mine = ['2C', '2S', '4C', '5C', '6C', '7C', '8C', '9C', '10C', 'JC', 'QC', 'KC', 'AC', '3S', '4S', '5S', '6S'];
@@ -170,7 +168,7 @@ function browserPass() {
             scriptedPlay(carol, rank, 3);
             browserPass();
           });
-          scriptedPlay(carol, '2', 2);
+          scriptedPlay(carol, 'ACE', 2);
           cy.get('[data-test="round-over-title"]', { timeout: 10000 }).should('have.text', 'Round 1 is over');
           cy.get('[data-test="round-over-place"]').then(($rows) => {
             const row = (i: number, part: string) => $rows.eq(i).find(`[data-test="place-${part}"]`).text();
