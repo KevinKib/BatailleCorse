@@ -50,15 +50,15 @@ or a small change of the removal rule.
 
 | Chunk | Title | Cost | Needs | Parallel with | State |
 |-------|-------|------|-------|---------------|-------|
-| C1 | `refactor: remove the Picaria variant of Three Men's Morris` (+ the host colour defaults to random) | M | - | D | [ ] |
-| C2 | `feat: Six Men's Morris rules as data (interfaces)` | S | C1 | D | [ ] |
-| C3 | `feat: mills, removal and Six Men's Morris in the Morris engine` | L | C2 | C4, C5, F1 | [ ] |
-| C4 | `feat: Six Men's Morris transitions and bots` | M-L | C2 | C3, C5, F1 | [ ] |
-| C5 | `test: solve Six Men's Morris offline` | M | C2 | C3, C4, F1 | [ ] |
-| D | Claude Design canvas, 2-3 options, owner chooses | S | spec merged | C1 to C5 | [ ] |
-| F1 | `feat: Six Men's Morris on screen` | L | D, C2 (contract) | C3, C4, C5 | [ ] |
-| C6 | `feat: Morris bots remove pieces and think outside the game lock` | S | C3, C4 | F1 | [ ] |
-| C7 | `test: Six Men's Morris end to end` (integration) | M | C3, C5, C6, F1 | - | [ ] |
+| C1 | `refactor: remove the Picaria variant of Three Men's Morris` (+ the host colour defaults to random) | M | - | D | [x] |
+| C2 | `feat: Six Men's Morris rules as data (interfaces)` | S | C1 | D | [x] |
+| C3 | `feat: mills, removal and Six Men's Morris in the Morris engine` | L | C2 | C4, C5, F1 | [x] |
+| C4 | `feat: Six Men's Morris transitions and bots` | M-L | C2 | C3, C5, F1 | [x] |
+| C5 | `test: solve Six Men's Morris offline` | M | C2 | C3, C4, F1 | [x] |
+| D | Claude Design canvas, 2-3 options, owner chooses | S | spec merged | C1 to C5 | [x] |
+| F1 | `feat: Six Men's Morris on screen` | L | D, C2 (contract) | C3, C4, C5 | [x] |
+| C6 | `feat: Morris bots remove pieces and think outside the game lock` | S | C3, C4 | F1 | [x] |
+| C7 | `test: Six Men's Morris end to end` (integration) | M | C3, C5, C6, F1 | - | [x] |
 
 About 9 to 11 days of work, 8 PRs.
 

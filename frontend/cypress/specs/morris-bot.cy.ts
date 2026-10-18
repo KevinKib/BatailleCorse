@@ -8,7 +8,7 @@ const mine = () => cy.get('[data-test^="point-"][data-owner="white"]');
 const theirs = () => cy.get('[data-test^="point-"][data-owner="black"]');
 
 /** The host's lobby with a bot on seat 1; `variant` picks the radio when it is not Tapatan. */
-function lobbyWithBot(variant?: 'achi') {
+function lobbyWithBot(variant?: 'achi' | 'six') {
   cy.visit('/games/three-men-morris');
   cy.get('[data-test="name"]').type('Alice');
   cy.get('[data-test="new-game"]').click();
@@ -48,6 +48,31 @@ describe("Three Men's Morris against a bot", () => {
     cy.get('[data-test="point-4"]').click();
     mine().should('have.length', 1);
     theirs().should('have.length', 1);
+    cy.get('[data-test="turn-hint"]').should('contain.text', 'Your turn');
+    cy.get('[data-test="tag-name"]').first().should('have.text', 'Bot 1');
+  });
+
+  it("Six at Easy: the bot closes its first mill (0 1 2, the first free points) and takes my first piece", () => {
+    lobbyWithBot('six');
+    level().select('Easy');
+    level().should('have.value', 'random');
+    cy.get('[data-test="start"]').click();
+    cy.get('[data-test="morris-board"]', { timeout: 10000 }).should('be.visible').and('have.attr', 'data-variant', 'six');
+    cy.get('[data-test="turn-hint"]').should('contain.text', 'Your turn');
+    // Under the test profile the Easy bot takes the first legal point each time: 0, 1, then 2 closes a mill.
+    // I place on 9, 11 and 13: no line of mine.
+    cy.get('[data-test="point-9"]').click();
+    cy.get('[data-test="point-0"]').should('have.attr', 'data-owner', 'black');
+    cy.get('[data-test="turn-hint"]').should('contain.text', 'Your turn');
+    cy.get('[data-test="point-11"]').click();
+    cy.get('[data-test="point-1"]').should('have.attr', 'data-owner', 'black');
+    cy.get('[data-test="turn-hint"]').should('contain.text', 'Your turn');
+    cy.get('[data-test="point-13"]').click();
+    cy.get('[data-test="point-2"]').should('have.attr', 'data-owner', 'black');
+    // The bot took one of my three pieces (the first it may take) and the turn came back to me.
+    cy.get('[data-test="player-tag"][data-colour="white"] [data-test="tag-lost"]').should('contain.text', '1 lost');
+    mine().should('have.length', 2);
+    cy.get('[data-test="removal-banner"]').should('not.exist');
     cy.get('[data-test="turn-hint"]').should('contain.text', 'Your turn');
     cy.get('[data-test="tag-name"]').first().should('have.text', 'Bot 1');
   });
