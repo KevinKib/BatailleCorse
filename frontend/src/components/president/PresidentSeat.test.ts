@@ -106,6 +106,48 @@ describe('PresidentSeat', () => {
     });
   });
 
+  describe('a compact plate (a phone: the markers sit on the fan, never on a line of their own)', () => {
+    const compact = (props: Record<string, unknown> = {}) => mountSeat({ fan: true, narrow: true, compact: true, ...props });
+    const overlay = (w: ReturnType<typeof compact>) => w.find('.seat-hand .seat-markers--overlay');
+
+    it('givenAPassedSeat_thenPassedIsOverTheFan_andStillSaysPassed', () => {
+      const w = compact({ player: buildPresidentPlayer(1, { passed: true }) });
+      expect(overlay(w).exists()).toBe(true);
+      expect(overlay(w).get('[data-test="seat-passed"]').text()).toBe('Passed');
+      expect(w.find('.seat-hand [data-test="seat-fan"]').exists()).toBe(true);
+    });
+
+    it('givenASeatThatIsOut_thenItsPlaceTakesTheFansPlace', () => {
+      const w = compact({ player: buildPresidentPlayer(1, { out: true, place: 2, handSize: 0 }) });
+      expect(overlay(w).get('[data-test="seat-out"]').text()).toBe('Out, place 2');
+      expect(w.find('.fan-picture').classes()).toContain('fan-picture--reserved');
+    });
+
+    it('givenAForbiddenFinisher_thenOutOnATwoStaysRed', () => {
+      const w = compact({ player: buildPresidentPlayer(1, { out: true, place: null, handSize: 0, forbiddenFinish: true }) });
+      expect(overlay(w).get('[data-test="seat-out"]').text()).toBe('Out on a 2');
+      expect(overlay(w).get('[data-test="seat-out"]').classes()).toContain('marker--forbidden');
+    });
+
+    it('givenReadyAtTheRoundEnd_thenReadyIsACheckInTheSamePill_andTheTextStaysForScreenReaders', () => {
+      const w = compact({ player: buildPresidentPlayer(1, { out: true, place: 1, handSize: 0, ready: true }), showReady: true });
+      const ready = overlay(w).get('[data-test="seat-ready"]');
+      expect(ready.text()).toBe('Ready');
+      expect(ready.find('.ready-text').classes()).toContain('sr-only');
+      expect(ready.find('.pi-check').exists()).toBe(true);
+    });
+
+    it('givenNothingToSay_thenNoOverlay', () => {
+      expect(overlay(compact()).exists()).toBe(false);
+    });
+
+    it('givenANormalPlate_thenTheMarkersKeepTheirOwnLine', () => {
+      const w = mountSeat({ fan: true, player: buildPresidentPlayer(1, { passed: true }) });
+      expect(w.find('.seat-markers--overlay').exists()).toBe(false);
+      expect(w.get('.seat-markers [data-test="seat-passed"]').exists()).toBe(true);
+    });
+  });
+
   it('givenADisconnectedSeat_thenTheBadgeShows', () => {
     const wrapper = mountSeat({ disconnected: true, secondsRemaining: 30 });
     expect(wrapper.find('[data-test="seat-disconnect-badge"]').exists()).toBe(true);

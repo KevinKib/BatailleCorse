@@ -8,7 +8,8 @@ import { plural } from '../../locales/format';
 // How many cards a seat still holds, as a picture: a small fan of card backs (one per card up to a cap, tighter as it
 // grows), with the number written under it ("7 cards"), which is also what assistive technology reads (the picture
 // is hidden from it).
-const props = defineProps<{ count: number; narrow?: boolean }>();
+// `reserve`: an empty hand keeps the height of a fan (something else, a marker, takes its place without moving the plate).
+const props = defineProps<{ count: number; narrow?: boolean; reserve?: boolean }>();
 const ui = useI18n().presidentUi;
 const layout = computed(() => fanLayout(props.count, props.narrow ?? false));
 const width = computed(() => layout.value.backs > 0
@@ -17,7 +18,7 @@ const width = computed(() => layout.value.backs > 0
 
 <template>
   <span class="hand-fan" data-test="seat-fan" :data-count="count">
-    <span class="fan-picture" aria-hidden="true">
+    <span class="fan-picture" :class="{ 'fan-picture--reserved': reserve }" :style="reserve ? { minHeight: `${layout.cardW * 1.451}px` } : undefined" aria-hidden="true">
       <span v-if="layout.backs > 0" class="fan-backs" :style="{ width: `${width}px`, '--fan-card-w': `${layout.cardW}px` }">
         <span v-for="i in layout.backs" :key="i" class="fan-back" data-test="fan-back"
               :style="{ left: `${(i - 1) * layout.stepPx}px`, transform: `rotate(${(i - (layout.backs + 1) / 2) * 3}deg)` }">

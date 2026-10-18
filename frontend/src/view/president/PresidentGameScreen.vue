@@ -473,6 +473,7 @@ const rematchButton = computed(() =>
               fan
               :count="inFlight.shown(opponent.seat, opponent.handSize)"
               :narrow="narrow"
+              :compact="narrow"
               :bubble="bubbles.bySeat.value[opponent.seat] ?? null"
               :still="still" />
           </div>
@@ -711,6 +712,10 @@ const rematchButton = computed(() =>
     flex: none;
   }
   .seat-slot { position: static; transform: none; min-width: 0; --seat-label-max: 5.5rem; }
+  /* My own plate is one line (name, cards, marker) rather than a stack: the room goes to the felt. */
+  .my-zone :deep(.president-seat), .my-zone :deep(.seat-hand) {
+    flex-direction: row; flex-wrap: wrap; justify-content: center; align-items: center; gap: 2px 8px;
+  }
   .table-center { position: static; transform: none; flex: 1 1 auto; display: flex; align-items: center; justify-content: center; padding: var(--space-2); }
 }
 
