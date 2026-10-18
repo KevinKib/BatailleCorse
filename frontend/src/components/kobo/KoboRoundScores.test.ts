@@ -4,7 +4,7 @@ import KoboRoundScores from './KoboRoundScores.vue';
 import type { RoundRow } from '../../model/kobo/roundScores';
 
 const row = (seat: number, overrides: Partial<RoundRow> = {}): RoundRow => ({
-  seat, handValue: 12, roundPoints: 12, totalBefore: 20, totalAfter: 32, reset: false, announcer: false, gift: false,
+  seat, handValue: 12, roundPoints: 12, totalBefore: 20, totalAfter: 32, announcer: false, gift: false,
   ...overrides,
 });
 const NAMES = ['Alice', 'Bob', 'Carol'];
@@ -45,20 +45,10 @@ describe('KoboRoundScores', () => {
     expect(pill.attributes('aria-label')).toBe('Bob received 10 points');
   });
 
-  it('givenAReset_thenThePillShowsTheTotalItFellFromAndTo50', () => {
-    const wrapper = mountScores([row(0), row(1, { reset: true, totalBefore: 60, roundPoints: 15, totalAfter: 50 })]);
-    const pill = wrapper.get('[data-test="score-row-1"] [data-test="pill-reset"]');
-    expect(pill.text()).toBe('75 → 50');
-    expect(pill.attributes('aria-label')).toBe('Total reset from 75 to 50');
-  });
-
-  it('givenAResetOfTheGiftReceiver_thenTheGiftIsInTheTotalItFellFrom', () => {
-    const wrapper = mountScores([row(0), row(1, { reset: true, gift: true, totalBefore: 60, roundPoints: 5, totalAfter: 50 })]);
-    expect(wrapper.get('[data-test="score-row-1"] [data-test="pill-reset"]').text()).toBe('75 → 50');
-  });
-
-  it('givenNoReset_thenNoResetPill', () => {
-    expect(mountScores([row(0)]).find('[data-test="pill-reset"]').exists()).toBe(false);
+  it('givenATotalOfExactly75_thenItIsShownAsIsWithoutAnyResetMarker', () => {
+    const wrapper = mountScores([row(0), row(1, { totalBefore: 60, roundPoints: 15, totalAfter: 75 })]);
+    expect(wrapper.get('[data-test="score-row-1"] [data-test="score-total"]').text()).toBe('60 → 75');
+    expect(wrapper.find('[data-test="pill-reset"]').exists()).toBe(false);
   });
 
   it('givenReadySeats_thenOnlyTheReadyPlayersGetATick', () => {

@@ -456,8 +456,6 @@ export interface KoboSheetMessages {
     kobo: string;
     gift: string;                      // "+10"
     giftLabel: string;                 // '{player}': accessible text of the gift pill
-    reset: string;                     // '{from}', '{to}'
-    resetLabel: string;                // '{from}', '{to}': accessible text of the reset pill
   };
   ready: string;                       // the tick of a player who is ready for the next round
   giveTen: string;                     // '{player}'

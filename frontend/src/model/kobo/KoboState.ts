@@ -53,7 +53,6 @@ export interface KoboRoundPlayer {
   roundPoints: number;
   totalBefore: number;
   totalAfter: number;
-  reset: boolean;
 }
 
 export interface KoboRound {

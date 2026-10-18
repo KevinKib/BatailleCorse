@@ -926,9 +926,9 @@ describe('KoboGameScreen', () => {
     ];
     const round = (overrides = {}) => ({
       players: [
-        { seat: 0, handValue: 2, roundPoints: 0, totalBefore: 10, totalAfter: 10, reset: false },
-        { seat: 1, handValue: 30, roundPoints: 30, totalBefore: 5, totalAfter: 35, reset: false },
-        { seat: 2, handValue: 20, roundPoints: 20, totalBefore: 0, totalAfter: 20, reset: false },
+        { seat: 0, handValue: 2, roundPoints: 0, totalBefore: 10, totalAfter: 10 },
+        { seat: 1, handValue: 30, roundPoints: 30, totalBefore: 5, totalAfter: 35 },
+        { seat: 2, handValue: 20, roundPoints: 20, totalBefore: 0, totalAfter: 20 },
       ],
       announcer: 0, announcerWon: true, giftTo: null, ...overrides,
     });

@@ -1,4 +1,4 @@
-import type { KoboPlayer, KoboRound, KoboRoundPlayer } from './KoboState';
+import type { KoboPlayer, KoboRound } from './KoboState';
 
 /** The scores of the round that just ended, as the table shows them. Every number comes from the server. */
 
@@ -8,8 +8,6 @@ export interface RoundRow {
   roundPoints: number;
   totalBefore: number;
   totalAfter: number;
-  /** The total was put back to 50 (see `resetFrom` for the total it fell from). */
-  reset: boolean;
   /** The player who called Kobo. */
   announcer: boolean;
   /** The player who received the 10 points of a winning Kobo. */
@@ -28,22 +26,9 @@ export function roundRows(round: KoboRound): RoundRow[] {
       roundPoints: p.roundPoints,
       totalBefore: p.totalBefore,
       totalAfter: p.totalAfter,
-      reset: p.reset,
       announcer: round.announcer === p.seat,
       gift: round.giftTo === p.seat,
     }));
-}
-
-/** Points a winning announcer gives: the DTO flags the receiver but carries no amount, only the totals. */
-const GIFT_POINTS_SHOWN = 10;
-
-/**
- * The total a reset player had reached before it fell to 50 ("75 → 50"). The server sends the totals around the
- * round but not that intermediate one, so it is the sum of what it did send; display only, nothing is decided here.
- */
-export function resetFrom(player: KoboRoundPlayer, receivedGift: boolean): number | null {
-  if (!player.reset) return null;
-  return player.totalBefore + player.roundPoints + (receivedGift ? GIFT_POINTS_SHOWN : 0);
 }
 
 /** How the announcer did: won (and gives 10), lost (and takes the penalty) or nobody called Kobo. */

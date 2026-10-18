@@ -140,8 +140,8 @@ always qualifies: a tie with the lowest wins.
 
 **Who gets the 10 points.** From the provisional totals of `GIFT` (`lastRound` in the view, see
 `Kobo.lastRoundResult`): (1) an opponent pushed strictly above 100 by the 10 points while the bot then has the
-lowest total (the game ends and the bot wins); else (2) the opponent with the lowest provisional total whose
-total plus 10 is neither 75 nor 100 (those reset to 50 and would help them); else (3) the first other seat.
+lowest total (the game ends and the bot wins); else (2) the opponent with the lowest provisional total; else (3) the first other seat.
+(The 75/100 reset, which used to exclude some targets here, was removed on 2026-10-18.)
 
 **The match (any live phase).** If the discard top has rank `r`: an own remembered card of rank `r` first
 (no gift needed, the hand shrinks), else, when the level allows it, an opponent's remembered card of rank `r`,

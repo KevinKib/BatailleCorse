@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { finalStandings, roundRows, roundVerdict, resetFrom, winnersLowestTotal } from './roundScores';
+import { finalStandings, roundRows, roundVerdict, winnersLowestTotal } from './roundScores';
 import type { KoboRound, KoboRoundPlayer } from './KoboState';
 import { buildKoboPlayer } from '../fixtures/kobo';
 
 function rp(seat: number, overrides: Partial<KoboRoundPlayer> = {}): KoboRoundPlayer {
-  return { seat, handValue: 10, roundPoints: 10, totalBefore: 0, totalAfter: 10, reset: false, ...overrides };
+  return { seat, handValue: 10, roundPoints: 10, totalBefore: 0, totalAfter: 10, ...overrides };
 }
 
 function round(overrides: Partial<KoboRound> = {}): KoboRound {
@@ -25,22 +25,6 @@ describe('roundRows', () => {
 
   it('givenNoAnnouncer_thenNobodyIsMarked', () => {
     expect(roundRows(round()).every(r => !r.announcer && !r.gift)).toBe(true);
-  });
-});
-
-describe('resetFrom', () => {
-  it('givenAResetWithoutGift_thenTheTotalReachedBeforeTheResetIsBeforePlusRoundPoints', () => {
-    const player = rp(1, { totalBefore: 60, roundPoints: 15, totalAfter: 50, reset: true });
-    expect(resetFrom(player, false)).toBe(75);
-  });
-
-  it('givenAResetOfTheReceiverOfTheGift_thenTheGiftCountsInTheTotalReached', () => {
-    const player = rp(1, { totalBefore: 60, roundPoints: 5, totalAfter: 50, reset: true });
-    expect(resetFrom(player, true)).toBe(75);
-  });
-
-  it('givenNoReset_thenNull', () => {
-    expect(resetFrom(rp(1), false)).toBeNull();
   });
 });
 

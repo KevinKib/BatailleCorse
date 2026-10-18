@@ -61,8 +61,7 @@ public record KoboDto(
     public record RevealDto(int seat, int slot, int revision, CardDto card) {
     }
 
-    public record PlayerRoundDto(int seat, int handValue, int roundPoints, int totalBefore, int totalAfter,
-                                 boolean reset) {
+    public record PlayerRoundDto(int seat, int handValue, int roundPoints, int totalBefore, int totalAfter) {
     }
 
     public record RoundDto(List<PlayerRoundDto> players, Integer announcer, boolean announcerWon, Integer giftTo) {
@@ -71,7 +70,7 @@ public record KoboDto(
             List<PlayerRoundDto> players = result.handValues().keySet().stream()
                     .sorted(Comparator.comparingInt(PlayerId::id))
                     .map(p -> new PlayerRoundDto(p.id(), result.handValues().get(p), result.roundPoints().get(p),
-                            result.totalsBefore().get(p), result.totalsAfter().get(p), result.reset().contains(p)))
+                            result.totalsBefore().get(p), result.totalsAfter().get(p)))
                     .toList();
             return new RoundDto(players,
                     result.announcer() == null ? null : result.announcer().id(),
