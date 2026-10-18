@@ -24,7 +24,7 @@ const end = (segment: readonly number[], last: boolean) =>
       :key="n"
       :cx="p.x"
       :cy="p.y"
-      :r="geometry.crossings.includes(n) ? 3.5 : 5" />
+      r="5" />
   </svg>
 </template>
 

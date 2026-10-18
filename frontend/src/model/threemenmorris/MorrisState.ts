@@ -8,7 +8,7 @@ export type MorrisAction = 'PLACE' | 'MOVE';
 export type MorrisReason = 'LINE' | 'BLOCKED' | 'FORFEIT' | 'DRAW_AGREED' | 'DRAW_REPETITION';
 
 /** The variants a lobby offers; the server leaves `variant` out of the state for the default, Tapatan. */
-export type MorrisVariantKey = 'tapatan' | 'achi' | 'picaria';
+export type MorrisVariantKey = 'tapatan' | 'achi';
 
 export type MorrisColour = 'WHITE' | 'BLACK';
 

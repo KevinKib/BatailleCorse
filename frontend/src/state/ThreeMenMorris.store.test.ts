@@ -112,11 +112,11 @@ describe('ThreeMenMorris store', () => {
       expect(store.variant).toBe('achi');
     });
 
-    it('offers the points of legalPlacements: the Picaria centre is never proposed while placing', () => {
+    it('offers the points of legalPlacements: a point the server leaves out is never proposed while placing', () => {
       const store = seated(0);
       store.applyEvent({
         type: 'state-update',
-        state: morrisState({ variant: 'picaria', legalPlacements: [0, 1, 2, 3, 5, 6, 7, 8] }),
+        state: morrisState({ variant: 'achi', legalPlacements: [0, 1, 2, 3, 5, 6, 7, 8] }),
       });
       expect(store.selectablePoints).not.toContain(4);
       expect(store.selectablePoints).toHaveLength(8);

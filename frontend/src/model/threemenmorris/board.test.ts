@@ -37,9 +37,9 @@ describe('placement', () => {
 });
 
 describe('placement with legalPlacements', () => {
-  it('offers exactly the points the server lists, the centre being closed in Picaria', () => {
+  it('offers exactly the points the server lists, whatever the free points', () => {
     const s = morrisState({
-      variant: 'picaria',
+      variant: 'achi',
       legalPlacements: [0, 1, 2, 3, 5, 6, 7, 8],
     });
     expect(selectable(s, 0)).toEqual([0, 1, 2, 3, 5, 6, 7, 8]);

@@ -198,87 +198,14 @@ describe('ThreeMenMorrisGameScreen', () => {
       expect(wrapper.get('[data-test="morris-board"]').attributes('data-variant')).toBe('tapatan');
     });
 
-    const empty13 = (): (number | null)[] => Array(13).fill(null);
-    const picariaPlacing = (overrides: Partial<MorrisState> = {}) => morrisState({
-      variant: 'picaria', board: empty13(), legalPlacements: [0, 1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12],
-      ...overrides,
-    });
-    // White (seat 0, me) to move: pieces on 0, 5 and the lower-left crossing 12; Black on 2, 4 and 7.
-    const picariaMoving = (overrides: Partial<MorrisState> = {}) => morrisState({
-      variant: 'picaria', phase: 'MOVEMENT',
-      board: [0, N, 1, N, 1, 0, N, 1, N, N, N, N, 0],
-      players: [
-        { seat: 0, name: 'Alice', current: true, piecesToPlace: 0 },
-        { seat: 1, name: 'Bob', current: false, piecesToPlace: 0 },
-      ],
-      availableActions: ['MOVE'],
-      legalMoves: [{ from: 12, to: 3 }, { from: 12, to: 6 }, { from: 0, to: 1 }, { from: 5, to: 8 }],
-      ...overrides,
-    });
-
-    it('shows Picaria on its 13 points, the crossings offered and no centre to place on', async () => {
-      const { wrapper } = await mountScreen(picariaPlacing());
-      expect(wrapper.get('[data-test="variant-name"]').text()).toBe('Picaria');
-      expect(wrapper.findAll('[data-line]')).toHaveLength(28);
-      expect(wrapper.findAll('[data-test^="point-"]')).toHaveLength(13);
-      expect(point(wrapper, 4).attributes('data-state')).toBe('idle');
-      expect(point(wrapper, 3).attributes('data-state')).toBe('highlighted');
-      expect(point(wrapper, 9).attributes('data-state')).toBe('highlighted');
-    });
-
-    it('closes the centre with a padlock and says so while placing, and not on Tapatan', async () => {
-      const { wrapper } = await mountScreen(picariaPlacing());
-      expect(point(wrapper, 4).attributes('data-locked')).toBe('true');
-      expect(point(wrapper, 4).find('[data-test="lock"]').exists()).toBe(true);
-      expect(wrapper.get('[data-test="centre-closed"]').text()).toBe('The centre is closed while you place.');
-      document.body.innerHTML = '';
-      const tapatan = await mountScreen(morrisState());
-      expect(tapatan.wrapper.find('[data-test="centre-closed"]').exists()).toBe(false);
-      expect(point(tapatan.wrapper, 4).attributes('data-locked')).toBeUndefined();
-    });
-
-    it('opens the centre once the pieces are placed', async () => {
-      const { wrapper } = await mountScreen(picariaMoving());
+    it('has no padlock, no closed-centre hint and no marks on a Tapatan table', async () => {
+      const { wrapper } = await mountScreen(movementState());
       expect(wrapper.find('[data-test="centre-closed"]').exists()).toBe(false);
-      expect(point(wrapper, 4).attributes('data-locked')).toBeUndefined();
-    });
-
-    it('keeps the centre open on a piece once it sits there', async () => {
-      const board = empty13();
-      board[4] = 1;
-      const { wrapper } = await mountScreen(picariaPlacing({ board }));
-      expect(point(wrapper, 4).find('[data-test="lock"]').exists()).toBe(false);
-    });
-
-    it('lights the paths to the destinations of the selected piece, a move through a crossing', async () => {
-      const { store, wrapper } = await mountScreen(picariaMoving());
-      expect(wrapper.findAll('[data-test="lit-path"]')).toHaveLength(0);
-      await point(wrapper, 12).trigger('click');
-      expect(store.selected).toBe(12);
-      expect(wrapper.findAll('[data-test="lit-path"]').map(p => p.attributes('data-to')).sort()).toEqual(['3', '6']);
-    });
-
-    it('marks the pieces and the player tags of Picaria, and not those of Tapatan', async () => {
-      const { wrapper } = await mountScreen(picariaMoving());
-      expect(wrapper.findAll('[data-test="piece-mark"]')).toHaveLength(6);
-      expect(wrapper.findAll('[data-test="tag-mark"]')).toHaveLength(2);
-      document.body.innerHTML = '';
-      const tapatan = await mountScreen(movementState());
-      expect(tapatan.wrapper.findAll('[data-test="piece-mark"]')).toHaveLength(0);
-      expect(tapatan.wrapper.findAll('[data-test="tag-mark"]')).toHaveLength(0);
-    });
-
-    it('strokes a corner, crossing, centre line that wins', async () => {
-      const board = empty13();
-      [0, 9, 4].forEach(p => { board[p] = 0; });
-      [1, 2].forEach(p => { board[p] = 1; });
-      const { store, wrapper } = await mountScreen(picariaMoving());
-      store.applyEvent({ type: 'state-update', state: picariaMoving({
-        board, phase: 'FINISHED', availableActions: [], legalMoves: [], winningLine: [0, 9, 4],
-        outcome: { status: 'FINISHED', winner: 0, reason: 'LINE' },
-      }) });
-      await flushPromises();
-      expect(wrapper.findAll('line[data-winning="true"]').map(l => l.attributes('data-line')).sort()).toEqual(['0-9', '9-4']);
+      expect(wrapper.find('[data-locked]').exists()).toBe(false);
+      expect(wrapper.find('[data-test="lock"]').exists()).toBe(false);
+      expect(wrapper.findAll('[data-test="piece-mark"]')).toHaveLength(0);
+      expect(wrapper.findAll('[data-test="tag-mark"]')).toHaveLength(0);
+      expect(wrapper.findAll('[data-test^="point-"]')).toHaveLength(9);
     });
 
     it('draws the colour of each player from the state when the host plays Black', async () => {
@@ -297,13 +224,9 @@ describe('ThreeMenMorrisGameScreen', () => {
       expect(wrapper.get('[data-test="phase-hint"]').text()).toBe('Place a piece');
     });
 
-    it('rules of the variant: Achi says four pieces, Picaria says the centre is closed', async () => {
+    it('rules of the variant: Achi says four pieces', async () => {
       const achi = await mountScreen(morrisState({ variant: 'achi' }));
       expect(achi.wrapper.get('[data-cy="rules-panel"]').text()).toContain('four pieces');
-      document.body.innerHTML = '';
-      const picaria = await mountScreen(morrisState({ variant: 'picaria' }));
-      expect(picaria.wrapper.get('[data-cy="rules-panel"]').text()).toContain('centre');
-      expect(picaria.wrapper.get('[data-cy="rules-panel"]').text()).toContain('Thirteen points');
     });
 
     it('marks the points of the opponent last move on the board, not mine', async () => {
@@ -323,8 +246,8 @@ describe('ThreeMenMorrisGameScreen', () => {
         canEditOptions: true,
         options: { variant: 'tapatan', hostColour: 'white' },
         optionDescriptors: [
-          { key: 'variant', type: 'CHOICE', values: ['tapatan', 'achi', 'picaria'], defaultValue: 'tapatan', labelKey: 'options.threeMenMorris.variant' },
-          { key: 'hostColour', type: 'CHOICE', values: ['white', 'black', 'random'], defaultValue: 'white', labelKey: 'options.threeMenMorris.hostColour' },
+          { key: 'variant', type: 'CHOICE', values: ['tapatan', 'achi'], defaultValue: 'tapatan', labelKey: 'options.threeMenMorris.variant' },
+          { key: 'hostColour', type: 'CHOICE', values: ['white', 'black', 'random'], defaultValue: 'random', labelKey: 'options.threeMenMorris.hostColour' },
         ],
       }));
       await wrapper.get('[data-test="option-variant-achi"]').setValue(true);
@@ -338,8 +261,8 @@ describe('ThreeMenMorrisGameScreen', () => {
         mySeat: 1, canEditOptions: false,
         options: { variant: 'achi', hostColour: 'black' },
         optionDescriptors: [
-          { key: 'variant', type: 'CHOICE', values: ['tapatan', 'achi', 'picaria'], defaultValue: 'tapatan', labelKey: 'options.threeMenMorris.variant' },
-          { key: 'hostColour', type: 'CHOICE', values: ['white', 'black', 'random'], defaultValue: 'white', labelKey: 'options.threeMenMorris.hostColour' },
+          { key: 'variant', type: 'CHOICE', values: ['tapatan', 'achi'], defaultValue: 'tapatan', labelKey: 'options.threeMenMorris.variant' },
+          { key: 'hostColour', type: 'CHOICE', values: ['white', 'black', 'random'], defaultValue: 'random', labelKey: 'options.threeMenMorris.hostColour' },
         ],
       }), 1);
       expect(wrapper.get('[data-test="option-variant"]').text()).toContain('Achi');

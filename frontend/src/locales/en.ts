@@ -418,7 +418,6 @@ export const messagesEn: Messages = {
       youPlay: 'You play {colour}. White starts.',
       hintPlace: 'Place a piece',
       hintMove: 'Move a piece',
-      centreClosed: 'The centre is closed while you place.',
       waitingFor: 'Waiting for {player}…',
       piecesLeft: { one: '{n} piece left to place', other: '{n} pieces left to place' },
       colourTag: '{name}, {colour}',
@@ -470,11 +469,6 @@ export const messagesEn: Messages = {
         summary: '4 pieces each, one free point',
         rule: 'Achi: 4 pieces each, so eight pieces on nine points and one point stays free. Same board as Tapatan.',
       },
-      picaria: {
-        name: 'Picaria',
-        summary: '3 pieces, 13 points',
-        rule: 'Picaria: 3 pieces each on thirteen points. The crossings are points too, and the centre is closed while you place: it is reached by moving.',
-      },
     },
     colours: { white: 'White', black: 'Black', random: 'Random' },
   },
@@ -503,45 +497,6 @@ export const messagesEn: Messages = {
           kind: 'text',
           title: 'Movement',
           body: ['Once all eight pieces are down, slide one of yours along a line to the free neighbouring point.'],
-        },
-        {
-          kind: 'text',
-          title: 'Blocked',
-          body: ['If a player cannot move on their turn, the other player wins.'],
-        },
-        {
-          kind: 'text',
-          title: 'Forfeit',
-          body: ['Leaving the game, or staying disconnected too long, gives the win to your opponent.'],
-        },
-      ],
-    },
-    picaria: {
-      toggleLabel: 'Rules',
-      panelTitle: 'Picaria',
-      closeLabel: 'Close rules',
-      sections: [
-        {
-          kind: 'text',
-          title: 'Goal',
-          body: ['Line up your three pieces on three points of a line. Crossings count as points.'],
-        },
-        {
-          kind: 'text',
-          title: 'The board',
-          body: [
-            'Thirteen points: the nine of the grid, and four crossings where the two diagonals meet the diamond joining the middles of the sides. A piece slides one step along a line, so crossing from a corner to the centre takes two moves. White plays first.',
-          ],
-        },
-        {
-          kind: 'text',
-          title: 'Placement',
-          body: ['Take turns putting your three pieces on free points, except the centre: it stays closed while you place. A line made while placing wins at once.'],
-        },
-        {
-          kind: 'text',
-          title: 'Movement',
-          body: ['Once all six pieces are down, slide one of yours along a line to a free neighbouring point. The centre can now be reached.'],
         },
         {
           kind: 'text',
@@ -717,7 +672,6 @@ export const messagesEn: Messages = {
       'Top left', 'Top middle', 'Top right',
       'Middle left', 'Centre', 'Middle right',
       'Bottom left', 'Bottom middle', 'Bottom right',
-      'Upper-left crossing', 'Upper-right crossing', 'Lower-right crossing', 'Lower-left crossing',
     ],
     white: 'White piece',
     black: 'Black piece',
@@ -725,7 +679,6 @@ export const messagesEn: Messages = {
     canMove: 'can move',
     canPlace: 'can place here',
     selected: 'selected',
-    closed: 'closed while placing',
     pointLabel: '{point}: {state}',
   },
   bullshitUi: {
@@ -1071,7 +1024,7 @@ export const messagesEn: Messages = {
       vars: { range: { deckSize: { '32': '7\u2192A', '52': 'A\u2192K' } } },
     },
     threeMenMorris: {
-      variant: { label: 'Variant', tapatan: 'Tapatan', achi: 'Achi', picaria: 'Picaria' },
+      variant: { label: 'Variant', tapatan: 'Tapatan', achi: 'Achi' },
       hostColour: { label: 'Host plays', white: 'White', black: 'Black', random: 'Random' },
       level: { label: 'Level', random: 'Easy', greedy: 'Medium', perfect: 'Expert' },
     },
