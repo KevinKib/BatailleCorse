@@ -35,15 +35,15 @@ it does not say (the cards of a trick that the new state already shows empty) is
 
 ## Chunks
 
-Each is about a day and its own PR. Chunks 2 to 4 depend on chunk 1 only and can run in parallel (their shared
+Each is about a day and its own PR. Chunks 2 to 4 depend on chunk 1 only (2, the exchange flights, first) and can run in parallel (their shared
 files are listed under Conflicts).
 
 | Chunk | Title | Size | Needs | Content | State |
 |-------|-------|------|-------|---------|-------|
-| 1 | `feat: President animations, chunk 1 (shared table, visible plays and passes)` | L | - | this spec amendment and plan; shared room and felt tokens (Kobo and President); shared score table (Kobo final totals, President standings); the shared travelling-card layer, queue and movement types (`components/table/CardMotionLayer.vue`, `model/table/motion.ts`, `model/table/queue.ts`; Kobo's files become thin wrappers); the President event log in the store, derived from the event data and the previous state (`model/president/eventLog.ts`); `model/president/motion.ts` (movements and seat bubbles of an entry, scaled by the speed); visible plays (flight, rings, arrow), pass bubbles and a dimmed passed seat, forbidden-finish and completion bubbles; the trick-closed badge with its reason and the closing flash; the trick indicator; the shared speed button (`components/table/AnimationSpeedButton.vue`, Mangola moved onto it); Cypress `president-animations.cy.ts` | #264 |
-| 2 | `feat: President animations, chunk 2 (round sheet from the bottom)` | M | 1 | the end-of-round sheet (`PresidentRoundSummary`) enters from the bottom in the place of my zone, as Kobo's score sheet (`sheet-slot`), the table staying above it; the places shown one by one (a place badge popping on each seat in finishing order); the round and total columns and the ready checks in the same table look as Kobo's round scores (shared parts extracted from `KoboRoundScores` / `KoboScoreSheet`); reduced motion: no slide | - |
+| 1 | `feat: President animations, chunk 1 (shared table, visible plays and passes)` | L | - | this spec amendment and plan; shared room and felt tokens (Kobo and President); shared score table (Kobo final totals, President standings); the shared travelling-card layer, queue and movement types (`components/table/CardMotionLayer.vue`, `model/table/motion.ts`, `model/table/queue.ts`; Kobo's files become thin wrappers); the President event log in the store, derived from the event data and the previous state (`model/president/eventLog.ts`); `model/president/motion.ts` (movements and seat bubbles of an entry, scaled by the speed); visible plays (flight, rings, arrow), pass bubbles and a dimmed passed seat, forbidden-finish and completion bubbles; the trick-closed badge with its reason and the closing flash; the trick indicator; the cards left in each hand as a fan of card backs on every seat, its count dropping when the flight lands (owner, 2026-10-18); the shared speed button (`components/table/AnimationSpeedButton.vue`, Mangola moved onto it); Cypress `president-animations.cy.ts` | #264 |
+| 2 | `feat: President animations, chunk 2 (exchange flights)` | M | 1 | **first item (owner, 2026-10-18): every giver physically sees the cards leave the hand**: at the deal of an exchange round the Scum's and Vice-Scum's best cards fly from their hand to the receiver, the give-back cards fly the other way, faces for the giver and the receiver, backs for the others, the hand counts and fans following the landing; the model is chunk 1's `model/president/exchangeMotion.ts` (`planExchangeFlights`, tested), this chunk wires it into the screen (watch on successive states, my hand cards as the source and destination for me, the received cards landing in my hand) and adds the Cypress; reload during the exchange shows the state as it is | - |
 | 3 | `feat: President animations, chunk 3 (trick sweep toward the winner)` | M | 1 | when a trick closes, after the closing badge's hold, its cards (the closing play, and the plays of the closed trick kept from the previous state) sweep card by card toward the winner's seat (620 ms, 90 ms between cards), ring on the winner; the badge stays on the empty pile until the next play; queue order kept with the plays of a burst | - |
-| 4 | `feat: President animations, chunk 4 (exchange flights)` | M | 1 | the exchange: the best cards taken at the deal fly from the low title to the high one, the returns back; face down and count only outside my pair, the faces of `received` / `given` in my pair; my received cards land in my hand and turn face up; reload during the exchange shows the state as it is | - |
+| 4 | `feat: President animations, chunk 4 (round sheet from the bottom)` | M | 1 | the end-of-round sheet (`PresidentRoundSummary`) enters from the bottom in the place of my zone, as Kobo's score sheet (`sheet-slot`), the table staying above it; the places shown one by one (a place badge popping on each seat in finishing order); the round and total columns and the ready checks in the same table look as Kobo's round scores (shared parts extracted from `KoboRoundScores` / `KoboScoreSheet`); reduced motion: no slide | - |
 | 5 | `feat: President animations, chunk 5 (polish)` | S-M | 2, 3, 4 | tempo tuning after a playtest; the "went out" place badge animation; sound (Kobo's toggle, if the owner wants it); a whole-round Cypress at each speed; 8 players at 375 px with flights | - |
 
 ## Chunk 1 in detail
@@ -70,13 +70,17 @@ Order of work (strict TDD for every model):
    play, or the closed play with its badge until the next play) and the trick indicator's count.
 7. **Motion plan** `model/president/motion.ts` and `tempo.ts`: the movements of an entry (cards from the seat or
    my hand zone to the pile cards, rings, a ring on the winner when the trick closes) and its bubbles (pass,
-   out on a 2, four completed), scaled by the speed; nothing at Instant but the still rings.
+   out on a 2, four completed), scaled by the speed; nothing at Instant but the still rings. Also
+   `model/president/exchangeMotion.ts` (`planExchangeFlights`: the exchange flights from two successive states,
+   faces inside my pair only), tested here and played by the screen in chunk 2.
 8. **Components.** `PresidentTrick` (indicator, closed badge and flash, the notes as a secondary line),
-   `PresidentSeat` (bubble, dimmed when passed), `components/table/AnimationSpeedButton.vue` (Mangola's button,
+   `PresidentSeat` (bubble, dimmed when passed, the fan of card backs with its count: `components/president/PresidentHandFan.vue`,
+   its geometry in `model/president/handFan.ts`; the count shown is the state's minus the cards still in flight,
+   from `model/president/motion.ts`), `components/table/AnimationSpeedButton.vue` (Mangola's button,
    moved; Mangola uses it), the screen wiring (the layer, the queue, the bubbles, the speed button next to the
    round chip).
 9. **Cypress** `president-animations.cy.ts`: a play flies (a copy and rings exist), a pass bubble shows, a cut
-   shows the "Closed by a 2" badge, Instant has no copies; the existing President and Kobo specs unchanged and
+   shows the "Closed by a 2" badge, each seat's fan of backs and its count drop after a play, Instant has no copies; the existing President and Kobo specs unchanged and
    green.
 
 ## Conflicts

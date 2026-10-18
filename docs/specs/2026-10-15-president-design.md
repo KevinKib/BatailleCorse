@@ -662,8 +662,18 @@ titles, a revolution active, an exchange pending). The options are kept for cont
         seat's marker;
       - **completion out of turn** (`COMPLETION`, or a play by a seat that was not the current one): the play
         flies like any other, with a "Four completed" bubble on its seat, before the closing badge;
-      - later chunks: the exchange flights (face down outside my pair), the round sheet entering from the
-        bottom, the places shown one by one.
+      - **cards left in each hand** (owner, 2026-10-18): every opponent's seat shows its hand as a small fan of card
+        backs (one back per card up to a cap, the fan tightening as it grows, so 8 players fit at 375 px), with
+        the number next to it (readable, and the accessible name of the fan: "7 cards"). The count drops when a
+        played card lands on the pile (the seat keeps the old count while the copy is in flight); an empty hand
+        shows no fan;
+      - **the exchange** (owner, 2026-10-18): every player who gives cards sees them physically leave the hand.
+        At the deal of an exchange round, the Scum's (and Vice-Scum's) best cards fly from their hand to the
+        receiver; when a high title gives back, the returned cards fly the other way. The faces show for the giver
+        and the receiver (from `given` / `received` of their DTO), card backs for everybody else (the server sends
+        no other pair's cards); the hand counts (and the fans) follow the landing. The cards are known from two
+        successive states (the exchange events carry a count only). Chunk 2;
+      - later chunks: the round sheet entering from the bottom, the places shown one by one, the trick sweep.
    5. **What never animates.** The first state received (an invite link, a reload, a reconnection) shows as it
       is: no past event is replayed. The state always wins: Play, Pass and Complete follow the state, never an
       animation; a copy in flight hides only the place it lands on, shown again whatever happens.
