@@ -55,6 +55,20 @@ class MorrisPositionTest {
     }
 
     @Test
+    void removingDefaultsToFalseAndIsPartOfEqualityButNotOfTheKey() {
+        MorrisPosition plain = layout("WBW.B..WB", WHITE).position();
+        MorrisPosition removing = new MorrisPosition(plain.rules(), plain.board(), plain.inHand(),
+                plain.toMove(), true);
+
+        assertThat(plain.removing(), is(false));
+        assertThat(removing.removing(), is(true));
+        assertThat(removing, is(not(plain)));
+        assertThat(removing.key(), is(plain.key()));
+        assertThat(removing, is(new MorrisPosition(plain.rules(), plain.board(), plain.inHand(),
+                plain.toMove(), true)));
+    }
+
+    @Test
     void keysDifferWhenTheBoardOrTheSideToMoveDiffer() {
         MorrisPosition base = layout("WBW.B..WB", WHITE).position();
 

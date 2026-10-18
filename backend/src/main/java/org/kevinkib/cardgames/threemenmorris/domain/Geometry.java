@@ -22,6 +22,15 @@ public record Geometry(int points, List<List<Integer>> adjacency, List<List<Inte
                     List.of(0, 3, 6), List.of(1, 4, 7), List.of(2, 5, 8),
                     List.of(0, 4, 8), List.of(2, 4, 6)));
 
+    /**
+     * Six Men's Morris: two concentric squares joined at the middles of their sides, 16 points. The outer
+     * square is 0..7 clockwise from the top left (corners 0, 2, 4, 6, middles 1, 3, 5, 7), the inner square
+     * 8..15 in the same order (point {@code i + 8} is the inner twin of {@code i}). Adjacent: consecutive
+     * points of a square, and the four joins 1-9, 3-11, 5-13, 7-15; no diagonals. The 8 lines of three are the
+     * sides of the squares (a join has two points, so it is no line); each corner lies on two of them.
+     */
+    public static final Geometry SIX_MEN = sixMen();
+
     public Geometry {
         if (points < 1) {
             throw new IllegalArgumentException("A geometry has at least one point");
@@ -68,6 +77,32 @@ public record Geometry(int points, List<List<Integer>> adjacency, List<List<Inte
 
     public boolean areAdjacent(int a, int b) {
         return neighbours(a).contains(b);
+    }
+
+    private static Geometry sixMen() {
+        List<java.util.Set<Integer>> neighbours = new java.util.ArrayList<>();
+        for (int point = 0; point < 16; point++) {
+            neighbours.add(new java.util.TreeSet<>());
+        }
+        for (int square = 0; square < 16; square += 8) {
+            for (int i = 0; i < 8; i++) {
+                int a = square + i;
+                int b = square + (i + 1) % 8;
+                neighbours.get(a).add(b);
+                neighbours.get(b).add(a);
+            }
+        }
+        for (int middle = 1; middle < 8; middle += 2) {
+            neighbours.get(middle).add(middle + 8);
+            neighbours.get(middle + 8).add(middle);
+        }
+        List<List<Integer>> lines = new java.util.ArrayList<>();
+        for (int square = 0; square < 16; square += 8) {
+            for (int corner = 0; corner < 8; corner += 2) {
+                lines.add(List.of(square + corner, square + corner + 1, square + (corner + 2) % 8));
+            }
+        }
+        return new Geometry(16, neighbours.stream().<List<Integer>>map(List::copyOf).toList(), lines);
     }
 
     /** Orthogonal neighbours, plus the centre, which every other point reaches along a line or a diagonal. */
