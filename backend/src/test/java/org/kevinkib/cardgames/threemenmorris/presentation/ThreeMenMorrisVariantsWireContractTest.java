@@ -22,7 +22,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
 /**
- * Characterisation of the wire contract of Achi and Picaria (the Tapatan one is pinned by
+ * Characterisation of the wire contract of Achi (the Tapatan one is pinned by
  * {@link ThreeMenMorrisWireContractTest}, which M2 leaves untouched): the exact JSON of the per-viewer
  * DTO and of the event data, including the additive fields {@code variant} and {@code legalPlacements}.
  */
@@ -55,7 +55,7 @@ class ThreeMenMorrisVariantsWireContractTest {
     }
 
     @Test
-    void theJsonOfAchiAndPicariaViewsAndEventsIsPinned() throws Exception {
+    void theJsonOfAchiViewsAndEventsIsPinned() throws Exception {
         List<String> out = new ArrayList<>();
 
         ThreeMenMorris achi = new ThreeMenMorris(ID, MorrisRules.ACHI, WHITE);
@@ -68,19 +68,6 @@ class ThreeMenMorrisVariantsWireContractTest {
         ThreeMenMorris blocked = new ThreeMenMorris(ID, MorrisRules.ACHI, WHITE);
         play(blocked, out, 0, -1, 2, 1, -1, 1, 0, -1, 5, 1, -1, 3, 0, -1, 6, 1, -1, 4, 0, -1, 7, 1, -1, 8);
         out.add("ACHI-BLOCKED\n" + views(blocked));
-
-        ThreeMenMorris picaria = new ThreeMenMorris(ID, MorrisRules.PICARIA, WHITE);
-        out.add("PICARIA-NEW\n" + views(picaria));
-        play(picaria, out, 0, -1, 1);
-        out.add("PICARIA-WHITE-PLACED\n" + views(picaria));
-        play(picaria, out, 1, -1, 0);
-        out.add("PICARIA-CENTRE-STILL-CLOSED\n" + views(picaria));
-        play(picaria, out, 0, -1, 6, 1, -1, 2, 0, -1, 8, 1, -1, 5);
-        out.add("PICARIA-MOVEMENT\n" + views(picaria));
-        play(picaria, out, 0, 1, 9);
-        out.add("PICARIA-AFTER-CROSSING-MOVE\n" + views(picaria));
-        play(picaria, out, 1, 5, 4);
-        out.add("PICARIA-BLACK-MOVE-TO-CENTRE\n" + views(picaria));
 
         assertThat(String.join("\n", out), is(golden()));
     }

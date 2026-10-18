@@ -6,12 +6,12 @@ import {
   GEOMETRIES, neighbourByArrow, neighbourByPage, segmentsOnLine, type MorrisGeometry,
 } from '../../model/threemenmorris/geometries';
 
-// The Three Men's Morris board, presentational only: one real button per point of the variant's geometry (nine, or
-// Picaria's thirteen), placed from its coordinates over a decorative SVG of its lines. Points are numbered row by row
-// (0 1 2 / 3 4 5 / 6 7 8, the centre is 4), then Picaria's four crossings (9 to 12), like the backend. Picaria is the
-// refined table: a plaque under the lines, the moves lit along the line from the selected piece, a mark on the pieces
-// besides their colour, and a padlock on the point closed while placing. It knows nothing of sessions or stores: the
-// table passes what to show and decides what an event means (place, select, move, deselect).
+// The Three Men's Morris board, presentational only: one real button per point of the variant's geometry, placed from
+// its coordinates over a decorative SVG of its lines. Points are numbered row by row (0 1 2 / 3 4 5 / 6 7 8, the
+// centre is 4), like the backend. A geometry flagged `refined` gets a plaque under the lines, the moves lit along the
+// line from the selected piece and a mark on the pieces besides their colour (no variant is refined for now). It knows
+// nothing of sessions or stores: the table passes what to show and decides what an event means (place, select, move,
+// deselect).
 type Owner = 'white' | 'black' | null;
 
 const props = withDefaults(defineProps<{
@@ -20,8 +20,7 @@ const props = withDefaults(defineProps<{
   selectable?: boolean[];        // points a click or Enter is accepted on (own movable pieces, free points, destinations)
   highlighted?: boolean[];       // points drawn as playable: free points, playable pieces, then the destinations
   selected?: number | null;      // the selected piece
-  targets?: number[];            // the legal destinations of the selected piece (Picaria lights a path to each)
-  locked?: number[];             // points shown as closed, with a padlock (Picaria's centre while placing)
+  targets?: number[];            // the legal destinations of the selected piece (a refined board lights a path to each)
   winningLine?: number[];        // the points of the winning line, held on screen at the end
   lastMove?: number[];           // the points of the opponent's last move, faintly ringed until the next state
   disabled?: boolean;            // game over or offline: readable but inert
@@ -33,7 +32,6 @@ const props = withDefaults(defineProps<{
   highlighted: () => [],
   selected: null,
   targets: () => [],
-  locked: () => [],
   winningLine: () => [],
   lastMove: () => [],
   disabled: false,
@@ -65,11 +63,9 @@ const pointStyle = (n: number) => {
 const isLastMove = (n: number): boolean => props.lastMove.includes(n);
 
 const inert = computed(() => props.disabled || !props.interactive);
-// The drawn segments on the winning line: its own segment on Tapatan and Achi, its edges cut at the crossings on Picaria.
+// The drawn segments on the winning line, whatever the order the server lists its points in.
 const winningSegments = computed(() => new Set(segmentsOnLine(props.geometry, props.winningLine).map(lineKey)));
 const isWinningPoint = (n: number): boolean => props.winningLine.includes(n);
-const isCrossing = (n: number): boolean => props.geometry.crossings.includes(n);
-const isLocked = (n: number): boolean => props.locked.includes(n) && !props.cells[n];
 
 // The line from the selected piece to each of its destinations, lit on the refined board.
 const litPaths = computed(() => {
@@ -92,7 +88,6 @@ function labelOf(n: number): string {
   const words = [owner === 'white' ? ui.white : owner === 'black' ? ui.black : ui.free];
   if (props.selected === n) words.push(ui.selected);
   if (canAct(n) && props.selected !== n) words.push(owner ? ui.canMove : ui.canPlace);
-  if (isLocked(n)) words.push(ui.closed);
   return format(ui.pointLabel, { point: ui.pointNames[n], state: words.join(', ') });
 }
 
@@ -130,7 +125,7 @@ function onKeydown(event: KeyboardEvent, n: number): void {
     return;
   }
   if (PAGE_KEYS.includes(event.key)) {
-    // The arrows never leave the grid for a crossing; these two keys visit every point in order.
+    // These two keys visit every point in the server's numbering.
     event.preventDefault();
     const next = neighbourByPage(props.geometry, n, event.key);
     if (next !== null) void focusPoint(next);
@@ -193,8 +188,6 @@ function onKeyup(event: KeyboardEvent): void {
         :data-test="`point-${n}`"
         :data-owner="cells[n] ?? 'none'"
         :data-state="stateOf(n)"
-        :data-crossing="isCrossing(n) ? 'true' : undefined"
-        :data-locked="isLocked(n) ? 'true' : undefined"
         :data-winning="isWinningPoint(n) ? 'true' : undefined"
         :data-last="isLastMove(n) ? 'true' : undefined"
         :aria-label="labelOf(n)"
@@ -206,13 +199,6 @@ function onKeyup(event: KeyboardEvent): void {
         @keyup="onKeyup"
         @focus="roving = n"
       >
-        <template v-if="isLocked(n)">
-          <span class="morris-lock-ring" aria-hidden="true"></span>
-          <svg class="morris-lock" data-test="lock" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <rect x="5" y="11" width="14" height="10" rx="2" />
-            <path d="M8 11V8a4 4 0 0 1 8 0v3" />
-          </svg>
-        </template>
         <Transition name="piece">
           <span v-if="cells[n]" class="morris-piece" :class="`morris-piece--${cells[n]}`" data-test="piece">
             <span
@@ -274,7 +260,7 @@ function onKeyup(event: KeyboardEvent): void {
 
 .morris-point {
   /* Placed from the geometry: the centre of the button sits on the point. A third of the board wide on the
-     nine-point boards; Picaria's thirteen points narrow it (see below). */
+     nine-point boards; a refined board narrows it (see below). */
   position: absolute;
   width: 33.333%;
   height: 33.333%;
@@ -357,9 +343,9 @@ function onKeyup(event: KeyboardEvent): void {
 .piece-enter-active { transition: opacity 150ms ease-out, transform 150ms ease-out; }
 .piece-enter-from { opacity: 0; transform: scale(0.6); }
 
-/* Picaria, the refined table. Thirteen points leave 23.57% of the board between the closest two, so a point is a
-   circle of 23% of the board (at least 44 px from a board of 191 px) and a piece 18%. Sizes below are percentages
-   of that circle: 14.8% is a 3.4% dot, 56.5% a 13% ring, 78.3% an 18% piece. */
+/* The refined table (for a board with more points than nine). A point is a circle of 23% of the board (at least
+   44 px from a board of 191 px) and a piece 18%. Sizes below are percentages of that circle: 14.8% is a 3.4% dot,
+   56.5% a 13% ring, 78.3% an 18% piece. */
 .morris-plaque {
   position: absolute;
   inset: 4%;
@@ -384,14 +370,6 @@ function onKeyup(event: KeyboardEvent): void {
   height: 23%;
 }
 .morris-board[data-refined='true'] .morris-point::before { width: 14.8%; }
-/* A crossing is a small diamond, a grid point a dot. */
-.morris-board[data-refined='true'] .morris-point[data-crossing='true']::before {
-  width: 13.6%;
-  border-radius: 1px;
-  transform: rotate(45deg);
-  background: var(--gold-soft);
-  opacity: 0.85;
-}
 .morris-board[data-refined='true'] .morris-point[data-state='highlighted']::before {
   width: 56.5%;
   border-radius: 50%;
@@ -434,35 +412,6 @@ function onKeyup(event: KeyboardEvent): void {
   transform: translate(-50%, -50%) rotate(45deg);
   border-radius: 1px;
   background: rgba(244, 236, 216, 0.78);
-}
-
-/* A point closed while pieces are placed: a dashed ring and a padlock instead of the dot. */
-.morris-point[data-locked='true']::before { display: none; }
-.morris-lock-ring {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 52%;
-  aspect-ratio: 1;
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
-  box-sizing: border-box;
-  border: 1.5px dashed rgba(255, 255, 255, 0.42);
-  pointer-events: none;
-}
-.morris-lock {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: max(14px, 21.7%);
-  aspect-ratio: 1;
-  transform: translate(-50%, -50%);
-  fill: none;
-  stroke: rgba(255, 255, 255, 0.7);
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  pointer-events: none;
 }
 
 .morris-live {

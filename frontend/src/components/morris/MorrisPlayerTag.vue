@@ -10,7 +10,7 @@ const props = defineProps<{
   colour: 'white' | 'black';
   piecesToPlace: number;
   active: boolean;
-  marked?: boolean;   // the chip carries the mark of the pieces (Picaria): a ring for White, a small diamond for Black
+  marked?: boolean;   // the chip carries the mark of the pieces (refined boards): a ring for White, a small diamond for Black
 }>();
 
 const ui = useI18n().threeMenMorrisUi;

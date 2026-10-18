@@ -80,7 +80,7 @@ class ThreeMenMorrisVariantIT {
     @Test
     void aRoomCreatedWithTheAchiVariantStartsWithFourPiecesInHand() throws Exception {
         RoomCreated room = sessionService.createRoom(ThreeMenMorrisFactory.GAME_TYPE, "Alice",
-                GameOptions.of(Map.of("variant", "achi")));
+                GameOptions.of(Map.of("variant", "achi", "hostColour", "white")));
         String guestToken = sessionService.joinRoom(new GameId(room.gameId()), "Bob").token();
 
         Map<String, Object> start = startAndAwaitStart(room, guestToken);
@@ -92,21 +92,22 @@ class ThreeMenMorrisVariantIT {
     }
 
     @Test
-    void theHostPicksPicariaInTheLobbyAndTheCentreIsClosed() throws Exception {
+    void anOldTabPickingPicariaIsRefusedAndTheLobbyKeepsItsValue() throws Exception {
         RoomCreated room = sessionService.createRoom(ThreeMenMorrisFactory.GAME_TYPE, "Alice");
         String guestToken = sessionService.joinRoom(new GameId(room.gameId()), "Bob").token();
         StompSession host = stomp.connect();
+        StompSession guest = stomp.connect();
         Frames hostFrames = stomp.subscribeSeat(host, room.gameId(), room.hostToken());
+        Frames guestFrames = stomp.subscribeSeat(guest, room.gameId(), guestToken);
+
         stomp.send(host, "/app/lobby/setOptions",
                 Map.of("gameId", room.gameId(), "token", room.hostToken(), "values", Map.of("variant", "picaria")));
-        hostFrames.await(f -> "picaria".equals(options(f).get("variant")));
 
-        Map<String, Object> start = startAndAwaitStart(room, guestToken);
-
-        assertThat(state(start).get("variant"), is("picaria"));
-        assertThat(players(start).get(0).get("piecesToPlace"), is(3));
-        assertThat(state(start).get("legalPlacements"), is(List.of(0, 1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12)));
-        assertThat(((List<?>) state(start).get("board")).size(), is(13));
+        hostFrames.await(f -> Boolean.FALSE.equals(f.get("success")));
+        stomp.send(host, "/app/lobby/setOptions",
+                Map.of("gameId", room.gameId(), "token", room.hostToken(), "values", Map.of("variant", "achi")));
+        Map<String, Object> guestSees = guestFrames.await(f -> true);
+        assertThat(options(guestSees).get("variant"), is("achi"));
     }
 
     @Test
@@ -125,8 +126,9 @@ class ThreeMenMorrisVariantIT {
     }
 
     @Test
-    void aRoomWithoutOptionsStartsAsTapatanWithoutTheNewFields() throws Exception {
-        RoomCreated room = sessionService.createRoom(ThreeMenMorrisFactory.GAME_TYPE, "Alice");
+    void aRoomWithoutAVariantStartsAsTapatanWithoutTheNewFields() throws Exception {
+        RoomCreated room = sessionService.createRoom(ThreeMenMorrisFactory.GAME_TYPE, "Alice",
+                GameOptions.of(Map.of("hostColour", "white")));
         String guestToken = sessionService.joinRoom(new GameId(room.gameId()), "Bob").token();
 
         Map<String, Object> start = startAndAwaitStart(room, guestToken);

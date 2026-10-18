@@ -30,7 +30,8 @@ class ThreeMenMorrisWebSocketControllerTest {
     private final ThreeMenMorrisTable table = new ThreeMenMorrisTable();
 
     private RoomCreated createRoom() {
-        return table.sessions.createRoom(ThreeMenMorrisFactory.GAME_TYPE, "Alice");
+        return table.sessions.createRoom(ThreeMenMorrisFactory.GAME_TYPE, "Alice",
+                org.kevinkib.cardgames.game.GameOptions.of(java.util.Map.of("hostColour", "white")));
     }
 
     @Test

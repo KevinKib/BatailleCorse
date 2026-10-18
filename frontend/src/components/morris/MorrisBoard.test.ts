@@ -219,21 +219,12 @@ describe('MorrisBoard geometry', () => {
     expect(w.find('[data-line="1-3"]').exists()).toBe(false);
   });
 
-  it('draws the 28 edges of Picaria, cut at the crossings', () => {
-    const w = board({ geometry: GEOMETRIES.picaria, cells: Array(13).fill(null) });
-    expect(w.findAll('[data-line]')).toHaveLength(28);
-    for (const edge of ['0-9', '9-4', '1-9', '9-3', '4-11']) {
-      expect(w.find(`[data-line="${edge}"]`).exists(), edge).toBe(true);
-    }
-    expect(w.find('[data-line="1-3"]').exists()).toBe(false);
-  });
-
   it('draws Achi like Tapatan', () => {
     expect(board({ geometry: GEOMETRIES.achi }).findAll('[data-line]')).toHaveLength(8);
   });
 
   it('places each point from its coordinates', () => {
-    const w = board({ geometry: GEOMETRIES.picaria });
+    const w = board({ geometry: GEOMETRIES.achi });
     expect(point(w, 4).attributes('style')).toContain('left: 50%');
     expect(point(w, 4).attributes('style')).toContain('top: 50%');
     expect(point(w, 2).attributes('style')).toContain('left: 83.33');
@@ -250,141 +241,95 @@ describe('MorrisBoard geometry', () => {
   });
 
   it('moves focus by the geometry, not by a grid, with the arrows', async () => {
-    const w = mount(MorrisBoard, { props: { cells: empty(), geometry: GEOMETRIES.picaria }, attachTo: document.body });
+    const w = mount(MorrisBoard, { props: { cells: empty(), geometry: GEOMETRIES.tapatan }, attachTo: document.body });
     await point(w, 4).trigger('keydown', { key: 'ArrowRight' });
     expect(document.activeElement).toBe(point(w, 5).element);
     w.unmount();
   });
 });
 
-describe('MorrisBoard on the 13 points of Picaria', () => {
-  const cells13 = (): Cell[] => Array(13).fill(null);
-  const flags13 = (...on: number[]): boolean[] => Array.from({ length: 13 }, (_, i) => on.includes(i));
-  const picaria = (props: Record<string, unknown> = {}) =>
-    mount(MorrisBoard, { props: { cells: cells13(), geometry: GEOMETRIES.picaria, ...props } });
-
-  it('renders 13 real buttons, the four crossings named after their place', () => {
-    const w = picaria();
-    expect(w.findAll('button')).toHaveLength(13);
-    expect(ui.pointNames).toHaveLength(13);
-    for (let n = 9; n < 13; n++) {
-      expect(point(w, n).attributes('aria-label')).toContain(ui.pointNames[n]);
-      expect(point(w, n).attributes('data-crossing')).toBe('true');
-    }
-    expect(point(w, 9).attributes('aria-label')).toContain('Upper-left crossing');
-    expect(point(w, 4).attributes('data-crossing')).toBeUndefined();
+describe('MorrisBoard has no Picaria features', () => {
+  it('renders nine points with no crossing, no padlock and no closed point', () => {
+    const w = board();
+    expect(w.findAll('button')).toHaveLength(9);
+    expect(ui.pointNames).toHaveLength(9);
+    expect(w.find('[data-crossing]').exists()).toBe(false);
+    expect(w.find('[data-locked]').exists()).toBe(false);
+    expect(w.find('[data-test="lock"]').exists()).toBe(false);
+    expect(Object.keys(ui)).not.toContain('closed');
   });
 
-  it('places the crossings between the corners and the centre', () => {
-    const w = picaria();
-    expect(point(w, 9).attributes('style')).toContain('left: 33.33');
-    expect(point(w, 9).attributes('style')).toContain('top: 33.33');
-    expect(point(w, 11).attributes('style')).toContain('left: 66.67');
-    expect(point(w, 11).attributes('style')).toContain('top: 66.67');
-  });
-
-  it('is the refined table: a plaque under the lines, and nothing of the kind on Tapatan or Achi', () => {
-    expect(picaria().find('[data-test="plaque"]').exists()).toBe(true);
-    expect(picaria().get('[data-test="morris-board"]').attributes('data-refined')).toBe('true');
-    for (const geometry of [GEOMETRIES.tapatan, GEOMETRIES.achi]) {
-      const w = board({ geometry });
-      expect(w.find('[data-test="plaque"]').exists()).toBe(false);
-      expect(w.get('[data-test="morris-board"]').attributes('data-refined')).toBeUndefined();
-    }
-  });
-
-  it('strokes the two edges of a corner, crossing, centre line when it wins', async () => {
-    const w = picaria();
-    await w.setProps({ winningLine: [0, 9, 4] });
-    const won = w.findAll('line[data-winning="true"]').map((l) => l.attributes('data-line')).sort();
-    expect(won).toEqual(['0-9', '9-4']);
-    for (const n of [0, 9, 4]) expect(point(w, n).attributes('data-winning')).toBe('true');
-    expect(point(w, 11).attributes('data-winning')).toBeUndefined();
-  });
-
-  it('marks White with an engraved ring and Black with a small diamond, besides their colour', () => {
-    const cells = cells13();
-    cells[0] = 'white';
-    cells[12] = 'black';
-    const w = picaria({ cells });
-    expect(point(w, 0).get('[data-test="piece-mark"]').attributes('data-mark')).toBe('ring');
-    expect(point(w, 12).get('[data-test="piece-mark"]').attributes('data-mark')).toBe('diamond');
-  });
-
-  it('puts no mark on the pieces of Tapatan and Achi', () => {
+  it('is not the refined table on Tapatan or Achi: no plaque, no mark, no lit path', () => {
     const cells = empty();
     cells[0] = 'white';
     cells[8] = 'black';
     for (const geometry of [GEOMETRIES.tapatan, GEOMETRIES.achi]) {
-      expect(board({ cells, geometry }).find('[data-test="piece-mark"]').exists()).toBe(false);
+      const w = board({ cells, geometry, selected: 0, targets: [1, 3] });
+      expect(w.find('[data-test="plaque"]').exists()).toBe(false);
+      expect(w.get('[data-test="morris-board"]').attributes('data-refined')).toBeUndefined();
+      expect(w.find('[data-test="piece-mark"]').exists()).toBe(false);
+      expect(w.findAll('[data-test="lit-path"]')).toHaveLength(0);
     }
+  });
+});
+
+// No variant is refined for now; the flag stays for the Six Men's Morris board, so it is exercised on a 3x3 geometry.
+describe('MorrisBoard refined flag', () => {
+  const refinedGeometry = { ...GEOMETRIES.tapatan, refined: true };
+  const refined = (props: Record<string, unknown> = {}) => board({ geometry: refinedGeometry, ...props });
+
+  it('draws a plaque under the lines', () => {
+    expect(refined().find('[data-test="plaque"]').exists()).toBe(true);
+    expect(refined().get('[data-test="morris-board"]').attributes('data-refined')).toBe('true');
+  });
+
+  it('marks White with an engraved ring and Black with a small diamond, besides their colour', () => {
+    const cells = empty();
+    cells[0] = 'white';
+    cells[8] = 'black';
+    const w = refined({ cells });
+    expect(point(w, 0).get('[data-test="piece-mark"]').attributes('data-mark')).toBe('ring');
+    expect(point(w, 8).get('[data-test="piece-mark"]').attributes('data-mark')).toBe('diamond');
   });
 
   it('lights the line from the selected piece to each destination', () => {
-    const cells = cells13();
-    cells[12] = 'white';
-    const w = picaria({ cells, selected: 12, selectable: flags13(12, 3, 6), targets: [3, 6] });
+    const cells = empty();
+    cells[0] = 'white';
+    const w = refined({ cells, selected: 0, selectable: flags(0, 1, 3), targets: [1, 3] });
     const paths = w.findAll('[data-test="lit-path"]');
-    expect(paths.map((p) => p.attributes('data-to')).sort()).toEqual(['3', '6']);
+    expect(paths.map((p) => p.attributes('data-to')).sort()).toEqual(['1', '3']);
     const toThree = paths.find((p) => p.attributes('data-to') === '3')!;
-    expect(toThree.attributes('x1')).toBe('33.33');
-    expect(toThree.attributes('y1')).toBe('66.67');
+    expect(toThree.attributes('x1')).toBe('16.67');
+    expect(toThree.attributes('y1')).toBe('16.67');
     expect(toThree.attributes('x2')).toBe('16.67');
     expect(toThree.attributes('y2')).toBe('50');
   });
 
   it('lights nothing without a selection, or while the board is inert', async () => {
-    const cells = cells13();
-    cells[12] = 'white';
-    const w = picaria({ cells, targets: [3, 6] });
-    expect(w.findAll('[data-test="lit-path"]')).toHaveLength(0);
-    await w.setProps({ selected: 12, interactive: false });
-    expect(w.findAll('[data-test="lit-path"]')).toHaveLength(0);
-  });
-
-  it('does not light paths on Tapatan', () => {
     const cells = empty();
     cells[0] = 'white';
-    const w = board({ cells, selected: 0, targets: [1, 3] });
+    const w = refined({ cells, targets: [1, 3] });
+    expect(w.findAll('[data-test="lit-path"]')).toHaveLength(0);
+    await w.setProps({ selected: 0, interactive: false });
     expect(w.findAll('[data-test="lit-path"]')).toHaveLength(0);
   });
+});
 
-  it('shows a closed point as a dashed ring with a padlock, named as closed, and does not act on it', async () => {
-    const w = picaria({ locked: [4], selectable: flags13(0, 1) });
-    expect(point(w, 4).attributes('data-locked')).toBe('true');
-    expect(point(w, 4).find('[data-test="lock"]').exists()).toBe(true);
-    expect(point(w, 4).attributes('aria-label')).toContain(ui.closed);
-    expect(point(w, 0).find('[data-test="lock"]').exists()).toBe(false);
-    await point(w, 4).trigger('click');
-    expect(w.emitted('select')).toBeUndefined();
-  });
-
-  it('has no closed point by default', () => {
-    expect(picaria().findAll('[data-test="lock"]')).toHaveLength(0);
-    expect(picaria().find('[data-locked]').exists()).toBe(false);
-  });
-
-  it('goes by the arrows between the crossings and by Page Down and Page Up through every point', async () => {
-    const w = mount(MorrisBoard, { props: { cells: cells13(), geometry: GEOMETRIES.picaria }, attachTo: document.body });
-    await point(w, 9).trigger('keydown', { key: 'ArrowRight' });
-    expect(document.activeElement).toBe(point(w, 10).element);
-    await point(w, 10).trigger('keydown', { key: 'PageUp' });
-    expect(document.activeElement).toBe(point(w, 9).element);
-    await point(w, 9).trigger('keydown', { key: 'PageUp' });
-    expect(document.activeElement).toBe(point(w, 8).element);
+describe('MorrisBoard keyboard', () => {
+  it('goes by Page Down and Page Up through every point in order', async () => {
+    const w = mount(MorrisBoard, { props: { cells: empty() }, attachTo: document.body });
+    await point(w, 3).trigger('keydown', { key: 'PageDown' });
+    expect(document.activeElement).toBe(point(w, 4).element);
+    await point(w, 4).trigger('keydown', { key: 'PageUp' });
+    expect(document.activeElement).toBe(point(w, 3).element);
     await point(w, 8).trigger('keydown', { key: 'PageDown' });
-    await point(w, 9).trigger('keydown', { key: 'PageDown' });
-    await point(w, 10).trigger('keydown', { key: 'PageDown' });
-    await point(w, 11).trigger('keydown', { key: 'PageDown' });
-    expect(document.activeElement).toBe(point(w, 12).element);
-    await point(w, 12).trigger('keydown', { key: 'PageDown' });
-    expect(document.activeElement).toBe(point(w, 12).element);
+    expect(document.activeElement).toBe(point(w, 3).element);
     w.unmount();
   });
 
-  it('keeps a single tab stop over the 13 points, on the first one to act on', () => {
-    const w = picaria({ selectable: flags13(12, 3) });
-    const stops = Array.from({ length: 13 }, (_, n) => point(w, n).attributes('tabindex')).filter((t) => t === '0');
+  it('keeps a single tab stop over the nine points, on the first one to act on', () => {
+    const w = board({ selectable: flags(7, 3) });
+    const stops = Array.from({ length: 9 }, (_, n) => point(w, n).attributes('tabindex')).filter((t) => t === '0');
     expect(stops).toHaveLength(1);
     expect(point(w, 3).attributes('tabindex')).toBe('0');
   });

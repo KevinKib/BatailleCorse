@@ -33,7 +33,7 @@ const variant = computed(() => {
 });
 type Colour = keyof typeof ui.colours;
 const colours = computed(() => (descriptorOf('hostColour')?.values ?? ['white', 'black', 'random']) as Colour[]);
-const colour = computed(() => valueOf('hostColour', 'white') as Colour);
+const colour = computed(() => valueOf('hostColour', 'random') as Colour);
 
 function pick(event: Event, key: string, value: string, current: string) {
   emit('set-option', key, value);

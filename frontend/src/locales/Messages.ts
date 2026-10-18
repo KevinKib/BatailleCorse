@@ -234,7 +234,7 @@ export interface OptionsMessages {
     vars: Record<string, Record<string, Record<string, string>>>;
   };
   threeMenMorris: {
-    variant: OptionTexts;              // `label`, then `tapatan` / `achi` / `picaria`
+    variant: OptionTexts;              // `label`, then `tapatan` / `achi`
     hostColour: OptionTexts;           // `label`, then `white` / `black` / `random`
     level: OptionTexts;                // a bot seat's level: `label`, then `random` (Easy) / `greedy` (Medium) / `perfect` (Expert)
   };
@@ -533,7 +533,7 @@ export interface TurnMessages {
 
 // What a Three Men's Morris variant is called, said in a few words, and its rule in one line.
 export interface MorrisVariantTexts {
-  name: string;                        // Tapatan, Achi, Picaria
+  name: string;                        // Tapatan, Achi
   summary: string;                     // under the name on its lobby card
   rule: string;                        // the rule line shown under the choice
 }
@@ -543,21 +543,20 @@ export interface MorrisLobbyMessages {
   variantLabel: string;                // group name of the variant cards
   colourLabel: string;                 // group name of the colour buttons, for the host
   hostPlays: string;                   // the same choice, read by the others
-  variants: Record<'tapatan' | 'achi' | 'picaria', MorrisVariantTexts>;
+  variants: Record<'tapatan' | 'achi', MorrisVariantTexts>;
   colours: { white: string; black: string; random: string };
 }
 
 // Three Men's Morris board: every word of its accessible names (no visible text on the board itself).
 export interface MorrisBoardMessages {
   boardLabel: string;                  // name of the board group
-  pointNames: string[];                // the nine points, row by row (0 1 2 / 3 4 5 / 6 7 8), then Picaria's four crossings
+  pointNames: string[];                // the nine points, row by row (0 1 2 / 3 4 5 / 6 7 8)
   white: string;                       // a White piece is on the point
   black: string;                       // a Black piece is on the point
   free: string;                        // the point is empty
   canMove: string;                     // I may select this piece
   canPlace: string;                    // I may put a piece on this free point
   selected: string;                    // this piece is the selected one
-  closed: string;                      // this point is closed while pieces are placed (Picaria's centre)
   pointLabel: string;                  // {point} then the state words, e.g. "Centre, White piece, can move"
 }
 
@@ -658,7 +657,6 @@ export interface ThreeMenMorrisUiMessages {
     youPlay: string;                   // '{colour}': shown before the first piece, with who starts
     hintPlace: string;                 // my turn, placement phase
     hintMove: string;                  // my turn, movement phase
-    centreClosed: string;              // under the hint while a point is closed to placement (Picaria's centre)
     waitingFor: string;                // '{player}': not my turn
     piecesLeft: PluralForms;           // '{n}' = pieces still to place (accessible name of the discs)
     colourTag: string;                 // '{name}', '{colour}': accessible name of a player tag
@@ -712,7 +710,7 @@ export interface Messages {
   mangolaUi: MangolaUiMessages; // Mangola screen, board and placement editor
   threeMenMorrisUi: ThreeMenMorrisUiMessages; // Three Men's Morris screens
   morrisLobby: MorrisLobbyMessages; // Three Men's Morris lobby options
-  morrisVariantRules: Record<'achi' | 'picaria', RulesMessages>; // rules panel of the variants (Tapatan: threeMenMorris)
+  morrisVariantRules: Record<'achi', RulesMessages>; // rules panel of the variants (Tapatan: threeMenMorris)
   bullshitUi: BullshitUiMessages; // Bullshit screens
   koboUi: KoboUiMessages;   // Kobo screens
   batailleCorseUi: BatailleCorseUiMessages; // Bataille Corse table

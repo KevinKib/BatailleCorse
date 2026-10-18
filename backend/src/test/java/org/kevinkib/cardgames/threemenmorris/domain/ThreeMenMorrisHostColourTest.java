@@ -49,11 +49,11 @@ class ThreeMenMorrisHostColourTest {
     }
 
     @Test
-    void hostColourIsAChoiceDefaultingToWhite() {
+    void hostColourIsAChoiceDefaultingToRandom() {
         List<OptionDescriptor> options = new ThreeMenMorrisFactory(new FixedDraw(0)).optionDescriptors();
 
         assertThat(options.get(1), is(new OptionDescriptor("hostColour", OptionType.CHOICE,
-                List.of("white", "black", "random"), "white", "options.threeMenMorris.hostColour")));
+                List.of("white", "black", "random"), "random", "options.threeMenMorris.hostColour")));
     }
 
     @Test
@@ -93,13 +93,13 @@ class ThreeMenMorrisHostColourTest {
     }
 
     @Test
-    void noOptionsKeepSeatZeroWhite() {
+    void noOptionsDrawTheHostColourOnce() {
         FixedDraw random = new FixedDraw(1);
 
         ThreeMenMorris game = (ThreeMenMorris) new ThreeMenMorrisFactory(random).create(GameId.generate(), 2);
 
-        assertThat(game.whiteSeat(), is(HOST));
-        assertThat(random.draws, is(0));
+        assertThat(game.whiteSeat(), is(GUEST));
+        assertThat(random.draws, is(1));
     }
 
     @Test

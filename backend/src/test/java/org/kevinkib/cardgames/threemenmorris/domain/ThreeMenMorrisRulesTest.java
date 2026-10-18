@@ -22,7 +22,6 @@ class ThreeMenMorrisRulesTest {
     void tapatanIsNineFreePointsAndThreePiecesEach() {
         assertThat(MorrisRules.TAPATAN.geometry(), is(Geometry.TAPATAN));
         assertThat(MorrisRules.TAPATAN.piecesPerPlayer(), is(3));
-        assertThat(MorrisRules.TAPATAN.placement(), is(MorrisRules.PlacementRule.FREE));
     }
 
     @Test
@@ -93,7 +92,7 @@ class ThreeMenMorrisRulesTest {
 
     @Test
     void thePiecesPerPlayerComeFromTheRules() throws Exception {
-        MorrisRules fourPieces = new MorrisRules(Geometry.TAPATAN, 4, MorrisRules.PlacementRule.FREE);
+        MorrisRules fourPieces = new MorrisRules(Geometry.TAPATAN, 4);
         ThreeMenMorris game = new ThreeMenMorris(GameId.generate(), fourPieces, WHITE);
 
         assertThat(game.piecesToPlace(WHITE), is(4));
@@ -113,7 +112,7 @@ class ThreeMenMorrisRulesTest {
         Geometry chain = new Geometry(5,
                 List.of(List.of(1), List.of(0, 2), List.of(1, 3), List.of(2, 4), List.of(3)),
                 List.of(List.of(0, 1, 2)));
-        MorrisRules rules = new MorrisRules(chain, 3, MorrisRules.PlacementRule.FREE);
+        MorrisRules rules = new MorrisRules(chain, 3);
         ThreeMenMorris game = new ThreeMenMorris(GameId.generate(), rules, WHITE);
 
         game.place(WHITE, 0);
@@ -132,7 +131,7 @@ class ThreeMenMorrisRulesTest {
         Geometry chain = new Geometry(4,
                 List.of(List.of(1), List.of(0, 2), List.of(1, 3), List.of(2)),
                 List.of());
-        MorrisRules rules = new MorrisRules(chain, 1, MorrisRules.PlacementRule.FREE);
+        MorrisRules rules = new MorrisRules(chain, 1);
         ThreeMenMorris game = new ThreeMenMorris(GameId.generate(), rules, WHITE);
         game.place(WHITE, 0);
         game.place(BLACK, 3);

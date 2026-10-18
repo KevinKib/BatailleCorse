@@ -41,7 +41,7 @@ public final class MorrisTransitions {
         Geometry geometry = position.rules().geometry();
         if (isPlacement(position)) {
             for (int point = 0; point < geometry.points(); point++) {
-                if (position.board().get(point) == null && !isLocked(position.rules(), point)) {
+                if (position.board().get(point) == null) {
                     decisions.add(new MorrisDecision.Place(point));
                 }
             }
@@ -81,11 +81,6 @@ public final class MorrisTransitions {
             return new Outcome.Win(mover);
         }
         return new Outcome.Next(next);
-    }
-
-    private static boolean isLocked(MorrisRules rules, int point) {
-        return rules.placement() == MorrisRules.PlacementRule.CENTRE_FORBIDDEN_DURING_PLACEMENT
-                && point == MorrisRules.CENTRE;
     }
 
     private static boolean hasLine(MorrisRules rules, List<Integer> board, int seat) {

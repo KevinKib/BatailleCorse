@@ -1,7 +1,7 @@
 import type { MorrisState, MorrisVariantKey } from './MorrisState';
 
 /**
- * How each variant's board is drawn: where its points sit (nine, or Picaria's thirteen), which segments join them,
+ * How each variant's board is drawn: where its points sit, which segments join them,
  * how many pieces each player holds. This is display only. The server alone knows the rules (adjacency, legal
  * moves, placements), and the client never derives a move from these segments.
  */
@@ -15,26 +15,20 @@ export interface MorrisPointPosition {
 export interface MorrisGeometry {
   key: MorrisVariantKey;
   /**
-   * The points as the server numbers them: the nine of the grid row by row (0 1 2 / 3 4 5 / 6 7 8, the centre is 4),
-   * then Picaria's four crossings (9 between 0 and 4, 10 between 2 and 4, 11 between 8 and 4, 12 between 6 and 4).
+   * The points as the server numbers them: the nine of the grid row by row (0 1 2 / 3 4 5 / 6 7 8, the centre is 4).
    */
   points: readonly MorrisPointPosition[];
   /**
-   * What is drawn: the three points of each line for Tapatan and Achi; for Picaria the two-point edges, already cut
-   * at the crossings, so that every drawn segment joins two neighbouring points.
+   * What is drawn: the three points of each line.
    */
   segments: readonly (readonly number[])[];
   /** Pieces each player holds. */
   pieces: number;
-  /** Points that are no grid point (Picaria's four): drawn as small diamonds. */
-  crossings: readonly number[];
-  /** Points drawn as closed (a padlock) while pieces are placed; display only, the server refuses them. */
-  closedWhilePlacing: readonly number[];
-  /** The refined table of Picaria: a plaque under the lines, lit paths, and a mark on the pieces besides colour. */
+  /** The refined table: a plaque under the lines, lit paths, and a mark on the pieces besides colour. */
   refined: boolean;
 }
 
-export const VARIANT_KEYS: readonly MorrisVariantKey[] = ['tapatan', 'achi', 'picaria'];
+export const VARIANT_KEYS: readonly MorrisVariantKey[] = ['tapatan', 'achi'];
 
 const coordinate = (n: number): number => Math.round(((n * 2 + 1) * 100 / 6) * 100) / 100;
 const GRID: readonly MorrisPointPosition[] = Array.from({ length: 9 }, (_, i) => ({
@@ -49,40 +43,9 @@ const LINES: readonly (readonly number[])[] = [
   [0, 4, 8], [2, 4, 6],
 ];
 
-/** Picaria's thirteen points: the grid, then the four crossings, 9 NW, 10 NE, 11 SE, 12 SW. */
-const PICARIA_POINTS: readonly MorrisPointPosition[] = [
-  ...GRID,
-  { x: 33.33, y: 33.33 },
-  { x: 66.67, y: 33.33 },
-  { x: 66.67, y: 66.67 },
-  { x: 33.33, y: 66.67 },
-];
-
-/**
- * Picaria's drawn edges. The rows and the columns are cut at the grid points, the two long diagonals at the four
- * crossings (0-9-4-11-8 and 2-10-4-12-6) and the diamond joining the middles of the sides at the same crossings
- * (1-9-3, 1-10-5, 5-11-7, 7-12-3).
- */
-const PICARIA_EDGES: readonly (readonly number[])[] = [
-  [0, 1], [1, 2], [3, 4], [4, 5], [6, 7], [7, 8],
-  [0, 3], [3, 6], [1, 4], [4, 7], [2, 5], [5, 8],
-  [0, 9], [9, 4], [4, 11], [11, 8],
-  [2, 10], [10, 4], [4, 12], [12, 6],
-  [1, 9], [9, 3], [1, 10], [10, 5], [5, 11], [11, 7], [7, 12], [12, 3],
-];
-
 export const GEOMETRIES: Record<MorrisVariantKey, MorrisGeometry> = {
-  tapatan: { key: 'tapatan', points: GRID, segments: LINES, pieces: 3, crossings: [], closedWhilePlacing: [], refined: false },
-  achi: { key: 'achi', points: GRID, segments: LINES, pieces: 4, crossings: [], closedWhilePlacing: [], refined: false },
-  picaria: {
-    key: 'picaria',
-    points: PICARIA_POINTS,
-    segments: PICARIA_EDGES,
-    pieces: 3,
-    crossings: [9, 10, 11, 12],
-    closedWhilePlacing: [4],
-    refined: true,
-  },
+  tapatan: { key: 'tapatan', points: GRID, segments: LINES, pieces: 3, refined: false },
+  achi: { key: 'achi', points: GRID, segments: LINES, pieces: 4, refined: false },
 };
 
 /** The variant of a state; an absent or unknown one is Tapatan, which the server leaves out. */
@@ -125,8 +88,7 @@ export function neighbourByArrow(geometry: MorrisGeometry, point: number, key: s
 
 /**
  * The point Page Down or Page Up leads to: the next or the previous one in the server's numbering, or null at an end
- * or for another key. The arrows follow the lines of the grid, which never lead to a crossing from a grid point; these
- * two keys reach every point.
+ * or for another key.
  */
 export function neighbourByPage(geometry: MorrisGeometry, point: number, key: string): number | null {
   const next = key === 'PageDown' ? point + 1 : key === 'PageUp' ? point - 1 : null;
@@ -144,7 +106,7 @@ function onSpan(p: MorrisPointPosition, a: MorrisPointPosition, b: MorrisPointPo
 
 /**
  * The drawn segments that lie on a winning line, whatever the order the server lists its points in: the segment of a
- * three-point line on Tapatan and Achi, the two edges of a line cut at a crossing on Picaria.
+ * three-point line on Tapatan and Achi.
  */
 export function segmentsOnLine(geometry: MorrisGeometry, line: readonly number[]): (readonly number[])[] {
   if (line.length < 2) return [];

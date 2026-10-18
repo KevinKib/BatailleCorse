@@ -1,5 +1,7 @@
 # Three Men's Morris v2: design
 
+> **Removed 2026-10-18 (owner decision, PR #271).** The Picaria variant no longer exists in the code: White wins it with perfect play, even on the 13-point board (solver result below), so it is replaced by Six Men's Morris (`docs/specs/2026-10-18-six-men-morris-design.md`). A request with `variant=picaria` is refused as an unknown value, with no alias. This text is kept as history.
+
 Issue #147 (follow-up of the v1 frontend). Plan: `docs/plans/2026-10-14-three-men-morris-v2-plan.md`.
 Written by Claude Opus 5.5. The owner played v1 and asked for five changes: computer players with levels,
 variants (Tapatan, Achi, Picaria) as a lobby option, draws (offer and repetition), a colour choice for the
@@ -208,7 +210,7 @@ Package `threemenmorris/domain` (pure, ArchUnit unchanged).
 
 ## Colours
 
-- Game option `hostColour`: `white`, `black`, `random`; default `white` **[Q7]**. Label: "Host plays".
+- Game option `hostColour`: `white`, `black`, `random`; default `white` **[Q7]** (**changed 2026-10-18, PR #271: the default is now `random` for every variant**, owner answer Q10 of the Six Men's Morris spec). Label: "Host plays".
 - **Where the draw happens:** `ThreeMenMorrisFactory.create(id, 2, options)` maps the option to `whiteSeat`
   (seat 0 for `white`, seat 1 for `black`, one `RandomGenerator` draw for `random`). The domain receives a
   fixed seat and is tested without randomness; the factory is tested with a fixed generator.
@@ -357,7 +359,9 @@ no extraction of a shared bot driver; no change to Kobo's in-flight frontend (PR
   not "any action"; covered by Vitest.
 - **Cypress flakiness:** zero bot delay and a constant generator under `test`; every wait on a DOM state.
 
-## Picaria on the 13-point board (owner decision 2026-10-18, PR #265)
+## Picaria on the 13-point board (owner decision 2026-10-18, PR #265) [REMOVED 2026-10-18, PR #271]
+
+> **Removed 2026-10-18 (owner decision, PR #271).** The Picaria variant no longer exists in the code: White wins it with perfect play, even on the 13-point board (solver result below), so it is replaced by Six Men's Morris (`docs/specs/2026-10-18-six-men-morris-design.md`). A request with `variant=picaria` is refused as an unknown value, with no alias. This text is kept as history. Reason: White wins with perfect play even on the 13-point board.
 
 The 9-point Picaria is removed; Picaria is the Zuni board of 13 points. Tapatan and Achi are unchanged.
 
