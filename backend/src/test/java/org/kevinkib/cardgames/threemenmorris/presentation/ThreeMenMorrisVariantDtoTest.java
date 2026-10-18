@@ -40,12 +40,12 @@ class ThreeMenMorrisVariantDtoTest {
         ThreeMenMorris game = new ThreeMenMorris(GameId.generate(), MorrisRules.PICARIA, WHITE);
 
         assertThat(ThreeMenMorrisDto.forViewer(game, WHITE).variant(), is("picaria"));
-        assertThat(ThreeMenMorrisDto.forViewer(game, WHITE).legalPlacements(), is(List.of(0, 1, 2, 3, 5, 6, 7, 8)));
+        assertThat(ThreeMenMorrisDto.forViewer(game, WHITE).legalPlacements(), is(List.of(0, 1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12)));
 
         game.place(WHITE, 1);
         game.place(BLACK, 0);
 
-        assertThat(ThreeMenMorrisDto.forViewer(game, WHITE).legalPlacements(), is(List.of(2, 3, 5, 6, 7, 8)));
+        assertThat(ThreeMenMorrisDto.forViewer(game, WHITE).legalPlacements(), is(List.of(2, 3, 5, 6, 7, 8, 9, 10, 11, 12)));
     }
 
     @Test

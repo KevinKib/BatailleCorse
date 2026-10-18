@@ -33,7 +33,7 @@ class MorrisTransitionsTest {
                 new PlayerId(0)).position();
 
         assertThat(MorrisTransitions.legal(tapatan).size(), is(9));
-        assertThat(MorrisTransitions.legal(picaria).size(), is(8));
+        assertThat(MorrisTransitions.legal(picaria).size(), is(12));
         assertThat(MorrisTransitions.legal(picaria).contains(new MorrisDecision.Place(4)), is(false));
     }
 

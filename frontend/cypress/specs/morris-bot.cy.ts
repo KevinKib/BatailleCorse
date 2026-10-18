@@ -49,7 +49,7 @@ describe("Three Men's Morris against a bot", () => {
     cy.get('[data-test="tag-name"]').first().should('have.text', 'Bot 1');
   });
 
-  it('Picaria at Expert: the bot answers each placement, a solved draw', () => {
+  it('Picaria at Expert: the bot answers each placement, solved: a win for White', () => {
     lobbyWithBot('picaria');
     level().select('Expert');
     cy.get('[data-test="start"]').click();
@@ -60,23 +60,22 @@ describe("Three Men's Morris against a bot", () => {
     cy.get('[data-test="turn-hint"]').should('contain.text', 'Your turn');
   });
 
-  it('Picaria at Expert: the bot accepts a draw in a drawn position, and Play again keeps the bot and its level', () => {
+  it('Picaria at Expert: the bot, which solves the 13-point board (a win for White), punishes a poor opening, and Play again keeps the bot and its level', () => {
     lobbyWithBot('picaria');
     level().select('Expert');
     cy.get('[data-test="start"]').click();
     cy.get('[data-test="morris-board"]', { timeout: 10000 }).should('be.visible');
-    // Three placements each, on the free points the board highlights (the first one, every time).
+    // Three placements, on the free points the board highlights (the first one, every time): not the winning opening
+    // (a side middle), so Black lines up three. A draw is no longer reachable, the board being a win for White.
     [1, 2, 3].forEach((n) => {
       cy.get('[data-test="turn-hint"]').should('contain.text', 'Your turn');
       cy.get('[data-test^="point-"][data-state="highlighted"]').first().click();
       mine().should('have.length', n);
       theirs().should('have.length', n);
     });
-    cy.get('[data-test="phase-hint"]').should('have.text', 'Move a piece');
-    cy.get('[data-test="draw-offer"]').click();
     cy.get('[data-test="end"]', { timeout: 10000 }).should('be.visible');
-    cy.get('.end-title').should('have.text', 'DRAW');
-    cy.get('.end-sub').should('have.text', 'Draw agreed.');
+    cy.get('.end-title').should('have.text', 'DEFEAT');
+    cy.get('.end-sub').should('have.text', 'Bot 1 lined up three.');
     cy.get('[data-cy="play-again"]').click();
     cy.get('[data-test="lobby"]', { timeout: 10000 }).should('be.visible');
     cy.get('[data-test="badge-bot"]').should('be.visible');

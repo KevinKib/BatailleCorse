@@ -116,7 +116,7 @@ describe("Three Men's Morris variants and colours", () => {
     });
   });
 
-  it('Picaria: the diamond is drawn and the centre is never offered while placing', () => {
+  it('Picaria: the diamond is drawn through its crossings and the centre is never offered while placing', () => {
     hostLobbyWithGuest().then(({ guest }) => {
       cy.get('[data-test="variant-card-picaria"]').click();
       cy.get('[data-test="option-variant-picaria"]').should('be.checked');
@@ -126,7 +126,7 @@ describe("Three Men's Morris variants and colours", () => {
       cy.get('[data-test="morris-board"]', { timeout: 10000 }).should('be.visible');
       cy.get('[data-test="variant-name"]').should('have.text', 'Picaria');
       myTurn();
-      ['1-3', '3-7', '7-5', '5-1'].forEach((diagonal) => cy.get(`[data-line="${diagonal}"]`).should('exist'));
+      ['1-9', '9-3', '1-10', '10-5', '5-11', '11-7', '7-12', '12-3'].forEach((diagonal) => cy.get(`[data-line="${diagonal}"]`).should('exist'));
       cy.get('[data-test="point-4"]').should('have.attr', 'data-state', 'idle')
         .and('have.attr', 'aria-label').and('not.contain', 'can place here');
       cy.get('[data-test="point-3"]').should('have.attr', 'data-state', 'highlighted');
@@ -179,7 +179,7 @@ describe("Three Men's Morris variants and colours", () => {
         waitForFrame(guest, (f) => f.state?.options?.variant === 'picaria');
         cy.get('[data-test="start"]').scrollIntoView().should('not.be.disabled').click();
         cy.get('[data-test="morris-board"]', { timeout: 10000 }).should('be.visible');
-        for (let n = 0; n < 9; n++) {
+        for (let n = 0; n < 13; n++) {
           cy.get(`[data-test="point-${n}"]`).then(($el) => {
             const r = $el[0].getBoundingClientRect();
             expect(r.width, `point ${n} width`).to.be.at.least(44);

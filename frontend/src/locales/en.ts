@@ -402,6 +402,7 @@ export const messagesEn: Messages = {
       youPlay: 'You play {colour}. White starts.',
       hintPlace: 'Place a piece',
       hintMove: 'Move a piece',
+      centreClosed: 'The centre is closed while you place.',
       waitingFor: 'Waiting for {player}…',
       piecesLeft: { one: '{n} piece left to place', other: '{n} pieces left to place' },
       colourTag: '{name}, {colour}',
@@ -455,8 +456,8 @@ export const messagesEn: Messages = {
       },
       picaria: {
         name: 'Picaria',
-        summary: '3 pieces each, extra diagonals',
-        rule: 'Picaria: 3 pieces each. Four short diagonals add moves, and the centre is closed while you place: it is reached by moving.',
+        summary: '3 pieces, 13 points',
+        rule: 'Picaria: 3 pieces each on thirteen points. The crossings are points too, and the centre is closed while you place: it is reached by moving.',
       },
     },
     colours: { white: 'White', black: 'Black', random: 'Random' },
@@ -507,14 +508,13 @@ export const messagesEn: Messages = {
         {
           kind: 'text',
           title: 'Goal',
-          body: ['Line up your three pieces in a row, a column or a diagonal.'],
+          body: ['Line up your three pieces on three points of a line. Crossings count as points.'],
         },
         {
           kind: 'text',
           title: 'The board',
           body: [
-            'Nine points, joined by rows, columns and the two diagonals through the centre, plus four short diagonals between the middles of the sides. White plays first.',
-            'The short diagonals let a piece move, but they never make a line.',
+            'Thirteen points: the nine of the grid, and four crossings where the two diagonals meet the diamond joining the middles of the sides. A piece slides one step along a line, so crossing from a corner to the centre takes two moves. White plays first.',
           ],
         },
         {
@@ -701,6 +701,7 @@ export const messagesEn: Messages = {
       'Top left', 'Top middle', 'Top right',
       'Middle left', 'Centre', 'Middle right',
       'Bottom left', 'Bottom middle', 'Bottom right',
+      'Upper-left crossing', 'Upper-right crossing', 'Lower-right crossing', 'Lower-left crossing',
     ],
     white: 'White piece',
     black: 'Black piece',
@@ -708,6 +709,7 @@ export const messagesEn: Messages = {
     canMove: 'can move',
     canPlace: 'can place here',
     selected: 'selected',
+    closed: 'closed while placing',
     pointLabel: '{point}: {state}',
   },
   bullshitUi: {

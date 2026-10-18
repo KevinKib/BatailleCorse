@@ -27,9 +27,12 @@ describe('MorrisLobbyOptions for the host', () => {
     }
   });
 
-  it('draws Picaria with its four short diagonals and the others without', () => {
+  it('names Picaria by its pieces and points, and draws its 13 points with the others on nine', () => {
     const w = mountOptions();
-    expect(t(w, 'variant-card-picaria').findAll('line')).toHaveLength(12);
+    expect(ui.variants.picaria.summary).toBe('3 pieces, 13 points');
+    expect(t(w, 'variant-card-picaria').findAll('circle')).toHaveLength(13);
+    expect(t(w, 'variant-card-achi').findAll('circle')).toHaveLength(9);
+    expect(t(w, 'variant-card-picaria').findAll('line')).toHaveLength(28);
     expect(t(w, 'variant-card-achi').findAll('line')).toHaveLength(8);
     expect(t(w, 'variant-card-tapatan').findAll('line')).toHaveLength(8);
   });
