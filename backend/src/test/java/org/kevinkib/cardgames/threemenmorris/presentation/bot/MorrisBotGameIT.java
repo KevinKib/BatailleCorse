@@ -92,8 +92,11 @@ class MorrisBotGameIT {
         if (!game.currentSeat().equals(HUMAN)) {
             return false;
         }
+        List<Integer> removals = game.legalRemovals(HUMAN);
         List<Integer> placements = game.legalPlacements(HUMAN);
-        if (!placements.isEmpty()) {
+        if (!removals.isEmpty()) {
+            table.actions.remove(game.getId(), HUMAN, removals.get(table.human.nextInt(removals.size())));
+        } else if (!placements.isEmpty()) {
             table.actions.place(game.getId(), HUMAN, placements.get(table.human.nextInt(placements.size())));
         } else {
             var moves = game.legalMoves(HUMAN);
@@ -133,6 +136,37 @@ class MorrisBotGameIT {
                 }
             }
         }
+    }
+
+    @Test
+    void everyLevelFinishesEverySixMenGameThroughMillsAndRemovalsWithoutStallingOrForfeitingTheBot()
+            throws Exception {
+        Map<MorrisResult.Reason, Integer> endings = new java.util.EnumMap<>(MorrisResult.Reason.class);
+        int botRemovals = 0;
+        int humanRemovals = 0;
+        for (MorrisBotLevel level : MorrisBotLevel.values()) {
+            for (String colour : List.of("white", "black")) {
+                for (long seed = 1; seed <= 12; seed++) {
+                    Table table = new Table(MorrisVariant.SIX, colour, level, seed);
+
+                    play(table);
+
+                    String context = "SIX " + level + " host " + colour + " seed " + seed;
+                    assertThat(context + " finished", table.game.isFinished(), is(true));
+                    assertThat(context, table.game.pendingRemoval() == null, is(true));
+                    assertThat(context, table.game.result().reason(), in(List.of(MorrisResult.Reason.REDUCED,
+                            MorrisResult.Reason.BLOCKED, MorrisResult.Reason.DRAW_AGREED,
+                            MorrisResult.Reason.DRAW_REPETITION, MorrisResult.Reason.DRAW_MOVE_LIMIT)));
+                    endings.merge(table.game.result().reason(), 1, Integer::sum);
+                    botRemovals += table.game.lost(HUMAN);
+                    humanRemovals += table.game.lost(BOT);
+                }
+            }
+        }
+        assertThat("the bot removed pieces: " + endings, botRemovals > 0, is(true));
+        assertThat("the human removed pieces: " + endings, humanRemovals > 0, is(true));
+        assertThat("a game ended reduced: " + endings, endings.getOrDefault(MorrisResult.Reason.REDUCED, 0) > 0,
+                is(true));
     }
 
     @ParameterizedTest

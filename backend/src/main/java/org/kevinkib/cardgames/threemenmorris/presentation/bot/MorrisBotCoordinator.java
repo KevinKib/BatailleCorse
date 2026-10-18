@@ -10,6 +10,7 @@ import org.kevinkib.cardgames.presentation.dto.event.EventData;
 import org.kevinkib.cardgames.presentation.state.GameStateListener;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameEvictionListener;
 import org.kevinkib.cardgames.threemenmorris.domain.Move;
+import org.kevinkib.cardgames.threemenmorris.domain.MorrisPosition;
 import org.kevinkib.cardgames.threemenmorris.domain.ThreeMenMorris;
 import org.kevinkib.cardgames.threemenmorris.domain.bot.MorrisBot;
 import org.kevinkib.cardgames.threemenmorris.domain.bot.MorrisBotLevel;
@@ -32,13 +33,17 @@ import java.util.function.Function;
  *
  * <p>After every state broadcast it cancels the tasks of the previous state and schedules one task per bot
  * seat that has something to do, after a thinking delay: answering a draw offer when the opponent made one
- * (even off turn), else playing when it is the seat's turn. A task remembers the game version it reasoned
- * about and is dropped if the state moved on; the check and the action run under the game's monitor, so a
- * task, a human action and a forfeit are serialised per game. The level is read from the seat option
- * {@code level}.
+ * (even off turn), else playing (a placement, a move, or the removal owed after a mill) when it is the
+ * seat's turn. A task remembers the game version it reasoned about.
  *
- * <p>A strategy that fails or proposes an illegal decision falls back to the first legal placement or
- * move, so the table never stalls (an unanswered draw offer is declined). Nothing is scheduled once the
+ * <p><b>The search runs outside the monitor of the game</b>, which a human action, a forfeit and the other
+ * tasks take: a task takes a snapshot (position, level) under the monitor and drops itself if the version
+ * moved on, thinks without any lock, then takes the monitor again, checks the version a second time and only
+ * then applies the decision. A human who acts while the bot thinks therefore never waits for a search, and
+ * the bot's stale answer is thrown away. The level is read from the seat option {@code level}.
+ *
+ * <p>A strategy that fails or proposes an illegal decision falls back to the first legal removal, placement
+ * or move, so the table never stalls (an unanswered draw offer is declined). Nothing is scheduled once the
  * game is over, no bot is left in it, or it was evicted; a new game under the same id (Play again) gets a
  * fresh table. Bots never offer a draw: the repetition rule ends endless games.
  */
@@ -160,21 +165,56 @@ public class MorrisBotCoordinator implements GameStateListener<ThreeMenMorris>, 
 
     // ---- a bot acts --------------------------------------------------------------------------
 
+    /** What a task needs to reason, copied under the monitor so the search can run without it. */
+    private record Request(MorrisPosition position, MorrisBotLevel level, boolean offerPending) {
+    }
+
     private void think(ThreeMenMorris game, PlayerId seat, int version) {
+        Request request;
         synchronized (game) {
-            if (!tables.containsKey(game.getId()) || game.isFinished() || game.version() != version) {
+            if (!unchanged(game, version)) {
                 return; // the state moved on since this bot started thinking
             }
-            boolean offerPending = mustAnswerOffer(game, seat);
             try {
-                MorrisBotLevel level = MorrisBotLevel.fromOption(
-                        seatOptions.seatOptions(game.getId(), seat).get(LEVEL_KEY));
-                apply(game, seat, bots.apply(level).decide(game.position(), seat, offerPending));
-            } catch (Exception e) {
-                log.warn("Bot {} failed in game {}; falling back to its first legal action", seat, game.getId(), e);
-                fallback(game, seat, offerPending);
+                request = new Request(game.position(),
+                        MorrisBotLevel.fromOption(seatOptions.seatOptions(game.getId(), seat).get(LEVEL_KEY)),
+                        mustAnswerOffer(game, seat));
+            } catch (RuntimeException e) {
+                log.warn("Bot {} could not be set up in game {}; falling back to its first legal action", seat,
+                        game.getId(), e);
+                fallback(game, seat, mustAnswerOffer(game, seat));
+                return;
             }
         }
+
+        MorrisDecision decision = null;
+        try {
+            decision = bots.apply(request.level()).decide(request.position(), seat, request.offerPending());
+        } catch (Exception e) {
+            log.warn("Bot {} failed in game {}; falling back to its first legal action", seat, game.getId(), e);
+        }
+
+        synchronized (game) {
+            if (!unchanged(game, version)) {
+                return; // a human acted or the game ended while it was thinking: this answer is stale
+            }
+            try {
+                if (decision == null) {
+                    throw new IllegalStateException("no decision");
+                }
+                apply(game, seat, decision);
+            } catch (Exception e) {
+                log.warn("Bot {} proposed an illegal decision in game {}; falling back to its first legal action",
+                        seat, game.getId(), e);
+                fallback(game, seat, request.offerPending());
+            }
+        }
+    }
+
+    /** Whether the table still follows this game and the state is the one the task reasoned about. */
+    private boolean unchanged(ThreeMenMorris game, int version) {
+        Table table = tables.get(game.getId());
+        return table != null && table.game == game && !game.isFinished() && game.version() == version;
     }
 
     private void apply(ThreeMenMorris game, PlayerId seat, MorrisDecision decision) throws Exception {
@@ -183,6 +223,8 @@ public class MorrisBotCoordinator implements GameStateListener<ThreeMenMorris>, 
             actions.place(id, seat, place.point());
         } else if (decision instanceof MorrisDecision.Step step) {
             actions.move(id, seat, step.from(), step.to());
+        } else if (decision instanceof MorrisDecision.Remove remove) {
+            actions.remove(id, seat, remove.point());
         } else if (decision instanceof MorrisDecision.AcceptDraw) {
             actions.acceptDraw(id, seat);
         } else if (decision instanceof MorrisDecision.DeclineDraw) {
@@ -194,6 +236,11 @@ public class MorrisBotCoordinator implements GameStateListener<ThreeMenMorris>, 
         try {
             if (offerPending) {
                 actions.declineDraw(game.getId(), seat);
+                return;
+            }
+            List<Integer> removals = game.legalRemovals(seat);
+            if (!removals.isEmpty()) {
+                actions.remove(game.getId(), seat, removals.get(0));
                 return;
             }
             List<Integer> placements = game.legalPlacements(seat);
