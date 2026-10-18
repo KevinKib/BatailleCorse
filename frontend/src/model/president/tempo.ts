@@ -20,6 +20,8 @@ export const PRESIDENT_TEMPO = {
   bubbleMs: 1400,
   /** Bubbles that come in a burst pop this far apart (they are not queued with the flights). */
   bubbleGapMs: 200,
+  /** A seat's card count waits for its flights to land, but never longer than this behind the state. */
+  countLagMaxMs: 2000,
   /** The burst bounds, as Kobo's. */
   queue: { maxQueued: 4, maxLagMs: 3500 },
 } as const;

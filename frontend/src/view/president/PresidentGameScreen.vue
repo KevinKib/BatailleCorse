@@ -160,7 +160,7 @@ const still = computed(() => speed.value === 'instant' || prefersReducedMotion()
 const screenEl = ref<HTMLElement | null>(null);
 const motionLayer = ref<{ play: (m: PresidentMovement[], o?: { marksOnly?: boolean; startInMs?: number; still?: boolean }) => void } | null>(null);
 const bubbles = useSeatBubbles({ gapMs: PRESIDENT_TEMPO.bubbleGapMs });
-const inFlight = useInFlightCounts();
+const inFlight = useInFlightCounts({ maxLagMs: PRESIDENT_TEMPO.countLagMaxMs });
 onBeforeUnmount(() => { bubbles.cancel(); inFlight.cancel(); });
 const tempoQueue = createTempoQueue(() => Date.now(), PRESIDENT_TEMPO.queue);
 const CARD_RATIO = 243.1375 / 167.575;
