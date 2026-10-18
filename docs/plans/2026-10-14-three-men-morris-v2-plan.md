@@ -74,7 +74,7 @@ No behaviour, wire or test change for v1: every existing test passes unchanged.
 ## M2 `feat: Achi and Picaria variants of Three Men's Morris` (M)
 
 - `domain/MorrisVariant.java` (`TAPATAN`, `ACHI`, `PICARIA`; option key, rules). `Geometry.PICARIA` (Tapatan
-  plus 1-3, 3-7, 7-5, 5-1). `MorrisRules.ACHI` (4 pieces), `MorrisRules.PICARIA` (3 pieces,
+  plus 1-3, 3-7, 7-5, 5-1; **superseded 2026-10-18 by the 13-point board, PR #265**: grid 0..8 plus crossings 9..12, 16 lines). `MorrisRules.ACHI` (4 pieces), `MorrisRules.PICARIA` (3 pieces,
   `CENTRE_FORBIDDEN_DURING_PLACEMENT`).
 - `ThreeMenMorris.place`: refuses the locked centre with a new `PointLockedException`; `legalPlacements`
   leaves it out.
