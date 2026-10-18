@@ -43,7 +43,8 @@ describe("Three Men's Morris variants and colours", () => {
   it('the host picks Achi and Black, the guest reads both, the guest (White) places first, 4 pieces each', () => {
     hostLobbyWithGuest().then(({ guest }) => {
       cy.get('[data-test="option-variant"]').should('be.visible');
-      cy.get('[data-test="variant-card-picaria"]').should('be.visible');
+      cy.get('[data-test="variant-card-picaria"]').should('not.exist');
+      cy.get('[data-test="option-hostColour-random"]').should('be.checked');
       cy.get('[data-test="variant-rule"]').should('contain.text', 'Tapatan');
       cy.get('[data-test="variant-card-achi"]').click();
       cy.get('[data-test="option-variant-achi"]').should('be.checked');
@@ -116,37 +117,8 @@ describe("Three Men's Morris variants and colours", () => {
     });
   });
 
-  it('Picaria: the diamond is drawn through its crossings and the centre is never offered while placing', () => {
-    hostLobbyWithGuest().then(({ guest }) => {
-      cy.get('[data-test="variant-card-picaria"]').click();
-      cy.get('[data-test="option-variant-picaria"]').should('be.checked');
-      cy.get('[data-test="variant-rule"]').should('contain.text', 'centre is closed');
-      waitForFrame(guest, (f) => f.state?.options?.variant === 'picaria');
-      cy.get('[data-test="start"]').should('not.be.disabled').click();
-      cy.get('[data-test="morris-board"]', { timeout: 10000 }).should('be.visible');
-      cy.get('[data-test="variant-name"]').should('have.text', 'Picaria');
-      myTurn();
-      ['1-9', '9-3', '1-10', '10-5', '5-11', '11-7', '7-12', '12-3'].forEach((diagonal) => cy.get(`[data-line="${diagonal}"]`).should('exist'));
-      cy.get('[data-test="point-4"]').should('have.attr', 'data-state', 'idle')
-        .and('have.attr', 'aria-label').and('not.contain', 'can place here');
-      cy.get('[data-test="point-3"]').should('have.attr', 'data-state', 'highlighted');
-      // A click on the centre places nothing; the turn stays mine.
-      click(4);
-      owner(4, 'none');
-      myTurn();
-      // Both sides place three pieces on the other points; the centre is still never proposed.
-      click(0); owner(0, 'white');
-      place(guest, 1); owner(1, 'black'); myTurn();
-      cy.get('[data-test="point-4"]').should('have.attr', 'data-state', 'idle');
-      click(8); owner(8, 'white');
-      place(guest, 2); owner(2, 'black'); myTurn();
-      cy.get('[data-test="point-4"]').should('have.attr', 'data-state', 'idle');
-      cy.get('[data-test="point-5"]').should('have.attr', 'data-state', 'highlighted');
-    });
-  });
-
   SIZES.forEach(([width, height]) => {
-    it(`lobby options and Picaria board fit at ${width}x${height} with 44 px targets`, () => {
+    it(`lobby options and Achi board fit at ${width}x${height} with 44 px targets`, () => {
       cy.viewport(width, height);
       hostLobbyWithGuest().then(({ guest }) => {
         const noHorizontalScroll = () => cy.document().then((doc) => {
@@ -154,13 +126,12 @@ describe("Three Men's Morris variants and colours", () => {
         });
         cy.get('[data-test="variant-card-tapatan"]').scrollIntoView();
         const rects: Record<string, DOMRect> = {};
-        ['tapatan', 'achi', 'picaria'].forEach((key) => {
+        ['tapatan', 'achi'].forEach((key) => {
           cy.get(`[data-test="variant-card-${key}"]`).should('be.visible').then(($el) => { rects[key] = $el[0].getBoundingClientRect(); });
         });
         cy.then(() => {
-          // Three columns on one row, from a phone up; every card is a target of at least 44 px.
+          // Two columns on one row, from a phone up; every card is a target of at least 44 px.
           expect(rects.tapatan.top).to.eq(rects.achi.top);
-          expect(rects.achi.top).to.eq(rects.picaria.top);
           Object.values(rects).forEach((r) => {
             expect(r.height, 'card height').to.be.at.least(44);
             expect(r.width, 'card width').to.be.at.least(44);
@@ -175,11 +146,11 @@ describe("Three Men's Morris variants and colours", () => {
         });
         noHorizontalScroll();
 
-        cy.get('[data-test="variant-card-picaria"]').click();
-        waitForFrame(guest, (f) => f.state?.options?.variant === 'picaria');
+        cy.get('[data-test="variant-card-achi"]').click();
+        waitForFrame(guest, (f) => f.state?.options?.variant === 'achi');
         cy.get('[data-test="start"]').scrollIntoView().should('not.be.disabled').click();
         cy.get('[data-test="morris-board"]', { timeout: 10000 }).should('be.visible');
-        for (let n = 0; n < 13; n++) {
+        for (let n = 0; n < 9; n++) {
           cy.get(`[data-test="point-${n}"]`).then(($el) => {
             const r = $el[0].getBoundingClientRect();
             expect(r.width, `point ${n} width`).to.be.at.least(44);

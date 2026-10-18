@@ -20,6 +20,9 @@ function inMovementPhase(): Cypress.Chainable<Scripted> {
   cy.get('[data-test="name"]').type('Alice');
   cy.get('[data-test="new-game"]').click();
   cy.get('[data-test="lobby"]', { timeout: 10000 }).should('be.visible');
+  // The host colour defaults to random: this spec needs the host to be White.
+  cy.get('[data-test="colour-white"]').click();
+  cy.get('[data-test="option-hostColour-white"]').should('be.checked');
   return cy.location('pathname').then((path) => {
     const id = path.split('/room/')[1];
     return joinAsScriptedPlayer(id, 'Bob', 'three-men-morris').then((black) => {

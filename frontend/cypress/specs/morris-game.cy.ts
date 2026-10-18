@@ -19,6 +19,9 @@ function asWhite(): Cypress.Chainable<{ id: string; black: Scripted }> {
   cy.get('[data-test="new-game"]').click();
   cy.url({ timeout: 10000 }).should('match', /\/games\/three-men-morris\/room\/.+/);
   cy.get('[data-test="lobby"]', { timeout: 10000 }).should('be.visible');
+  // The host colour defaults to random: this spec needs the host to be White.
+  cy.get('[data-test="colour-white"]').click();
+  cy.get('[data-test="option-hostColour-white"]').should('be.checked');
   return cy.location('pathname').then((path) => {
     const id = path.split('/room/')[1];
     return joinAsScriptedPlayer(id, 'Bob', 'three-men-morris').then((black) => {
@@ -42,6 +45,8 @@ function asBlack(): Cypress.Chainable<{ id: string; white: Scripted }> {
       });
       cy.get('[data-test="lobby"]', { timeout: 10000 }).should('be.visible');
       return connectScriptedPlayer(gameId, token, 0).then((white) => {
+        // The host colour defaults to random: the scripted host picks White, then starts (same connection, so in order).
+        cy.then(() => white.publish('/app/lobby/setOptions', { values: { hostColour: 'white' } }));
         cy.then(() => white.publish('/app/three-men-morris/start', {}));
         cy.get('[data-test="morris-board"]', { timeout: 10000 }).should('be.visible');
         return cy.wrap({ id: gameId, white });
