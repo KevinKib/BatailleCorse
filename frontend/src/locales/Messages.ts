@@ -539,13 +539,14 @@ export interface MorrisLobbyMessages {
 // Three Men's Morris board: every word of its accessible names (no visible text on the board itself).
 export interface MorrisBoardMessages {
   boardLabel: string;                  // name of the board group
-  pointNames: string[];                // the nine points, row by row (0 1 2 / 3 4 5 / 6 7 8)
+  pointNames: string[];                // the nine points, row by row (0 1 2 / 3 4 5 / 6 7 8), then Picaria's four crossings
   white: string;                       // a White piece is on the point
   black: string;                       // a Black piece is on the point
   free: string;                        // the point is empty
   canMove: string;                     // I may select this piece
   canPlace: string;                    // I may put a piece on this free point
   selected: string;                    // this piece is the selected one
+  closed: string;                      // this point is closed while pieces are placed (Picaria's centre)
   pointLabel: string;                  // {point} then the state words, e.g. "Centre, White piece, can move"
 }
 
@@ -646,6 +647,7 @@ export interface ThreeMenMorrisUiMessages {
     youPlay: string;                   // '{colour}': shown before the first piece, with who starts
     hintPlace: string;                 // my turn, placement phase
     hintMove: string;                  // my turn, movement phase
+    centreClosed: string;              // under the hint while a point is closed to placement (Picaria's centre)
     waitingFor: string;                // '{player}': not my turn
     piecesLeft: PluralForms;           // '{n}' = pieces still to place (accessible name of the discs)
     colourTag: string;                 // '{name}', '{colour}': accessible name of a player tag

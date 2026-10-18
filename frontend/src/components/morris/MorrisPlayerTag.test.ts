@@ -41,6 +41,16 @@ describe('MorrisPlayerTag', () => {
     expect(tag({ active: true }).attributes('data-active')).toBe('true');
   });
 
+  it('carries no mark on the chip by default, as on Tapatan and Achi', () => {
+    expect(tag().find('[data-test="tag-mark"]').exists()).toBe(false);
+    expect(tag({ colour: 'black' }).find('[data-test="tag-mark"]').exists()).toBe(false);
+  });
+
+  it('marks the chip like the pieces when asked: a ring for White, a small diamond for Black', () => {
+    expect(tag({ marked: true }).get('[data-test="tag-chip"] [data-test="tag-mark"]').attributes('data-mark')).toBe('ring');
+    expect(tag({ marked: true, colour: 'black' }).get('[data-test="tag-chip"] [data-test="tag-mark"]').attributes('data-mark')).toBe('diamond');
+  });
+
   it('is named for screen readers by name and colour', () => {
     expect(tag().attributes('aria-label')).toBe('Alice, White');
   });

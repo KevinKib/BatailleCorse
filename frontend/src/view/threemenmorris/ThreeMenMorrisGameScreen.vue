@@ -42,8 +42,10 @@ const colourOf = (seat: number): 'white' | 'black' => (store.colourOf(seat) === 
 const me = computed(() => store.game?.players.find(p => p.seat === store.mySeat));
 const opponent = computed(() => store.game?.players.find(p => p.seat !== store.mySeat));
 
-const cells = computed(() => (store.game?.board ?? Array(9).fill(null))
+const cells = computed(() => (store.game?.board ?? Array(store.geometry.points.length).fill(null))
   .map((owner: number | null) => (owner === null ? null : colourOf(owner))));
+// Picaria's centre is shown closed (a padlock) until the placement phase is over; the server refuses it anyway.
+const lockedPoints = computed(() => (store.gamePhase === 'PLACEMENT' ? [...store.geometry.closedWhilePlacing] : []));
 // What a click is accepted on: my free points or movable pieces, then the destinations of the selection.
 // The same points are drawn as playable: the server decides, the board only shows.
 const playable = computed(() => Array.from({ length: store.geometry.points.length }, (_, n) =>
@@ -244,6 +246,7 @@ function leaveLobby() {
           :name="displayName(opponent.seat)"
           :colour="colourOf(opponent.seat)"
           :pieces-to-place="opponent.piecesToPlace"
+          :marked="store.geometry.refined"
           :active="opponent.current && store.phase === 'playing'" />
 
         <MorrisBoard
@@ -253,6 +256,8 @@ function leaveLobby() {
           :selectable="playable"
           :highlighted="playable"
           :selected="store.selected"
+          :targets="store.targetPoints"
+          :locked="lockedPoints"
           :winning-line="store.game?.winningLine ?? []"
           :disabled="boardDisabled"
           :interactive="store.isMyTurn"
@@ -266,10 +271,14 @@ function leaveLobby() {
           :name="displayName(me.seat)"
           :colour="colourOf(me.seat)"
           :pieces-to-place="me.piecesToPlace"
+          :marked="store.geometry.refined"
           :active="store.isMyTurn" />
 
         <YourTurnIndicator class="turn-slot" :active="store.isMyTurn" />
         <p v-if="store.phase === 'playing'" class="phase-hint" data-test="phase-hint">{{ phaseHint }}</p>
+        <p v-if="lockedPoints.length && store.phase === 'playing'" class="centre-closed" data-test="centre-closed">
+          {{ ui.table.centreClosed }}
+        </p>
         <p v-if="noPieceDownYet && store.phase === 'playing'" class="colour-hint" data-test="colour-hint">
           {{ format(ui.table.youPlay, { colour: store.myColour === 'WHITE' ? ui.white : ui.black }) }}
         </p>
@@ -388,6 +397,7 @@ function leaveLobby() {
 .tag-slot { flex: none; }
 .turn-slot { flex: none; min-height: 1.2em; }
 .phase-hint,
+.centre-closed,
 .colour-hint {
   flex: none;
   margin: 0;
@@ -396,7 +406,8 @@ function leaveLobby() {
   color: rgba(255, 255, 255, 0.78);
   overflow-wrap: anywhere;
 }
-.colour-hint { font-size: 0.75rem; color: rgba(255, 255, 255, 0.6); }
+.colour-hint,
+.centre-closed { font-size: 0.75rem; color: rgba(255, 255, 255, 0.6); }
 
 .repetition-hint {
   flex: none;
