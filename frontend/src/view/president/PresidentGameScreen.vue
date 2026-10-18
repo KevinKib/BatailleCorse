@@ -257,33 +257,32 @@ async function playEntry(entry: PresidentLogEntry) {
   const factor = speedFactor(speed.value);
   const isStill = still.value;
   for (const bubble of planBubbles(entry)) bubbles.show(bubble, PRESIDENT_TEMPO.bubbleMs * (factor || 1));
-  // The pile is held by the sweep of the previous trick: this move waits for it to clear.
-  while (holdDone) await holdDone;
   const moves = planMovements(entry, store.mySeat, factor || 1);
   if (moves.length === 0) return;
-  // A trick this move closed: keep its pile on screen from now on, before the DOM moves on to the next state.
+  // A trick this move closes is swept toward its winner after the badge's hold: the sweep takes its time in the queue
+  // (the next move starts once it is over), and when the queue is full there is no sweep.
   const closed = !isStill && motionLayer.value ? closedPile(entry) : null;
-  if (closed) beginHold(closed, entry.id);
-  // The pile shows the new play once the DOM has the new state.
-  await nextTick();
   const sweep = closed ? planSweep(entry, store.mySeat, factor || 1) : [];
   const sweepAt = sweepStartMs(entry, store.mySeat, factor || 1);
   const spanMs = sweep.length > 0 ? sweepAt + eventSpanMs(sweep) + PRESIDENT_TEMPO.sweep.landHoldMs : eventSpanMs(moves);
   const admission = isStill ? { startInMs: 0, motion: false } : tempoQueue.admit(spanMs);
-  if (closed) {
-    // Behind a full queue there is no sweep: the pile gives way to the state at once.
-    if (admission.motion && sweep.length > 0) scheduleHold(closed, entry.id, admission.startInMs + sweepAt, admission.startInMs + spanMs);
-    else endHold();
-  }
+  const arrivedAt = Date.now();
+  // The pile of the trick before this one is held by its sweep: where this move lands is known only once it clears.
+  while (holdDone) await holdDone;
+  const startInMs = Math.max(0, admission.startInMs - (Date.now() - arrivedAt));
+  const sweeps = closed !== null && admission.motion && sweep.length > 0;
+  // Keep the closed trick's pile on screen from now on, before the DOM moves on to the next state.
+  if (closed && sweeps) beginHold(closed, entry.id);
+  // The pile shows the new play once the DOM has the new state.
+  await nextTick();
+  if (closed && sweeps) scheduleHold(closed, entry.id, startInMs + sweepAt, startInMs + spanMs);
   if (admission.motion && entry.seat !== store.mySeat) {
     const flights = moves.filter(m => m.kind === 'travel');
-    inFlight.add(entry.seat, flights.length, admission.startInMs + eventSpanMs(flights));
+    inFlight.add(entry.seat, flights.length, startInMs + eventSpanMs(flights));
   }
-  motionLayer.value?.play(moves, { marksOnly: !admission.motion, startInMs: admission.startInMs, still: isStill });
+  motionLayer.value?.play(moves, { marksOnly: !admission.motion, startInMs, still: isStill });
   // The cards of the closed trick leave once the badge has had its moment (their copies wait out of sight until then).
-  if (admission.motion && sweep.length > 0) {
-    motionLayer.value?.play(sweep, { startInMs: admission.startInMs + sweepAt, still: false });
-  }
+  if (sweeps) motionLayer.value?.play(sweep, { startInMs: startInMs + sweepAt, still: false });
 }
 
 // The log is newest first: what is new is what comes before the head I already knew.

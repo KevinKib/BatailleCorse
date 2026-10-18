@@ -518,7 +518,7 @@ describe('PresidentGameScreen', () => {
         await flushPromises();
         return room3;
       };
-      const advance = async (ms: number) => { vi.advanceTimersByTime(ms); await flushPromises(); };
+      const advance = async (ms: number) => { await vi.advanceTimersByTimeAsync(ms); await flushPromises(); };
 
       beforeEach(() => { vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] }); });
       afterEach(() => { vi.useRealTimers(); });
@@ -548,6 +548,24 @@ describe('PresidentGameScreen', () => {
         expect(wrapper.find('[data-test="trick-closed"]').exists()).toBe(false);
         expect(wrapper.findAll('[data-test="trick-card"]')).toHaveLength(1);
         expect(wrapper.get('[data-test="trick-cards"]').classes()).not.toContain('trick-cards--swept');
+      });
+
+      it('givenManyTricksClosingInABurst_thenThePictureNeverFallsFarBehindTheState', async () => {
+        const { wrapper, store } = await cutAfterAKing();
+        // Five more tricks closed at once, then an open play: past the queue's bounds the sweeps are skipped.
+        for (let version = 3; version < 8; version++) {
+          store.applyEvent({ type: 'state-update', state: playing({ version, currentSeat: 1 }) });
+          store.applyEvent(event(1, 'PLAY', { trickWinner: 1, trickEndReason: 'QUAD' }));
+        }
+        const lead = { rank: '3', suit: 'CLUB', name: 'CLUB_3' };
+        store.applyEvent({ type: 'state-update', state: playing({
+          version: 9, currentSeat: 2, trick: buildPresidentTrick({ leader: 1, plays: [{ seat: 1, cards: [lead] }] }),
+        }) });
+        store.applyEvent(event(1, 'PLAY', { cards: [lead] }));
+        await flushPromises();
+        await advance(9000);
+        expect(wrapper.find('[data-test="trick-closed"]').exists()).toBe(false);
+        expect(wrapper.findAll('[data-test="trick-card"]')).toHaveLength(1);
       });
 
       it('givenTheInstantSpeed_thenNoSweepAndTheClosingPlayStaysUntilTheNextPlay', async () => {

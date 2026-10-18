@@ -211,7 +211,7 @@ const chipTexts = computed(() => props.chips.flatMap((chip) => {
 @media (max-width: 767px) {
   .trick { flex-direction: row; justify-content: center; align-items: center; gap: var(--space-2); width: 100%; }
   .trick-plate { flex: 0 1 auto; min-width: 0; max-width: 64%; }
-  .trick-closed--line { gap: 0 6px; padding: 3px 10px; }
+  .trick-closed--line { gap: 0 6px; padding: 3px 10px; margin-top: 10px; }
   .trick-closed--line .trick-closed-leader::before { margin-right: 6px; }
   .chips { flex: 1 1 0; min-width: 0; max-width: none; flex-direction: column; flex-wrap: nowrap; align-items: flex-start; justify-content: center; gap: 3px; }
   .chip { max-width: 100%; box-sizing: border-box; white-space: normal; border-radius: 10px; padding: 1px 8px; line-height: 1.25; }

@@ -667,8 +667,12 @@ titles, a revolution active, an exchange pending). The options are kept for cont
         ALL_PASSED): a closing flash on the pile, the closing play stays on the pile, dimmed, with a badge that
         says why ("Closed by a 2", "Four of a kind", "Out first", "Everyone passed") and who leads; a ring on
         the winner's seat. The badge stays until the next play (state, not a timer). The text line under the
-        pile stays as a secondary, screen-reader line. Later (chunk 3), the closed cards sweep card by card
-        toward the winner;
+        pile stays as a secondary, screen-reader line. Chunk 3: once the closing play has landed and the badge
+        has had its moment (800 ms), the cards of the closed trick (the closing play, then the earlier plays, newest
+        first, at most 8) sweep card by card to the winner's seat (620 ms a card, 90 ms apart), which is ringed; the pile
+        then shows the badge and the trick count on an empty pile until the next play. The picture of the closed pile
+        is held while the sweep runs (a next play already in the state flies in afterwards). No sweep at the Instant
+        speed or under reduced motion;
       - **forbidden finish** ("Out on a 2", `outForbidden`): a red bubble "Out on a 2" on the seat, then the
         seat's marker;
       - **completion out of turn** (`COMPLETION`, or a play by a seat that was not the current one): the play
