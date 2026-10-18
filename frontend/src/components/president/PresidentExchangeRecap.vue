@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import PlayingCard from '../PlayingCard.vue';
 import { useI18n } from '../../composables/useI18n';
 import { cardLabel } from '../../model/president/cardLabel';
@@ -7,8 +8,10 @@ import { format, plural } from '../../locales/format';
 
 // What the exchange of the round came to, once the play has begun: a line per pair. My own pair shows the faces
 // (the cards I gave and the ones that came back); the others say how many cards went each way. It sits over the
-// action bar until it is closed, so nothing about the exchange is only a movement.
-defineProps<{
+// action bar until it is closed, so nothing about the exchange is only a movement. On a phone only my own pair is drawn, as a banner over
+// the top of the felt (the felt never scrolls inside itself, so the summary takes no height from it); the other pairs, and the whole summary of a
+// seat outside every pair, stay in the page for assistive technology.
+const props = defineProps<{
   lines: ExchangeRecapLine[];
   nameOf: (seat: number) => string;
 }>();
@@ -16,10 +19,11 @@ const emit = defineEmits<{ close: [] }>();
 
 const ui = useI18n().presidentUi;
 const recap = ui.exchange.recap;
+const hasMine = computed(() => props.lines.some(l => l.mine));
 </script>
 
 <template>
-  <section class="recap" data-test="exchange-recap" role="region" :aria-label="recap.title">
+  <section class="recap" :class="{ 'no-mine': !hasMine }" data-test="exchange-recap" role="region" :aria-label="recap.title">
     <h3 class="title">{{ recap.title }}</h3>
     <ul class="lines">
       <li v-for="line in lines" :key="`${line.high}-${line.low}`" class="line" :class="{ mine: line.mine }"
@@ -80,5 +84,19 @@ const recap = ui.exchange.recap;
   .recap { padding-left: 12px; }
   .line { font-size: 0.75rem; }
   .cards :deep(.playing_card) { width: 26px; }
+}
+@media (max-width: 767px) {
+  .line:not(.mine), .recap.no-mine, .recap.no-mine .close {
+    position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0);
+    white-space: nowrap; border: 0;
+  }
+  .recap.no-mine { background: none; min-height: 0; }
+  /* A banner over the top of the felt, so that it takes no height from it (the felt never scrolls inside itself); the
+     screen closes it on its own after a few seconds. */
+  .recap:not(.no-mine) {
+    position: fixed; z-index: 1700; width: auto; box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5); background: rgba(0, 0, 0, 0.9);
+    top: calc(var(--hud-inset) * 2 + var(--hud-chip-h) + env(safe-area-inset-top, 0px));
+    left: var(--space-2); right: var(--space-2);
+  }
 }
 </style>

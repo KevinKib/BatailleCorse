@@ -30,6 +30,12 @@ describe('PresidentExchangeRecap', () => {
     expect(other.findAll('img')).toHaveLength(0);
   });
 
+  it('givenASeatOutsideEveryPair_thenTheSummaryIsMarkedToStayOutOfSightOnAPhone', () => {
+    const w = mountRecap({ lines: [lines[1]] });
+    expect(w.get('[data-test="exchange-recap"]').classes()).toContain('no-mine');
+    expect(mountRecap().get('[data-test="exchange-recap"]').classes()).not.toContain('no-mine');
+  });
+
   it('givenTheCloseButton_thenItAsksToDismissTheSummary', async () => {
     const w = mountRecap();
     const close = w.get('[data-test="recap-close"]');

@@ -347,6 +347,27 @@ describe('PresidentGameScreen', () => {
       }
     });
 
+    it('givenAPhone_thenTheSummaryBannerGoesByItselfAfterAFewSeconds', async () => {
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+      vi.stubGlobal('matchMedia', (query: string) => ({
+        matches: query.includes('max-width'), media: query, addEventListener: () => {}, removeEventListener: () => {},
+      }));
+      try {
+        const done = exchanging({
+          phase: 'PLAYING', availableActions: ['PLAY'], toGiveBack: 0, exchange: [{ high: 0, low: 2, count: 2, done: true }],
+          received: buildPresidentHand(['KING', 'HEART'], ['ACE', 'CLUB']), given: buildPresidentHand(['3', 'CLUB'], ['9', 'HEART']),
+        });
+        const { wrapper } = await mountRoom(room(done));
+        expect(wrapper.find('[data-test="exchange-recap"]').exists()).toBe(true);
+        vi.advanceTimersByTime(8500);
+        await flushPromises();
+        expect(wrapper.find('[data-test="exchange-recap"]').exists()).toBe(false);
+      } finally {
+        vi.unstubAllGlobals();
+        vi.useRealTimers();
+      }
+    });
+
     it('givenNoExchangeThisRound_thenThereIsNoSummary', async () => {
       const { wrapper } = await mountRoom(room(playing()));
       expect(wrapper.find('[data-test="exchange-recap"]').exists()).toBe(false);

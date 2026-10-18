@@ -112,6 +112,9 @@ function bobGivesTwoCardsBack(bob: Guest) {
           });
         cy.get('[data-test="recap-returned"]').should('have.text', 'Bob gave back:');
         cy.get('[data-test="recap-returned-cards"] img').should('have.length', 2);
+        cy.get('[data-test="president-table"]').should(($felt) => {
+          expect($felt[0].scrollHeight, 'felt content height').to.be.at.most($felt[0].clientHeight + 1);
+        });
         cy.screenshot(`exchange-recap-${width}`, { capture: 'viewport' });
         noHorizontalScroll();
         // The summary does not push the table off the screen, nor hide the Play and Pass buttons.
@@ -152,37 +155,54 @@ describe('President exchange flights at the Instant speed', () => {
 // Eight players (seven bots that answer at once under the test profile, a scripted twin of the browser's seat that plays
 // round 1): whatever title the browser ends with, round 2 opens on an exchange of several pairs. The flights ring the
 // places, the table still fits on the screen, and the summary names every pair (the faces only in my own).
-[[375, 667], [1280, 720]].forEach(([width, height]) => {
-  describe(`President exchange flights with 8 players at ${width} px`, () => {
+[[375, 667], [375, 812], [360, 640], [1280, 720]].forEach(([width, height]) => {
+  describe(`President exchange flights with 8 players at ${width}x${height}`, () => {
     it('rings the exchange, keeps the table in the screen and summarises every pair', () => {
       cy.viewport(width, height);
       cy.window().then((win) => win.localStorage.removeItem('animationSpeed'));
       hostLobby('Alice').then((id) => {
         for (let i = 0; i < 7; i++) cy.get('[data-test="add-bot"]').click();
         cy.get('[data-test="player-count"]').should('contain.text', '8 / 8');
-        connectMyself(id).then((me) => autoplay(id, me, { ready: false }));
+        cy.wrap(null, { log: false }).as('twin');
+        connectMyself(id).then((me) => { autoplay(id, me, { ready: false }); cy.wrap(me, { log: false }).as('twin'); });
         cy.get('[data-test="start"]').should('not.be.disabled').click();
         cy.get('[data-test="president-table"]', { timeout: 10000 }).should('be.visible');
         cy.get('[data-test="round-over-title"]', { timeout: 120000 }).should('have.text', 'Round 1 is over');
         cy.get('[data-test="motion-card"]', { timeout: 20000 }).should('not.exist');
         cy.get('[data-test="ready"]').click();
         cy.get('[data-test="round"]', { timeout: 30000 }).should('have.text', 'Round 2 of 5');
+        // Once the exchange is over the twin stops: the bots play up to my turn and wait for me, so that the round cannot
+        // end under the summary.
+        cy.get('@twin').then((me) => {
+          awaitState(me as any, 'round 2 is on', (st) => st.round === 2 && st.phase === 'PLAYING');
+          cy.then(() => (me as any).disconnect());
+        });
         // The exchange moved cards between the pairs: their places are ringed (and the copies fly, unless it is over).
         cy.get('[data-test="motion-mark"]').should('have.length.at.least', 2);
-        cy.screenshot(`exchange-8-players-flights-${width}`, { capture: 'viewport' });
-        // The twin and the bots give back at once: the play begins and the summary names every pair. Bots that answer at
-        // once may finish the whole round before the summary has had its turn: then the round sheet stands in for it
-        // (the summary itself is covered in the Scum specs above and in the component tests).
-        cy.get('[data-test="exchange-recap"], [data-test="round-over-title"]', { timeout: 20000 }).should('exist').then(($found) => {
-          if (!$found.is('[data-test="exchange-recap"]')) return;
-          cy.get('[data-test="recap-line"]').should('have.length.at.least', 2);
-          cy.get('[data-test="exchange-recap"]').should('contain.text', 'gave');
-          noHorizontalScroll();
-          cy.get('[data-test="opponent-seat"]').should('have.length', 7);
-          cy.window().then((win) => {
-            expect(win.document.documentElement.scrollHeight, 'page height').to.be.at.most(win.innerHeight);
+        cy.screenshot(`exchange-8-players-flights-${width}x${height}`, { capture: 'viewport' });
+        // The play has begun: the summary names every pair, and the felt does not scroll inside itself (measured in one
+        // synchronous check).
+        cy.get('[data-test="exchange-recap"]', { timeout: 20000 }).should(($recap) => {
+          const doc = $recap[0].ownerDocument;
+          const felt = doc.querySelector('[data-test="president-table"]') as HTMLElement;
+          expect(doc.querySelectorAll('[data-test="recap-line"]').length, 'a line per pair').to.be.at.least(2);
+          expect($recap.text()).to.contain('gave');
+          expect(doc.documentElement.scrollWidth, 'page width').to.be.at.most(doc.documentElement.clientWidth);
+          expect(doc.documentElement.scrollHeight, 'page height').to.be.at.most(doc.defaultView!.innerHeight);
+          expect(doc.querySelectorAll('[data-test="opponent-seat"]').length, 'opponents').to.eq(7);
+        });
+        cy.screenshot(`exchange-8-players-recap-${width}x${height}`, { capture: 'viewport' });
+        // The summary takes no height from the felt: what the felt overflows by (a mid-round table of 8 on a small phone
+        // can already, with the titles and the passes written under the plates) is the same once it is closed.
+        const overflow = ($felt: JQuery<HTMLElement>) => $felt[0].scrollHeight - $felt[0].clientHeight;
+        cy.get('[data-test="president-table"]').then(($felt) => {
+          const withRecap = overflow($felt);
+          cy.log(`felt overflow with the summary: ${withRecap}px`);
+          cy.get('[data-test="recap-close"]').click({ force: true });
+          cy.get('[data-test="exchange-recap"]').should('not.exist');
+          cy.get('[data-test="president-table"]').should(($after) => {
+            expect(withRecap, 'felt overflow with the summary open').to.be.at.most(overflow($after) + 1);
           });
-          cy.screenshot(`exchange-8-players-recap-${width}`, { capture: 'viewport' });
         });
       });
     });

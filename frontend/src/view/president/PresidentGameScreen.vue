@@ -278,8 +278,19 @@ watch(() => store.stateChange, change => { if (change) void playExchange(change)
 // The summary of the exchange stays over the action bar until it is closed (once per round).
 const closedRecapRound = ref<number | null>(null);
 const recapHeld = ref(false);
+const RECAP_PHONE_MS = 8000;
+let recapTimer: ReturnType<typeof setTimeout> | null = null;
+onBeforeUnmount(() => { if (recapTimer) clearTimeout(recapTimer); });
 const recap = computed(() => store.game ? exchangeRecap(store.game, store.mySeat) : []);
 const showRecap = computed(() => recap.value.length > 0 && closedRecapRound.value !== store.game?.round && !recapHeld.value);
+// On a phone the summary is a banner over the felt: it goes by itself after a few seconds (the cross closes it sooner).
+watch(showRecap, shown => {
+  if (recapTimer) clearTimeout(recapTimer);
+  recapTimer = null;
+  if (!shown || !narrow.value) return;
+  const round = store.game?.round ?? null;
+  recapTimer = setTimeout(() => { closedRecapRound.value = round; }, RECAP_PHONE_MS);
+}, { immediate: true });
 
 // --- The end -------------------------------------------------------------------------------------------------------
 const endScreen = useEndScreen(() => store.screen === 'finished', () => false);
