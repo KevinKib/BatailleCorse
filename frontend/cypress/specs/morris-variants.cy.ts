@@ -44,6 +44,8 @@ describe("Three Men's Morris variants and colours", () => {
     hostLobbyWithGuest().then(({ guest }) => {
       cy.get('[data-test="option-variant"]').should('be.visible');
       cy.get('[data-test="variant-card-picaria"]').should('not.exist');
+      cy.get('[data-test^="variant-card-"]').should('have.length', 3);
+      ['tapatan', 'achi', 'six'].forEach((key) => cy.get(`[data-test="variant-card-${key}"]`).should('be.visible'));
       cy.get('[data-test="option-hostColour-random"]').should('be.checked');
       cy.get('[data-test="variant-rule"]').should('contain.text', 'Tapatan');
       cy.get('[data-test="variant-card-achi"]').click();
@@ -84,10 +86,35 @@ describe("Three Men's Morris variants and colours", () => {
     });
   });
 
+  it('the host picks Six and Black, the guest reads both, the guest (White) places first, 6 pieces each, a 16-point board', () => {
+    hostLobbyWithGuest().then(({ guest }) => {
+      cy.get('[data-test="variant-card-six"]').click();
+      cy.get('[data-test="option-variant-six"]').should('be.checked');
+      cy.get('[data-test="variant-rule"]').should('contain.text', 'A mill takes a piece');
+      cy.get('[data-test="colour-black"]').click();
+      cy.get('[data-test="option-hostColour-black"]').should('be.checked');
+      waitForFrame(guest, (f) => f.state?.options?.variant === 'six' && f.state?.options?.hostColour === 'black');
+
+      cy.get('[data-test="start"]').should('not.be.disabled').click();
+      cy.get('[data-test="morris-board"]', { timeout: 10000 }).should('be.visible').and('have.attr', 'data-variant', 'six');
+      cy.get('[data-test="variant-name"]').should('have.text', "Six Men's Morris");
+      cy.get('[data-test="colour-hint"]').should('contain.text', 'You play Black');
+      cy.get('[data-test^="point-"]').should('have.length', 16);
+      cy.get('[data-test="reserve-piece"]').should('have.length', 12);
+      cy.get('[data-test="phase-hint"]').should('contain.text', 'Waiting for Bob');
+      place(guest, 0);
+      owner(0, 'white');
+      myTurn();
+      click(8);
+      owner(8, 'black');
+      cy.get('[data-test="reserve-piece"]').should('have.length', 10);
+    });
+  });
+
   it('shows the guest the variant and the colour read only, then the table with the right colours', () => {
     guestLobbyWithHost().then(({ host }) => {
       // A view sent before the browser's seat subscription is live is lost: repeat the (idempotent) change until it shows.
-      cy.window({ log: false }).then((win) => new Promise<void>((resolve, reject) => {
+      cy.window({ log: false }).then({ timeout: 15000 }, (win) => new Promise<void>((resolve, reject) => {
         const deadline = Date.now() + 10000;
         const attempt = () => {
           host.publish('/app/lobby/setOptions', { values: { variant: 'achi', hostColour: 'black' } });
@@ -126,12 +153,13 @@ describe("Three Men's Morris variants and colours", () => {
         });
         cy.get('[data-test="variant-card-tapatan"]').scrollIntoView();
         const rects: Record<string, DOMRect> = {};
-        ['tapatan', 'achi'].forEach((key) => {
+        ['tapatan', 'achi', 'six'].forEach((key) => {
           cy.get(`[data-test="variant-card-${key}"]`).should('be.visible').then(($el) => { rects[key] = $el[0].getBoundingClientRect(); });
         });
         cy.then(() => {
-          // Two columns on one row, from a phone up; every card is a target of at least 44 px.
+          // Three columns on one row, from a phone up; every card is a target of at least 44 px.
           expect(rects.tapatan.top).to.eq(rects.achi.top);
+          expect(rects.achi.top).to.eq(rects.six.top);
           Object.values(rects).forEach((r) => {
             expect(r.height, 'card height').to.be.at.least(44);
             expect(r.width, 'card width').to.be.at.least(44);
