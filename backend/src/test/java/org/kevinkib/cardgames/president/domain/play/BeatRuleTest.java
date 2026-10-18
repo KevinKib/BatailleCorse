@@ -113,14 +113,14 @@ class BeatRuleTest {
             "BEAT          | 9C 9D       | 2D 2H    | true",
             "BEAT          | 9C 9D 9H    | 2D 2H    | false",
             "BEAT          | 9C 9D 9H    | 2D 2H 2S | true",
-            "BEAT          | 2C          | 2D       | true",
+            "BEAT          | 2C          | 2D       | false",
             "BEAT          | 2C 2D       | 2H       | false",
-            "BEAT          | 2C 2D       | 2H 2S    | true",
+            "BEAT          | 2C 2D       | 2H 2S    | false",
             "MATCH_OR_PASS | 9C          | 2D       | false",
             "MATCH_OR_PASS | 9C 9D       | 2D       | false",
             "MATCH_OR_PASS | 9C 9D       | 2D 2H    | false",
             "MATCH_OR_PASS | 9C 9D       | 10D 10H  | false",
-            "MATCH_OR_PASS | 2C          | 2D       | true",
+            "MATCH_OR_PASS | 2C          | 2D       | false",
     })
     void aTwoCutsOnlyWithTheSameNumberOfCards(String constraint, String top, String candidate,
                                               boolean accepted) throws Exception {

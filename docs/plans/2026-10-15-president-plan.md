@@ -10,7 +10,7 @@ Checklist followed: `docs/architecture/add-a-game.md`; names: `docs/architecture
 round 1 and the forbidden finish on a 2 are fixed rules. The keys `equalPlay`, `firstLead` and `forbiddenFinish`
 that the P1, P3, V1 and V2 sections below describe no longer exist (the strict parse refuses them like any unknown
 key; the enums `EqualPlay`, `FirstLead` and `ForbiddenFinish` are gone); where a section below names one of them,
-read the fixed behaviour. A forbidden finisher never closes the trick, a lone 2 or a quad of 2s that empties the
+read the fixed behaviour. [Superseded 2026-10-18: a forbidden finisher's 2s still close the trick, see spec decision 26] A forbidden finisher never closes the trick, a lone 2 or a quad of 2s that empties the
 hand included. Delivered by `feat/president-fixed-rules`.
 
 **Goal:** a fifth game, President (Le Président / Trou du cul), playable with the owner's rules and every
@@ -388,3 +388,4 @@ on the e2e stack, one at a time.
 - Spectators, chat, turn timers, persistence.
 
 > Amended 2026-10-18 (owner feedback, PR "a 2 cuts only with the same number of cards"): the lone-2-always-cuts wording above is replaced by the same-count cut and the option `reducedCut`; see spec V4, V4b and decision 27.
+> Amended again 2026-10-18 (owner answers on #263): a play of 2s that empties the hand still closes the trick (CUT or QUAD) and stays a forbidden finish; a pair of 2s is never played on a pair of 2s; see spec decisions 26 and 27.

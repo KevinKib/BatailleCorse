@@ -84,9 +84,7 @@ class LegalPlaysTest {
             "7C 7D 7H    | BEAT          | 2D 2H 2S 9C 9D | 2D 2H 2S",
             "7C 7D       | BEAT          | 2D 2H 9C 9D    | 9C 9D, 2D 2H",
             "7C          | BEAT          | 2D 2H 9C 9D    | 9C, 2D",
-            // the same count holds against a play of 2s
-            "2C 2S       | BEAT          | 2D 2H 9C 9D    | 2D 2H",
-            "2C          | BEAT          | 2D 2H 9C 9D    | 2D",
+            
             // the binding asks for the same rank and count, and a 2 is not that rank
             "7C          | MATCH_OR_PASS | 2D 7D          | 7D",
             "7C 7D       | MATCH_OR_PASS | 2D 2H 7H 7S    | 7H 7S",

@@ -273,7 +273,7 @@ export const messagesEn: Messages = {
       FIRST_OUT: '{player} went out and the trick is closed.',
       CUT: '{player} closed the trick with a 2.',
       QUAD: '{player} closed the trick with four of a kind.',
-      forbidden: '{player} went out on a 2 and will finish last.',
+      forbidden: '{player} closed the trick with a 2 and went out: they will finish last.',
     },
     actions: { play: 'Play', complete: 'Complete the four', pass: 'Pass', clear: 'Clear' },
     hint: {

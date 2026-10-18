@@ -35,16 +35,13 @@ class PlayEffectsTest {
             // one 2, on anything, even as a lead
             "9C          | 2D          | CUT",
             "-           | 2D          | CUT",
-            "2C          | 2D          | CUT",
             // n twos on n cards cut; a lone 2 does not cut a group
             "9C 9D       | 2D 2H       | CUT",
             "9C 9D 9H    | 2D 2H 2S    | CUT",
-            "2C 2D       | 2H 2S       | CUT",
             "9C 9D       | 2D          | NONE",
             "9C 9D 9H    | 2D          | NONE",
             "9C 9D 9H 9S | 2D          | NONE",
             "9C 9D 9H    | 2D 2H       | NONE",
-            "2C 2D       | 2H          | NONE",
             // 2s led close the trick at once; anything else goes on
             "-           | 2D 2H       | CUT",
             "-           | 2D 2H 2S    | CUT",

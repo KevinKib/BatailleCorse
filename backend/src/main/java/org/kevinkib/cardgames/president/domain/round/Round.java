@@ -133,13 +133,9 @@ public final class Round {
                 endRound(events);
                 return events;
             }
-            if (forbiddenFinish) {
-                // a forbidden finisher never closes the trick, whatever the play (a lone 2, a pair, a quad of 2s):
-                // it stays open on their play and ends by the passes or by the next play that closes it
-                afterAction(events);
-                return events;
-            }
-            if (finishing.size() == 1) {
+            // a forbidden finisher takes no place, so never the 1st one: their 2s close the trick as any 2s do
+            // (CUT, or QUAD), and the next seat that still holds cards leads
+            if (!forbiddenFinish && finishing.size() == 1) {
                 // the owner's rule: the player who takes 1st place closes the trick, the next seat with cards leads
                 completeTrick(events, TrickEndReason.FIRST_OUT);
                 return events;

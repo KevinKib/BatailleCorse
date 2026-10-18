@@ -51,6 +51,10 @@ public final class BeatRule {
 
     public static boolean answers(Play candidate, Play top, RankOrder order, Constraint constraint,
                                   boolean reducedCut) {
+        if (constraint != Constraint.FREE && top.rank() == order.topRank()) {
+            // 2s always close the trick, so no play of 2s is ever left on top; nothing answers one
+            return false;
+        }
         return switch (constraint) {
             case FREE -> true;
             case BEAT -> beats(candidate, top, order) || isEqual(candidate, top)
