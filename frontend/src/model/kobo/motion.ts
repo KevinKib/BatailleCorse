@@ -1,6 +1,7 @@
 import type Card from '../Card';
 import type { KoboLogEntry } from './KoboEvents';
 import { MOTION_MAX_MS, TEMPO, type LegTempo } from './tempo';
+import { eventSpanMs, type TableMovement } from '../table/motion';
 
 /**
  * Where a card flies from or to, as the table names it (the component turns it into a rectangle). Purely visual:
@@ -19,38 +20,14 @@ export type MotionAnchor =
   /** Every card of the table (the reveal at the end of a round). */
   | { kind: 'table' };
 
-export interface Movement {
-  /** `travel`: one way. `glance`: out and back (a peek). `reveal`: every card turns over in place. */
-  kind: 'travel' | 'glance' | 'reveal';
-  from: MotionAnchor;
-  to: MotionAnchor;
-  /** The face shown in flight; null is a card back (a face-down card never appears in an event). */
-  card: Card | null;
-  /** Starts face down and turns face up on the way (the card I draw, a card that leaves a face-down slot for the discard). */
-  flip: boolean;
-  /** Travels face up and turns face down once landed (the card I just saw, going into one of my slots). */
-  turnDown: boolean;
-  /**
-   * What the destination keeps showing until the copy lands, so no card seems to vanish or appear from nowhere:
-   * undefined nothing, null a card back, a card its face (the top of the discard that this one is about to cover).
-   */
-  restsOn?: Card | null;
-  /** The source slot keeps showing a card back until the copy leaves it. */
-  leavesBack?: boolean;
-  actor: number;
-  /** An opponent's move gets a faint arrow as well: the one place where reading the table is hard. */
-  byOpponent: boolean;
-  /** The hold on the source before the card leaves (plus the wait behind a previous move of the same event). */
-  delayMs: number;
-  /** The flight itself. */
-  durationMs: number;
-  /** The hold on the destination once landed. */
-  holdAfterMs: number;
-  /** The places to ring while this move plays (slots only: the piles speak for themselves). */
-  marks: MotionAnchor[];
-}
+/**
+ * A Kobo movement: the shared table movement (`model/table/motion.ts`) between Kobo's places. Kobo uses `travel`
+ * (the flip of the card I draw, the turn face down of the card I saw), `glance` (a peek) and `reveal` (the end of a
+ * round); its rings are on slots only (the piles speak for themselves).
+ */
+export type Movement = TableMovement<MotionAnchor>;
 
-export { MOTION_MAX_MS };
+export { MOTION_MAX_MS, eventSpanMs };
 
 /** What the table knew before the event, to draw it without teleporting a card. */
 export interface MotionContext {
@@ -63,11 +40,6 @@ export interface MotionContext {
 const legOf = (byOpponent: boolean): LegTempo => (byOpponent ? TEMPO.opponent : TEMPO.own);
 const markable = (...anchors: MotionAnchor[]): MotionAnchor[] =>
   anchors.filter(a => a.kind === 'slot' || a.kind === 'newSlot');
-
-/** When the last flight of an event is over (the holds after landing excluded): the next event may start then. */
-export function eventSpanMs(movements: Movement[]): number {
-  return movements.reduce((span, m) => Math.max(span, m.delayMs + m.durationMs), 0);
-}
 
 /**
  * The movements an event stands for, from its public data only. A swap is two crossing moves; a match sends the

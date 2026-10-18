@@ -1,0 +1,25 @@
+import type { LegTempo } from '../kobo/tempo';
+
+/**
+ * The tempo of President's animations (option B of the animations canvas, spec §11 decision 7), in one place. Shorter
+ * than Kobo's: a trick often holds 5 to 10 moves and the bots play every 0.7 to 1.3 s. At the Normal speed; Fast
+ * halves every duration. Purely visual: no rule of the game depends on it.
+ */
+export const PRESIDENT_TEMPO = {
+  /** Another seat's play. */
+  opponent: { holdBeforeMs: 180, flightMs: 700, holdAfterMs: 250 } satisfies LegTempo,
+  /** My own play. */
+  own: { holdBeforeMs: 100, flightMs: 480, holdAfterMs: 250 } satisfies LegTempo,
+  /** The cards of one play leave this far apart, so a pair reads as two cards. */
+  cardStaggerMs: 60,
+  /** How long the rings stay on the places a move touched. */
+  markMs: 1600,
+  /** The same rings when nothing moves (reduced motion, Instant): still outlines. */
+  markReducedMs: 1500,
+  /** How long a seat bubble ("Pass", "Out on a 2", "Four completed") stays up. */
+  bubbleMs: 1400,
+  /** Bubbles that come in a burst pop this far apart (they are not queued with the flights). */
+  bubbleGapMs: 200,
+  /** The burst bounds, as Kobo's. */
+  queue: { maxQueued: 4, maxLagMs: 3500 },
+} as const;
