@@ -104,6 +104,22 @@ describe('PresidentTrick', () => {
       expect(wrapper.get('[data-test="trick-closed-reason"]').text()).toBe('Trick closed');
     });
 
+    it('givenTheClosedCardsHaveBeenSweptAway_thenThePileIsEmptyButTheBadgeAndTheCountStay', () => {
+      const wrapper = mountTrick(buildPresidentTrick(), { pile: { play: { seat: 2, cards: cut.cards }, closure: cut, count: 3 }, swept: true });
+      const cards = wrapper.get('[data-test="trick-cards"]');
+      expect(cards.classes()).toContain('trick-cards--swept');
+      expect(cards.attributes('aria-hidden')).toBe('true');
+      expect(wrapper.get('[data-test="trick-closed-reason"]').text()).toBe('Closed by a 2');
+      expect(wrapper.get('[data-test="trick-closed-leader"]').text()).toBe('Seat 2 leads');
+      expect(wrapper.get('[data-test="trick-count"]').text()).toBe('3 cards in the trick');
+    });
+
+    it('givenAnOpenTrick_thenSweptHidesNothing', () => {
+      const trick = buildPresidentTrick({ plays: [{ seat: 1, cards: [nine('CLUB')] }] });
+      const wrapper = mountTrick(trick, { swept: true });
+      expect(wrapper.get('[data-test="trick-cards"]').classes()).not.toContain('trick-cards--swept');
+    });
+
     it('givenStill_thenTheClosingFlashDoesNotPlay', () => {
       const wrapper = mountTrick(buildPresidentTrick(), { pile: { play: { seat: 2, cards: cut.cards }, closure: cut, count: 3 }, still: true });
       expect(wrapper.get('.trick-plate').classes()).toContain('trick-plate--still');

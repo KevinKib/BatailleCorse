@@ -22,6 +22,13 @@ export function pileView(game: PresidentState, latest: PresidentLogEntry | null)
   }
   const closure = latest?.closure ?? null;
   if (!closure || game.phase !== 'PLAYING' || latest!.round !== game.round) return { play: null, closure: null, count: 0 };
+  return closedPile(latest!);
+}
+
+/** The pile as the move that closed a trick left it (its closing play, dimmed, with the closure); null if it closed none. Pure. */
+export function closedPile(entry: PresidentLogEntry): PileView | null {
+  const closure = entry.closure;
+  if (!closure) return null;
   return {
     play: closure.cards.length ? { seat: closure.closer, cards: closure.cards } : null,
     closure,

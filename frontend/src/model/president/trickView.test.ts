@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { pileView } from './trickView';
+import { closedPile, pileView } from './trickView';
 import type { PresidentLogEntry } from './eventLog';
 import { buildPresidentCard as card, buildPresidentState, buildPresidentTrick } from '../fixtures/president';
 
@@ -8,6 +8,22 @@ const closing = (over: Partial<PresidentLogEntry> = {}): PresidentLogEntry => ({
   outForbidden: false, outPlace: null,
   closure: { winner: 1, reason: 'CUT', closer: 1, cards: [card('2', 'SPADE')], size: 3, trickCards: [card('2', 'SPADE')] },
   ...over,
+});
+
+describe('closedPile', () => {
+  it('givenAnEntryThatClosedATrick_thenThePileAsItShowedWhenItClosed', () => {
+    const entry = closing();
+    expect(closedPile(entry)).toEqual({ play: { seat: 1, cards: [card('2', 'SPADE')] }, closure: entry.closure, count: 3 });
+  });
+
+  it('givenAnEntryThatClosedNothing_thenNull', () => {
+    expect(closedPile(closing({ closure: null }))).toBeNull();
+  });
+
+  it('isTheViewPileViewGivesForTheSameEntryOnAnEmptyTrick', () => {
+    const entry = closing();
+    expect(closedPile(entry)).toEqual(pileView(buildPresidentState(), entry));
+  });
 });
 
 describe('pileView', () => {

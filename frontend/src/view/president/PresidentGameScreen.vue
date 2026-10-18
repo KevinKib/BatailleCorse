@@ -45,8 +45,9 @@ import { useInFlightCounts } from '../../composables/useInFlightCounts';
 import { createTempoQueue } from '../../model/table/queue';
 import { eventSpanMs } from '../../model/table/motion';
 import {
-  planBubbles, planMovements, speedFactor, type PresidentAnchor, type PresidentMovement,
+  planBubbles, planMovements, planSweep, speedFactor, sweepStartMs, type PresidentAnchor, type PresidentMovement,
 } from '../../model/president/motion';
+import { closedPile, type PileView } from '../../model/president/trickView';
 import { planExchangeFlights } from '../../model/president/exchangeMotion';
 import { exchangeRecap } from '../../model/president/exchangeRecap';
 import { PRESIDENT_TEMPO } from '../../model/president/tempo';
@@ -169,7 +170,7 @@ const inFlight = useInFlightCounts({ maxLagMs: PRESIDENT_TEMPO.countLagMaxMs });
 // The cards of the exchange still flying into my hand: their place in the hand waits for them.
 const landing = ref<string[]>([]);
 const landingTimers = new Set<ReturnType<typeof setTimeout>>();
-onBeforeUnmount(() => { bubbles.cancel(); inFlight.cancel(); landingTimers.forEach(clearTimeout); });
+onBeforeUnmount(() => { bubbles.cancel(); inFlight.cancel(); landingTimers.forEach(clearTimeout); endHold(); });
 const tempoQueue = createTempoQueue(() => Date.now(), PRESIDENT_TEMPO.queue);
 const CARD_RATIO = 243.1375 / 167.575;
 
@@ -201,6 +202,15 @@ function resolveAnchor(anchor: PresidentAnchor): MotionTarget | null {
       const rect = visibleRect(find('[data-test="trick-cards"]'));
       return rect ? { rect, cards: [] } : null;
     }
+    case 'pileSlot': {
+      // The plays under the top one are not drawn: they leave from the middle of the pile, at the size of a card.
+      const box = visibleRect(find('[data-test="trick-cards"]'));
+      const card = visibleRect(find('[data-test="trick-cards"] .playing_card'));
+      if (!box || !card) return null;
+      return { rect: { left: box.left + (box.width - card.width) / 2, top: card.top, width: card.width, height: card.height }, cards: [] };
+    }
+    case 'rect':
+      return { rect: { left: anchor.left, top: anchor.top, width: anchor.width, height: anchor.height }, cards: [] };
     case 'pileCard': {
       const card = find('[data-test="trick-cards"]')?.children[anchor.index]?.querySelector<HTMLElement>('.playing_card');
       const rect = visibleRect(card);
@@ -209,20 +219,71 @@ function resolveAnchor(anchor: PresidentAnchor): MotionTarget | null {
   }
 }
 
+// A closed trick stays on the pile as a picture (its closing play, dimmed, with the badge) until its cards have swept
+// away toward the winner, even when the next play is already in the state: that play flies in once the sweep is over.
+// Only a picture: the state, the buttons and the clicks never wait for it, and it ends by itself (timers, unmount).
+const hold = ref<{ pile: PileView; id: number } | null>(null);
+// The entry whose closed trick has been swept: its pile stays empty (badge only) until the next play, held or not.
+const sweptId = ref<number | null>(null);
+let holdDone: Promise<void> | null = null;
+let releaseHold: (() => void) | null = null;
+const holdTimers = new Set<ReturnType<typeof setTimeout>>();
+const shownPile = computed<PileView>(() => hold.value?.pile ?? store.pile);
+const pileSwept = computed(() => sweptId.value !== null && sweptId.value === (hold.value?.id ?? store.events[0]?.id));
+
+function beginHold(pile: PileView, id: number) {
+  hold.value = { pile, id };
+  holdDone = new Promise<void>((resolve) => {
+    releaseHold = () => { holdDone = null; releaseHold = null; resolve(); };
+  });
+}
+function endHold() {
+  holdTimers.forEach(clearTimeout);
+  holdTimers.clear();
+  hold.value = null;
+  releaseHold?.();
+}
+/** The cards leave the pile at `sweepAtMs` (it shows no card from then on); the held picture ends at `endMs`. */
+function scheduleHold(pile: PileView, id: number, sweepAtMs: number, endMs: number) {
+  const later = (ms: number, action: () => void) => {
+    const timer = setTimeout(() => { holdTimers.delete(timer); if (hold.value?.id === id) action(); }, ms);
+    holdTimers.add(timer);
+  };
+  later(sweepAtMs, () => { sweptId.value = id; });
+  later(endMs, endHold);
+}
+
 async function playEntry(entry: PresidentLogEntry) {
   const factor = speedFactor(speed.value);
   const isStill = still.value;
   for (const bubble of planBubbles(entry)) bubbles.show(bubble, PRESIDENT_TEMPO.bubbleMs * (factor || 1));
+  // The pile is held by the sweep of the previous trick: this move waits for it to clear.
+  while (holdDone) await holdDone;
   const moves = planMovements(entry, store.mySeat, factor || 1);
   if (moves.length === 0) return;
+  // A trick this move closed: keep its pile on screen from now on, before the DOM moves on to the next state.
+  const closed = !isStill && motionLayer.value ? closedPile(entry) : null;
+  if (closed) beginHold(closed, entry.id);
   // The pile shows the new play once the DOM has the new state.
   await nextTick();
-  const admission = isStill ? { startInMs: 0, motion: false } : tempoQueue.admit(eventSpanMs(moves));
+  const sweep = closed ? planSweep(entry, store.mySeat, factor || 1) : [];
+  const sweepAt = sweepStartMs(entry, store.mySeat, factor || 1);
+  const spanMs = sweep.length > 0 ? sweepAt + eventSpanMs(sweep) + PRESIDENT_TEMPO.sweep.landHoldMs : eventSpanMs(moves);
+  const admission = isStill ? { startInMs: 0, motion: false } : tempoQueue.admit(spanMs);
+  if (closed) {
+    // Behind a full queue there is no sweep: the pile gives way to the state at once.
+    if (admission.motion && sweep.length > 0) scheduleHold(closed, entry.id, admission.startInMs + sweepAt, admission.startInMs + spanMs);
+    else endHold();
+  }
   if (admission.motion && entry.seat !== store.mySeat) {
     const flights = moves.filter(m => m.kind === 'travel');
     inFlight.add(entry.seat, flights.length, admission.startInMs + eventSpanMs(flights));
   }
   motionLayer.value?.play(moves, { marksOnly: !admission.motion, startInMs: admission.startInMs, still: isStill });
+  // The cards of the closed trick leave once the badge has had its moment (their copies wait out of sight until then).
+  if (admission.motion && sweep.length > 0) {
+    motionLayer.value?.play(sweep, { startInMs: admission.startInMs + sweepAt, still: false });
+  }
 }
 
 // The log is newest first: what is new is what comes before the head I already knew.
@@ -417,7 +478,7 @@ const rematchButton = computed(() =>
           </div>
         </div>
         <div class="table-center" role="region" :aria-label="ui.table.pile">
-          <PresidentTrick :trick="store.game.trick" :pile="store.pile" :still="still" :my-seat="store.mySeat"
+          <PresidentTrick :trick="store.game.trick" :pile="shownPile" :swept="pileSwept" :still="still" :my-seat="store.mySeat"
                           :name-of="displayName" :chips="chips" :notes="trickNotes" />
         </div>
       </div>

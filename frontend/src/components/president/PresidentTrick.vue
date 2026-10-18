@@ -22,6 +22,8 @@ const props = defineProps<{
   notes?: string[];
   /** What the pile shows (the store's `pile`); without it, the top play of `trick`. */
   pile?: PileView;
+  /** The cards of a closed trick have been swept toward the winner: the pile keeps its place but shows no card. */
+  swept?: boolean;
   /** No closing flash (reduced motion, Instant). */
   still?: boolean;
 }>();
@@ -65,7 +67,7 @@ const chipTexts = computed(() => props.chips.flatMap((chip) => {
   <div class="trick" data-test="trick">
     <div :key="plateKey" class="trick-plate" :class="{ 'trick-plate--closed': closure, 'trick-plate--still': still }">
       <template v-if="top">
-        <div class="trick-cards" data-test="trick-cards">
+        <div class="trick-cards" :class="{ 'trick-cards--swept': swept && closure }" data-test="trick-cards" :aria-hidden="swept && closure ? 'true' : undefined">
           <span v-for="card in top.cards" :key="card.name" class="trick-card"
                 :data-test="closure ? 'closed-trick-card' : 'trick-card'" role="img"
                 :aria-label="cardLabel(card, ui, false)">
@@ -102,6 +104,8 @@ const chipTexts = computed(() => props.chips.flatMap((chip) => {
 .trick { display: flex; flex-direction: column; align-items: center; gap: var(--space-1); min-width: 0; }
 .trick-plate { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; min-height: 40px; }
 .trick-cards { position: relative; display: flex; justify-content: center; }
+/* Swept away: the place stays (the badge does not jump), the cards do not show. */
+.trick-cards--swept { visibility: hidden; }
 .trick-card { display: block; width: var(--president-pile-card-w, 52px); }
 .trick-card + .trick-card { margin-left: calc(var(--president-pile-card-w, 52px) * -0.45); }
 .trick-card :deep(.playing_card) { display: block; width: 100%; height: auto; aspect-ratio: 167.575 / 243.1375; }

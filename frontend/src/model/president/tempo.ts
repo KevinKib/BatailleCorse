@@ -28,10 +28,12 @@ export const PRESIDENT_TEMPO = {
     badgeHoldMs: 800,
     /** One card's flight to the winner's seat. */
     flightMs: 620,
+    /** A copy stays this long on the seat it reached, so that its landing is seen. */
+    landHoldMs: 40,
     /** The cards leave this far apart. */
     staggerMs: 90,
     /** At most this many cards sweep (the latest ones): the layer stays light on a very long trick. */
-    maxCards: 10,
+    maxCards: 8,
   },
   /** The burst bounds, as Kobo's. */
   queue: { maxQueued: 4, maxLagMs: 3500 },

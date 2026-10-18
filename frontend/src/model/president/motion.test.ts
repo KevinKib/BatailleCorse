@@ -117,7 +117,7 @@ describe('planSweep', () => {
   it('givenTheSweepTempo_thenCardsLeaveNinetyMillisecondsApartAndFlyFor620', () => {
     const moves = planSweep(closing(), ME).filter(m => m.kind === 'travel');
     expect(moves.map(m => m.delayMs)).toEqual([0, 90, 180, 270]);
-    expect(moves.every(m => m.durationMs === 620 && m.holdAfterMs === 0 && !m.byOpponent)).toBe(true);
+    expect(moves.every(m => m.durationMs === 620 && m.holdAfterMs === PRESIDENT_TEMPO.sweep.landHoldMs && !m.byOpponent)).toBe(true);
   });
 
   it('givenTheSweep_thenAnEndRingOnTheWinnerWhenTheLastCardHasLanded', () => {

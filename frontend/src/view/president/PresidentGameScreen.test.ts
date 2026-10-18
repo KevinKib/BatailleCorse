@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { mount, flushPromises } from '@vue/test-utils';
 import { setActivePinia, createPinia } from 'pinia';
 import { createMemoryHistory, RouterView } from 'vue-router';
@@ -505,6 +505,58 @@ describe('PresidentGameScreen', () => {
       expect(wrapper.findAll('[data-test="closed-trick-card"]')).toHaveLength(1);
       expect(wrapper.get('[data-test="trick-count"]').text()).toBe('2 cards in the trick');
       expect(wrapper.get('[data-test="trick-note"]').text()).toBe('P1 closed the trick with a 2.');
+    });
+
+    describe('the sweep of a closed trick (chunk 3)', () => {
+      const king = { rank: 'KING', suit: 'HEART', name: 'HEART_KING' };
+      const cutAfterAKing = async () => {
+        const room3 = await mountRoom(room(playing({
+          currentSeat: 1, trick: buildPresidentTrick({ leader: 0, plays: [{ seat: 0, cards: [king] }] }),
+        })));
+        room3.store.applyEvent({ type: 'state-update', state: playing({ version: 2, currentSeat: 1 }) });
+        room3.store.applyEvent(event(1, 'PLAY', { trickWinner: 1, trickEndReason: 'CUT' }));
+        await flushPromises();
+        return room3;
+      };
+      const advance = async (ms: number) => { vi.advanceTimersByTime(ms); await flushPromises(); };
+
+      beforeEach(() => { vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] }); });
+      afterEach(() => { vi.useRealTimers(); });
+
+      it('keepsTheClosingPlayOnThePileForTheBadgeHold_thenSweepsItAwayLeavingTheBadgeAndTheCount', async () => {
+        const { wrapper } = await cutAfterAKing();
+        expect(wrapper.get('[data-test="trick-cards"]').classes()).not.toContain('trick-cards--swept');
+        expect(wrapper.findAll('[data-test="closed-trick-card"]')).toHaveLength(1);
+        await advance(4000);
+        expect(wrapper.get('[data-test="trick-cards"]').classes()).toContain('trick-cards--swept');
+        expect(wrapper.get('[data-test="trick-closed-reason"]').text()).toBe('Closed by a 2');
+        expect(wrapper.get('[data-test="trick-count"]').text()).toBe('2 cards in the trick');
+      });
+
+      it('givenTheWinnerLeadsAtOnce_thenTheClosedPileStaysUntilTheSweepIsOver_andThenTheNewPlayShows', async () => {
+        const { wrapper, store } = await cutAfterAKing();
+        const lead = { rank: '3', suit: 'CLUB', name: 'CLUB_3' };
+        store.applyEvent({ type: 'state-update', state: playing({
+          version: 3, currentSeat: 2, trick: buildPresidentTrick({ leader: 1, plays: [{ seat: 1, cards: [lead] }] }),
+        }) });
+        store.applyEvent(event(1, 'PLAY', { cards: [lead] }));
+        await flushPromises();
+        // The state already has the new play; the picture still shows the trick that closed.
+        expect(wrapper.find('[data-test="trick-closed"]').exists()).toBe(true);
+        expect(wrapper.find('[data-test="trick-card"]').exists()).toBe(false);
+        await advance(6000);
+        expect(wrapper.find('[data-test="trick-closed"]').exists()).toBe(false);
+        expect(wrapper.findAll('[data-test="trick-card"]')).toHaveLength(1);
+        expect(wrapper.get('[data-test="trick-cards"]').classes()).not.toContain('trick-cards--swept');
+      });
+
+      it('givenTheInstantSpeed_thenNoSweepAndTheClosingPlayStaysUntilTheNextPlay', async () => {
+        localStorage.setItem('animationSpeed', 'instant');
+        const { wrapper } = await cutAfterAKing();
+        await advance(6000);
+        expect(wrapper.get('[data-test="trick-cards"]').classes()).not.toContain('trick-cards--swept');
+        expect(wrapper.findAll('[data-test="closed-trick-card"]')).toHaveLength(1);
+      });
     });
 
     it('hasTheSharedSpeedButton_NormalByDefault_cyclingToFast', async () => {

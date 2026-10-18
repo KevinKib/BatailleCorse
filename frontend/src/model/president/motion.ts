@@ -81,7 +81,7 @@ export function planSweep(entry: PresidentLogEntry, mySeat: number, factor = 1):
   const moves: PresidentMovement[] = closure.trickCards.slice(0, sweep.maxCards).map((card, index) => ({
     kind: 'travel', from: index < closure.cards.length ? { kind: 'pileCard', index } : { kind: 'pileSlot' }, to: winner,
     card, flip: false, turnDown: false, actor: closure.winner, byOpponent: false,
-    delayMs: index * sweep.staggerMs, durationMs: sweep.flightMs, holdAfterMs: 0, marks: [],
+    delayMs: index * sweep.staggerMs, durationMs: sweep.flightMs, holdAfterMs: sweep.landHoldMs, marks: [],
   }));
   if (moves.length > 0) {
     moves.push({
