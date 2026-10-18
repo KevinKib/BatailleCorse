@@ -52,6 +52,10 @@ public class ThreeMenMorris implements Game {
         if (!SEAT_0.equals(whiteSeat) && !SEAT_1.equals(whiteSeat)) {
             throw new IllegalArgumentException("No such seat: " + whiteSeat);
         }
+        if (rules.lineRule() != MorrisRules.LineRule.WIN) {
+            // Mills, removals, flying and the quiet-move limit are data only until the engine reads them.
+            throw new UnsupportedOperationException("Mill rules are not playable yet");
+        }
         this.id = id;
         this.rules = rules;
         this.geometry = rules.geometry();

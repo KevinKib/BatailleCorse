@@ -42,6 +42,10 @@ public final class MorrisSolver {
 
     /** Solves the variant from scratch; prefer {@link #forRules}, which caches. */
     public MorrisSolver(MorrisRules rules) {
+        if (!rules.solvable()) {
+            throw new IllegalArgumentException("These rules are too large for the in-app solver "
+                    + "(mill rules have tens of millions of positions)");
+        }
         List<MorrisPosition> positions = new ArrayList<>();
         Map<MorrisPosition, Integer> indexOf = new HashMap<>();
         MorrisPosition opening = normalised(new MorrisPosition(rules,

@@ -11,6 +11,10 @@ public sealed interface MorrisDecision {
     record Step(int from, int to) implements MorrisDecision {
     }
 
+    /** Takes an opponent piece after a mill (pending removal; Six Men's Morris). */
+    record Remove(int point) implements MorrisDecision {
+    }
+
     record AcceptDraw() implements MorrisDecision {
     }
 

@@ -15,6 +15,7 @@ import java.util.List;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
 /**
@@ -53,6 +54,12 @@ class MorrisSolverTest {
                     () -> new MorrisSolver(variant.rules()));
             assertThat(variant + " positions", solver.size(), greaterThan(1_000));
         }
+    }
+
+    @Test
+    void rulesThatAreNotSolvableAreRefused() {
+        assertThrows(IllegalArgumentException.class, () -> MorrisSolver.forRules(MorrisRules.SIX_MEN));
+        assertThrows(IllegalArgumentException.class, () -> new MorrisSolver(MorrisRules.SIX_MEN));
     }
 
     @Test

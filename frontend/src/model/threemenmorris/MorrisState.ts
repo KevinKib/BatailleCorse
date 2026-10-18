@@ -3,9 +3,17 @@ import type { LobbyView } from '../lobby/LobbyView';
 export type MorrisPhase = 'PLACEMENT' | 'MOVEMENT' | 'FINISHED';
 
 /** What the server lets the viewer do now: only the current seat has one, and none once the game is over. */
-export type MorrisAction = 'PLACE' | 'MOVE';
+export type MorrisAction = 'PLACE' | 'MOVE' | 'REMOVE';
 
-export type MorrisReason = 'LINE' | 'BLOCKED' | 'FORFEIT' | 'DRAW_AGREED' | 'DRAW_REPETITION';
+/** `REDUCED` (a player is down to two pieces) and `DRAW_MOVE_LIMIT` (quiet plies) only occur on Six Men's Morris. */
+export type MorrisReason =
+  | 'LINE'
+  | 'BLOCKED'
+  | 'FORFEIT'
+  | 'DRAW_AGREED'
+  | 'DRAW_REPETITION'
+  | 'REDUCED'
+  | 'DRAW_MOVE_LIMIT';
 
 /** The variants a lobby offers; the server leaves `variant` out of the state for the default, Tapatan. */
 export type MorrisVariantKey = 'tapatan' | 'achi';
@@ -20,6 +28,14 @@ export interface MorrisPlayer {
   piecesToPlace: number;
   /** Left out by the server while seat 0 plays White (the default). */
   colour?: MorrisColour;
+  /** Pieces removed so far; written only on mill variants (Six Men's Morris). */
+  lost?: number;
+}
+
+/** A pending removal: `seat` closed the mill `mill` (three points) and must now take an opponent piece. */
+export interface MorrisRemoval {
+  seat: number;
+  mill: number[];
 }
 
 export interface MorrisMove {
@@ -65,6 +81,15 @@ export interface MorrisState {
    * since my last move.
    */
   drawActions?: string[];
+  // Mill variants only (Six Men's Morris); a 3x3 state carries none of these four fields.
+  /** The pending removal, while a player who closed a mill has yet to take a piece. */
+  removal?: MorrisRemoval;
+  /** The opponent pieces the viewer may take now; only written during the viewer's own pending removal. */
+  legalRemovals?: number[];
+  /** Movement plies without a removal, only written from 40 (for the warning). */
+  quietPlies?: number;
+  /** The quiet-ply limit that draws the game (50), so the client does not hard-code it. */
+  quietPlyLimit?: number;
 }
 
 export type MorrisView = LobbyView | MorrisState;
@@ -76,6 +101,15 @@ export interface MorrisEventData {
   point: number | null;
   from: number | null;
   to: number | null;
+  /** The three points of the mill this placement or move closed; absent when it closed none. */
+  mill?: number[];
+}
+
+/** Public description of a removal (`REMOVE` event, or the `GAME_OVER` it caused): the point taken. */
+export interface MorrisRemovalEventData {
+  seat: number;
+  action: 'REMOVE';
+  point: number;
 }
 
 /** Public description of a draw command; an accepted offer comes as the `GAME_OVER` with `ACCEPT_DRAW`. */
