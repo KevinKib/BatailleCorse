@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { computed, nextTick, ref, useTemplateRef, watch } from 'vue';
+import { computed, nextTick, ref, useTemplateRef } from 'vue';
 import { useI18n } from '../../composables/useI18n';
 import type { MangolaCell } from '../../model/mangola/board';
 import { NO_BOARD_MARKS, type BoardMarks } from '../../model/mangola/marks';
 import type { HandPosition } from '../../model/mangola/replay';
 import { SPEED_PROFILES } from '../../model/mangola/trace';
 import type { AnimationSpeed } from '../../composables/useAnimationSpeed';
-import { format } from '../../locales/format';
 import MangolaPit from './MangolaPit.vue';
+import AnimationSpeedButton from '../table/AnimationSpeedButton.vue';
 
 // The Mangola board, presentational only: the 4 x 8 grid exactly as the viewer sees it (`rows` comes from the
 // store, own half at the bottom), the chevrons, the divider between the inner rows and the marks of the
@@ -45,11 +45,7 @@ const emit = defineEmits<{ sow: [pit: number]; skip: []; 'cycle-speed': [] }>();
 
 const ui = useI18n().mangolaUi;
 
-const speedName = computed(() => ui.board.speeds[props.speed]);
-const speedLabel = computed(() => format(ui.board.speed, { speed: speedName.value }));
-// A change of speed is read out (the button's own name changes silently): not at first, only after a tap.
-const speedAnnouncement = ref('');
-watch(() => props.speed, () => { speedAnnouncement.value = speedLabel.value; });
+// The speed button is the shared one (`AnimationSpeedButton`); it reads out a change of speed itself.
 
 const inert = computed(() => props.disabled || !props.interactive || props.animating);
 const canSow = (cell: MangolaCell): boolean => !inert.value && cell.legal;
@@ -164,23 +160,12 @@ const handStyle = computed(() => {
       </span>
     </div>
     <div class="mg-board__footer">
-      <button
-        type="button"
-        class="mg-board__speed"
-        data-test="speed-button"
-        :aria-label="speedLabel"
-        @click="emit('cycle-speed')"
-      >
-        <span class="mg-board__speed-chevrons" aria-hidden="true" :data-speed="speed">
-          <i></i><i></i><i></i>
-        </span>
-        <span aria-hidden="true">{{ speedName }}</span>
-      </button>
+      <AnimationSpeedButton class="mg-board__speed" :speed="speed" :names="ui.board.speeds" :label="ui.board.speed"
+                            @cycle="emit('cycle-speed')" />
       <p class="mg-board__legend mg-board__legend--bottom">{{ ui.board.yourSide }}</p>
       <button v-if="animating" type="button" class="mg-board__skip" data-test="skip-sowing" @click="emit('skip')">{{ ui.board.skip }}</button>
     </div>
     <div class="mg-live" role="status" data-test="board-live">{{ announcement }}</div>
-    <div class="mg-live" role="status" data-test="speed-live">{{ speedAnnouncement }}</div>
   </div>
 </template>
 
@@ -204,42 +189,15 @@ const handStyle = computed(() => {
   font-size: 0.8rem;
   cursor: pointer;
 }
-.mg-board__skip:focus-visible,
-.mg-board__speed:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.mg-board__skip:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 
-/* The speed button faces Skip: at the left of the same line, the same 44 px target. */
+/* The speed button (shared) faces Skip: at the left of the same line. */
 .mg-board__speed {
   position: absolute;
   left: 0;
   top: 50%;
   transform: translateY(-50%);
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4em;
-  min-width: 44px;
-  min-height: 44px;
-  padding: 0 var(--space-3, 0.75rem);
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.55);
-  color: inherit;
-  font: inherit;
-  font-size: 0.8rem;
-  cursor: pointer;
 }
-/* Three small chevrons, lit one more at each speed: a glyph that does not need a language. */
-.mg-board__speed-chevrons { display: inline-flex; gap: 2px; }
-.mg-board__speed-chevrons i {
-  width: 0.45em;
-  height: 0.45em;
-  border-top: 2px solid currentColor;
-  border-right: 2px solid currentColor;
-  transform: rotate(45deg) scale(0.9);
-  opacity: 0.25;
-}
-.mg-board__speed-chevrons i:nth-child(1) { opacity: 1; }
-.mg-board__speed-chevrons[data-speed='fast'] i:nth-child(-n + 2),
-.mg-board__speed-chevrons[data-speed='instant'] i { opacity: 1; }
 
 /* The hand covers exactly one cell and slides to the next one: it never takes a tap. */
 .mg-board__hand {

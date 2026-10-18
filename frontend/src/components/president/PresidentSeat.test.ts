@@ -39,6 +39,13 @@ describe('PresidentSeat', () => {
     expect(wrapper.get('[data-test="seat-current"]').text()).toBe('Playing');
   });
 
+  it('givenANarrowPlate_thenThePlayingMarkerIsOnlyForScreenReaders_theLitNameSaysItOnScreen', () => {
+    const wrapper = mountSeat({ current: true, narrow: true, fan: true });
+    expect(wrapper.get('[data-test="seat-current"]').classes()).toContain('sr-only');
+    expect(wrapper.get('[data-test="seat-label"]').classes()).toContain('seat-label--active');
+    expect(mountSeat({ current: true }).get('[data-test="seat-current"]').classes()).not.toContain('sr-only');
+  });
+
   it('givenAPassedSeat_thenItSaysPassed', () => {
     const wrapper = mountSeat({ player: buildPresidentPlayer(1, { passed: true }) });
     expect(wrapper.get('[data-test="seat-passed"]').text()).toBe('Passed');
@@ -64,6 +71,39 @@ describe('PresidentSeat', () => {
   it('givenAReadySeatAtTheRoundEnd_thenItSaysReady', () => {
     const wrapper = mountSeat({ player: buildPresidentPlayer(1, { ready: true }), showReady: true });
     expect(wrapper.get('[data-test="seat-ready"]').text()).toBe('Ready');
+  });
+
+  describe('the pictures of the table', () => {
+    it('givenAnOpponentsPlate_thenTheHandIsAFanOfBacksWithItsCount', () => {
+      const wrapper = mountSeat({ fan: true });
+      expect(wrapper.findAll('[data-test="fan-back"]')).toHaveLength(5);
+      expect(wrapper.get('[data-test="seat-cards"]').text()).toBe('5 cards');
+    });
+
+    it('givenCardsStillInFlight_thenTheFanShowsTheCountItIsGiven', () => {
+      const wrapper = mountSeat({ fan: true, count: 7 });
+      expect(wrapper.findAll('[data-test="fan-back"]')).toHaveLength(7);
+      expect(wrapper.get('[data-test="seat-cards"]').text()).toBe('7 cards');
+    });
+
+    it('givenMyOwnPlate_thenNoFan', () => {
+      expect(mountSeat().find('[data-test="seat-fan"]').exists()).toBe(false);
+    });
+
+    it.each([
+      ['pass', 'Pass'],
+      ['outForbidden', 'Out on a 2'],
+      ['completed', 'Four completed'],
+    ] as const)('givenABubble_%s_thenItPopsOverThePlate', (kind, text) => {
+      const bubble = mountSeat({ bubble: { kind, key: 1 } }).get('[data-test="seat-bubble"]');
+      expect(bubble.text()).toBe(text);
+      expect(bubble.attributes('data-kind')).toBe(kind);
+      expect(bubble.attributes('aria-hidden')).toBe('true');
+    });
+
+    it('givenAPassedSeat_thenThePlateIsDimmed', () => {
+      expect(mountSeat({ player: buildPresidentPlayer(1, { passed: true }) }).classes()).toContain('president-seat--passed');
+    });
   });
 
   it('givenADisconnectedSeat_thenTheBadgeShows', () => {

@@ -111,6 +111,65 @@ describe('President store', () => {
     });
   });
 
+  describe('event log (what the table animates)', () => {
+    const play = (seat: number, cards = [card('9', 'HEART')], over: Record<string, unknown> = {}) => ({
+      seat, action: 'PLAY', cards, count: null, outPlace: null, outForbidden: null, trickWinner: null,
+      trickEndReason: null, barrierOpened: null, ...over,
+    });
+
+    it('givenTheFirstStateOnly_thenTheLogIsEmpty', () => {
+      const store = boot();
+      store.applyEvent({ type: 'state-update', state: game([]) });
+      expect(store.events).toEqual([]);
+    });
+
+    it('givenMovesAtTheTable_thenEachIsLoggedNewestFirst_withTheStateBeforeIt', () => {
+      const store = boot();
+      const lead = { seat: 0, cards: [card('7', 'HEART'), card('7', 'CLUB')] };
+      store.applyEvent({ type: 'state-update', state: game([], { currentSeat: 1, trick: buildPresidentTrick({ leader: 0, plays: [lead] }) }) });
+      // Bob cuts with a pair of 2s: the new state already shows the trick empty.
+      store.applyEvent({ type: 'state-update', state: game([], { version: 2, currentSeat: 1 }) });
+      store.applyEvent({
+        type: 'event', eventType: 'PLAY', message: '',
+        eventData: play(1, [card('2', 'SPADE'), card('2', 'CLUB')], { trickWinner: 1, trickEndReason: 'CUT' }),
+      });
+      store.applyEvent({ type: 'state-update', state: game([], { version: 3, currentSeat: 2 }) });
+      store.applyEvent({ type: 'event', eventType: 'PASS', message: '', eventData: play(2, [], { action: 'PASS', cards: null }) });
+      expect(store.events.map(e => [e.action, e.seat])).toEqual([['PASS', 2], ['PLAY', 1]]);
+      expect(store.events[1].closure).toMatchObject({ winner: 1, reason: 'CUT', size: 4 });
+      expect(store.events[0].id).toBeGreaterThan(store.events[1].id);
+    });
+
+    it('givenAPresenceEventOrARoundStart_thenNothingIsLogged', () => {
+      const store = boot();
+      store.applyEvent({ type: 'state-update', state: game([]) });
+      store.applyEvent({ type: 'event', eventType: 'OPPONENT_DISCONNECTED', eventData: { seat: 2 }, message: '' });
+      store.applyEvent({ type: 'event', eventType: 'ROUND_START', eventData: null, message: '' });
+      expect(store.events).toEqual([]);
+    });
+
+    it('givenTheRoomGoesBackToALobby_thenTheLogIsCleared', () => {
+      const store = boot();
+      store.applyEvent({ type: 'state-update', state: game([]) });
+      store.applyEvent({ type: 'event', eventType: 'PLAY', eventData: play(0), message: '' });
+      expect(store.events).toHaveLength(1);
+      store.applyEvent({ type: 'state-update', state: lobbyView() });
+      expect(store.events).toEqual([]);
+    });
+
+    it('givenAClosedTrick_thenThePileKeepsTheClosingPlayUntilTheNextPlay', () => {
+      const store = boot();
+      store.applyEvent({ type: 'state-update', state: game([]) });
+      store.applyEvent({ type: 'state-update', state: game([], { version: 2, currentSeat: 1 }) });
+      store.applyEvent({ type: 'event', eventType: 'PLAY', message: '', eventData: play(1, [card('2', 'SPADE')], { trickWinner: 1, trickEndReason: 'CUT' }) });
+      expect(store.pile.closure?.reason).toBe('CUT');
+      expect(store.pile.play?.cards.map(c => c.name)).toEqual(['SPADE_2']);
+      store.applyEvent({ type: 'state-update', state: game([], { version: 3, trick: buildPresidentTrick({ leader: 1, plays: [{ seat: 1, cards: [card('5', 'HEART')] }] }) }) });
+      expect(store.pile.closure).toBeNull();
+      expect(store.pile.count).toBe(1);
+    });
+  });
+
   describe('hand and selection', () => {
     function turn(overrides: Partial<PresidentState> = {}) {
       const store = boot();

@@ -17,7 +17,7 @@ describe('PresidentScores', () => {
     const wrapper = mountScores();
     await wrapper.get('[data-test="scores"]').trigger('click');
     expect(wrapper.get('[data-test="scores"]').attributes('aria-expanded')).toBe('true');
-    expect(wrapper.findAll('[data-test="standing-row"]')).toHaveLength(2);
+    expect(wrapper.findAll('[data-test^="final-row-"]')).toHaveLength(2);
     await wrapper.get('[data-test="scores-close"]').trigger('click');
     expect(wrapper.find('[data-test="scores-panel"]').exists()).toBe(false);
   });

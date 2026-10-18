@@ -258,6 +258,17 @@ describe('President messages', () => {
     expect(ui.summary.forbiddenLabel).toBeTruthy();
   });
 
+  it('givenTheTableAnimations_thenTheBadgesBubblesIndicatorAndSpeedAreWritten', () => {
+    const m = messagesEn.presidentUi.motion;
+    for (const reason of ['ALL_PASSED', 'FIRST_OUT', 'CUT', 'QUAD']) expect(m.closed[reason], reason).toBeTruthy();
+    expect(m.closed.CUT).toBe('Closed by a 2');
+    expect(m.leads).toContain('{player}');
+    expect(m.trickCount.other).toContain('{n}');
+    expect(m.bubbles).toEqual({ pass: 'Pass', outForbidden: 'Out on a 2', completed: 'Four completed' });
+    expect(m.speed).toContain('{speed}');
+    expect(m.speeds).toEqual({ normal: 'Normal', fast: 'Fast', instant: 'Instant' });
+  });
+
   it('givenABotSeat_thenItsPresidentLevelsAreNamed', () => {
     const { level } = messagesEn.options.president;
     expect(level.label).toBe('Level');

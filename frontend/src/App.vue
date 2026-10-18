@@ -109,6 +109,15 @@ const onLeave = fadeOut;
   --felt-mid: #0d2e18;
   --felt-edge: #07160d;
 
+  /* The room and the table of the card tables (Kobo, President): a neutral anthracite room (no green) where the
+     felt of the table stands out by its hue alone, and the felt oval itself. One look for every table. */
+  --table-room-bg: radial-gradient(ellipse at 50% 40%, #1d201f 0%, #121414 55%, #0a0b0b 100%);
+  --table-felt-bg:
+    radial-gradient(ellipse at 50% 46%, transparent 18%, rgba(0, 0, 0, 0.55) 100%),
+    radial-gradient(ellipse at 50% 42%, var(--felt-center) 0%, var(--felt-mid) 52%, var(--felt-edge) 100%);
+  --table-felt-border: 1px solid rgba(255, 255, 255, 0.06);
+  --table-felt-shadow: inset 0 2px 30px rgba(0, 0, 0, 0.55), 0 10px 40px rgba(0, 0, 0, 0.45);
+
   /* Fabric grain. An inline fractalNoise SVG (zero asset files) laid over the
      felt gradient at low opacity to kill the "smooth digital" look. */
   --felt-noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");

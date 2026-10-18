@@ -336,7 +336,7 @@ export const messagesEn: Messages = {
       forbidden: 'On a 2',
       forbiddenLabel: 'Went out on a 2: placed last',
     },
-    standings: { title: 'Standings', scores: 'Scores', close: 'Close' },
+    standings: { title: 'Standings', scores: 'Scores', close: 'Close', rank: 'Rank', player: 'Player', points: 'Points' },
     notice: {
       moveImpossible: 'That play was refused. Check your cards.',
       connection: 'Could not reach the server. Try again.',
@@ -353,6 +353,21 @@ export const messagesEn: Messages = {
       rematchFailed: 'Could not start a new game. Try again.',
     },
     live: { yourTurn: 'Your turn' },
+    motion: {
+      trickCount: { one: '{n} card in the trick', other: '{n} cards in the trick' },
+      closed: {
+        CUT: 'Closed by a 2',
+        QUAD: 'Four of a kind',
+        FIRST_OUT: 'Out first',
+        ALL_PASSED: 'Everyone passed',
+      },
+      closedOther: 'Trick closed',
+      leads: '{player} leads',
+      youLead: 'You lead',
+      bubbles: { pass: 'Pass', outForbidden: 'Out on a 2', completed: 'Four completed' },
+      speed: 'Animation speed: {speed}',
+      speeds: { normal: 'Normal', fast: 'Fast', instant: 'Instant' },
+    },
   },
   threeMenMorris: {
     toggleLabel: 'Rules',

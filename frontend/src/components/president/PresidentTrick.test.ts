@@ -54,6 +54,67 @@ describe('PresidentTrick', () => {
     expect(wrapper.get('[data-test="trick-notes"]').attributes('aria-live')).toBe('polite');
   });
 
+  describe('the trick indicator and the closed trick (spec §11 decision 7)', () => {
+    const cut = { winner: 2, reason: 'CUT', closer: 2, cards: [buildPresidentCard('2', 'CLUB')], size: 3 };
+
+    it('givenPlaysOnTheTrick_thenTheIndicatorCountsItsCards', () => {
+      const trick = buildPresidentTrick({ plays: [{ seat: 1, cards: [nine('CLUB')] }, { seat: 2, cards: [nine('HEART'), nine('SPADE')] }] });
+      expect(mountTrick(trick).get('[data-test="trick-count"]').text()).toBe('3 cards in the trick');
+    });
+
+    it('putsTheIndicatorFirstInTheRowOfChips_soThePileTakesOneRowLess', () => {
+      const trick = buildPresidentTrick({ plays: [{ seat: 1, cards: [nine('CLUB')] }] });
+      const row = mountTrick(trick, { chips: [{ key: 'afterPass.reenter' }] }).get('[data-test="trick-chips"]');
+      expect(row.element.firstElementChild?.getAttribute('data-test')).toBe('trick-count');
+      expect(row.findAll('[data-test="rule-chip"]')).toHaveLength(1);
+    });
+
+    it('givenAClosedTrick_thenTheBadgeTakesThePlaceOfWhoPlayed_outsideTheCards', () => {
+      const wrapper = mountTrick(buildPresidentTrick(), { pile: { play: { seat: 2, cards: cut.cards }, closure: cut, count: 3 } });
+      expect(wrapper.find('[data-test="trick-by"]').exists()).toBe(false);
+      expect(wrapper.find('[data-test="trick-cards"] [data-test="trick-closed"]').exists()).toBe(false);
+      expect(wrapper.get('[data-test="trick-closed"]').classes()).toContain('trick-closed--line');
+    });
+
+    it('givenAnEmptyTrick_thenNoIndicator', () => {
+      expect(mountTrick().find('[data-test="trick-count"]').exists()).toBe(false);
+    });
+
+    it('givenAClosedTrick_thenTheClosingPlayStaysDimmedWithABadgeSayingWhyAndWhoLeads', () => {
+      const wrapper = mountTrick(buildPresidentTrick(), { pile: { play: { seat: 2, cards: cut.cards }, closure: cut, count: 3 } });
+      const badge = wrapper.get('[data-test="trick-closed"]');
+      expect(badge.attributes('data-reason')).toBe('CUT');
+      expect(badge.get('[data-test="trick-closed-reason"]').text()).toBe('Closed by a 2');
+      expect(badge.get('[data-test="trick-closed-leader"]').text()).toBe('Seat 2 leads');
+      expect(wrapper.findAll('[data-test="closed-trick-card"]')).toHaveLength(1);
+      // Not a play to beat: the cards of the trick in progress are a different test id.
+      expect(wrapper.find('[data-test="trick-card"]').exists()).toBe(false);
+      expect(wrapper.get('.trick-plate').classes()).toContain('trick-plate--closed');
+      expect(wrapper.get('[data-test="trick-count"]').text()).toBe('3 cards in the trick');
+    });
+
+    it('givenIWinTheClosedTrick_thenItSaysYouLead', () => {
+      const wrapper = mountTrick(buildPresidentTrick(), { pile: { play: null, closure: { ...cut, winner: 0, reason: 'ALL_PASSED' }, count: 3 } });
+      expect(wrapper.get('[data-test="trick-closed-reason"]').text()).toBe('Everyone passed');
+      expect(wrapper.get('[data-test="trick-closed-leader"]').text()).toBe('You lead');
+    });
+
+    it('givenAnUnknownReason_thenAPlainClosedBadge', () => {
+      const wrapper = mountTrick(buildPresidentTrick(), { pile: { play: null, closure: { ...cut, reason: 'NEW' }, count: 3 } });
+      expect(wrapper.get('[data-test="trick-closed-reason"]').text()).toBe('Trick closed');
+    });
+
+    it('givenStill_thenTheClosingFlashDoesNotPlay', () => {
+      const wrapper = mountTrick(buildPresidentTrick(), { pile: { play: { seat: 2, cards: cut.cards }, closure: cut, count: 3 }, still: true });
+      expect(wrapper.get('.trick-plate').classes()).toContain('trick-plate--still');
+    });
+
+    it('keepsTheNotesAsASecondaryLineForScreenReaders', () => {
+      const wrapper = mountTrick(buildPresidentTrick(), { notes: ['Bob closed the trick with a 2.'] });
+      expect(wrapper.get('[data-test="trick-notes"]').classes()).toContain('sr-only');
+    });
+  });
+
   it('givenAnUnknownChipKey_thenNothingIsShownForIt', () => {
     const wrapper = mountTrick(buildPresidentTrick(), { chips: [{ key: 'nope' }] });
     expect(wrapper.findAll('[data-test="rule-chip"]')).toHaveLength(0);
