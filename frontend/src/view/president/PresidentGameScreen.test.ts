@@ -382,4 +382,56 @@ describe('PresidentGameScreen', () => {
     await flushPromises();
     expect(router.currentRoute.value.name).toBe('games');
   });
+
+  describe('the pictures of the table (spec §11 decision 7)', () => {
+    const event = (seat: number, action: 'PLAY' | 'PASS', over: Record<string, unknown> = {}) => ({
+      type: 'event' as const, eventType: action, message: '',
+      eventData: {
+        seat, action, cards: action === 'PLAY' ? [{ rank: '2', suit: 'CLUB', name: 'CLUB_2' }] : null, count: null,
+        outPlace: null, outForbidden: null, trickWinner: null, trickEndReason: null, barrierOpened: null, ...over,
+      },
+    });
+
+    it('showsEveryOpponentsHandAsAFanWithItsCount_andTheMotionLayer', async () => {
+      const { wrapper } = await mountRoom(room(playing({ players: seatsOf(3, { 1: { handSize: 4 } }) })));
+      const fans = wrapper.findAll('[data-test="opponent-seat"] [data-test="seat-fan"]');
+      expect(fans).toHaveLength(2);
+      expect(wrapper.get('[data-seat="1"] [data-test="seat-cards"]').text()).toBe('4 cards');
+      expect(wrapper.findAll('[data-seat="1"] [data-test="fan-back"]')).toHaveLength(4);
+      expect(wrapper.find('[data-test="my-zone"] [data-test="seat-fan"]').exists()).toBe(false);
+      expect(wrapper.find('[data-test="motion-layer"]').exists()).toBe(true);
+    });
+
+    it('givenAPass_thenAPassBubblePopsOverTheSeat', async () => {
+      const { wrapper, store } = await mountRoom(room(playing({ currentSeat: 1 })));
+      store.applyEvent({ type: 'state-update', state: playing({ version: 2, currentSeat: 2, players: seatsOf(3, { 1: { passed: true } }) }) });
+      store.applyEvent(event(1, 'PASS'));
+      await flushPromises();
+      const bubble = wrapper.get('[data-seat="1"] [data-test="seat-bubble"]');
+      expect(bubble.text()).toBe('Pass');
+      expect(wrapper.get('.seat-slot[data-seat="1"] .president-seat').classes()).toContain('president-seat--passed');
+    });
+
+    it('givenACutWithATwo_thenThePileSaysClosedByATwoAndWhoLeads', async () => {
+      const { wrapper, store } = await mountRoom(room(playing({
+        currentSeat: 1, trick: buildPresidentTrick({ leader: 0, plays: [{ seat: 0, cards: [{ rank: 'KING', suit: 'HEART', name: 'HEART_KING' }] }] }),
+      })));
+      store.applyEvent({ type: 'state-update', state: playing({ version: 2, currentSeat: 1 }) });
+      store.applyEvent(event(1, 'PLAY', { trickWinner: 1, trickEndReason: 'CUT' }));
+      await flushPromises();
+      expect(wrapper.get('[data-test="trick-closed-reason"]').text()).toBe('Closed by a 2');
+      expect(wrapper.get('[data-test="trick-closed-leader"]').text()).toBe('P1 leads');
+      expect(wrapper.findAll('[data-test="closed-trick-card"]')).toHaveLength(1);
+      expect(wrapper.get('[data-test="trick-count"]').text()).toBe('2 cards in the trick');
+      expect(wrapper.get('[data-test="trick-note"]').text()).toBe('P1 closed the trick with a 2.');
+    });
+
+    it('hasTheSharedSpeedButton_NormalByDefault_cyclingToFast', async () => {
+      const { wrapper } = await mountRoom(room(playing()));
+      const button = wrapper.get('[data-test="table-footer"] [data-test="speed-button"]');
+      expect(button.attributes('aria-label')).toBe('Animation speed: Normal');
+      await button.trigger('click');
+      expect(wrapper.get('[data-test="speed-button"]').attributes('aria-label')).toBe('Animation speed: Fast');
+    });
+  });
 });

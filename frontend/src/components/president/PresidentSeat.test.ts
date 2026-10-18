@@ -66,6 +66,39 @@ describe('PresidentSeat', () => {
     expect(wrapper.get('[data-test="seat-ready"]').text()).toBe('Ready');
   });
 
+  describe('the pictures of the table', () => {
+    it('givenAnOpponentsPlate_thenTheHandIsAFanOfBacksWithItsCount', () => {
+      const wrapper = mountSeat({ fan: true });
+      expect(wrapper.findAll('[data-test="fan-back"]')).toHaveLength(5);
+      expect(wrapper.get('[data-test="seat-cards"]').text()).toBe('5 cards');
+    });
+
+    it('givenCardsStillInFlight_thenTheFanShowsTheCountItIsGiven', () => {
+      const wrapper = mountSeat({ fan: true, count: 7 });
+      expect(wrapper.findAll('[data-test="fan-back"]')).toHaveLength(7);
+      expect(wrapper.get('[data-test="seat-cards"]').text()).toBe('7 cards');
+    });
+
+    it('givenMyOwnPlate_thenNoFan', () => {
+      expect(mountSeat().find('[data-test="seat-fan"]').exists()).toBe(false);
+    });
+
+    it.each([
+      ['pass', 'Pass'],
+      ['outForbidden', 'Out on a 2'],
+      ['completed', 'Four completed'],
+    ] as const)('givenABubble_%s_thenItPopsOverThePlate', (kind, text) => {
+      const bubble = mountSeat({ bubble: { kind, key: 1 } }).get('[data-test="seat-bubble"]');
+      expect(bubble.text()).toBe(text);
+      expect(bubble.attributes('data-kind')).toBe(kind);
+      expect(bubble.attributes('aria-hidden')).toBe('true');
+    });
+
+    it('givenAPassedSeat_thenThePlateIsDimmed', () => {
+      expect(mountSeat({ player: buildPresidentPlayer(1, { passed: true }) }).classes()).toContain('president-seat--passed');
+    });
+  });
+
   it('givenADisconnectedSeat_thenTheBadgeShows', () => {
     const wrapper = mountSeat({ disconnected: true, secondsRemaining: 30 });
     expect(wrapper.find('[data-test="seat-disconnect-badge"]').exists()).toBe(true);
