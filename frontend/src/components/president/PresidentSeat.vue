@@ -191,5 +191,8 @@ const title = computed(() => props.player.title ? ui.titles[titleKey(props.playe
   .seat-label--active::before { left: 5px; }
   .seat-title, .seat-stats { font-size: 0.6rem; }
   .marker { font-size: 0.56rem; padding: 1px 4px; }
+  /* No room above a seat at the top of the felt: the bubble sits over the fan instead. */
+  .seat-bubble { bottom: auto; top: 14px; font-size: 0.68rem; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.6); }
+  .seat-bubble::after { display: none; }
 }
 </style>
