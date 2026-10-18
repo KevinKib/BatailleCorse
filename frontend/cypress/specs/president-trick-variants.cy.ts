@@ -1,5 +1,5 @@
 // President trick variants on a fixed deal (PUT /api/test/president/{id}/deal, test profile only), with the Classic
-// rules: a lone 2 and a four of a kind close the trick (fixed rules). The browser is seat 0 (Alice); Bob and Carol
+// rules: a lone 2 on a lone card and a four of a kind close the trick (fixed rules). The browser is seat 0 (Alice); Bob and Carol
 // are scripted.
 //  1. Alice leads the king of hearts, Bob cuts it with a 2: the trick is closed at once and Bob leads;
 //  2. Bob plays a four of a kind: it closes the trick too, and the line under the pile says so;
@@ -69,11 +69,13 @@ const texts = (selector: string) => cy.get(selector).then(($e) => [...$e].map((e
           cy.get('[data-test="phase-text"]').should('have.text', 'Your turn');
           cy.get('[data-test="trick-card"]').should('have.length', 2);
           cy.screenshot(`president-variants-${width}`, { capture: 'viewport' });
-          // 4. Alice answers the pair of 2s with a lone 2: it closes the trick at once and she leads.
+          // 4. A lone 2 no longer answers a pair (a 2 cuts only with the same number of cards): Alice can only pass,
+          // which ends the trick, and the lead goes to Carol, the next seat that still holds cards.
           cy.get('[data-card="CLUB_2"]').click({ force: true });
-          cy.get('[data-test="play"]').should('not.be.disabled').click();
+          cy.get('[data-test="play"]').should('be.disabled');
+          cy.get('[data-test="pass"]').should('not.be.disabled').click();
           cy.get('[data-test="trick-card"]').should('not.exist');
-          cy.get('[data-test="phase-text"]').should('have.text', 'Your turn');
+          cy.get('[data-test="phase-text"]').should('have.text', 'Carol is playing');
           noHorizontalScroll();
         });
       });

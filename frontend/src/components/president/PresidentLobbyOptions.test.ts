@@ -12,6 +12,7 @@ const VALUES: Record<string, string[]> = {
   scoring: ['rank', 'titles', 'zeroSum'],
   length: ['rounds-5', 'rounds-3', 'rounds-10', 'points-11', 'points-21', 'endless'],
   mustPlay: ['off', 'on'],
+  reducedCut: ['off', 'on'],
 };
 const descriptors: OptionDescriptor[] = Object.entries(VALUES).map(([key, values]) => ({
   key, type: 'CHOICE', values, defaultValue: CLASSIC_PRESIDENT_OPTIONS[key], labelKey: `options.president.${key}`,

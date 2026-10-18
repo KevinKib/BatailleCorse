@@ -15,6 +15,8 @@ const QUEEN_S = card('QUEEN', 'SPADE');
 const KING_H = card('KING', 'HEART');
 const KING_S = card('KING', 'SPADE');
 const FOUR_D = card('4', 'DIAMOND');
+const TWO_H = card('2', 'HEART');
+const TWO_S = card('2', 'SPADE');
 
 /** The viewer to act: `legalPlays` as the server lists them, a trick whose top is `top`. */
 function ctx(
@@ -63,6 +65,10 @@ describe('analyseSelection', () => {
     ['equal play, a lower rank', equalPair, [NINE_H, NINE_S], false, { code: 'matchOnly', rank: 'JACK', count: 2 }],
     ['equal play, the right rank and the wrong count', equalPair, [JACK_H], false, { code: 'matchOnly', rank: 'JACK', count: 2 }],
     ['equal play, nothing of the required rank', equalNone, [QUEEN_H, QUEEN_S], false, { code: 'mustPass' }],
+    // a 2 cuts with the same number of cards: two 2s on a pair, but never a lone 2 on a pair
+    ['two 2s cut a pair', ctx([set('KING', 2), set('2', 2)], set('9', 2)), [TWO_H, TWO_S], true, null],
+    ['a lone 2 does not cut a pair', ctx([set('KING', 2), set('2', 2)], set('9', 2)), [TWO_H], false, { code: 'wrongCount', counts: [2] }],
+    ['a 2 is not offered under "a Jack or nothing"', equalPair, [TWO_H, TWO_S], false, { code: 'matchOnly', rank: 'JACK', count: 2 }],
     ['mixed ranks', leading, [NINE_H, KING_H], false, { code: 'mixedRanks' }],
     ['nothing selected', leading, [], false, { code: 'nothingSelected' }],
   ])('%s', (_name, context, selected, legal, reason) => {

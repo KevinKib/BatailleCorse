@@ -266,6 +266,7 @@ export const messagesEn: Messages = {
       'afterPass.reenter': 'After a pass: play again',
       'afterPass.out': 'After a pass: out of the trick',
       'mustPlay.on': 'Compulsory play',
+      'reducedCut.on': 'Reduced cut',
     },
     trickEnd: {
       ALL_PASSED: '{player} won the trick: everyone else passed.',
@@ -1065,6 +1066,7 @@ export const messagesEn: Messages = {
       level: { label: 'Level', easy: 'Easy', medium: 'Medium', hard: 'Hard' },
       afterPass: { label: 'After a pass', reenter: 'Play again', out: 'Out of the trick' },
       mustPlay: { label: 'Compulsory play', off: 'No, you may pass', on: 'Yes, no pass if you can play' },
+      reducedCut: { label: 'Cutting with 2s', off: 'Same number of 2s as cards', on: 'One 2 less on a pair or a triple' },
       exchange: { label: 'Exchange', two: '2 cards, then 1', one: '1 card', scaled: 'More with more players', none: 'None' },
       giveBack: { label: 'Cards given back', free: 'Free choice', lowest: 'Lowest cards' },
       nextLead: { label: 'Leads from round 2', scum: 'Scum', president: 'President' },

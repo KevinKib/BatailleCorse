@@ -386,3 +386,5 @@ on the e2e stack, one at a time.
 - Dropped for now by the owner (spec §3.5): the skip form of equal play, eight stops, `revolution = trick`,
   `runs = anySuit`, two decks and 9-10 players, putsch, the fall of the President.
 - Spectators, chat, turn timers, persistence.
+
+> Amended 2026-10-18 (owner feedback, PR "a 2 cuts only with the same number of cards"): the lone-2-always-cuts wording above is replaced by the same-count cut and the option `reducedCut`; see spec V4, V4b and decision 27.

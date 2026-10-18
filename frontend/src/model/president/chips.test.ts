@@ -72,6 +72,11 @@ describe('ruleChips, the trick variants', () => {
     expect(keys({ ...classic, mustPlay: 'on' })).toContain('mustPlay.on');
   });
 
+  it('givenTheReducedCut_thenItsChipIsShown', () => {
+    expect(keys({ ...classic, reducedCut: 'on' })).toContain('reducedCut.on');
+    expect(keys({ ...classic, reducedCut: 'off' })).not.toContain('reducedCut.on');
+  });
+
   it('givenCompulsoryPlaySwitchedOff_thenItsChipGoesAway', () => {
     const chips = keys({ ...classic, mustPlay: 'off' });
     expect(chips).toEqual(['afterPass.reenter']);

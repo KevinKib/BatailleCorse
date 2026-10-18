@@ -83,7 +83,7 @@ The id is a plain word, not a prefix of another game id, and reads well in `/gam
     2026-10-17 reading of the 2 that closes the trick]: a lone 2, a pair, a triple or a quad of 2s that empties
     the hand is a forbidden finish, not a `CUT` and not a `QUAD`, and neither is a four completed in succession
     (3.1.1) by a player whose completion empties their hand. The play stays on the pile as the play to beat
-    (a lone 2 is answered only by another lone 2, a pair of 2s by a lone 2 too); the following players answer or
+    (it is answered only by 2s of the same count, with the same-count cut rule, V4 and example 11); the following players answer or
     pass as usual, and the trick ends by the normal passes (`ALL_PASSED`), the lead going to the next seat that
     still holds cards. A 2 closes the trick (`CUT`) only when the player still holds cards afterwards.
 - **Round end**: when only one player still holds cards, that player takes the last place; the round is over
@@ -126,7 +126,9 @@ The owner's rules, always in force: equal play is a fixed rule, not an option (d
   last until the trick closes.
 - A pass under the binding is an ordinary pass: it counts toward the trick end, and under
   `afterPass = reenter` the passer may play again later in the same trick.
-- A cut (V4) is a higher play, so it cannot answer the binding [O, "C cannot play higher"].
+- A cut (V4) is a higher play, so it cannot answer the binding [O, "C cannot play higher"]. A 2 is therefore
+  **not playable** under the binding unless 2 is the bound rank (decided 2026-10-18; the V2 exception "a lone 2 is
+  legal even under the constraint" is gone). Under "a Jack or nothing" no 2 is offered.
 - Nobody is skipped: the skip form of equal play (the next player loses their turn) is not the owner's rule
   and is out of scope (3.5).
 - **The four closes the trick** [O]: when the four cards of a rank have been played in succession in the
@@ -199,9 +201,21 @@ The test contract of the PR that ships equal play (plan, V1). Four players A, B,
    trick at once (`FIRST_OUT`).
 10. **A lone 2 or a quad of 2s that empties the hand closes nothing (decided 2026-10-18).** Same table as
     example 9, but C holds 2♠ 2♥ 2♦ 2♣ and plays all four at once as their last play (or A leads a pair of 9s and
-    C answers with their last card, 2♠). It is a forbidden finish, not a `QUAD` and not a `CUT`: C is placed
+    C answers with their last pair, 2♠ 2♥). It is a forbidden finish, not a `QUAD` and not a `CUT`: C is placed
     last at the round end, the play stays on the pile and D answers or passes. When C still held another card
     after the 2, the 2 would be a `CUT` and close the trick at once.
+11. **A 2 cuts with the same number of cards (decided 2026-10-18).** A leads 9♠ 9♥ (a pair); B holds 2♠ and 4♣. B
+    **cannot** play 2♠ (a lone 2 does not answer a pair: `PlayDoesNotBeatException`, no `CUT`). Had B held 2♠ 2♥, the
+    pair of 2s beats the pair and closes the trick (`CUT`), and B leads. The same holds for a triple (three 2s on
+    three cards) and for a lone 2 on a lone card.
+12. **No 2 under "X or nothing" (decided 2026-10-18).** A leads J♠, B plays J♥ (C is bound to a Jack or a pass).
+    C holds 2♠: the 2 is not offered and playing it is refused; C may play a Jack or pass. A 2 is not the bound
+    rank, whatever the option `reducedCut`.
+13. **Reduced cut (`reducedCut = on`).** A leads 9♠ 9♥ 9♦; B plays 2♠ 2♥ (n-1 twos): `CUT`, B leads. B could not
+    close it with 2♠ alone (a single 2 never closes a triple). On a pair, B closes with 2♠ alone.
+14. **2s led (decided 2026-10-18).** A leads 2♠ (or 2♠ 2♥, or a triple of 2s): the trick closes at once (`CUT`)
+    and A leads again; if the lead empties A's hand it is a forbidden finish and closes nothing. Triple of 2s
+    led: closes like the pair and the lone 2, an open decision for the owner.
 
 Each example is one parameterised test row: the starting hands, the command sequence (seat, cards or pass,
 in or out of turn), and the expected trick state after each command (top, binding, window open, trick
@@ -235,7 +249,8 @@ together with others in the sources. Defaults are those of the "Classic" preset,
 |---|---------|-------|------|----------|--------------------------|---------|--------|-----------|
 | V1 | Re-entry after passing | "passer plusieurs fois son tour"; Australian "no playing after passing" is the opposite | `reenter`: a player who passed may play again when the turn comes back in the same trick. `out`: a pass is final until the trick ends | always one of the two | With `out`, the trick ends as soon as nobody but the last player is still in it. A pass forced by the equal-play binding is an ordinary pass | `reenter` | Offered (`afterPass`), P1 | [O] decided 2026-10-15 (sources split: pagat and regles-du-jeu.net allow re-entry, regles.com memo says a passer "generally does not come back") |
 | V2 | Equal play binds the next player ("X or nothing"), the four closes the trick, completion out of turn | "X ou rien", "carte égale ou rien", "égaler", "carré qui coupe" | A play of the same count and the **same** rank as the top is legal; the player after it must play that rank and count, or pass, and the binding repeats; the four cards of a rank played in succession close the trick, the completing player leads; the holder of the missing cards may complete out of turn (3.1.1) | very common in French play | The first pass ends the binding (O1 decided). A single lead does not open the completion window (O4 decided). A cut (V4) cannot answer the binding. Two players left: the binding falls back on the first player, no special case. A run chain (V12) never completes a four | always on | Fixed rule (no key since 2026-10-18; it was `equalPlay = on|off`), V1 | [O] the owner's rules (decided 2026-10-15); fr.wikipedia describes "or nothing" as a sub-variant of "passage de tour"; the name "ou rien" and the completion out of turn are not found in any written source; the four completed by equal plays is Danish Røvhul (pagat) |
-| V4 | The 2 closes the trick | "le 2 coupe", "2 utilisé comme atout", "single two wins", "bomb" | A single top card (2) may be played on any play (any count, a play of 2s included) and ends the trick at once; the player of the 2 leads, unless the 2 is their last play: that is a forbidden finish and closes nothing (decided 2026-10-18). A **fixed rule, not an option** (owner, 2026-10-17: "le 2 ferme le pli dès qu'il est joué, dès le premier 2") | common | Under a revolution the cutting card is the top rank in force (the 3) [O]. A lone 2 is always allowed, under the equal-play binding too (it closes the trick, so there is no binding left); it is not a completion, so out of turn it is refused. A pair of 2s is an ordinary play. Leading with a 2 is allowed (it simply wins the trick at once). A lone 2 that is the last card is a forbidden finish that still closes the trick | fixed | Fixed rule (no key), V2 | [S] single: fr.wikipedia, pagat, 10h26, officialgamerules; ladder: fr.wikipedia example "two 2s beat a triple of jacks", pagat Sofia/Toronto |
+| V4 | The 2 closes the trick (same-count cut) | "le 2 coupe", "2 utilisé comme atout", "bomb" | The cards played must always match the number of cards on the table. **n twos played on a group of n cards beat it, whatever n, and close the trick** (`CUT`; a quad in one play still closes it as `QUAD`); a lone 2 can therefore no longer close a pair or a triple (a pair of 2s closes a pair). 2s **led** (one, two or three) close their trick at once and the leader leads again. If the play empties the hand it is a forbidden finish and closes nothing (decided 2026-10-18). A **fixed rule** (owner, 2026-10-18, replacing "the lone 2 always cuts"); the option `reducedCut` (V4b) relaxes the count | common | Under a revolution the cutting card is the top rank in force (the 3) [O]. A 2 is playable under the equal-play binding only when 2 is the bound rank; out of turn it is refused (not a completion). Four 2s in succession (a pair then a pair) close the trick as `QUAD`, not `CUT`. Triple of 2s as a lead closes: open decision | fixed | Fixed rule (no key), V2 | [S] single: fr.wikipedia, pagat, 10h26, officialgamerules; the count rule is the owner's |
+| V4b | Reduced cut | "coupe réduite" | With `reducedCut = on`, **n-1 twos also close a group of n for n = 2 and 3**: one 2 closes a pair, two 2s close a triple. A single 2 never closes a triple, in any configuration | owner variant | Same limits as V4: not under the binding, a forbidden finish closes nothing | off | Offered (`reducedCut = off|on`) | [O] owner, 2026-10-18 |
 | V5 | A quad played at once clears the trick | "carré qui coupe", "bombe", Danish Røvhul "four of a rank clear the pile" | A single play of four cards of one rank ends the trick; that player leads. A **fixed rule, not an option** (owner, 2026-10-17; V1 already wires it). The four completed in succession is part of `equalPlay = on` (V2) | regional | With revolution (V8) both apply: order reversed, then a fresh lead. Independent of `equalPlay`. A quad that empties the hand: going out, then the lead passes to the next seat with cards | fixed | Fixed rule (no key), V2 | [O] decided 2026-10-15 (O5), fixed 2026-10-17; [S] pagat (Røvhul), gathertogethergames |
 | V7 | Forbidden finish | "interdiction de terminer par un 2", "on ne finit pas sur un 2", "cannot go out with the highest card" | A player whose last play contains a top-rank card (2; the 3 under a revolution) goes out but is placed **last**; among several such players the later one is lower [S, pagat Røvhul] | very common in French play | Under a revolution the forbidden card is the top rank in force (3) [O; S fr.wikipedia, pagat Daifugō]. A completion of 2s that empties the hand is a forbidden finish too. A forbidden finisher never closes the trick, whatever the play (O3 decided, 3.1; a lone 2 or a quad of 2s that empties the hand is no `CUT` nor `QUAD`, decided 2026-10-18). Alternative "the play is refused" not offered [U] | `lastPlace` | Fixed rule (no key since 2026-10-18; it was `forbiddenFinish = lastPlace|off`), V2 | [O] always on in the owner's rules; [S] regles-du-jeu.net, fr.wikipedia, 10h26, pagat Daifugō |
 | V8 | Revolution | "révolution", "contre-révolution", "four of a kind inverts ranks", "kakumei" | A quad (four of a rank in one play) reverses the ranking (3 high, 2 low); a later quad reverses it back (counter-revolution). Duration: `round` (until the end of the round) [S, fr.wikipedia, pagat Daifugō], `persistent` (carries over to later rounds until a new quad) [S, fr.wikipedia variant] | common | Effect is **immediate**: the next player must beat the quad in the reversed order, i.e. with a lower quad [O; S, fr.wikipedia "must follow the newly established order"; pagat Daifugō says "from the next clearing"]. The cutting card and the forbidden finish follow the top rank in force (3). A four completed in succession is no revolution. Exchange "best cards" follow the order in force at the deal | off | Offered (`revolution = off|round|persistent`), V3 | [O] decided 2026-10-15 as specified |
@@ -319,12 +334,13 @@ documented, never refused, so the host can set options in any order [D, O].
 | `scoring` | `rank`, `titles`, `zeroSum` | P2 / P3 |
 | `length` | `rounds-5`, `rounds-3`, `rounds-10`, `points-11`, `points-21`, `endless` | P2 / P3 (`endless` added in P3) |
 | `mustPlay` | `off`, `on` | V2 |
+| `reducedCut` | `off`, `on` | V4b |
 | `revolution` | `off`, `round`, `persistent` | V3 |
 | `ranking` | `twoHigh`, `aceHigh` | V3 |
 | `runs` | `off`, `sameSuit` | V4 |
 | `suitLock` | `off`, `on` | V4 |
 
-Eleven keys (equal play, the king of hearts lead of round 1, the forbidden finish on a 2, the 2 that closes the trick and the quad that closes it are fixed rules, not options: owner 2026-10-17 and 2026-10-18; their former keys are unknown keys and the strict parse refuses them). Until a variant's PR ships, its key does not exist (the server refuses it as unknown), and the
+Twelve keys (equal play, the king of hearts lead of round 1, the forbidden finish on a 2, the 2 that closes the trick and the quad that closes it are fixed rules, not options: owner 2026-10-17 and 2026-10-18; their former keys are unknown keys and the strict parse refuses them). Until a variant's PR ships, its key does not exist (the server refuses it as unknown), and the
 domain behaves as the "off" value. Defaults are the Classic preset, so a room created without touching
 anything plays the owner's rules.
 
@@ -338,7 +354,7 @@ shows "Classic" while the current values equal it, "Custom" otherwise. The other
 
 | Preset | Values |
 |--------|--------|
-| Classic (the owner's rules) | the defaults: re-entry after a pass, equal play binds the next player (the first pass ends the binding; the four closes the trick, completion out of turn), forbidden finish on a 2, exchange 2/1 with a free return, king of hearts leads round 1, Scum leads rounds 2+, rank points, 5 rounds; every other option off |
+| Classic (the owner's rules) | the defaults: re-entry after a pass, equal play binds the next player (the first pass ends the binding; the four closes the trick, completion out of turn), forbidden finish on a 2, exchange 2/1 with a free return, king of hearts leads round 1, Scum leads rounds 2+, rank points, 5 rounds; every other option off (`reducedCut` off: a 2 cuts only with as many cards as the play it answers) |
 
 Classic changes no key from the defaults, so selecting it is a reset to the defaults. A key not yet shipped is
 simply absent from the change map.
@@ -753,6 +769,16 @@ le plus petit", the king of hearts lead. They are the owner's rules [O], marked 
     A 2 closes the trick only when the player keeps cards afterwards. Decisions confirmed the same day: several
     forbidden finishers are placed last, the later one lowest, and the player who keeps cards sits just above
     them; a play that would be a forbidden finish counts as a legal play for `mustPlay`. Worked example 10.
+27. **2s cut with the same number of cards; option `reducedCut`.** Decided 2026-10-18 (owner), replacing "a lone 2
+    always cuts" (items 24 to 26 and V4 as of #256/#262): (1) the cards played always match the number on the
+    table: n twos on n cards beat them and close the trick (`CUT`), a lone 2 no longer closes a pair or a triple;
+    (2) under "X or nothing" a 2 is not playable unless it is the bound rank (the V2 exception is removed); a 2
+    is still not a completion out of turn; (3) new option `reducedCut` (`off` default, `on`): n-1 twos also close
+    a group of n for n = 2 and 3, a single 2 never closes a triple; (4) 2s led (one, two or three) close the
+    trick at once, the leader leads again; the triple of 2s led and a triple on a triple stay **open decisions**
+    flagged for the owner; (5) the forbidden finish (item 26) is unchanged: a play that empties the hand with a
+    2 never closes; (6) four 2s completed in succession (pair on pair) close as `QUAD`, not `CUT`; (7) mustPlay
+    and the bots use the legal plays of the domain, so both follow. Worked examples 11 to 14.
 
 ### 13.2 Still open
 
