@@ -8,6 +8,7 @@ import type { KoboEventData, KoboLogEntry } from '../model/kobo/KoboEvents';
 import type { LobbyView } from '../model/lobby/LobbyView';
 import { koboInteraction, NOTHING, type KoboPending, type KoboSlotCommand } from '../model/kobo/interaction';
 import { reconcilePending } from '../model/kobo/pending';
+import { displayedOf, liveHold, mergeHold, NO_HOLD, type DisplayedHold } from '../model/kobo/displayed';
 import { revealToken, visibleFaces } from '../model/kobo/faces';
 import { useSeatPresence, FORFEIT_NOTICE_HOLD_MS } from '../composables/useSeatPresence';
 import { useSeatRoom } from '../composables/useSeatRoom';
@@ -134,6 +135,8 @@ export const useKoboStore = defineStore('kobo-store', () => {
     busy.value = false;
     clearTimeout(settleTimer);
     settling.value = false;
+    clearTimeout(holdTimer);
+    held.value = NO_HOLD;
     events.value = [];
     notice.value = null;
     hiddenPeek.value = null;
@@ -153,9 +156,29 @@ export const useKoboStore = defineStore('kobo-store', () => {
     clearTimeout(settleTimer);
     settleTimer = setTimeout(() => { settling.value = false; }, KOBO_SETTLE_MS);
   }
+  // What the table still shows while the flights of an event play (see `DisplayedHold`): a match is built on it.
+  const held = ref<DisplayedHold>(NO_HOLD);
+  let holdTimer: ReturnType<typeof setTimeout> | undefined;
+  /** Keeps `hold` on screen for the match commands until its end time (a `Date.now()` stamp), however the flights end. */
+  function holdDisplayed(hold: DisplayedHold) {
+    held.value = mergeHold(liveHold(held.value, Date.now()), hold);
+    scheduleRelease();
+  }
+  // Wakes up at the next end time to drop what has landed (the interaction must recompute without any other change).
+  function scheduleRelease() {
+    clearTimeout(holdTimer);
+    const next = Math.min(...Object.values(held.value.slots).map(h => h.until), held.value.discard?.until ?? Infinity);
+    if (!Number.isFinite(next)) return;
+    holdTimer = setTimeout(() => {
+      held.value = liveHold(held.value, Date.now());
+      scheduleRelease();
+    }, Math.max(0, next - Date.now()));
+  }
   const interaction = computed(() =>
     game.value
-      ? koboInteraction(game.value, mySeat.value, pending.value, { directMatch: !settling.value })
+      ? koboInteraction(game.value, mySeat.value, pending.value, {
+        directMatch: !settling.value, displayed: displayedOf(held.value),
+      })
       : NOTHING);
   // Every card the viewer may see, by `slotKey` (see `visibleFaces`).
   const faces = computed(() =>
@@ -244,7 +267,7 @@ export const useKoboStore = defineStore('kobo-store', () => {
     forfeitNotice: presence.forfeitNotice,
     pending, busy, events, notice,
     me, isMyTurn, can, interaction, screen, faces, canHidePeek,
-    applyEvent, armMatch, cancelPending, pickSlot, pickPile, hidePeek,
+    applyEvent, holdDisplayed, armMatch, cancelPending, pickSlot, pickPile, hidePeek,
     create: (name?: string) => session.create(name),
     join: (id: string, name?: string) => session.join(id, name),
     restore: (id: string, seat: number, token: string) => session.restore(id, seat, token),

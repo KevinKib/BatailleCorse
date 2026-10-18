@@ -230,6 +230,31 @@ describe('koboInteraction', () => {
       });
     });
 
+    describe('while a flight is still playing', () => {
+      const displayed = { slotRevisions: { [slotKey(0, 0)]: 2, [slotKey(1, 0)]: 5 }, discardTopRank: 'QUEEN' };
+
+      it('a one-click match is built on the revision and the rank on screen, not the latest ones', () => {
+        const interaction = koboInteraction(matchable(), 0, NONE, { displayed });
+        expect(interaction.intents[slotKey(0, 0)]).toEqual({
+          kind: 'send', command: { type: 'match', seat: 0, slot: 0, expectedTopRank: 'QUEEN', expectedRevision: 2 },
+        });
+        expect(interaction.intents[slotKey(1, 0)]).toEqual({
+          kind: 'pend',
+          pending: { kind: 'match-give', target: { seat: 1, slot: 0 }, expectedTopRank: 'QUEEN', expectedRevision: 5 },
+        });
+      });
+
+      it('the armed mode takes the displayed values too', () => {
+        const intent = koboInteraction(matchable(), 0, { kind: 'match-armed' }, { displayed }).intents[slotKey(0, 0)];
+        expect(intent).toMatchObject({ command: { expectedTopRank: 'QUEEN', expectedRevision: 2 } });
+      });
+
+      it('a slot that is not held keeps its latest revision, and an unheld discard its latest rank', () => {
+        const interaction = koboInteraction(matchable(), 0, NONE, { displayed: { slotRevisions: {}, discardTopRank: undefined } });
+        expect(interaction.intents[slotKey(0, 0)]).toMatchObject({ command: { expectedTopRank: 'KING', expectedRevision: 4 } });
+      });
+    });
+
     it('a card of another player asks which of mine to give: a second click, like the armed mode', () => {
       expect(koboInteraction(matchable(), 0, NONE).intents[slotKey(1, 0)]).toEqual({
         kind: 'pend',

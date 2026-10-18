@@ -1,4 +1,5 @@
 import type { KoboAction, KoboPlayer, KoboState } from './KoboState';
+import type { KoboDisplayed } from './displayed';
 
 /** The local selection a multi-click action builds up. Never sent as is: it only decides the next click. */
 export type KoboPending =
@@ -52,6 +53,11 @@ export interface KoboInteraction {
 export interface KoboInteractionOptions {
   /** False holds the one-click match back (right after a command of mine, against a double tap). Default true. */
   directMatch?: boolean;
+  /**
+   * What a flight still playing keeps on screen: a match is built on these values instead of the latest state's, so
+   * a tap on a card the player still sees as it was is judged stale by the server (no penalty).
+   */
+  displayed?: KoboDisplayed;
 }
 
 export function slotKey(seat: number, slot: number): string {
@@ -91,7 +97,7 @@ function intentsFor(
 export function koboInteraction(
   state: KoboState, mySeat: number, pending: KoboPending, options: KoboInteractionOptions = {},
 ): KoboInteraction {
-  const base = slotInteraction(state, mySeat, pending);
+  const base = slotInteraction(state, mySeat, pending, options.displayed);
   const me = state.players.find(p => p.seat === mySeat);
   if (!me) return base;
   const piles = {
@@ -104,7 +110,7 @@ export function koboInteraction(
   // The give step has its own exit (Cancel, Esc): the Match toggle would only repeat it.
   const flags = { matchHint: tapIsMatch, matchButton: matchPossible && !tapIsMatch && pending.kind !== 'match-give' };
   if (options.directMatch !== false && tapIsMatch) {
-    return { ...base, ...flags, piles, directMatch: true, intents: matchIntents(state, me, state.players) };
+    return { ...base, ...flags, piles, directMatch: true, intents: matchIntents(state, me, state.players, options.displayed) };
   }
   return { ...base, ...flags, piles };
 }
@@ -126,13 +132,16 @@ function allowsDirectMatch(
 }
 
 /** Every occupied slot of `players` as a match at the rank and revision on screen (a card of another player asks for mine). */
-function matchIntents(state: KoboState, me: KoboPlayer, players: KoboPlayer[]): Record<string, KoboSlotIntent> {
+function matchIntents(
+  state: KoboState, me: KoboPlayer, players: KoboPlayer[], displayed?: KoboDisplayed,
+): Record<string, KoboSlotIntent> {
   const top = state.discardTop;
   if (!top) return {};
-  const expectedTopRank = top.rank;
+  const expectedTopRank = displayed?.discardTopRank ?? top.rank;
   const hasCardToGive = occupiedSlots(me).length > 0;
   return intentsFor(players, (player, slot) => {
-    const expectedRevision = player.slots.find(s => s.slot === slot)!.revision;
+    const expectedRevision = displayed?.slotRevisions[slotKey(player.seat, slot)]
+      ?? player.slots.find(s => s.slot === slot)!.revision;
     if (player.seat !== me.seat && hasCardToGive) {
       return {
         kind: 'pend',
@@ -143,7 +152,9 @@ function matchIntents(state: KoboState, me: KoboPlayer, players: KoboPlayer[]): 
   });
 }
 
-function slotInteraction(state: KoboState, mySeat: number, pending: KoboPending): KoboInteraction {
+function slotInteraction(
+  state: KoboState, mySeat: number, pending: KoboPending, displayed?: KoboDisplayed,
+): KoboInteraction {
   const me = state.players.find(p => p.seat === mySeat);
   if (!me) return NOTHING;
   const others = state.players.filter(p => p.seat !== mySeat);
@@ -165,7 +176,7 @@ function slotInteraction(state: KoboState, mySeat: number, pending: KoboPending)
       };
     }
     if (!state.discardTop) return NOTHING;
-    return { ...NOTHING, prompt: 'matchPick', intents: matchIntents(state, me, state.players) };
+    return { ...NOTHING, prompt: 'matchPick', intents: matchIntents(state, me, state.players, displayed) };
   }
 
   if (can('SWAP_DRAWN')) {

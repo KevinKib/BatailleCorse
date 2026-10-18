@@ -878,6 +878,47 @@ describe('KoboGameScreen', () => {
         expect(wrapper.get('[data-test="slot-0-2"]').attributes('disabled')).toBeUndefined();
       });
 
+      describe('a bot matches my card', () => {
+        const NINE = buildKoboCard('9', 'SPADE');
+        const TWO = buildKoboCard('2', 'CLUB');
+        const mine = (revision: number) => buildKoboPlayer(0, { slots: [0, 1, 2, 3].map(s => buildKoboSlot(s, { revision: s === 0 ? revision : 0 })) });
+        const withRevision = (revision: number, version: number, discardTop = NINE) => buildKoboState({
+          phase: 'DRAW', currentSeat: 1, availableActions: ['MATCH_DISCARD'], discardTop, version,
+          players: [mine(revision), buildKoboPlayer(1, { current: true })],
+        });
+        const botMatchesMySlot = async (store: ReturnType<typeof useKoboStore>) => {
+          // The state comes first (my slot 0 now holds the bot's card), the event after, as on the wire.
+          store.applyEvent({ type: 'state-update', state: withRevision(6, 2, TWO) });
+          event(store, 'MATCH', { seat: 1, targetSeat: 0, targetSlot: 0, givenSlot: 1, card: NINE, success: true });
+          await flushPromises();
+        };
+        const matchOf = (store: ReturnType<typeof useKoboStore>, key: string) => {
+          const intent = store.interaction.intents[key];
+          return intent?.kind === 'send' && intent.command.type === 'match' ? intent.command : null;
+        };
+
+        it('givenTheFlightIsStillPlaying_thenATapOnThatSlotAsksForTheRevisionAndTheRankOnScreen', async () => {
+          const { store } = await mountRoom(s => {
+            s.applyEvent({ type: 'seat-change', seat: 0 });
+            s.applyEvent({ type: 'state-update', state: withRevision(4, 1) });
+          });
+          await botMatchesMySlot(store);
+          expect(matchOf(store, '0:0')).toMatchObject({ expectedRevision: 4, expectedTopRank: '9' });
+          // A card the event did not touch keeps its revision, but the discard on screen is still the old one.
+          expect(matchOf(store, '0:2')).toMatchObject({ expectedRevision: 0, expectedTopRank: '9' });
+        });
+
+        it('givenReducedMotion_thenThereIsNoFlightAndTheTapUsesTheLatestState', async () => {
+          window.matchMedia = ((q: string) => ({ matches: q.includes('reduce'), media: q, addEventListener() {}, removeEventListener() {} })) as typeof window.matchMedia;
+          const { store } = await mountRoom(s => {
+            s.applyEvent({ type: 'seat-change', seat: 0 });
+            s.applyEvent({ type: 'state-update', state: withRevision(4, 1) });
+          });
+          await botMatchesMySlot(store);
+          expect(matchOf(store, '0:0')).toMatchObject({ expectedRevision: 6, expectedTopRank: '2' });
+        });
+      });
+
       it('givenAMovementWhoseSourceIsNotOnTheTable_thenItIsSkippedWithoutError', async () => {
         const { wrapper, store } = await playing({ phase: 'DRAW', currentSeat: 1 });
         event(store, 'PEEK', { seat: 1, targetSeat: 9, targetSlot: 0 });

@@ -26,6 +26,7 @@ import KoboScoreSheet from '../../components/kobo/KoboScoreSheet.vue';
 import KoboFinalTotals from '../../components/kobo/KoboFinalTotals.vue';
 import KoboMotionLayer, { type MotionRect, type MotionTarget } from '../../components/kobo/KoboMotionLayer.vue';
 import KoboSoundToggle from '../../components/kobo/KoboSoundToggle.vue';
+import { planHold } from '../../model/kobo/displayed';
 import { eventSpanMs, planMovements, type MotionAnchor, type Movement } from '../../model/kobo/motion';
 import { createTempoQueue } from '../../model/kobo/queue';
 import { prefersReducedMotion } from '../../composables/usePileAnimation';
@@ -289,6 +290,10 @@ async function playEvent(entry: KoboLogEntry) {
   // The table already shows the state of this event, so its copies are set up now (they hold the places and show
   // the old cards there) and only start flying when their turn comes: nothing is drawn late over a changed table.
   motionLayer.value?.play(ready, { marksOnly: !admission.motion, startInMs: admission.startInMs });
+  // Until its copies have landed the table still shows the old cards: a tap on one is judged on what is shown.
+  if (admission.motion && typeof Element.prototype.animate === 'function') {
+    store.holdDisplayed(planHold(before, ready, Date.now() + admission.startInMs + eventSpanMs(ready)));
+  }
 }
 
 // The log is newest first: what is new is what comes before the head I already knew.

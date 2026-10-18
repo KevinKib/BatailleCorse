@@ -6,6 +6,7 @@ import { buildKoboState, buildKoboPlayer, buildKoboSlot, buildKoboCard } from '.
 import type { KoboAction, KoboState } from '../model/kobo/KoboState';
 import type { LobbyView } from '../model/lobby/LobbyView';
 import { slotKey } from '../model/kobo/interaction';
+import { planHold } from '../model/kobo/displayed';
 
 function lobbyView(overrides: Partial<LobbyView> = {}): LobbyView {
   return {
@@ -312,6 +313,55 @@ describe('Kobo store', () => {
         store.pickSlot(0, 0);
         expect(sent().at(-1)).toMatchObject({ dest: '/app/kobo/match' });
       });
+    });
+  });
+
+  describe('a tap while a flight is still playing', () => {
+    beforeEach(() => { vi.useFakeTimers(); vi.setSystemTime(10_000); });
+    afterEach(() => { vi.useRealTimers(); });
+
+    // A bot matched my slot 0 (revision 4 -> 6) and gave me a card; the table still shows the old card.
+    const earlier = game(['MATCH_DISCARD'], {
+      currentSeat: 1, discardTop: buildKoboCard('KING'),
+      players: [buildKoboPlayer(0, { slots: [buildKoboSlot(0, { revision: 4 })] }), buildKoboPlayer(1, { current: true })],
+    });
+    const latest = game(['MATCH_DISCARD'], {
+      version: 2, currentSeat: 1, discardTop: buildKoboCard('KING'),
+      players: [buildKoboPlayer(0, { slots: [buildKoboSlot(0, { revision: 6 })] }), buildKoboPlayer(1, { current: true })],
+    });
+    const hold = () => planHold(earlier, [
+      { kind: 'travel', from: { kind: 'slot', seat: 0, slot: 0 }, to: { kind: 'discard' }, card: null, flip: true, turnDown: false,
+        actor: 1, byOpponent: true, delayMs: 250, durationMs: 1000, holdAfterMs: 450, marks: [] },
+    ], 10_000 + 1250);
+
+    it('sends the revision and the rank on screen until the flight has landed, then the latest ones', () => {
+      const store = boot();
+      store.applyEvent({ type: 'state-update', state: earlier });
+      store.applyEvent({ type: 'state-update', state: latest });
+      store.holdDisplayed(hold());
+      store.pickSlot(0, 0);
+      expect(sent().at(-1)).toMatchObject({ dest: '/app/kobo/match', body: { seat: 0, slot: 0, expectedRevision: 4, expectedTopRank: 'KING' } });
+      vi.advanceTimersByTime(1300);
+      store.pickSlot(0, 0);
+      expect(sent().at(-1)).toMatchObject({ dest: '/app/kobo/match', body: { seat: 0, slot: 0, expectedRevision: 6 } });
+    });
+
+    it('leaves a slot that did not change alone', () => {
+      const store = boot();
+      store.applyEvent({ type: 'state-update', state: latest });
+      store.holdDisplayed(hold());
+      store.pickSlot(1, 0);
+      expect(store.pending).toMatchObject({ kind: 'match-give', expectedRevision: 0 });
+    });
+
+    it('forgets what was held when the room is left', () => {
+      const store = boot();
+      store.applyEvent({ type: 'state-update', state: latest });
+      store.holdDisplayed(hold());
+      store.applyEvent({ type: 'removed' } as never);
+      store.applyEvent({ type: 'state-update', state: latest });
+      store.pickSlot(0, 0);
+      expect(sent().at(-1)).toMatchObject({ body: { expectedRevision: 6 } });
     });
   });
 
