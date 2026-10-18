@@ -28,21 +28,22 @@ class SixMenSolverSmallTest {
 
     /** Solves both ways and compares the verdict of every position the naive search reaches. */
     static void assertAgree(MorrisRules rules) {
+        long begin = System.nanoTime();
         BruteForceMorris brute = new BruteForceMorris(rules);
         brute.solve();
+        System.out.printf("[small] naive search: %d positions in %.1f s%n", brute.nodeCount(), (System.nanoTime() - begin) / 1e9);
         SixMenSolver compact = new SixMenSolver(rules);
         compact.solve();
-        int compared = 0;
-        for (BruteForceMorris.Node node : brute.nodes()) {
-            if (node.reduced()) {
-                continue;
+        int[] compared = {0};
+        brute.forEachNode((node, expected) -> {
+            if (!node.reduced()) {
+                SixMenSolver.Verdict actual = compact.verdict(toPos(node));
+                assertThat("position " + node, actual,
+                        is(new SixMenSolver.Verdict(expected.outcome(), expected.depth())));
+                compared[0]++;
             }
-            BruteForceMorris.Verdict expected = brute.verdict(node);
-            SixMenSolver.Verdict actual = compact.verdict(toPos(node));
-            assertThat("position " + node, actual, is(new SixMenSolver.Verdict(expected.outcome(), expected.depth())));
-            compared++;
-        }
-        assertThat("the naive search reached something", compared > 1000, is(true));
+        });
+        assertThat("the naive search reached something", compared[0] > 1000, is(true));
     }
 
     @Test

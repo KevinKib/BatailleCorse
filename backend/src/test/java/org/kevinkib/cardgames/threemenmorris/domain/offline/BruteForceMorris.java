@@ -34,8 +34,9 @@ final class BruteForceMorris {
 
     private final Geometry geometry;
     private final int pieces;
-    private final Map<Node, Integer> ids = new HashMap<>();
-    private final List<Node> nodes = new ArrayList<>();
+    private final Map<Long, Integer> ids = new HashMap<>();
+    private long[] keys = new long[1 << 16];
+    private int nodeCount;
     private final List<int[]> successors = new ArrayList<>();
     private int[] kind;
     private int[] depth;
@@ -60,34 +61,58 @@ final class BruteForceMorris {
     }
 
     int nodeCount() {
-        return nodes.size();
+        return nodeCount;
     }
 
-    List<Node> nodes() {
-        return nodes;
+    /** Calls {@code visitor} with every node reached, and its verdict. */
+    void forEachNode(java.util.function.BiConsumer<Node, Verdict> visitor) {
+        for (int id = 0; id < nodeCount; id++) {
+            visitor.accept(unpack(keys[id]), new Verdict(kind[id], depth[id]));
+        }
     }
 
-    Verdict verdict(Node node) {
-        int id = ids.get(node);
-        return new Verdict(kind[id], depth[id]);
+    /** A node as a long (two bits per point, the hands, the seat to move, the reduced flag): memory only. */
+    private long pack(Node node) {
+        long key = 0;
+        for (int point = 0; point < geometry.points(); point++) {
+            key |= (long) (node.board().get(point) + 1) << (2 * point);
+        }
+        key |= (long) node.whiteHand() << 32;
+        key |= (long) node.blackHand() << 36;
+        key |= (long) node.toMove() << 40;
+        key |= (node.reduced() ? 1L : 0L) << 41;
+        return key;
+    }
+
+    private Node unpack(long key) {
+        List<Integer> board = new ArrayList<>();
+        for (int point = 0; point < geometry.points(); point++) {
+            board.add((int) ((key >> (2 * point)) & 3) - 1);
+        }
+        return new Node(List.copyOf(board), (int) ((key >> 32) & 15), (int) ((key >> 36) & 15),
+                (int) ((key >> 40) & 1), ((key >> 41) & 1) == 1);
     }
 
     private int idOf(Node node) {
-        Integer known = ids.get(node);
+        long key = pack(node);
+        Integer known = ids.get(key);
         if (known != null) {
             return known;
         }
-        int id = nodes.size();
-        ids.put(node, id);
-        nodes.add(node);
+        int id = nodeCount++;
+        ids.put(key, id);
+        if (id == keys.length) {
+            keys = java.util.Arrays.copyOf(keys, id * 2);
+        }
+        keys[id] = key;
         successors.add(null);
         return id;
     }
 
     private void explore() {
         idOf(start());
-        for (int next = 0; next < nodes.size(); next++) {
-            List<Node> children = children(nodes.get(next));
+        for (int next = 0; next < nodeCount; next++) {
+            List<Node> children = children(unpack(keys[next]));
             int[] childIds = new int[children.size()];
             for (int i = 0; i < childIds.length; i++) {
                 childIds[i] = idOf(children.get(i));
@@ -175,7 +200,7 @@ final class BruteForceMorris {
 
     /** Round r resolves the wins and losses of depth r from the snapshot of the rounds before. */
     private void analyse() {
-        int n = nodes.size();
+        int n = nodeCount;
         kind = new int[n];
         depth = new int[n];
         boolean[] resolved = new boolean[n];

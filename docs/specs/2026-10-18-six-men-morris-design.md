@@ -185,6 +185,43 @@ double mill), so the plan runs our own **offline solve once** (chunk C5) and wri
 a forced White win under our rules, that would be reported to the owner as a question before the frontend
 chunk merges (the rules are data: flipping a rule is a one-line change).
 
+### Solver result [V, chunk C5, 2026-10-18]
+
+**Six Men's Morris under our rules is a draw with perfect play.** The published claim is confirmed; the first
+player has no forced win, and neither has the second. Measured by the opt-in test `SixMenMorrisSolveRunTest`
+(test sources `domain/offline/`, `SixMenSolver`: dense index by combinatorial rank, layers by total pieces
+and hands left, movement layers solved in rounds by depth):
+
+- Rules solved: the exact rules above (mill removal with protected mills, one removal per move even for a
+  double mill, no flying, loss at two pieces counting the hand, blocked loses). Repetition and the 50-ply
+  quiet limit are **not** modelled: a position the solver cannot resolve is a draw (infinite play). That is
+  sound for the question asked: those draw rules only end games early, so a forced win under them would also
+  be a forced win without them; the converse does not hold, which is why "draw" here is exact and a win would
+  have needed a re-check against the 50-ply limit (not needed).
+- **Opening value for White: draw**, and every one of the 16 first placements leaves Black with a draw (so
+  nothing in the opening loses by force, whichever point White picks).
+- **Positions:** 49,986,423 states stored (at least 3 pieces per player, the seat to move normalised): 30,194,257
+  won, 16,208,774 lost, 3,583,392 drawn for the player to move. **Reachable from the opening: 24,484,351**
+  normalised (6,859,157 in the placement phase, 17,625,194 in the movement phase). Colour-normalising halves the
+  movement phase only (White-to-move and Black-to-move positions with swapped colours merge; in placement the
+  hands tell the seats apart), so the comparable absolute count is about `2 * 17,625,194 + 6,859,157` =
+  42.1 million, close to Liou's 42,372,745 (the gap of about 0.3 million is not explained here: it may be positions
+  where a player is down to two pieces, which the solver does not store, or differences in the counting) [H].
+- **Depth:** the longest forced win or loss anywhere in the table is 120 plies (119 won, 120 lost); the
+  opening is a draw, so it has no depth.
+- **`BLOCKED` is reachable** (14,122 reachable positions where the player to move has no legal move) and
+  **`REDUCED` is reachable** (582,648 reachable positions with a move that leaves the opponent two pieces).
+- **Cost:** about 30 to 40 s to solve on 16 cores (about 100 MB for the `short` table); with the naive
+  cross-check of the four-piece game and the reachability pass the opt-in test takes about 200 s with
+  `-Xmx4g`. Run: `cd backend && mvn -s ../deploy/docker/settings.xml test -Dtest=SixMenMorrisSolveRunTest
+  -Dmorris.solveSix=true -DargLine=-Xmx4g` (Surefire forwards the property; the default `mvn test` and CI skip
+  the class).
+- **Checks:** the compact solver agrees with an independent naive search (absolute colours, object keys,
+  snapshot rounds) on every position of the three-piece game (default suite) and of the four-piece game
+  (4,111,151 positions, in the opt-in run), outcome and depth. The successor generator is checked on
+  hand-written positions (mill, protection, double mill, two-piece loss, block, no flying). The cross-check
+  against the aggregate (C3) and `MorrisTransitions` (C4) is left to those chunks' integration, as agreed.
+
 ## State space [E]
 
 Positions counted from the seat to move (colours relabelled, as `MorrisSolver.normalised` does):

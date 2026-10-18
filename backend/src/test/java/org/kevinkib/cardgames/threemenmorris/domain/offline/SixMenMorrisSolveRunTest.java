@@ -7,7 +7,7 @@ import org.kevinkib.cardgames.threemenmorris.domain.MorrisRules;
 /**
  * Not part of the default suite: solves Six Men's Morris under our exact rules and prints the result. Run with
  * {@code mvn -s ../deploy/docker/settings.xml test -Dtest=SixMenMorrisSolveRunTest -Dmorris.solveSix=true
- * -DargLine=-Xmx2g} (about 50 million states, a few minutes). It first repeats the cross-check against the
+ * -DargLine=-Xmx4g} (about 50 million states, about 200 s, mostly the four-piece cross-check). It first repeats the cross-check against the
  * naive search with four pieces each, so a broken solver stops before the long run. It asserts nothing about
  * the value of the game: the result is pinned in the spec, section "Solver result".
  */
