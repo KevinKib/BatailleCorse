@@ -87,7 +87,8 @@ class HeuristicPresidentBotTest {
                 Arguments.of("an ace is kept too (long hand)", "AC 4D 4H 5C 5D 6H", "9H", "pass"),
                 Arguments.of("a control card is spent when the hand is short", "2C 3D", "9H", "2"),
                 Arguments.of("going out on the control card is a forbidden finish", "2C", "9H", "pass"),
-                Arguments.of("a control pair is not a finish to go for", "2C 2D", "9H 9D", "2"));
+                Arguments.of("a control pair that is the whole hand is a forbidden finish", "2C 2D", "9H 9D", "pass"),
+                Arguments.of("a control pair is spent when the hand is short", "2C 2D 5D", "9H 9D", "2 2"));
     }
 
     @ParameterizedTest(name = "{0}: {1} on {2} gives {3}")
@@ -104,7 +105,8 @@ class HeuristicPresidentBotTest {
         return Stream.of(
                 Arguments.of("passes rather than going out on a two", "2C", "9H", "pass"),
                 Arguments.of("a two that leaves a card is fine", "2C 5D", "9H", "2"),
-                Arguments.of("a lone two that leaves a card is fine", "2C 2D", "9H 9D", "2"));
+                Arguments.of("a pair of twos that leaves a card is fine", "2C 2D 5D", "9H 9D", "2 2"),
+                Arguments.of("a lone two cannot answer a pair", "2C 5D", "9H 9D", "pass"));
     }
 
     @ParameterizedTest(name = "{0}: {1} on {2} gives {3}")
@@ -125,7 +127,7 @@ class HeuristicPresidentBotTest {
         return Stream.of(
                 Arguments.of("keeps its cutting two rather than spend it on a low pair (long hand)",
                         "2H 6C 7C 8C 9C", "4C 4D", SINGLE_CUT, "pass"),
-                Arguments.of("spends the cutting two when the hand is short", "2H 6C", "4C 4D", SINGLE_CUT, "2"),
+                Arguments.of("spends the cutting pair when the hand is short", "2H 2D 6C", "4C 4D", SINGLE_CUT, "2 2"),
                 Arguments.of("plays an ordinary higher pair before thinking of a cut",
                         "2H 6C 6D 8C 9C", "4C 4D", SINGLE_CUT, "6 6"),
                 Arguments.of("never goes out on a cutting two when that finish is forbidden",

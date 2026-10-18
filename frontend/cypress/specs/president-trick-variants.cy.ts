@@ -1,10 +1,10 @@
 // President trick variants on a fixed deal (PUT /api/test/president/{id}/deal, test profile only), with the Classic
-// rules: a lone 2 and a four of a kind close the trick (fixed rules). The browser is seat 0 (Alice); Bob and Carol
+// rules: a lone 2 on a lone card and a four of a kind close the trick (fixed rules). The browser is seat 0 (Alice); Bob and Carol
 // are scripted.
 //  1. Alice leads the king of hearts, Bob cuts it with a 2: the trick is closed at once and Bob leads;
 //  2. Bob plays a four of a kind: it closes the trick too, and the line under the pile says so;
 //  3. Bob goes on, then leads his last three cards, 2s: he goes out on a forbidden finish, which is announced, marked
-//     on his seat, and does not close the trick (Alice is asked to answer).
+//     on his seat, and closes the trick all the same (a 2 always closes); Carol, the next seat with cards, leads.
 import {
   hostLobby, joinGuests, noHorizontalScroll, scriptedPass, scriptedPlay,
 } from '../support/presidentRoom';
@@ -61,22 +61,18 @@ const texts = (selector: string) => cy.get(selector).then(($e) => [...$e].map((e
           cy.get('[data-test="phase-text"]').should('have.text', 'Your turn');
           cy.get('[data-test="pass"]').should('not.be.disabled').click();
           scriptedPlay(bob, '2', 2);
-          cy.get('[data-test="trick-note"]').should('have.text', 'Bob went out on a 2 and will finish last.');
+          cy.get('[data-test="trick-note"]').should('have.text', 'Bob closed the trick with a 2 and went out: they will finish last.');
           cy.get('[data-seat="1"] [data-test="seat-out"]').should('have.text', 'Out on a 2');
           cy.get('[data-seat="1"] [data-test="seat-cards"]').should('have.text', '0 cards');
-          // Going out on a 2 did not close the trick: Carol, then Alice, are asked to answer the pair of 2s.
-          scriptedPass(carol);
-          cy.get('[data-test="phase-text"]').should('have.text', 'Your turn');
-          cy.get('[data-test="trick-card"]').should('have.length', 2);
-          cy.screenshot(`president-variants-${width}`, { capture: 'viewport' });
-          // 4. Alice answers the pair of 2s with a lone 2: it closes the trick at once and she leads.
-          cy.get('[data-card="CLUB_2"]').click({ force: true });
-          cy.get('[data-test="play"]').should('not.be.disabled').click();
+          // The 2s closed the trick although Bob went out on them (he takes no place): the next seat that still holds
+          // cards, Carol, leads a new trick.
           cy.get('[data-test="trick-card"]').should('not.exist');
-          cy.get('[data-test="phase-text"]').should('have.text', 'Your turn');
+          cy.get('[data-test="phase-text"]').should('have.text', 'Carol is playing');
+          cy.screenshot(`president-variants-${width}`, { capture: 'viewport' });
           noHorizontalScroll();
         });
       });
     });
   });
 });
+

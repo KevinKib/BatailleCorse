@@ -95,6 +95,7 @@ class PresidentRandomGamesTest {
         PresidentOptions d = PresidentOptions.defaults();
         return Stream.of(
                 Arguments.of("mustPlay on", d.withMustPlay(true)),
+                Arguments.of("reducedCut on", d.withReducedCut(true)),
                 Arguments.of("mustPlay, afterPass out", d.withMustPlay(true).withAfterPass(AfterPass.OUT)));
     }
 

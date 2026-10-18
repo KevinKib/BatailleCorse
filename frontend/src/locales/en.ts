@@ -266,13 +266,14 @@ export const messagesEn: Messages = {
       'afterPass.reenter': 'After a pass: play again',
       'afterPass.out': 'After a pass: out of the trick',
       'mustPlay.on': 'Compulsory play',
+      'reducedCut.on': 'Reduced cut',
     },
     trickEnd: {
       ALL_PASSED: '{player} won the trick: everyone else passed.',
       FIRST_OUT: '{player} went out and the trick is closed.',
       CUT: '{player} closed the trick with a 2.',
       QUAD: '{player} closed the trick with four of a kind.',
-      forbidden: '{player} went out on a 2 and will finish last.',
+      forbidden: '{player} closed the trick with a 2 and went out: they will finish last.',
     },
     actions: { play: 'Play', complete: 'Complete the four', pass: 'Pass', clear: 'Clear' },
     hint: {
@@ -1082,6 +1083,7 @@ export const messagesEn: Messages = {
       level: { label: 'Level', easy: 'Easy', medium: 'Medium', hard: 'Hard' },
       afterPass: { label: 'After a pass', reenter: 'Play again', out: 'Out of the trick' },
       mustPlay: { label: 'Compulsory play', off: 'No, you may pass', on: 'Yes, no pass if you can play' },
+      reducedCut: { label: 'Cutting with 2s', off: 'Same number of 2s as cards', on: 'One 2 less on a pair or a triple' },
       exchange: { label: 'Exchange', two: '2 cards, then 1', one: '1 card', scaled: 'More with more players', none: 'None' },
       giveBack: { label: 'Cards given back', free: 'Free choice', lowest: 'Lowest cards' },
       nextLead: { label: 'Leads from round 2', scum: 'Scum', president: 'President' },

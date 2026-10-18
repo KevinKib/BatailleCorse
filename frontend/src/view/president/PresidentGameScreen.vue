@@ -113,7 +113,8 @@ const trickNotes = computed(() => {
   const data = store.lastEvent?.data;
   if (!data) return [];
   const notes: string[] = [];
-  if (data.trickWinner !== null && data.trickWinner !== undefined && data.trickEndReason) {
+  // a forbidden finish closes the trick too (a 2 always closes): its own sentence says both, the winner is the next leader
+  if (!data.outForbidden && data.trickWinner !== null && data.trickWinner !== undefined && data.trickEndReason) {
     const template = ui.trickEnd[data.trickEndReason];
     if (template) notes.push(format(template, { player: displayName(data.trickWinner) }));
   }

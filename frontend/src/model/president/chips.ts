@@ -18,6 +18,7 @@ const KNOWN: Record<string, readonly string[]> = {
   afterPass: ['reenter', 'out'],
   // the variants that change the table get a chip; their default-off value (no compulsory play) does not
   mustPlay: ['on'],
+  reducedCut: ['on'],
 };
 
 function known(options: Record<string, string>, name: string): string | null {
@@ -42,5 +43,7 @@ export function ruleChips(state: ChipContext): PresidentChip[] {
   if (afterPass) chips.push({ key: `afterPass.${afterPass}` });
   const mustPlay = known(state.options, 'mustPlay');
   if (mustPlay) chips.push({ key: `mustPlay.${mustPlay}` });
+  const reducedCut = known(state.options, 'reducedCut');
+  if (reducedCut) chips.push({ key: `reducedCut.${reducedCut}` });
   return chips;
 }
