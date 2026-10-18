@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import SeatDisconnectBadge from '../SeatDisconnectBadge.vue';
+import PresidentHandFan from './PresidentHandFan.vue';
+import type { SeatBubble } from '../../model/president/motion';
 import type { PresidentPlayer } from '../../model/president/PresidentState';
 import { titleKey } from '../../model/president/titles';
 import { useI18n } from '../../composables/useI18n';
@@ -17,8 +19,19 @@ const props = defineProps<{
   showReady?: boolean;
   disconnected?: boolean;
   secondsRemaining?: number | null;
+  /** An opponent's plate: the hand as a fan of card backs (my own hand is on screen). */
+  fan?: boolean;
+  /** The count shown, when it differs from the state's (cards still flying to the pile). */
+  count?: number | null;
+  /** Phone layout: a smaller fan. */
+  narrow?: boolean;
+  /** A bubble over the plate ("Pass"...); a new `key` pops it again. */
+  bubble?: { kind: SeatBubble['kind']; key: number } | null;
+  /** No pop (reduced motion, Instant). */
+  still?: boolean;
 }>();
 const ui = useI18n().presidentUi;
+const shownCount = computed(() => props.count ?? props.player.handSize);
 const outText = computed(() => {
   const place = props.player.place;
   if (!props.player.forbiddenFinish) return format(ui.table.out, { n: place ?? '' });
@@ -28,11 +41,18 @@ const title = computed(() => props.player.title ? ui.titles[titleKey(props.playe
 </script>
 
 <template>
-  <div class="president-seat" :class="{ 'president-seat--out': player.out, 'president-seat--disconnected': disconnected }"
+  <div class="president-seat"
+       :class="{
+         'president-seat--out': player.out, 'president-seat--disconnected': disconnected,
+         'president-seat--passed': player.passed && !player.out,
+       }"
        :data-seat="player.seat">
+    <span v-if="bubble" :key="bubble.key" class="seat-bubble" :class="[`seat-bubble--${bubble.kind}`, { 'seat-bubble--still': still }]"
+          data-test="seat-bubble" :data-kind="bubble.kind" aria-hidden="true">{{ ui.motion.bubbles[bubble.kind] }}</span>
     <span class="seat-label" :class="{ 'seat-label--active': current }" data-test="seat-label" :title="label">{{ label }}</span>
     <span v-if="title" class="seat-title" data-test="seat-title">{{ title }}</span>
-    <span class="seat-stats" data-test="seat-cards">{{ plural(ui.table.cards, player.handSize) }}</span>
+    <PresidentHandFan v-if="fan" :count="shownCount" :narrow="narrow" />
+    <span v-else class="seat-stats" data-test="seat-cards">{{ plural(ui.table.cards, shownCount) }}</span>
     <span v-if="current || player.out || player.passed || (showReady && player.ready)" class="seat-markers">
       <span v-if="current" class="marker marker--current" data-test="seat-current">{{ ui.table.current }}</span>
       <span v-if="player.out" class="marker marker--out" :class="{ 'marker--forbidden': player.forbiddenFinish }"
@@ -46,6 +66,7 @@ const title = computed(() => props.player.title ? ui.titles[titleKey(props.playe
 
 <style scoped>
 .president-seat {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -120,6 +141,48 @@ const title = computed(() => props.player.title ? ui.titles[titleKey(props.playe
 .marker--out { color: var(--gold); }
 .marker--forbidden { color: rgb(var(--accent-negative-rgb)); }
 .president-seat--out .seat-label { opacity: 0.7; }
+/* A seat that passed sits back while the trick lasts. */
+.president-seat--passed .seat-label, .president-seat--passed :deep(.fan-picture) { opacity: 0.55; }
+
+/* The bubble of a move: a speech bubble over the plate that pops and stays a moment (the screen removes it). */
+.seat-bubble {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  z-index: 3;
+  transform: translateX(-50%);
+  padding: 3px 10px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: #1b1b1b;
+  background: #f4f1e6;
+  border-radius: 999px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  animation: bubble-pop 220ms cubic-bezier(.2, .8, .2, 1.4) both;
+}
+.seat-bubble::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border: 5px solid transparent;
+  border-top-color: #f4f1e6;
+}
+.seat-bubble--outForbidden { color: #fff; background: rgb(var(--accent-negative-rgb)); }
+.seat-bubble--outForbidden::after { border-top-color: rgb(var(--accent-negative-rgb)); }
+.seat-bubble--completed { background: var(--gold); }
+.seat-bubble--completed::after { border-top-color: var(--gold); }
+.seat-bubble--still { animation: none; }
+@keyframes bubble-pop {
+  from { opacity: 0; transform: translate(-50%, 6px) scale(0.6); }
+  to { opacity: 1; transform: translate(-50%, 0) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) { .seat-bubble { animation: none; } }
 .president-seat--disconnected .seat-label { opacity: 0.6; }
 
 @media (max-width: 767px) {

@@ -357,6 +357,17 @@ export interface PresidentUiMessages {
     rematchFailed: string;
   };
   live: { yourTurn: string };
+  /** The pictures of the table (spec §11 decision 7): the trick indicator, the closed-trick badge, the seat bubbles. */
+  motion: {
+    trickCount: PluralForms;           // '{n}' = cards in the trick
+    closed: Record<string, string>;    // the badge of a closed trick, by `TrickEndReason`
+    closedOther: string;               // the badge for a reason not listed
+    leads: string;                     // '{player}' takes the lead
+    youLead: string;
+    bubbles: { pass: string; outForbidden: string; completed: string };
+    speed: string;                     // '{speed}': name of the speed button (states are read out)
+    speeds: { normal: string; fast: string; instant: string };
+  };
 }
 
 // Kobo screens (`KoboGameScreen`): the lobby wiring and the table (read only for now, the actions come next).

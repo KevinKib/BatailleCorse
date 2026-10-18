@@ -34,6 +34,20 @@ import { rematchButtonFor } from '../../model/RematchButton';
 import { ruleChips } from '../../model/president/chips';
 import { hintText } from '../../model/president/hint';
 import { format } from '../../locales/format';
+import CardMotionLayer from '../../components/table/CardMotionLayer.vue';
+import AnimationSpeedButton from '../../components/table/AnimationSpeedButton.vue';
+import type { MotionRect, MotionTarget } from '../../components/table/motionTarget';
+import { useAnimationSpeed } from '../../composables/useAnimationSpeed';
+import { prefersReducedMotion } from '../../composables/usePileAnimation';
+import { useSeatBubbles } from '../../composables/useSeatBubbles';
+import { useInFlightCounts } from '../../composables/useInFlightCounts';
+import { createTempoQueue } from '../../model/table/queue';
+import { eventSpanMs } from '../../model/table/motion';
+import {
+  planBubbles, planMovements, speedFactor, type PresidentAnchor, type PresidentMovement,
+} from '../../model/president/motion';
+import { PRESIDENT_TEMPO } from '../../model/president/tempo';
+import type { PresidentLogEntry } from '../../model/president/eventLog';
 
 // The President table: the opponents around the trick (a ring on a wide screen, a compact grid on a phone), my hand,
 // and what I can do with it. Every rule is the server's (`legalPlays`): the screen only shows and sends. The exchange
@@ -137,6 +151,82 @@ watch(() => [store.game?.round, store.game?.currentSeat, store.game?.version, li
   liveSpoken.value = liveText.value;
 });
 
+// --- The pictures of the table (spec §11 decision 7, option B) -------------------------------------------------------
+// Purely visual: each new move of the log is played over the table (the cards fly from the seat to the pile, a bubble
+// pops over a seat that passed, the winner of a closed trick is ringed). The state, the buttons and the clicks never
+// wait for it, and a place that cannot be found just skips the picture. Reduced motion and Instant: still rings only.
+const { speed, cycle: cycleSpeed } = useAnimationSpeed();
+const still = computed(() => speed.value === 'instant' || prefersReducedMotion());
+const screenEl = ref<HTMLElement | null>(null);
+const motionLayer = ref<{ play: (m: PresidentMovement[], o?: { marksOnly?: boolean; startInMs?: number; still?: boolean }) => void } | null>(null);
+const bubbles = useSeatBubbles({ gapMs: PRESIDENT_TEMPO.bubbleGapMs });
+const inFlight = useInFlightCounts();
+onBeforeUnmount(() => { bubbles.cancel(); inFlight.cancel(); });
+const tempoQueue = createTempoQueue(() => Date.now(), PRESIDENT_TEMPO.queue);
+const CARD_RATIO = 243.1375 / 167.575;
+
+const visibleRect = (el: Element | null | undefined): MotionRect | null => {
+  if (!el) return null;
+  const r = el.getBoundingClientRect();
+  return r.width > 0 && r.height > 0 ? { left: r.left, top: r.top, width: r.width, height: r.height } : null;
+};
+const find = (selector: string) => screenEl.value?.querySelector<HTMLElement>(selector) ?? null;
+/** A card-sized rectangle in the middle of a place (my hand zone, a seat without a fan). */
+const cardAt = (box: MotionRect, width: number): MotionRect =>
+  ({ left: box.left + (box.width - width) / 2, top: box.top + (box.height - width * CARD_RATIO) / 2, width, height: width * CARD_RATIO });
+
+function resolveAnchor(anchor: PresidentAnchor): MotionTarget | null {
+  switch (anchor.kind) {
+    case 'seat': {
+      if (anchor.seat === store.mySeat) {
+        const box = visibleRect(find('[data-test="my-zone"] [data-test="hand"]')) ?? visibleRect(find('[data-test="my-zone"]'));
+        return box ? { rect: cardAt(box, 44), cards: [] } : null;
+      }
+      const slot = find(`.seat-slot[data-seat="${anchor.seat}"]`);
+      const fan = visibleRect(slot?.querySelector('.fan-backs'));
+      if (fan) return { rect: cardAt(fan, Math.min(fan.width, 24)), cards: [] };
+      const box = visibleRect(slot);
+      return box ? { rect: cardAt(box, 24), cards: [] } : null;
+    }
+    case 'pile': {
+      const rect = visibleRect(find('[data-test="trick-cards"]'));
+      return rect ? { rect, cards: [] } : null;
+    }
+    case 'pileCard': {
+      const card = find('[data-test="trick-cards"]')?.children[anchor.index]?.querySelector<HTMLElement>('.playing_card');
+      const rect = visibleRect(card);
+      return card && rect ? { rect, cards: [card] } : null;
+    }
+  }
+}
+
+async function playEntry(entry: PresidentLogEntry) {
+  const factor = speedFactor(speed.value);
+  const isStill = still.value;
+  for (const bubble of planBubbles(entry)) bubbles.show(bubble, PRESIDENT_TEMPO.bubbleMs * (factor || 1));
+  const moves = planMovements(entry, store.mySeat, factor || 1);
+  if (moves.length === 0) return;
+  // The pile shows the new play once the DOM has the new state.
+  await nextTick();
+  const admission = isStill ? { startInMs: 0, motion: false } : tempoQueue.admit(eventSpanMs(moves));
+  if (admission.motion && entry.seat !== store.mySeat) {
+    const flights = moves.filter(m => m.kind === 'travel');
+    inFlight.add(entry.seat, flights.length, admission.startInMs + eventSpanMs(flights));
+  }
+  motionLayer.value?.play(moves, { marksOnly: !admission.motion, startInMs: admission.startInMs, still: isStill });
+}
+
+// The log is newest first: what is new is what comes before the head I already knew.
+watch(() => store.events, (events, previous) => {
+  const known = previous?.[0] ?? null;
+  const fresh: PresidentLogEntry[] = [];
+  for (const entry of events) {
+    if (entry === known) break;
+    fresh.push(entry);
+  }
+  fresh.reverse().forEach(entry => { void playEntry(entry); });
+});
+
 // --- The end -------------------------------------------------------------------------------------------------------
 const endScreen = useEndScreen(() => store.screen === 'finished', () => false);
 endScreen.revealImmediatelyIfOver();
@@ -168,7 +258,7 @@ const rematchButton = computed(() =>
 </script>
 
 <template>
-  <div class="president-screen" :class="{ 'president-screen--lobby': store.screen === 'lobby' }">
+  <div ref="screenEl" class="president-screen" :class="{ 'president-screen--lobby': store.screen === 'lobby' }">
     <GameLobby
       v-if="store.screen === 'lobby' && store.lobby"
       :game="game"
@@ -220,6 +310,9 @@ const rematchButton = computed(() =>
         <PresidentScores :standings="store.game.standings" :name-of="displayName" :my-seat="store.mySeat" />
       </div>
 
+      <!-- The cards that travel (a picture only, hidden from assistive technology), and the one live region. -->
+      <CardMotionLayer ref="motionLayer" :resolve="resolveAnchor" :mark-ms="PRESIDENT_TEMPO.markMs"
+                       :mark-reduced-ms="PRESIDENT_TEMPO.markReducedMs" arrow-id="president-arrow-head" />
       <p class="sr-only" role="status" aria-live="polite" aria-atomic="true" data-test="president-live">{{ liveSpoken }}</p>
 
       <Transition name="forfeit-fade">
@@ -250,11 +343,17 @@ const rematchButton = computed(() =>
               :current="store.game.phase === 'PLAYING' && store.game.currentSeat === opponent.seat"
               :show-ready="isRoundOver"
               :disconnected="seatDisconnected(opponent.seat)"
-              :seconds-remaining="seatSecondsRemaining(opponent.seat)" />
+              :seconds-remaining="seatSecondsRemaining(opponent.seat)"
+              fan
+              :count="inFlight.shown(opponent.seat, opponent.handSize)"
+              :narrow="narrow"
+              :bubble="bubbles.bySeat.value[opponent.seat] ?? null"
+              :still="still" />
           </div>
         </div>
         <div class="table-center" role="region" :aria-label="ui.table.pile">
-          <PresidentTrick :trick="store.game.trick" :my-seat="store.mySeat" :name-of="displayName" :chips="chips" :notes="trickNotes" />
+          <PresidentTrick :trick="store.game.trick" :pile="store.pile" :still="still" :my-seat="store.mySeat"
+                          :name-of="displayName" :chips="chips" :notes="trickNotes" />
         </div>
       </div>
 
@@ -264,7 +363,9 @@ const rematchButton = computed(() =>
           :player="store.me"
           :label="ui.you"
           :current="store.isMyTurn && store.game.phase === 'PLAYING'"
-          :show-ready="isRoundOver" />
+          :show-ready="isRoundOver"
+          :bubble="bubbles.bySeat.value[store.mySeat] ?? null"
+          :still="still" />
         <PresidentHand :cards="store.hand" :selected="selectedNames" :received="receivedNames" @toggle="name => store.toggleCard(name)" />
         <PresidentRoundSummary
           v-if="isRoundOver"
@@ -305,6 +406,8 @@ const rematchButton = computed(() =>
       <div class="table-footer" data-test="table-footer">
         <Button data-test="back" class="back-button" :label="ui.back" icon="pi pi-undo"
                 severity="secondary" variant="text" rounded @click="router.push({ name: 'games' })" />
+        <AnimationSpeedButton class="speed" :speed="speed" :names="ui.motion.speeds" :label="ui.motion.speed"
+                              @cycle="cycleSpeed()" />
       </div>
     </template>
   </div>
@@ -416,7 +519,8 @@ const rematchButton = computed(() =>
 }
 .my-zone :deep(.seat-label) { font-size: 0.8rem; padding: 4px 14px; }
 
-.table-footer { flex: none; display: flex; align-items: center; }
+.table-footer { flex: none; display: flex; align-items: center; gap: var(--space-2); }
+.table-footer .speed { margin-left: auto; }
 
 .sr-only {
   position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
