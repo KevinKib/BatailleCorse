@@ -3,6 +3,8 @@ package org.kevinkib.cardgames.threemenmorris.domain;
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.game.PlayerId;
 
+import java.util.List;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
@@ -47,18 +49,49 @@ class MorrisVariantTest {
     }
 
     @Test
-    void picariaAddsTheFourShortDiagonalsAndKeepsTheEightLines() {
-        assertThat(Geometry.PICARIA.points(), is(9));
-        assertThat(Geometry.PICARIA.lines(), is(Geometry.TAPATAN.lines()));
-        assertThat(Geometry.PICARIA.neighbours(1), containsInAnyOrder(0, 2, 4, 3, 5));
-        assertThat(Geometry.PICARIA.neighbours(3), containsInAnyOrder(0, 6, 4, 1, 7));
-        assertThat(Geometry.PICARIA.neighbours(5), containsInAnyOrder(2, 8, 4, 1, 7));
-        assertThat(Geometry.PICARIA.neighbours(7), containsInAnyOrder(6, 8, 4, 3, 5));
-        assertThat(Geometry.PICARIA.neighbours(0), containsInAnyOrder(1, 3, 4));
-        assertThat(Geometry.PICARIA.neighbours(4), containsInAnyOrder(0, 1, 2, 3, 5, 6, 7, 8));
-        assertThat(Geometry.PICARIA.areAdjacent(1, 3), is(true));
-        assertThat(Geometry.PICARIA.areAdjacent(5, 7), is(true));
-        assertThat(Geometry.TAPATAN.areAdjacent(1, 3), is(false));
+    void picariaHasThirteenPointsTheGridAndFourCrossingsOnTheDiamond() {
+        // Grid 0..8 row by row; crossings of the diamond with the corner diagonals:
+        // 9 between 0 and 4, 10 between 2 and 4, 11 between 8 and 4, 12 between 6 and 4.
+        assertThat(Geometry.PICARIA.points(), is(13));
+        assertThat(Geometry.PICARIA.neighbours(0), containsInAnyOrder(1, 3, 9));
+        assertThat(Geometry.PICARIA.neighbours(1), containsInAnyOrder(0, 2, 4, 9, 10));
+        assertThat(Geometry.PICARIA.neighbours(2), containsInAnyOrder(1, 5, 10));
+        assertThat(Geometry.PICARIA.neighbours(3), containsInAnyOrder(0, 4, 6, 9, 12));
+        assertThat(Geometry.PICARIA.neighbours(4), containsInAnyOrder(1, 3, 5, 7, 9, 10, 11, 12));
+        assertThat(Geometry.PICARIA.neighbours(5), containsInAnyOrder(2, 4, 8, 10, 11));
+        assertThat(Geometry.PICARIA.neighbours(6), containsInAnyOrder(3, 7, 12));
+        assertThat(Geometry.PICARIA.neighbours(7), containsInAnyOrder(4, 6, 8, 11, 12));
+        assertThat(Geometry.PICARIA.neighbours(8), containsInAnyOrder(5, 7, 11));
+        assertThat(Geometry.PICARIA.neighbours(9), containsInAnyOrder(0, 1, 3, 4));
+        assertThat(Geometry.PICARIA.neighbours(10), containsInAnyOrder(1, 2, 4, 5));
+        assertThat(Geometry.PICARIA.neighbours(11), containsInAnyOrder(4, 5, 7, 8));
+        assertThat(Geometry.PICARIA.neighbours(12), containsInAnyOrder(3, 4, 6, 7));
+        // a corner is no longer next to the centre: a crossing sits between them
+        assertThat(Geometry.PICARIA.areAdjacent(0, 4), is(false));
+        assertThat(Geometry.PICARIA.areAdjacent(1, 3), is(false));
+        assertThat(Geometry.TAPATAN.areAdjacent(0, 4), is(true));
+    }
+
+    @Test
+    void picariaHasSixteenLinesTheGridAndEveryTripletAlongADrawnLine() {
+        assertThat(Geometry.PICARIA.lines().size(), is(16));
+        assertThat(Geometry.PICARIA.lines(), containsInAnyOrder(
+                // 3 rows and 3 columns of the grid
+                List.of(0, 1, 2), List.of(3, 4, 5), List.of(6, 7, 8),
+                List.of(0, 3, 6), List.of(1, 4, 7), List.of(2, 5, 8),
+                // corner diagonals 0-9-4-11-8 and 2-10-4-12-6: three consecutive points each
+                List.of(0, 9, 4), List.of(9, 4, 11), List.of(4, 11, 8),
+                List.of(2, 10, 4), List.of(10, 4, 12), List.of(4, 12, 6),
+                // diamond edges
+                List.of(1, 9, 3), List.of(1, 10, 5), List.of(5, 11, 7), List.of(7, 12, 3)));
+    }
+
+    @Test
+    void everyLineIsAChainOfAdjacentPoints() {
+        for (List<Integer> line : Geometry.PICARIA.lines()) {
+            assertThat(line.toString(), Geometry.PICARIA.areAdjacent(line.get(0), line.get(1))
+                    && Geometry.PICARIA.areAdjacent(line.get(1), line.get(2)), is(true));
+        }
     }
 
     @Test

@@ -14,7 +14,7 @@ public record MorrisRules(Geometry geometry, int piecesPerPlayer, PlacementRule 
         CENTRE_FORBIDDEN_DURING_PLACEMENT
     }
 
-    /** The centre of the nine-point boards, row by row. */
+    /** The centre of the boards, point 4 of the 3x3 grid (the same on the 13-point Picaria board). */
     public static final int CENTRE = 4;
 
     public static final MorrisRules TAPATAN = new MorrisRules(Geometry.TAPATAN, 3, PlacementRule.FREE);
