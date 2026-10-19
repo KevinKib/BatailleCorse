@@ -150,7 +150,15 @@ The owner's rules, always in force: equal play is a fixed rule, not an option (d
     until the next **play** is made on the trick, or the trick closes. Passes, even several around the
     table, do not close it, since the chain stays the top. A **single lead of r does not open it** [O,
     decided 2026-10-15, section 13.1 item 19]: an equal play is needed first, so the holder of the three
-    other 9s cannot play them out of turn on a lone 9 (example 8).
+    other 9s cannot play them out of turn on a lone 9 (example 8). In turn they can (next bullet).
+  - **Three cards on a lone card, in turn** [O, decided 2026-10-19]: when the top of the trick is a single card
+    of rank r (a chain of one play), the player to act who holds the three other cards of r may play them at
+    once: the cumulative count of r reaches four, the trick closes (`QUAD`) and that player leads. The play is
+    listed in `legalPlays` (so `mustPlay` counts it). It works only with exactly the three missing cards, never
+    with fewer, never out of turn, and never the other way round: a lone card does not finish a triple, nor a
+    single a pair (a smaller group never completes on a bigger one). The cases: single then three, legal; single
+    then pair, single or three of another rank, illegal; pair then pair, legal (equal play); pair then single,
+    illegal; triple then single, illegal; two singles then the last two, legal (as before).
   - **Optional** [O]: the holder may keep the cards; there is no penalty.
   - This is the only out-of-turn play of the game (3.4).
 
@@ -186,9 +194,9 @@ The test contract of the PR that ships equal play (plan, V1). Four players A, B,
    leads. Had A passed instead, that pass would end the binding again, and B would be free to play a 10.
 8. **A single lead does not open the window (O4).** A leads 9♠ (a chain of one play). C holds 9♥ 9♦ 9♣ and
    plays them out of turn: refused with `NotPlayersTurnException`, no mutation. When the turn reaches C, the
-   same three cards are not a legal in-turn play either (a triple on a single). Only after an equal play
-   does the window open: had B played 9♥ (a chain of two), the holder of the two missing 9s could complete
-   at once, as in example 4.
+   same three cards are a legal in-turn play (decided 2026-10-19): the four 9s are down, the trick closes
+   (`QUAD`) and C leads. Only after an equal play does the out-of-turn window open: had B played 9♥ (a chain
+   of two), the holder of the two missing 9s could complete at once, as in example 4.
 9. **A forbidden finisher out first closes the trick without taking 1st place (O3, reversed 2026-10-18).** A leads
    K♠ K♥; B plays A♠ A♥; C plays 2♠ 2♥ as their last cards. C goes out with a forbidden finish: C does not take 1st
    place (C will be placed last) but the pair of 2s cuts the pair and closes the trick (`CUT`, not `FIRST_OUT`).

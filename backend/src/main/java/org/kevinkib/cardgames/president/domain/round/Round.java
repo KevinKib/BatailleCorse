@@ -12,6 +12,7 @@ import org.kevinkib.cardgames.president.domain.event.TrickEndReason;
 import org.kevinkib.cardgames.president.domain.event.TrickWon;
 import org.kevinkib.cardgames.president.domain.play.BeatRule;
 import org.kevinkib.cardgames.president.domain.play.Completion;
+import org.kevinkib.cardgames.president.domain.play.Constraint;
 import org.kevinkib.cardgames.president.domain.play.IllegalPlayException;
 import org.kevinkib.cardgames.president.domain.play.LegalPlays;
 import org.kevinkib.cardgames.president.domain.play.Play;
@@ -103,7 +104,7 @@ public final class Round {
             }
             throw new NotPlayersTurnException();
         }
-        boolean completion = isCompletion(play);
+        boolean completion = isCompletion(play, inTurn);
         if (!inTurn && !completion) {
             throw refusalOutOfTurn(play);
         }
@@ -274,7 +275,21 @@ public final class Round {
         if (phase != Phase.PLAYING || seat == null || seat.id() == null || seat.id() != current) {
             return List.of();
         }
-        return LegalPlays.of(hands.get(current), trick.top(), order, trick.constraint(), options.reducedCut());
+        List<Play> plays = new ArrayList<>(
+                LegalPlays.of(hands.get(current), trick.top(), order, trick.constraint(), options.reducedCut()));
+        Chain chain = trick.chain();
+        if (chain != null && isLoneCard(chain)) {
+            // three cards complete the four on a lone card: listed in rank order, after the lone card's own rank
+            List<Card> missing = Completion.heldBy(hands.get(current), chain.rank(), chain.cards());
+            if (!missing.isEmpty()) {
+                int index = 0;
+                while (index < plays.size() && order.compare(plays.get(index).rank(), chain.rank()) <= 0) {
+                    index++;
+                }
+                plays.add(index, new Play(missing, chain.rank()));
+            }
+        }
+        return plays;
     }
 
     /**
@@ -315,10 +330,21 @@ public final class Round {
     }
 
     /** Whether the cards are exactly the ones that complete the four, with the window open. */
-    private boolean isCompletion(Play play) {
+    private boolean isCompletion(Play play, boolean inTurn) {
         Chain chain = trick.chain();
-        return chain != null && chain.plays() >= 2 && play.rank() == chain.rank()
+        return chain != null && (chain.plays() >= 2 || (inTurn && isLoneCard(chain)))
+                && play.rank() == chain.rank()
                 && Completion.isCompletion(play.cards(), chain.rank(), chain.cards());
+    }
+
+    /**
+     * A single card at the top of the trick that three more of its rank can complete, in turn only: the cumulative
+     * count of the rank reaches four with a play of exactly the cards missing. It never works the other way round
+     * (a lone card on a triple), and a 2 is never left on top of a trick.
+     */
+    private boolean isLoneCard(Chain chain) {
+        return chain.plays() == 1 && chain.cards().size() == 1 && chain.rank() != order.topRank()
+                && trick.constraint() == Constraint.BEAT;
     }
 
     /**
