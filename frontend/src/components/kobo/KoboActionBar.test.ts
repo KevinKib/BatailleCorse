@@ -50,6 +50,17 @@ describe('KoboActionBar', () => {
     expect(wrapper.find('.actions-buttons').exists()).toBe(true);
   });
 
+  // Where the buttons go around the text is in the CSS (one on the right, two one per side, three under it); the
+  // Cypress spec kobo-turn-label-centered measures that the text stays on the axis of the cards in every case.
+  it.each<[string, KoboPhase, KoboAction[], Record<string, unknown>, string]>([
+    ['OneButton', 'DRAW', ['DRAW'], {}, 'actions-buttons--n1'],
+    ['TwoButtons', 'TURN_END', ['END_TURN', 'ANNOUNCE_KOBO'], {}, 'actions-buttons--n2'],
+    ['AButtonAndCancel', 'DECISION', ['DISCARD_DRAWN'], { pending: { kind: 'match-armed' } }, 'actions-buttons--n2'],
+    ['ThreeButtons', 'TURN_END', ['END_TURN', 'ANNOUNCE_KOBO'], { canHide: true }, 'actions-buttons--n3'],
+  ])('given%s_thenTheirPlaceAroundTheTextIs%s', (_name, phase, actions, props, expected) => {
+    expect(mountBar(phase, actions, props).find('.actions-buttons').classes()).toContain(expected);
+  });
+
   it('givenAButtonIsPressed_thenTheBarEmitsItsEvent', async () => {
     const wrapper = mountBar('TURN_END', ['END_TURN', 'ANNOUNCE_KOBO']);
     await button(wrapper, 'endTurn').trigger('click');

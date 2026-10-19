@@ -34,6 +34,9 @@ const buttons = computed(() => barButtons(props.game).filter(id => id !== 'match
 // No button, no column: an empty one would still cost the row gap and push the title off the centre of the bar.
 const hasButtons = computed(() => buttons.value.length > 0 || props.pending.kind !== 'none' || props.canHide);
 
+// How many buttons the bar shows (1, 2 or 3 and more): it decides where they go around the text (see `.actions-buttons`).
+const buttonCount = computed(() => Math.min(3, buttons.value.length + (props.pending.kind !== 'none' ? 1 : 0) + (props.canHide ? 1 : 0)));
+
 // "I have memorised" alone: the button goes under the text, so the text is centred in the whole bar.
 const readyOnly = computed(() => buttons.value.length === 1 && buttons.value[0] === 'ready' && props.pending.kind === 'none' && !props.canHide);
 
@@ -51,7 +54,7 @@ const armed = computed(() => props.pending.kind === 'match-armed' || props.pendi
 
 <template>
   <div class="kobo-actions" :class="{ 'kobo-actions--ready': readyOnly }" data-test="kobo-actions">
-    <div class="actions-row">
+    <div class="actions-row" :class="{ 'actions-row--bare': !hasButtons }">
       <div class="actions-text">
         <!-- Floats over the text of the bar (never over its buttons) instead of pushing the table. -->
         <p v-if="notice" class="notice" data-test="notice" role="alert">{{ ui.notice[notice] }}</p>
@@ -62,7 +65,7 @@ const armed = computed(() => props.pending.kind === 'match-armed' || props.pendi
         <!-- Under the phase line, in the room the text column leaves free in the first row of the bar. -->
         <slot name="log" />
       </div>
-      <div v-if="hasButtons" class="actions-buttons">
+      <div v-if="hasButtons" class="actions-buttons" :class="`actions-buttons--n${buttonCount}`">
         <Button
           v-for="id in buttons"
           :key="id"
@@ -104,6 +107,7 @@ const armed = computed(() => props.pending.kind === 'match-armed' || props.pendi
    notice floats over the bar instead of pushing it. The memorise state (text, then its button) has the same height. */
 .kobo-actions {
   position: relative;
+  container-type: inline-size;
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -121,34 +125,71 @@ const armed = computed(() => props.pending.kind === 'match-armed' || props.pendi
   .kobo-actions--ready .actions-buttons { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); }
 }
 /* Memorising: nothing to log and no turn cue; the text is centred in the bar and the button sits under it. */
-.kobo-actions--ready .actions-row { flex-direction: column; justify-content: flex-start; gap: 0; }
+.kobo-actions--ready .actions-row { display: flex; flex-direction: column; justify-content: flex-start; gap: 0; }
 .kobo-actions--ready .actions-text { flex: none; width: 100%; }
 .kobo-actions--ready .actions-text :deep(.turn-indicator),
 .kobo-actions--ready .actions-text :deep(.event-log) { display: none; }
 .kobo-actions--ready .actions-text .line { min-height: 1.25em; }
+/* Three tracks: the text is always the middle one, so it is centred on the bar (and so on my cards, which are
+   centred in the same box) whatever the buttons are. The two side tracks are equal (1fr each), so a button never
+   pushes the text off the axis. One button sits in the right track; two share the sides, one each (End turn on the
+   left, Kobo! on the right), which keeps the text centred and the bar at its height; three would not fit beside the
+   text on a phone, so they take a row of their own under it, centred (the bar grows, as it always did then). */
 .actions-row {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) fit-content(var(--kobo-text-max, 11rem)) minmax(0, 1fr);
   align-items: center;
-  justify-content: center;
-  gap: 0 var(--space-2);
+  column-gap: var(--space-2);
   min-height: 44px;
 }
-/* The text takes what the buttons leave and wraps; the buttons keep their size and wrap below it if they must. */
 .actions-text {
   position: relative;
-  flex: 1 1 8rem;
+  grid-column: 2;
+  grid-row: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
-.actions-buttons {
+/* No button: nothing to leave room for, the text takes the whole row (and stays centred in it). */
+.actions-row--bare .actions-text { grid-column: 1 / -1; }
+/* One or two buttons: the wrapper disappears and each button is placed in a side track. */
+.actions-buttons--n1,
+.actions-buttons--n2 { display: contents; }
+.actions-buttons--n1 > .action-button { grid-column: 3; grid-row: 1; justify-self: start; }
+.actions-buttons--n2 > .action-button:first-child { grid-column: 1; grid-row: 1; justify-self: end; }
+.actions-buttons--n2 > .action-button:last-child { grid-column: 3; grid-row: 1; justify-self: start; }
+/* A side track is narrow on a phone: a label stays on one line, with a little less padding. */
+.actions-buttons--n1 > .action-button,
+.actions-buttons--n2 > .action-button { white-space: nowrap; padding-inline: 0.7rem; }
+.actions-buttons--n3 {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  justify-self: center;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: var(--space-1);
 }
+/* A wider bar gives the text room for a whole prompt on one line (the sides still hold one button each). */
+@container (min-width: 600px) {
+  .actions-row { --kobo-text-max: 22rem; }
+}
+/* And one wide enough for the right track to hold three buttons keeps them all beside the text. */
+@container (min-width: 900px) {
+  .actions-buttons--n2,
+  .actions-buttons--n3 {
+    display: flex;
+    grid-column: 3;
+    grid-row: 1;
+    justify-self: start;
+    gap: var(--space-1);
+  }
+  .actions-buttons--n2 > .action-button:first-child,
+  .actions-buttons--n2 > .action-button:last-child { grid-column: auto; grid-row: auto; justify-self: auto; }
+}
+/* Memorising: the one button is in the flow of the column, under the text. */
+.kobo-actions--ready .actions-buttons { display: flex; justify-content: center; }
 .action-button { min-height: 44px; min-width: 44px; }
 .line {
   margin: 0;
