@@ -33,7 +33,7 @@ function nothingScrolls() {
   });
   cy.get('[data-test="ready"]').should('be.visible').then(($button) => {
     const box = $button[0].getBoundingClientRect();
-    expect(box.bottom, 'Next round button bottom').to.be.at.most(Cypress.config('viewportHeight'));
+    expect(box.bottom, 'Next round button bottom').to.be.at.most($button[0].ownerDocument.defaultView!.innerHeight);
   });
 }
 
@@ -80,7 +80,9 @@ describe('President end of round, 3 players on a fixed deal', () => {
           cy.get('[data-test="motion-card"]').should('not.exist');
           cy.get('[data-test="my-zone"]').should('not.exist');
           cy.get('[data-test="round-over-place"]').should('have.length', 3);
-          cy.get('[data-test="round-over-place"]').first().should('have.css', 'animation-name', 'place-in');
+          cy.get('[data-test="round-over-place"]').first().should(($row) => {
+            expect($row.css('animation-name'), 'places come in animated').to.match(/^place-in/);
+          });
           cy.get('[data-test="round-over-place"]').last().should('be.visible');
           nothingScrolls();
         });

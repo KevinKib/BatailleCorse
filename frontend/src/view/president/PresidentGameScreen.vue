@@ -463,7 +463,7 @@ const rematchButton = computed(() =>
         {{ ui.table.offline }}
       </div>
 
-      <div class="table-frame" data-test="president-table" role="region" :aria-label="ui.table.opponents"
+      <div class="table-frame" :class="{ 'table-frame--round-end': sheetOpen }" data-test="president-table" role="region" :aria-label="ui.table.opponents"
            :style="{ '--opponent-columns': columns }">
         <div class="opponents-ring" data-test="opponents">
           <div
@@ -744,6 +744,8 @@ const rematchButton = computed(() =>
   .my-zone :deep(.president-seat), .my-zone :deep(.seat-hand) {
     flex-direction: row; flex-wrap: wrap; justify-content: center; align-items: center; gap: 2px 8px;
   }
+  /* The pile says nothing once the round is over and the sheet leaves the table little room (as Kobo's). */
+  .table-frame--round-end .table-center { display: none; }
   .table-center { position: static; transform: none; flex: 1 1 auto; display: flex; align-items: center; justify-content: center; padding: var(--space-1) var(--space-2); }
 }
 
