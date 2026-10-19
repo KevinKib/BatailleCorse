@@ -17,6 +17,7 @@ import org.kevinkib.cardgames.president.domain.exchange.PendingReturn;
 import org.kevinkib.cardgames.president.domain.play.Play;
 import org.kevinkib.cardgames.president.domain.round.Action;
 import org.kevinkib.cardgames.president.domain.round.Phase;
+import org.kevinkib.cardgames.president.presentation.PresidentExchangeViewTimeout;
 import org.kevinkib.cardgames.president.presentation.PresidentGameActions;
 import org.kevinkib.cardgames.president.presentation.dto.PresidentDto;
 import org.kevinkib.cardgames.presentation.bot.FixedThinkingDelay;
@@ -55,6 +56,7 @@ class PresidentBotGameIT {
     private static final PlayerId BOT = new PlayerId(1);
     private static final PlayerId OTHER_HUMAN = new PlayerId(2);
     private static final int STEP_BOUND = 2_000;
+    private static final Duration EXCHANGE_VIEW_TIMEOUT = Duration.ofSeconds(20);
 
     /** Wraps a strategy to record every decision the game would have refused. */
     private static final class CheckedBot implements PresidentBotStrategy {
@@ -97,6 +99,10 @@ class PresidentBotGameIT {
                         || !view.hand().containsAll(giveBack.cards())) {
                     violations.add("illegal give back " + giveBack.cards());
                 }
+            } else if (decision instanceof PresidentBotDecision.SeeExchange) {
+                if (!view.can(Action.SEE_EXCHANGE)) {
+                    violations.add("sees the exchange out of the view in " + view.phase());
+                }
             } else if (!view.can(Action.READY)) {
                 violations.add("ready out of the barrier in " + view.phase());
             }
@@ -136,6 +142,7 @@ class PresidentBotGameIT {
             coordinator = new PresidentBotCoordinator(sessions::botSeats, sessions::seatOptions, actions, scheduler,
                     new FixedThinkingDelay(Duration.ZERO), l -> checked);
             broadcaster.addListener(coordinator);
+            broadcaster.addListener(new PresidentExchangeViewTimeout(actions, scheduler, EXCHANGE_VIEW_TIMEOUT));
 
             RoomCreated room = sessions.createRoom(PresidentFactory.GAME_TYPE, "Alice");
             id = new GameId(room.gameId());
@@ -179,6 +186,13 @@ class PresidentBotGameIT {
                 }
                 return false;
             }
+            case EXCHANGE_VIEW -> {
+                if (game.exchangeSeen().contains(human)) {
+                    return false;
+                }
+                table.actions.seeExchange(id, human, game.round());
+                return true;
+            }
             case ROUND_OVER -> {
                 if (game.readySeats().contains(human)) {
                     return false;
@@ -195,8 +209,10 @@ class PresidentBotGameIT {
     private static void playUntil(Table table, java.util.function.BooleanSupplier done) throws Exception {
         int steps = 0;
         while (!done.getAsBoolean() && steps++ < STEP_BOUND) {
-            if (!table.scheduler.pending().isEmpty()) {
-                table.scheduler.runNext();
+            var botTask = table.scheduler.pending().stream()
+                    .filter(task -> !task.delay().equals(EXCHANGE_VIEW_TIMEOUT)).findFirst();
+            if (botTask.isPresent()) {
+                botTask.get().run(); // the exchange view timeout fires only when a test says so
             } else if (!humanActs(table, HUMAN) && !humanActs(table, OTHER_HUMAN)) {
                 throw new AssertionError("The table stalled at step " + steps + ": phase " + table.game.phase()
                         + ", current seat " + table.game.currentSeat());
@@ -246,6 +262,53 @@ class PresidentBotGameIT {
 
         assertThat(table.violations, is(empty()));
         assertThat(table.game.phase() == Phase.EXCHANGE || table.game.phase() == Phase.PLAYING, is(true));
+    }
+
+    /** Round 1 played out and everyone ready: the table is in the exchange of round 2. */
+    private static void toTheExchangeView(Table table) throws Exception {
+        playUntil(table, () -> table.game.round() == 2);
+        playUntil(table, () -> table.game.phase() == Phase.EXCHANGE_VIEW);
+        // the bot's acknowledgement is scheduled with no delay: let it run, the humans do not act
+        table.scheduler.pending().stream().filter(task -> task.delay().isZero()).forEach(ManualBotScheduler.Entry::run);
+    }
+
+    @Test
+    void theBotAcknowledgesAtOnceAndTheHumansAcknowledgementsBeginTheFirstTrick() throws Exception {
+        Table table = new Table(PresidentBotLevel.HARD, 11);
+        table.fixTheDealAndStart();
+        playUntil(table, () -> table.game.phase() == Phase.ROUND_OVER);
+        toTheExchangeView(table);
+
+        // the bot acknowledged with no delay and is the only one: both humans are still waited for
+        assertThat(table.game.exchangeSeen(), is(Set.of(BOT)));
+        assertThat(table.scheduler.pending().size(), is(1)); // the timer alone
+        assertThat(table.scheduler.pending().get(0).delay(), is(EXCHANGE_VIEW_TIMEOUT));
+
+        table.actions.seeExchange(table.id, HUMAN, 2);
+        assertThat(table.game.phase(), is(Phase.EXCHANGE_VIEW));
+        table.actions.seeExchange(table.id, OTHER_HUMAN, 2);
+
+        assertThat(table.game.phase(), is(Phase.PLAYING));
+        assertThat(table.scheduler.pending().stream().anyMatch(t -> t.delay().equals(EXCHANGE_VIEW_TIMEOUT)),
+                is(false)); // the timer was cancelled by the play beginning
+        playUntil(table, () -> table.game.phase() == Phase.ROUND_OVER || table.game.round() > 2);
+        assertThat(table.violations, is(empty()));
+    }
+
+    @Test
+    void theTimeoutBeginsTheFirstTrickWhenTheHumansNeverAcknowledge() throws Exception {
+        Table table = new Table(PresidentBotLevel.HARD, 13);
+        table.fixTheDealAndStart();
+        playUntil(table, () -> table.game.phase() == Phase.ROUND_OVER);
+        toTheExchangeView(table);
+        assertThat(table.game.exchangeSeen(), is(Set.of(BOT)));
+
+        table.scheduler.pending().stream().filter(t -> t.delay().equals(EXCHANGE_VIEW_TIMEOUT)).findFirst()
+                .orElseThrow().run();
+
+        assertThat(table.game.phase(), is(Phase.PLAYING));
+        playUntil(table, () -> table.game.phase() == Phase.ROUND_OVER || table.game.round() > 2);
+        assertThat(table.violations, is(empty()));
     }
 
     @Test
