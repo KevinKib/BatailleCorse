@@ -41,10 +41,15 @@ class PresidentBotSelfPlayTest {
     private static final PresidentBotLevel[] MIX = PresidentBotLevel.values();
 
     /** Plays one match; the bots' levels are given per seat. */
-    private static final class Match {
+    static final class Match {
         final President game;
         final List<HeuristicPresidentBot> bots = new ArrayList<>();
         final List<PresidentBotMemory> memories = new ArrayList<>();
+        final List<PresidentBotLevel> levels;
+        /** Forbidden finishes (going out on a 2) per level, and the seat-rounds played per level. */
+        final Map<PresidentBotLevel, Integer> forbiddenFinishes = new EnumMap<>(PresidentBotLevel.class);
+        final Map<PresidentBotLevel, Integer> seatRounds = new EnumMap<>(PresidentBotLevel.class);
+        private int lastCountedRound;
         int commands;
         int rounds;
         int outOfTurnCompletions;
@@ -54,6 +59,7 @@ class PresidentBotSelfPlayTest {
         }
 
         Match(int seats, long seed, List<PresidentBotLevel> levels, PresidentOptions options) {
+            this.levels = levels;
             game = new President(GameId.generate(), seats, seed, new RandomDeckSource(), options);
             for (int seat = 0; seat < seats; seat++) {
                 bots.add(new HeuristicPresidentBot(levels.get(seat).tuning(), new Random(seed * 31 + seat)));
@@ -75,8 +81,24 @@ class PresidentBotSelfPlayTest {
                     memories.get(seat.id()).observe(PresidentBotView.forSeat(game, seat));
                 }
                 assertThat("the whole deck after command " + commands, cardsInGame(), is(52));
+                countRound();
             }
             return game.isFinished();
+        }
+
+        /** Tallies a round once it is over: who went out on a 2, and which levels played it. */
+        private void countRound() {
+            var result = game.lastRoundResult();
+            if (result == null || result.round() == lastCountedRound) {
+                return;
+            }
+            lastCountedRound = result.round();
+            for (PlayerId seat : result.forbiddenFinishers()) {
+                forbiddenFinishes.merge(levels.get(seat.id()), 1, Integer::sum);
+            }
+            for (PlayerId seat : game.getPlayerIds()) {
+                seatRounds.merge(levels.get(seat.id()), 1, Integer::sum);
+            }
         }
 
         /** A bot that is not on turn and holds a completion decides first; true when it completed. */

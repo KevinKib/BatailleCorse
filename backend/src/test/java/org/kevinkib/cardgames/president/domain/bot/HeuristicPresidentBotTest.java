@@ -159,6 +159,47 @@ class HeuristicPresidentBotTest {
     }
 
     @Test
+    void thePlannerNeverLeavesAHandOfTwosOnlyWhenItLeads() {
+        PresidentBotView view = leading("AH 2C", PresidentOptions.defaults());
+
+        assertThat(shown(decide(CAUTIOUS_PLANNER, view, new PresidentBotMemory(PresidentBotFixtures.BOT_LEADING))), is("2"));
+        assertThat(shown(decide(CAUTIOUS, view, new PresidentBotMemory(PresidentBotFixtures.BOT_LEADING))), is("A"));
+    }
+
+    @Test
+    void thePlannerCutsWithItsTwoRatherThanStrandItAsTheLastCard() {
+        PresidentBotView view = following("5H 2C", "3H", PresidentOptions.defaults());
+
+        assertThat(shown(decide(CAUTIOUS_PLANNER, view, new PresidentBotMemory(PresidentBotFixtures.BOT_FOLLOWING))), is("2"));
+    }
+
+    @Test
+    void thePlannerPassesRatherThanPlayTheOnlySetThatStrandsItsTwos() {
+        PresidentBotView view = following("5H 5D 2C", "3H 3D", PresidentOptions.defaults());
+
+        assertThat(shown(decide(CAUTIOUS_PLANNER, view, new PresidentBotMemory(PresidentBotFixtures.BOT_FOLLOWING))), is("pass"));
+    }
+
+    @Test
+    void underCompulsoryPlayThePlannerLeadsTwosWhileTwoOtherSetsRemain() {
+        PresidentBotView view = leading("2C 5H 9D", PresidentOptions.defaults().withMustPlay(true));
+
+        assertThat(shown(decide(CAUTIOUS_PLANNER, view, new PresidentBotMemory(PresidentBotFixtures.BOT_LEADING))), is("2"));
+    }
+
+    @Test
+    void aRandomPlayNeverGoesOutOnATwoNorStrandsTheTwosWhenAnotherChoiceExists() {
+        PresidentBotTuning random = new PresidentBotTuning(1, 0, 0, 2, 4, true);
+        PresidentBotView out = following("2C 2D", "9H", PresidentOptions.defaults());
+        PresidentBotView stranding = leading("5H 2C", PresidentOptions.defaults());
+
+        assertThat(shown(new HeuristicPresidentBot(random, ALWAYS_HIGH).decide(out,
+                new PresidentBotMemory(PresidentBotFixtures.BOT_FOLLOWING))), is("pass"));
+        assertThat(shown(new HeuristicPresidentBot(random, ALWAYS_LOW).decide(stranding,
+                new PresidentBotMemory(PresidentBotFixtures.BOT_LEADING))), is("2"));
+    }
+
+    @Test
     void thePlannerKeepsLeadingLowFirstWhenSeveralLowSetsRemain() {
         PresidentBotView view = leading("2C 2D 5H 9D", PresidentOptions.defaults());
 
