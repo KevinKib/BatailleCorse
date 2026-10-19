@@ -1,5 +1,5 @@
 // Shared steps of the President specs: the browser under test hosts the room, scripted STOMP clients are the others.
-import { joinAsScriptedPlayer, type ScriptedPlayer } from './stompPlayer';
+import { joinAsScriptedPlayer, type ScriptedPlayer, type ScriptedPlayerOptions } from './stompPlayer';
 
 export type Guest = ScriptedPlayer & { token: string; seat: number };
 
@@ -19,11 +19,15 @@ export function noHorizontalScroll() {
   });
 }
 
-/** Joins `names` as scripted guests (seats 1..) and waits for the lobby to count them. */
-export function joinGuests(id: string, names: string[]) {
+/**
+ * Joins `names` as scripted guests (seats 1..) and waits for the lobby to count them. A guest acknowledges the card
+ * exchange by itself (the table waits for every human to have seen it); `options.holdExchange` keeps every guest back
+ * (`guest.seeExchange()` or `scriptedSeeExchange` lets it through).
+ */
+export function joinGuests(id: string, names: string[], options: ScriptedPlayerOptions = {}) {
   const guests: Guest[] = [];
   names.forEach((name) => {
-    joinAsScriptedPlayer(id, name, 'president').then((guest) => { guests.push(guest); });
+    joinAsScriptedPlayer(id, name, 'president', options).then((guest) => { guests.push(guest); });
   });
   cy.get('[data-test="player-count"]').should('contain.text', `${names.length + 1} / 8`);
   return cy.then(() => guests);
@@ -61,6 +65,12 @@ export function scriptedPlay(player: ScriptedPlayer & { seat: number }, rank: st
     const cards = player.lastState().hand.filter((c: any) => c.rank === rank).slice(0, count);
     player.publish('/app/president/play', { cards });
   });
+}
+
+/** The scripted player has seen the exchange of the round: it says so as soon as the server asks (a held-back guest). */
+export function scriptedSeeExchange(player: ScriptedPlayer) {
+  awaitState(player, 'the exchange view', (s) => s.phase === 'EXCHANGE_VIEW' && s.availableActions.includes('SEE_EXCHANGE'));
+  cy.then(() => player.seeExchange());
 }
 
 /** Every player presses "ready" at the round-over barrier. */

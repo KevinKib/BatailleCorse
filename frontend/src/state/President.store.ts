@@ -33,6 +33,9 @@ export interface PresidentTableEvent {
 /** Events that are not about the table: they have their own state (presence, forfeit). */
 const NOT_TABLE_EVENTS = new Set(['OPPONENT_DISCONNECTED', 'OPPONENT_RECONNECTED', 'FORFEIT']);
 
+/** The exchange view's own events: they change the state only (no move, no log entry, no notice). */
+const EXCHANGE_VIEW_EVENTS = new Set(['EXCHANGE_SEEN', 'EXCHANGE_CLOSED']);
+
 /**
  * Identifies the trick a selection was made in: the round, the phase and who opened it with which cards. Plays
  * added to the same trick keep it; a new trick, a new round or a new phase change it.
@@ -65,6 +68,8 @@ export const usePresidentStore = defineStore('president-store', () => {
   // states only). Null after a first state, a lobby or a clear.
   const stateChange = ref<{ id: number; before: PresidentState; after: PresidentState } | null>(null);
   let changeId = 0;
+  // The round whose exchange I have told the server I saw (once per round); forgotten once the view is over.
+  let exchangeSeenRound: number | null = null;
 
   const game = computed<PresidentState | null>(() =>
     state.value && state.value.started ? state.value : null);
@@ -103,6 +108,7 @@ export const usePresidentStore = defineStore('president-store', () => {
         state.value = next;
         stateChange.value = nextGame && previousGame ? { id: ++changeId, before: previousGame, after: nextGame } : null;
         busy.value = false;
+        if (nextGame?.phase !== 'EXCHANGE_VIEW') exchangeSeenRound = null;
         room.onStateUpdate(next.started);
         if (nextGame) {
           for (const p of nextGame.players) roster.value = { ...roster.value, [p.seat]: p };
@@ -135,6 +141,7 @@ export const usePresidentStore = defineStore('president-store', () => {
       case 'seat-change': mySeat.value = event.seat; break;
       case 'event':
         if (event.eventType === 'FORFEIT') room.onForfeit(event.eventData as ForfeitEventData);
+        if (EXCHANGE_VIEW_EVENTS.has(event.eventType)) break;
         if (NOT_TABLE_EVENTS.has(event.eventType)) {
           presence.applyPresenceEvent(event.eventType, event.eventData);
         } else {
@@ -158,6 +165,7 @@ export const usePresidentStore = defineStore('president-store', () => {
     events.value = [];
     previousGame = null;
     stateChange.value = null;
+    exchangeSeenRound = null;
     gameId.value = null;
     roster.value = {};
   }
@@ -262,6 +270,24 @@ export const usePresidentStore = defineStore('president-store', () => {
     return can('READY') ? send(() => session.ready()) : false;
   }
 
+  /**
+   * Tells the server I have seen this round's exchange, once per round and only while it asks. No `busy` lock:
+   * nothing else is possible during the view, and a lost frame is retried by the reload after a reconnection.
+   */
+  function seeExchange(): boolean {
+    const round = game.value?.round;
+    if (!can('SEE_EXCHANGE') || round === undefined || exchangeSeenRound === round) return false;
+    notice.value = null;
+    try {
+      session.seeExchange(round);
+    } catch {
+      notice.value = 'connection';
+      return false;
+    }
+    exchangeSeenRound = round;
+    return true;
+  }
+
   // Leaves the lobby and forgets everything about it, so the next room starts from a clean store.
   const leave = () => room.leave(clear);
 
@@ -275,7 +301,7 @@ export const usePresidentStore = defineStore('president-store', () => {
     busy, notice, lastEvent, events, pile, stateChange,
     me, isMyTurn, can, options, hand, screen,
     selectedCards, selectedPattern, canPlay, playHint, completions, canGiveBack, canComplete,
-    applyEvent, toggleCard, clearSelection, play, complete, pass, giveBack, ready,
+    applyEvent, toggleCard, clearSelection, play, complete, pass, giveBack, ready, seeExchange,
     suggestGiveBack,
     create: (name?: string) => session.create(name),
     join: (id: string, name?: string) => session.join(id, name),

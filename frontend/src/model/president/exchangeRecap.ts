@@ -14,12 +14,12 @@ export interface ExchangeRecapLine {
 }
 
 /**
- * What the exchange of the round came to, once every pair is done and the play has begun (the server keeps the pairs
+ * What the exchange of the round came to, once every pair is done (in the exchange view, then once the play has begun; the server keeps the pairs
  * and my `given` / `received` cards all round): a line per pair, with the cards only in my own. Empty before that,
  * with no exchange, and once the round is over. Pure.
  */
 export function exchangeRecap(state: PresidentState, mySeat: number): ExchangeRecapLine[] {
-  if (state.phase !== 'PLAYING' || state.exchange.length === 0 || !state.exchange.every(p => p.done)) return [];
+  if ((state.phase !== 'PLAYING' && state.phase !== 'EXCHANGE_VIEW') || state.exchange.length === 0 || !state.exchange.every(p => p.done)) return [];
   return state.exchange.map(pair => {
     const mine = pair.low === mySeat || pair.high === mySeat;
     const asLow = pair.low === mySeat;

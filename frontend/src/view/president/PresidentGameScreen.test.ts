@@ -368,6 +368,185 @@ describe('PresidentGameScreen', () => {
       }
     });
 
+    describe('the exchange view (the table waits for every human to see the exchange)', () => {
+      const phaseLine = (wrapper: { get: (s: string) => { text: () => string } }) => wrapper.get('[data-test="phase-text"]').text();
+      const viewing = (overrides: Partial<PresidentState> = {}) => exchanging({
+        phase: 'EXCHANGE_VIEW', availableActions: ['SEE_EXCHANGE'], toGiveBack: 0, currentSeat: 2,
+        exchange: [{ high: 0, low: 2, count: 2, done: true }],
+        received: buildPresidentHand(['KING', 'HEART'], ['ACE', 'CLUB']), given: buildPresidentHand(['3', 'CLUB'], ['9', 'HEART']),
+        ...overrides,
+      });
+      const ui = messagesEn.presidentUi.exchangeView;
+      const nobodySaw = () => seatsOf(3, { 0: { title: 'PRESIDENT' }, 1: { title: 'NEUTRAL' }, 2: { title: 'SCUM' } });
+      const iSaw = (...others: number[]) => seatsOf(3, {
+        0: { title: 'PRESIDENT', sawExchange: true }, 1: { title: 'NEUTRAL', sawExchange: others.includes(1) },
+        2: { title: 'SCUM', sawExchange: others.includes(2) },
+      });
+      const spyAck = (store: ReturnType<typeof usePresidentStore>) =>
+        vi.spyOn(store, 'seeExchange').mockImplementation(() => true);
+      const afterTimers = async (ms: number) => { vi.advanceTimersByTime(ms); await flushPromises(); };
+
+      beforeEach(() => { vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] }); });
+      afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {}))); });
+
+      it('givenIHaveNotSeenItYet_thenThePhaseLineSaysTheExchange_andPlayAndPassAreDisabled', async () => {
+        const { wrapper } = await mountRoom(room(viewing({ players: nobodySaw() })));
+        expect(phaseLine(wrapper)).toBe(ui.watching);
+        expect(wrapper.get('[data-test="play"]').attributes('disabled')).toBeDefined();
+        expect(wrapper.get('[data-test="pass"]').attributes('disabled')).toBeDefined();
+        expect(wrapper.find('[data-test="exchange-panel"]').exists()).toBe(false);
+      });
+
+      it('givenIHaveSeenItAndOneHumanIsLeft_thenThePhaseLineNamesThem', async () => {
+        const { wrapper } = await mountRoom(room(viewing({ players: iSaw(2), availableActions: [] })));
+        expect(phaseLine(wrapper)).toBe('Waiting for P1 to see the exchange');
+      });
+
+      it('givenTwoHumansLeftOrMore_thenThePhaseLineNamesThemOrCountsThem', async () => {
+        const five = (...saw: number[]) => Array.from({ length: 5 }, (_, seat) =>
+          buildPresidentPlayer(seat, { name: `P${seat}`, sawExchange: saw.includes(seat), bot: seat === 4 ? true : undefined }));
+        const two = await mountRoom(room(viewing({ players: five(0, 3), availableActions: [] })));
+        expect(phaseLine(two.wrapper)).toBe('Waiting for P1 and P2');
+        two.wrapper.unmount();
+        const many = await mountRoom(room(viewing({ players: five(0), availableActions: [] })));
+        expect(phaseLine(many.wrapper)).toBe('Waiting for 3 players');
+      });
+
+      it('givenABotThatHasNotAcknowledged_thenNobodyWaitsForIt', async () => {
+        const players = [
+          buildPresidentPlayer(0, { name: 'P0', sawExchange: true }), buildPresidentPlayer(1, { name: 'P1', bot: true }),
+          buildPresidentPlayer(2, { name: 'P2', bot: true }),
+        ];
+        const { wrapper } = await mountRoom(room(viewing({ players, availableActions: [] })));
+        expect(phaseLine(wrapper)).toBe(ui.starting);
+      });
+
+      it('givenAReload_thenTheSummaryShowsAtOnce_andTheAcknowledgementComesAfterThreeSeconds', async () => {
+        const { wrapper, store } = await mountRoom(room(viewing({ players: nobodySaw() })));
+        const ack = spyAck(store);
+        expect(wrapper.find('[data-test="exchange-recap"]').exists()).toBe(true);
+        await afterTimers(2900);
+        expect(ack).not.toHaveBeenCalled();
+        await afterTimers(200);
+        expect(ack).toHaveBeenCalledTimes(1);
+      });
+
+      it('givenAReloadAtFast_thenTheAcknowledgementComesAfterOneAndAHalfSeconds', async () => {
+        localStorage.setItem('animationSpeed', 'fast');
+        const { store } = await mountRoom(room(viewing({ players: nobodySaw() })));
+        const ack = spyAck(store);
+        await afterTimers(1400);
+        expect(ack).not.toHaveBeenCalled();
+        await afterTimers(200);
+        expect(ack).toHaveBeenCalledTimes(1);
+      });
+
+      it('givenInstant_thenItAcknowledgesAtOnce', async () => {
+        localStorage.setItem('animationSpeed', 'instant');
+        const spy = vi.spyOn(usePresidentStore(), 'seeExchange').mockImplementation(() => true);
+        await mountRoom(room(viewing({ players: nobodySaw() })));
+        await afterTimers(0);
+        expect(spy).toHaveBeenCalledTimes(1);
+      });
+
+      it('whenTheSummaryCrossIsPressed_thenItAcknowledgesAtOnce_andOnlyOnce', async () => {
+        const { wrapper, store } = await mountRoom(room(viewing({ players: nobodySaw() })));
+        const ack = spyAck(store);
+        await wrapper.get('[data-test="recap-close"]').trigger('click');
+        expect(ack).toHaveBeenCalledTimes(1);
+        expect(wrapper.find('[data-test="exchange-recap"]').exists()).toBe(false);
+        await afterTimers(5000);
+        expect(ack).toHaveBeenCalledTimes(1);
+      });
+
+      describe('after the flights of the state that opened the view', () => {
+        const over = () => playing({ round: 1, phase: 'ROUND_OVER', legalPlays: [], availableActions: ['READY'] });
+
+        it('givenNormalSpeed_thenItAcknowledgesWhenTheFlightsHaveLandedAndTheSummaryHasShownThreeSeconds', async () => {
+          const { store } = await mountRoom(room(over()));
+          const ack = spyAck(store);
+          store.applyEvent({ type: 'state-update', state: viewing({ version: 2, players: nobodySaw() }) });
+          await flushPromises();
+          await afterTimers(4000);
+          expect(ack).not.toHaveBeenCalled();
+          await afterTimers(1000);
+          expect(ack).toHaveBeenCalledTimes(1);
+        });
+
+        it('givenFast_thenTheSummaryIsReadInHalfTheTime', async () => {
+          localStorage.setItem('animationSpeed', 'fast');
+          const { store } = await mountRoom(room(over()));
+          const ack = spyAck(store);
+          store.applyEvent({ type: 'state-update', state: viewing({ version: 2, players: nobodySaw() }) });
+          await flushPromises();
+          await afterTimers(2500);
+          expect(ack).not.toHaveBeenCalled();
+          await afterTimers(1000);
+          expect(ack).toHaveBeenCalledTimes(1);
+        });
+
+        it('givenInstant_thenItAcknowledgesAtOnceEvenOnTheChangeThatOpensTheView', async () => {
+          localStorage.setItem('animationSpeed', 'instant');
+          const { store } = await mountRoom(room(over()));
+          const ack = spyAck(store);
+          store.applyEvent({ type: 'state-update', state: viewing({ version: 2, players: nobodySaw() }) });
+          await flushPromises();
+          expect(ack).toHaveBeenCalledTimes(1);
+        });
+
+        it('givenReducedMotionAtNormal_thenTheRingsStillCountAsTheFlightsThenThreeSeconds', async () => {
+          localStorage.setItem('animationSpeed', 'normal');
+          vi.stubGlobal('matchMedia', (query: string) => ({
+            matches: query.includes('prefers-reduced-motion'), media: query, addEventListener: () => {}, removeEventListener: () => {},
+          }));
+          const { store } = await mountRoom(room(over()));
+          const ack = spyAck(store);
+          store.applyEvent({ type: 'state-update', state: viewing({ version: 2, players: nobodySaw() }) });
+          await flushPromises();
+          await afterTimers(4000);
+          expect(ack).not.toHaveBeenCalled();
+          await afterTimers(1000);
+          expect(ack).toHaveBeenCalledTimes(1);
+        });
+
+        it('givenMoreStatesInTheView_thenTheTimerIsNotRearmedNorSentTwice', async () => {
+          const { store } = await mountRoom(room(over()));
+          const ack = spyAck(store);
+          store.applyEvent({ type: 'state-update', state: viewing({ version: 2, players: nobodySaw() }) });
+          await flushPromises();
+          await afterTimers(3000);
+          store.applyEvent({ type: 'state-update', state: viewing({ version: 3, players: seatsOf(3, { 1: { sawExchange: true } }) }) });
+          await flushPromises();
+          await afterTimers(2000);
+          expect(ack).toHaveBeenCalledTimes(1);
+          await afterTimers(10000);
+          expect(ack).toHaveBeenCalledTimes(1);
+        });
+
+        it('givenThePlayStartsBeforeTheTimer_thenNothingIsSent', async () => {
+          const { store } = await mountRoom(room(over()));
+          const ack = spyAck(store);
+          store.applyEvent({ type: 'state-update', state: viewing({ version: 2, players: nobodySaw() }) });
+          await flushPromises();
+          await afterTimers(1000);
+          store.applyEvent({ type: 'state-update', state: viewing({ version: 3, phase: 'PLAYING', availableActions: ['PLAY'] }) });
+          await flushPromises();
+          await afterTimers(10000);
+          expect(ack).not.toHaveBeenCalled();
+        });
+
+        it('givenTheScreenIsLeft_thenTheTimerIsCleared', async () => {
+          const { store, wrapper } = await mountRoom(room(over()));
+          const ack = spyAck(store);
+          store.applyEvent({ type: 'state-update', state: viewing({ version: 2, players: nobodySaw() }) });
+          await flushPromises();
+          wrapper.unmount();
+          await afterTimers(10000);
+          expect(ack).not.toHaveBeenCalled();
+        });
+      });
+    });
+
     it('givenNoExchangeThisRound_thenThereIsNoSummary', async () => {
       const { wrapper } = await mountRoom(room(playing()));
       expect(wrapper.find('[data-test="exchange-recap"]').exists()).toBe(false);

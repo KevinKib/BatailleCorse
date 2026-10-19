@@ -51,6 +51,7 @@ import {
 import { closedPile, type PileView } from '../../model/president/trickView';
 import { planExchangeFlights } from '../../model/president/exchangeMotion';
 import { exchangeRecap } from '../../model/president/exchangeRecap';
+import { ackDelayMs, exchangeViewStatus } from '../../model/president/exchangeView';
 import { PRESIDENT_TEMPO } from '../../model/president/tempo';
 import { endKind, endTimings } from '../../model/president/endSequence';
 import type { PresidentLogEntry } from '../../model/president/eventLog';
@@ -137,9 +138,25 @@ const roundText = computed(() => {
 
 const isExchange = computed(() => store.game?.phase === 'EXCHANGE');
 
+// While the table looks at the exchange nobody plays: the line says where the exchange stands, not whose turn it is.
+const viewText = computed(() => {
+  const g = store.game;
+  const status = g ? exchangeViewStatus(g, store.mySeat) : null;
+  if (!status) return '';
+  const view = ui.exchangeView;
+  if (status.kind === 'watching') return view.watching;
+  if (status.kind === 'starting') return view.starting;
+  if (status.seats.length === 1) return format(view.waitingOne, { player: displayName(status.seats[0]) });
+  if (status.seats.length === 2) {
+    return format(view.waitingTwo, { a: displayName(status.seats[0]), b: displayName(status.seats[1]) });
+  }
+  return format(view.waitingMany, { n: status.seats.length });
+});
+
 const phaseText = computed(() => {
   const g = store.game;
   if (!g) return '';
+  if (g.phase === 'EXCHANGE_VIEW') return viewText.value;
   return store.isMyTurn ? ui.phase.yourTurn : format(ui.phase.waiting, { player: displayName(g.currentSeat) });
 });
 const hint = computed(() => hintText(store.playHint, ui));
@@ -332,7 +349,12 @@ async function playExchange(change: { before: PresidentState; after: PresidentSt
   const factor = speedFactor(speed.value);
   const isStill = still.value;
   const moves = planExchangeFlights(change.before, change.after, store.mySeat, factor || 1);
-  if (moves.length === 0) return;
+  const opensView = change.after.phase === 'EXCHANGE_VIEW' && change.before.phase !== 'EXCHANGE_VIEW';
+  if (moves.length === 0) {
+    // Nothing flies: the summary is on screen already, its three seconds start now.
+    if (opensView) armAcknowledgement(ackDelayMs({ flightsEndMs: 0, factor }));
+    return;
+  }
   // The summary comes in once the flights and their rings are over: it moves the hand, which the flights and the rings
   // were measured on.
   recapHeld.value = true;
@@ -361,8 +383,38 @@ async function playExchange(change: { before: PresidentState; after: PresidentSt
     }
   }
   motionLayer.value?.play(moves, { marksOnly: !admission.motion, startInMs: admission.startInMs, still: isStill });
+  // The table has seen the exchange once the flights have landed and the summary has been read: that is when this
+  // screen tells the server (rings stand for the flights under reduced motion; Instant does not wait).
+  if (opensView) armAcknowledgement(ackDelayMs({ flightsEndMs: admission.startInMs + endMs, factor }));
 }
 watch(() => store.stateChange, change => { if (change) void playExchange(change); });
+
+// The acknowledgement of the exchange (the table waits for every human to have seen it): one timer per round, armed by
+// the change that opens the view or, after a reload, by the summary showing. The store sends once per round and only
+// while the server asks for it, so a timer that fires late finds nothing to do.
+let ackTimer: ReturnType<typeof setTimeout> | null = null;
+let ackArmedRound: number | null = null;
+function clearAcknowledgement() {
+  if (ackTimer) clearTimeout(ackTimer);
+  ackTimer = null;
+}
+function acknowledgeExchange() {
+  clearAcknowledgement();
+  store.seeExchange();
+}
+function armAcknowledgement(delayMs: number) {
+  const g = store.game;
+  if (!g || g.phase !== 'EXCHANGE_VIEW' || ackArmedRound === g.round) return;
+  ackArmedRound = g.round;
+  if (delayMs <= 0) acknowledgeExchange();
+  else ackTimer = setTimeout(acknowledgeExchange, delayMs);
+}
+watch(() => store.game?.phase === 'EXCHANGE_VIEW', inView => {
+  if (inView) return;
+  clearAcknowledgement();
+  ackArmedRound = null;
+});
+onBeforeUnmount(clearAcknowledgement);
 
 // The summary of the exchange stays over the action bar until it is closed (once per round).
 const closedRecapRound = ref<number | null>(null);
@@ -380,6 +432,20 @@ watch(showRecap, shown => {
   const round = store.game?.round ?? null;
   recapTimer = setTimeout(() => { closedRecapRound.value = round; }, RECAP_PHONE_MS);
 }, { immediate: true });
+// A page opened on the view (a reload) has no flights to wait for: the summary shows now and is read for three seconds.
+watch(showRecap, shown => {
+  const g = store.game;
+  if (!shown || g?.phase !== 'EXCHANGE_VIEW') return;
+  // The change that opens the view has its flights: `playExchange` arms the timer, from where they end.
+  const change = store.stateChange;
+  if (change && change.after.version === g.version && change.before.phase !== 'EXCHANGE_VIEW') return;
+  armAcknowledgement(ackDelayMs({ flightsEndMs: 0, factor: speedFactor(speed.value) }));
+}, { immediate: true });
+// The cross closes the summary and says the exchange has been seen, without waiting for the three seconds.
+function closeRecap() {
+  closedRecapRound.value = store.game?.round ?? null;
+  if (store.game?.phase === 'EXCHANGE_VIEW') acknowledgeExchange();
+}
 
 // --- The end -------------------------------------------------------------------------------------------------------
 // The end of a round (owner feedback, 2026-10-19): the table finishes (last plays, closing badge, sweep) before the
@@ -559,7 +625,7 @@ const rematchButton = computed(() =>
           @suggest="store.suggestGiveBack()"
           @clear="store.clearSelection()" />
         <PresidentExchangeRecap v-if="showRecap" :lines="recap" :name-of="displayName"
-                                @close="closedRecapRound = store.game.round" />
+                                @close="closeRecap()" />
         <PresidentActionBar
           v-if="!roundEnding && !isExchange"
           :phase-text="phaseText"
