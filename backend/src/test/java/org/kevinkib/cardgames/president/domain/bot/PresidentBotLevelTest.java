@@ -18,8 +18,8 @@ class PresidentBotLevelTest {
         // level, random play, random pass, counted ranks, control ranks, short hand, plans the end game,
         // chance of taking a completion, keeps a completion that would be a forbidden finish
         return Stream.of(
-                Arguments.of(PresidentBotLevel.EASY, 0.30, 0.20, 0, 2, 6, false, 0.5, false),
-                Arguments.of(PresidentBotLevel.MEDIUM, 0.0, 0.0, 3, 2, 52, false, 1.0, false),
+                Arguments.of(PresidentBotLevel.EASY, 0.30, 0.20, 0, 2, 6, true, 0.5, true),
+                Arguments.of(PresidentBotLevel.MEDIUM, 0.0, 0.0, 3, 2, 52, true, 1.0, true),
                 Arguments.of(PresidentBotLevel.HARD, 0.0, 0.0, 13, 2, 52, true, 1.0, true));
     }
 

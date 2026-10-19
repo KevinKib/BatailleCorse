@@ -24,8 +24,11 @@ import java.util.random.RandomGenerator;
  *       nobody can beat when the level counts cards) kept for the end;</li>
  *   <li>follow with the lowest beating set that does not break a set; pass rather than break a pair or spend a
  *       control card, unless the hand is short or the play goes out;</li>
- *   <li>never go out on a two when that finish is forbidden (a cutting two included); the hard level also leads its
- *       twos first so that a low set stays for last;</li>
+ *   <li>never go out on a two when that finish is forbidden (a cutting two included), at any level, even in a random
+ *       play; the levels that plan their end game (all of them) also never leave a hand made only of twos, which
+ *       could only end on that finish: they lead or cut with the twos while another set remains (under compulsory
+ *       play, while up to two other sets remain, as the pass is refused) and pass or decline a completion rather
+ *       than strand the twos;</li>
  *   <li>keep a cutting two like any control card: it is played on a low trick only when the hand is short; under
  *       compulsory play, which refuses the pass, it plays the weakest legal play instead;</li>
  *   <li>give back the lowest cards of the exchange without breaking a pair;</li>
@@ -99,7 +102,17 @@ public final class HeuristicPresidentBot implements PresidentBotStrategy {
             return new PresidentBotDecision.Pass();
         }
         if (chance(tuning.randomPlayProbability())) {
-            return play(legal.get(random.nextInt(legal.size())));
+            // random, but never a forbidden finish when any other legal play exists
+            List<Play> candidates = withoutForbiddenFinish(view, legal);
+            List<Play> notStranded = tuning.plansEndGame() ? withoutStranding(view, candidates) : candidates;
+            if (!notStranded.isEmpty()) {
+                candidates = notStranded;
+            } else if (tuning.plansEndGame() && !candidates.isEmpty() && canPass && !leading) {
+                return new PresidentBotDecision.Pass(); // every play would strand the twos: keep the cards
+            } else if (candidates.isEmpty()) {
+                candidates = legal;
+            }
+            return play(candidates.get(random.nextInt(candidates.size())));
         }
         if (leading) {
             return lead(view, memory, legal);
@@ -108,6 +121,10 @@ public final class HeuristicPresidentBot implements PresidentBotStrategy {
         if (decision instanceof PresidentBotDecision.Pass && !canPass) {
             // compulsory play refuses the pass: the weakest play, one that is not a forbidden finish if there is one
             List<Play> allowed = withoutForbiddenFinish(view, legal);
+            List<Play> notStranded = tuning.plansEndGame() ? withoutStranding(view, allowed) : allowed;
+            if (!notStranded.isEmpty()) {
+                allowed = notStranded;
+            }
             return play(allowed.isEmpty() ? legal.get(0) : allowed.get(0));
         }
         return decision;
@@ -118,9 +135,12 @@ public final class HeuristicPresidentBot implements PresidentBotStrategy {
      * the cards that would be its last ones and a forbidden finish (twos).
      */
     private boolean takesCompletion(PresidentBotView view) {
-        if (tuning.keepsDangerousCompletion()
-                && view.completion().size() == view.hand().size()
-                && view.completion().get(0).getRank() == FrenchRank.TWO) {
+        FrenchRank rank = (FrenchRank) view.completion().get(0).getRank();
+        if (tuning.keepsDangerousCompletion() && view.completion().size() == view.hand().size()
+                && rank == FrenchRank.TWO) {
+            return false;
+        }
+        if (tuning.plansEndGame() && leavesOnlyTwos(view.hand(), rank, view.completion().size())) {
             return false;
         }
         return tuning.completionProbability() >= 1 || chance(tuning.completionProbability());
@@ -135,6 +155,13 @@ public final class HeuristicPresidentBot implements PresidentBotStrategy {
         if (allowed.isEmpty()) {
             return play(legal.get(0));
         }
+        if (tuning.plansEndGame()) {
+            // a hand reduced to twos can only end on a forbidden finish: lead the twos while another set remains
+            List<Play> notStranded = withoutStranding(view, allowed);
+            if (!notStranded.isEmpty()) {
+                allowed = notStranded;
+            }
+        }
         Play goingOut = goingOut(view, allowed);
         if (goingOut != null) {
             return play(goingOut);
@@ -145,7 +172,7 @@ public final class HeuristicPresidentBot implements PresidentBotStrategy {
             return play(allowed.get(0));
         }
         if (tuning.plansEndGame()) {
-            Play twos = keepLowCardForLast(sets, groups);
+            Play twos = keepLowCardForLast(sets, groups, view.options().mustPlay() ? 2 : 1);
             if (twos != null) {
                 return play(twos);
             }
@@ -160,6 +187,10 @@ public final class HeuristicPresidentBot implements PresidentBotStrategy {
 
     private PresidentBotDecision follow(PresidentBotView view, List<Play> legal) {
         List<Play> allowed = withoutForbiddenFinish(view, legal);
+        if (tuning.plansEndGame()) {
+            // never strand the hand on twos (the last play would be forbidden): keep the cards and pass instead
+            allowed = withoutStranding(view, allowed);
+        }
         if (allowed.isEmpty()) {
             return new PresidentBotDecision.Pass();
         }
@@ -198,6 +229,20 @@ public final class HeuristicPresidentBot implements PresidentBotStrategy {
                 .toList();
     }
 
+    /** The plays that do not leave a hand made only of twos: such a hand can only end on a forbidden finish. */
+    private static List<Play> withoutStranding(PresidentBotView view, List<Play> plays) {
+        return plays.stream()
+                .filter(p -> !leavesOnlyTwos(view.hand(), p.rank(), p.count()))
+                .toList();
+    }
+
+    private static boolean leavesOnlyTwos(List<Card> hand, Object played, int count) {
+        int left = hand.size() - count;
+        long twos = hand.stream().filter(c -> c.getRank() == FrenchRank.TWO).count();
+        long twosLeft = played == FrenchRank.TWO ? twos - count : twos;
+        return left > 0 && twosLeft == left;
+    }
+
     private static Play goingOut(PresidentBotView view, List<Play> plays) {
         return plays.stream().filter(p -> p.count() == view.hand().size()).findFirst().orElse(null);
     }
@@ -215,9 +260,9 @@ public final class HeuristicPresidentBot implements PresidentBotStrategy {
      * Under a forbidden finish the last play must not be a two: when the hand is some twos and a single other
      * set, the twos go first and the other set goes out last.
      */
-    private static Play keepLowCardForLast(List<Play> sets, Map<FrenchRank, Integer> groups) {
-        boolean oneOtherSet = groups.keySet().stream().filter(rank -> rank != FrenchRank.TWO).count() == 1;
-        if (!oneOtherSet) {
+    private static Play keepLowCardForLast(List<Play> sets, Map<FrenchRank, Integer> groups, int maxOtherSets) {
+        long otherSets = groups.keySet().stream().filter(rank -> rank != FrenchRank.TWO).count();
+        if (otherSets < 1 || otherSets > maxOtherSets) {
             return null;
         }
         return sets.stream().filter(p -> p.rank() == FrenchRank.TWO).findFirst().orElse(null);

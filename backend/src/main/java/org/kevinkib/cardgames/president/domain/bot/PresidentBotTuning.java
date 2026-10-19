@@ -8,7 +8,8 @@ package org.kevinkib.cardgames.president.domain.bot;
  * @param countedRanks              how many of the strongest ranks the bot counts (0 none, 3 is 2, A and K, 13 all)
  * @param controlRanks              how many of the strongest ranks are control cards, kept for the end
  * @param shortHand                 the hand size up to which the bot breaks sets and spends control cards
- * @param plansEndGame              whether the bot plans its last plays (a low card kept for last)
+ * @param plansEndGame              whether the bot plans its last plays (never leaves a hand of twos only, so a
+ *                                  low card is kept for last)
  * @param completionProbability     chance of taking a completion of the four when one is on offer
  * @param keepsDangerousCompletion  whether the bot keeps a completion that would empty its hand on a forbidden
  *                                  finish (twos under the forbidden-finish option)
