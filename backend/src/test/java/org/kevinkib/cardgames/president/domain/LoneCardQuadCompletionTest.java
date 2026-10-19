@@ -3,6 +3,9 @@ package org.kevinkib.cardgames.president.domain;
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.president.domain.event.PlayerOut;
+import org.kevinkib.cardgames.president.domain.event.Played;
+import org.kevinkib.cardgames.president.domain.round.Action;
+import org.kevinkib.cardgames.president.domain.round.CompletionClosedException;
 import org.kevinkib.cardgames.president.domain.event.PresidentEvent;
 import org.kevinkib.cardgames.president.domain.event.TrickEndReason;
 import org.kevinkib.cardgames.president.domain.event.TrickWon;
@@ -10,12 +13,12 @@ import org.kevinkib.cardgames.president.domain.play.Play;
 import org.kevinkib.cardgames.president.domain.play.PlayDoesNotBeatException;
 import org.kevinkib.cardgames.president.domain.round.NotPlayersTurnException;
 import org.kevinkib.cardgames.president.domain.rules.PresidentOptions;
-import org.kevinkib.cardgames.president.domain.trick.MustPlayException;
 import org.kevinkib.cards.domain.deck.french.FrenchRank;
 
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -25,7 +28,7 @@ import static org.kevinkib.cardgames.president.domain.PresidentFixtures.cards;
 /**
  * The four of a kind is completed across plays by the cumulative count of one rank at the top of the trick, but
  * only by a play of exactly the cards still missing and never by a smaller group on a bigger one: three 5s close
- * a trick whose top is a lone 5 (in turn), a lone 5 never finishes a triple of 5s.
+ * a trick whose top is a lone 5 (in turn or out of turn), a lone 5 never finishes a triple of 5s.
  */
 class LoneCardQuadCompletionTest {
 
@@ -47,7 +50,8 @@ class LoneCardQuadCompletionTest {
                 .withHand("5S 3C").withHand("5H 5D 5C 4C").withHand("QC 6C").build();
         play(game, 0, "5S");
 
-        assertThat(offers(game, 1, FrenchRank.FIVE, 3), is(true));
+        assertThat(game.completion(seat(1)), containsInAnyOrder(cards("5H 5D 5C").toArray()));
+        assertThat(game.availableActions(seat(1)).contains(Action.COMPLETE), is(true));
         List<PresidentEvent> events = play(game, 1, "5H 5D 5C");
 
         assertThat(events, hasItem(new TrickWon(seat(1), TrickEndReason.QUAD)));
@@ -94,16 +98,41 @@ class LoneCardQuadCompletionTest {
     }
 
     @Test
-    void aLoneCardDoesNotOpenTheWindowOutOfTurn() throws Exception {
+    void theHolderOfTheThreeMissingCardsCompletesALoneCardOutOfTurn() throws Exception {
         President game = aPresident().leader(0)
                 .withHand("5S 3C").withHand("4C 8C").withHand("5H 5D 5C 6C").build();
         play(game, 0, "5S");
+
+        assertThat(game.completion(seat(2)), containsInAnyOrder(cards("5H 5D 5C").toArray()));
+        assertThat(game.availableActions(seat(2)).contains(Action.COMPLETE), is(true));
+        List<PresidentEvent> events = play(game, 2, "5H 5D 5C");
+
+        assertThat(events, hasItem(new Played(seat(2), cards("5H 5D 5C"), true)));
+        assertThat(events, hasItem(new TrickWon(seat(2), TrickEndReason.QUAD)));
+        assertThat(game.currentSeat(), is(seat(2)));
+    }
+
+    @Test
+    void theOutOfTurnWindowOnALoneCardClosesWithTheNextPlay() throws Exception {
+        President game = aPresident().leader(0)
+                .withHand("5S 3C").withHand("6C 8C").withHand("7C 9C").withHand("5H 5D 5C 4C").build();
+        play(game, 0, "5S");
+        play(game, 1, "6C");
         int version = game.version();
 
-        assertThrows(NotPlayersTurnException.class, () -> play(game, 2, "5H 5D 5C"));
+        assertThat(game.completion(seat(3)).isEmpty(), is(true));
+        assertThrows(CompletionClosedException.class, () -> play(game, 3, "5H 5D 5C"));
 
         assertThat(game.version(), is(version));
-        assertThat(game.completion(seat(2)).isEmpty(), is(true));
+    }
+
+    @Test
+    void aPartOfTheMissingCardsOutOfTurnIsRefused() throws Exception {
+        President game = aPresident().leader(0)
+                .withHand("5S 3C").withHand("4C 8C").withHand("5H 5D 5C 6C").build();
+        play(game, 0, "5S");
+
+        assertThrows(CompletionClosedException.class, () -> play(game, 2, "5H 5D"));
     }
 
     @Test
@@ -205,26 +234,13 @@ class LoneCardQuadCompletionTest {
     }
 
     @Test
-    void compulsoryPlayCountsTheCompletionOfALoneCardAsALegalPlay() throws Exception {
+    void theCompletionIsNeverACompulsoryLegalPlay() throws Exception {
         PresidentOptions mustPlay = PresidentOptions.defaults().withMustPlay(true);
         President game = aPresident().leader(0).options(mustPlay)
-                .withHand("5S 3C").withHand("5H 5D 5C 2C").withHand("QC 6C").build();
+                .withHand("5S 3C").withHand("5H 5D 5C 4C").withHand("QC 6C").build();
         play(game, 0, "5S");
 
-        // the triple is the only play of seat 1 (a 2 cuts a single too, so it is listed as well)
-        assertThat(offers(game, 1, FrenchRank.FIVE, 3), is(true));
-        assertThrows(MustPlayException.class, () -> game.pass(seat(1)));
-    }
-
-    @Test
-    void theCompletionIsListedAmongTheLegalPlaysInRankOrder() throws Exception {
-        President game = aPresident().leader(0)
-                .withHand("5S 3C").withHand("5H 5D 5C 9C KC").withHand("QC 6C").build();
-        play(game, 0, "5S");
-
-        List<Play> plays = game.legalPlays(seat(1));
-
-        assertThat(plays.stream().map(p -> p.rank() + "x" + p.count()).toList(),
-                is(List.of("5x1", "5x3", "9x1", "KINGx1")));
+        assertThat(offers(game, 1, FrenchRank.FIVE, 3), is(false));
+        assertThat(game.completion(seat(1)).size(), is(3));
     }
 }

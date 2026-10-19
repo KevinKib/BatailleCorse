@@ -12,7 +12,6 @@ import org.kevinkib.cardgames.president.domain.event.TrickEndReason;
 import org.kevinkib.cardgames.president.domain.event.TrickWon;
 import org.kevinkib.cardgames.president.domain.play.BeatRule;
 import org.kevinkib.cardgames.president.domain.play.Completion;
-import org.kevinkib.cardgames.president.domain.play.Constraint;
 import org.kevinkib.cardgames.president.domain.play.IllegalPlayException;
 import org.kevinkib.cardgames.president.domain.play.LegalPlays;
 import org.kevinkib.cardgames.president.domain.play.Play;
@@ -104,7 +103,7 @@ public final class Round {
             }
             throw new NotPlayersTurnException();
         }
-        boolean completion = isCompletion(play, inTurn);
+        boolean completion = isCompletion(play);
         if (!inTurn && !completion) {
             throw refusalOutOfTurn(play);
         }
@@ -275,26 +274,12 @@ public final class Round {
         if (phase != Phase.PLAYING || seat == null || seat.id() == null || seat.id() != current) {
             return List.of();
         }
-        List<Play> plays = new ArrayList<>(
-                LegalPlays.of(hands.get(current), trick.top(), order, trick.constraint(), options.reducedCut()));
-        Chain chain = trick.chain();
-        if (chain != null && isLoneCard(chain)) {
-            // three cards complete the four on a lone card: listed in rank order, after the lone card's own rank
-            List<Card> missing = Completion.heldBy(hands.get(current), chain.rank(), chain.cards());
-            if (!missing.isEmpty()) {
-                int index = 0;
-                while (index < plays.size() && order.compare(plays.get(index).rank(), chain.rank()) <= 0) {
-                    index++;
-                }
-                plays.add(index, new Play(missing, chain.rank()));
-            }
-        }
-        return plays;
+        return LegalPlays.of(hands.get(current), trick.top(), order, trick.constraint(), options.reducedCut());
     }
 
     /**
      * The cards that complete the four when the seat holds all of them and the window is open (the chain at the
-     * top of the trick holds two plays or more), in turn or out of turn; nothing otherwise.
+     * top of the trick holds two plays or more, or is a lone card), in turn or out of turn; nothing otherwise.
      */
     public List<Card> completion(PlayerId seat) {
         if (phase != Phase.PLAYING || seat == null || seat.id() == null
@@ -302,7 +287,7 @@ public final class Round {
             return List.of();
         }
         Chain chain = trick.chain();
-        if (chain == null || chain.plays() < 2) {
+        if (chain == null || !windowOpen(chain)) {
             return List.of();
         }
         return HandSort.sorted(Completion.heldBy(hands.get(seat.id()), chain.rank(), chain.cards()), order);
@@ -330,21 +315,20 @@ public final class Round {
     }
 
     /** Whether the cards are exactly the ones that complete the four, with the window open. */
-    private boolean isCompletion(Play play, boolean inTurn) {
+    private boolean isCompletion(Play play) {
         Chain chain = trick.chain();
-        return chain != null && (chain.plays() >= 2 || (inTurn && isLoneCard(chain)))
+        return chain != null && windowOpen(chain)
                 && play.rank() == chain.rank()
                 && Completion.isCompletion(play.cards(), chain.rank(), chain.cards());
     }
 
     /**
-     * A single card at the top of the trick that three more of its rank can complete, in turn only: the cumulative
-     * count of the rank reaches four with a play of exactly the cards missing. It never works the other way round
-     * (a lone card on a triple), and a 2 is never left on top of a trick.
+     * The completion window is open: the chain holds two plays or more, or a single card that three more of its
+     * rank can complete (the cumulative count reaches four with a play of exactly the cards missing). It never works
+     * the other way round (a lone card on a triple), and a 2 is never left on top of a trick.
      */
-    private boolean isLoneCard(Chain chain) {
-        return chain.plays() == 1 && chain.cards().size() == 1 && chain.rank() != order.topRank()
-                && trick.constraint() == Constraint.BEAT;
+    private boolean windowOpen(Chain chain) {
+        return chain.plays() >= 2 || (chain.cards().size() == 1 && chain.rank() != order.topRank());
     }
 
     /**
@@ -354,14 +338,14 @@ public final class Round {
      */
     private PresidentException refusalOutOfTurn(Play play) {
         Chain chain = trick.chain();
-        FrenchRank windowRank = chain != null && chain.plays() >= 2 ? chain.rank() : closedWindowRank;
-        return play.rank() == windowRank ? new CompletionClosedException() : new NotPlayersTurnException();
+        FrenchRank windowRank = chain != null && windowOpen(chain) ? chain.rank() : closedWindowRank;
+        return play.rank() == windowRank || play.rank() == closedWindowRank ? new CompletionClosedException() : new NotPlayersTurnException();
     }
 
     /** Remembers the window a play closed, and forgets the old one when a new window opens. */
     private void noteWindow(Chain before) {
         Chain after = trick.chain();
-        if (before != null && before.plays() >= 2 && after.rank() != before.rank()) {
+        if (before != null && windowOpen(before) && after.rank() != before.rank()) {
             closedWindowRank = before.rank();
         }
         if (after.plays() == 2) {
@@ -429,7 +413,7 @@ public final class Round {
         int last = trick.lastPlayer();
         int winner = hands.get(last).isEmpty() ? nextSeatWithCards(last) : last;
         Chain chain = trick.chain();
-        if (chain != null && chain.plays() >= 2) {
+        if (chain != null && windowOpen(chain)) {
             closedWindowRank = chain.rank();
         }
         discard.addAll(trick.cards());
