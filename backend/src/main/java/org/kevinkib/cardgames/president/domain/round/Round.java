@@ -183,7 +183,12 @@ public final class Round {
         hands.set(target, new ArrayList<>(HandSort.sorted(received, order)));
     }
 
-    /** The exchange is done: the first trick can start. */
+    /** Every card has changed hands: the table is shown the exchange before the first trick. */
+    public void showExchange() {
+        phase = Phase.EXCHANGE_VIEW;
+    }
+
+    /** The exchange is done and seen (or there was none): the first trick can start. */
     public void beginPlay() {
         phase = Phase.PLAYING;
     }
@@ -201,7 +206,7 @@ public final class Round {
         }
         discard.addAll(hands.get(seat));
         hands.set(seat, new ArrayList<>());
-        if (phase == Phase.EXCHANGE) {
+        if (phase == Phase.EXCHANGE || phase == Phase.EXCHANGE_VIEW) {
             if (seat == current) {
                 passLeadFrom(seat);
             }

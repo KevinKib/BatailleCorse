@@ -81,6 +81,8 @@ class PresidentBotViewParityTest {
             assertThat(context, view.handSizes().get(seat), is(player.handSize()));
             assertThat(context, view.totals().getOrDefault(seat, 0), is(player.points()));
             assertThat(context, view.readySeats().contains(seat), is(player.ready()));
+            // the bot view keeps no copy of the acknowledgements: its actions say whether it still has to see it
+            assertThat(context, game.exchangeSeen().contains(seat), is(player.sawExchange()));
             int place = view.finishingOrder().indexOf(seat);
             assertThat(context, place < 0 ? null : place + 1, is(player.place()));
             assertThat(context, view.titles().get(seat) == null ? null : view.titles().get(seat).name(),
@@ -134,6 +136,8 @@ class PresidentBotViewParityTest {
                         List<Card> hand = game.hand(pending.high());
                         game.giveBack(pending.high(), hand.subList(0, pending.count()));
                     }
+                    case EXCHANGE_VIEW -> game.seeExchange(game.getPlayerIds().stream()
+                            .filter(s -> !game.exchangeSeen().contains(s)).findFirst().orElseThrow(), game.round());
                     case ROUND_OVER -> game.ready(game.getPlayerIds().stream()
                             .filter(s -> !game.readySeats().contains(s)).findFirst().orElseThrow());
                     default -> throw new AssertionError("unexpected phase " + game.phase());
@@ -143,6 +147,7 @@ class PresidentBotViewParityTest {
         }
         assertThat(seen, hasItem(Phase.PLAYING));
         assertThat(seen, hasItem(Phase.EXCHANGE));
+        assertThat(seen, hasItem(Phase.EXCHANGE_VIEW));
         assertThat(seen, hasItem(Phase.ROUND_OVER));
     }
 
@@ -173,6 +178,13 @@ class PresidentBotViewParityTest {
                     PendingReturn pending = game.pendingReturns().get(0);
                     game.giveBack(pending.high(), game.hand(pending.high()).subList(0, pending.count()));
                 }
+                case EXCHANGE_VIEW -> game.getPlayerIds().forEach(seat -> {
+                    try {
+                        game.seeExchange(seat, game.round());
+                    } catch (Exception e) {
+                        throw new AssertionError(e);
+                    }
+                });
                 case ROUND_OVER -> PresidentRounds.readyAll(game);
                 default -> throw new AssertionError(game.phase());
             }

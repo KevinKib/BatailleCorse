@@ -35,6 +35,7 @@ import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.kevinkib.cardgames.president.domain.PresidentFixtures.card;
 import static org.kevinkib.cardgames.president.domain.PresidentFixtures.cards;
+import static org.kevinkib.cardgames.president.domain.PresidentFixtures.seeExchangeAll;
 
 /**
  * Round 2 of a 5-player match whose first round ended 2, 0, 4, 1, 3: seat 2 is President, seat 0 Vice-President,
@@ -130,8 +131,10 @@ class ExchangeFlowTest {
 
         assertThat(last, hasItem(new CardsGivenBack(p(2), p(3), 2)));
         assertThat(last.stream().anyMatch(e -> e instanceof RoundDealt), is(false));
-        assertThat(game.phase(), is(Phase.PLAYING));
+        assertThat(game.phase(), is(Phase.EXCHANGE_VIEW));
         assertThat(game.pendingReturns(), is(empty()));
+        seeExchangeAll(game);
+        assertThat(game.phase(), is(Phase.PLAYING));
         assertThat(game.handSizes(), is(List.of(11, 10, 10, 10, 11)));
         assertThat(game.currentSeat(), is(p(3)));
         assertThat(game.trick().plays(), is(empty()));
@@ -266,7 +269,7 @@ class ExchangeFlowTest {
     void lowestGiveBackIsAutomaticAndSkipsTheExchangePhase() throws Exception {
         President game = roundTwo(PresidentOptions.defaults().withGiveBack(GiveBack.LOWEST));
 
-        assertThat(game.phase(), is(Phase.PLAYING));
+        assertThat(game.phase(), is(Phase.EXCHANGE_VIEW));
         assertThat(game.pendingReturns(), is(empty()));
         assertThat(game.handSizes(), is(List.of(11, 10, 10, 10, 11)));
         assertThat(game.currentSeat(), is(p(3)));
@@ -315,6 +318,7 @@ class ExchangeFlowTest {
         President game = roundTwo();
         game.giveBack(p(2), lowest(game, 2, 2));
         game.giveBack(p(0), lowest(game, 0, 1));
+        seeExchangeAll(game);
 
         List<Play> plays = game.legalPlays(p(3));
 

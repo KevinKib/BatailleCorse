@@ -5,6 +5,8 @@ import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.president.domain.card.RankOrder;
 import org.kevinkib.cardgames.president.domain.event.CardsGivenBack;
+import org.kevinkib.cardgames.president.domain.event.ExchangeSeen;
+import org.kevinkib.cardgames.president.domain.event.ExchangeViewClosed;
 import org.kevinkib.cardgames.president.domain.event.MatchFinished;
 import org.kevinkib.cardgames.president.domain.event.PresidentEvent;
 import org.kevinkib.cardgames.president.domain.event.PresidentResult;
@@ -50,7 +52,8 @@ import java.util.TreeSet;
 /**
  * A President match: a series of rounds. Each round is dealt (from round 2 by the previous Scum), the high
  * titles receive the best cards of the low titles and give cards back, the tricks are played, the finishing
- * order is scored, and the table waits until every player is ready. The match ends when the length option is
+ * order is scored, and the table waits until every player is ready. After an exchange the first trick waits
+ * until every active seat has seen it (the {@code EXCHANGE_VIEW} phase). The match ends when the length option is
  * reached or a single player is left.
  *
  * <p>All state changes go through synchronized methods, and a rejected command throws a
@@ -73,6 +76,8 @@ public class President implements Game {
     private final Set<Integer> active = new TreeSet<>();
     private final Map<PlayerId, Integer> totals = new LinkedHashMap<>();
     private final Set<PlayerId> ready = new LinkedHashSet<>();
+    /** The seats that have seen this round's exchange; filled during {@code EXCHANGE_VIEW}, cleared at each deal. */
+    private final Set<PlayerId> sawExchange = new LinkedHashSet<>();
     private final Map<PlayerId, List<Card>> received = new HashMap<>();
     private final Map<PlayerId, List<Card>> given = new HashMap<>();
     private List<PendingReturn> exchange = new ArrayList<>();
@@ -219,7 +224,7 @@ public class President implements Game {
         List<PresidentEvent> events = new ArrayList<>();
         events.add(new CardsGivenBack(pending.high(), pending.low(), pending.count()));
         if (pendingReturns().isEmpty()) {
-            round.beginPlay();
+            openExchangeView();
         }
         version++;
         return events;
@@ -248,14 +253,40 @@ public class President implements Game {
         return events;
     }
 
-    /** The seat has seen this round's exchange; the last active seat to say so starts the first trick. */
+    /**
+     * The seat has seen this round's exchange; the last active seat to say so starts the first trick. An
+     * acknowledgement that is late (another round, the view closed or never opened, the match over) or repeated
+     * changes nothing and returns no event: it is a fact about a screen, never a mistake.
+     */
     public synchronized List<PresidentEvent> seeExchange(PlayerId seat, int round) throws PresidentException {
-        return List.of(); // the view is never entered yet: no event, no version change
+        if (!isActive(seat)) {
+            throw new NotPlayersTurnException();
+        }
+        if (finished || round != number || this.round.phase() != Phase.EXCHANGE_VIEW || sawExchange.contains(seat)) {
+            return List.of();
+        }
+        sawExchange.add(seat);
+        boolean playBegins = sawExchange.containsAll(getPlayerIds());
+        if (playBegins) {
+            this.round.beginPlay();
+        }
+        version++;
+        return List.of(new ExchangeSeen(seat, playBegins));
     }
 
-    /** The table stops waiting (the timeout): every seat that has not seen the exchange is counted as having seen it. */
+    /**
+     * The table stops waiting (the timeout): every seat that has not seen the exchange is counted as having seen
+     * it and the first trick starts. Nothing happens unless the view of that round is open.
+     */
     public synchronized List<PresidentEvent> closeExchangeView(int round) {
-        return List.of(); // the view is never entered yet: no event, no version change
+        if (finished || round != number || this.round.phase() != Phase.EXCHANGE_VIEW) {
+            return List.of();
+        }
+        List<PlayerId> late = getPlayerIds().stream().filter(seat -> !sawExchange.contains(seat)).toList();
+        sawExchange.addAll(late);
+        this.round.beginPlay();
+        version++;
+        return List.of(new ExchangeViewClosed(round, late));
     }
 
     /**
@@ -275,6 +306,7 @@ public class President implements Game {
         active.remove(loser.id());
         totals.remove(loser);
         ready.remove(loser);
+        sawExchange.remove(loser);
         List<PresidentEvent> events = new ArrayList<>(round.forfeit(loser));
         version++;
 
@@ -286,6 +318,11 @@ public class President implements Game {
         switch (before) {
             case EXCHANGE -> {
                 if (pendingReturns().isEmpty()) {
+                    openExchangeView();
+                }
+            }
+            case EXCHANGE_VIEW -> {
+                if (sawExchange.containsAll(getPlayerIds())) {
                     round.beginPlay();
                 }
             }
@@ -328,6 +365,7 @@ public class President implements Game {
     private void startNextRound(List<PresidentEvent> events) {
         number++;
         ready.clear();
+        sawExchange.clear();
         received.clear();
         given.clear();
         List<PlayerId> order = previousOrder.stream().filter(this::isActive).toList();
@@ -371,11 +409,24 @@ public class President implements Game {
             throw new IllegalStateException("The exchange moves cards the hands hold", e);
         }
         if (pendingReturns().isEmpty()) {
-            round.beginPlay();
+            openExchangeView();
         }
     }
 
     // ----- exchange helpers -----
+
+    /**
+     * Every card has changed hands: the table is shown the exchange before the first trick. A round whose plan has
+     * no pair never had an exchange, so it goes straight to the play.
+     */
+    private void openExchangeView() {
+        sawExchange.clear();
+        if (exchange.isEmpty()) {
+            round.beginPlay();
+        } else {
+            round.showExchange();
+        }
+    }
 
     private int pendingIndex(PlayerId high) {
         for (int index = 0; index < exchange.size(); index++) {
@@ -542,7 +593,7 @@ public class President implements Game {
                 yield actions;
             }
             case EXCHANGE -> pendingIndex(seat) >= 0 ? List.of(Action.GIVE_BACK) : List.of();
-            case EXCHANGE_VIEW -> exchangeSeen().contains(seat) ? List.of() : List.of(Action.SEE_EXCHANGE);
+            case EXCHANGE_VIEW -> sawExchange.contains(seat) ? List.of() : List.of(Action.SEE_EXCHANGE);
             case ROUND_OVER -> ready.contains(seat) ? List.of() : List.of(Action.READY);
             case FINISHED -> List.of();
         };
@@ -581,9 +632,12 @@ public class President implements Game {
         return List.copyOf(given.getOrDefault(seat, List.of()));
     }
 
-    /** The seats that have seen this round's exchange; always empty until the exchange view is entered. */
+    /** The seats that have seen this round's exchange; empty outside {@code EXCHANGE_VIEW}. */
     public synchronized Set<PlayerId> exchangeSeen() {
-        return Set.of();
+        if (finished || round.phase() != Phase.EXCHANGE_VIEW) {
+            return Set.of();
+        }
+        return Set.copyOf(sawExchange);
     }
 
     public synchronized Set<PlayerId> readySeats() {

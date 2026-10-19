@@ -241,6 +241,13 @@ class PresidentMatchTest {
             var pending = game.pendingReturns().get(0);
             return game.giveBack(pending.high(), game.hand(pending.high()).subList(0, pending.count()));
         }
+        if (game.phase() == Phase.EXCHANGE_VIEW) {
+            List<PresidentEvent> events = List.of();
+            for (PlayerId viewer : game.getPlayerIds()) {
+                events = game.seeExchange(viewer, game.round());
+            }
+            return events;
+        }
         PlayerId seat = game.currentSeat();
         boolean leading = game.trick().plays().isEmpty();
         var options = game.legalPlays(seat);

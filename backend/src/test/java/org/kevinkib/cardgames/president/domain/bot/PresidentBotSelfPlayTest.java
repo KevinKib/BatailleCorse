@@ -132,7 +132,8 @@ class PresidentBotSelfPlayTest {
                 case EXCHANGE -> game.pendingReturns().get(0).high();
                 case ROUND_OVER -> game.getPlayerIds().stream()
                         .filter(seat -> !game.readySeats().contains(seat)).findFirst().orElseThrow();
-                case EXCHANGE_VIEW -> throw new IllegalStateException("the exchange view is not entered yet");
+                case EXCHANGE_VIEW -> game.getPlayerIds().stream()
+                        .filter(seat -> !game.exchangeSeen().contains(seat)).findFirst().orElseThrow();
                 case FINISHED -> throw new IllegalStateException("finished");
             };
         }
@@ -148,6 +149,8 @@ class PresidentBotSelfPlayTest {
                 game.giveBack(actor, giveBack.cards());
             } else if (decision instanceof PresidentBotDecision.Keep) {
                 throw new AssertionError("the seat on turn must act: " + actor);
+            } else if (decision instanceof PresidentBotDecision.SeeExchange) {
+                game.seeExchange(actor, game.round());
             } else {
                 int before = game.round();
                 game.ready(actor);
