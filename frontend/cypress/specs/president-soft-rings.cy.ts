@@ -56,26 +56,29 @@ const bob = '.seat-slot[data-seat="1"]';
           cy.get('[data-card="HEART_KING"]').click({ force: true });
           cy.get('[data-card="HEART_KING"].selected .playing_card').should(($card) => {
             const now = box($card[0]);
-            const settled = king !== null && Math.abs(king.top - now.top) < 0.5 && Math.abs(king.left - now.left) < 0.5;
+            // Raised (the 12 px lift of a selected card is done, not just started) and no longer moving between two reads.
+            const lift = new DOMMatrixReadOnly(getComputedStyle($card[0].parentElement!).transform).m42;
+            const raised = Math.abs(lift) >= 11;
+            const settled = raised && king !== null && Math.abs(king.top - now.top) < 0.5 && Math.abs(king.left - now.left) < 0.5;
             king = now;
             expect(settled, 'the selected king has stopped moving').to.eq(true);
           });
           cy.get('[data-test="play"]').should('not.be.disabled').click();
 
-          cy.get('[data-test="motion-mark"][data-role="from"]').should(($from) => {
-            expect($from.length, 'one dashed ring: the king\'s slot').to.eq(1);
-            expectRingAround(box($from[0]), king!, 2, 'source ring of my king');
-            expect(getComputedStyle($from[0]).borderStyle).to.eq('dashed');
-          });
-          cy.get('[data-test="motion-mark"][data-role="to"]').should(($to) => {
-            const landed = document.querySelector('[data-test="trick-cards"] .playing_card')!;
-            expect($to.length, 'one landing ring').to.eq(1);
-            expectRingAround(box($to[0]), box(landed), 2, 'landing ring of my king');
-          });
-          cy.get('[data-test="motion-mark"]').should(($marks) => {
-            $marks.each((_, mark) => {
+          // One snapshot of every ring (they last 1.6 s: the checks must not wait on one another).
+          cy.get('body').should(($body) => {
+            const marks = [...$body[0].querySelectorAll('[data-test="motion-mark"]')] as HTMLElement[];
+            const from = marks.filter(m => m.dataset.role === 'from');
+            const to = marks.filter(m => m.dataset.role === 'to');
+            expect(from.length, 'one dashed ring: the king\'s slot').to.eq(1);
+            expect(to.length, 'one landing ring').to.eq(1);
+            expectRingAround(box(from[0]), king!, 2, 'source ring of my king');
+            expect(getComputedStyle(from[0]).borderStyle).to.eq('dashed');
+            expectRingAround(box(to[0]), box($body[0].querySelector('[data-test="trick-cards"] .playing_card')!), 2, 'landing ring of my king');
+            marks.forEach((mark) => {
               const style = getComputedStyle(mark);
-              expect(style.borderTopWidth, 'a thin contour').to.eq('1.5px');
+              // 1.5 px, which the browser rounds to a device pixel (1 px at a scale of 1).
+              expect(parseFloat(style.borderTopWidth), 'a thin contour').to.be.within(1, 1.5);
               expect(style.boxShadow, 'no halo').to.eq('none');
             });
           });
@@ -85,10 +88,12 @@ const bob = '.seat-slot[data-seat="1"]';
           // 2. Bob's cut leaves the top back of his fan.
           scriptedPlay(bobPlayer, '2', 1);
           cy.get('[data-test="motion-mark"][data-role="from"]').should(($from) => {
-            const backs = document.querySelectorAll(`${bob} .fan-back`);
+            const backs = $from[0].ownerDocument.querySelectorAll(`${bob} .fan-back`);
             const top = box(backs[backs.length - 1]);
-            expect($from.length, 'one dashed ring: the top back').to.eq(1);
-            const ring = box($from[0]);
+            // Mine may still be showing (1.6 s): Bob's is the one over his fan.
+            const bobs = [...$from].filter(m => Math.abs(box(m).top + box(m).height / 2 - (top.top + top.height / 2)) < 40);
+            expect(bobs.length, 'one dashed ring: the top back').to.eq(1);
+            const ring = box(bobs[0]);
             expect(ring.width, 'at most the back + 6 px').to.be.at.most(top.width + 6);
             expect(ring.height, 'at most the back + 6 px').to.be.at.most(top.height + 6);
             expect(ring.left + ring.width / 2, 'centred on the top back').to.be.closeTo(top.left + top.width / 2, 3);

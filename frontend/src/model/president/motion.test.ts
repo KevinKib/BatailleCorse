@@ -76,17 +76,17 @@ describe('planMovements', () => {
     expect(planMovements(entry({ action: 'PASS', cards: [] }), ME)).toEqual([]);
   });
 
-  it('givenAPlayThatClosesTheTrick_thenAfterTheFlightsTheWinnersSeatIsRinged', () => {
+  it('givenAPlayThatClosesTheTrick_thenAfterTheFlightsAnEmptyRingMarksTheEnd_andNoSeatIsRinged', () => {
     const moves = planMovements(entry({ closure: { winner: 2, reason: 'CUT', closer: 1, cards: [card('2', 'CLUB')], size: 2, trickCards: [card('2', 'CLUB'), card('9', 'HEART')] } }), ME);
     const ring = moves.at(-1)!;
-    expect(ring).toMatchObject({ kind: 'ring', marks: [{ kind: 'seat', seat: 2 }], durationMs: 0 });
+    expect(ring).toMatchObject({ kind: 'ring', marks: [], durationMs: 0 });
     expect(ring.delayMs).toBe(moves[0].delayMs + moves[0].durationMs);
   });
 
-  it('givenAPassThatClosesTheTrick_thenOnlyTheRingOnTheWinner', () => {
+  it('givenAPassThatClosesTheTrick_thenOnlyTheEmptyRingThatKeepsTheSweepGoing', () => {
     const moves = planMovements(entry({ action: 'PASS', cards: [], closure: { winner: 0, reason: 'ALL_PASSED', closer: 0, cards: [], size: 1, trickCards: [] } }), ME);
     expect(moves).toHaveLength(1);
-    expect(moves[0]).toMatchObject({ kind: 'ring', marks: [{ kind: 'seat', seat: 0 }], delayMs: 0 });
+    expect(moves[0]).toMatchObject({ kind: 'ring', marks: [], delayMs: 0 });
   });
 
   it('givenTheFastSpeed_thenEverythingIsTwiceAsFast', () => {
@@ -158,9 +158,9 @@ describe('planSweep', () => {
     expect(moves.every(m => m.durationMs === 620 && m.holdAfterMs === PRESIDENT_TEMPO.sweep.landHoldMs && !m.byOpponent)).toBe(true);
   });
 
-  it('givenTheSweep_thenAnEndRingOnTheWinnerWhenTheLastCardHasLanded', () => {
+  it('givenTheSweep_thenAnEmptyEndMovementWhenTheLastCardHasLanded', () => {
     const moves = planSweep(closing(), ME);
-    expect(moves.at(-1)).toMatchObject({ kind: 'ring', marks: [{ kind: 'seat', seat: 2 }], delayMs: 270 + 620 });
+    expect(moves.at(-1)).toMatchObject({ kind: 'ring', marks: [], delayMs: 270 + 620 });
   });
 
   it('givenAPassThatClosesTheTrick_thenTheCardsStartFromThePileSlots', () => {

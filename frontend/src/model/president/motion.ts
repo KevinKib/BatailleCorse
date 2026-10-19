@@ -50,9 +50,10 @@ export function sourcesFor(
 }
 
 /**
- * The movements of a move, from its log entry (and the places `sources` measured at my click): each card played flies from its exact place (the top back of the fan for an opponent) to
- * its place on the pile, with rings on both ends (an arrow too for an opponent), and a trick it closed rings the
- * winner's seat once the cards have landed. A pass moves nothing (its bubble says it). `factor` scales every
+ * The movements of a move, from its log entry (and the places `sources` measured at my click): each card played
+ * flies from its exact place (the top back of the fan for an opponent) to its place on the pile, with a ring on both
+ * ends (an arrow too for an opponent). A trick it closed ends with an empty `ring` movement (no mark: the badge says
+ * who leads) that keeps the sweep going when nothing else moved. A pass moves nothing (its bubble says it). `factor` scales every
  * duration (see `speedFactor`; the screen plays nothing at 0 but still rings). Pure.
  */
 export function planMovements(
@@ -78,7 +79,7 @@ export function planMovements(
     const winner: PresidentAnchor = { kind: 'seat', seat: entry.closure.winner };
     moves.push({
       kind: 'ring', from: { kind: 'pile' }, to: winner, card: null, flip: false, turnDown: false, actor: entry.seat,
-      byOpponent: false, delayMs: eventSpanMs(moves), durationMs: 0, holdAfterMs: leg.holdAfterMs, marks: [winner],
+      byOpponent: false, delayMs: eventSpanMs(moves), durationMs: 0, holdAfterMs: leg.holdAfterMs, marks: [],
     });
   }
   return factor > 0 ? scaleMovements(moves, factor) : moves;
@@ -99,7 +100,7 @@ export function sweepStartMs(entry: PresidentLogEntry, mySeat: number, factor = 
 /**
  * The sweep of a closed trick: its cards fly one after the other from the pile to the winner's seat (the closing
  * play first, from its own cards on the pile; the plays under it, which are not drawn, from the middle of the pile),
- * then the seat is ringed. Delays count from the start of the sweep (`sweepStartMs`). Nothing when the entry closed
+ * then an empty `ring` movement ends it (the seat is not ringed). Delays count from the start of the sweep (`sweepStartMs`). Nothing when the entry closed
  * no trick. `factor` scales every duration. Pure.
  */
 export function planSweep(entry: PresidentLogEntry, mySeat: number, factor = 1): PresidentMovement[] {
@@ -115,7 +116,7 @@ export function planSweep(entry: PresidentLogEntry, mySeat: number, factor = 1):
   if (moves.length > 0) {
     moves.push({
       kind: 'ring', from: { kind: 'pile' }, to: winner, card: null, flip: false, turnDown: false, actor: closure.winner,
-      byOpponent: false, delayMs: eventSpanMs(moves), durationMs: 0, holdAfterMs: PRESIDENT_TEMPO.own.holdAfterMs, marks: [winner],
+      byOpponent: false, delayMs: eventSpanMs(moves), durationMs: 0, holdAfterMs: PRESIDENT_TEMPO.own.holdAfterMs, marks: [],
     });
   }
   return factor > 0 ? scaleMovements(moves, factor) : moves;
