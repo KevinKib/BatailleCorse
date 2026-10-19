@@ -67,4 +67,25 @@ describe('CardMotionLayer', () => {
     expect(w.find('marker').attributes('id')).toBe('president-arrow-head');
     expect(w.get('[data-test="motion-arrow"]').attributes('marker-end')).toBe('url(#president-arrow-head)');
   });
+
+  it('givenTheSoftStyle_thenTheRingHugsTheCardWithoutHaloOrPop', async () => {
+    const w = mount(CardMotionLayer<string>, { props: { resolve, markStyle: 'soft' } });
+    play(w, [move()]);
+    await flushPromises();
+    const marks = w.findAll('[data-test="motion-mark"]');
+    expect(marks.every(m => m.attributes('data-style') === 'soft')).toBe(true);
+    // The card is 40 x 58 at (0, 10): the ring is 2 px around it.
+    expect(marks[0].attributes('style')).toContain('left: -2px');
+    expect(marks[0].attributes('style')).toContain('width: 44px');
+    expect(marks[0].attributes('style')).toContain('height: 62px');
+  });
+
+  it('givenNoStyle_thenTheRingIsKobosOneWith4pxAround', async () => {
+    const w = mount(CardMotionLayer<string>, { props: { resolve } });
+    play(w, [move()]);
+    await flushPromises();
+    const mark = w.get('[data-test="motion-mark"]');
+    expect(mark.attributes('data-style')).toBeUndefined();
+    expect(mark.attributes('style')).toContain('width: 48px');
+  });
 });

@@ -1,5 +1,5 @@
 <script setup lang="ts" generic="Anchor">
-import { nextTick, onBeforeUnmount, ref } from 'vue';
+import { computed, nextTick, onBeforeUnmount, ref } from 'vue';
 import PlayingCard from '../PlayingCard.vue';
 import type Card from '../../model/Card';
 import type { TableMovement } from '../../model/table/motion';
@@ -21,9 +21,13 @@ const props = withDefaults(defineProps<{
   markMs?: number;
   /** The same ring when it does not animate (reduced motion, or a still play): a plain outline. */
   markReducedMs?: number;
+  /** `soft`: a thin tinted contour hugging the card (no halo, no pop); default: the glowing ring. */
+  markStyle?: 'glow' | 'soft';
   /** The id of the arrow head marker (unique on the page). */
   arrowId?: string;
-}>(), { markMs: 2000, markReducedMs: 1500, arrowId: 'table-arrow-head' });
+}>(), { markMs: 2000, markReducedMs: 1500, markStyle: 'glow', arrowId: 'table-arrow-head' });
+/** How far a ring stands off the card it surrounds. */
+const markPad = computed(() => props.markStyle === 'soft' ? 2 : 4);
 
 interface Ghost { id: number; movement: Movement; from: MotionRect; to: MotionRect; hide: HTMLElement[]; waitMs: number }
 /** A card the table keeps showing in a place until a copy lands on it (or leaves it), so the place is never blank. */
@@ -279,8 +283,8 @@ defineExpose({ play });
             :x1="a.x1" :y1="a.y1" :x2="a.x2" :y2="a.y2" :marker-end="`url(#${arrowId})`" style="opacity: 0" />
     </svg>
     <div v-for="m in marks" :key="m.id" class="mark" data-test="motion-mark" :data-role="m.role"
-         :data-still="m.still ? 'true' : undefined"
-         :style="{ left: m.rect.left - 4 + 'px', top: m.rect.top - 4 + 'px', width: m.rect.width + 8 + 'px', height: m.rect.height + 8 + 'px', animationDuration: m.lifeMs + 'ms' }"></div>
+         :data-still="m.still ? 'true' : undefined" :data-style="markStyle === 'soft' ? 'soft' : undefined"
+         :style="{ left: m.rect.left - markPad + 'px', top: m.rect.top - markPad + 'px', width: m.rect.width + 2 * markPad + 'px', height: m.rect.height + 2 * markPad + 'px', animationDuration: m.lifeMs + 'ms' }"></div>
     <div v-for="u in unders" :key="u.id" class="under" data-test="motion-under"
          :style="{ left: u.rect.left + 'px', top: u.rect.top + 'px', width: u.rect.width + 'px', height: u.rect.height + 'px' }">
       <PlayingCard v-if="u.card" class="face" :rank="u.card.rank" :suit="u.card.suit" />
@@ -321,6 +325,23 @@ defineExpose({ play });
 }
 .mark[data-role="from"] { border-style: dashed; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.55), 0 0 10px 2px rgba(255, 210, 63, 0.5); }
 .mark[data-still="true"] { animation: none; }
+/* The soft contour (President): Kobo's touched-slot look, a thin gold line over a faint tint, hugging the card. No
+   halo, no pop; it only fades in and out, and the source is dashed over no tint. */
+.mark[data-style="soft"] {
+  border: 1.5px solid color-mix(in srgb, var(--gold, #f5c842) 95%, transparent);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--gold, #f5c842) 12%, transparent);
+  box-shadow: none;
+  animation-name: mark-fade;
+}
+.mark[data-style="soft"][data-role="from"] { border-style: dashed; background: none; box-shadow: none; }
+.mark[data-style="soft"][data-still="true"] { animation: none; }
+@keyframes mark-fade {
+  0% { opacity: 0; }
+  8% { opacity: 1; }
+  70% { opacity: 1; }
+  100% { opacity: 0; }
+}
 @keyframes mark-glow {
   0% { opacity: 0; transform: scale(1.12); }
   8% { opacity: 1; transform: scale(1); }

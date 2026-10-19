@@ -45,7 +45,8 @@ import { useInFlightCounts } from '../../composables/useInFlightCounts';
 import { createTempoQueue } from '../../model/table/queue';
 import { eventSpanMs } from '../../model/table/motion';
 import {
-  planBubbles, planMovements, planSweep, speedFactor, sweepStartMs, type PresidentAnchor, type PresidentMovement,
+  planBubbles, planMovements, planSweep, sourcesFor, speedFactor, sweepStartMs, type PendingSources, type PlaySources,
+  type PresidentAnchor, type PresidentMovement,
 } from '../../model/president/motion';
 import { closedPile, type PileView } from '../../model/president/trickView';
 import { planExchangeFlights } from '../../model/president/exchangeMotion';
@@ -185,19 +186,44 @@ const find = (selector: string) => screenEl.value?.querySelector<HTMLElement>(se
 const cardAt = (box: MotionRect, width: number): MotionRect =>
   ({ left: box.left + (box.width - width) / 2, top: box.top + (box.height - width * CARD_RATIO) / 2, width, height: width * CARD_RATIO });
 
+/** A seat as a place: my hand zone (a card in its middle) or an opponent's fan (a card the height of it). */
+function seatTarget(seat: number): MotionTarget | null {
+  if (seat === store.mySeat) {
+    const box = visibleRect(find('[data-test="my-zone"] [data-test="hand"]')) ?? visibleRect(find('[data-test="my-zone"]'));
+    return box ? { rect: cardAt(box, 44), cards: [] } : null;
+  }
+  const slot = find(`.seat-slot[data-seat="${seat}"]`);
+  const fan = visibleRect(slot?.querySelector('.fan-backs'));
+  // A card the height of the fan, so that the rings stay on the backs and never cover the count under them.
+  if (fan) return { rect: cardAt(fan, Math.min(fan.width, fan.height / CARD_RATIO)), cards: [] };
+  const box = visibleRect(slot);
+  return box ? { rect: cardAt(box, 24), cards: [] } : null;
+}
+
+// What the click on Play measured: the exact place of every card I play, because the state arrives before the
+// picture and those cards have left my hand by then. Consumed by the play that comes back in the log.
+let pendingSources: PendingSources | null = null;
+function playSelected() {
+  const rects: PlaySources = {};
+  screenEl.value?.querySelectorAll<HTMLElement>('[data-test="hand"] .hand-card.selected').forEach((button) => {
+    const rect = visibleRect(button.querySelector('.playing_card'));
+    const name = button.dataset.card;
+    if (rect && name) rects[name] = rect;
+  });
+  pendingSources = Object.keys(rects).length > 0 ? { rects, at: Date.now() } : null;
+  store.play();
+}
+
 function resolveAnchor(anchor: PresidentAnchor): MotionTarget | null {
   switch (anchor.kind) {
-    case 'seat': {
-      if (anchor.seat === store.mySeat) {
-        const box = visibleRect(find('[data-test="my-zone"] [data-test="hand"]')) ?? visibleRect(find('[data-test="my-zone"]'));
-        return box ? { rect: cardAt(box, 44), cards: [] } : null;
-      }
+    case 'seat':
+      return seatTarget(anchor.seat);
+    case 'fanTop': {
+      // The back on top of the fan (its last one): the cards an opponent plays leave from it.
       const slot = find(`.seat-slot[data-seat="${anchor.seat}"]`);
-      const fan = visibleRect(slot?.querySelector('.fan-backs'));
-      // A card the height of the fan, so that the rings stay on the backs and never cover the count under them.
-      if (fan) return { rect: cardAt(fan, Math.min(fan.width, fan.height / CARD_RATIO)), cards: [] };
-      const box = visibleRect(slot);
-      return box ? { rect: cardAt(box, 24), cards: [] } : null;
+      const backs = slot?.querySelectorAll('.fan-back');
+      const rect = visibleRect(backs?.[backs.length - 1]);
+      return rect ? { rect, cards: [] } : seatTarget(anchor.seat);
     }
     case 'pile': {
       const rect = visibleRect(find('[data-test="trick-cards"]'));
@@ -258,7 +284,9 @@ async function playEntry(entry: PresidentLogEntry) {
   const factor = speedFactor(speed.value);
   const isStill = still.value;
   for (const bubble of planBubbles(entry)) bubbles.show(bubble, PRESIDENT_TEMPO.bubbleMs * (factor || 1));
-  const moves = planMovements(entry, store.mySeat, factor || 1);
+  const sources = sourcesFor(entry, store.mySeat, pendingSources, Date.now());
+  if (sources) pendingSources = null;
+  const moves = planMovements(entry, store.mySeat, factor || 1, sources);
   if (moves.length === 0) return;
   // A trick this move closes is swept toward its winner after the badge's hold: the sweep takes its time in the queue
   // (the next move starts once it is over), and when the queue is full there is no sweep.
@@ -448,7 +476,7 @@ const rematchButton = computed(() =>
 
       <!-- The cards that travel (a picture only, hidden from assistive technology), and the one live region. -->
       <CardMotionLayer ref="motionLayer" :resolve="resolveAnchor" :mark-ms="PRESIDENT_TEMPO.markMs"
-                       :mark-reduced-ms="PRESIDENT_TEMPO.markReducedMs" arrow-id="president-arrow-head" />
+                       :mark-reduced-ms="PRESIDENT_TEMPO.markReducedMs" mark-style="soft" arrow-id="president-arrow-head" />
       <p class="sr-only" role="status" aria-live="polite" aria-atomic="true" data-test="president-live">{{ liveSpoken }}</p>
 
       <Transition name="forfeit-fade">
@@ -543,7 +571,7 @@ const rematchButton = computed(() =>
           :notice="noticeText"
           :can-complete="store.canComplete"
           @complete="store.complete()"
-          @primary="store.play()"
+          @primary="playSelected()"
           @pass="store.pass()"
           @clear="store.clearSelection()" />
       </div>

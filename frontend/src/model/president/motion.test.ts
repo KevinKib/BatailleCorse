@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { planBubbles, planMovements, planSweep, speedFactor, sweepStartMs } from './motion';
+import { planBubbles, planMovements, planSweep, sourcesFor, speedFactor, sweepStartMs } from './motion';
 import { PRESIDENT_TEMPO } from './tempo';
 import type { PresidentLogEntry } from './eventLog';
 import { buildPresidentCard as card } from '../fixtures/president';
@@ -11,22 +11,60 @@ const entry = (over: Partial<PresidentLogEntry> = {}): PresidentLogEntry => ({
 });
 const ME = 0;
 
+describe('sourcesFor', () => {
+  const rect = { left: 1, top: 2, width: 3, height: 4 };
+  const mine = entry({ seat: ME, cards: [card('9', 'HEART')] });
+
+  it('givenFreshMeasuresOfMyPlay_thenTheyAreGiven', () => {
+    expect(sourcesFor(mine, ME, { rects: { HEART_9: rect }, at: 1000 }, 3000)).toEqual({ HEART_9: rect });
+  });
+
+  it('givenAnOpponentsPlayOrAPass_thenNone', () => {
+    const pending = { rects: { HEART_9: rect }, at: 1000 };
+    expect(sourcesFor(entry({ seat: 1 }), ME, pending, 1500)).toBeUndefined();
+    expect(sourcesFor(entry({ seat: ME, action: 'PASS', cards: [] }), ME, pending, 1500)).toBeUndefined();
+  });
+
+  it('givenStaleMeasuresOrOtherCards_thenNone', () => {
+    expect(sourcesFor(mine, ME, { rects: { HEART_9: rect }, at: 1000 }, 1000 + 60_000)).toBeUndefined();
+    expect(sourcesFor(mine, ME, { rects: { CLUB_9: rect }, at: 1000 }, 1500)).toBeUndefined();
+    expect(sourcesFor(mine, ME, null, 1500)).toBeUndefined();
+  });
+});
+
 describe('planMovements', () => {
-  it('givenAnOpponentsPlay_thenEachCardFliesFromTheSeatToItsPlaceOnThePile_withTheOpponentsTempo', () => {
+  it('givenAnOpponentsPlay_thenEachCardFliesFromTheFanToItsPlaceOnThePile_withTheOpponentsTempo', () => {
     const moves = planMovements(entry({ cards: [card('9', 'HEART'), card('9', 'CLUB')] }), ME);
     expect(moves).toHaveLength(2);
     expect(moves.map(m => [m.kind, m.from, m.to, m.card?.name])).toEqual([
-      ['travel', { kind: 'seat', seat: 1 }, { kind: 'pileCard', index: 0 }, 'HEART_9'],
-      ['travel', { kind: 'seat', seat: 1 }, { kind: 'pileCard', index: 1 }, 'CLUB_9'],
+      ['travel', { kind: 'fanTop', seat: 1 }, { kind: 'pileCard', index: 0 }, 'HEART_9'],
+      ['travel', { kind: 'fanTop', seat: 1 }, { kind: 'pileCard', index: 1 }, 'CLUB_9'],
     ]);
     const leg = PRESIDENT_TEMPO.opponent;
     expect(moves[0]).toMatchObject({ byOpponent: true, delayMs: leg.holdBeforeMs, durationMs: leg.flightMs, holdAfterMs: leg.holdAfterMs });
     expect(moves[1].delayMs).toBe(leg.holdBeforeMs + PRESIDENT_TEMPO.cardStaggerMs);
   });
 
-  it('givenAPlay_thenTheSeatIsRingedDashedAndThePilePlain', () => {
-    const [move] = planMovements(entry(), ME);
-    expect(move.marks).toEqual([{ kind: 'seat', seat: 1 }, { kind: 'pile' }]);
+  it('givenAnOpponentsPlay_thenEachCardLeavesTheTopBackOfTheFan_andOnlyTheCardsThatLandedAreRinged', () => {
+    const moves = planMovements(entry({ cards: [card('9', 'HEART'), card('9', 'CLUB')] }), ME);
+    expect(moves.map(m => m.from)).toEqual([{ kind: 'fanTop', seat: 1 }, { kind: 'fanTop', seat: 1 }]);
+    expect(moves[0].marks).toEqual([{ kind: 'fanTop', seat: 1 }, { kind: 'pileCard', index: 0 }]);
+    expect(moves[1].marks).toEqual([{ kind: 'fanTop', seat: 1 }, { kind: 'pileCard', index: 1 }]);
+  });
+
+  it('givenMyPlayWithMeasuredSources_thenEachCardLeavesItsExactPlaceAndThatPlaceIsTheDashedRing', () => {
+    const a = { left: 10, top: 500, width: 56, height: 81 };
+    const b = { left: 40, top: 500, width: 56, height: 81 };
+    const moves = planMovements(entry({ seat: ME, cards: [card('9', 'HEART'), card('9', 'CLUB')] }), ME, 1,
+      { HEART_9: a, CLUB_9: b });
+    expect(moves.map(m => m.from)).toEqual([{ kind: 'rect', ...a }, { kind: 'rect', ...b }]);
+    expect(moves[1].marks).toEqual([{ kind: 'rect', ...b }, { kind: 'pileCard', index: 1 }]);
+  });
+
+  it('givenMyPlayWithoutAMeasuredSource_thenItLeavesMyHandZone', () => {
+    const [move] = planMovements(entry({ seat: ME }), ME);
+    expect(move.from).toEqual({ kind: 'seat', seat: ME });
+    expect(move.marks).toEqual([{ kind: 'seat', seat: ME }, { kind: 'pileCard', index: 0 }]);
   });
 
   it('givenMyPlay_thenMyTempoAndNoArrow', () => {
@@ -38,17 +76,17 @@ describe('planMovements', () => {
     expect(planMovements(entry({ action: 'PASS', cards: [] }), ME)).toEqual([]);
   });
 
-  it('givenAPlayThatClosesTheTrick_thenAfterTheFlightsTheWinnersSeatIsRinged', () => {
+  it('givenAPlayThatClosesTheTrick_thenAfterTheFlightsAnEmptyRingMarksTheEnd_andNoSeatIsRinged', () => {
     const moves = planMovements(entry({ closure: { winner: 2, reason: 'CUT', closer: 1, cards: [card('2', 'CLUB')], size: 2, trickCards: [card('2', 'CLUB'), card('9', 'HEART')] } }), ME);
     const ring = moves.at(-1)!;
-    expect(ring).toMatchObject({ kind: 'ring', marks: [{ kind: 'seat', seat: 2 }], durationMs: 0 });
+    expect(ring).toMatchObject({ kind: 'ring', marks: [], durationMs: 0 });
     expect(ring.delayMs).toBe(moves[0].delayMs + moves[0].durationMs);
   });
 
-  it('givenAPassThatClosesTheTrick_thenOnlyTheRingOnTheWinner', () => {
+  it('givenAPassThatClosesTheTrick_thenOnlyTheEmptyRingThatKeepsTheSweepGoing', () => {
     const moves = planMovements(entry({ action: 'PASS', cards: [], closure: { winner: 0, reason: 'ALL_PASSED', closer: 0, cards: [], size: 1, trickCards: [] } }), ME);
     expect(moves).toHaveLength(1);
-    expect(moves[0]).toMatchObject({ kind: 'ring', marks: [{ kind: 'seat', seat: 0 }], delayMs: 0 });
+    expect(moves[0]).toMatchObject({ kind: 'ring', marks: [], delayMs: 0 });
   });
 
   it('givenTheFastSpeed_thenEverythingIsTwiceAsFast', () => {
@@ -120,9 +158,9 @@ describe('planSweep', () => {
     expect(moves.every(m => m.durationMs === 620 && m.holdAfterMs === PRESIDENT_TEMPO.sweep.landHoldMs && !m.byOpponent)).toBe(true);
   });
 
-  it('givenTheSweep_thenAnEndRingOnTheWinnerWhenTheLastCardHasLanded', () => {
+  it('givenTheSweep_thenAnEmptyEndMovementWhenTheLastCardHasLanded', () => {
     const moves = planSweep(closing(), ME);
-    expect(moves.at(-1)).toMatchObject({ kind: 'ring', marks: [{ kind: 'seat', seat: 2 }], delayMs: 270 + 620 });
+    expect(moves.at(-1)).toMatchObject({ kind: 'ring', marks: [], delayMs: 270 + 620 });
   });
 
   it('givenAPassThatClosesTheTrick_thenTheCardsStartFromThePileSlots', () => {
