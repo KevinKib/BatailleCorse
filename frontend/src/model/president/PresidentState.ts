@@ -3,11 +3,11 @@ import type { LobbyView } from '../lobby/LobbyView';
 
 /** Mirrors of the backend `PresidentDto` (the viewer's projection of a started game); nothing here is derived. */
 
-export type PresidentPhase = 'EXCHANGE' | 'PLAYING' | 'ROUND_OVER' | 'FINISHED';
+export type PresidentPhase = 'EXCHANGE' | 'EXCHANGE_VIEW' | 'PLAYING' | 'ROUND_OVER' | 'FINISHED';
 
 export type PresidentTitle = 'PRESIDENT' | 'VICE_PRESIDENT' | 'NEUTRAL' | 'VICE_SCUM' | 'SCUM';
 
-export type PresidentAction = 'PLAY' | 'PASS' | 'COMPLETE' | 'GIVE_BACK' | 'READY';
+export type PresidentAction = 'PLAY' | 'PASS' | 'COMPLETE' | 'GIVE_BACK' | 'READY' | 'SEE_EXCHANGE';
 
 /** A set of `count` cards of one rank. The only kind of play for now (runs come with their own PR). */
 export interface PresidentPattern {
@@ -31,6 +31,8 @@ export interface PresidentPlayer {
   points: number;
   /** Has pressed "ready" on the round-over barrier. */
   ready: boolean;
+  /** Has seen this round's exchange (the exchange view); false outside the view. */
+  sawExchange: boolean;
   /** Went out on a forbidden finish: out at once, but placed last when the round ends (`place` stays null until then). */
   forbiddenFinish: boolean;
 }

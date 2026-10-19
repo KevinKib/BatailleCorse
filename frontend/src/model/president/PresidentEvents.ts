@@ -2,7 +2,8 @@ import type Card from '../Card';
 import type { PresidentView } from './PresidentState';
 
 export type PresidentEventType =
-  | 'START' | 'ROUND_START' | 'EXCHANGE' | 'PLAY' | 'COMPLETION' | 'PASS' | 'ROUND_END' | 'READY' | 'GAME_OVER';
+  | 'START' | 'ROUND_START' | 'EXCHANGE' | 'PLAY' | 'COMPLETION' | 'PASS' | 'ROUND_END' | 'READY' | 'GAME_OVER'
+  | 'EXCHANGE_SEEN' | 'EXCHANGE_CLOSED';
 
 /**
  * What a command did, public to every seat. `action` is the command even when the event type is a ROUND_END or
@@ -20,6 +21,12 @@ export interface PresidentEventData {
   trickWinner: number | null;
   trickEndReason: string | null;
   barrierOpened: boolean | null;
+}
+
+/** The data of an EXCHANGE_CLOSED event: the timeout closed the exchange view of `round`; `late` are the seats that had not seen it. */
+export interface PresidentExchangeClosedData {
+  round: number;
+  late: number[];
 }
 
 export interface PresidentResponse {

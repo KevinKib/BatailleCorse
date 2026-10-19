@@ -291,6 +291,13 @@ export const messagesEn: Messages = {
       waiting: '{player} is playing',
       roundOver: 'Round {n} is over',
     },
+    exchangeView: {
+      watching: 'The exchange',
+      waitingOne: 'Waiting for {player} to see the exchange',
+      waitingTwo: 'Waiting for {a} and {b}',
+      waitingMany: 'Waiting for {n} players',
+      starting: 'The first trick starts',
+    },
     exchange: {
       label: 'Card exchange',
       youAre: {
