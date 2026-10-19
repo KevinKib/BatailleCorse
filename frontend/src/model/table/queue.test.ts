@@ -32,4 +32,17 @@ describe('createTempoQueue (shared)', () => {
     queue.admit(1500);
     expect(queue.admit(300)).toEqual({ startInMs: 0, motion: false });
   });
+
+  it('givenAnEventStillFlying_thenTheBacklogIsWhatIsLeftOfIt_andZeroOnceItIsOver', () => {
+    const t = { now: 0 };
+    const queue = createTempoQueue(at(t), bounds);
+    expect(queue.backlogMs()).toBe(0);
+    queue.admit(600);
+    t.now = 200;
+    expect(queue.backlogMs()).toBe(400);
+    queue.admit(300);
+    expect(queue.backlogMs()).toBe(700);
+    t.now = 5000;
+    expect(queue.backlogMs()).toBe(0);
+  });
 });

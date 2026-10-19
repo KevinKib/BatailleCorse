@@ -115,3 +115,34 @@ describe('PresidentRoundSummary', () => {
     expect(wrapper.get('[data-test="round-over-waiting"]').text()).toBe('Waiting for the others');
   });
 });
+
+describe('PresidentRoundSummary, the sheet of the last round', () => {
+  it('givenTheMatchEndedWithThisRound_thenTheWayOnIsTheFinalScoresNotTheNextRound', async () => {
+    const wrapper = mountSummary({ final: true, canReady: false });
+    expect(wrapper.find('[data-test="ready"]').exists()).toBe(false);
+    expect(wrapper.find('[data-test="round-over-waiting"]').exists()).toBe(false);
+    const next = wrapper.get('[data-test="final-scores"]');
+    expect(next.text()).toBe('Final scores');
+    await next.trigger('click');
+    expect(wrapper.emitted('continue')).toHaveLength(1);
+  });
+
+  it('givenAnOrdinaryRound_thenThereIsNoFinalScoresButton', () => {
+    expect(mountSummary().find('[data-test="final-scores"]').exists()).toBe(false);
+  });
+
+  it('givenTheSheetComesIn_thenTheSeatsAppearOneByOneFromTheFirstPlace', () => {
+    const delays = rows(mountSummary()).map(row => row.attributes('style'));
+    expect(delays).toEqual(['--place-delay: 0ms;', '--place-delay: 140ms;', '--place-delay: 280ms;']);
+  });
+
+  it('givenAStillTable_thenTheSeatsAppearAtOnce', () => {
+    const delays = rows(mountSummary({ still: true })).map(row => row.attributes('style'));
+    expect(delays).toEqual(['--place-delay: 0ms;', '--place-delay: 0ms;', '--place-delay: 0ms;']);
+  });
+
+  it('givenFast_thenTheSeatsAppearCloserTogether', () => {
+    const delays = rows(mountSummary({ factor: 0.5 })).map(row => row.attributes('style'));
+    expect(delays).toEqual(['--place-delay: 0ms;', '--place-delay: 70ms;', '--place-delay: 140ms;']);
+  });
+});

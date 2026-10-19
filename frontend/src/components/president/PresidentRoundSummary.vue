@@ -5,6 +5,7 @@ import type { PresidentPlayer, PresidentRound, PresidentTitle } from '../../mode
 import { seatsByPlace, titleKey, titleOrder } from '../../model/president/titles';
 import { useI18n } from '../../composables/useI18n';
 import { format } from '../../locales/format';
+import { PRESIDENT_TEMPO } from '../../model/president/tempo';
 import type { PresidentTitleKey } from '../../locales/Messages';
 
 // The end-of-round sheet: the finishing order with the title each seat has just earned, how it moved from the title
@@ -17,10 +18,20 @@ const props = defineProps<{
   nameOf: (seat: number) => string;
   /** False once I pressed Ready: the button gives way to a waiting line. */
   canReady: boolean;
+  /** The match ends with this round: the way on is the final scores, not the next round. */
+  final?: boolean;
+  /** Instant or reduced motion: the sheet and its places come in at once. */
+  still?: boolean;
+  /** The speed factor of the animations (1 normal, 0.5 fast). */
+  factor?: number;
 }>();
-const emit = defineEmits<{ ready: [] }>();
+const emit = defineEmits<{ ready: []; continue: [] }>();
 
 const ui = useI18n().presidentUi;
+// The places come in one by one, best first, once the sheet is up (each row's delay is its own CSS variable).
+const placeDelay = (index: number) =>
+  props.still ? 0 : Math.round(index * PRESIDENT_TEMPO.roundEnd.placeStaggerMs * (props.factor ?? 1));
+const slideMs = computed(() => props.still ? 0 : Math.round(PRESIDENT_TEMPO.roundEnd.slideMs * (props.factor ?? 1)));
 const titleText = (title: PresidentTitle | null) => title ? ui.titles[titleKey(title) as PresidentTitleKey] : '';
 
 interface Row {
@@ -63,10 +74,12 @@ const ICONS = { up: 'pi-arrow-up', down: 'pi-arrow-down', same: 'pi-minus' } as 
 </script>
 
 <template>
-  <section class="round-over" data-test="round-over">
+  <section class="round-over" :class="{ 'round-over--still': still }" :style="{ '--sheet-slide': slideMs + 'ms' }"
+           data-test="round-over">
     <h2 class="round-over-title" data-test="round-over-title">{{ format(ui.phase.roundOver, { n: round }) }}</h2>
     <ol class="places">
-      <li v-for="r in rows" :key="r.seat" class="place" data-test="round-over-place">
+      <li v-for="(r, i) in rows" :key="r.seat" class="place" data-test="round-over-place"
+          :style="{ '--place-delay': placeDelay(i) + 'ms' }">
         <span class="place-label" data-test="place-label">{{ format(ui.roundOver.place, { n: r.place ?? '', player: nameOf(r.seat) }) }}</span>
         <span class="place-tags">
           <span class="place-title" data-test="place-title">{{ titleText(r.title) }}</span>
@@ -85,7 +98,9 @@ const ICONS = { up: 'pi-arrow-up', down: 'pi-arrow-down', same: 'pi-minus' } as 
         </span>
       </li>
     </ol>
-    <Button v-if="canReady" data-test="ready" class="ready" :label="ui.roundOver.ready" severity="success" rounded
+    <Button v-if="final" data-test="final-scores" class="ready" :label="ui.roundOver.finalScores" severity="success" rounded
+            @click="emit('continue')" />
+    <Button v-else-if="canReady" data-test="ready" class="ready" :label="ui.roundOver.ready" severity="success" rounded
             @click="emit('ready')" />
     <p v-else class="waiting" data-test="round-over-waiting" role="status">{{ ui.roundOver.waiting }}</p>
   </section>
@@ -96,7 +111,13 @@ const ICONS = { up: 'pi-arrow-up', down: 'pi-arrow-down', same: 'pi-minus' } as 
   display: flex; flex-direction: column; align-items: center; gap: var(--space-2);
   box-sizing: border-box; width: 100%; max-width: 420px;
   padding: var(--space-2); background: rgba(0, 0, 0, 0.45); border-radius: 14px;
+  animation: sheet-rise var(--sheet-slide, 0ms) ease-out both;
 }
+.place { animation: place-in 260ms ease-out both; animation-delay: var(--place-delay, 0ms); }
+@keyframes sheet-rise { from { transform: translateY(100%); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes place-in { from { transform: translateY(8px) scale(0.96); opacity: 0; } to { transform: none; opacity: 1; } }
+.round-over--still, .round-over--still .place { animation: none; }
+@media (prefers-reduced-motion: reduce) { .round-over, .place { animation: none; } }
 .round-over-title { margin: 0; font-family: var(--font-title); font-size: 1rem; color: var(--gold); }
 .places { margin: 0; padding: 0; list-style: none; width: 100%; font-size: 0.85rem; color: rgba(255, 255, 255, 0.9); }
 .place {

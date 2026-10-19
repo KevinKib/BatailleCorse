@@ -41,8 +41,17 @@ import { autoplay, connectMyself } from '../support/presidentAutoplay';
             cy.get('[data-test="round"]', { timeout: 30000 }).should('have.text', `Round ${round + 1} of 3`);
           });
 
-          // The last round ends the match.
-          cy.get('[data-cy="end-overlay"]', { timeout: 60000 }).should('be.visible');
+          // The last round ends the match: its sheet comes first, with the way on to the final scores instead of Ready,
+          // and the final scores do not come by themselves.
+          cy.get('[data-test="round-over-title"]', { timeout: 60000 }).should('have.text', 'Round 3 is over');
+          cy.get('[data-test="round-over-place"]').should('have.length', 3);
+          cy.get('[data-test="ready"]').should('not.exist');
+          cy.get('[data-cy="end-overlay"]').should('not.exist');
+          cy.wait(2500); // a negative check: the final scores must not appear on their own
+          cy.get('[data-cy="end-overlay"]').should('not.exist');
+          noHorizontalScroll();
+          cy.get('[data-test="final-scores"]').should('have.text', 'Final scores').click();
+          cy.get('[data-cy="end-overlay"]', { timeout: 10000 }).should('be.visible');
           cy.get('[data-test="end-winner"]').invoke('text').should('match', /^Winners?: /);
           cy.get('[data-test="end-sub"]').invoke('text').should('match', /^\d+ points$/);
           cy.get('[data-test="end-extra"] [data-test^="final-row-"]').should('have.length', 3);

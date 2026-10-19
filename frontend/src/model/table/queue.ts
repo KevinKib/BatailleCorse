@@ -33,5 +33,9 @@ export function createTempoQueue(now: () => number, bounds: QueueBounds) {
       if (startInMs > 0) starts.push(t + startInMs);
       return { startInMs, motion: true };
     },
+    /** How long until the events admitted so far are all over (0 when the table is idle). */
+    backlogMs(): number {
+      return Math.max(0, busyUntil - now());
+    },
   };
 }

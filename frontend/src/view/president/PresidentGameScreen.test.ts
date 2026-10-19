@@ -577,6 +577,116 @@ describe('PresidentGameScreen', () => {
       });
     });
 
+    describe('the end of a round (chunk 4): the table finishes, then the round sheet, then the final scores', () => {
+      const advance = async (ms: number) => { await vi.advanceTimersByTimeAsync(ms); await flushPromises(); };
+      const finalPlay = { rank: '3', suit: 'CLUB', name: 'CLUB_3' };
+      const places = { 0: { place: 3, title: 'PRESIDENT' as const }, 1: { place: 1, title: 'SCUM' as const }, 2: { place: 2, title: 'NEUTRAL' as const } };
+      const scored = (round: number) => ({
+        round, finishingOrder: [1, 2, 0],
+        players: [
+          { seat: 1, place: 1, title: 'PRESIDENT' as const, points: 3, total: 5, forbiddenFinish: false },
+          { seat: 2, place: 2, title: 'NEUTRAL' as const, points: 2, total: 4, forbiddenFinish: false },
+          { seat: 0, place: 3, title: 'SCUM' as const, points: 1, total: 3, forbiddenFinish: false },
+        ],
+      });
+      const roundOverAfterAPlay = (over: Partial<PresidentState> = {}) => playing({
+        version: 2, round: 2, phase: 'ROUND_OVER', availableActions: ['READY'], legalPlays: [],
+        players: seatsOf(3, places), lastRound: scored(2), ...over,
+      });
+      /** A table in round 2 where seat 1 is about to play the last card of the round. */
+      const midRound = () => mountRoom(room(playing({ round: 2, currentSeat: 1, players: seatsOf(3, { 1: { handSize: 1 } }) })));
+      const lastPlay = (store: ReturnType<typeof usePresidentStore>, state: PresidentState) => {
+        store.applyEvent({ type: 'state-update', state });
+        store.applyEvent(event(1, 'PLAY', { cards: [finalPlay], outPlace: 1 }));
+      };
+
+      beforeEach(() => { vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] }); });
+      afterEach(() => { vi.useRealTimers(); });
+
+      it('givenTheLastPlayEndsTheRound_thenTheSheetWaitsForTheFlightAndTheTableToSettle_andNothingElseAsksForAnAction', async () => {
+        const { wrapper, store } = await midRound();
+        lastPlay(store, roundOverAfterAPlay());
+        await flushPromises();
+        expect(wrapper.find('[data-test="round-over"]').exists()).toBe(false);
+        expect(wrapper.find('[data-test="action-bar"]').exists()).toBe(false);
+        await advance(1500);
+        expect(wrapper.find('[data-test="round-over"]').exists()).toBe(false);
+        await advance(1500);
+        expect(wrapper.get('[data-test="round-over-title"]').text()).toBe('Round 2 is over');
+        expect(wrapper.find('[data-test="ready"]').exists()).toBe(true);
+      });
+
+      it('givenTheLastPlayClosesATrick_thenTheSheetWaitsForTheBadgeAndTheSweepToo', async () => {
+        const king = { rank: 'KING', suit: 'HEART', name: 'HEART_KING' };
+        const { wrapper, store } = await mountRoom(room(playing({
+          round: 2, currentSeat: 1, players: seatsOf(3, { 1: { handSize: 1 } }),
+          trick: buildPresidentTrick({ leader: 0, plays: [{ seat: 0, cards: [king] }] }),
+        })));
+        store.applyEvent({ type: 'state-update', state: roundOverAfterAPlay() });
+        store.applyEvent(event(1, 'PLAY', { cards: [finalPlay], outPlace: 1, trickWinner: 1, trickEndReason: 'CUT' }));
+        await flushPromises();
+        await advance(2500);
+        expect(wrapper.find('[data-test="round-over"]').exists()).toBe(false);
+        await advance(4000);
+        expect(wrapper.find('[data-test="round-over"]').exists()).toBe(true);
+      });
+
+      it('givenTheInstantSpeed_thenTheSheetComesRightAfterTheLastPlay', async () => {
+        localStorage.setItem('animationSpeed', 'instant');
+        const { wrapper, store } = await midRound();
+        lastPlay(store, roundOverAfterAPlay());
+        await flushPromises();
+        await advance(50);
+        expect(wrapper.find('[data-test="round-over"]').exists()).toBe(true);
+      });
+
+      it('givenTheLastRoundOfTheMatch_thenTheRoundSheetShowsFirstAndTheFinalScoresOnlyOnceContinued', async () => {
+        const { wrapper, store } = await midRound();
+        lastPlay(store, roundOverAfterAPlay({
+          phase: 'FINISHED', availableActions: [], outcome: { status: 'FINISHED', winners: [1], reason: 'POINTS' },
+          standings: [{ seat: 1, points: 12 }, { seat: 0, points: 8 }, { seat: 2, points: 5 }],
+        }));
+        await flushPromises();
+        expect(wrapper.find('[data-test="end"]').exists()).toBe(false);
+        expect(wrapper.find('[data-test="round-over"]').exists()).toBe(false);
+        await advance(4000);
+        expect(wrapper.find('[data-test="round-over"]').exists()).toBe(true);
+        expect(wrapper.find('[data-test="end"]').exists()).toBe(false);
+        expect(wrapper.find('[data-test="ready"]').exists()).toBe(false);
+        // The players read their round: the final scores do not come by themselves.
+        await advance(60_000);
+        expect(wrapper.find('[data-test="end"]').exists()).toBe(false);
+        await wrapper.get('[data-test="final-scores"]').trigger('click');
+        await flushPromises();
+        expect(wrapper.get('[data-test="end-winner"]').text()).toBe('Winner: P1');
+        expect(wrapper.findAll('[data-test="end-extra"] [data-test^="final-row-"]')).toHaveLength(3);
+      });
+
+      it('givenTheMatchEndsByAForfeit_thenTheFinalScoresComeAfterTheTableSettles_withoutARoundSheet', async () => {
+        const { wrapper, store } = await midRound();
+        store.applyEvent({ type: 'state-update', state: playing({
+          version: 2, round: 2, phase: 'FINISHED', availableActions: [], legalPlays: [],
+          outcome: { status: 'FINISHED', winners: [0], reason: 'FORFEIT' },
+        }) });
+        await flushPromises();
+        expect(wrapper.find('[data-test="end"]').exists()).toBe(false);
+        await advance(2000);
+        expect(wrapper.find('[data-test="end"]').exists()).toBe(true);
+        expect(wrapper.find('[data-test="round-over"]').exists()).toBe(false);
+      });
+
+      it('givenTheNextRoundStarts_thenTheSheetGoesAndThePlayBarComesBack', async () => {
+        const { wrapper, store } = await midRound();
+        lastPlay(store, roundOverAfterAPlay());
+        await advance(5000);
+        expect(wrapper.find('[data-test="round-over"]').exists()).toBe(true);
+        store.applyEvent({ type: 'state-update', state: playing({ version: 3, round: 3 }) });
+        await flushPromises();
+        expect(wrapper.find('[data-test="round-over"]').exists()).toBe(false);
+        expect(wrapper.find('[data-test="action-bar"]').exists()).toBe(true);
+      });
+    });
+
     it('hasTheSharedSpeedButton_NormalByDefault_cyclingToFast', async () => {
       const { wrapper } = await mountRoom(room(playing()));
       const button = wrapper.get('[data-test="table-footer"] [data-test="speed-button"]');
