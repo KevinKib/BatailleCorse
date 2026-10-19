@@ -11,7 +11,7 @@ import { format, plural } from '../../locales/format';
 // The pile: the top play of the trick, face up, with who made it, a small indicator of how many cards the trick holds
 // (spec §11 decision 7, in place of the covered plays) and the rule chips next to it (decision 6C). A trick the latest
 // move closed keeps its closing play on the pile, dimmed, with a badge that says why and who leads, until the next
-// play (`pileView`); it flashes once when it closes. The notes under the pile (who took the trick and why, a forbidden
+// play (`pileView`). The notes under the pile (who took the trick and why, a forbidden
 // finish) are a secondary line for screen readers: the badge says it on screen.
 const props = defineProps<{
   trick: PresidentTrick;
@@ -24,7 +24,7 @@ const props = defineProps<{
   pile?: PileView;
   /** The cards of a closed trick have been swept toward the winner: the pile keeps its place but shows no card. */
   swept?: boolean;
-  /** No closing flash (reduced motion, Instant). */
+  /** No badge animation (reduced motion, Instant). */
   still?: boolean;
 }>();
 const ui = useI18n().presidentUi;
@@ -142,30 +142,15 @@ const chipTexts = computed(() => props.chips.flatMap((chip) => {
 .trick-closed--line .trick-closed-leader::before { content: "·"; margin-right: 8px; font-weight: 800; }
 .trick-closed-reason { font-size: 0.8rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; }
 .trick-closed-leader { font-size: 0.7rem; font-weight: 700; }
-/* The closing flash: a gold glow around the closed play, once. */
-.trick-plate--closed::before {
-  content: "";
-  position: absolute;
-  inset: -10px -14px;
-  border-radius: 14px;
-  pointer-events: none;
-  box-shadow: 0 0 0 3px rgba(255, 210, 63, 0.9), 0 0 26px 8px rgba(255, 210, 63, 0.7);
-  opacity: 0;
-  animation: closing-flash 900ms ease-out both;
-}
+/* No closing flash: the badge says it (owner decision, soft rings). */
 .trick-plate--closed .trick-closed { animation: badge-in 260ms cubic-bezier(.2, .8, .2, 1.3) both; }
-.trick-plate--still::before, .trick-plate--still .trick-closed { animation: none; }
-@keyframes closing-flash {
-  0% { opacity: 0; transform: scale(1.15); }
-  20% { opacity: 1; transform: scale(1); }
-  100% { opacity: 0; }
-}
+.trick-plate--still .trick-closed { animation: none; }
 @keyframes badge-in {
   from { opacity: 0; transform: scale(0.7); }
   to { opacity: 1; transform: scale(1); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .trick-plate--closed::before, .trick-plate--closed .trick-closed { animation: none; }
+  .trick-plate--closed .trick-closed { animation: none; }
 }
 
 /* The trick indicator: how many cards the trick holds. */
