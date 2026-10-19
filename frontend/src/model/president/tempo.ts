@@ -35,6 +35,17 @@ export const PRESIDENT_TEMPO = {
     /** At most this many cards sweep (the latest ones): the layer stays light on a very long trick. */
     maxCards: 8,
   },
+  /** The end of a round (chunk 4): the table finishes before any sheet or scoreboard comes in. */
+  roundEnd: {
+    /** After the last move is over (flights, closing badge, sweep), the table stays this long as it is, then the sheet. */
+    settleMs: 1100,
+    /** Waits this long first, so that the last move of the round has reached the queue (the state comes before it). */
+    graceMs: 80,
+    /** The places of the sheet appear this far apart, best first. */
+    placeStaggerMs: 140,
+    /** The sheet rises from the bottom this long. */
+    slideMs: 320,
+  },
   /** The burst bounds, as Kobo's. */
   queue: { maxQueued: 4, maxLagMs: 3500 },
 } as const;

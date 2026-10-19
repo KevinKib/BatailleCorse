@@ -10,7 +10,7 @@ import { useSeatDisconnectCountdown } from '../../composables/useSeatDisconnectC
 import { useGameDuration } from '../../composables/useGameDuration';
 import { useConnectionStatus } from '../../composables/useConnectionStatus';
 import { useNarrowScreen } from '../../composables/useNarrowScreen';
-import { useEndScreen } from '../../composables/useEndScreen';
+import { usePresidentEndSequence } from '../../composables/usePresidentEndSequence';
 import { useI18n } from '../../composables/useI18n';
 import GameLobby from '../../components/lobby/GameLobby.vue';
 import EndGameOverlay from '../../components/EndGameOverlay.vue';
@@ -51,6 +51,7 @@ import { closedPile, type PileView } from '../../model/president/trickView';
 import { planExchangeFlights } from '../../model/president/exchangeMotion';
 import { exchangeRecap } from '../../model/president/exchangeRecap';
 import { PRESIDENT_TEMPO } from '../../model/president/tempo';
+import { endKind, endTimings } from '../../model/president/endSequence';
 import type { PresidentLogEntry } from '../../model/president/eventLog';
 import type { PresidentState } from '../../model/president/PresidentState';
 
@@ -134,7 +135,7 @@ const roundText = computed(() => {
 });
 
 const isExchange = computed(() => store.game?.phase === 'EXCHANGE');
-const isRoundOver = computed(() => store.game?.phase === 'ROUND_OVER');
+
 const phaseText = computed(() => {
   const g = store.game;
   if (!g) return '';
@@ -353,9 +354,19 @@ watch(showRecap, shown => {
 }, { immediate: true });
 
 // --- The end -------------------------------------------------------------------------------------------------------
-const endScreen = useEndScreen(() => store.screen === 'finished', () => false);
-endScreen.revealImmediatelyIfOver();
-onBeforeUnmount(() => endScreen.cancel());
+// The end of a round (owner feedback, 2026-10-19): the table finishes (last plays, closing badge, sweep) before the
+// round sheet comes in, and the round sheet always comes before the final scores: on the last round of the match it
+// stays until the player moves on. A page opened on an ended game shows its sheet or its final scores at once.
+const kind = computed(() => store.game ? endKind(store.game) : 'none');
+const endSequence = usePresidentEndSequence({
+  kind: () => kind.value,
+  backlogMs: () => tempoQueue.backlogMs(),
+  busy: () => hold.value !== null,
+  timings: () => endTimings(speedFactor(speed.value) || 1, still.value),
+});
+const sheetOpen = endSequence.sheetVisible;
+// While the sheet is not up yet, the table is still finishing: no action to offer.
+const roundEnding = computed(() => kind.value !== 'none');
 const winners = computed(() => {
   const outcome = store.game?.outcome;
   return outcome?.status === 'FINISHED' ? outcome.winners : [];
@@ -408,7 +419,7 @@ const rematchButton = computed(() =>
     </GameLobby>
 
     <EndGameOverlay
-      v-else-if="store.screen === 'finished' && endScreen.showEndOverlay.value"
+      v-else-if="store.screen === 'finished' && endSequence.finalVisible.value"
       data-test="end"
       :did-i-win="iWon"
       :winner-line="winnerLine"
@@ -466,7 +477,7 @@ const rematchButton = computed(() =>
               :player="opponent"
               :label="displayName(opponent.seat)"
               :current="store.game.phase === 'PLAYING' && store.game.currentSeat === opponent.seat"
-              :show-ready="isRoundOver"
+              :show-ready="sheetOpen"
               :disconnected="seatDisconnected(opponent.seat)"
               :seconds-remaining="seatSecondsRemaining(opponent.seat)"
               fan
@@ -483,26 +494,32 @@ const rematchButton = computed(() =>
         </div>
       </div>
 
-      <div class="my-zone" data-test="my-zone" role="region" :aria-label="ui.table.yourCards">
-        <PresidentSeat
-          v-if="store.me"
-          :player="store.me"
-          :label="ui.you"
-          :current="store.isMyTurn && store.game.phase === 'PLAYING'"
-          :show-ready="isRoundOver"
-          :bubble="bubbles.bySeat.value[store.mySeat] ?? null"
-          :still="still" />
-        <PresidentHand :cards="store.hand" :selected="selectedNames" :received="receivedNames" :landing="landing" @toggle="name => store.toggleCard(name)" />
+      <!-- The end of a round: the sheet rises under the table, in the place of my zone (as Kobo's score sheet). -->
+      <div v-if="sheetOpen" class="sheet-slot" data-test="sheet-slot">
         <PresidentRoundSummary
-          v-if="isRoundOver"
           :players="store.game.players"
           :round="store.game.round"
           :last-round="store.game.lastRound"
           :name-of="displayName"
           :can-ready="canReady"
-          @ready="store.ready()" />
+          :final="kind === 'final'"
+          :still="still"
+          :factor="speedFactor(speed) || 1"
+          @ready="store.ready()"
+          @continue="endSequence.continueToFinal()" />
+      </div>
+
+      <div v-else class="my-zone" data-test="my-zone" role="region" :aria-label="ui.table.yourCards">
+        <PresidentSeat
+          v-if="store.me"
+          :player="store.me"
+          :label="ui.you"
+          :current="store.isMyTurn && store.game.phase === 'PLAYING'"
+          :bubble="bubbles.bySeat.value[store.mySeat] ?? null"
+          :still="still" />
+        <PresidentHand :cards="store.hand" :selected="selectedNames" :received="receivedNames" :landing="landing" @toggle="name => store.toggleCard(name)" />
         <PresidentExchangePanel
-          v-else-if="isExchange"
+          v-if="isExchange"
           :pairs="store.game.exchange"
           :my-seat="store.mySeat"
           :title="store.me?.title ?? null"
@@ -516,7 +533,7 @@ const rematchButton = computed(() =>
         <PresidentExchangeRecap v-if="showRecap" :lines="recap" :name-of="displayName"
                                 @close="closedRecapRound = store.game.round" />
         <PresidentActionBar
-          v-if="!isRoundOver && !isExchange"
+          v-if="!roundEnding && !isExchange"
           :phase-text="phaseText"
           :primary-label="ui.actions.play"
           :can-primary="store.canPlay"
@@ -646,6 +663,18 @@ const rematchButton = computed(() =>
   /* No panel around my zone (as Kobo's): the hand, the plate and the bar stand on the room. */
 }
 .my-zone :deep(.seat-label) { font-size: 0.8rem; padding: 4px 14px; }
+/* The round sheet takes the place of my zone: its room is its content, up to a share of the screen, and it scrolls
+   inside itself beyond that. The table above gives way. */
+.sheet-slot {
+  flex: none;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  max-height: min(420px, 62%);
+  overflow-y: auto;
+}
 
 .table-footer { flex: none; display: flex; align-items: center; gap: var(--space-2); }
 .table-footer .speed { margin-left: auto; }

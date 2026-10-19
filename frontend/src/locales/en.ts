@@ -335,7 +335,7 @@ export const messagesEn: Messages = {
         close: 'Close the exchange summary',
       },
     },
-    roundOver: { ready: 'Next round', waiting: 'Waiting for the others', place: '{n}. {player}' },
+    roundOver: { ready: 'Next round', waiting: 'Waiting for the others', place: '{n}. {player}', finalScores: 'Final scores' },
     summary: {
       points: '+{n}',
       pointsLabel: 'Points of this round',

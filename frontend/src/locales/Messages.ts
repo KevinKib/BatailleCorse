@@ -339,7 +339,7 @@ export interface PresidentUiMessages {
       close: string;                   // tooltip and name of the close button
     };
   };
-  roundOver: { ready: string; waiting: string; place: string };  // place: '{n}', '{player}'
+  roundOver: { ready: string; waiting: string; place: string; finalScores: string };  // place: '{n}', '{player}'
   summary: {                          // the end-of-round sheet
     points: string;                    // '{n}' = points won this round
     pointsLabel: string;               // tooltip of the points column
