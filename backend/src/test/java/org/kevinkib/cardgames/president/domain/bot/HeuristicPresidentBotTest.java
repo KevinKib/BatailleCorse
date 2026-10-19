@@ -212,6 +212,21 @@ class HeuristicPresidentBotTest {
     }
 
     @Test
+    void itAcknowledgesTheExchangeInTheExchangeView() {
+        PresidentBotView barrier = atTheBarrier();
+        PresidentBotView view = new PresidentBotView(barrier.seat(), barrier.version(), barrier.round(),
+                org.kevinkib.cardgames.president.domain.round.Phase.EXCHANGE_VIEW, barrier.currentSeat(),
+                List.of(org.kevinkib.cardgames.president.domain.round.Action.SEE_EXCHANGE), barrier.hand(),
+                barrier.handSizes(), barrier.trick(), List.of(), barrier.finishingOrder(), barrier.titles(),
+                barrier.pendingReturns(), barrier.received(), barrier.given(), barrier.readySeats(),
+                barrier.totals(), barrier.options());
+
+        PresidentBotDecision decision = decide(CAUTIOUS, view, new PresidentBotMemory(barrier.seat()));
+
+        assertThat(decision, instanceOf(PresidentBotDecision.SeeExchange.class));
+    }
+
+    @Test
     void anEasyBotPassesAtRandomWhenItCouldPlay() {
         PresidentBotView view = following("7H 9D", "5H");
 

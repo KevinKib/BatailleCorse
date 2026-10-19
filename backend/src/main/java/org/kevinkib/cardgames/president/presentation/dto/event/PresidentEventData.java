@@ -1,6 +1,7 @@
 package org.kevinkib.cardgames.president.presentation.dto.event;
 
 import org.kevinkib.cardgames.president.domain.event.CardsGivenBack;
+import org.kevinkib.cardgames.president.domain.event.ExchangeSeen;
 import org.kevinkib.cardgames.president.domain.event.Played;
 import org.kevinkib.cardgames.president.domain.event.PlayerOut;
 import org.kevinkib.cardgames.president.domain.event.PresidentEvent;
@@ -51,6 +52,8 @@ public record PresidentEventData(
                 count = e.count();
             } else if (event instanceof Ready e) {
                 barrierOpened = e.opened();
+            } else if (event instanceof ExchangeSeen e) {
+                barrierOpened = e.playBegins();
             }
         }
         return new PresidentEventData(seat, action.name(), cards, count, outPlace, outForbidden, trickWinner,

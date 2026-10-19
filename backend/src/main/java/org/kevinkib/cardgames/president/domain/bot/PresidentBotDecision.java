@@ -40,4 +40,8 @@ public sealed interface PresidentBotDecision {
     /** Ready for the next round, at the barrier. */
     record Ready() implements PresidentBotDecision {
     }
+
+    /** The exchange has been seen, in the exchange view. */
+    record SeeExchange() implements PresidentBotDecision {
+    }
 }

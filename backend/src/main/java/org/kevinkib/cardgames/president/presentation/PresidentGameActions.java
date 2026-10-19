@@ -3,12 +3,14 @@ package org.kevinkib.cardgames.president.presentation;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.president.domain.President;
+import org.kevinkib.cardgames.president.domain.event.ExchangeViewClosed;
 import org.kevinkib.cardgames.president.domain.event.Played;
 import org.kevinkib.cardgames.president.domain.event.PresidentEvent;
 import org.kevinkib.cardgames.president.domain.round.Phase;
 import org.kevinkib.cardgames.president.domain.rules.PresidentException;
 import org.kevinkib.cardgames.president.presentation.dto.PresidentDto;
 import org.kevinkib.cardgames.president.presentation.dto.event.PresidentEventData;
+import org.kevinkib.cardgames.president.presentation.dto.event.PresidentExchangeClosedData;
 import org.kevinkib.cardgames.president.presentation.dto.event.PresidentEventType;
 import org.kevinkib.cardgames.presentation.state.SeatStateBroadcaster;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
@@ -54,12 +56,35 @@ public class PresidentGameActions {
         run(id, seat, PresidentEventType.READY, g -> g.ready(seat), "Player " + seat + " is ready.");
     }
 
+    /** The seat has seen the exchange of {@code round}; a late or repeated acknowledgement broadcasts nothing. */
+    public void seeExchange(GameId id, PlayerId seat, int round) throws PresidentException {
+        run(id, seat, PresidentEventType.EXCHANGE_SEEN, g -> g.seeExchange(seat, round),
+                "Player " + seat + " saw the exchange.");
+    }
+
+    /** The table stops waiting for the exchange view of {@code round}; nothing is broadcast when the domain ignores it. */
+    public void closeExchangeView(GameId id, int round) {
+        President game = sessionService.getGame(id, President.class);
+        synchronized (game) {
+            List<PresidentEvent> events = game.closeExchangeView(round);
+            events.stream().filter(e -> e instanceof ExchangeViewClosed).map(e -> (ExchangeViewClosed) e)
+                    .findFirst().ifPresent(closed -> {
+                        sessionService.touch(id);
+                        broadcaster.broadcast(game, PresidentEventType.EXCHANGE_CLOSED.toString(),
+                                PresidentExchangeClosedData.from(closed), "The exchange view was closed.");
+                    });
+        }
+    }
+
     private void run(GameId gameId, PlayerId seat, PresidentEventType command, Command action, String message)
             throws PresidentException {
         President game = sessionService.getGame(gameId, President.class);
         synchronized (game) {
             Phase before = game.phase();
             List<PresidentEvent> events = action.apply(game);
+            if (events.isEmpty()) {
+                return; // a late or repeated acknowledgement: nothing changed, so nothing to touch or announce
+            }
             sessionService.touch(gameId);
             // a play made out of turn is the completion of the four, announced as such
             PresidentEventType named = events.stream().anyMatch(e -> e instanceof Played p && p.outOfTurn())

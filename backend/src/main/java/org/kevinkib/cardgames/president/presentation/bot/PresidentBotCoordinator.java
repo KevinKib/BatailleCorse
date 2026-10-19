@@ -304,6 +304,8 @@ public class PresidentBotCoordinator implements GameStateListener<President>, Ga
             actions.pass(id, seat);
         } else if (decision instanceof PresidentBotDecision.GiveBack giveBack) {
             actions.giveBack(id, seat, giveBack.cards());
+        } else if (decision instanceof PresidentBotDecision.SeeExchange) {
+            actions.seeExchange(id, seat, game.round());
         } else {
             actions.ready(id, seat);
         }
@@ -320,6 +322,7 @@ public class PresidentBotCoordinator implements GameStateListener<President>, Ga
                             .mapToInt(PendingReturn::count).sum();
                     actions.giveBack(id, seat, HandSort.sorted(view.hand(), ORDER).subList(0, owed));
                 }
+                case EXCHANGE_VIEW -> actions.seeExchange(id, seat, view.round());
                 case ROUND_OVER -> actions.ready(id, seat);
                 case PLAYING -> {
                     if (!view.can(Action.PLAY) && !view.can(Action.PASS)) {

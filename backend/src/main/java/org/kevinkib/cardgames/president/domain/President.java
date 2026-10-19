@@ -248,6 +248,16 @@ public class President implements Game {
         return events;
     }
 
+    /** The seat has seen this round's exchange; the last active seat to say so starts the first trick. */
+    public synchronized List<PresidentEvent> seeExchange(PlayerId seat, int round) throws PresidentException {
+        return List.of(); // the view is never entered yet: no event, no version change
+    }
+
+    /** The table stops waiting (the timeout): every seat that has not seen the exchange is counted as having seen it. */
+    public synchronized List<PresidentEvent> closeExchangeView(int round) {
+        return List.of(); // the view is never entered yet: no event, no version change
+    }
+
     /**
      * The player leaves the match for good (the {@link Game} contract). Their hand is set aside and their
      * points are dropped; during the exchange a pending return of theirs is first completed with their lowest
@@ -532,6 +542,7 @@ public class President implements Game {
                 yield actions;
             }
             case EXCHANGE -> pendingIndex(seat) >= 0 ? List.of(Action.GIVE_BACK) : List.of();
+            case EXCHANGE_VIEW -> exchangeSeen().contains(seat) ? List.of() : List.of(Action.SEE_EXCHANGE);
             case ROUND_OVER -> ready.contains(seat) ? List.of() : List.of(Action.READY);
             case FINISHED -> List.of();
         };
@@ -568,6 +579,11 @@ public class President implements Game {
     /** What the seat gave in this round's exchange; private to that seat. */
     public synchronized List<Card> given(PlayerId seat) {
         return List.copyOf(given.getOrDefault(seat, List.of()));
+    }
+
+    /** The seats that have seen this round's exchange; always empty until the exchange view is entered. */
+    public synchronized Set<PlayerId> exchangeSeen() {
+        return Set.of();
     }
 
     public synchronized Set<PlayerId> readySeats() {

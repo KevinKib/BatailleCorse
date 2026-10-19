@@ -6,6 +6,7 @@ import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.president.domain.President;
 import org.kevinkib.cardgames.president.domain.round.Phase;
 import org.kevinkib.cardgames.president.presentation.api.PresidentCardsPayload;
+import org.kevinkib.cardgames.president.presentation.api.PresidentRoundPayload;
 import org.kevinkib.cardgames.president.presentation.dto.PresidentDto;
 import org.kevinkib.cardgames.presentation.api.GameActionPayload;
 import org.kevinkib.cardgames.presentation.api.Response;
@@ -199,6 +200,37 @@ class PresidentWebSocketControllerTest {
         assertThat(table.messaging.payloads.get(0).getEventType(), is("EXCHANGE"));
         assertThat(game.phase(), is(Phase.PLAYING));
         assertThat(((PresidentDto) table.messaging.payloads.get(0).getState()).phase(), is("PLAYING"));
+    }
+
+    @Test
+    void seeExchange_outsideTheViewIsASilentNoOp() {
+        President game = threePlayers();
+
+        table.ws.seeExchange(new PresidentRoundPayload(game.getId().uuid().toString(), table.token(game, 0), 1));
+
+        assertThat(table.messaging.payloads.isEmpty(), is(true));
+        assertThat(game.version(), is(0));
+    }
+
+    @Test
+    void seeExchange_withoutARoundIsRefusedToTheSenderAlone() {
+        President game = threePlayers();
+
+        table.ws.seeExchange(new PresidentRoundPayload(game.getId().uuid().toString(), table.token(game, 0), null));
+
+        assertThat(table.messaging.seats, is(List.of(seat(0))));
+        assertThat(table.messaging.payloads.get(0).isSuccess(), is(false));
+        assertThat(table.messaging.payloads.get(0).getMessage(), is("Missing field: round"));
+        assertThat(game.version(), is(0));
+    }
+
+    @Test
+    void seeExchange_withAStaleTokenIsIgnoredWithoutAnyReply() {
+        President game = threePlayers();
+
+        table.ws.seeExchange(new PresidentRoundPayload(game.getId().uuid().toString(), "stale", 1));
+
+        assertThat(table.messaging.payloads.isEmpty(), is(true));
     }
 
     @Test

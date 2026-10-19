@@ -110,6 +110,7 @@ class PresidentBotSelfPlayTest {
                 case EXCHANGE -> game.pendingReturns().get(0).high();
                 case ROUND_OVER -> game.getPlayerIds().stream()
                         .filter(seat -> !game.readySeats().contains(seat)).findFirst().orElseThrow();
+                case EXCHANGE_VIEW -> throw new IllegalStateException("the exchange view is not entered yet");
                 case FINISHED -> throw new IllegalStateException("finished");
             };
         }

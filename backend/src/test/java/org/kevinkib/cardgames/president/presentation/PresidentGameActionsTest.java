@@ -111,6 +111,17 @@ class PresidentGameActionsTest {
     }
 
     @Test
+    void anAcknowledgementOrACloseThatTheDomainIgnoresBroadcastsNothing() throws Exception {
+        President game = threePlayers();
+
+        table.actions.seeExchange(game.getId(), seat(0), 1);
+        table.actions.closeExchangeView(game.getId(), 1);
+
+        assertThat(table.messaging.payloads.isEmpty(), is(true));
+        assertThat(game.version(), is(0));
+    }
+
+    @Test
     void theFirstPlayerOutIsAnnouncedWithItsPlaceAndTheTrickItClosed() throws Exception {
         President game = table.install(aPresident().withHand("4C").withHand("5C 6C").withHand("7C 8C").leader(0)
                 .build());

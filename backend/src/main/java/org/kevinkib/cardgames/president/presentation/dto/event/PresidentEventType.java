@@ -6,7 +6,8 @@ package org.kevinkib.cardgames.president.presentation.dto.event;
  * with their PRs; a trick won or a player out is carried as data of the PLAY or PASS that caused it.
  */
 public enum PresidentEventType {
-    START, ROUND_START, EXCHANGE, PLAY, COMPLETION, PASS, ROUND_END, READY, GAME_OVER;
+    START, ROUND_START, EXCHANGE, PLAY, COMPLETION, PASS, ROUND_END, READY, GAME_OVER,
+    EXCHANGE_SEEN, EXCHANGE_CLOSED;
 
     @Override
     public String toString() {
