@@ -55,7 +55,7 @@ public record PresidentDto(
     /** {@code bot} is true for a computer seat and omitted from the JSON otherwise. */
     public record PlayerDto(int seat, String name, @JsonInclude(JsonInclude.Include.NON_DEFAULT) boolean bot,
                             int handSize, String title, Integer place, boolean out, boolean passed, int points,
-                            boolean ready, boolean forbiddenFinish) {
+                            boolean ready, boolean forbiddenFinish, boolean sawExchange) {
     }
 
     /** A set of {@code count} cards of one rank. */
@@ -121,6 +121,7 @@ public record PresidentDto(
             Map<PlayerId, Title> titles = game.titles();
             TrickView trick = game.trick();
             Set<PlayerId> ready = game.readySeats();
+            Set<PlayerId> exchangeSeen = game.exchangeSeen();
             List<PlayerDto> players = game.getPlayerIds().stream().map(p -> {
                 int index = finishing.indexOf(p);
                 Title title = titles.get(p);
@@ -128,7 +129,7 @@ public record PresidentDto(
                 return new PlayerDto(p.id(), names.get(p), bots.contains(p), game.hand(p).size(),
                         title == null ? null : title.name(), index < 0 ? null : index + 1,
                         index >= 0 || forbidden.contains(p), trick.passed().contains(p),
-                        game.standings().points(p), ready.contains(p), forbidden.contains(p));
+                        game.standings().points(p), ready.contains(p), forbidden.contains(p), exchangeSeen.contains(p));
             }).toList();
             boolean toAct = viewer.equals(game.currentSeat());
             int rounds = game.options().length().rounds();

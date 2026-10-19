@@ -255,6 +255,16 @@ class PresidentDtoTest {
         assertThat(view(game, 0).availableActions(), contains("READY"));
     }
 
+    @Test
+    void sawExchangeIsAlwaysPresentAndFalseUntilTheViewIsEntered() throws Exception {
+        President game = aPresident().withHand("4C").withHand("5C 6C").withHand("7C 8C 9C").leader(0).build();
+
+        PresidentDto dto = view(game, 0);
+
+        assertThat(dto.players().stream().noneMatch(PresidentDto.PlayerDto::sawExchange), is(true));
+        assertThat(MAPPER.writeValueAsString(dto).contains("\"sawExchange\":false"), is(true));
+    }
+
     // ---- the exchange
 
     @Test

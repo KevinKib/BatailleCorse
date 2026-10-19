@@ -59,6 +59,10 @@ public final class HeuristicPresidentBot implements PresidentBotStrategy {
                 require(view, Action.READY);
                 yield new PresidentBotDecision.Ready();
             }
+            case EXCHANGE_VIEW -> {
+                require(view, Action.SEE_EXCHANGE);
+                yield new PresidentBotDecision.SeeExchange();
+            }
             case PLAYING -> decideTurn(view, memory);
             case FINISHED -> throw new IllegalStateException("The match is over");
         };

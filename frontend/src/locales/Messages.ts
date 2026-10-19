@@ -314,6 +314,14 @@ export interface PresidentUiMessages {
     waiting: string;                   // '{player}'
     roundOver: string;                 // '{n}' = round
   };
+  /** The phase line while the table waits to have seen the exchange (`EXCHANGE_VIEW`). */
+  exchangeView: {
+    watching: string;                  // I have not acknowledged yet
+    waitingOne: string;                // '{player}'
+    waitingTwo: string;                // '{a}', '{b}'
+    waitingMany: string;               // '{n}' = humans left
+    starting: string;                  // nobody left to wait for
+  };
   /** The exchange step (`PresidentExchangePanel`); `{player}` is a name, `{n}` a number of cards. */
   exchange: {
     label: string;                     // region name

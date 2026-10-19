@@ -37,4 +37,7 @@ export default class PresidentSession extends SeatGameSession<PresidentView, Pre
 
   /** Round-over barrier: ready for the next round. */
   ready(): void { this.publishAction('/app/president/ready'); }
+
+  /** Exchange view: this screen has shown the exchange of `round`. A late or repeated one is ignored silently. */
+  seeExchange(round: number): void { this.publishAction('/app/president/seeExchange', { round }); }
 }

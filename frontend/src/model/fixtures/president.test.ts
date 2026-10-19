@@ -9,7 +9,7 @@ const PRESIDENT_DTO_FIELDS = [
   'exchange', 'lastRound', 'standings', 'outcome', 'hand', 'received', 'given', 'toGiveBack', 'legalPlays',
   'availableActions',
 ];
-const PLAYER_DTO_FIELDS = ['seat', 'name', 'handSize', 'title', 'place', 'out', 'passed', 'points', 'ready', 'forbiddenFinish'];
+const PLAYER_DTO_FIELDS = ['seat', 'name', 'handSize', 'title', 'place', 'out', 'passed', 'points', 'ready', 'forbiddenFinish', 'sawExchange'];
 const TRICK_DTO_FIELDS = ['leader', 'plays', 'top', 'lastPlayer', 'passed', 'constraint', 'requiredRank', 'requiredCount', 'chain'];
 
 describe('President fixtures', () => {

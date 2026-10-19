@@ -221,6 +221,15 @@ describe('President messages', () => {
     }
   });
 
+  it('givenTheExchangeView_thenItsFivePhaseLinesAreWritten', () => {
+    const v = messagesEn.presidentUi.exchangeView;
+    expect(v.watching).toBe('The exchange');
+    expect(v.waitingOne).toBe('Waiting for {player} to see the exchange');
+    expect(v.waitingTwo).toBe('Waiting for {a} and {b}');
+    expect(v.waitingMany).toBe('Waiting for {n} players');
+    expect(v.starting).toBe('The first trick starts');
+  });
+
   it('givenTheTitles_thenTheyAreTheEnglishOnes', () => {
     expect(messagesEn.presidentUi.titles).toEqual({
       president: 'President', vicePresident: 'Vice-President', neutral: 'Neutral', viceScum: 'Vice-Scum', scum: 'Scum',

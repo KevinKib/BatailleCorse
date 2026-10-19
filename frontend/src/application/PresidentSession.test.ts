@@ -128,6 +128,11 @@ describe('PresidentSession', () => {
       expect(c.published).toEqual([{ dest: '/app/president/ready', body: base }]);
     });
 
+    it('seeExchange sends the round whose exchange was seen', () => {
+      const c = bound(); c.session.seeExchange(3);
+      expect(c.published).toEqual([{ dest: '/app/president/seeExchange', body: { ...base, round: 3 } }]);
+    });
+
     it('forfeit publishes the shared /app/forfeit', () => {
       const c = bound(); c.session.forfeit();
       expect(c.published).toEqual([{ dest: '/app/forfeit', body: base }]);

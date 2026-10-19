@@ -3,6 +3,7 @@ package org.kevinkib.cardgames.president.presentation;
 import org.kevinkib.cardgames.president.domain.President;
 import org.kevinkib.cardgames.president.domain.PresidentFactory;
 import org.kevinkib.cardgames.president.presentation.api.PresidentCardsPayload;
+import org.kevinkib.cardgames.president.presentation.api.PresidentRoundPayload;
 import org.kevinkib.cardgames.president.presentation.dto.PresidentDto;
 import org.kevinkib.cardgames.president.presentation.dto.event.PresidentEventType;
 import org.kevinkib.cardgames.presentation.api.GameActionPayload;
@@ -74,6 +75,16 @@ public class PresidentWebSocketController {
     @MessageMapping("/president/ready")
     public void ready(@Payload GameActionPayload p) {
         handle(p.gameId(), p.token(), PresidentEventType.READY, actions::ready);
+    }
+
+    @MessageMapping("/president/seeExchange")
+    public void seeExchange(@Payload PresidentRoundPayload p) {
+        handle(p.gameId(), p.token(), PresidentEventType.EXCHANGE_SEEN, (id, seat) -> {
+            if (p.round() == null) {
+                throw new IllegalArgumentException("Missing field: round");
+            }
+            actions.seeExchange(id, seat, p.round());
+        });
     }
 
     private static List<Card> cardsOf(List<CardDto> cards) {

@@ -35,6 +35,7 @@ export function buildPresidentPlayer(seat: number, overrides: Partial<PresidentP
     passed: false,
     points: 0,
     ready: false,
+    sawExchange: false,
     forbiddenFinish: false,
     ...overrides,
   };
