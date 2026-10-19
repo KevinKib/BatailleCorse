@@ -376,6 +376,70 @@ class PresidentBotCoordinatorTest {
         assertThat(game.readySeats(), is(Set.of(BOT, OTHER_HUMAN)));
     }
 
+    // ------------------------------------------------------------------ exchange view
+
+    private President inTheView(java.util.function.Predicate<President> accepted, int... botSeats) throws Exception {
+        return register(PresidentRounds.inExchangeView(GameId.generate(), 3, accepted), botSeats);
+    }
+
+    @Test
+    void aBotAcknowledgesTheExchangeViewAtOnceWithNoThinkingDelay() throws Exception {
+        President game = inTheView(g -> true, 1);
+
+        start(game);
+
+        assertThat(scheduler.pending().size(), is(1));
+        assertThat(scheduler.pending().get(0).delay(), is(Duration.ZERO));
+        scheduler.runNext();
+        assertThat(game.exchangeSeen(), is(Set.of(BOT)));
+        assertThat(game.phase(), is(Phase.EXCHANGE_VIEW));
+        assertThat(scheduler.pending(), is(empty())); // seen it: nothing left to do, and it never plays
+    }
+
+    @Test
+    void aHumansAcknowledgementDoesNotRestartTheBotsStep() throws Exception {
+        President game = inTheView(g -> true, 1, 2);
+        start(game);
+        assertThat(scheduler.pending().size(), is(2));
+        ManualBotScheduler.Entry second = scheduler.pending().get(1);
+
+        scheduler.pending().get(0).run();
+
+        assertThat(second.isCancelled(), is(false));
+        assertThat(scheduler.pending(), is(List.of(second)));
+    }
+
+    @Test
+    void theFirstBotLeadIsScheduledOnlyOnceTheViewClosedAndWithItsThinkingDelay() throws Exception {
+        President game = inTheView(g -> g.currentSeat().equals(BOT), 1);
+        start(game);
+        scheduler.runNext(); // the bot has seen it
+        assertThat(scheduler.pending(), is(empty()));
+
+        actions.seeExchange(game.getId(), HUMAN, game.round());
+        assertThat(scheduler.pending(), is(empty())); // still waiting for the other human
+        actions.seeExchange(game.getId(), OTHER_HUMAN, game.round());
+
+        assertThat(game.phase(), is(Phase.PLAYING));
+        assertThat(scheduler.pending().size(), is(1));
+        assertThat(scheduler.pending().get(0).delay(), is(DELAY));
+        scheduler.runNext();
+        assertThat(game.trick().plays().size(), is(1));
+    }
+
+    @Test
+    void aBotWhoseStrategyFailsStillAcknowledgesTheView() throws Exception {
+        President game = inTheView(g -> true, 1);
+        bot.answer = view -> {
+            throw new IllegalStateException("boom");
+        };
+        start(game);
+
+        scheduler.runNext();
+
+        assertThat(game.exchangeSeen(), is(Set.of(BOT)));
+    }
+
     // ------------------------------------------------------------------ lifecycle
 
     @Test

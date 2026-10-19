@@ -83,6 +83,11 @@ class PresidentBotViewParityTest {
             assertThat(context, view.readySeats().contains(seat), is(player.ready()));
             // the bot view keeps no copy of the acknowledgements: its actions say whether it still has to see it
             assertThat(context, game.exchangeSeen().contains(seat), is(player.sawExchange()));
+            if (seat.equals(viewer)) {
+                // ... and in the view, the bot is offered the acknowledgement exactly while its own flag is false
+                boolean offered = game.phase() == Phase.EXCHANGE_VIEW && !player.sawExchange();
+                assertThat(context, view.can(Action.SEE_EXCHANGE), is(offered));
+            }
             int place = view.finishingOrder().indexOf(seat);
             assertThat(context, place < 0 ? null : place + 1, is(player.place()));
             assertThat(context, view.titles().get(seat) == null ? null : view.titles().get(seat).name(),

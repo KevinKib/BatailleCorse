@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.president.domain.President;
+import org.kevinkib.cardgames.president.domain.round.Phase;
 import org.kevinkib.cardgames.presentation.support.StompTestClient;
 import org.kevinkib.cardgames.presentation.support.StompTestClient.Frames;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
@@ -34,7 +35,8 @@ import static org.kevinkib.cardgames.presentation.support.StompTestClient.body;
  * President over a real WebSocket: lobby, start, private per-seat states, a few plays, a refused play answered
  * to the sender alone, a forfeit, and reconnection through REST.
  */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+        properties = "president.exchange-view.timeout=PT2S")
 class PresidentWebSocketControllerIT {
 
     @LocalServerPort
@@ -79,6 +81,104 @@ class PresidentWebSocketControllerIT {
                 HttpResponse.BodyHandlers.ofString());
         assertThat(response.statusCode(), is(200));
         return objectMapper.readValue(response.body(), Map.class);
+    }
+
+    /**
+     * Over a real WebSocket: each seat acknowledges the exchange of round 2 (a repeated one answers nothing, the
+     * last one begins the play), and a seat that never does is not waited for beyond the timeout (1 s here).
+     */
+    @Test
+    @SuppressWarnings("unchecked")
+    void theExchangeViewIsClosedByTheAcknowledgementsAndByTheTimeout() throws Exception {
+        String[] ids = new String[1];
+        String[] tokens = new String[3];
+        StompSession[] sessions = {stomp.connect(), stomp.connect(), stomp.connect()};
+        Frames[] frames = startedTable(ids, tokens, sessions);
+        String gameId = ids[0];
+        President game = sessionService.getGame(new GameId(gameId), President.class);
+        synchronized (game) { // round 1 played out and round 2 dealt, straight on the game: no broadcast
+            PresidentRounds.playRoundOut(game);
+            PresidentRounds.readyAll(game);
+            while (game.phase() == Phase.EXCHANGE) {
+                var owed = game.pendingReturns().get(0);
+                game.giveBack(owed.high(), game.hand(owed.high()).subList(0, owed.count()));
+            }
+            assertThat(game.phase(), is(Phase.EXCHANGE_VIEW));
+        }
+
+        // every seat acknowledges: each one is announced, a repeated acknowledgement is silent
+        stomp.sendApp(sessions[0], "/president/seeExchange", body(gameId, tokens[0], "round", 2));
+        Map<String, Object> first = frames[1].await(f -> "EXCHANGE_SEEN".equals(f.get("eventType")));
+        assertThat(state(first).get("phase"), is("EXCHANGE_VIEW"));
+        stomp.sendApp(sessions[0], "/president/seeExchange", body(gameId, tokens[0], "round", 2));
+        stomp.sendApp(sessions[1], "/president/seeExchange", body(gameId, tokens[1], "round", 2));
+        frames[2].await(f -> "EXCHANGE_SEEN".equals(f.get("eventType")) && f.get("state") != null
+                && "EXCHANGE_VIEW".equals(state(f).get("phase")) && seen(state(f)) == 2);
+        stomp.sendApp(sessions[2], "/president/seeExchange", body(gameId, tokens[2], "round", 2));
+        Map<String, Object> last = frames[0].await(f -> "EXCHANGE_SEEN".equals(f.get("eventType"))
+                && "PLAYING".equals(state(f).get("phase")));
+        assertThat(((Map<String, Object>) last.get("eventData")).get("barrierOpened"), is(true));
+        assertThat(game.phase(), is(Phase.PLAYING));
+    }
+
+    private static int seen(Map<String, Object> state) {
+        return (int) list(state.get("players")).stream().filter(p -> Boolean.TRUE.equals(p.get("sawExchange")))
+                .count();
+    }
+
+    /** A started table of three humans over STOMP; fills the game id and the tokens. */
+    private Frames[] startedTable(String[] gameIdOut, String[] tokens, StompSession[] sessions) throws Exception {
+        HttpResponse<String> created = HttpClient.newHttpClient().send(
+                HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/api/lobby"))
+                        .header("Content-Type", "application/json")
+                        .POST(HttpRequest.BodyPublishers.ofString("{\"gameType\":\"president\",\"name\":\"Alice\"}"))
+                        .build(),
+                HttpResponse.BodyHandlers.ofString());
+        Map<String, Object> room = objectMapper.readValue(created.body(), Map.class);
+        String gameId = (String) room.get("gameId");
+        gameIdOut[0] = gameId;
+        tokens[0] = (String) room.get("token");
+        tokens[1] = sessionService.joinRoom(new GameId(gameId), "Bob").token();
+        tokens[2] = sessionService.joinRoom(new GameId(gameId), "Carol").token();
+        Frames[] frames = new Frames[3];
+        for (int i = 0; i < 3; i++) {
+            frames[i] = stomp.subscribeSeat(sessions[i], gameId, tokens[i]);
+        }
+        stomp.sendApp(sessions[0], "/president/start", body(gameId, tokens[0]));
+        for (int i = 0; i < 3; i++) {
+            frames[i].await(f -> "START".equals(f.get("eventType")));
+        }
+        return frames;
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void aSeatThatNeverSeesTheExchangeIsNotWaitedForBeyondTheTimeout() throws Exception {
+        String[] ids = new String[1];
+        String[] tokens = new String[3];
+        StompSession[] sessions = {stomp.connect(), stomp.connect(), stomp.connect()};
+        Frames[] frames = startedTable(ids, tokens, sessions);
+        String gameId = ids[0];
+        President game = sessionService.getGame(new GameId(gameId), President.class);
+        synchronized (game) {
+            PresidentRounds.playRoundOut(game);
+            PresidentRounds.readyAll(game);
+            while (game.phase() == Phase.EXCHANGE) {
+                var owed = game.pendingReturns().get(0);
+                game.giveBack(owed.high(), game.hand(owed.high()).subList(0, owed.count()));
+            }
+            assertThat(game.phase(), is(Phase.EXCHANGE_VIEW));
+        }
+
+        // one acknowledgement is the first broadcast of the view: it arms the timer; the others never come
+        stomp.sendApp(sessions[0], "/president/seeExchange", body(gameId, tokens[0], "round", 2));
+
+        Map<String, Object> closed = frames[1].await(f -> "EXCHANGE_CLOSED".equals(f.get("eventType")));
+        assertThat(state(closed).get("phase"), is("PLAYING"));
+        Map<String, Object> data = (Map<String, Object>) closed.get("eventData");
+        assertThat(data.get("round"), is(2));
+        assertThat(((List<Object>) data.get("late")).size(), is(2));
+        assertThat(game.phase(), is(Phase.PLAYING));
     }
 
     @Test

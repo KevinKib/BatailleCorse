@@ -29,6 +29,7 @@ import org.kevinkib.cards.domain.Card;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -43,8 +44,8 @@ import java.util.function.Function;
  * Decides when a President computer seat must act and applies its decision through the same use cases as a
  * human: a play or a pass on its turn, the completion of the four it holds (in turn or out of turn, with its own
  * task when it is not the seat on turn; a completion the game refuses as too late is dropped), the cards it owes
- * back in the exchange, and "ready" at the barrier
- * between two rounds.
+ * back in the exchange, its acknowledgement of the exchange view (with no thinking delay, so a bot never keeps a
+ * human waiting), and "ready" at the barrier between two rounds.
  *
  * <p>After every state broadcast, under the game's monitor, it feeds the memory of each bot (the cards of the
  * broadcast first, since the last play of a closed trick is no longer on the table, then the seat's own view)
@@ -243,7 +244,9 @@ public class PresidentBotCoordinator implements GameStateListener<President>, Ga
             table.cancel(bot.seat);
             if (step != null) {
                 PlayerId seat = bot.seat;
-                BotScheduler.BotTask task = scheduler.schedule(thinkingDelay.next(), () -> act(game, seat, step));
+                // seeing the exchange is not a decision: the bots acknowledge at once, so they never make a human wait
+                Duration delay = step.phase() == Phase.EXCHANGE_VIEW ? Duration.ZERO : thinkingDelay.next();
+                BotScheduler.BotTask task = scheduler.schedule(delay, () -> act(game, seat, step));
                 table.pending.put(seat, new Pending(step, task));
             }
         }

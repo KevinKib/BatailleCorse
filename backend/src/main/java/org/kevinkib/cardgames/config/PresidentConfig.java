@@ -6,6 +6,7 @@ import org.kevinkib.cardgames.president.domain.PresidentFactory;
 import org.kevinkib.cardgames.president.domain.RandomDeckSource;
 import org.kevinkib.cardgames.president.domain.ScriptedDeckSource;
 import org.kevinkib.cardgames.president.domain.bot.HeuristicPresidentBot;
+import org.kevinkib.cardgames.president.presentation.PresidentExchangeViewTimeout;
 import org.kevinkib.cardgames.president.presentation.PresidentGameActions;
 import org.kevinkib.cardgames.president.presentation.bot.PresidentBotCoordinator;
 import org.kevinkib.cardgames.president.presentation.dto.PresidentDto;
@@ -24,6 +25,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
+import java.time.Duration;
 import java.util.Random;
 import java.util.random.RandomGenerator;
 
@@ -34,6 +36,9 @@ public class PresidentConfig {
     /** A bot "thinks" for a random 700-1300 ms before each step (properties {@code president.bots.delay-min-ms} / {@code delay-max-ms}). */
     public static final String DEFAULT_DELAY_MIN_MS = "700";
     public static final String DEFAULT_DELAY_MAX_MS = "1300";
+
+    /** How long the exchange view may last before the first trick starts anyway (ISO-8601 duration). */
+    public static final String DEFAULT_EXCHANGE_VIEW_TIMEOUT = "PT20S";
 
     /** Production: the bots' random choices (the easy level, ties) really vary. */
     @Bean("presidentBotRandom")
@@ -89,6 +94,21 @@ public class PresidentConfig {
     public GameLifecycleBroadcaster presidentLifecycleBroadcaster(
             SeatStateBroadcaster<President, PresidentDto> presidentStateBroadcaster) {
         return new SeatLifecycleBroadcaster<>(President.class, presidentStateBroadcaster);
+    }
+
+    /**
+     * Stops the table waiting for the exchange view after {@code president.exchange-view.timeout} (default
+     * {@value #DEFAULT_EXCHANGE_VIEW_TIMEOUT}): the seats that have not acknowledged count as having seen it.
+     */
+    @Bean
+    public PresidentExchangeViewTimeout presidentExchangeViewTimeout(
+            PresidentGameActions actions,
+            SeatStateBroadcaster<President, PresidentDto> presidentStateBroadcaster,
+            BotScheduler botScheduler,
+            @Value("${president.exchange-view.timeout:" + DEFAULT_EXCHANGE_VIEW_TIMEOUT + "}") Duration timeout) {
+        PresidentExchangeViewTimeout viewTimeout = new PresidentExchangeViewTimeout(actions, botScheduler, timeout);
+        presidentStateBroadcaster.addListener(viewTimeout);
+        return viewTimeout;
     }
 
     /**

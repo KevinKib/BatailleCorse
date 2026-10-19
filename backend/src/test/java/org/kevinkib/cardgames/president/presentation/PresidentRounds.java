@@ -26,6 +26,32 @@ public final class PresidentRounds {
         }
     }
 
+    /**
+     * A match of {@code nbPlayers} advanced to the exchange view of round 2: the round played out, everyone
+     * ready, every return given back. Searches the seeds for a deal whose round 2 has an exchange.
+     */
+    public static President inExchangeView(org.kevinkib.cardgames.game.GameId id, int nbPlayers) throws Exception {
+        return inExchangeView(id, nbPlayers, game -> true);
+    }
+
+    /** As {@link #inExchangeView(org.kevinkib.cardgames.game.GameId, int)}, for a deal the given test accepts. */
+    public static President inExchangeView(org.kevinkib.cardgames.game.GameId id, int nbPlayers,
+                                           java.util.function.Predicate<President> accepted) throws Exception {
+        for (long seed = 1; seed < 500; seed++) {
+            President game = new President(id, nbPlayers, seed);
+            playRoundOut(game);
+            readyAll(game);
+            while (game.phase() == Phase.EXCHANGE) {
+                var owed = game.pendingReturns().get(0);
+                game.giveBack(owed.high(), game.hand(owed.high()).subList(0, owed.count()));
+            }
+            if (game.phase() == Phase.EXCHANGE_VIEW && accepted.test(game)) {
+                return game;
+            }
+        }
+        throw new AssertionError("no seed reaches the exchange view");
+    }
+
     public static void readyAll(President game) throws Exception {
         for (PlayerId seat : game.getPlayerIds()) {
             game.ready(seat);
