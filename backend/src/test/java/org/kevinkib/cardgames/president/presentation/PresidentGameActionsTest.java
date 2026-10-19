@@ -246,6 +246,10 @@ class PresidentGameActionsTest {
                 var pending = game.pendingReturns().get(0);
                 table.actions.giveBack(game.getId(), pending.high(),
                         game.hand(pending.high()).subList(0, pending.count()));
+            } else if (game.phase() == Phase.EXCHANGE_VIEW) {
+                for (PlayerId s : game.getPlayerIds()) {
+                    table.actions.seeExchange(game.getId(), s, game.round());
+                }
             } else {
                 for (PlayerId s : game.getPlayerIds()) {
                     if (!game.readySeats().contains(s)) {

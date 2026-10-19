@@ -49,6 +49,12 @@ final class PresidentDriver {
                 java.util.Collections.shuffle(hand, random);
                 game.giveBack(pending.high(), hand.subList(0, pending.count()));
             }
+            case EXCHANGE_VIEW -> {
+                // one seat at a time, in a random order, so the barrier is crossed seat by seat
+                List<PlayerId> waiting = new ArrayList<>(game.getPlayerIds());
+                waiting.removeAll(game.exchangeSeen());
+                game.seeExchange(waiting.get(random.nextInt(waiting.size())), game.round());
+            }
             case ROUND_OVER -> {
                 for (PlayerId seat : game.getPlayerIds()) {
                     if (!game.readySeats().contains(seat)) {

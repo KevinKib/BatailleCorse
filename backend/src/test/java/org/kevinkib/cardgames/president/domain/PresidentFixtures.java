@@ -1,5 +1,8 @@
 package org.kevinkib.cardgames.president.domain;
 
+import org.kevinkib.cardgames.game.PlayerId;
+import org.kevinkib.cardgames.president.domain.round.Phase;
+import org.kevinkib.cardgames.president.domain.rules.PresidentException;
 import org.kevinkib.cards.domain.Card;
 import org.kevinkib.cards.domain.deck.french.FrenchRank;
 import org.kevinkib.cards.domain.deck.french.FrenchSuit;
@@ -80,6 +83,18 @@ public final class PresidentFixtures {
             default -> "?";
         };
         return r + s;
+    }
+
+    /**
+     * Every active seat acknowledges the exchange view of the current round, so that the first trick can start;
+     * does nothing outside the view. Tests that cross an exchange call it after the last return (or the deal).
+     */
+    public static void seeExchangeAll(President game) throws PresidentException {
+        for (PlayerId seat : game.getPlayerIds()) {
+            if (game.phase() == Phase.EXCHANGE_VIEW) {
+                game.seeExchange(seat, game.round());
+            }
+        }
     }
 
     /** The codes of several cards, space separated, in order. */

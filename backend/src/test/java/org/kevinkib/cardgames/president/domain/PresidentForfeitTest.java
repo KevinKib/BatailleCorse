@@ -26,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.kevinkib.cardgames.president.domain.PresidentBuilder.aPresident;
 import static org.kevinkib.cardgames.president.domain.PresidentFixtures.card;
 import static org.kevinkib.cardgames.president.domain.PresidentFixtures.cards;
+import static org.kevinkib.cardgames.president.domain.PresidentFixtures.seeExchangeAll;
 
 /** Spec section 8: one test per phase and per position of the player who forfeits. */
 class PresidentForfeitTest {
@@ -316,6 +317,8 @@ class PresidentForfeitTest {
 
         game.forfeit(p(2));
 
+        assertThat(game.phase(), is(Phase.EXCHANGE_VIEW));
+        seeExchangeAll(game);
         assertThat(game.phase(), is(Phase.PLAYING));
         assertThat(game.currentSeat(), is(p(3)));
         assertThat(game.pendingReturns(), is(empty()));
@@ -332,6 +335,7 @@ class PresidentForfeitTest {
         assertThat(game.received(p(1)), is(lowest));
         assertThat(game.pendingReturns(), contains(new PendingReturn(p(2), p(3), 2, false)));
         game.giveBack(p(2), game.hand(p(2)).subList(0, 2));
+        seeExchangeAll(game);
         assertThat(game.phase(), is(Phase.PLAYING));
         assertThat(game.currentSeat(), is(p(3)));
     }
@@ -346,6 +350,7 @@ class PresidentForfeitTest {
         assertThat(game.hand(p(2)).size(), is(presidentCards));
         assertThat(game.pendingReturns(), contains(new PendingReturn(p(0), p(1), 1, false)));
         game.giveBack(p(0), game.hand(p(0)).subList(0, 1));
+        seeExchangeAll(game);
         assertThat(game.phase(), is(Phase.PLAYING));
         assertThat(game.currentSeat(), is(p(4)));
         assertThat(game.trick().leader(), is(p(4)));

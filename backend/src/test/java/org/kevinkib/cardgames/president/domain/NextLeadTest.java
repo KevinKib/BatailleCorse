@@ -4,6 +4,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
+import org.kevinkib.cardgames.president.domain.round.Phase;
 import org.kevinkib.cardgames.president.domain.rules.ExchangeAmount;
 import org.kevinkib.cardgames.president.domain.rules.NextLead;
 import org.kevinkib.cardgames.president.domain.rules.PresidentOptions;
@@ -45,6 +46,8 @@ class NextLeadTest {
             var pending = game.pendingReturns().get(0);
             game.giveBack(pending.high(), game.hand(pending.high()).subList(0, pending.count()));
         }
+        assertThat(game.phase(), is(Phase.EXCHANGE_VIEW));
+        PresidentFixtures.seeExchangeAll(game);
 
         assertThat(game.currentSeat(), is(new PlayerId(expectedLeader)));
     }

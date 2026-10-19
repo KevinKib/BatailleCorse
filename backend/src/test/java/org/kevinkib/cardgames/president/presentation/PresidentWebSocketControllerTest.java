@@ -198,8 +198,8 @@ class PresidentWebSocketControllerTest {
         table.ws.giveBack(cards(game, president.id(), back));
 
         assertThat(table.messaging.payloads.get(0).getEventType(), is("EXCHANGE"));
-        assertThat(game.phase(), is(Phase.PLAYING));
-        assertThat(((PresidentDto) table.messaging.payloads.get(0).getState()).phase(), is("PLAYING"));
+        assertThat(game.phase(), is(Phase.EXCHANGE_VIEW));
+        assertThat(((PresidentDto) table.messaging.payloads.get(0).getState()).phase(), is("EXCHANGE_VIEW"));
     }
 
     @Test
