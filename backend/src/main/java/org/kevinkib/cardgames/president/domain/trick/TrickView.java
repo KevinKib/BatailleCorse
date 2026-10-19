@@ -34,7 +34,7 @@ public record TrickView(PlayerId leader, List<TrickPlay> plays, List<PlayerId> p
         return plays.isEmpty() ? null : plays.get(plays.size() - 1).seat();
     }
 
-    /** Whether the completion window is open: the chain at the top holds two plays or more. */
+    /** Whether the completion window is open for a chain of two plays or more (a lone card opens it too, see Round). */
     public boolean completionOpen() {
         return chain != null && chain.plays() >= 2;
     }

@@ -146,11 +146,16 @@ The owner's rules, always in force: equal play is a fixed rule, not an option (d
   one 52-card deck there is exactly one such holder at a time, so two seats never compete for it; the player
   whose turn it is completes in turn, under the same rule (the count of the binding does not apply to a
   completion).
-  - **Window** [O]: it opens as soon as the chain holds two plays (at least one equal play) and stays open
-    until the next **play** is made on the trick, or the trick closes. Passes, even several around the
-    table, do not close it, since the chain stays the top. A **single lead of r does not open it** [O,
-    decided 2026-10-15, section 13.1 item 19]: an equal play is needed first, so the holder of the three
-    other 9s cannot play them out of turn on a lone 9 (example 8).
+  - **Window** [O]: it opens as soon as the chain holds two plays (at least one equal play), **or as soon as
+    the top of the trick is a single card** [O, decided 2026-10-19, reversing item 19: the holder of the three
+    other cards of its rank may then play exactly those three, in turn or out of turn, through the same COMPLETE
+    action]. It stays open until the next **play** is made on the trick, or the trick closes. Passes, even
+    several around the table, do not close it, since the chain stays the top. The completion needs exactly the
+    cards still missing, so it works only with the full set: never with fewer, and never the other way round
+    (a lone card does not finish a triple, a single does not finish a pair: a smaller group never completes on
+    a bigger one). As any completion it is never compulsory (`mustPlay` ignores it) and is not listed in
+    `legalPlays`. The cases: single then the three others, legal; single then a pair of the rest or three of
+    another rank, illegal; pair then the other pair, legal; pair or triple then a smaller group, illegal.
   - **Optional** [O]: the holder may keep the cards; there is no penalty.
   - This is the only out-of-turn play of the game (3.4).
 
@@ -184,11 +189,10 @@ The test contract of the PR that ships equal play (plan, V1). Four players A, B,
    holds 9♦ and plays it (equal play): the chain now holds three 9s, the binding is back and falls on A,
    who must play a 9 or pass. A holds 9♣ and plays it: the four 9s are down, the trick closes (`QUAD`) and A
    leads. Had A passed instead, that pass would end the binding again, and B would be free to play a 10.
-8. **A single lead does not open the window (O4).** A leads 9♠ (a chain of one play). C holds 9♥ 9♦ 9♣ and
-   plays them out of turn: refused with `NotPlayersTurnException`, no mutation. When the turn reaches C, the
-   same three cards are not a legal in-turn play either (a triple on a single). Only after an equal play
-   does the window open: had B played 9♥ (a chain of two), the holder of the two missing 9s could complete
-   at once, as in example 4.
+8. **A single lead opens the window too (O4, reversed 2026-10-19).** A leads 9♠ (a chain of one play). C holds
+   9♥ 9♦ 9♣ and plays them out of turn: the four 9s are down, the trick closes (`QUAD`) and C leads. The same
+   three cards are a legal completion in turn as well. Had B played any other card first, the window would be
+   closed (`CompletionClosedException`). A pair or a lone card never completes a triple.
 9. **A forbidden finisher out first closes the trick without taking 1st place (O3, reversed 2026-10-18).** A leads
    K♠ K♥; B plays A♠ A♥; C plays 2♠ 2♥ as their last cards. C goes out with a forbidden finish: C does not take 1st
    place (C will be placed last) but the pair of 2s cuts the pair and closes the trick (`CUT`, not `FIRST_OUT`).
