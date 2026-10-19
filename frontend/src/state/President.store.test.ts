@@ -99,6 +99,18 @@ describe('President store', () => {
       expect(store.lastForfeit).toEqual({ seat: 1, reason: 'RESIGNED' });
     });
 
+    it('givenTheTwoExchangeViewEvents_thenTheyLeaveNoLogEntryNoLastEventAndNoNotice', () => {
+      const store = boot();
+      store.applyEvent({ type: 'state-update', state: game([]) });
+      const data = { seat: 1, action: 'PLAY', cards: [card('9', 'HEART')], count: null, outPlace: null, trickWinner: null, trickEndReason: null, barrierOpened: null };
+      store.applyEvent({ type: 'event', eventType: 'PLAY', eventData: data, message: '' });
+      const logged = store.events;
+      store.applyEvent({ type: 'event', eventType: 'EXCHANGE_SEEN', eventData: { ...data, action: 'EXCHANGE_SEEN', cards: [] }, message: '' });
+      store.applyEvent({ type: 'event', eventType: 'EXCHANGE_CLOSED', eventData: { round: 2, late: [1] }, message: '' });
+      expect(store.events).toBe(logged);
+      expect(store.lastEvent?.eventType).toBe('PLAY');
+    });
+
     it('keeps the last table event, forgets it at a round start, and keeps presence events out of it', () => {
       const store = boot();
       const data = { seat: 1, action: 'PLAY', cards: [card('9', 'HEART')], count: null, outPlace: null, trickWinner: null, trickEndReason: null, barrierOpened: null };
@@ -366,6 +378,63 @@ describe('President store', () => {
       store.applyEvent({ type: 'state-update', state: game(['READY'], { phase: 'ROUND_OVER' }) });
       expect(store.ready()).toBe(true);
       expect(sent()).toEqual([{ dest: '/app/president/ready', body: { gameId: 'g1', token: 'tok' } }]);
+    });
+
+    describe('seeExchange', () => {
+      const inView = (over: Partial<PresidentState> = {}) =>
+        game(['SEE_EXCHANGE'], { phase: 'EXCHANGE_VIEW', round: 2, ...over });
+
+      it('givenTheViewOffersIt_thenItSendsTheRoundOnce', () => {
+        const store = boot();
+        store.applyEvent({ type: 'state-update', state: inView() });
+        expect(store.seeExchange()).toBe(true);
+        expect(sent()).toEqual([{ dest: '/app/president/seeExchange', body: { gameId: 'g1', token: 'tok', round: 2 } }]);
+        expect(store.seeExchange()).toBe(false);
+        store.applyEvent({ type: 'state-update', state: inView({ version: 2 }) });
+        expect(store.seeExchange()).toBe(false);
+        expect(sent()).toHaveLength(1);
+      });
+
+      it('givenAnotherRound_thenItSendsAgain', () => {
+        const store = boot();
+        store.applyEvent({ type: 'state-update', state: inView() });
+        store.seeExchange();
+        store.applyEvent({ type: 'state-update', state: game([], { phase: 'PLAYING', round: 2, version: 3 }) });
+        store.applyEvent({ type: 'state-update', state: inView({ round: 3, version: 4 }) });
+        expect(store.seeExchange()).toBe(true);
+        expect(sent().map(s => s.body.round)).toEqual([2, 3]);
+      });
+
+      it('givenTheServerDoesNotOfferIt_thenNothingIsSent', () => {
+        const store = boot();
+        store.applyEvent({ type: 'state-update', state: game([], { phase: 'EXCHANGE_VIEW', round: 2 }) });
+        expect(store.seeExchange()).toBe(false);
+        expect(sent()).toEqual([]);
+      });
+
+      it('doesNotTakeTheBusyLock', () => {
+        const store = boot();
+        store.applyEvent({ type: 'state-update', state: inView() });
+        store.seeExchange();
+        expect(store.busy).toBe(false);
+      });
+
+      it('givenTheSocketIsDown_thenItCanBeTriedAgain', () => {
+        const store = boot();
+        store.applyEvent({ type: 'state-update', state: inView() });
+        publish.mockImplementationOnce(() => { throw new Error('down'); });
+        expect(store.seeExchange()).toBe(false);
+        expect(store.seeExchange()).toBe(true);
+      });
+
+      it('givenARematchOnTheSameRound_thenItSendsAgain', () => {
+        const store = boot();
+        store.applyEvent({ type: 'state-update', state: inView() });
+        store.seeExchange();
+        store.applyEvent({ type: 'state-update', state: game([], { phase: 'PLAYING', round: 1, version: 5 }) });
+        store.applyEvent({ type: 'state-update', state: inView({ version: 6 }) });
+        expect(store.seeExchange()).toBe(true);
+      });
     });
 
     it('giveBack sends the selected cards once their number is the one owed', () => {

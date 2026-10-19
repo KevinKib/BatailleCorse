@@ -26,6 +26,12 @@ describe('exchangeRecap', () => {
     expect(exchangeRecap(played({}), 4).every(l => l.best === null && !l.mine)).toBe(true);
   });
 
+  it('givenTheExchangeView_thenTheSummaryShowsAlreadyWithTheSameLines', () => {
+    const view = exchangeRecap(played({ phase: 'EXCHANGE_VIEW', given: best, received: back }), 2);
+    expect(view).toEqual(exchangeRecap(played({ given: best, received: back }), 2));
+    expect(view).toHaveLength(2);
+  });
+
   it('givenAReturnStillToCome_thenThereIsNoRecapYet', () => {
     const pending = [{ high: 0, low: 2, count: 2, done: true }, { high: 1, low: 3, count: 1, done: false }];
     expect(exchangeRecap(played({ phase: 'EXCHANGE', exchange: pending }), 2)).toEqual([]);

@@ -12,6 +12,20 @@ export interface ScriptedPlayer {
   lastState(): any;
   publish(destination: string, body: Record<string, unknown>): void;
   disconnect(): void;
+  /**
+   * President: while true the guest does not acknowledge the card exchange by itself, so a spec can keep the table
+   * waiting for it (then `seeExchange()` lets it through). Guests acknowledge as soon as the server offers
+   * `SEE_EXCHANGE` by default, like a human who has watched the exchange; for any other game nothing is ever offered.
+   */
+  holdExchange: boolean;
+  /** Acknowledges the exchange of the round the latest state is in (a no-op for the server when it is not waiting). */
+  seeExchange(): void;
+}
+
+/** Options of a scripted guest. */
+export interface ScriptedPlayerOptions {
+  /** President: start with the exchange acknowledgement held back (see `ScriptedPlayer.holdExchange`). */
+  holdExchange?: boolean;
 }
 
 // Every scripted socket opened in the current test. The spec iframe lives for the whole spec file, so a socket
@@ -41,10 +55,11 @@ export function joinAsScriptedPlayer(
   gameId: string,
   name: string,
   gameType: ScriptedGameType = 'bullshit',
+  options: ScriptedPlayerOptions = {},
 ): Cypress.Chainable<ScriptedPlayer & { token: string; seat: number }> {
   return cy.request('POST', joinPath(gameType, gameId), { name }).then((res) => {
     const { playerId, token } = res.body as { playerId: number; token: string };
-    return connectScriptedPlayer(gameId, token, playerId);
+    return connectScriptedPlayer(gameId, token, playerId, options);
   });
 }
 
@@ -70,7 +85,7 @@ export function waitForFrame(
  * channel (an options change with nothing in it: a success for the host, a refusal for anybody else), which proves
  * the subscription is live: a frame sent before that would be lost, and no fixed wait is needed.
  */
-export function connectScriptedPlayer(gameId: string, token: string, seat: number) {
+export function connectScriptedPlayer(gameId: string, token: string, seat: number, options: ScriptedPlayerOptions = {}) {
   const base = (Cypress.config('baseUrl') as string).replace(/^http/, 'ws');
   return cy.wrap(new Promise<ScriptedPlayer & { token: string; seat: number }>((resolve, reject) => {
     const frames: ScriptedPlayer['frames'] = [];
@@ -84,12 +99,19 @@ export function connectScriptedPlayer(gameId: string, token: string, seat: numbe
       publish: (destination: string, body: Record<string, unknown>) =>
         client.publish({ destination, body: JSON.stringify({ gameId, token, ...body }) }),
       disconnect: () => { openClients.delete(client); void client.deactivate(); },
+      holdExchange: options.holdExchange ?? false,
+      seeExchange: () => {
+        const state = player.lastState();
+        if (state?.availableActions?.includes('SEE_EXCHANGE')) player.publish('/app/president/seeExchange', { round: state.round });
+      },
     };
     client.onStompError = (frame) => reject(new Error(frame.headers['message']));
     client.onWebSocketError = () => reject(new Error('scripted player: websocket error'));
     client.onConnect = () => {
       client.subscribe(`/topic/game/${gameId}/seat/${token}`, (message: IMessage) => {
         frames.push(JSON.parse(message.body));
+        // The exchange of a President round: a guest is a human seat, the table waits for it (inert until offered).
+        if (!player.holdExchange) player.seeExchange();
         if (frames.length === 1) resolve(player);
       }, { token });
       // The probe is repeated until the first frame comes back, whenever the subscription became active.
