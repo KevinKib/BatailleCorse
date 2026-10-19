@@ -57,6 +57,14 @@ describe('PresidentHand', () => {
     const wrapper = mountHand(['SPADE_ACE'], ['SPADE_ACE']);
     expect(wrapper.get('[data-card="SPADE_ACE"]').attributes('aria-label')).toBe('Ace of spades, selected, received');
   });
+  it('givenCardsLeaveTheHand_thenItKeepsTheHeightOfTheFullHand_soTheTableAboveNeverMoves', async () => {
+    const wrapper = mountHand();
+    const full = (wrapper.get('[data-test="hand"]').element as HTMLElement).style.minHeight;
+    expect(full).toContain('calc(');
+    await wrapper.setProps({ cards: hand.slice(0, 2) });
+    expect((wrapper.get('[data-test="hand"]').element as HTMLElement).style.minHeight).toBe(full);
+  });
+
   it('givenACardStillFlyingIn_thenItsPlaceIsKeptButItIsHiddenUntilItLands', async () => {
     const wrapper = mount(PresidentHand, { props: { cards: hand, selected: [], received: [], landing: ['HEART_QUEEN'] } });
     expect(wrapper.get('[data-card="HEART_QUEEN"]').classes()).toContain('landing');

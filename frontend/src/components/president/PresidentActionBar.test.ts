@@ -43,9 +43,11 @@ describe('PresidentActionBar', () => {
     expect(mountBar({ canPass: false }).get('[data-test="pass"]').attributes('disabled')).toBeDefined();
   });
 
-  it('givenNoSelection_thenClearIsHiddenElseItEmitsClear', async () => {
-    expect(mountBar().find('[data-test="clear"]').exists()).toBe(false);
+  it('givenNoSelection_thenClearIsThereButDisabledElseItEmitsClear', async () => {
+    // Clear never comes and goes: Play and Pass would shift by its width.
+    expect(mountBar().get('[data-test="clear"]').attributes('disabled')).toBeDefined();
     const wrapper = mountBar({ hasSelection: true });
+    expect(wrapper.get('[data-test="clear"]').attributes('disabled')).toBeUndefined();
     await wrapper.get('[data-test="clear"]').trigger('click');
     expect(wrapper.emitted('clear')).toHaveLength(1);
   });
@@ -62,5 +64,19 @@ describe('PresidentActionBar', () => {
   it('givenARefusalNotice_thenItIsAnnounced', () => {
     const wrapper = mountBar({ notice: 'That play was refused. Check your cards.' });
     expect(wrapper.get('[data-test="notice"]').attributes('role')).toBe('alert');
+  });
+
+  it('givenARefusalNotice_thenItSharesTheSlotOfTheHintLineSoNothingGrows', () => {
+    const wrapper = mountBar({ notice: 'That play was refused.', hint: 'Play a 9 or nothing.' });
+    const slot = wrapper.get('[data-test="help-slot"]');
+    expect(slot.find('[data-test="play-hint"]').exists()).toBe(true);
+    expect(slot.find('[data-test="notice"]').exists()).toBe(true);
+  });
+
+  it('givenACompletion_thenTheCompleteButtonFloatsInTheHelpSlotNotInTheButtonRow', () => {
+    // The Complete button floats over the help line when it is on offer: the row of buttons keeps its three.
+    const wrapper = mountBar({ canComplete: true });
+    expect(wrapper.get('[data-test="buttons"]').findAll('button')).toHaveLength(3);
+    expect(wrapper.get('[data-test="help-slot"]').find('[data-test="complete"]').exists()).toBe(true);
   });
 });

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import PlayingCard from '../PlayingCard.vue';
 import { useHandLayout } from '../../composables/useHandLayout';
 import { useI18n } from '../../composables/useI18n';
@@ -18,12 +18,23 @@ const props = defineProps<{
   received?: string[];
   /** The names of the cards still flying in (an exchange flight): their place is kept, the card shows once it lands. */
   landing?: string[];
+  /** The size of the hand dealt: the layout is never smaller than that of a full hand, so it does not change as cards leave. */
+  minCount?: number;
 }>();
 const emit = defineEmits<{ toggle: [name: string] }>();
 
 const ui = useI18n().presidentUi;
 const root = ref<HTMLElement | null>(null);
-const { layout } = useHandLayout(root, () => props.cards.length);
+// The layout is that of the fullest hand seen: as cards leave, the others keep their size, their place and the height of
+// the hand (the table above never moves because a row of cards is empty).
+const peak = ref(Math.max(props.minCount ?? 0, props.cards.length));
+watch(() => props.cards.length, (n) => { if (n > peak.value) peak.value = n; });
+const { layout } = useHandLayout(root, () => peak.value);
+
+// The height the rows asked for (the second overlaps the first by 0.7 of a card width), kept whether they hold cards or not.
+const CARD_RATIO = 243.1375 / 167.575;
+const handHeight = computed(() =>
+  `calc(var(--space-3) + ${(layout.value.rows === 2 ? 2 * CARD_RATIO - 0.7 : CARD_RATIO) * layout.value.cardWidth}px)`);
 
 const rows = computed(() => {
   const indexed = props.cards.map((card, index) => ({ card, index }));
@@ -41,7 +52,7 @@ const labelOf = (card: Card) => {
 </script>
 
 <template>
-  <div ref="root" class="hand" data-test="hand" :style="{ '--card-w': layout.cardWidth + 'px', '--step': layout.step + 'px' }">
+  <div ref="root" class="hand" data-test="hand" :style="{ '--card-w': layout.cardWidth + 'px', '--step': layout.step + 'px', minHeight: handHeight }">
     <div v-for="(row, r) in rows" :key="r" class="hand-row">
       <button
         v-for="{ card, index } in row"

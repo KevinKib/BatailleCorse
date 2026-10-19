@@ -8,8 +8,9 @@ import { plural } from '../../locales/format';
 // How many cards a seat still holds, as a picture: a small fan of card backs (one per card up to a cap, tighter as it
 // grows), with the number written under it ("7 cards"), which is also what assistive technology reads (the picture
 // is hidden from it).
-// `reserve`: an empty hand keeps the height of a fan (something else, a marker, takes its place without moving the plate).
-const props = defineProps<{ count: number; narrow?: boolean; reserve?: boolean }>();
+// An empty hand keeps the height of a fan: a seat that goes out never jumps. What the seat says (passed, out) is the
+// default slot, drawn over the fan.
+const props = defineProps<{ count: number; narrow?: boolean }>();
 const ui = useI18n().presidentUi;
 const layout = computed(() => fanLayout(props.count, props.narrow ?? false));
 const width = computed(() => layout.value.backs > 0
@@ -18,13 +19,16 @@ const width = computed(() => layout.value.backs > 0
 
 <template>
   <span class="hand-fan" data-test="seat-fan" :data-count="count">
-    <span class="fan-picture" :class="{ 'fan-picture--reserved': reserve }" :style="reserve ? { minHeight: `${layout.cardW * 1.451}px` } : undefined" aria-hidden="true">
-      <span v-if="layout.backs > 0" class="fan-backs" :style="{ width: `${width}px`, '--fan-card-w': `${layout.cardW}px` }">
-        <span v-for="i in layout.backs" :key="i" class="fan-back" data-test="fan-back"
-              :style="{ left: `${(i - 1) * layout.stepPx}px`, transform: `rotate(${(i - (layout.backs + 1) / 2) * 3}deg)` }">
-          <PlayingCard :hidden="true" rank="ace" suit="spade" />
+    <span class="fan-stage">
+      <span class="fan-picture fan-picture--reserved" :style="{ minHeight: `${layout.cardW * 1.451}px` }" aria-hidden="true">
+        <span v-if="layout.backs > 0" class="fan-backs" :style="{ width: `${width}px`, '--fan-card-w': `${layout.cardW}px` }">
+          <span v-for="i in layout.backs" :key="i" class="fan-back" data-test="fan-back"
+                :style="{ left: `${(i - 1) * layout.stepPx}px`, transform: `rotate(${(i - (layout.backs + 1) / 2) * 3}deg)` }">
+            <PlayingCard :hidden="true" rank="ace" suit="spade" />
+          </span>
         </span>
       </span>
+      <span v-if="$slots.default" class="fan-overlay"><slot /></span>
     </span>
     <span class="fan-text" data-test="seat-cards">{{ plural(ui.table.cards, count) }}</span>
   </span>
@@ -33,7 +37,20 @@ const width = computed(() => layout.value.backs > 0
 <style scoped>
 /* The gap keeps the count clear of the ring drawn around the backs. */
 .hand-fan { display: inline-flex; flex-direction: column; align-items: center; gap: 5px; max-width: 100%; }
+.fan-stage { position: relative; display: inline-flex; justify-content: center; max-width: 100%; }
 .fan-picture { display: inline-flex; align-items: center; }
+.fan-overlay {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: var(--seat-label-max, 5.5rem);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 .fan-backs { position: relative; display: block; height: calc(var(--fan-card-w) * 1.451); }
 .fan-back { position: absolute; top: 0; width: var(--fan-card-w); transform-origin: 50% 100%; }
 .fan-back :deep(.playing_card) {

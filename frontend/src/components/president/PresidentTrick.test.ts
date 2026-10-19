@@ -131,6 +131,28 @@ describe('PresidentTrick', () => {
     });
   });
 
+  describe('the reserved places (nothing moves when a text comes or goes)', () => {
+    it('givenAnEmptyTrick_thenTheLineUnderThePileAndTheChipRowAreStillThere', () => {
+      const wrapper = mountTrick();
+      expect(wrapper.find('[data-test="trick-line"]').exists()).toBe(true);
+      expect(wrapper.find('[data-test="trick-chips"]').exists()).toBe(true);
+      expect(wrapper.findAll('[data-test="rule-chip"]')).toHaveLength(0);
+    });
+
+    it('putsWhoPlayedAndTheClosedBadgeInTheSameLine', () => {
+      const play = buildPresidentTrick({ plays: [{ seat: 1, cards: [nine('CLUB')] }], top: { kind: 'SET', rank: '9', count: 1 } });
+      expect(mountTrick(play).get('[data-test="trick-line"] [data-test="trick-by"]').text()).toBe('Seat 1 played');
+      const cut = { winner: 2, reason: 'CUT', closer: 2, cards: [buildPresidentCard('2', 'CLUB')], size: 3 };
+      const closed = mountTrick(buildPresidentTrick(), { pile: { play: { seat: 2, cards: cut.cards }, closure: cut, count: 3 } });
+      expect(closed.get('[data-test="trick-line"] [data-test="trick-closed"]').exists()).toBe(true);
+      expect(closed.findAll('[data-test="trick-line"]')).toHaveLength(1);
+    });
+
+    it('keepsTheEmptyTrickTextInThePlaceOfTheCards', () => {
+      expect(mountTrick().get('[data-test="trick-stage"] [data-test="trick-empty"]').text()).toBe('Nothing played yet');
+    });
+  });
+
   it('givenAnUnknownChipKey_thenNothingIsShownForIt', () => {
     const wrapper = mountTrick(buildPresidentTrick(), { chips: [{ key: 'nope' }] });
     expect(wrapper.findAll('[data-test="rule-chip"]')).toHaveLength(0);

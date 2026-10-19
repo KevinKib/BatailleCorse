@@ -77,16 +77,29 @@ const pairLines = computed(() => props.pairs.map(p => ({
 </template>
 
 <style scoped>
-.exchange { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 100%; }
+/* The panel fills the place of the action bar (the controls place of my zone has one height for every phase), so the
+   felt above never resizes when the exchange begins or ends. */
+.exchange { display: flex; flex-direction: column; align-items: center; justify-content: space-between; gap: 2px; width: 100%; height: 100%; min-height: 0; overflow: hidden; }
 .exchange p { margin: 0; text-align: center; }
 .role { font-size: 0.85rem; font-weight: 700; color: var(--gold); }
-.received { font-size: 0.75rem; color: rgba(255, 255, 255, 0.85); }
+.received { font-size: 0.7rem; line-height: 1.15; color: rgba(255, 255, 255, 0.85); }
 .instruction { font-size: 0.85rem; font-weight: 700; color: #fff; }
-.buttons { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.buttons { display: flex; flex-wrap: nowrap; justify-content: center; gap: 8px; }
 .action.p-button { min-height: 44px; min-width: 88px; }
 .pairs {
   list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center;
   gap: 2px 12px; font-size: 0.75rem; color: rgba(255, 255, 255, 0.7);
 }
 .pairs .mine { color: rgba(255, 255, 255, 0.95); font-weight: 700; }
+/* A phone: my title stands beside my name, so the role line is for screen readers; the pairs are one line, mine first. */
+@media (max-width: 767px) {
+  .role {
+    position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0);
+    white-space: nowrap; border: 0;
+  }
+  .exchange { position: relative; }
+  .pairs { flex-wrap: nowrap; height: 1rem; overflow: hidden; font-size: 0.7rem; }
+  .pairs li { white-space: nowrap; }
+  .pairs .mine { order: -1; }
+}
 </style>

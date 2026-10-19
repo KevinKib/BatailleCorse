@@ -141,10 +141,42 @@ describe('PresidentSeat', () => {
       expect(overlay(compact()).exists()).toBe(false);
     });
 
-    it('givenANormalPlate_thenTheMarkersKeepTheirOwnLine', () => {
+    it('givenANormalPlate_thenTheMarkersAreOnTheFanToo_neverOnALineOfTheirOwn', () => {
       const w = mountSeat({ fan: true, player: buildPresidentPlayer(1, { passed: true }) });
-      expect(w.find('.seat-markers--overlay').exists()).toBe(false);
-      expect(w.get('.seat-markers [data-test="seat-passed"]').exists()).toBe(true);
+      expect(w.find('.seat-hand .seat-markers--overlay [data-test="seat-passed"]').exists()).toBe(true);
+    });
+
+    it('givenASeatThatIsOutOnANormalPlate_thenTheFanKeepsItsHeight', () => {
+      const w = mountSeat({ fan: true, player: buildPresidentPlayer(1, { out: true, place: 2, handSize: 0 }) });
+      expect(w.find('.fan-picture').classes()).toContain('fan-picture--reserved');
+    });
+  });
+
+  describe('the reserved places (nothing moves when a text comes or goes)', () => {
+    it('givenATitleLineIsReserved_thenAPlateWithoutTitleKeepsTheLine', () => {
+      const w = mountSeat({ fan: true, reserveTitle: true });
+      expect(w.find('[data-test="seat-title"]').exists()).toBe(false);
+      expect(w.get('[data-test="seat-title-slot"]').attributes('aria-hidden')).toBe('true');
+    });
+
+    it('givenNoTitleLineIsReserved_thenThereIsNoSlot', () => {
+      expect(mountSeat({ fan: true }).find('[data-test="seat-title-slot"]').exists()).toBe(false);
+    });
+
+    it('givenATitle_thenItFillsTheReservedLineInsteadOfAddingOne', () => {
+      const w = mountSeat({ fan: true, reserveTitle: true, player: buildPresidentPlayer(1, { title: 'SCUM' }) });
+      expect(w.findAll('.seat-title')).toHaveLength(1);
+      expect(w.get('[data-test="seat-title"]').text()).toBe('Scum');
+    });
+
+    it('givenMyOwnPlate_thenItsMarkersStandBesideTheNameNotUnderIt', () => {
+      const w = mountSeat({ current: true });
+      expect(w.find('.seat-markers--side [data-test="seat-current"]').exists()).toBe(true);
+    });
+
+    it('givenAnyNameState_thenTheTurnDotIsThereLitOrNot', () => {
+      expect(mountSeat().find('.seat-label .turn-dot').exists()).toBe(true);
+      expect(mountSeat({ current: true }).find('.seat-label .turn-dot').classes()).toContain('turn-dot--on');
     });
   });
 
