@@ -5,6 +5,7 @@ import type { PresidentTrick } from '../../model/president/PresidentState';
 import type { PresidentChip } from '../../model/president/chips';
 import type { PileView } from '../../model/president/trickView';
 import { cardLabel, rankLabel } from '../../model/president/cardLabel';
+import { bindingOf } from '../../model/president/binding';
 import { useI18n } from '../../composables/useI18n';
 import { format, plural } from '../../locales/format';
 
@@ -54,9 +55,14 @@ const closedLeader = computed(() => {
 });
 // A new closure restarts the flash.
 const plateKey = computed(() => closure.value ? `closed-${closure.value.winner}-${closure.value.reason}-${closure.value.size}-${top.value?.cards.map(c => c.name).join('+') ?? ''}` : 'open');
+// Equal play: the trick is bound to a rank ("9 or nothing"). A frame and a banner say it; the closed pile has none.
+const binding = computed(() => closure.value ? null : bindingOf(props.trick));
+const bindingRank = computed(() => binding.value ? rankLabel(binding.value.rank, ui) : '');
 const chipTexts = computed(() => props.chips.flatMap((chip) => {
   const template = ui.chips[chip.key];
   if (template === undefined) return [];
+  // The banner says the binding and how far the chain went: the two chips would only repeat it.
+  if (binding.value && (chip.key === 'match' || chip.key === 'chain')) return [];
   const vars = { ...chip.vars };
   if (typeof vars.rank === 'string') vars.rank = rankLabel(vars.rank, ui);
   return [{ key: chip.key, text: format(template, vars) }];
@@ -66,7 +72,7 @@ const chipTexts = computed(() => props.chips.flatMap((chip) => {
   <div class="trick" data-test="trick">
     <!-- The plate has three places that never change size: the cards (or "nothing played yet"), one line under them (who
          played, or the badge of a closed trick), and, beside or below, the row of chips. -->
-    <div :key="plateKey" class="trick-plate" :class="{ 'trick-plate--closed': closure, 'trick-plate--still': still }">
+    <div :key="plateKey" class="trick-plate" :class="{ 'trick-plate--bound': binding, 'trick-plate--closed': closure, 'trick-plate--still': still }">
       <div class="trick-stage" data-test="trick-stage">
         <div v-if="top" class="trick-cards" :class="{ 'trick-cards--swept': swept && closure }" data-test="trick-cards" :aria-hidden="swept && closure ? 'true' : undefined">
           <span v-for="card in top.cards" :key="card.name" class="trick-card"
@@ -91,6 +97,16 @@ const chipTexts = computed(() => props.chips.flatMap((chip) => {
     </ul>
     <!-- The rows of chips are always there: how many cards the trick holds first, then the rules in force. -->
     <ul class="chips" data-test="trick-chips">
+      <!-- "9 or nothing": the rank every next play is bound to, and how many of its four cards are played (the fourth closes). -->
+      <li v-if="binding" class="binding" data-test="binding">
+        <span class="binding-head"><span class="binding-rank" data-test="binding-rank">{{ bindingRank }}</span><span class="binding-or">{{ ui.motion.binding.orNothing }}</span></span>
+        <span class="binding-count">
+          <span class="binding-pips" aria-hidden="true">
+            <span v-for="i in binding.total" :key="i" class="binding-pip" :class="{ 'binding-pip--on': i <= binding.played }" data-test="binding-pip"></span>
+          </span>
+          <span class="binding-progress" data-test="binding-progress">{{ format(ui.motion.binding.played, { n: binding.played }) }}</span>
+        </span>
+      </li>
       <li v-if="view.count > 0" class="chip trick-count" data-test="trick-count">
         <span class="trick-count-icon" aria-hidden="true"><i></i><i></i></span>{{ plural(ui.motion.trickCount, view.count) }}
       </li>
@@ -163,6 +179,23 @@ const chipTexts = computed(() => props.chips.flatMap((chip) => {
   .trick-plate--closed .trick-closed { animation: none; }
 }
 
+/* The binding (equal play): a gold frame round the cards and a banner in the place of the chips. Neither is in the flow of
+   the pile: the frame is an outline, the banner is a chip-row item, so nothing moves when they come. */
+.trick-plate--bound .trick-cards { outline: 2px solid var(--gold); outline-offset: 5px; border-radius: 6px; box-shadow: 0 0 12px rgba(255, 210, 63, 0.35); }
+.binding {
+  box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; gap: 2px; padding: 2px 8px;
+  list-style: none; color: #fff; background: rgba(255, 210, 63, 0.1); border: 2px solid var(--gold); border-radius: 12px;
+}
+.binding-head { display: flex; flex-direction: column; align-items: flex-start; gap: 0; white-space: nowrap; }
+.binding-rank { font-size: 1.35rem; font-weight: 800; line-height: 1; color: var(--gold); }
+.binding-or { font-size: 0.6rem; font-weight: 800; line-height: 1.1; letter-spacing: 0.05em; text-transform: uppercase; }
+.binding-count { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.binding-pips { display: inline-flex; gap: 3px; flex: none; }
+.binding-pip { width: 10px; height: 14px; box-sizing: border-box; border: 1.5px solid var(--gold); border-radius: 2px; }
+.binding-pip--on { background: var(--gold); }
+/* The count in words is for screen readers: the pips show it. */
+.binding-progress { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
 /* The trick indicator: how many cards the trick holds. */
 .trick-count {
   display: inline-flex;
@@ -229,11 +262,16 @@ const chipTexts = computed(() => props.chips.flatMap((chip) => {
     display: grid;
     grid-auto-flow: column;
     grid-template-rows: repeat(3, minmax(0, 1fr));
-    grid-auto-columns: minmax(0, 1fr);
+    grid-auto-columns: auto;
+    justify-content: start;
     align-content: stretch;
     justify-items: start;
     gap: 3px 4px;
   }
+  /* The banner has a column of its own (the count chip under it, the rules beside it) so that no chip is squeezed. */
+  .chips:has(.binding) { grid-template-columns: 6.4rem minmax(0, 1fr); }
+  /* The binding takes the first two of the three rows of chips. */
+  .binding { grid-row: span 2; align-self: stretch; }
   .chip {
     height: auto; max-height: 100%; align-self: center; max-width: 100%; white-space: normal; border-radius: 10px;
     padding: 1px 7px; line-height: 1.2; overflow: hidden;

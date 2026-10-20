@@ -273,6 +273,8 @@ describe('President messages', () => {
     for (const reason of ['ALL_PASSED', 'FIRST_OUT', 'CUT', 'QUAD']) expect(m.closed[reason], reason).toBeTruthy();
     expect(m.closed.CUT).toBe('Closed by a 2');
     expect(m.leads).toContain('{player}');
+    expect(m.binding.orNothing).toBe('or nothing');
+    expect(m.binding.played).toContain('{n}');
     expect(m.trickCount.other).toContain('{n}');
     expect(m.bubbles).toEqual({ pass: 'Pass', outForbidden: 'Out on a 2', completed: 'Four completed' });
     expect(m.speed).toContain('{speed}');

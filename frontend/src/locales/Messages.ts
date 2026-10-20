@@ -378,6 +378,7 @@ export interface PresidentUiMessages {
     trickCount: PluralForms;           // '{n}' = cards in the trick
     closed: Record<string, string>;    // the badge of a closed trick, by `TrickEndReason`
     closedOther: string;               // the badge for a reason not listed
+    binding: { orNothing: string; played: string }; // equal play: "9 or nothing", and '{n}' of the four played
     leads: string;                     // '{player}' takes the lead
     youLead: string;
     bubbles: { pass: string; outForbidden: string; completed: string };

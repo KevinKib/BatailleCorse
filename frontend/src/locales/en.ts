@@ -380,6 +380,7 @@ export const messagesEn: Messages = {
         ALL_PASSED: 'Everyone passed',
       },
       closedOther: 'Trick closed',
+      binding: { orNothing: 'or nothing', played: '{n} of 4 played' },
       leads: '{player} leads',
       youLead: 'You lead',
       bubbles: { pass: 'Pass', outForbidden: 'Out on a 2', completed: 'Four completed' },

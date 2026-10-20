@@ -47,9 +47,12 @@ const chipTexts = () => cy.get('[data-test="rule-chip"]').then(($c) => [...$c].m
           scriptedPlay(bob, 'KING', 1);
           scriptedPlay(carol, 'KING', 1);
           cy.get('[data-test="phase-text"]').should('have.text', 'Your turn');
+          // The binding is a gold banner (the rank, "or nothing", the four cards as boxes), not two chips.
+          cy.get('[data-test="binding"]').should('contain.text', 'King').and('contain.text', 'or nothing');
+          cy.get('[data-test="binding-pip"].binding-pip--on').should('have.length', 3);
+          cy.get('[data-test="binding-pip"]').should('have.length', 4);
           chipTexts().then((texts) => {
-            expect(texts).to.include('King or nothing');
-            expect(texts).to.include('3 plays of King in a row');
+            expect(texts).not.to.include('King or nothing');
             expect(texts).not.to.include('To beat: 1 × King');
           });
           // Alice holds the fourth king and plays in turn: no button is needed, the play is the completion.
@@ -66,10 +69,8 @@ const chipTexts = () => cy.get('[data-test="rule-chip"]').then(($c) => [...$c].m
           scriptedPlay(bob, '9', 1);
           scriptedPlay(carol, '9', 1);
           cy.get('[data-test="phase-text"]').should('have.text', 'Your turn');
-          chipTexts().then((texts) => {
-            expect(texts).to.include('9 or nothing');
-            expect(texts).to.include('2 plays of 9 in a row');
-          });
+          cy.get('[data-test="binding-rank"]').should('have.text', '9');
+          cy.get('[data-test="binding-pip"].binding-pip--on').should('have.length', 2);
           // A wrong rank (not a lone 2, which always closes the trick) is refused with the equal-play wording.
           cy.get('[data-card="HEART_3"]').click({ force: true });
           cy.get('[data-test="play-hint"]').should('have.text', 'Play a 9 or nothing.');

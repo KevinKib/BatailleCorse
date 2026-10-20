@@ -18,6 +18,7 @@ const REGIONS: Array<{ name: string; selector: string; dims?: Dim[] }> = [
   { name: 'play', selector: '[data-test="play"]' },
   { name: 'pass', selector: '[data-test="pass"]' },
   { name: 'clear', selector: '[data-test="clear"]' },
+  { name: 'binding', selector: '[data-test="binding"]', dims: ['top', 'height'] },
   { name: 'pile.cards', selector: '[data-test="trick-cards"]', dims: ['top', 'height'] },
   { name: 'pile.card', selector: '[data-test="trick-cards"] .playing_card', dims: ['top', 'height', 'width'] },
 ];

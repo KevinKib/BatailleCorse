@@ -105,9 +105,10 @@ SCREENS.forEach(([width, height]) => {
         stillAcross('leading the king', () => { selectAndPlay('HEART_KING'); },
           () => { cy.get('[data-test="phase-text"]').should('have.text', 'Bob is playing'); });
         stillAcross('a king answered: King or nothing', () => { scriptedPlay(bob, 'KING', 1); },
-          () => { cy.contains('[data-test="rule-chip"]', 'King or nothing').should('exist'); });
+          () => { cy.get('[data-test="binding"]').should('contain.text', 'King').and('contain.text', 'or nothing'); cy.get('[data-test="binding-pip"].binding-pip--on').should('have.length', 2); });
         stillAcross('the chain of three and the Complete button', () => { scriptedPlay(carol, 'KING', 1); },
-          () => { myTurn(); cy.get('[data-test="complete"]').should('be.visible'); cy.contains('[data-test="rule-chip"]', '3 plays of King in a row').should('exist'); });
+          () => { myTurn(); cy.get('[data-test="complete"]').should('be.visible'); cy.get('[data-test="binding-pip"].binding-pip--on').should('have.length', 3); cy.get('[data-test="binding-pip"]').should('have.length', 4); });
+        cy.screenshot(`president-still-binding-${width}x${height}`, { capture: 'viewport' });
         stillAcross('the fourth king closes the trick', () => { selectAndPlay('SPADE_KING'); },
           () => { myTurn(); cy.get('[data-test="trick-card"]').should('not.exist'); cy.get('[data-test="complete"]').should('not.exist'); });
 
@@ -115,7 +116,7 @@ SCREENS.forEach(([width, height]) => {
         stillAcross('leading a 5', () => { selectAndPlay('HEART_5'); },
           () => { cy.get('[data-test="phase-text"]').should('have.text', 'Bob is playing'); });
         stillAcross('two nines: 9 or nothing', () => { scriptedPlay(bob, '9', 1); scriptedPlay(carol, '9', 1); },
-          () => { myTurn(); cy.contains('[data-test="rule-chip"]', '2 plays of 9 in a row').should('exist'); });
+          () => { myTurn(); cy.get('[data-test="binding-rank"]').should('have.text', '9'); cy.get('[data-test="binding-pip"].binding-pip--on').should('have.length', 2); });
         stillAcross('a card that cannot be played, and its hint', () => { cy.get('[data-card="HEART_3"]').click({ force: true }); },
           () => { cy.get('[data-test="play-hint"]').should('have.text', 'Play a 9 or nothing.'); });
         stillAcross('clearing it', () => { cy.get('[data-test="clear"]').click(); },
