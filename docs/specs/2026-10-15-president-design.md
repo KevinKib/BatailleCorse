@@ -399,10 +399,14 @@ Sub-packages (each with the exceptions it protects):
 
 | Phase | Meaning | Leaves with |
 |-------|---------|-------------|
-| `EXCHANGE` | round ≥ 2 with an exchange; low ranks' best cards already moved; high ranks choose what to give back | the last `giveBack` (instant when `giveBack = lowest`) |
-| `PLAYING` | tricks | the last but one player goes out |
+| `EXCHANGE` | round ≥ 2 with an exchange; low ranks' best cards already moved; high ranks choose what to give back | the last `giveBack` (instant when `giveBack = lowest`): to `EXCHANGE_VIEW` |
+| `EXCHANGE_VIEW` | every card has changed hands; the table is shown the exchange, no trick yet (barrier like `ROUND_OVER`: every active seat acknowledges, or the 20 s timeout closes the view) | `seeExchange` from the last active seat, `closeExchangeView`, or a forfeit after which every remaining seat has seen it: to `PLAYING` |
+| `PLAYING` | tricks (round 1, a round with no exchange, or after `EXCHANGE_VIEW`) | the last but one player goes out |
 | `ROUND_OVER` | round scored and shown; barrier | `ready` from every remaining player, or `FINISHED` |
 | `FINISHED` | the match length is reached (never under `endless`), or one player is left | Play again (outside the aggregate) |
+
+The `EXCHANGE_VIEW` barrier (phase, `seeExchange`, `closeExchangeView`, `players[].sawExchange`, the 20 s timer and the
+bots' zero-delay acknowledgement) is specified in `docs/specs/2026-10-19-president-exchange-sync-design.md`.
 
 ### 6.2 Commands and queries
 
@@ -490,11 +494,12 @@ the wrong cards), `WrongGiveBackException` (count, or not your turn to return), 
 | `/president/pass` | `GameActionPayload` | pass |
 | `/president/giveBack` | `PresidentCardsPayload` | exchange return |
 | `/president/ready` | `GameActionPayload` | round barrier |
+| `/president/seeExchange` | `PresidentRoundPayload(gameId, token, round)` | the seat has seen the exchange of this round; a late or repeated one changes nothing and answers nothing |
 | `/presence`, `/forfeit` | existing | unchanged |
 
 `PresidentEventType`: `START`, `ROUND_START`, `EXCHANGE`, `PLAY`, `COMPLETION` (a play out of turn), `PASS`,
 `MATCH_REQUIRED`, `TRICK_WON`,
-`REVOLUTION`, `PLAYER_OUT`, `ROUND_END`, `READY`, `GAME_OVER`. One `SuccessResponse` per human seat through a
+`REVOLUTION`, `PLAYER_OUT`, `ROUND_END`, `READY`, `EXCHANGE_SEEN`, `EXCHANGE_CLOSED`, `GAME_OVER`. One `SuccessResponse` per human seat through a
 `SeatStateBroadcaster<President, PresidentDto>`; refusals answered to the sender alone with
 `ErrorResponse(type, message, state)`.
 
