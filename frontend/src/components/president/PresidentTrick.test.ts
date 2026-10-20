@@ -35,6 +35,26 @@ describe('PresidentTrick', () => {
     expect(mountTrick(trick).get('[data-test="trick-by"]').text()).toBe('You played');
   });
 
+  it('givenWhatTheTableShowsSoFar_thenTheTextsSayItWhileTheCardsAreThePile', () => {
+    // The pile (the latest state, under the flights) has three plays; the table has only shown the first one so far.
+    const pile = { play: { seat: 3, cards: [nine('SPADE')] }, closure: null, count: 3 };
+    const display = { play: { seat: 1, cards: [buildPresidentCard('7', 'CLUB')] }, closure: null, count: 1 };
+    const wrapper = mountTrick(buildPresidentTrick(), { pile, display });
+    expect(wrapper.get('[data-test="trick-by"]').text()).toBe('Seat 1 played');
+    expect(wrapper.get('[data-test="trick-count"]').text()).toBe('1 card in the trick');
+    expect(wrapper.findAll('[data-test="trick-card"]')).toHaveLength(1);
+    expect(wrapper.get('[data-test="trick-card"]').attributes('aria-label')).toContain('9');
+  });
+
+  it('givenAClosureNotShownYet_thenNoBadge', () => {
+    const cut = { winner: 2, reason: 'CUT', closer: 2, cards: [buildPresidentCard('2', 'CLUB')], size: 2, trickCards: [] };
+    const pile = { play: { seat: 2, cards: cut.cards }, closure: cut, count: 2 };
+    const display = { play: { seat: 1, cards: [nine('CLUB')] }, closure: null, count: 1 };
+    const wrapper = mountTrick(buildPresidentTrick(), { pile, display });
+    expect(wrapper.find('[data-test="trick-closed"]').exists()).toBe(false);
+    expect(wrapper.get('[data-test="trick-by"]').text()).toBe('Seat 1 played');
+  });
+
   it('showsTheRuleChipsAsText', () => {
     const wrapper = mountTrick(buildPresidentTrick(), {
       chips: [{ key: 'beat', vars: { count: 2, rank: 'JACK' } }, { key: 'afterPass.reenter' }],

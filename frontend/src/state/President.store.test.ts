@@ -169,6 +169,9 @@ describe('President store', () => {
       expect(store.events.map(e => [e.action, e.seat])).toEqual([['PASS', 2], ['PLAY', 1]]);
       expect(store.events[1].closure).toMatchObject({ winner: 1, reason: 'CUT', size: 4 });
       expect(store.events[0].id).toBeGreaterThan(store.events[1].id);
+      // Each move carries the state it led to: the texts show it once the move's picture is over.
+      expect(store.events[1].after?.version).toBe(2);
+      expect(store.events[0].after?.version).toBe(3);
     });
 
     it('givenAPresenceEventOrARoundStart_thenNothingIsLogged', () => {
