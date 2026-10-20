@@ -296,7 +296,7 @@ export interface PresidentUiMessages {
     offline: string;
   };
   chips: Record<string, string>;       // by chip key (see `ruleChips`); '{count}', '{rank}' in `beat`
-  /** Who took the trick and why, by `TrickEndReason` ('{player}'), and the note of a forbidden finish. */
+  /** Who set the trick aside and why, by `TrickEndReason` ('{player}'), and the note of a forbidden finish. */
   trickEnd: Record<string, string>;
   actions: { play: string; complete: string; pass: string; clear: string; };
   hint: {
