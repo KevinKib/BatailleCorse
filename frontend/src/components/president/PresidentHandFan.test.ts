@@ -24,6 +24,14 @@ describe('PresidentHandFan', () => {
     expect(w.get('[data-test="seat-cards"]').text()).toBe('0 cards');
   });
 
+  it('givenAnEmptyHand_thenTheFanStillKeepsItsHeight_theSeatNeverJumps', () => {
+    const w = fan(0);
+    expect(w.get('.fan-picture').classes()).toContain('fan-picture--reserved');
+    expect(w.get('.fan-picture').attributes('style')).toContain('min-height');
+    const wide = fan(0, false);
+    expect(wide.get('.fan-picture').attributes('style')).toContain('min-height');
+  });
+
   it('isReadAsANumberOfCards_thePictureHidden', () => {
     const w = fan(1);
     expect(w.get('[data-test="seat-cards"]').text()).toBe('1 card');

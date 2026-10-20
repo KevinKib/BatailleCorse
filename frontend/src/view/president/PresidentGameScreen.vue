@@ -115,6 +115,10 @@ const narrow = useNarrowScreen();
 const ring = computed(() => seatPositions(opponents.value.length));
 const columns = computed(() => Math.min(Math.max(opponents.value.length, 1), 4));
 const chips = computed(() => store.game ? ruleChips(store.game) : []);
+// The places the table keeps whether they are used or not (nothing moves when a text comes or goes): the title line of a
+// plate in a match of more than one round, and the size of a full hand.
+const reserveTitle = computed(() => store.game?.rounds !== 1);
+const dealtCount = computed(() => Math.ceil(52 / Math.max(store.game?.players.length ?? 1, 1)));
 // What the last command did to the trick: who took it and why, and a forbidden finish. The text is the client's;
 // the facts (winner, reason, forbidden) are the server's event.
 const trickNotes = computed(() => {
@@ -459,6 +463,10 @@ const endSequence = usePresidentEndSequence({
   timings: () => endTimings(speedFactor(speed.value) || 1, still.value),
 });
 const sheetOpen = endSequence.sheetVisible;
+// The place of my zone keeps its height while the round sheet rises over it, so that the felt above never resizes.
+const areaEl = ref<HTMLElement | null>(null);
+const lockedAreaHeight = ref<number | null>(null);
+watch(sheetOpen, (open) => { lockedAreaHeight.value = open ? (areaEl.value?.offsetHeight ?? null) : null; }, { flush: 'pre' });
 // While the sheet is not up yet, the table is still finishing: no action to offer.
 const roundEnding = computed(() => kind.value !== 'none');
 const winners = computed(() => {
@@ -578,6 +586,7 @@ const rematchButton = computed(() =>
               :count="inFlight.shown(opponent.seat, opponent.handSize)"
               :narrow="narrow"
               :compact="narrow"
+              :reserve-title="reserveTitle"
               :bubble="bubbles.bySeat.value[opponent.seat] ?? null"
               :still="still" />
           </div>
@@ -588,58 +597,66 @@ const rematchButton = computed(() =>
         </div>
       </div>
 
-      <!-- The end of a round: the sheet rises under the table, in the place of my zone (as Kobo's score sheet). -->
-      <div v-if="sheetOpen" class="sheet-slot" data-test="sheet-slot">
-        <PresidentRoundSummary
-          :players="store.game.players"
-          :round="store.game.round"
-          :last-round="store.game.lastRound"
-          :name-of="displayName"
-          :can-ready="canReady"
-          :final="kind === 'final'"
-          :still="still"
-          :factor="speedFactor(speed) || 1"
-          @ready="store.ready()"
-          @continue="endSequence.continueToFinal()" />
-      </div>
+      <!-- My place: my zone, or the round sheet that rises over it (the end of a round, as Kobo's score sheet). The place has
+           one height whatever it holds, so the felt above never resizes. -->
+      <div ref="areaEl" class="my-area" :style="lockedAreaHeight ? { minHeight: lockedAreaHeight + 'px' } : undefined">
+        <div v-if="sheetOpen" class="sheet-slot" data-test="sheet-slot">
+          <PresidentRoundSummary
+            :players="store.game.players"
+            :round="store.game.round"
+            :last-round="store.game.lastRound"
+            :name-of="displayName"
+            :can-ready="canReady"
+            :final="kind === 'final'"
+            :still="still"
+            :factor="speedFactor(speed) || 1"
+            @ready="store.ready()"
+            @continue="endSequence.continueToFinal()" />
+        </div>
 
-      <div v-else class="my-zone" data-test="my-zone" role="region" :aria-label="ui.table.yourCards">
-        <PresidentSeat
-          v-if="store.me"
-          :player="store.me"
-          :label="ui.you"
-          :current="store.isMyTurn && store.game.phase === 'PLAYING'"
-          :bubble="bubbles.bySeat.value[store.mySeat] ?? null"
-          :still="still" />
-        <PresidentHand :cards="store.hand" :selected="selectedNames" :received="receivedNames" :landing="landing" @toggle="name => store.toggleCard(name)" />
-        <PresidentExchangePanel
-          v-if="isExchange"
-          :pairs="store.game.exchange"
-          :my-seat="store.mySeat"
-          :title="store.me?.title ?? null"
-          :received-count="store.game.received.length"
-          :selected-count="store.selectedCards.length"
-          :can-give="store.canGiveBack"
-          :name-of="displayName"
-          @give="store.giveBack()"
-          @suggest="store.suggestGiveBack()"
-          @clear="store.clearSelection()" />
-        <PresidentExchangeRecap v-if="showRecap" :lines="recap" :name-of="displayName"
-                                @close="closeRecap()" />
-        <PresidentActionBar
-          v-if="!roundEnding && !isExchange"
-          :phase-text="phaseText"
-          :primary-label="ui.actions.play"
-          :can-primary="store.canPlay"
-          :can-pass="store.can('PASS') && !store.busy"
-          :has-selection="store.selectedCards.length > 0"
-          :hint="hint"
-          :notice="noticeText"
-          :can-complete="store.canComplete"
-          @complete="store.complete()"
-          @primary="playSelected()"
-          @pass="store.pass()"
-          @clear="store.clearSelection()" />
+        <div v-else class="my-zone" data-test="my-zone" role="region" :aria-label="ui.table.yourCards">
+          <PresidentSeat
+            v-if="store.me"
+            :player="store.me"
+            :label="ui.you"
+            :current="store.isMyTurn && store.game.phase === 'PLAYING'"
+            :bubble="bubbles.bySeat.value[store.mySeat] ?? null"
+            :still="still" />
+          <PresidentHand :cards="store.hand" :selected="selectedNames" :received="receivedNames" :landing="landing"
+                         :min-count="dealtCount" @toggle="name => store.toggleCard(name)" />
+          <!-- One place for what I can do: the action bar, or the exchange panel; the summary of the exchange floats over it. -->
+          <div class="controls" data-test="controls">
+            <PresidentExchangePanel
+              v-if="isExchange"
+              :pairs="store.game.exchange"
+              :my-seat="store.mySeat"
+              :title="store.me?.title ?? null"
+              :received-count="store.game.received.length"
+              :selected-count="store.selectedCards.length"
+              :can-give="store.canGiveBack"
+              :name-of="displayName"
+              @give="store.giveBack()"
+              @suggest="store.suggestGiveBack()"
+              @clear="store.clearSelection()" />
+            <PresidentActionBar
+              v-else-if="!roundEnding"
+              :phase-text="phaseText"
+              :primary-label="ui.actions.play"
+              :can-primary="store.canPlay"
+              :can-pass="store.can('PASS') && !store.busy"
+              :has-selection="store.selectedCards.length > 0"
+              :hint="hint"
+              :notice="noticeText"
+              :can-complete="store.canComplete"
+              @complete="store.complete()"
+              @primary="playSelected()"
+              @pass="store.pass()"
+              @clear="store.clearSelection()" />
+            <div v-if="showRecap" class="recap-slot">
+              <PresidentExchangeRecap :lines="recap" :name-of="displayName" @close="closeRecap()" />
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="table-footer" data-test="table-footer">
@@ -738,37 +755,50 @@ const rematchButton = computed(() =>
 .table-center {
   position: absolute;
   left: 50%;
-  top: 56%;
-  transform: translate(-50%, -50%);
+  bottom: 9%;
+  transform: translateX(-50%);
+  width: min(27rem, 54%);
   z-index: 1;
 }
 
-.my-zone {
+/* My place: it has one height whatever it holds (my zone in any phase, or the round sheet over it), so that the felt
+   above never resizes. */
+.my-area {
+  position: relative;
   flex: none;
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  --controls-h: 100px;
+}
+.my-zone {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--space-1);
   width: 100%;
-  max-width: 1000px;
-  margin: 0 auto;
   padding: var(--space-2) var(--space-2) 0;
   box-sizing: border-box;
   /* No panel around my zone (as Kobo's): the hand, the plate and the bar stand on the room. */
 }
-.my-zone :deep(.seat-label) { font-size: 0.8rem; padding: 4px 14px; }
-/* The round sheet takes the place of my zone: its room is its content, up to a share of the screen, and it scrolls
-   inside itself beyond that. The table above gives way. */
+/* What I can do (the action bar or the exchange panel): one height for every phase. */
+.controls { position: relative; width: 100%; height: var(--controls-h); }
+/* The summary of the exchange floats over the top of the controls (the wide screen; a phone has it as a banner). */
+.recap-slot { position: absolute; z-index: 3; top: 0; left: 0; right: 0; }
+/* The round sheet rises over my place and the bottom of the felt: its room is its content, up to a share of the screen,
+   and it scrolls inside itself beyond that. The felt does not resize for it. */
 .sheet-slot {
-  flex: none;
+  position: absolute;
+  z-index: 5;
+  left: 0;
+  right: 0;
+  bottom: 0;
   display: flex;
   justify-content: center;
-  width: 100%;
-  max-width: 1000px;
-  margin: 0 auto;
-  max-height: min(420px, 62%);
+  max-height: min(420px, 62dvh);
   overflow-y: auto;
 }
+.sheet-slot :deep(.round-over) { background: rgba(10, 14, 12, 0.94); box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.5); }
 
 .table-footer { flex: none; display: flex; align-items: center; gap: var(--space-2); }
 .table-footer .speed { margin-left: auto; }
@@ -822,7 +852,7 @@ const rematchButton = computed(() =>
     overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior: contain;
-    --president-pile-card-w: 44px;
+    --president-pile-card-w: 40px;
   }
   .opponents-ring {
     position: static;
@@ -834,13 +864,14 @@ const rematchButton = computed(() =>
     flex: none;
   }
   .seat-slot { position: static; transform: none; min-width: 0; --seat-label-max: 5.5rem; }
-  /* My own plate is one line (name, cards, marker) rather than a stack: the room goes to the felt. */
-  .my-zone :deep(.president-seat), .my-zone :deep(.seat-hand) {
-    flex-direction: row; flex-wrap: wrap; justify-content: center; align-items: center; gap: 2px 8px;
+  .my-zone { padding-top: var(--space-1); }
+  .table-center {
+    position: static; transform: none; width: auto; flex: 1 1 auto; display: flex; align-items: center; justify-content: center;
+    padding: var(--space-1) var(--space-2);
   }
-  /* The pile says nothing once the round is over and the sheet leaves the table little room (as Kobo's). */
-  .table-frame--round-end .table-center { display: none; }
-  .table-center { position: static; transform: none; flex: 1 1 auto; display: flex; align-items: center; justify-content: center; padding: var(--space-1) var(--space-2); }
+}
+@media (min-width: 768px) {
+  .my-area { --controls-h: 132px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
