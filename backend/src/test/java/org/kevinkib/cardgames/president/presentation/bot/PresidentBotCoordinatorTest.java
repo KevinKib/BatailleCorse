@@ -52,6 +52,7 @@ import static org.kevinkib.cardgames.president.domain.PresidentFixtures.cards;
 class PresidentBotCoordinatorTest {
 
     private static final Duration DELAY = Duration.ofMillis(900);
+    private static final Duration GRACE = Duration.ofMillis(3000);
     private static final PlayerId HUMAN = new PlayerId(0);
     private static final PlayerId BOT = new PlayerId(1);
     private static final PlayerId OTHER_HUMAN = new PlayerId(2);
@@ -99,7 +100,7 @@ class PresidentBotCoordinatorTest {
                 new FixedThinkingDelay(DELAY), level -> {
                     levelsAsked.add(level);
                     return bot;
-                });
+                }, GRACE);
         broadcaster.addListener(coordinator);
     }
 
@@ -660,5 +661,67 @@ class PresidentBotCoordinatorTest {
 
         assertThat(bot.views, is(empty()));
         assertThat(game.hand(COMPLETER).size(), is(3));
+    }
+
+    // ------------------------------------------------------------------ a human's completion out of turn
+
+    private static final PlayerId HUMAN_HOLDER = new PlayerId(3);
+
+    /**
+     * Seat 0 (human) leads a lone 5S; seats 1 and 2 are computers; seat 3, a human who is not next, holds the
+     * three missing 5s. The completion window opens for seat 3 while the computer on seat 1 is on turn.
+     */
+    private President loneFiveForAHuman() throws Exception {
+        President game = register(aPresident().leader(0).withHand("5S 3C").withHand("6S 7S 4C")
+                .withHand("8S 9S 4D").withHand("5H 5D 5C 10H").build(), 1, 2);
+        start(game);
+        actions.play(game.getId(), HUMAN, cards("5S"));
+        return game;
+    }
+
+    @Test
+    void aBotOnTurnWaitsTheCompletionGraceWhileAHumanHoldsTheCompletionOutOfTurn() throws Exception {
+        President game = loneFiveForAHuman();
+        assertThat(game.currentSeat(), is(BOT));
+        assertThat(game.completion(HUMAN_HOLDER).size(), is(3));
+
+        assertThat(scheduler.pending().size(), is(1));
+        assertThat(scheduler.pending().get(0).delay(), is(GRACE));
+    }
+
+    @Test
+    void theGraceIsGivenOncePerWindowTheNextBotThinksAsUsual() throws Exception {
+        President game = loneFiveForAHuman();
+        bot.answer = view -> new PresidentBotDecision.Pass();
+
+        scheduler.runNext(); // seat 1 passes: the window stays open, seat 2 is on turn
+
+        assertThat(game.currentSeat(), is(new PlayerId(2)));
+        assertThat(game.completion(HUMAN_HOLDER).size(), is(3));
+        assertThat(scheduler.pending().size(), is(1));
+        assertThat(scheduler.pending().get(0).delay(), is(DELAY));
+    }
+
+    @Test
+    void theHumanCompletesWithinTheGraceAndLeads() throws Exception {
+        President game = loneFiveForAHuman();
+        ManualBotScheduler.Entry botTurn = scheduler.pending().get(0);
+
+        actions.play(game.getId(), HUMAN_HOLDER, cards("5H 5D 5C"));
+
+        assertThat(botTurn.isCancelled(), is(true));
+        assertThat(game.trick().plays(), is(empty()));
+        assertThat(game.currentSeat(), is(HUMAN_HOLDER));
+    }
+
+    @Test
+    void aBotOnTurnThinksAsUsualWhenNoHumanHoldsACompletion() throws Exception {
+        President game = register(aPresident().leader(0).withHand("5S 3C").withHand("6S 7S 4C")
+                .withHand("8S 9S 4D").withHand("5H 5D 10H").build(), 1, 2);
+        start(game);
+        actions.play(game.getId(), HUMAN, cards("5S"));
+
+        assertThat(scheduler.pending().size(), is(1));
+        assertThat(scheduler.pending().get(0).delay(), is(DELAY));
     }
 }

@@ -602,7 +602,11 @@ Seat option `level` (`easy|medium|hard`), `PresidentFactory.supportsBots() = tru
   lowest legal play, else the lowest cards to give back, else ready. A completion task that the domain
   refuses as too late (a play came first) is dropped silently. There is no race between players (one holder
   at a time), so no reaction delay: a completion uses the thinking delay like any other decision, and since
-  passes keep the window open, only a human's quick play can beat it.
+  passes keep the window open, only a human's quick play can beat it. The other way round, a human out of turn
+  who holds the completion would lose the window to the next bot's play, often before the played card has even
+  landed on their screen: so, once per window (the round and the chain's cards), the bot on turn waits at least
+  `president.bots.completion-grace-ms` (3000 ms, kept under `test`) before it acts. Passes keep the window and
+  the next bots think as usual; a human on turn is never made to wait.
 
 ## 11. UI decisions taken (Claude Design canvas, owner's choice of 2026-10-15)
 

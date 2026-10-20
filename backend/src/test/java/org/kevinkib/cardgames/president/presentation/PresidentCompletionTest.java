@@ -81,6 +81,18 @@ class PresidentCompletionTest {
     }
 
     @Test
+    void aLoneCardOffersTheCompletionToAHolderWhoIsNotNext() throws Exception {
+        President game = table.install(aPresident().leader(0)
+                .withHand("5S 3C").withHand("6S 4C").withHand("7S 4D").withHand("5H 5D 5C 10H").build());
+        table.actions.play(game.getId(), seat(0), cards("5S"));
+
+        PresidentDto holder = view(game, 3);
+        assertThat(holder.currentSeat(), is(1));
+        assertThat(holder.completion(), containsInAnyOrder(dtos("5H", "5D", "5C").toArray()));
+        assertThat(holder.availableActions(), hasItem("COMPLETE"));
+    }
+
+    @Test
     void anEmptyTrickIsFreeAndHasNoChain() {
         President game = aPresident().leader(0).withHand("4C 9C").withHand("5C").withHand("6C").build();
 

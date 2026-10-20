@@ -55,6 +55,10 @@ import java.util.function.Function;
  * thinking of the others. The next broadcast cancels the tasks whose step is gone; a task that fires on a state
  * it was not scheduled for, because the state moved without a broadcast, does nothing.
  *
+ * <p>A completion window that opens for a human who is not on turn would close at the next bot's play, often
+ * before the human has even seen the card land: so, once per window, the bot on turn waits at least the
+ * completion grace before it acts.
+ *
  * <p>The decision is taken and applied in one go under the game's monitor (the heuristic is cheap), so it can
  * never be stale. A strategy that fails or proposes something the game refuses falls back to a fixed legal
  * action (the lowest legal set when leading, a pass when following, the lowest cards in the exchange, ready),
@@ -76,6 +80,8 @@ public class PresidentBotCoordinator implements GameStateListener<President>, Ga
     private final BotScheduler scheduler;
     private final ThinkingDelay thinkingDelay;
     private final Function<PresidentBotLevel, PresidentBotStrategy> strategies;
+    /** How long at least the bot on turn waits, once per window, while a human holds the completion out of turn. */
+    private final Duration completionGrace;
     private final Map<GameId, Table> tables = new ConcurrentHashMap<>();
 
     public PresidentBotCoordinator(BotSeats botSeats,
@@ -84,12 +90,23 @@ public class PresidentBotCoordinator implements GameStateListener<President>, Ga
                                    BotScheduler scheduler,
                                    ThinkingDelay thinkingDelay,
                                    Function<PresidentBotLevel, PresidentBotStrategy> strategies) {
+        this(botSeats, seatOptions, actions, scheduler, thinkingDelay, strategies, Duration.ZERO);
+    }
+
+    public PresidentBotCoordinator(BotSeats botSeats,
+                                   BotSeatOptions seatOptions,
+                                   PresidentGameActions actions,
+                                   BotScheduler scheduler,
+                                   ThinkingDelay thinkingDelay,
+                                   Function<PresidentBotLevel, PresidentBotStrategy> strategies,
+                                   Duration completionGrace) {
         this.botSeats = botSeats;
         this.seatOptions = seatOptions;
         this.actions = actions;
         this.scheduler = scheduler;
         this.thinkingDelay = thinkingDelay;
         this.strategies = strategies;
+        this.completionGrace = completionGrace == null ? Duration.ZERO : completionGrace;
     }
 
     /** What a task was scheduled for; {@code version} is -1 outside play. */
@@ -123,6 +140,8 @@ public class PresidentBotCoordinator implements GameStateListener<President>, Ga
         final Map<PlayerId, BotSeat> bots = new LinkedHashMap<>();
         final Map<PlayerId, Pending> pending = new ConcurrentHashMap<>();
         int scheduledVersion = -1;
+        /** The completion window a human was last given the grace for (round and chain cards); null if none. */
+        Object gracedWindow;
 
         Table(President game) {
             this.game = game;
@@ -234,6 +253,7 @@ public class PresidentBotCoordinator implements GameStateListener<President>, Ga
 
     private void schedule(Table table) {
         President game = table.game;
+        Duration grace = graceFor(table);
         for (BotSeat bot : table.bots.values()) {
             PresidentBotView view = PresidentBotView.forSeat(game, bot.seat);
             Step step = view.actions().isEmpty() ? null : Step.of(view);
@@ -246,10 +266,42 @@ public class PresidentBotCoordinator implements GameStateListener<President>, Ga
                 PlayerId seat = bot.seat;
                 // seeing the exchange is not a decision: the bots acknowledge at once, so they never make a human wait
                 Duration delay = step.phase() == Phase.EXCHANGE_VIEW ? Duration.ZERO : thinkingDelay.next();
+                if (seat.equals(game.currentSeat()) && grace.compareTo(delay) > 0) {
+                    delay = grace; // a human out of turn gets the time to see the window and complete
+                }
                 BotScheduler.BotTask task = scheduler.schedule(delay, () -> act(game, seat, step));
                 table.pending.put(seat, new Pending(step, task));
             }
         }
+    }
+
+    /**
+     * The grace the bot on turn gets: the completion grace when a human seat that is not on turn holds the
+     * completion of a window it was not yet given the grace for, else nothing. The window is known by the round
+     * and the cards of its chain, which no later window of the round can share; passes keep it, so the grace is
+     * given once and the next bots think as usual.
+     */
+    private Duration graceFor(Table table) {
+        President game = table.game;
+        if (completionGrace.isZero() || game.phase() != Phase.PLAYING || game.trick().chain() == null) {
+            return Duration.ZERO;
+        }
+        PlayerId current = game.currentSeat();
+        if (!table.bots.containsKey(current)) {
+            return Duration.ZERO; // a human on turn: nobody is made to wait
+        }
+        boolean humanHolds = game.getPlayerIds().stream()
+                .filter(seat -> !table.bots.containsKey(seat) && !seat.equals(current))
+                .anyMatch(seat -> !game.completion(seat).isEmpty());
+        if (!humanHolds) {
+            return Duration.ZERO;
+        }
+        Object window = List.of(game.round(), game.trick().chain().cards());
+        if (window.equals(table.gracedWindow)) {
+            return Duration.ZERO;
+        }
+        table.gracedWindow = window;
+        return completionGrace;
     }
 
     /** Whether the table still follows this game, which is not over. */

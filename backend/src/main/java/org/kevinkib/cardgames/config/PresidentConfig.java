@@ -37,6 +37,12 @@ public class PresidentConfig {
     public static final String DEFAULT_DELAY_MIN_MS = "700";
     public static final String DEFAULT_DELAY_MAX_MS = "1300";
 
+    /**
+     * While a human out of turn holds the completion of the four, the bot on turn waits at least this long, once per
+     * window (property {@code president.bots.completion-grace-ms}); the {@code test} profile keeps it.
+     */
+    public static final String DEFAULT_COMPLETION_GRACE_MS = "3000";
+
     /** How long the exchange view may last before the first trick starts anyway (ISO-8601 duration). */
     public static final String DEFAULT_EXCHANGE_VIEW_TIMEOUT = "PT20S";
 
@@ -124,11 +130,13 @@ public class PresidentConfig {
             BotScheduler botScheduler,
             @Qualifier("presidentBotRandom") RandomGenerator presidentBotRandom,
             @Value("${president.bots.delay-min-ms:" + DEFAULT_DELAY_MIN_MS + "}") long minMillis,
-            @Value("${president.bots.delay-max-ms:" + DEFAULT_DELAY_MAX_MS + "}") long maxMillis) {
+            @Value("${president.bots.delay-max-ms:" + DEFAULT_DELAY_MAX_MS + "}") long maxMillis,
+            @Value("${president.bots.completion-grace-ms:" + DEFAULT_COMPLETION_GRACE_MS + "}") long graceMillis) {
         PresidentBotCoordinator coordinator = new PresidentBotCoordinator(
                 sessionService::botSeats, botSeatOptions, actions, botScheduler,
                 new UniformThinkingDelay(minMillis, maxMillis, presidentBotRandom),
-                level -> new HeuristicPresidentBot(level.tuning(), presidentBotRandom));
+                level -> new HeuristicPresidentBot(level.tuning(), presidentBotRandom),
+                Duration.ofMillis(graceMillis));
         presidentStateBroadcaster.addListener(coordinator);
         return coordinator;
     }
