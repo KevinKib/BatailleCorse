@@ -54,8 +54,9 @@ export function toLogEntry(
   after: PresidentState | null = null,
 ): PresidentLogEntry | null {
   if (!data || NOT_MOVES.has(eventType)) return null;
-  if (data.action !== 'PLAY' && data.action !== 'PASS') return null;
-  const action = data.action;
+  // A completion out of turn is the play command; the server names its action COMPLETION, as its event type.
+  const action = data.action === 'COMPLETION' ? 'PLAY' : data.action;
+  if (action !== 'PLAY' && action !== 'PASS') return null;
   const cards = action === 'PLAY' ? data.cards ?? [] : [];
   const plays = before?.trick.plays ?? [];
   const top = plays.length ? plays[plays.length - 1] : null;
