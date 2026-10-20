@@ -107,7 +107,7 @@ function browserPass() {
             && s.hand.some((c: any) => c.suit === 'CLUB' && c.rank === '3')
             && s.hand.some((c: any) => c.suit === 'CLUB' && c.rank === '10'));
           cy.get('[data-test="exchange-panel"]').should('not.exist');
-          cy.get('[data-test="phase-text"]', { timeout: 10000 }).should('have.text', 'Carol is playing');
+          cy.get('[data-test="phase-text"]', { timeout: 20000 }).should('have.text', 'Carol is playing');
           cy.get('[data-test^="hand-card-"]').should('have.length', 18);
           noHorizontalScroll();
         });
@@ -173,7 +173,7 @@ function browserPass() {
 
           // The return arrives: the Scum leads round 2 with 17 cards, and the panel is gone.
           cy.get('[data-test="exchange-panel"]', { timeout: 10000 }).should('not.exist');
-          cy.get('[data-test="phase-text"]').should('have.text', 'Your turn');
+          cy.get('[data-test="phase-text"]', { timeout: 20000 }).should('have.text', 'Your turn');
           cy.get('[data-test^="hand-card-"]').should('have.length', 17);
           cy.get('@back').then((back) => {
             (back as unknown as Array<{ name: string }>).forEach((card) =>

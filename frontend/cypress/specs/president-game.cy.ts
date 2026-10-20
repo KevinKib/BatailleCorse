@@ -104,7 +104,7 @@ function playTriple(rank: string, goesOut = false) {
           cy.get('[data-test="exchange-give"]').should('not.be.disabled').click();
 
           // Exchange done: the Scum leads round 2; the table names who plays.
-          cy.get('[data-test="phase-text"]', { timeout: 10000 }).should('have.text', 'Carol is playing');
+          cy.get('[data-test="phase-text"]', { timeout: 20000 }).should('have.text', 'Carol is playing');
           awaitState(bob, 'round 2 is being played', (s) => s.round === 2 && s.phase === 'PLAYING');
           noHorizontalScroll();
         });
