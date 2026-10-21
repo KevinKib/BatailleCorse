@@ -936,6 +936,25 @@ describe('PresidentGameScreen', () => {
         expect(wrapper.get('[data-seat="3"] [data-test="seat-cards"]').text()).toBe('7 cards');
       });
 
+      it('givenIPlay_thenMyTurnEndsAtOnce_whileMyCardsFly', async () => {
+        const { wrapper, store } = await mountRoom(room(playing({ currentSeat: 0, players: four() })));
+        expect(wrapper.get('[data-test="phase-text"]').text()).toBe('Your turn');
+        const three = card('3', 'CLUB');
+        store.applyEvent({ type: 'state-update', state: playing({
+          version: 2, currentSeat: 1, players: four({ 0: { handSize: 7 } }), availableActions: [],
+          trick: buildPresidentTrick({ leader: 0, plays: [{ seat: 0, cards: [three] }], top: { kind: 'SET', rank: '3', count: 1 }, constraint: 'BEAT' }),
+        }) });
+        store.applyEvent(event(0, 'PLAY', { cards: [three] }));
+        await flushPromises();
+        // "Your turn" always means my cards can be played: it goes with my click, the next seat is told instead.
+        expect(wrapper.get('[data-test="phase-text"]').text()).toBe('P1 is playing');
+        // The pile still says what the table has shown (my card is in the air).
+        expect(wrapper.find('[data-test="trick-by"]').exists()).toBe(false);
+        await advance(1000);
+        expect(wrapper.get('[data-test="trick-by"]').text()).toBe('You played');
+        expect(wrapper.get('[data-test="phase-text"]').text()).toBe('P1 is playing');
+      });
+
       it('givenTheInstantSpeed_thenTheTextsAreTheLatestStateAtOnce', async () => {
         localStorage.setItem('animationSpeed', 'instant');
         const { wrapper, store } = await mountRoom(room(playing({ currentSeat: 1, players: four() })));

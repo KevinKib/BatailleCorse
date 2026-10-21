@@ -122,7 +122,15 @@ onBeforeUnmount(() => display.cancel());
 /** The game as the table shows it. */
 const shown = computed<PresidentState | null>(() => (store.game ? display.displayed.value?.state ?? store.game : null));
 const shownMe = computed(() => shown.value?.players.find(p => p.seat === store.mySeat) ?? null);
-const shownMyTurn = computed(() => shown.value?.currentSeat === store.mySeat && shownMe.value !== null);
+// My turn is told once the table has shown it, and only while it is still mine: once I have played, it is over at once
+// (my cards may still be flying), so "Your turn" always means my cards can be played.
+const shownMyTurn = computed(() => shown.value?.currentSeat === store.mySeat && shownMe.value !== null && store.isMyTurn);
+/** Whose turn the table tells: the shown state's, or, right after my own move, the seat that plays after me. */
+const shownCurrentSeat = computed(() => {
+  const g = shown.value;
+  if (!g) return null;
+  return g.currentSeat === store.mySeat && !store.isMyTurn ? store.game?.currentSeat ?? g.currentSeat : g.currentSeat;
+});
 /** The move whose state the table shows, when that state is the one the move led to. */
 const shownEntry = computed(() => {
   const d = display.displayed.value;
@@ -189,7 +197,7 @@ const phaseText = computed(() => {
   const g = shown.value;
   if (!g) return '';
   if (g.phase === 'EXCHANGE_VIEW') return viewText.value;
-  return shownMyTurn.value ? ui.phase.yourTurn : format(ui.phase.waiting, { player: displayName(g.currentSeat) });
+  return shownMyTurn.value ? ui.phase.yourTurn : format(ui.phase.waiting, { player: displayName(shownCurrentSeat.value ?? g.currentSeat) });
 });
 const hint = computed(() => hintText(store.playHint, ui));
 const noticeText = computed(() => store.notice ? ui.notice[store.notice] : '');
@@ -631,7 +639,7 @@ const rematchButton = computed(() =>
             <PresidentSeat
               :player="opponent"
               :label="displayName(opponent.seat)"
-              :current="shown?.phase === 'PLAYING' && shown.currentSeat === opponent.seat"
+              :current="shown?.phase === 'PLAYING' && shownCurrentSeat === opponent.seat"
               :show-ready="sheetOpen"
               :disconnected="seatDisconnected(opponent.seat)"
               :seconds-remaining="seatSecondsRemaining(opponent.seat)"
