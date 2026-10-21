@@ -724,9 +724,10 @@ describe('ThreeMenMorrisGameScreen', () => {
         expect(banner.get('[data-test="removal-title"]').text()).toBe('Mill! Take one of Bob’s pieces.');
         expect(banner.get('[data-test="removal-can-take"]').text()).toBe('2 can be taken.');
         expect(banner.get('[data-test="removal-protected"]').text()).toBe('Pieces in a mill are safe while Bob has others.');
-        // Under my tag, which is the second one.
+        // Under my tag, which is the second one, in the notes block (a fixed slot: nothing resizes the board).
         const kids = Array.from(wrapper.get('.table').element.children);
-        expect(kids.indexOf(banner.element)).toBeGreaterThan(kids.indexOf(tagOf(wrapper, 1).element));
+        expect(kids.indexOf(wrapper.get('.lower').element)).toBeGreaterThan(kids.indexOf(tagOf(wrapper, 1).element));
+        expect(wrapper.get('[data-test="notes"]').element.contains(banner.element)).toBe(true);
       });
 
       it('rings the pieces that can be taken and shields those a mill protects', async () => {
@@ -798,7 +799,8 @@ describe('ThreeMenMorrisGameScreen', () => {
         const { wrapper } = await mountScreen(removalTheirs());
         const banner = wrapper.get('[data-test="removal-banner"]');
         const kids = Array.from(wrapper.get('.table').element.children);
-        expect(kids.indexOf(banner.element)).toBeGreaterThan(kids.indexOf(tagOf(wrapper, 1).element));
+        expect(kids.indexOf(wrapper.get('.lower').element)).toBeGreaterThan(kids.indexOf(tagOf(wrapper, 1).element));
+        expect(wrapper.get('[data-test="notes"]').element.contains(banner.element)).toBe(true);
         expect(wrapper.find('[data-test="phase-hint"]').exists()).toBe(false);
         expect(wrapper.get('[data-test="removal-banner"]').attributes('role')).toBe('status');
       });
@@ -848,6 +850,18 @@ describe('ThreeMenMorrisGameScreen', () => {
       it('says "1 move" in the singular', async () => {
         const { wrapper } = await mountScreen(six(BOARD, { quietPlies: 49, quietPlyLimit: 50 }));
         expect(wrapper.get('[data-test="quiet-warning"]').text()).toBe('1 move without a capture before a draw.');
+      });
+
+      it('keeps the warnings in the notes block and the draw button row in the page, so the board never resizes', async () => {
+        const { wrapper } = await mountScreen(six(BOARD, { quietPlies: 42, quietPlyLimit: 50 }));
+        const notes = wrapper.get('[data-test="notes"]').element;
+        expect(notes.contains(wrapper.get('[data-test="quiet-warning"]').element)).toBe(true);
+        expect(wrapper.get('.board-slot [data-test="morris-board"]').exists()).toBe(true);
+        expect(wrapper.find('.table--crowded').exists()).toBe(false);
+        // The draw button's row is there before the movement phase too (empty), like the notes block.
+        const placing = await mountScreen(six(BOARD, { phase: 'PLACEMENT' }));
+        expect(placing.wrapper.get('[data-test="draw-bar"]').exists()).toBe(true);
+        expect(placing.wrapper.find('[data-test="draw-offer"]').exists()).toBe(false);
       });
 
       it('shows no quiet warning while the server sends no count', async () => {

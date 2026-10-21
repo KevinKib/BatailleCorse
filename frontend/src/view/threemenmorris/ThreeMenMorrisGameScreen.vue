@@ -82,10 +82,6 @@ const quietMovesLeft = computed<number | null>(() => {
   if (!isSix.value || store.phase !== 'playing' || g?.quietPlies === undefined || g.quietPlyLimit === undefined) return null;
   return Math.max(g.quietPlyLimit - g.quietPlies, 0);
 });
-// A lot to say under the board (the banner, or two warnings and more): the board keeps its smaller size on tall screens too.
-const crowded = computed(() =>
-  store.removalPending
-  || lastPiecesNames.value.length + (quietMovesLeft.value !== null ? 1 : 0) + (store.repeatedTwice ? 1 : 0) >= 2);
 
 const { online } = useConnectionStatus();
 watch(online, (isOnline, wasOnline) => {
@@ -286,14 +282,7 @@ function leaveLobby() {
         {{ ui.table.offline }}
       </div>
 
-      <div
-        class="table"
-        :class="{
-          'table--draw-bar': showDrawBar,
-          'table--draw-incoming': store.incomingDrawOffer,
-          'table--six': isSix,
-          'table--crowded': crowded,
-        }">
+      <div class="table">
         <MorrisPlayerTag
           v-if="opponent"
           class="tag-slot"
@@ -304,23 +293,26 @@ function leaveLobby() {
           v-bind="countsOf(opponent)"
           :active="opponent.current && store.phase === 'playing'" />
 
-        <MorrisBoard
-          :cells="cells"
-          :geometry="store.geometry"
-          :last-move="store.opponentLastMove"
-          :selectable="playable"
-          :highlighted="highlighted"
-          :selected="store.selected"
-          :winning-line="store.game?.winningLine ?? []"
-          :mill="millPoints"
-          :removable="removable"
-          :protected-points="protectedPoints"
-          :captured="store.capturedPoint"
-          :disabled="boardDisabled"
-          :interactive="store.isMyTurn"
-          :announcement="announcement"
-          @select="point => store.pointClicked(point)"
-          @clear="store.clearSelection()" />
+        <!-- The board takes what the fixed rows leave (see .board-slot): nothing that comes and goes resizes it. -->
+        <div class="board-slot">
+          <MorrisBoard
+            :cells="cells"
+            :geometry="store.geometry"
+            :last-move="store.opponentLastMove"
+            :selectable="playable"
+            :highlighted="highlighted"
+            :selected="store.selected"
+            :winning-line="store.game?.winningLine ?? []"
+            :mill="millPoints"
+            :removable="removable"
+            :protected-points="protectedPoints"
+            :captured="store.capturedPoint"
+            :disabled="boardDisabled"
+            :interactive="store.isMyTurn"
+            :announcement="announcement"
+            @select="point => store.pointClicked(point)"
+            @clear="store.clearSelection()" />
+        </div>
 
         <MorrisPlayerTag
           v-if="me"
@@ -332,61 +324,70 @@ function leaveLobby() {
           v-bind="countsOf(me)"
           :active="store.isMyTurn" />
 
-        <YourTurnIndicator class="turn-slot" :active="store.isMyTurn" />
-        <div
-          v-if="store.removalPending && store.phase === 'playing'"
-          class="removal-banner"
-          :class="{ 'removal-banner--info': !store.iMustRemove }"
-          data-test="removal-banner"
-          role="status">
-          <svg class="removal-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true" focusable="false">
-            <circle cx="12" cy="12" r="8" stroke-dasharray="3 3" />
-            <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
-          </svg>
-          <div class="removal-text">
-            <template v-if="store.iMustRemove">
-              <div class="removal-title" data-test="removal-title">{{ format(ui.table.removeTitleMine, { player: removalOpponentName }) }}</div>
-              <div class="removal-sub">
-                <span data-test="removal-can-take">{{ plural(ui.table.removeCanTake, removableCount) }}</span>
-                <span v-if="protectedPoints.length > 0" data-test="removal-protected">{{ format(ui.table.removeProtected, { player: removalOpponentName }) }}</span>
+        <!-- The turn cue and the notes are one block of fixed height, whatever it says (the banner, the hint, the
+             warnings). A draw offer for me takes its place while it lasts; the texts it covers stay in the page, hidden. -->
+        <div class="lower" :class="{ 'lower--offer': showDrawBar && store.incomingDrawOffer }">
+          <div class="lower-text">
+            <YourTurnIndicator class="turn-slot" :active="store.isMyTurn" />
+            <div class="notes" data-test="notes">
+              <div
+                v-if="store.removalPending && store.phase === 'playing'"
+                class="removal-banner"
+                :class="{ 'removal-banner--info': !store.iMustRemove }"
+                data-test="removal-banner"
+                role="status">
+                <svg class="removal-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true" focusable="false">
+                  <circle cx="12" cy="12" r="8" stroke-dasharray="3 3" />
+                  <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
+                </svg>
+                <div class="removal-text">
+                  <template v-if="store.iMustRemove">
+                    <div class="removal-title" data-test="removal-title">{{ format(ui.table.removeTitleMine, { player: removalOpponentName }) }}</div>
+                    <div class="removal-sub">
+                      <span data-test="removal-can-take">{{ plural(ui.table.removeCanTake, removableCount) }}</span>
+                      <span v-if="protectedPoints.length > 0" data-test="removal-protected">{{ format(ui.table.removeProtected, { player: removalOpponentName }) }}</span>
+                    </div>
+                  </template>
+                  <template v-else>
+                    <div class="removal-title" data-test="removal-title">{{ format(ui.table.removeTitleTheirs, { player: removerName }) }}</div>
+                    <div class="removal-sub" data-test="removal-sub">{{ ui.table.removeSubTheirs }}</div>
+                  </template>
+                </div>
               </div>
-            </template>
-            <template v-else>
-              <div class="removal-title" data-test="removal-title">{{ format(ui.table.removeTitleTheirs, { player: removerName }) }}</div>
-              <div class="removal-sub" data-test="removal-sub">{{ ui.table.removeSubTheirs }}</div>
-            </template>
+              <p v-if="store.phase === 'playing' && !store.removalPending" class="phase-hint" data-test="phase-hint">{{ phaseHint }}</p>
+              <p v-if="noPieceDownYet && store.phase === 'playing'" class="colour-hint" data-test="colour-hint">
+                {{ format(ui.table.youPlay, { colour: store.myColour === 'WHITE' ? ui.white : ui.black }) }}
+              </p>
+              <p v-if="store.repeatedTwice" class="repetition-hint" data-test="repetition-hint" role="status">
+                {{ ui.draw.repetition }}
+              </p>
+              <p v-for="name in lastPiecesNames" :key="name" class="warning-hint" data-test="last-pieces" role="status">
+                {{ format(ui.table.lastPieces, { player: name }) }}
+              </p>
+              <p v-if="quietMovesLeft !== null" class="warning-hint" data-test="quiet-warning" role="status">
+                {{ plural(ui.table.quietMoves, quietMovesLeft) }}
+              </p>
+            </div>
+          </div>
+          <div v-if="showDrawBar && store.incomingDrawOffer" class="draw-incoming" data-test="draw-incoming"
+               role="alertdialog" aria-labelledby="draw-incoming-title" aria-describedby="draw-incoming-hint">
+            <p id="draw-incoming-title" class="draw-title">{{ format(ui.draw.incoming, { player: drawOffererName }) }}</p>
+            <p id="draw-incoming-hint" class="draw-sub">{{ ui.draw.incomingHint }}</p>
+            <div class="draw-answers">
+              <button type="button" class="draw-btn draw-btn--accept" data-test="draw-accept" @click="store.acceptDraw()">
+                {{ ui.draw.accept }}
+              </button>
+              <button type="button" class="draw-btn draw-btn--decline" data-test="draw-decline" @click="store.declineDraw()">
+                {{ ui.draw.decline }}
+              </button>
+            </div>
           </div>
         </div>
-        <p v-if="store.phase === 'playing' && !store.removalPending" class="phase-hint" data-test="phase-hint">{{ phaseHint }}</p>
-        <p v-if="noPieceDownYet && store.phase === 'playing'" class="colour-hint" data-test="colour-hint">
-          {{ format(ui.table.youPlay, { colour: store.myColour === 'WHITE' ? ui.white : ui.black }) }}
-        </p>
-        <p v-if="store.repeatedTwice" class="repetition-hint" data-test="repetition-hint" role="status">
-          {{ ui.draw.repetition }}
-        </p>
-        <p v-for="name in lastPiecesNames" :key="name" class="warning-hint" data-test="last-pieces" role="status">
-          {{ format(ui.table.lastPieces, { player: name }) }}
-        </p>
-        <p v-if="quietMovesLeft !== null" class="warning-hint" data-test="quiet-warning" role="status">
-          {{ plural(ui.table.quietMoves, quietMovesLeft) }}
-        </p>
       </div>
 
-      <div v-if="showDrawBar" class="draw-bar" data-test="draw-bar">
-        <div v-if="store.incomingDrawOffer" class="draw-incoming" data-test="draw-incoming"
-             role="alertdialog" aria-labelledby="draw-incoming-title" aria-describedby="draw-incoming-hint">
-          <p id="draw-incoming-title" class="draw-title">{{ format(ui.draw.incoming, { player: drawOffererName }) }}</p>
-          <p id="draw-incoming-hint" class="draw-sub">{{ ui.draw.incomingHint }}</p>
-          <div class="draw-answers">
-            <button type="button" class="draw-btn draw-btn--accept" data-test="draw-accept" @click="store.acceptDraw()">
-              {{ ui.draw.accept }}
-            </button>
-            <button type="button" class="draw-btn draw-btn--decline" data-test="draw-decline" @click="store.declineDraw()">
-              {{ ui.draw.decline }}
-            </button>
-          </div>
-        </div>
-        <button type="button" class="draw-btn draw-btn--offer" data-test="draw-offer"
+      <!-- The draw button's row exists for the whole game (empty during the placement phase and once it is over). -->
+      <div class="draw-bar" data-test="draw-bar">
+        <button v-if="showDrawBar" type="button" class="draw-btn draw-btn--offer" data-test="draw-offer"
                 :disabled="!store.canOfferDraw" @click="store.offerDraw()">
           {{ store.myDrawOfferPending ? ui.draw.offered : ui.draw.offer }}
         </button>
@@ -523,23 +524,54 @@ function leaveLobby() {
 .removal-sub { margin-top: 2px; font-size: 0.78rem; color: rgba(255, 255, 255, 0.75); overflow-wrap: anywhere; }
 .removal-sub span + span { margin-left: 0.35em; }
 
-/* The draw bar sits under the table, above Back (the validated "Table A" layout). The board gives it room. */
-.table--draw-bar { --morris-board-vh: 46vh; }
-.table--draw-incoming { --morris-board-vh: 36vh; }
-/* Six has more to say under the board (the banner, the warnings): the board gives the room. On a tall screen a calm
-   table gets the 416 px board of the design (52vh at 800 px); a crowded one, and every phone, keep 40vh. */
-.table--six.table--draw-bar { --morris-board-vh: 40vh; }
-.table--six.table--draw-incoming { --morris-board-vh: 36vh; }
-@media (min-height: 780px) {
-  .table--six.table--draw-bar:not(.table--crowded):not(.table--draw-incoming) { --morris-board-vh: 52vh; }
+/* The table holds still: this screen has fixed rows (the tags, the turn cue and notes block, the draw button row, Back) and
+   the board takes what they leave, so a text, a banner or a draw offer that comes and goes never moves or resizes it. */
+.board-slot {
+  flex: 1 1 0;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Without container units the board keeps a share of the viewport height. */
+  --morris-board-vh: 40vh;
 }
-.table--draw-incoming .turn-slot { display: none; }
+@supports (height: 1cqh) {
+  .board-slot {
+    container-type: size;
+    --morris-board-vh: 100cqh;
+  }
+}
+
+/* The turn cue and the notes under the tags: room for the worst case, a mill banner with the last-pieces, repetition and
+   draw warnings (Six) or the hint and the repetition warning (the other variants). */
+.lower {
+  --notes-h: 9.5rem;
+  position: relative;
+  flex: none;
+  width: 100%;
+  height: calc(1.2em + var(--space-2) + var(--notes-h));
+}
+.lower-text { display: flex; flex-direction: column; gap: var(--space-2); height: 100%; }
+.notes {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  height: var(--notes-h);
+}
+/* A draw offer for me takes the place of the block (its texts stay in the page, hidden, until it is answered). */
+.lower--offer .lower-text { visibility: hidden; }
+.lower--offer .draw-incoming { position: absolute; left: 0; right: 0; bottom: 0; }
+
+/* The draw button's row, under the table, above Back (the validated "Table A" layout). */
 .draw-bar {
   flex: none;
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
   width: 100%;
+  min-height: 44px;
   max-width: 560px;
   margin: 0 auto;
   box-sizing: border-box;
@@ -605,9 +637,14 @@ function leaveLobby() {
 .forfeit-fade-enter-from,
 .forfeit-fade-leave-to { opacity: 0; }
 
+/* Over the table, like the forfeit notice: it comes and goes without resizing anything. */
 .offline-notice {
-  flex: none;
-  align-self: center;
+  position: absolute;
+  top: 104px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1600;
+  white-space: nowrap;
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
