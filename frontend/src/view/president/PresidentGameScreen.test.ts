@@ -672,13 +672,20 @@ describe('PresidentGameScreen', () => {
       expect(wrapper.get('.seat-slot[data-seat="1"] .president-seat').classes()).toContain('president-seat--passed');
     });
 
-    it('givenACutWithATwo_thenThePileSaysClosedByATwoAndWhoLeads', async () => {
+    it('givenACutWithATwo_thenThePileSaysClosedByATwoAndWhoLeads_onceTheTwoHasLanded', async () => {
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
       const { wrapper, store } = await mountRoom(room(playing({
         currentSeat: 1, trick: buildPresidentTrick({ leader: 0, plays: [{ seat: 0, cards: [{ rank: 'KING', suit: 'HEART', name: 'HEART_KING' }] }] }),
       })));
       store.applyEvent({ type: 'state-update', state: playing({ version: 2, currentSeat: 1 }) });
       store.applyEvent(event(1, 'PLAY', { trickWinner: 1, trickEndReason: 'CUT' }));
       await flushPromises();
+      // The 2 is still flying: the pile still says who played the king.
+      expect(wrapper.find('[data-test="trick-closed"]').exists()).toBe(false);
+      expect(wrapper.get('[data-test="trick-by"]').text()).toBe('You played');
+      await vi.advanceTimersByTimeAsync(900);
+      await flushPromises();
+      vi.useRealTimers();
       expect(wrapper.get('[data-test="trick-closed-reason"]').text()).toBe('Closed by a 2');
       expect(wrapper.get('[data-test="trick-closed-leader"]').text()).toBe('P1 leads');
       expect(wrapper.findAll('[data-test="closed-trick-card"]')).toHaveLength(1);
@@ -714,6 +721,8 @@ describe('PresidentGameScreen', () => {
 
       it('givenTheWinnerLeadsAtOnce_thenTheClosedPileStaysUntilTheSweepIsOver_andThenTheNewPlayShows', async () => {
         const { wrapper, store } = await cutAfterAKing();
+        // The 2 has landed: the badge says why the trick closed.
+        await advance(900);
         const lead = { rank: '3', suit: 'CLUB', name: 'CLUB_3' };
         store.applyEvent({ type: 'state-update', state: playing({
           version: 3, currentSeat: 2, trick: buildPresidentTrick({ leader: 1, plays: [{ seat: 1, cards: [lead] }] }),
@@ -863,6 +872,124 @@ describe('PresidentGameScreen', () => {
         await flushPromises();
         expect(wrapper.find('[data-test="round-over"]').exists()).toBe(false);
         expect(wrapper.find('[data-test="action-bar"]').exists()).toBe(true);
+      });
+    });
+
+    describe('the texts follow the pictures (the displayed state, never the latest state)', () => {
+      const advance = async (ms: number) => { await vi.advanceTimersByTimeAsync(ms); await flushPromises(); };
+      const card = (rank: string, suit: string) => ({ rank, suit, name: `${suit}_${rank}` });
+      const seven = card('7', 'CLUB');
+      const nine = card('9', 'HEART');
+      const nineAgain = card('9', 'SPADE');
+      const four = (over: Record<number, Partial<ReturnType<typeof buildPresidentPlayer>>> = {}) => seatsOf(4, over);
+      const bindingText = (wrapper: Awaited<ReturnType<typeof mountRoom>>['wrapper']) =>
+        wrapper.find('[data-test="binding"]').exists() ? wrapper.get('[data-test="binding"]').text() : null;
+      // Three bots play 7, 9, 9 in a burst (the state of each play comes at once): only the second 9 binds the trick.
+      const sevenNineNine = (store: ReturnType<typeof usePresidentStore>) => {
+        store.applyEvent({ type: 'state-update', state: playing({
+          version: 2, currentSeat: 2, players: four({ 1: { handSize: 7 } }),
+          trick: buildPresidentTrick({ leader: 1, plays: [{ seat: 1, cards: [seven] }], top: { kind: 'SET', rank: '7', count: 1 }, constraint: 'BEAT' }),
+        }) });
+        store.applyEvent(event(1, 'PLAY', { cards: [seven] }));
+        store.applyEvent({ type: 'state-update', state: playing({
+          version: 3, currentSeat: 3, players: four({ 1: { handSize: 7 }, 2: { handSize: 7 } }),
+          trick: buildPresidentTrick({ leader: 1, plays: [{ seat: 1, cards: [seven] }, { seat: 2, cards: [nine] }], top: { kind: 'SET', rank: '9', count: 1 }, constraint: 'BEAT' }),
+        }) });
+        store.applyEvent(event(2, 'PLAY', { cards: [nine] }));
+        store.applyEvent({ type: 'state-update', state: playing({
+          version: 4, currentSeat: 0, players: four({ 1: { handSize: 7 }, 2: { handSize: 7 }, 3: { handSize: 7 } }),
+          trick: buildPresidentTrick({
+            leader: 1, plays: [{ seat: 1, cards: [seven] }, { seat: 2, cards: [nine] }, { seat: 3, cards: [nineAgain] }],
+            top: { kind: 'SET', rank: '9', count: 1 }, constraint: 'MATCH_OR_PASS', requiredRank: '9', requiredCount: 1,
+            chain: { rank: '9', cards: [nine, nineAgain], plays: 2 },
+          }),
+        }) });
+        store.applyEvent(event(3, 'PLAY', { cards: [nineAgain] }));
+      };
+      const opponentLands = 180 + 700;
+
+      beforeEach(() => { vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] }); });
+      afterEach(() => { vi.useRealTimers(); });
+
+      it('givenSevenNineNine_thenTheBannerComesOnlyOnceTheSecondNineHasLanded', async () => {
+        const { wrapper, store } = await mountRoom(room(playing({ currentSeat: 1, players: four() })));
+        sevenNineNine(store);
+        await flushPromises();
+        expect(bindingText(wrapper)).toBeNull();
+        expect(wrapper.get('[data-test="phase-text"]').text()).toBe('P1 is playing');
+        await advance(opponentLands + 20);
+        // The 7 has landed: the table says so, nothing more.
+        expect(bindingText(wrapper)).toBeNull();
+        expect(wrapper.get('[data-test="trick-by"]').text()).toBe('P1 played');
+        expect(wrapper.get('[data-test="phase-text"]').text()).toBe('P2 is playing');
+        expect(wrapper.get('[data-seat="1"] [data-test="seat-cards"]').text()).toBe('7 cards');
+        expect(wrapper.get('[data-seat="2"] [data-test="seat-cards"]').text()).toBe('8 cards');
+        await advance(opponentLands);
+        expect(bindingText(wrapper)).toBeNull();
+        expect(wrapper.get('[data-test="trick-by"]').text()).toBe('P2 played');
+        expect(wrapper.get('[data-test="phase-text"]').text()).toBe('P3 is playing');
+        await advance(opponentLands);
+        expect(bindingText(wrapper)).toContain('9');
+        expect(bindingText(wrapper)).toContain('or nothing');
+        expect(wrapper.get('[data-test="trick-by"]').text()).toBe('P3 played');
+        expect(wrapper.get('[data-test="phase-text"]').text()).toBe('Your turn');
+        expect(wrapper.get('[data-seat="3"] [data-test="seat-cards"]').text()).toBe('7 cards');
+      });
+
+      it('givenIPlay_thenMyTurnEndsAtOnce_whileMyCardsFly', async () => {
+        const { wrapper, store } = await mountRoom(room(playing({ currentSeat: 0, players: four() })));
+        expect(wrapper.get('[data-test="phase-text"]').text()).toBe('Your turn');
+        const three = card('3', 'CLUB');
+        store.applyEvent({ type: 'state-update', state: playing({
+          version: 2, currentSeat: 1, players: four({ 0: { handSize: 7 } }), availableActions: [],
+          trick: buildPresidentTrick({ leader: 0, plays: [{ seat: 0, cards: [three] }], top: { kind: 'SET', rank: '3', count: 1 }, constraint: 'BEAT' }),
+        }) });
+        store.applyEvent(event(0, 'PLAY', { cards: [three] }));
+        await flushPromises();
+        // "Your turn" always means my cards can be played: it goes with my click, the next seat is told instead.
+        expect(wrapper.get('[data-test="phase-text"]').text()).toBe('P1 is playing');
+        // The pile still says what the table has shown (my card is in the air).
+        expect(wrapper.find('[data-test="trick-by"]').exists()).toBe(false);
+        await advance(1000);
+        expect(wrapper.get('[data-test="trick-by"]').text()).toBe('You played');
+        expect(wrapper.get('[data-test="phase-text"]').text()).toBe('P1 is playing');
+      });
+
+      it('givenTheInstantSpeed_thenTheTextsAreTheLatestStateAtOnce', async () => {
+        localStorage.setItem('animationSpeed', 'instant');
+        const { wrapper, store } = await mountRoom(room(playing({ currentSeat: 1, players: four() })));
+        sevenNineNine(store);
+        await flushPromises();
+        expect(bindingText(wrapper)).toContain('or nothing');
+        expect(wrapper.get('[data-test="trick-by"]').text()).toBe('P3 played');
+        expect(wrapper.get('[data-test="phase-text"]').text()).toBe('Your turn');
+      });
+
+      it('givenABotWinsTheTrickThenLeads_thenItsCountNeverGoesDownThenUp', async () => {
+        const king = card('KING', 'HEART');
+        const lead = card('3', 'CLUB');
+        const { wrapper, store } = await mountRoom(room(playing({
+          currentSeat: 2, players: seatsOf(3, { 0: { passed: true }, 1: { handSize: 5 } }),
+          trick: buildPresidentTrick({ leader: 1, plays: [{ seat: 1, cards: [king] }], top: { kind: 'SET', rank: 'KING', count: 1 }, constraint: 'BEAT', passed: [0] }),
+        })));
+        // Seat 2 passes: everyone passed, seat 1 sets the trick aside, then leads at once.
+        store.applyEvent({ type: 'state-update', state: playing({ version: 2, currentSeat: 1, players: seatsOf(3, { 1: { handSize: 5 } }) }) });
+        store.applyEvent(event(2, 'PASS', { trickWinner: 1, trickEndReason: 'ALL_PASSED' }));
+        store.applyEvent({ type: 'state-update', state: playing({
+          version: 3, currentSeat: 2, players: seatsOf(3, { 1: { handSize: 4 } }),
+          trick: buildPresidentTrick({ leader: 1, plays: [{ seat: 1, cards: [lead] }], top: { kind: 'SET', rank: '3', count: 1 } }),
+        }) });
+        store.applyEvent(event(1, 'PLAY', { cards: [lead] }));
+        await flushPromises();
+        const counts: number[] = [];
+        for (let t = 0; t < 8000; t += 50) {
+          counts.push(Number(wrapper.get('[data-seat="1"] [data-test="seat-cards"]').text().split(' ')[0]));
+          await advance(50);
+        }
+        expect(counts[0]).toBe(5);
+        expect(counts[counts.length - 1]).toBe(4);
+        // Never down then up: the count only ever drops.
+        counts.forEach((n, i) => { if (i > 0) expect(n).toBeLessThanOrEqual(counts[i - 1]); });
       });
     });
 

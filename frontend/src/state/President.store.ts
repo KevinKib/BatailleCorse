@@ -150,7 +150,7 @@ export const usePresidentStore = defineStore('president-store', () => {
             ? null
             : { eventType: event.eventType, data: (event.eventData as PresidentEventData | null) ?? null };
           events.value = appendEntry(events.value,
-            toLogEntry(++entryId, event.eventType, (event.eventData as PresidentEventData | null) ?? null, previousGame));
+            toLogEntry(++entryId, event.eventType, (event.eventData as PresidentEventData | null) ?? null, previousGame, game.value));
         }
         break;
     }

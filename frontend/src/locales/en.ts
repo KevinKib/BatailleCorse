@@ -168,7 +168,7 @@ export const messagesEn: Messages = {
         body: [
           'A play is one or more cards of the same rank: a single, a pair, three or four of a kind.',
           'The leader of a trick plays anything. The next players must play the same number of cards of a higher rank, or pass.',
-          'A player who passed may play again when the turn comes back to them in the same trick. When everyone else has passed, the last player to play wins the trick and leads the next one.',
+          'A player who passed may play again when the turn comes back to them in the same trick. When everyone else has passed, the last player to play sets the cards of the trick aside and leads the next one.',
         ],
       },
       {
@@ -269,7 +269,7 @@ export const messagesEn: Messages = {
       'reducedCut.on': 'Reduced cut',
     },
     trickEnd: {
-      ALL_PASSED: '{player} won the trick: everyone else passed.',
+      ALL_PASSED: '{player} sets the trick aside: everyone else passed.',
       FIRST_OUT: '{player} went out and the trick is closed.',
       CUT: '{player} closed the trick with a 2.',
       QUAD: '{player} closed the trick with four of a kind.',

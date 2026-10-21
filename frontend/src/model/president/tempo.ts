@@ -20,8 +20,13 @@ export const PRESIDENT_TEMPO = {
   bubbleMs: 1400,
   /** Bubbles that come in a burst pop this far apart (they are not queued with the flights). */
   bubbleGapMs: 200,
-  /** A seat's card count waits for its flights to land, but never longer than this behind the state. */
+  /** The cards of the exchange wait for their flights to land, but never longer than this behind the state. */
   countLagMaxMs: 2000,
+  /**
+   * The texts of the table show a move once its cards have landed (after the moves before it, sweeps included), but
+   * never longer than this after its state arrived: past it, they catch up with the game.
+   */
+  displayLagMaxMs: 8000,
   /** The sweep of a closed trick toward its winner (chunk 3). */
   sweep: {
     /** The closing badge sits on the pile this long, after the closing play has landed, before the cards leave. */

@@ -12,17 +12,22 @@ import { format, plural } from '../../locales/format';
 // The pile: the top play of the trick, face up, with who made it, a small indicator of how many cards the trick holds
 // (spec §11 decision 7, in place of the covered plays) and the rule chips next to it (decision 6C). A trick the latest
 // move closed keeps its closing play on the pile, dimmed, with a badge that says why and who leads, until the next
-// play (`pileView`). The notes under the pile (who took the trick and why, a forbidden
+// play (`pileView`). The notes under the pile (who set the trick aside and why, a forbidden
 // finish) are a secondary line for screen readers: the badge says it on screen.
 const props = defineProps<{
   trick: PresidentTrick;
   mySeat: number;
   nameOf: (seat: number) => string;
   chips: PresidentChip[];
-  /** Short lines read out by screen readers: who took the trick and why, a forbidden finish. */
+  /** Short lines read out by screen readers: who set the trick aside and why, a forbidden finish. */
   notes?: string[];
   /** What the pile shows (the store's `pile`); without it, the top play of `trick`. */
   pile?: PileView;
+  /**
+   * What the texts say about the pile (who played, the badge of a closed trick, the indicator): the pile as the table
+   * has shown it so far, while the cards under the flights are already `pile`'s. Without it, `pile`.
+   */
+  display?: PileView;
   /** The cards of a closed trick have been swept toward the winner: the pile keeps its place but shows no card. */
   swept?: boolean;
   /** No badge animation (reduced motion, Instant). */
@@ -40,12 +45,15 @@ const view = computed<PileView>(() => {
   };
 });
 const top = computed(() => view.value.play);
-const closure = computed(() => view.value.closure);
+// The texts follow what the table has shown (the cards are the pile's, hidden under their flights until they land).
+const said = computed<PileView>(() => props.display ?? view.value);
+const saidTop = computed(() => said.value.play);
+const closure = computed(() => said.value.closure);
 const by = computed(() => {
-  if (!top.value) return '';
-  return top.value.seat === props.mySeat
+  if (!saidTop.value) return '';
+  return saidTop.value.seat === props.mySeat
     ? ui.table.playedByYou
-    : format(ui.table.playedBy, { player: props.nameOf(top.value.seat) });
+    : format(ui.table.playedBy, { player: props.nameOf(saidTop.value.seat) });
 });
 const closedReason = computed(() => closure.value ? ui.motion.closed[closure.value.reason] ?? ui.motion.closedOther : '');
 const closedLeader = computed(() => {
@@ -54,7 +62,7 @@ const closedLeader = computed(() => {
   return c.winner === props.mySeat ? ui.motion.youLead : format(ui.motion.leads, { player: props.nameOf(c.winner) });
 });
 // A new closure restarts the flash.
-const plateKey = computed(() => closure.value ? `closed-${closure.value.winner}-${closure.value.reason}-${closure.value.size}-${top.value?.cards.map(c => c.name).join('+') ?? ''}` : 'open');
+const plateKey = computed(() => closure.value ? `closed-${closure.value.winner}-${closure.value.reason}-${closure.value.size}-${saidTop.value?.cards.map(c => c.name).join('+') ?? ''}` : 'open');
 // Equal play: the trick is bound to a rank ("9 or nothing"). A frame and a banner say it; the closed pile has none.
 const binding = computed(() => closure.value ? null : bindingOf(props.trick));
 const bindingRank = computed(() => binding.value ? rankLabel(binding.value.rank, ui) : '');
@@ -74,14 +82,14 @@ const chipTexts = computed(() => props.chips.flatMap((chip) => {
          played, or the badge of a closed trick), and, beside or below, the row of chips. -->
     <div :key="plateKey" class="trick-plate" :class="{ 'trick-plate--bound': binding, 'trick-plate--closed': closure, 'trick-plate--still': still }">
       <div class="trick-stage" data-test="trick-stage">
-        <div v-if="top" class="trick-cards" :class="{ 'trick-cards--swept': swept && closure }" data-test="trick-cards" :aria-hidden="swept && closure ? 'true' : undefined">
+        <div v-if="top" class="trick-cards" :class="{ 'trick-cards--swept': swept && view.closure }" data-test="trick-cards" :aria-hidden="swept && view.closure ? 'true' : undefined">
           <span v-for="card in top.cards" :key="card.name" class="trick-card"
-                :data-test="closure ? 'closed-trick-card' : 'trick-card'" role="img"
+                :data-test="view.closure ? 'closed-trick-card' : 'trick-card'" role="img"
                 :aria-label="cardLabel(card, ui, false)">
             <PlayingCard :rank="card.rank" :suit="card.suit" />
           </span>
         </div>
-        <p v-else-if="!closure" class="trick-empty" data-test="trick-empty">{{ ui.table.emptyTrick }}</p>
+        <p v-else-if="!view.closure" class="trick-empty" data-test="trick-empty">{{ ui.table.emptyTrick }}</p>
       </div>
       <div class="trick-line" data-test="trick-line">
         <!-- A closed trick: one line in place of who played (who leads says it), clear of the rings on the cards. -->
@@ -89,7 +97,7 @@ const chipTexts = computed(() => props.chips.flatMap((chip) => {
           <span class="trick-closed-reason" data-test="trick-closed-reason">{{ closedReason }}</span>
           <span class="trick-closed-leader" data-test="trick-closed-leader">{{ closedLeader }}</span>
         </p>
-        <p v-else-if="top" class="trick-by" data-test="trick-by">{{ by }}</p>
+        <p v-else-if="saidTop" class="trick-by" data-test="trick-by">{{ by }}</p>
       </div>
     </div>
     <ul class="trick-notes sr-only" data-test="trick-notes" aria-live="polite">
@@ -107,8 +115,8 @@ const chipTexts = computed(() => props.chips.flatMap((chip) => {
           <span class="binding-progress" data-test="binding-progress">{{ format(ui.motion.binding.played, { n: binding.played }) }}</span>
         </span>
       </li>
-      <li v-if="view.count > 0" class="chip trick-count" data-test="trick-count">
-        <span class="trick-count-icon" aria-hidden="true"><i></i><i></i></span>{{ plural(ui.motion.trickCount, view.count) }}
+      <li v-if="said.count > 0" class="chip trick-count" data-test="trick-count">
+        <span class="trick-count-icon" aria-hidden="true"><i></i><i></i></span>{{ plural(ui.motion.trickCount, said.count) }}
       </li>
       <li v-for="chip in chipTexts" :key="chip.key" class="chip" data-test="rule-chip">{{ chip.text }}</li>
     </ul>

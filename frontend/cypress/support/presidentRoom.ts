@@ -3,6 +3,10 @@ import { joinAsScriptedPlayer, type ScriptedPlayer, type ScriptedPlayerOptions }
 
 export type Guest = ScriptedPlayer & { token: string; seat: number };
 
+// The texts of the table follow the pictures (a move is told once its cards have landed, sweeps included): behind a
+// burst of scripted moves, "Your turn" may come several seconds after the state. Every President spec waits longer.
+Cypress.config('defaultCommandTimeout', 10000);
+
 /** Creates a President room as the host and yields its id once the lobby shows. */
 export function hostLobby(name: string) {
   cy.visit('/games/president');

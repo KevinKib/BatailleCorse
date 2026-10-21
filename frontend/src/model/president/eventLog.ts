@@ -5,7 +5,7 @@ import type { PresidentState } from './PresidentState';
 /** Why a trick ended, as the server names it (`TrickEndReason`); an unknown value is kept as given. */
 export type PresidentTrickEndReason = 'ALL_PASSED' | 'FIRST_OUT' | 'CUT' | 'QUAD' | (string & {});
 
-/** A trick that a move closed: who takes the lead, why, and what lay on the pile when it closed. */
+/** A trick that a move closed: who leads next, why, and what lay on the pile when it closed. */
 export interface PresidentTrickClosure {
   winner: number;
   reason: PresidentTrickEndReason;
@@ -39,6 +39,8 @@ export interface PresidentLogEntry {
   /** The place taken when the move emptied the hand. */
   outPlace: number | null;
   closure: PresidentTrickClosure | null;
+  /** The state the move led to: what the table's texts show once its picture is over (absent when unknown). */
+  after?: PresidentState | null;
 }
 
 /** How many entries the store keeps (newest first). */
@@ -49,6 +51,7 @@ const NOT_MOVES = new Set(['START', 'ROUND_START']);
 /** The entry of an event, or null when it is not a play or a pass (the start, a round start, an exchange, a ready). */
 export function toLogEntry(
   id: number, eventType: string, data: PresidentEventData | null, before: PresidentState | null,
+  after: PresidentState | null = null,
 ): PresidentLogEntry | null {
   if (!data || NOT_MOVES.has(eventType)) return null;
   if (data.action !== 'PLAY' && data.action !== 'PASS') return null;
@@ -81,6 +84,7 @@ export function toLogEntry(
     outForbidden: data.outForbidden === true,
     outPlace: data.outPlace ?? null,
     closure,
+    after,
   };
 }
 

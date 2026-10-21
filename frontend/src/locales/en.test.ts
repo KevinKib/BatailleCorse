@@ -213,6 +213,20 @@ describe('President messages', () => {
     expect(emptyLeaves(messagesEn.options.president, 'options.president')).toEqual([]);
   });
 
+  it('givenThePresidentTexts_thenTheCardsOfATrickAreSetAside_neverTakenOrWon', () => {
+    // Owner feedback (2026-10-21): the player who wins a trick does not take its cards, they set them aside.
+    const leaves: string[] = [];
+    const visit = (node: unknown) => {
+      if (typeof node === 'string') leaves.push(node);
+      else if (node && typeof node === 'object') Object.values(node).forEach(visit);
+    };
+    visit(messagesEn.presidentUi);
+    visit(messagesEn.president);
+    const wrong = leaves.filter(text => /\b(takes?|took|taken|collects?|collected|wins?|won)\b[^.]*\b(trick|cards of the trick|pile)\b/i.test(text));
+    expect(wrong).toEqual([]);
+    expect(messagesEn.presidentUi.trickEnd.ALL_PASSED).toBe('{player} sets the trick aside: everyone else passed.');
+  });
+
   it('givenThePresidentRules_thenTheyHaveATitleAndABodyPerSection', () => {
     expect(messagesEn.president.sections.length).toBeGreaterThan(0);
     for (const section of messagesEn.president.sections) {

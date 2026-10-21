@@ -48,7 +48,8 @@ import {
   planBubbles, planMovements, planSweep, sourcesFor, speedFactor, sweepStartMs, type PendingSources, type PlaySources,
   type PresidentAnchor, type PresidentMovement,
 } from '../../model/president/motion';
-import { closedPile, type PileView } from '../../model/president/trickView';
+import { closedPile, pileView, type PileView } from '../../model/president/trickView';
+import { useDisplayedState } from '../../composables/useDisplayedState';
 import { planExchangeFlights } from '../../model/president/exchangeMotion';
 import { exchangeRecap } from '../../model/president/exchangeRecap';
 import { ackDelayMs, exchangeViewStatus } from '../../model/president/exchangeView';
@@ -105,37 +106,72 @@ watch(online, (isOnline, wasOnline) => {
   if (isOnline && !wasOnline) void store.hydrate();
 });
 
+// --- What the table shows ----------------------------------------------------------------------------------------
+// Every text and indicator of the table (whose turn, "9 or nothing", the chips, the counts, the pile's line, the
+// scores, the bubbles) reads the game as the table has shown it so far: a move is told once its cards have landed,
+// never when its state arrives (owner feedback, 2026-10-21). The hand, the buttons and the rules read the latest
+// state: nothing the player can do waits for a picture. Under Instant or reduced motion, both are the same.
+const display = useDisplayedState<PresidentState, PresidentLogEntry>({
+  maxLagMs: PRESIDENT_TEMPO.displayLagMaxMs,
+  // A move's bubbles ("Pass", "Four completed") pop when the move is told, with its other texts.
+  onReveal: (entry) => {
+    for (const bubble of planBubbles(entry)) bubbles.show(bubble, PRESIDENT_TEMPO.bubbleMs * (speedFactor(speed.value) || 1));
+  },
+});
+onBeforeUnmount(() => display.cancel());
+/** The game as the table shows it. */
+const shown = computed<PresidentState | null>(() => (store.game ? display.displayed.value?.state ?? store.game : null));
+const shownMe = computed(() => shown.value?.players.find(p => p.seat === store.mySeat) ?? null);
+// My turn is told once the table has shown it, and only while it is still mine: once I have played, it is over at once
+// (my cards may still be flying), so "Your turn" always means my cards can be played.
+const shownMyTurn = computed(() => shown.value?.currentSeat === store.mySeat && shownMe.value !== null && store.isMyTurn);
+/** Whose turn the table tells: the shown state's, or, right after my own move, the seat that plays after me. */
+const shownCurrentSeat = computed(() => {
+  const g = shown.value;
+  if (!g) return null;
+  return g.currentSeat === store.mySeat && !store.isMyTurn ? store.game?.currentSeat ?? g.currentSeat : g.currentSeat;
+});
+/** The move whose state the table shows, when that state is the one the move led to. */
+const shownEntry = computed(() => {
+  const d = display.displayed.value;
+  return d?.entry && d.entry.after === d.state ? d.entry : null;
+});
+/** The pile as the texts tell it (the cards under the flights are the latest state's). */
+const toldPile = computed<PileView>(() => shown.value
+  ? pileView(shown.value, display.displayed.value?.entry ?? null)
+  : { play: null, closure: null, count: 0 });
+
 // --- The table ---------------------------------------------------------------------------------------------------
 // Opponents in the order they play after me. Wide: on the ellipse around the trick. Phone: a grid of at most four
 // plates a row (7 opponents are two rows) that scrolls inside its frame if it ever has to.
 const opponents = computed(() => opponentsInPlayOrder(
-  (store.game?.players ?? []).map(p => ({ ...p, id: String(p.seat) })), store.mySeat)
+  (shown.value?.players ?? []).map(p => ({ ...p, id: String(p.seat) })), store.mySeat)
   .filter(p => p.seat !== store.mySeat));
 const narrow = useNarrowScreen();
 const ring = computed(() => seatPositions(opponents.value.length));
 const columns = computed(() => Math.min(Math.max(opponents.value.length, 1), 4));
-const chips = computed(() => store.game ? ruleChips(store.game) : []);
+const chips = computed(() => shown.value ? ruleChips(shown.value) : []);
 // The places the table keeps whether they are used or not (nothing moves when a text comes or goes): the title line of a
 // plate in a match of more than one round, and the size of a full hand.
 const reserveTitle = computed(() => store.game?.rounds !== 1);
 const dealtCount = computed(() => Math.ceil(52 / Math.max(store.game?.players.length ?? 1, 1)));
-// What the last command did to the trick: who took it and why, and a forbidden finish. The text is the client's;
-// the facts (winner, reason, forbidden) are the server's event.
+// What the move the table shows did to the trick: who set it aside and why, and a forbidden finish. The text is the
+// client's; the facts (winner, reason, forbidden) are the server's event.
 const trickNotes = computed(() => {
-  const data = store.lastEvent?.data;
-  if (!data) return [];
+  const entry = shownEntry.value;
+  if (!entry) return [];
   const notes: string[] = [];
   // a forbidden finish closes the trick too (a 2 always closes): its own sentence says both, the winner is the next leader
-  if (!data.outForbidden && data.trickWinner !== null && data.trickWinner !== undefined && data.trickEndReason) {
-    const template = ui.trickEnd[data.trickEndReason];
-    if (template) notes.push(format(template, { player: displayName(data.trickWinner) }));
+  if (!entry.outForbidden && entry.closure) {
+    const template = ui.trickEnd[entry.closure.reason];
+    if (template) notes.push(format(template, { player: displayName(entry.closure.winner) }));
   }
-  if (data.outForbidden) notes.push(format(ui.trickEnd.forbidden, { player: displayName(data.seat) }));
+  if (entry.outForbidden) notes.push(format(ui.trickEnd.forbidden, { player: displayName(entry.seat) }));
   return notes;
 });
 
 const roundText = computed(() => {
-  const g = store.game;
+  const g = shown.value;
   if (!g) return '';
   return g.rounds ? format(ui.table.roundOf, { n: g.round, total: g.rounds }) : format(ui.table.round, { n: g.round });
 });
@@ -144,7 +180,7 @@ const isExchange = computed(() => store.game?.phase === 'EXCHANGE');
 
 // While the table looks at the exchange nobody plays: the line says where the exchange stands, not whose turn it is.
 const viewText = computed(() => {
-  const g = store.game;
+  const g = shown.value;
   const status = g ? exchangeViewStatus(g, store.mySeat) : null;
   if (!status) return '';
   const view = ui.exchangeView;
@@ -158,10 +194,10 @@ const viewText = computed(() => {
 });
 
 const phaseText = computed(() => {
-  const g = store.game;
+  const g = shown.value;
   if (!g) return '';
   if (g.phase === 'EXCHANGE_VIEW') return viewText.value;
-  return store.isMyTurn ? ui.phase.yourTurn : format(ui.phase.waiting, { player: displayName(g.currentSeat) });
+  return shownMyTurn.value ? ui.phase.yourTurn : format(ui.phase.waiting, { player: displayName(shownCurrentSeat.value ?? g.currentSeat) });
 });
 const hint = computed(() => hintText(store.playHint, ui));
 const noticeText = computed(() => store.notice ? ui.notice[store.notice] : '');
@@ -171,9 +207,9 @@ const receivedNames = computed(() => (store.game?.received ?? []).map(c => c.nam
 const selectedNames = computed(() => store.selectedCards.map(c => c.name));
 
 // One polite region for the turn: cleared and set again so that two turns in a row are both read.
-const liveText = computed(() => store.isMyTurn && store.game?.phase === 'PLAYING' ? ui.live.yourTurn : '');
+const liveText = computed(() => shownMyTurn.value && shown.value?.phase === 'PLAYING' ? ui.live.yourTurn : '');
 const liveSpoken = ref(liveText.value);
-watch(() => [store.game?.round, store.game?.currentSeat, store.game?.version, liveText.value].join('|'), async () => {
+watch(() => [shown.value?.round, shown.value?.currentSeat, shown.value?.version, liveText.value].join('|'), async () => {
   liveSpoken.value = '';
   if (!liveText.value) return;
   await nextTick();
@@ -301,13 +337,24 @@ function scheduleHold(pile: PileView, id: number, sweepAtMs: number, endMs: numb
   later(endMs, endHold);
 }
 
-async function playEntry(entry: PresidentLogEntry) {
+/** Plays a move's picture; its texts (`slot`, reserved in arrival order) are told once its cards have landed. */
+async function playEntry(entry: PresidentLogEntry, slot: number) {
+  try {
+    await playMoves(entry, slot);
+  } catch {
+    // A picture is never worth an error, nor a text held back by it.
+    display.revealIn(slot, 0);
+  }
+}
+
+async function playMoves(entry: PresidentLogEntry, slot: number) {
   const factor = speedFactor(speed.value);
   const isStill = still.value;
-  for (const bubble of planBubbles(entry)) bubbles.show(bubble, PRESIDENT_TEMPO.bubbleMs * (factor || 1));
   const sources = sourcesFor(entry, store.mySeat, pendingSources, Date.now());
   if (sources) pendingSources = null;
   const moves = planMovements(entry, store.mySeat, factor || 1, sources);
+  // Nothing flies (a pass) or nothing animates: told at once, after the moves before it.
+  if (moves.length === 0 || isStill) display.revealIn(slot, 0);
   if (moves.length === 0) return;
   // A trick this move closes is swept toward its winner after the badge's hold: the sweep takes its time in the queue
   // (the next move starts once it is over), and when the queue is full there is no sweep.
@@ -326,16 +373,15 @@ async function playEntry(entry: PresidentLogEntry) {
   // The pile shows the new play once the DOM has the new state.
   await nextTick();
   if (closed && sweeps) scheduleHold(closed, entry.id, startInMs + sweepAt, startInMs + spanMs);
-  if (admission.motion && entry.seat !== store.mySeat) {
-    const flights = moves.filter(m => m.kind === 'travel');
-    inFlight.add(entry.seat, flights.length, startInMs + eventSpanMs(flights));
-  }
+  // The move is told (its seat's count drops, the turn moves on, the trick says what binds it) once its cards land.
+  display.revealIn(slot, admission.motion ? startInMs + eventSpanMs(moves.filter(m => m.kind === 'travel')) : 0);
   motionLayer.value?.play(moves, { marksOnly: !admission.motion, startInMs, still: isStill });
   // The cards of the closed trick leave once the badge has had its moment (their copies wait out of sight until then).
   if (sweeps) motionLayer.value?.play(sweep, { startInMs: startInMs + sweepAt, still: false });
 }
 
-// The log is newest first: what is new is what comes before the head I already knew.
+// The log is newest first: what is new is what comes before the head I already knew. Each new move holds its state
+// back from the texts until its picture is over (reserved now, in arrival order).
 watch(() => store.events, (events, previous) => {
   const known = previous?.[0] ?? null;
   const fresh: PresidentLogEntry[] = [];
@@ -343,8 +389,23 @@ watch(() => store.events, (events, previous) => {
     if (entry === known) break;
     fresh.push(entry);
   }
-  fresh.reverse().forEach(entry => { void playEntry(entry); });
+  fresh.reverse().forEach((entry) => {
+    const after = entry.after ?? store.game;
+    if (after) void playEntry(entry, display.reserve(after, entry));
+  });
 });
+// A state that no move brought (an exchange, a ready, a new round, a reload) is told once the moves before it are; a
+// first state, a lobby or another game starts over. The state a move brought is the move's (above).
+watch(() => store.game, (game, previous) => {
+  if (!game || !previous || game.id !== previous.id) {
+    display.reset(game);
+    return;
+  }
+  if (store.events.some(entry => entry.after === game)) return;
+  display.show(game);
+}, { immediate: true });
+// Instant (or reduced motion) tells everything that waits at once.
+watch(still, isStill => { if (isStill) display.flush(); });
 
 // The exchange (spec §11 decision 7): the cards the exchange moved fly between the hands, from the two successive
 // states (the events carry counts, never cards). The state already has them in their new hand: the seats' counts and
@@ -545,7 +606,7 @@ const rematchButton = computed(() =>
       <div class="top-bar" data-test="top-bar">
         <GameTimer :time="formattedDuration" inline />
         <span class="round-chip" data-test="round">{{ roundText }}</span>
-        <PresidentScores :standings="store.game.standings" :name-of="displayName" :my-seat="store.mySeat" />
+        <PresidentScores :standings="shown?.standings ?? []" :name-of="displayName" :my-seat="store.mySeat" />
       </div>
 
       <!-- The cards that travel (a picture only, hidden from assistive technology), and the one live region. -->
@@ -578,7 +639,7 @@ const rematchButton = computed(() =>
             <PresidentSeat
               :player="opponent"
               :label="displayName(opponent.seat)"
-              :current="store.game.phase === 'PLAYING' && store.game.currentSeat === opponent.seat"
+              :current="shown?.phase === 'PLAYING' && shownCurrentSeat === opponent.seat"
               :show-ready="sheetOpen"
               :disconnected="seatDisconnected(opponent.seat)"
               :seconds-remaining="seatSecondsRemaining(opponent.seat)"
@@ -592,7 +653,7 @@ const rematchButton = computed(() =>
           </div>
         </div>
         <div class="table-center" role="region" :aria-label="ui.table.pile">
-          <PresidentTrick :trick="store.game.trick" :pile="shownPile" :swept="pileSwept" :still="still" :my-seat="store.mySeat"
+          <PresidentTrick :trick="shown?.trick ?? store.game.trick" :pile="shownPile" :display="toldPile" :swept="pileSwept" :still="still" :my-seat="store.mySeat"
                           :name-of="displayName" :chips="chips" :notes="trickNotes" />
         </div>
       </div>
@@ -616,10 +677,10 @@ const rematchButton = computed(() =>
 
         <div v-else class="my-zone" data-test="my-zone" role="region" :aria-label="ui.table.yourCards">
           <PresidentSeat
-            v-if="store.me"
-            :player="store.me"
+            v-if="shownMe"
+            :player="shownMe"
             :label="ui.you"
-            :current="store.isMyTurn && store.game.phase === 'PLAYING'"
+            :current="shownMyTurn && shown?.phase === 'PLAYING'"
             :bubble="bubbles.bySeat.value[store.mySeat] ?? null"
             :still="still" />
           <PresidentHand :cards="store.hand" :selected="selectedNames" :received="receivedNames" :landing="landing"
