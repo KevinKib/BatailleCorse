@@ -65,6 +65,8 @@ describe('President texts follow the animations', () => {
           });
           cy.get('[data-test="binding"]', { timeout: 10000 }).should('contain.text', '9').and('contain.text', 'or nothing');
           cy.get('[data-test="phase-text"]').should('have.text', 'Your turn');
+          // The sampler has seen the banner too (it reads every 30 ms).
+          cy.window().should(win => expect(((win as any).__samples as Sample[]).some(s => s.binding !== null)).to.eq(true));
           samples().then((all) => {
             const first = all.find(s => s.binding !== null)!;
             // A 9 flies 0.88 s at the Normal speed: the banner can only come after Dave's flight, not with his state.
@@ -85,10 +87,14 @@ describe('President texts follow the animations', () => {
         awaitState(dave, 'Dave led his 6', s => s.trick.plays.length === 1 && s.trick.plays[0].seat === 3);
         cy.get('.seat-slot[data-seat="3"] [data-test="seat-cards"]', { timeout: 15000 }).should('have.text', '11 cards');
         cy.get('[data-test="trick-by"]', { timeout: 15000 }).should('have.text', 'Dave played');
+        // The sampler has seen the last count too (it reads every 30 ms).
+        cy.window().should((win) => {
+          const all = (win as any).__samples as Sample[];
+          expect(all[all.length - 1].dave).to.eq(11);
+        });
         samples().then((all) => {
           const counts = all.map(s => s.dave).filter((n): n is number => n !== null);
           expect(counts[0], 'Dave held 13 cards').to.eq(13);
-          expect(counts[counts.length - 1]).to.eq(11);
           counts.forEach((n, i) => {
             if (i > 0) expect(n, `Dave's count never climbs back (sample ${i})`).to.be.at.most(counts[i - 1]);
           });
