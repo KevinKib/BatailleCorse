@@ -1,0 +1,2098 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`KoboGameScreen motion (characterisation) > plays the scripted log exactly as the hand-written loop did 1`] = `
+[
+  {
+    "layer": {
+      "arrowId": "kobo-arrow-head",
+      "markMs": 2000,
+      "markReducedMs": 1500,
+      "markStyle": "glow",
+    },
+  },
+  {
+    "step": "an opponent draws",
+  },
+  {
+    "sound": "card",
+  },
+  {
+    "play": {
+      "movements": [
+        {
+          "actor": 1,
+          "byOpponent": true,
+          "card": null,
+          "delayMs": 250,
+          "durationMs": 1000,
+          "flip": false,
+          "from": {
+            "kind": "draw",
+          },
+          "holdAfterMs": 450,
+          "kind": "travel",
+          "marks": [],
+          "to": {
+            "kind": "hand",
+          },
+          "turnDown": false,
+        },
+      ],
+      "options": {
+        "marksOnly": false,
+        "startInMs": 0,
+      },
+      "places": [
+        {
+          "from": {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 190,
+              "top": 191,
+              "width": 41,
+            },
+          },
+          "marks": [],
+          "to": {
+            "cards": 0,
+            "rect": {
+              "height": 60,
+              "left": 317,
+              "top": 318,
+              "width": 42,
+            },
+          },
+        },
+      ],
+    },
+  },
+  {
+    "hold": {
+      "discard": null,
+      "slots": {},
+    },
+  },
+  {
+    "step": "I draw (my face comes with the state)",
+  },
+  {
+    "sound": "turn",
+  },
+  {
+    "sound": "card",
+  },
+  {
+    "play": {
+      "movements": [
+        {
+          "actor": 0,
+          "byOpponent": false,
+          "card": {
+            "name": "CLUB_QUEEN",
+            "rank": "QUEEN",
+            "suit": "CLUB",
+          },
+          "delayMs": 150,
+          "durationMs": 700,
+          "flip": true,
+          "from": {
+            "kind": "draw",
+          },
+          "holdAfterMs": 300,
+          "kind": "travel",
+          "marks": [],
+          "to": {
+            "kind": "hand",
+          },
+          "turnDown": false,
+        },
+      ],
+      "options": {
+        "marksOnly": false,
+        "startInMs": 0,
+      },
+      "places": [
+        {
+          "from": {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 190,
+              "top": 191,
+              "width": 41,
+            },
+          },
+          "marks": [],
+          "to": {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 190,
+              "top": 191,
+              "width": 41,
+            },
+          },
+        },
+      ],
+    },
+  },
+  {
+    "hold": {
+      "discard": null,
+      "slots": {},
+    },
+  },
+  {
+    "step": "I swap the drawn card into my slot 0",
+  },
+  {
+    "sound": "card",
+  },
+  {
+    "play": {
+      "movements": [
+        {
+          "actor": 0,
+          "byOpponent": false,
+          "card": {
+            "name": "CLUB_QUEEN",
+            "rank": "QUEEN",
+            "suit": "CLUB",
+          },
+          "delayMs": 150,
+          "durationMs": 700,
+          "flip": false,
+          "from": {
+            "kind": "hand",
+          },
+          "holdAfterMs": 300,
+          "kind": "travel",
+          "marks": [
+            {
+              "kind": "slot",
+              "seat": 0,
+              "slot": 0,
+            },
+          ],
+          "restsOn": null,
+          "to": {
+            "kind": "slot",
+            "seat": 0,
+            "slot": 0,
+          },
+          "turnDown": true,
+        },
+        {
+          "actor": 0,
+          "byOpponent": false,
+          "card": {
+            "name": "SPADE_7",
+            "rank": "7",
+            "suit": "SPADE",
+          },
+          "delayMs": 150,
+          "durationMs": 700,
+          "flip": true,
+          "from": {
+            "kind": "slot",
+            "seat": 0,
+            "slot": 0,
+          },
+          "holdAfterMs": 300,
+          "kind": "travel",
+          "leavesBack": true,
+          "marks": [
+            {
+              "kind": "slot",
+              "seat": 0,
+              "slot": 0,
+            },
+          ],
+          "restsOn": {
+            "name": "HEART_4",
+            "rank": "4",
+            "suit": "HEART",
+          },
+          "to": {
+            "kind": "discard",
+          },
+          "turnDown": false,
+        },
+      ],
+      "options": {
+        "marksOnly": false,
+        "startInMs": 0,
+      },
+      "places": [
+        {
+          "from": {
+            "cards": 0,
+            "rect": {
+              "height": 60,
+              "left": 317,
+              "top": 318,
+              "width": 42,
+            },
+          },
+          "marks": [
+            {
+              "cards": 1,
+              "rect": {
+                "height": 58,
+                "left": 190,
+                "top": 191,
+                "width": 41,
+              },
+            },
+          ],
+          "to": {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 190,
+              "top": 191,
+              "width": 41,
+            },
+          },
+        },
+        {
+          "from": {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 190,
+              "top": 191,
+              "width": 41,
+            },
+          },
+          "marks": [
+            {
+              "cards": 1,
+              "rect": {
+                "height": 58,
+                "left": 190,
+                "top": 191,
+                "width": 41,
+              },
+            },
+          ],
+          "to": {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 190,
+              "top": 191,
+              "width": 41,
+            },
+          },
+        },
+      ],
+    },
+  },
+  {
+    "hold": {
+      "discard": {
+        "rank": "4",
+        "until": 40930,
+      },
+      "slots": {
+        "0:0": {
+          "revision": 1,
+          "until": 40930,
+        },
+      },
+    },
+  },
+  {
+    "step": "a bot discards the card it drew",
+  },
+  {
+    "sound": "card",
+  },
+  {
+    "play": {
+      "movements": [
+        {
+          "actor": 1,
+          "byOpponent": true,
+          "card": {
+            "name": "SPADE_9",
+            "rank": "9",
+            "suit": "SPADE",
+          },
+          "delayMs": 250,
+          "durationMs": 1000,
+          "flip": false,
+          "from": {
+            "kind": "hand",
+          },
+          "holdAfterMs": 450,
+          "kind": "travel",
+          "marks": [],
+          "restsOn": {
+            "name": "SPADE_7",
+            "rank": "7",
+            "suit": "SPADE",
+          },
+          "to": {
+            "kind": "discard",
+          },
+          "turnDown": false,
+        },
+      ],
+      "options": {
+        "marksOnly": false,
+        "startInMs": 0,
+      },
+      "places": [
+        {
+          "from": {
+            "cards": 0,
+            "rect": {
+              "height": 60,
+              "left": 317,
+              "top": 318,
+              "width": 42,
+            },
+          },
+          "marks": [],
+          "to": {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 190,
+              "top": 191,
+              "width": 41,
+            },
+          },
+        },
+      ],
+    },
+  },
+  {
+    "hold": {
+      "discard": {
+        "rank": "7",
+        "until": 61370,
+      },
+      "slots": {},
+    },
+  },
+  {
+    "step": "a bot peeks at another seat",
+  },
+  {
+    "sound": "card",
+  },
+  {
+    "play": {
+      "movements": [
+        {
+          "actor": 1,
+          "byOpponent": true,
+          "card": null,
+          "delayMs": 250,
+          "durationMs": 1200,
+          "flip": false,
+          "from": {
+            "kind": "slot",
+            "seat": 2,
+            "slot": 1,
+          },
+          "holdAfterMs": 300,
+          "kind": "glance",
+          "marks": [
+            {
+              "kind": "slot",
+              "seat": 2,
+              "slot": 1,
+            },
+          ],
+          "to": {
+            "kind": "seat",
+            "seat": 1,
+          },
+          "turnDown": false,
+        },
+      ],
+      "options": {
+        "marksOnly": false,
+        "startInMs": 0,
+      },
+      "places": [
+        {
+          "from": {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 190,
+              "top": 191,
+              "width": 41,
+            },
+          },
+          "marks": [
+            {
+              "cards": 1,
+              "rect": {
+                "height": 58,
+                "left": 190,
+                "top": 191,
+                "width": 41,
+              },
+            },
+          ],
+          "to": {
+            "cards": 0,
+            "rect": {
+              "height": 49.33119498731911,
+              "left": 656,
+              "top": 651,
+              "width": 34,
+            },
+          },
+        },
+      ],
+    },
+  },
+  {
+    "hold": {
+      "discard": null,
+      "slots": {
+        "2:1": {
+          "revision": 21,
+          "until": 81610,
+        },
+      },
+    },
+  },
+  {
+    "step": "a blind swap with my slot",
+  },
+  {
+    "sound": "card",
+  },
+  {
+    "play": {
+      "movements": [
+        {
+          "actor": 1,
+          "byOpponent": true,
+          "card": null,
+          "delayMs": 250,
+          "durationMs": 1000,
+          "flip": false,
+          "from": {
+            "kind": "slot",
+            "seat": 1,
+            "slot": 0,
+          },
+          "holdAfterMs": 450,
+          "kind": "travel",
+          "leavesBack": true,
+          "marks": [
+            {
+              "kind": "slot",
+              "seat": 1,
+              "slot": 0,
+            },
+            {
+              "kind": "slot",
+              "seat": 0,
+              "slot": 1,
+            },
+          ],
+          "to": {
+            "kind": "slot",
+            "seat": 0,
+            "slot": 1,
+          },
+          "turnDown": false,
+        },
+        {
+          "actor": 1,
+          "byOpponent": true,
+          "card": null,
+          "delayMs": 250,
+          "durationMs": 1000,
+          "flip": false,
+          "from": {
+            "kind": "slot",
+            "seat": 0,
+            "slot": 1,
+          },
+          "holdAfterMs": 450,
+          "kind": "travel",
+          "leavesBack": true,
+          "marks": [
+            {
+              "kind": "slot",
+              "seat": 0,
+              "slot": 1,
+            },
+            {
+              "kind": "slot",
+              "seat": 1,
+              "slot": 0,
+            },
+          ],
+          "to": {
+            "kind": "slot",
+            "seat": 1,
+            "slot": 0,
+          },
+          "turnDown": false,
+        },
+      ],
+      "options": {
+        "marksOnly": false,
+        "startInMs": 0,
+      },
+      "places": [
+        {
+          "from": {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 190,
+              "top": 191,
+              "width": 41,
+            },
+          },
+          "marks": [
+            {
+              "cards": 1,
+              "rect": {
+                "height": 58,
+                "left": 190,
+                "top": 191,
+                "width": 41,
+              },
+            },
+            {
+              "cards": 1,
+              "rect": {
+                "height": 58,
+                "left": 190,
+                "top": 191,
+                "width": 41,
+              },
+            },
+          ],
+          "to": {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 190,
+              "top": 191,
+              "width": 41,
+            },
+          },
+        },
+        {
+          "from": {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 190,
+              "top": 191,
+              "width": 41,
+            },
+          },
+          "marks": [
+            {
+              "cards": 1,
+              "rect": {
+                "height": 58,
+                "left": 190,
+                "top": 191,
+                "width": 41,
+              },
+            },
+            {
+              "cards": 1,
+              "rect": {
+                "height": 58,
+                "left": 190,
+                "top": 191,
+                "width": 41,
+              },
+            },
+          ],
+          "to": {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 190,
+              "top": 191,
+              "width": 41,
+            },
+          },
+        },
+      ],
+    },
+  },
+  {
+    "hold": {
+      "discard": null,
+      "slots": {
+        "0:1": {
+          "revision": 2,
+          "until": 101450,
+        },
+        "1:0": {
+          "revision": 10,
+          "until": 101450,
+        },
+      },
+    },
+  },
+  {
+    "step": "a king swap between two bots",
+  },
+  {
+    "sound": "card",
+  },
+  {
+    "play": {
+      "movements": [
+        {
+          "actor": 2,
+          "byOpponent": true,
+          "card": null,
+          "delayMs": 250,
+          "durationMs": 1000,
+          "flip": false,
+          "from": {
+            "kind": "slot",
+            "seat": 2,
+            "slot": 3,
+          },
+          "holdAfterMs": 450,
+          "kind": "travel",
+          "leavesBack": true,
+          "marks": [
+            {
+              "kind": "slot",
+              "seat": 2,
+              "slot": 3,
+            },
+            {
+              "kind": "slot",
+              "seat": 1,
+              "slot": 2,
+            },
+          ],
+          "to": {
+            "kind": "slot",
+            "seat": 1,
+            "slot": 2,
+          },
+          "turnDown": false,
+        },
+        {
+          "actor": 2,
+          "byOpponent": true,
+          "card": null,
+          "delayMs": 250,
+          "durationMs": 1000,
+          "flip": false,
+          "from": {
+            "kind": "slot",
+            "seat": 1,
+            "slot": 2,
+          },
+          "holdAfterMs": 450,
+          "kind": "travel",
+          "leavesBack": true,
+          "marks": [
+            {
+              "kind": "slot",
+              "seat": 1,
+              "slot": 2,
+            },
+            {
+              "kind": "slot",
+              "seat": 2,
+              "slot": 3,
+            },
+          ],
+          "to": {
+            "kind": "slot",
+            "seat": 2,
+            "slot": 3,
+          },
+          "turnDown": false,
+        },
+      ],
+      "options": {
+        "marksOnly": false,
+        "startInMs": 0,
+      },
+      "places": [
+        {
+          "from": {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 190,
+              "top": 191,
+              "width": 41,
+            },
+          },
+          "marks": [
+            {
+              "cards": 1,
+              "rect": {
+                "height": 58,
+                "left": 190,
+                "top": 191,
+                "width": 41,
+              },
+            },
+            {
+              "cards": 1,
+              "rect": {
+                "height": 58,
+                "left": 190,
+                "top": 191,
+                "width": 41,
+              },
+            },
+          ],
+          "to": {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 190,
+              "top": 191,
+              "width": 41,
+            },
+          },
+        },
+        {
+          "from": {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 190,
+              "top": 191,
+              "width": 41,
+            },
+          },
+          "marks": [
+            {
+              "cards": 1,
+              "rect": {
+                "height": 58,
+                "left": 190,
+                "top": 191,
+                "width": 41,
+              },
+            },
+            {
+              "cards": 1,
+              "rect": {
+                "height": 58,
+                "left": 190,
+                "top": 191,
+                "width": 41,
+              },
+            },
+          ],
+          "to": {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 190,
+              "top": 191,
+              "width": 41,
+            },
+          },
+        },
+      ],
+    },
+  },
+  {
+    "hold": {
+      "discard": null,
+      "slots": {
+        "1:2": {
+          "revision": 12,
+          "until": 121490,
+        },
+        "2:3": {
+          "revision": 23,
+          "until": 121490,
+        },
+      },
+    },
+  },
+  {
+    "step": "a match of mine on another seat, with a gift",
+  },
+  {
+    "sound": "card",
+  },
+  {
+    "play": {
+      "movements": [
+        {
+          "actor": 0,
+          "byOpponent": false,
+          "card": {
+            "name": "SPADE_9",
+            "rank": "9",
+            "suit": "SPADE",
+          },
+          "delayMs": 150,
+          "durationMs": 700,
+          "flip": true,
+          "from": {
+            "kind": "slot",
+            "seat": 1,
+            "slot": 2,
+          },
+          "holdAfterMs": 300,
+          "kind": "travel",
+          "leavesBack": true,
+          "marks": [
+            {
+              "kind": "slot",
+              "seat": 1,
+              "slot": 2,
+            },
+          ],
+          "restsOn": {
+            "name": "SPADE_9",
+            "rank": "9",
+            "suit": "SPADE",
+          },
+          "to": {
+            "kind": "discard",
+          },
+          "turnDown": false,
+        },
+        {
+          "actor": 0,
+          "byOpponent": false,
+          "card": null,
+          "delayMs": 600,
+          "durationMs": 700,
+          "flip": false,
+          "from": {
+            "kind": "slot",
+            "seat": 0,
+            "slot": 1,
+          },
+          "holdAfterMs": 300,
+          "kind": "travel",
+          "leavesBack": true,
+          "marks": [
+            {
+              "kind": "slot",
+              "seat": 0,
+              "slot": 1,
+            },
+            {
+              "kind": "slot",
+              "seat": 1,
+              "slot": 2,
+            },
+          ],
+          "to": {
+            "kind": "slot",
+            "seat": 1,
+            "slot": 2,
+          },
+          "turnDown": false,
+        },
+      ],
+      "options": {
+        "marksOnly": false,
+        "startInMs": 0,
+      },
+      "places": [
+        {
+          "from": {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 190,
+              "top": 191,
+              "width": 41,
+            },
+          },
+          "marks": [
+            {
+              "cards": 1,
+              "rect": {
+                "height": 58,
+                "left": 190,
+                "top": 191,
+                "width": 41,
+              },
+            },
+          ],
+          "to": {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 190,
+              "top": 191,
+              "width": 41,
+            },
+          },
+        },
+        {
+          "from": {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 190,
+              "top": 191,
+              "width": 41,
+            },
+          },
+          "marks": [
+            {
+              "cards": 1,
+              "rect": {
+                "height": 58,
+                "left": 190,
+                "top": 191,
+                "width": 41,
+              },
+            },
+            {
+              "cards": 1,
+              "rect": {
+                "height": 58,
+                "left": 190,
+                "top": 191,
+                "width": 41,
+              },
+            },
+          ],
+          "to": {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 190,
+              "top": 191,
+              "width": 41,
+            },
+          },
+        },
+      ],
+    },
+  },
+  {
+    "hold": {
+      "discard": {
+        "rank": "9",
+        "until": 141580,
+      },
+      "slots": {
+        "0:1": {
+          "revision": 2,
+          "until": 141580,
+        },
+        "1:2": {
+          "revision": 12,
+          "until": 141580,
+        },
+      },
+    },
+  },
+  {
+    "step": "a bot matches my card",
+  },
+  {
+    "sound": "card",
+  },
+  {
+    "play": {
+      "movements": [
+        {
+          "actor": 1,
+          "byOpponent": true,
+          "card": {
+            "name": "SPADE_9",
+            "rank": "9",
+            "suit": "SPADE",
+          },
+          "delayMs": 250,
+          "durationMs": 1000,
+          "flip": true,
+          "from": {
+            "kind": "slot",
+            "seat": 0,
+            "slot": 0,
+          },
+          "holdAfterMs": 450,
+          "kind": "travel",
+          "leavesBack": true,
+          "marks": [
+            {
+              "kind": "slot",
+              "seat": 0,
+              "slot": 0,
+            },
+          ],
+          "restsOn": {
+            "name": "CLUB_2",
+            "rank": "2",
+            "suit": "CLUB",
+          },
+          "to": {
+            "kind": "discard",
+          },
+          "turnDown": false,
+        },
+        {
+          "actor": 1,
+          "byOpponent": true,
+          "card": null,
+          "delayMs": 700,
+          "durationMs": 1000,
+          "flip": false,
+          "from": {
+            "kind": "slot",
+            "seat": 1,
+            "slot": 1,
+          },
+          "holdAfterMs": 450,
+          "kind": "travel",
+          "leavesBack": true,
+          "marks": [
+            {
+              "kind": "slot",
+              "seat": 1,
+              "slot": 1,
+            },
+            {
+              "kind": "slot",
+              "seat": 0,
+              "slot": 0,
+            },
+          ],
+          "to": {
+            "kind": "slot",
+            "seat": 0,
+            "slot": 0,
+          },
+          "turnDown": false,
+        },
+      ],
+      "options": {
+        "marksOnly": false,
+        "startInMs": 0,
+      },
+      "places": [
+        {
+          "from": {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 190,
+              "top": 191,
+              "width": 41,
+            },
+          },
+          "marks": [
+            {
+              "cards": 1,
+              "rect": {
+                "height": 58,
+                "left": 190,
+                "top": 191,
+                "width": 41,
+              },
+            },
+          ],
+          "to": {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 190,
+              "top": 191,
+              "width": 41,
+            },
+          },
+        },
+        {
+          "from": {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 190,
+              "top": 191,
+              "width": 41,
+            },
+          },
+          "marks": [
+            {
+              "cards": 1,
+              "rect": {
+                "height": 58,
+                "left": 190,
+                "top": 191,
+                "width": 41,
+              },
+            },
+            {
+              "cards": 1,
+              "rect": {
+                "height": 58,
+                "left": 190,
+                "top": 191,
+                "width": 41,
+              },
+            },
+          ],
+          "to": {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 190,
+              "top": 191,
+              "width": 41,
+            },
+          },
+        },
+      ],
+    },
+  },
+  {
+    "hold": {
+      "discard": {
+        "rank": "2",
+        "until": 162020,
+      },
+      "slots": {
+        "0:0": {
+          "revision": 1,
+          "until": 162020,
+        },
+        "1:1": {
+          "revision": 11,
+          "until": 162020,
+        },
+      },
+    },
+  },
+  {
+    "step": "a missed match",
+  },
+  {
+    "sound": "miss",
+  },
+  {
+    "play": {
+      "movements": [
+        {
+          "actor": 2,
+          "byOpponent": true,
+          "card": null,
+          "delayMs": 250,
+          "durationMs": 1000,
+          "flip": false,
+          "from": {
+            "kind": "draw",
+          },
+          "holdAfterMs": 450,
+          "kind": "travel",
+          "marks": [
+            {
+              "kind": "newSlot",
+              "seat": 2,
+            },
+          ],
+          "to": {
+            "kind": "newSlot",
+            "seat": 2,
+          },
+          "turnDown": false,
+        },
+      ],
+      "options": {
+        "marksOnly": false,
+        "startInMs": 0,
+      },
+      "places": [
+        {
+          "from": {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 190,
+              "top": 191,
+              "width": 41,
+            },
+          },
+          "marks": [
+            {
+              "cards": 1,
+              "rect": {
+                "height": 58,
+                "left": 190,
+                "top": 191,
+                "width": 41,
+              },
+            },
+          ],
+          "to": {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 190,
+              "top": 191,
+              "width": 41,
+            },
+          },
+        },
+      ],
+    },
+  },
+  {
+    "hold": {
+      "discard": null,
+      "slots": {},
+    },
+  },
+  {
+    "step": "an event with no picture",
+  },
+  {
+    "step": "the round ends",
+  },
+  {
+    "play": {
+      "movements": [
+        {
+          "actor": 1,
+          "byOpponent": false,
+          "card": null,
+          "delayMs": 0,
+          "durationMs": 700,
+          "flip": false,
+          "from": {
+            "kind": "table",
+          },
+          "holdAfterMs": 0,
+          "kind": "reveal",
+          "marks": [],
+          "to": {
+            "kind": "table",
+          },
+          "turnDown": false,
+        },
+      ],
+      "options": {
+        "marksOnly": false,
+        "startInMs": 0,
+      },
+      "places": [
+        {
+          "from": {
+            "cards": 12,
+            "rect": {
+              "height": 1,
+              "left": 0,
+              "top": 0,
+              "width": 1,
+            },
+          },
+          "marks": [],
+          "to": {
+            "cards": 12,
+            "rect": {
+              "height": 1,
+              "left": 0,
+              "top": 0,
+              "width": 1,
+            },
+          },
+        },
+      ],
+    },
+  },
+  {
+    "hold": {
+      "discard": null,
+      "slots": {},
+    },
+  },
+  {
+    "step": "a burst of six events",
+  },
+  {
+    "sound": "card",
+  },
+  {
+    "sound": "card",
+  },
+  {
+    "sound": "card",
+  },
+  {
+    "sound": "card",
+  },
+  {
+    "sound": "card",
+  },
+  {
+    "sound": "card",
+  },
+  {
+    "play": {
+      "movements": [
+        {
+          "actor": 1,
+          "byOpponent": true,
+          "card": null,
+          "delayMs": 250,
+          "durationMs": 1000,
+          "flip": false,
+          "from": {
+            "kind": "draw",
+          },
+          "holdAfterMs": 450,
+          "kind": "travel",
+          "marks": [],
+          "to": {
+            "kind": "hand",
+          },
+          "turnDown": false,
+        },
+      ],
+      "options": {
+        "marksOnly": false,
+        "startInMs": 0,
+      },
+      "places": [
+        {
+          "from": {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 190,
+              "top": 191,
+              "width": 41,
+            },
+          },
+          "marks": [],
+          "to": {
+            "cards": 0,
+            "rect": {
+              "height": 60,
+              "left": 317,
+              "top": 318,
+              "width": 42,
+            },
+          },
+        },
+      ],
+    },
+  },
+  {
+    "hold": {
+      "discard": null,
+      "slots": {},
+    },
+  },
+  {
+    "play": {
+      "movements": [
+        {
+          "actor": 1,
+          "byOpponent": true,
+          "card": {
+            "name": "HEART_4",
+            "rank": "4",
+            "suit": "HEART",
+          },
+          "delayMs": 250,
+          "durationMs": 1000,
+          "flip": false,
+          "from": {
+            "kind": "hand",
+          },
+          "holdAfterMs": 450,
+          "kind": "travel",
+          "marks": [],
+          "restsOn": {
+            "name": "HEART_4",
+            "rank": "4",
+            "suit": "HEART",
+          },
+          "to": {
+            "kind": "discard",
+          },
+          "turnDown": false,
+        },
+      ],
+      "options": {
+        "marksOnly": false,
+        "startInMs": 1250,
+      },
+      "places": [
+        {
+          "from": {
+            "cards": 0,
+            "rect": {
+              "height": 60,
+              "left": 317,
+              "top": 318,
+              "width": 42,
+            },
+          },
+          "marks": [],
+          "to": {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 190,
+              "top": 191,
+              "width": 41,
+            },
+          },
+        },
+      ],
+    },
+  },
+  {
+    "hold": {
+      "discard": {
+        "rank": "4",
+        "until": 242980,
+      },
+      "slots": {},
+    },
+  },
+  {
+    "play": {
+      "movements": [
+        {
+          "actor": 2,
+          "byOpponent": true,
+          "card": null,
+          "delayMs": 250,
+          "durationMs": 1000,
+          "flip": false,
+          "from": {
+            "kind": "draw",
+          },
+          "holdAfterMs": 450,
+          "kind": "travel",
+          "marks": [],
+          "to": {
+            "kind": "hand",
+          },
+          "turnDown": false,
+        },
+      ],
+      "options": {
+        "marksOnly": false,
+        "startInMs": 2500,
+      },
+      "places": [
+        {
+          "from": {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 190,
+              "top": 191,
+              "width": 41,
+            },
+          },
+          "marks": [],
+          "to": {
+            "cards": 0,
+            "rect": {
+              "height": 60,
+              "left": 317,
+              "top": 318,
+              "width": 42,
+            },
+          },
+        },
+      ],
+    },
+  },
+  {
+    "hold": {
+      "discard": null,
+      "slots": {},
+    },
+  },
+  {
+    "play": {
+      "movements": [
+        {
+          "actor": 2,
+          "byOpponent": true,
+          "card": {
+            "name": "SPADE_9",
+            "rank": "9",
+            "suit": "SPADE",
+          },
+          "delayMs": 250,
+          "durationMs": 1000,
+          "flip": false,
+          "from": {
+            "kind": "hand",
+          },
+          "holdAfterMs": 450,
+          "kind": "travel",
+          "marks": [],
+          "restsOn": {
+            "name": "HEART_4",
+            "rank": "4",
+            "suit": "HEART",
+          },
+          "to": {
+            "kind": "discard",
+          },
+          "turnDown": false,
+        },
+      ],
+      "options": {
+        "marksOnly": true,
+        "startInMs": 0,
+      },
+      "places": [
+        {
+          "from": {
+            "cards": 0,
+            "rect": {
+              "height": 60,
+              "left": 317,
+              "top": 318,
+              "width": 42,
+            },
+          },
+          "marks": [],
+          "to": {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 190,
+              "top": 191,
+              "width": 41,
+            },
+          },
+        },
+      ],
+    },
+  },
+  {
+    "play": {
+      "movements": [
+        {
+          "actor": 1,
+          "byOpponent": true,
+          "card": null,
+          "delayMs": 250,
+          "durationMs": 1000,
+          "flip": false,
+          "from": {
+            "kind": "draw",
+          },
+          "holdAfterMs": 450,
+          "kind": "travel",
+          "marks": [],
+          "to": {
+            "kind": "hand",
+          },
+          "turnDown": false,
+        },
+      ],
+      "options": {
+        "marksOnly": true,
+        "startInMs": 0,
+      },
+      "places": [
+        {
+          "from": {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 190,
+              "top": 191,
+              "width": 41,
+            },
+          },
+          "marks": [],
+          "to": {
+            "cards": 0,
+            "rect": {
+              "height": 60,
+              "left": 317,
+              "top": 318,
+              "width": 42,
+            },
+          },
+        },
+      ],
+    },
+  },
+  {
+    "play": {
+      "movements": [
+        {
+          "actor": 1,
+          "byOpponent": true,
+          "card": {
+            "name": "SPADE_7",
+            "rank": "7",
+            "suit": "SPADE",
+          },
+          "delayMs": 250,
+          "durationMs": 1000,
+          "flip": false,
+          "from": {
+            "kind": "hand",
+          },
+          "holdAfterMs": 450,
+          "kind": "travel",
+          "marks": [],
+          "restsOn": {
+            "name": "HEART_4",
+            "rank": "4",
+            "suit": "HEART",
+          },
+          "to": {
+            "kind": "discard",
+          },
+          "turnDown": false,
+        },
+      ],
+      "options": {
+        "marksOnly": true,
+        "startInMs": 0,
+      },
+      "places": [
+        {
+          "from": {
+            "cards": 0,
+            "rect": {
+              "height": 60,
+              "left": 317,
+              "top": 318,
+              "width": 42,
+            },
+          },
+          "marks": [],
+          "to": {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 190,
+              "top": 191,
+              "width": 41,
+            },
+          },
+        },
+      ],
+    },
+  },
+  {
+    "step": "reduced motion",
+  },
+  {
+    "sound": "card",
+  },
+  {
+    "sound": "miss",
+  },
+  {
+    "play": {
+      "movements": [
+        {
+          "actor": 1,
+          "byOpponent": true,
+          "card": null,
+          "delayMs": 250,
+          "durationMs": 1000,
+          "flip": false,
+          "from": {
+            "kind": "slot",
+            "seat": 1,
+            "slot": 0,
+          },
+          "holdAfterMs": 450,
+          "kind": "travel",
+          "leavesBack": true,
+          "marks": [
+            {
+              "kind": "slot",
+              "seat": 1,
+              "slot": 0,
+            },
+            {
+              "kind": "slot",
+              "seat": 0,
+              "slot": 1,
+            },
+          ],
+          "to": {
+            "kind": "slot",
+            "seat": 0,
+            "slot": 1,
+          },
+          "turnDown": false,
+        },
+        {
+          "actor": 1,
+          "byOpponent": true,
+          "card": null,
+          "delayMs": 250,
+          "durationMs": 1000,
+          "flip": false,
+          "from": {
+            "kind": "slot",
+            "seat": 0,
+            "slot": 1,
+          },
+          "holdAfterMs": 450,
+          "kind": "travel",
+          "leavesBack": true,
+          "marks": [
+            {
+              "kind": "slot",
+              "seat": 0,
+              "slot": 1,
+            },
+            {
+              "kind": "slot",
+              "seat": 1,
+              "slot": 0,
+            },
+          ],
+          "to": {
+            "kind": "slot",
+            "seat": 1,
+            "slot": 0,
+          },
+          "turnDown": false,
+        },
+      ],
+      "options": {
+        "marksOnly": true,
+        "startInMs": 0,
+      },
+      "places": [
+        {
+          "from": {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 190,
+              "top": 191,
+              "width": 41,
+            },
+          },
+          "marks": [
+            {
+              "cards": 1,
+              "rect": {
+                "height": 58,
+                "left": 190,
+                "top": 191,
+                "width": 41,
+              },
+            },
+            {
+              "cards": 1,
+              "rect": {
+                "height": 58,
+                "left": 190,
+                "top": 191,
+                "width": 41,
+              },
+            },
+          ],
+          "to": {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 190,
+              "top": 191,
+              "width": 41,
+            },
+          },
+        },
+        {
+          "from": {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 190,
+              "top": 191,
+              "width": 41,
+            },
+          },
+          "marks": [
+            {
+              "cards": 1,
+              "rect": {
+                "height": 58,
+                "left": 190,
+                "top": 191,
+                "width": 41,
+              },
+            },
+            {
+              "cards": 1,
+              "rect": {
+                "height": 58,
+                "left": 190,
+                "top": 191,
+                "width": 41,
+              },
+            },
+          ],
+          "to": {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 190,
+              "top": 191,
+              "width": 41,
+            },
+          },
+        },
+      ],
+    },
+  },
+  {
+    "play": {
+      "movements": [
+        {
+          "actor": 2,
+          "byOpponent": true,
+          "card": null,
+          "delayMs": 250,
+          "durationMs": 1000,
+          "flip": false,
+          "from": {
+            "kind": "draw",
+          },
+          "holdAfterMs": 450,
+          "kind": "travel",
+          "marks": [
+            {
+              "kind": "newSlot",
+              "seat": 2,
+            },
+          ],
+          "to": {
+            "kind": "newSlot",
+            "seat": 2,
+          },
+          "turnDown": false,
+        },
+      ],
+      "options": {
+        "marksOnly": true,
+        "startInMs": 0,
+      },
+      "places": [
+        {
+          "from": {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 190,
+              "top": 191,
+              "width": 41,
+            },
+          },
+          "marks": [
+            {
+              "cards": 1,
+              "rect": {
+                "height": 58,
+                "left": 190,
+                "top": 191,
+                "width": 41,
+              },
+            },
+          ],
+          "to": {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 190,
+              "top": 191,
+              "width": 41,
+            },
+          },
+        },
+      ],
+    },
+  },
+  {
+    "step": "a browser without the animation API",
+  },
+  {
+    "sound": "card",
+  },
+  {
+    "play": {
+      "movements": [
+        {
+          "actor": 1,
+          "byOpponent": true,
+          "card": {
+            "name": "SPADE_9",
+            "rank": "9",
+            "suit": "SPADE",
+          },
+          "delayMs": 250,
+          "durationMs": 1000,
+          "flip": true,
+          "from": {
+            "kind": "slot",
+            "seat": 0,
+            "slot": 0,
+          },
+          "holdAfterMs": 450,
+          "kind": "travel",
+          "leavesBack": true,
+          "marks": [
+            {
+              "kind": "slot",
+              "seat": 0,
+              "slot": 0,
+            },
+          ],
+          "restsOn": {
+            "name": "HEART_4",
+            "rank": "4",
+            "suit": "HEART",
+          },
+          "to": {
+            "kind": "discard",
+          },
+          "turnDown": false,
+        },
+        {
+          "actor": 1,
+          "byOpponent": true,
+          "card": null,
+          "delayMs": 700,
+          "durationMs": 1000,
+          "flip": false,
+          "from": {
+            "kind": "slot",
+            "seat": 1,
+            "slot": 1,
+          },
+          "holdAfterMs": 450,
+          "kind": "travel",
+          "leavesBack": true,
+          "marks": [
+            {
+              "kind": "slot",
+              "seat": 1,
+              "slot": 1,
+            },
+            {
+              "kind": "slot",
+              "seat": 0,
+              "slot": 0,
+            },
+          ],
+          "to": {
+            "kind": "slot",
+            "seat": 0,
+            "slot": 0,
+          },
+          "turnDown": false,
+        },
+      ],
+      "options": {
+        "marksOnly": false,
+        "startInMs": 0,
+      },
+      "places": [
+        {
+          "from": {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 190,
+              "top": 191,
+              "width": 41,
+            },
+          },
+          "marks": [
+            {
+              "cards": 1,
+              "rect": {
+                "height": 58,
+                "left": 190,
+                "top": 191,
+                "width": 41,
+              },
+            },
+          ],
+          "to": {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 190,
+              "top": 191,
+              "width": 41,
+            },
+          },
+        },
+        {
+          "from": {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 190,
+              "top": 191,
+              "width": 41,
+            },
+          },
+          "marks": [
+            {
+              "cards": 1,
+              "rect": {
+                "height": 58,
+                "left": 190,
+                "top": 191,
+                "width": 41,
+              },
+            },
+            {
+              "cards": 1,
+              "rect": {
+                "height": 58,
+                "left": 190,
+                "top": 191,
+                "width": 41,
+              },
+            },
+          ],
+          "to": {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 190,
+              "top": 191,
+              "width": 41,
+            },
+          },
+        },
+      ],
+    },
+  },
+]
+`;
