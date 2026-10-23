@@ -1,0 +1,29 @@
+[
+  {
+    "left": 602.7,
+    "top": 231,
+    "width": 74.5,
+    "height": 108.1,
+    "opacity": 1,
+    "level": "3000",
+    "picture": "/src/resources/cards/png/card_back.png?inline"
+  },
+  {
+    "left": 599.1,
+    "top": 272,
+    "width": 81.8,
+    "height": 117.5,
+    "opacity": 1,
+    "level": "3000",
+    "picture": "/src/resources/cards/png/card_back.png?inline"
+  },
+  {
+    "left": 598.1,
+    "top": 292.7,
+    "width": 83.9,
+    "height": 121,
+    "opacity": 1,
+    "level": "3000",
+    "picture": "/src/resources/cards/png/card_back.png?inline"
+  }
+]

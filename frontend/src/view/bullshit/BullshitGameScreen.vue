@@ -36,6 +36,7 @@ import { seatDisplayName } from '../../model/table/displayName';
 import { opponentsInPlayOrder } from '../../model/table/opponentOrder';
 import { seatPositions as ringPositions } from '../../model/table/seatRing';
 import { claimSuit } from '../../model/bullshit/claimSuit';
+import { sortHand } from '../../model/bullshit/sortHand';
 import { CLAIM_MODE_RANK, CLAIM_MODE_SUIT, type ClaimMode } from '../../model/bullshit/claimMode';
 
 const props = defineProps<{ gameId: string }>();
@@ -111,12 +112,15 @@ const motion = useTableMotion<never, BullshitAnchor>({ layer, bounds: BULLSHIT_Q
 
 function discard() {
   const hand = store.game?.myHand ?? [];
+  // The copy starts from the place numbered by the card's index in the hand, and shows the card displayed there (the
+  // places are numbered in display order): the two differ when the hand is not sent in display order, as before.
+  const shown = sortHand(hand, handSortMode.value);
   const sources = store.selectedCards
     .map(c => hand.findIndex(h => h.name === c.name))
     .filter(i => i >= 0)
     .flatMap(i => {
       const el = document.querySelector<HTMLElement>(`[data-test="hand-card-${i}"]`);
-      return el ? [{ rect: el.getBoundingClientRect(), card: hand[i] }] : [];
+      return el ? [{ rect: el.getBoundingClientRect(), card: shown[i] }] : [];
     });
   const plan = planDiscard(sources, pileCardEl()?.getBoundingClientRect() ?? null);
   if (plan) void motion.play(plan);

@@ -5,10 +5,9 @@
 const GHOSTS = '[data-test="flying-card"], [data-test="flying-pile"], [data-test="motion-card"]';
 const OUT = 'docs/screenshots/bullshit-shared-animation';
 // The same hand whatever the deal, so the pictures can be compared.
-const FIXED = [
-  ['ACE', 'HEART'], ['KING', 'SPADE'], ['QUEEN', 'DIAMOND'], ['JACK', 'CLUB'], ['TEN', 'HEART'], ['NINE', 'SPADE'],
-  ['EIGHT', 'DIAMOND'], ['SEVEN', 'CLUB'], ['SIX', 'HEART'], ['FIVE', 'SPADE'],
-];
+const RANKS = ['ACE', 'KING', 'QUEEN', 'JACK', '10', '9', '8', '7', '6', '5', '4', '3', '2'];
+const SUITS = ['HEART', 'SPADE', 'DIAMOND', 'CLUB'];
+const FIXED = RANKS.flatMap(rank => SUITS.map(suit => [rank, suit]));
 
 function startTwoPlayerGame() {
   cy.visit('/games');
@@ -52,7 +51,7 @@ function record(name: string, width: number) {
       return {
         left: round(r.left), top: round(r.top), width: round(r.width), height: round(r.height),
         opacity: Number(getComputedStyle(el).opacity), level: level(el),
-        picture: el.querySelector('img')?.getAttribute('src') ?? null,
+        picture: (el.matches('img') ? el : el.querySelector('img'))?.getAttribute('src') ?? null,
       };
     });
     if (tag) cy.writeFile(`../${OUT}/${tag}-${width}-${name}.json`, JSON.stringify(copies, null, 2));
@@ -65,11 +64,12 @@ function record(name: string, width: number) {
     beforeEach(() => {
       cy.viewport(width, height);
       startTwoPlayerGame();
+      cy.wait(1500); // the late state updates of the start are in: the fixed hand below is the last word
       cy.window().then((w) => {
         const pinia = (w.document.querySelector('#app') as any).__vue_app__.config.globalProperties.$pinia;
         const store = pinia._s.get('bullshit-store');
         const myHand = store.game.myHand.map((_: unknown, i: number) => {
-          const [rank, suit] = FIXED[i % FIXED.length];
+          const [rank, suit] = FIXED[i];
           return { rank, suit, name: `${suit}_${rank}` };
         });
         store.applyEvent({ type: 'state-update', state: { ...store.game, myHand } });
@@ -77,6 +77,7 @@ function record(name: string, width: number) {
     });
 
     it('freezes the discard of two cards to the pile', () => {
+      cy.clock(); // the layer drops a copy that never finishes after a safety delay: stop that clock, the copies stay
       freezeCopiesAt(250);
       cy.get('[data-test="hand-card-0"]').click({ force: true });
       cy.get('[data-test="hand-card-1"]').click({ force: true });
@@ -85,6 +86,7 @@ function record(name: string, width: number) {
     });
 
     it('freezes the pile on its way to the taker', () => {
+      cy.clock();
       freezeCopiesAt(300);
       cy.window().then((w) => {
         const pinia = (w.document.querySelector('#app') as any).__vue_app__.config.globalProperties.$pinia;
@@ -98,7 +100,7 @@ function record(name: string, width: number) {
         });
       });
       cy.get('[data-test="reveal"]').should('exist');
-      cy.get('[data-test="reveal"]', { timeout: 6000 }).should('not.exist');
+      cy.tick(3000); // the verdict goes away
       record('take', width);
     });
   });

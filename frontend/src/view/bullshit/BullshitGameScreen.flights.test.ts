@@ -20,9 +20,9 @@ const hand = [
   { rank: 'ACE', suit: 'HEART', name: 'HEART_ACE' },
   { rank: 'KING', suit: 'SPADE', name: 'SPADE_KING' },
 ];
-function state(winner: string | null = null): BullshitState {
+function state(winner: string | null = null, myHand = hand): BullshitState {
   return {
-    started: true, id: 'g1', gameType: 'bullshit', myHand: hand, availableActions: ['DISCARD'],
+    started: true, id: 'g1', gameType: 'bullshit', myHand, availableActions: ['DISCARD'],
     players: [{ id: '0', handCount: 2, isCurrentPlayer: true, name: 'Alice' }, { id: '1', handCount: 3, isCurrentPlayer: false }],
     currentTarget: { label: 'ACE' }, discardPileSize: 4, table: { state: 'NO_CLAIM' },
     pendingWinner: { state: 'NONE' },
@@ -147,6 +147,27 @@ describe('Bullshit flights (characterisation)', () => {
         ['60px', '90px', '3000'], ['60px', '90px', '3000'],
       ]);
       wrapper.unmount();
+    });
+
+    // Today the copy is taken from the place `hand-card-<n>` where n is the card's index in the hand as the server
+    // sent it, while the places are numbered in the order they are displayed (sorted). With a hand that is not in
+    // display order the copy starts from, and shows, the card sitting at that other place. Kept as it is: any
+    // change of it is a visible change for the owner to decide.
+    it('draws each copy from the place numbered by the card index in the hand, shown or not in that order', async () => {
+      const reversed = [hand[1], hand[0]];             // sent as KING, ACE; displayed as ACE (0), KING (1)
+      const ctx = setup(state(null, reversed));
+      vi.spyOn(ctx.store, 'discard').mockImplementation(() => {});
+      await ctx.wrapper.get('[data-test="hand-card-0"]').trigger('click');   // the ace, which is index 1 of the hand
+      await ctx.wrapper.get('[data-test="discard"]').trigger('click');
+      await flushPromises();
+      const root = ctx.wrapper.element as HTMLElement;
+      const pictureOf = (el: Element) => (el.matches('img') ? el : el.querySelector('img'))?.getAttribute('src');
+      expect(flights).toHaveLength(1);
+      expect(flights[0].frames[0].transform).toBe('translate(100px, 500px) scale(1) rotate(0deg)');
+      expect(pictureOf(flights[0].el)).toBeTruthy();
+      expect(pictureOf(flights[0].el)).toBe(pictureOf(root.querySelector('[data-test="hand-card-1"]')!));
+      expect(pictureOf(flights[0].el)).not.toBe(pictureOf(root.querySelector('[data-test="hand-card-0"]')!));
+      ctx.wrapper.unmount();
     });
 
     it('removes the copies once they have landed', async () => {
