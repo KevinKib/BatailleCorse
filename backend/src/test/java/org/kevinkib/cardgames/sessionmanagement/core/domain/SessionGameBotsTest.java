@@ -219,4 +219,65 @@ class SessionGameBotsTest {
     void givenFreeSeat_whenRenameSeat_thenRefused() {
         assertThrows(IllegalArgumentException.class, () -> lobby.renameSeat(new PlayerId(2), "X"));
     }
+
+    @Test
+    void givenBotsAfterTheHost_whenClaimSeatAheadOfBots_thenTheHumanSitsRightAfterTheHumansAndTheBotsShiftUp() {
+        lobby.claimBot(null);
+        lobby.claimBot("Robo");
+        lobby.setSeatOption(new PlayerId(2), "tier", "2");
+
+        SessionPlayer bob = lobby.claimSeatAheadOfBots("Bob");
+
+        assertThat(bob.id(), is(new PlayerId(1)));
+        assertThat(lobby.seats().get(1).name(), is("Bob"));
+        assertThat(lobby.findPlayerByToken(bob.token()), is(java.util.Optional.of(new PlayerId(1))));
+        assertThat(lobby.botSeats(), is(Set.of(new PlayerId(2), new PlayerId(3))));
+        assertThat(lobby.seats().get(2).name(), is("Bot 1"));
+        assertThat(lobby.seats().get(3).name(), is("Robo"));
+        assertThat(lobby.seats().get(3).options(), is(java.util.Map.of("tier", "2")));
+        assertThat(lobby.removableBotSeats(), contains(new PlayerId(2), new PlayerId(3)));
+    }
+
+    @Test
+    void givenNoHumanYet_whenClaimSeatAheadOfBots_thenTheHumanTakesTheHostSeat() {
+        SessionGame reopened = SessionGame.create(GameId.generate(), 3, "bullshit");
+        reopened.claimBotsOf(lobbyWithOneBot());
+
+        SessionPlayer first = reopened.claimSeatAheadOfBots(null);
+
+        assertThat(first.id(), is(new PlayerId(0)));
+        assertThat(first.name(), is("Player 1"));
+        assertThat(reopened.botSeats(), is(Set.of(new PlayerId(1))));
+    }
+
+    @Test
+    void givenHumansStayInPlace_whenClaimSeatAheadOfBots_thenTheirTokensAreKept() {
+        SessionPlayer bob = lobby.claimNextFreeSeat("Bob");
+        SessionToken aliceToken = lobby.findTokenByPlayer(new PlayerId(0)).orElseThrow();
+        lobby.claimBot(null);
+
+        SessionPlayer carl = lobby.claimSeatAheadOfBots("Carl");
+
+        assertThat(carl.id(), is(new PlayerId(2)));
+        assertThat(lobby.findPlayerByToken(aliceToken), is(java.util.Optional.of(new PlayerId(0))));
+        assertThat(lobby.findPlayerByToken(bob.token()), is(java.util.Optional.of(new PlayerId(1))));
+        assertThat(lobby.botSeats(), is(Set.of(new PlayerId(3))));
+    }
+
+    @Test
+    void givenFullRoom_whenClaimSeatAheadOfBots_thenNoFreeSeat() {
+        lobby.claimBot(null);
+        lobby.claimBot(null);
+        lobby.claimBot(null);
+
+        assertThrows(NoFreeSeatException.class, () -> lobby.claimSeatAheadOfBots("Bob"));
+        assertThat(lobby.botSeats(), is(Set.of(new PlayerId(1), new PlayerId(2), new PlayerId(3))));
+    }
+
+    private static SessionGame lobbyWithOneBot() {
+        SessionGame former = SessionGame.create(GameId.generate(), 3, "bullshit");
+        former.claimHost("Alice");
+        former.claimBot(null);
+        return former;
+    }
 }

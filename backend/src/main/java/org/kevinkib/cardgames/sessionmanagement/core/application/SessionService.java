@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * Session use cases. Every operation that reads or mutates a lobby's seats or options, and the computation of the
@@ -36,12 +37,16 @@ public class SessionService implements GameDirectory {
     }
 
     public synchronized JoinResult joinRoom(GameId id, String name) {
+        return join(id, lobby -> lobby.claimNextFreeSeat(name));
+    }
+
+    private JoinResult join(GameId id, Function<SessionGame, SessionPlayer> claim) {
         if (repository.findGame(id).isPresent()) {
             throw new GameAlreadyStartedException(id);
         }
         SessionGame lobby = repository.loadSessionGame(id);
         try {
-            SessionPlayer claimed = lobby.claimNextFreeSeat(name);
+            SessionPlayer claimed = claim.apply(lobby);
             lobby.bumpVersion();
             return new JoinResult(claimed.id(), claimed.token().uuid().toString(), lobbyViews(id));
         } catch (NoFreeSeatException e) {
@@ -52,7 +57,8 @@ public class SessionService implements GameDirectory {
     /**
      * Re-join the room for a rematch. If a game is present (finished or not), the room is first
      * reopened — the game is dropped and the lobby reset, keeping the computer players (order, names and seat
-     * options) on the seats right after seat 0 — then a seat is claimed; the first caller takes seat 0 and becomes host. Synchronized so a burst of simultaneous
+     * options) on the seats right after seat 0 — then a seat is claimed right after the humans already back, the bots
+     * shifting up (so they stay removable by the host); the first caller takes seat 0 and becomes host. Synchronized so a burst of simultaneous
      * Play-Again calls reopen exactly once before any of them claims a seat.
      */
     public synchronized JoinResult playAgain(GameId id, String name) {
@@ -66,7 +72,7 @@ public class SessionService implements GameDirectory {
             // The reopened lobby continues the version of the one it replaces: a client never sees it go backwards.
             repository.saveLobby(new SessionGame(id, type, options, fresh.players(), existing.version()));
         }
-        return joinRoom(id, name);
+        return join(id, lobby -> lobby.claimSeatAheadOfBots(name));
     }
 
     public RoomCreated createRoom(String gameType, String hostName) {
