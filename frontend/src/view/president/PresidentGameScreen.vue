@@ -36,12 +36,13 @@ import { ruleChips } from '../../model/president/chips';
 import { hintText } from '../../model/president/hint';
 import { format } from '../../locales/format';
 import {
-  AnimationSpeedButton, CardMotionLayer, createTempoQueue, eventSpanMs, prefersReducedMotion, speedFactor, useAnimationSpeed,
-  useDisplayedState, useInFlightCounts, useSeatBubbles, type MotionRect, type MotionTarget,
+  AnimationSpeedButton, CARD_RATIO, CardMotionLayer, defineAnchors, eventSpanMs, speedFactor, useAnimationSpeed,
+  useDisplayedState, useInFlightCounts, useSeatBubbles, useTableMotion, visibleRect, type CardMotionLayerPlay, type DomQuery,
+  type MotionPlan, type MotionTarget,
 } from '../../animation';
 import {
   planBubbles, planMovements, planSweep, sourcesFor, sweepStartMs, type PendingSources, type PlaySources,
-  type PresidentAnchor, type PresidentMovement,
+  type PresidentAnchor,
 } from '../../model/president/motion';
 import { closedPile, pileView, type PileView } from '../../model/president/trickView';
 import { planExchangeFlights } from '../../model/president/exchangeMotion';
@@ -215,41 +216,56 @@ watch(() => [shown.value?.round, shown.value?.currentSeat, shown.value?.version,
 // pops over a seat that passed, the winner of a closed trick is ringed). The state, the buttons and the clicks never
 // wait for it, and a place that cannot be found just skips the picture. Reduced motion and Instant: still rings only.
 const { speed, cycle: cycleSpeed } = useAnimationSpeed();
-const still = computed(() => speed.value === 'instant' || prefersReducedMotion());
 const screenEl = ref<HTMLElement | null>(null);
-const motionLayer = ref<{ play: (m: PresidentMovement[], o?: { marksOnly?: boolean; startInMs?: number; still?: boolean }) => void } | null>(null);
+const motionLayer = ref<{ play: CardMotionLayerPlay<PresidentAnchor> } | null>(null);
 const bubbles = useSeatBubbles({ gapMs: PRESIDENT_TEMPO.bubbleGapMs });
 const inFlight = useInFlightCounts({ maxLagMs: PRESIDENT_TEMPO.countLagMaxMs });
 // The cards of the exchange still flying into my hand: their place in the hand waits for them.
 const landing = ref<string[]>([]);
 const landingTimers = new Set<ReturnType<typeof setTimeout>>();
 onBeforeUnmount(() => { bubbles.cancel(); inFlight.cancel(); landingTimers.forEach(clearTimeout); endHold(); });
-const tempoQueue = createTempoQueue(() => Date.now(), PRESIDENT_TEMPO.queue);
-const CARD_RATIO = 243.1375 / 167.575;
-
-const visibleRect = (el: Element | null | undefined): MotionRect | null => {
-  if (!el) return null;
-  const r = el.getBoundingClientRect();
-  return r.width > 0 && r.height > 0 ? { left: r.left, top: r.top, width: r.width, height: r.height } : null;
-};
-const find = (selector: string) => screenEl.value?.querySelector<HTMLElement>(selector) ?? null;
-/** A card-sized rectangle in the middle of a place (my hand zone, a seat without a fan). */
-const cardAt = (box: MotionRect, width: number): MotionRect =>
-  ({ left: box.left + (box.width - width) / 2, top: box.top + (box.height - width * CARD_RATIO) / 2, width, height: width * CARD_RATIO });
 
 /** A seat as a place: my hand zone (a card in its middle) or an opponent's fan (a card the height of it). */
-function seatTarget(seat: number): MotionTarget | null {
+function seatTarget(seat: number, q: DomQuery): MotionTarget | null {
   if (seat === store.mySeat) {
-    const box = visibleRect(find('[data-test="my-zone"] [data-test="hand"]')) ?? visibleRect(find('[data-test="my-zone"]'));
-    return box ? { rect: cardAt(box, 44), cards: [] } : null;
+    const box = q.rect(q.find('[data-test="my-zone"] [data-test="hand"]')) ?? q.rect(q.find('[data-test="my-zone"]'));
+    return box ? { rect: q.cardAt(box, 44), cards: [] } : null;
   }
-  const slot = find(`.seat-slot[data-seat="${seat}"]`);
-  const fan = visibleRect(slot?.querySelector('.fan-backs'));
+  const slot = q.find(`.seat-slot[data-seat="${seat}"]`);
+  const fan = q.rect(slot?.querySelector('.fan-backs'));
   // A card the height of the fan, so that the rings stay on the backs and never cover the count under them.
-  if (fan) return { rect: cardAt(fan, Math.min(fan.width, fan.height / CARD_RATIO)), cards: [] };
-  const box = visibleRect(slot);
-  return box ? { rect: cardAt(box, 24), cards: [] } : null;
+  if (fan) return { rect: q.cardAt(fan, Math.min(fan.width, fan.height / CARD_RATIO)), cards: [] };
+  const box = q.rect(slot);
+  return box ? { rect: q.cardAt(box, 24), cards: [] } : null;
 }
+
+/** The places of the President table, measured inside the screen. */
+const resolveAnchor = defineAnchors<PresidentAnchor>(() => screenEl.value, {
+  seat: (anchor, q) => seatTarget(anchor.seat, q),
+  fanTop: (anchor, q) => {
+    // The back on top of the fan (its last one): the cards an opponent plays leave from it.
+    const backs = q.find(`.seat-slot[data-seat="${anchor.seat}"]`)?.querySelectorAll('.fan-back');
+    const rect = q.rect(backs?.[backs.length - 1]);
+    return rect ? { rect, cards: [] } : seatTarget(anchor.seat, q);
+  },
+  pile: (_anchor, q) => {
+    const rect = q.rect(q.find('[data-test="trick-cards"]'));
+    return rect ? { rect, cards: [] } : null;
+  },
+  pileSlot: (_anchor, q) => {
+    // The plays under the top one are not drawn: they leave from the middle of the pile, at the size of a card.
+    const box = q.rect(q.find('[data-test="trick-cards"]'));
+    const card = q.rect(q.find('[data-test="trick-cards"] .playing_card'));
+    if (!box || !card) return null;
+    return { rect: { left: box.left + (box.width - card.width) / 2, top: card.top, width: card.width, height: card.height }, cards: [] };
+  },
+  rect: anchor => ({ rect: { left: anchor.left, top: anchor.top, width: anchor.width, height: anchor.height }, cards: [] }),
+  pileCard: (anchor, q) => {
+    const card = q.find('[data-test="trick-cards"]')?.children[anchor.index]?.querySelector<HTMLElement>('.playing_card');
+    const rect = q.rect(card);
+    return card && rect ? { rect, cards: [card] } : null;
+  },
+});
 
 // What the click on Play measured: the exact place of every card I play, because the state arrives before the
 // picture and those cards have left my hand by then. Consumed by the play that comes back in the log.
@@ -263,38 +279,6 @@ function playSelected() {
   });
   pendingSources = Object.keys(rects).length > 0 ? { rects, at: Date.now() } : null;
   store.play();
-}
-
-function resolveAnchor(anchor: PresidentAnchor): MotionTarget | null {
-  switch (anchor.kind) {
-    case 'seat':
-      return seatTarget(anchor.seat);
-    case 'fanTop': {
-      // The back on top of the fan (its last one): the cards an opponent plays leave from it.
-      const slot = find(`.seat-slot[data-seat="${anchor.seat}"]`);
-      const backs = slot?.querySelectorAll('.fan-back');
-      const rect = visibleRect(backs?.[backs.length - 1]);
-      return rect ? { rect, cards: [] } : seatTarget(anchor.seat);
-    }
-    case 'pile': {
-      const rect = visibleRect(find('[data-test="trick-cards"]'));
-      return rect ? { rect, cards: [] } : null;
-    }
-    case 'pileSlot': {
-      // The plays under the top one are not drawn: they leave from the middle of the pile, at the size of a card.
-      const box = visibleRect(find('[data-test="trick-cards"]'));
-      const card = visibleRect(find('[data-test="trick-cards"] .playing_card'));
-      if (!box || !card) return null;
-      return { rect: { left: box.left + (box.width - card.width) / 2, top: card.top, width: card.width, height: card.height }, cards: [] };
-    }
-    case 'rect':
-      return { rect: { left: anchor.left, top: anchor.top, width: anchor.width, height: anchor.height }, cards: [] };
-    case 'pileCard': {
-      const card = find('[data-test="trick-cards"]')?.children[anchor.index]?.querySelector<HTMLElement>('.playing_card');
-      const rect = visibleRect(card);
-      return card && rect ? { rect, cards: [card] } : null;
-    }
-  }
 }
 
 // A closed trick stays on the pile as a picture (its closing play, dimmed, with the badge) until its cards have swept
@@ -331,63 +315,78 @@ function scheduleHold(pile: PileView, id: number, sweepAtMs: number, endMs: numb
   later(endMs, endHold);
 }
 
-/** Plays a move's picture; its texts (`slot`, reserved in arrival order) are told once its cards have landed. */
-async function playEntry(entry: PresidentLogEntry, slot: number) {
+/** What the table keeps of a move between its plan and its picture: its texts' slot and the trick it sweeps. */
+interface MovePicture {
+  /** The move's state, reserved in arrival order: its texts are told once its cards have landed. */
+  slot: number;
+  /** The pile of the trick the move closed, when its cards sweep toward the winner. */
+  swept: PileView | null;
+  sweepAtMs: number;
+}
+const movePictures = new WeakMap<PresidentLogEntry, MovePicture>();
+
+/**
+ * A move's picture: its cards fly to the pile; a trick it closes is swept toward its winner after the badge's hold (a
+ * follow-up: the sweep takes its time in the queue, the next move starts once it is over, and when the queue is full
+ * there is no sweep). Its state is reserved now, in arrival order.
+ */
+function planMove(entry: PresidentLogEntry, factor: number, isStill: boolean): MotionPlan<PresidentAnchor> | null {
+  const after = entry.after ?? store.game;
+  if (!after) return null;
+  const slot = display.reserve(after, entry);
   try {
-    await playMoves(entry, slot);
+    const sources = sourcesFor(entry, store.mySeat, pendingSources, Date.now());
+    if (sources) pendingSources = null;
+    const moves = planMovements(entry, store.mySeat, factor, sources);
+    // Nothing flies (a pass) or nothing animates: told at once, after the moves before it.
+    if (moves.length === 0 || isStill) display.revealIn(slot, 0);
+    const closed = moves.length > 0 && !isStill && motionLayer.value ? closedPile(entry) : null;
+    const sweep = closed ? planSweep(entry, store.mySeat, factor) : [];
+    const sweepAtMs = sweepStartMs(entry, store.mySeat, factor);
+    movePictures.set(entry, { slot, swept: sweep.length > 0 ? closed : null, sweepAtMs });
+    if (sweep.length === 0) return { movements: moves };
+    return {
+      movements: moves,
+      // The cards of the closed trick leave once the badge has had its moment (their copies wait out of sight until then).
+      followUps: [{ movements: sweep, atMs: sweepAtMs }],
+      spanMs: sweepAtMs + eventSpanMs(sweep) + PRESIDENT_TEMPO.sweep.landHoldMs,
+    };
   } catch {
     // A picture is never worth an error, nor a text held back by it.
     display.revealIn(slot, 0);
+    return null;
   }
 }
 
-async function playMoves(entry: PresidentLogEntry, slot: number) {
-  const factor = speedFactor(speed.value);
-  const isStill = still.value;
-  const sources = sourcesFor(entry, store.mySeat, pendingSources, Date.now());
-  if (sources) pendingSources = null;
-  const moves = planMovements(entry, store.mySeat, factor || 1, sources);
-  // Nothing flies (a pass) or nothing animates: told at once, after the moves before it.
-  if (moves.length === 0 || isStill) display.revealIn(slot, 0);
-  if (moves.length === 0) return;
-  // A trick this move closes is swept toward its winner after the badge's hold: the sweep takes its time in the queue
-  // (the next move starts once it is over), and when the queue is full there is no sweep.
-  const closed = !isStill && motionLayer.value ? closedPile(entry) : null;
-  const sweep = closed ? planSweep(entry, store.mySeat, factor || 1) : [];
-  const sweepAt = sweepStartMs(entry, store.mySeat, factor || 1);
-  const spanMs = sweep.length > 0 ? sweepAt + eventSpanMs(sweep) + PRESIDENT_TEMPO.sweep.landHoldMs : eventSpanMs(moves);
-  const admission = isStill ? { startInMs: 0, motion: false } : tempoQueue.admit(spanMs);
-  const arrivedAt = Date.now();
+// Each new move of the log (newest first, replayed oldest first) is played over the table, in the shared queue.
+const motion = useTableMotion<PresidentLogEntry, PresidentAnchor>({
+  layer: motionLayer,
+  speed,
+  bounds: PRESIDENT_TEMPO.queue,
+  log: () => store.events,
+  plan: (entry, { factor, still: isStill }) => planMove(entry, factor, isStill),
   // The pile of the trick before this one is held by its sweep: where this move lands is known only once it clears.
-  while (holdDone) await holdDone;
-  const startInMs = Math.max(0, admission.startInMs - (Date.now() - arrivedAt));
-  const sweeps = closed !== null && admission.motion && sweep.length > 0;
-  // Keep the closed trick's pile on screen from now on, before the DOM moves on to the next state.
-  if (closed && sweeps) beginHold(closed, entry.id);
-  // The pile shows the new play once the DOM has the new state.
-  await nextTick();
-  if (closed && sweeps) scheduleHold(closed, entry.id, startInMs + sweepAt, startInMs + spanMs);
-  // The move is told (its seat's count drops, the turn moves on, the trick says what binds it) once its cards land.
-  display.revealIn(slot, admission.motion ? startInMs + eventSpanMs(moves.filter(m => m.kind === 'travel')) : 0);
-  motionLayer.value?.play(moves, { marksOnly: !admission.motion, startInMs, still: isStill });
-  // The cards of the closed trick leave once the badge has had its moment (their copies wait out of sight until then).
-  if (sweeps) motionLayer.value?.play(sweep, { startInMs: startInMs + sweepAt, still: false });
-}
-
-// The log is newest first: what is new is what comes before the head I already knew. Each new move holds its state
-// back from the texts until its picture is over (reserved now, in arrival order).
-watch(() => store.events, (events, previous) => {
-  const known = previous?.[0] ?? null;
-  const fresh: PresidentLogEntry[] = [];
-  for (const entry of events) {
-    if (entry === known) break;
-    fresh.push(entry);
-  }
-  fresh.reverse().forEach((entry) => {
-    const after = entry.after ?? store.game;
-    if (after) void playEntry(entry, display.reserve(after, entry));
-  });
+  beforePlay: async (admitted, entry) => {
+    while (holdDone) await holdDone;
+    // Keep the closed trick's pile on screen from now on, before the DOM moves on to the next state.
+    const swept = admitted.motion ? movePictures.get(entry)?.swept ?? null : null;
+    if (swept) beginHold(swept, entry.id);
+    // The pile shows the new play once the DOM has the new state.
+    await nextTick();
+  },
+  onPlayed: (played, entry) => {
+    const picture = entry ? movePictures.get(entry) : undefined;
+    if (!entry || !picture) return;
+    const { startInMs } = played;
+    if (picture.swept && played.motion) {
+      scheduleHold(picture.swept, entry.id, startInMs + picture.sweepAtMs, startInMs + (played.plan.spanMs ?? 0));
+    }
+    // The move is told (its seat's count drops, the turn moves on, the trick says what binds it) once its cards land.
+    display.revealIn(picture.slot, played.motion ? startInMs + eventSpanMs(played.plan.movements.filter(m => m.kind === 'travel')) : 0);
+  },
 });
+const still = motion.still;
+const factor = motion.factor;
 // A state that no move brought (an exchange, a ready, a new round, a reload) is told once the moves before it are; a
 // first state, a lobby or another game starts over. The state a move brought is the move's (above).
 watch(() => store.game, (game, previous) => {
@@ -405,21 +404,22 @@ watch(still, isStill => { if (isStill) display.flush(); });
 // states (the events carry counts, never cards). The state already has them in their new hand: the seats' counts and
 // my own hand wait for the landing. Same queue, speed and rings as the plays.
 async function playExchange(change: { before: PresidentState; after: PresidentState }) {
-  const factor = speedFactor(speed.value);
-  const isStill = still.value;
-  const moves = planExchangeFlights(change.before, change.after, store.mySeat, factor || 1);
+  // The speed as it is (0 at Instant): the summary is read for its three seconds times this.
+  const speedNow = speedFactor(speed.value);
+  const moves = planExchangeFlights(change.before, change.after, store.mySeat, factor.value);
   const opensView = change.after.phase === 'EXCHANGE_VIEW' && change.before.phase !== 'EXCHANGE_VIEW';
   if (moves.length === 0) {
     // Nothing flies: the summary is on screen already, its three seconds start now.
-    if (opensView) armAcknowledgement(ackDelayMs({ flightsEndMs: 0, factor }));
+    if (opensView) armAcknowledgement(ackDelayMs({ flightsEndMs: 0, factor: speedNow }));
     return;
   }
   // The summary comes in once the flights and their rings are over: it moves the hand, which the flights and the rings
   // were measured on.
   recapHeld.value = true;
   await nextTick();
-  const admission = isStill ? { startInMs: 0, motion: false } : tempoQueue.admit(eventSpanMs(moves));
-  const endMs = isStill ? PRESIDENT_TEMPO.markReducedMs
+  // Same queue, speed and rings as the plays.
+  const admission = await motion.play({ movements: moves });
+  const endMs = admission.still ? PRESIDENT_TEMPO.markReducedMs
     : Math.max(PRESIDENT_TEMPO.markMs, eventSpanMs(moves) + Math.max(...moves.map(m => m.holdAfterMs)));
   const release = setTimeout(() => { landingTimers.delete(release); recapHeld.value = false; }, admission.startInMs + endMs);
   landingTimers.add(release);
@@ -441,10 +441,9 @@ async function playExchange(change: { before: PresidentState; after: PresidentSt
       }
     }
   }
-  motionLayer.value?.play(moves, { marksOnly: !admission.motion, startInMs: admission.startInMs, still: isStill });
   // The table has seen the exchange once the flights have landed and the summary has been read: that is when this
   // screen tells the server (rings stand for the flights under reduced motion; Instant does not wait).
-  if (opensView) armAcknowledgement(ackDelayMs({ flightsEndMs: admission.startInMs + endMs, factor }));
+  if (opensView) armAcknowledgement(ackDelayMs({ flightsEndMs: admission.startInMs + endMs, factor: speedNow }));
 }
 watch(() => store.stateChange, change => { if (change) void playExchange(change); });
 
@@ -513,9 +512,9 @@ function closeRecap() {
 const kind = computed(() => store.game ? endKind(store.game) : 'none');
 const endSequence = usePresidentEndSequence({
   kind: () => kind.value,
-  backlogMs: () => tempoQueue.backlogMs(),
+  backlogMs: () => motion.backlogMs(),
   busy: () => hold.value !== null,
-  timings: () => endTimings(speedFactor(speed.value) || 1, still.value),
+  timings: () => endTimings(factor.value, still.value),
 });
 const sheetOpen = endSequence.sheetVisible;
 // The place of my zone keeps its height while the round sheet rises over it, so that the felt above never resizes.
@@ -664,7 +663,7 @@ const rematchButton = computed(() =>
             :can-ready="canReady"
             :final="kind === 'final'"
             :still="still"
-            :factor="speedFactor(speed) || 1"
+            :factor="factor"
             @ready="store.ready()"
             @continue="endSequence.continueToFinal()" />
         </div>
