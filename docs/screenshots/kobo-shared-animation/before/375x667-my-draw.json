@@ -1,0 +1,120 @@
+{
+  "layerHtml": "<div data-v-e6bb3fda=\"\" data-v-340b5ee6=\"\" class=\"motion-layer\" data-test=\"motion-layer\" aria-hidden=\"true\"><svg data-v-e6bb3fda=\"\" class=\"motion-arrows\" xmlns=\"http://www.w3.org/2000/svg\"><defs data-v-e6bb3fda=\"\"><marker data-v-e6bb3fda=\"\" id=\"kobo-arrow-head\" viewBox=\"0 0 10 10\" refX=\"8\" refY=\"5\" markerWidth=\"6\" markerHeight=\"6\" orient=\"auto-start-reverse\"><path data-v-e6bb3fda=\"\" d=\"M0 0 L10 5 L0 10 z\" fill=\"currentColor\"></path></marker></defs></svg><div data-v-e6bb3fda=\"\" class=\"ghost\" data-test=\"motion-card\" data-ghost=\"1\" data-kind=\"travel\" style=\"width: 44px; height: 63.8281px; transform: translate(83.4062px, 59px);\"><img data-v-e6bb3fda=\"\" src=\"/src/resources/cards/png/card_back.png?inline\" alt=\"\" width=\"50\" height=\"72.54587498135164\" class=\"playing_card face\" data-face=\"back\"><img data-v-e6bb3fda=\"\" src=\"/src/resources/cards/png/card_2_spade.png?inline\" alt=\"\" width=\"50\" height=\"72.54587498135164\" class=\"playing_card face\" data-face=\"front\"></div></div>",
+  "animations": [
+    {
+      "target": "motion-card",
+      "timing": {
+        "delay": 150,
+        "duration": 1000,
+        "fill": "both",
+        "easing": "linear"
+      },
+      "keyframes": [
+        {
+          "offset": null,
+          "easing": "cubic-bezier(0.2, 0.8, 0.2, 1)",
+          "composite": "auto",
+          "transform": "translate(83.4062px, 59px) scale(1)",
+          "computedOffset": 0
+        },
+        {
+          "offset": 0.7,
+          "easing": "linear",
+          "composite": "auto",
+          "transform": "translate(230.594px, 59px) scale(1)",
+          "computedOffset": 0.7
+        },
+        {
+          "offset": null,
+          "easing": "linear",
+          "composite": "auto",
+          "transform": "translate(230.594px, 59px) scale(1)",
+          "computedOffset": 1
+        }
+      ]
+    },
+    {
+      "target": "IMG",
+      "timing": {
+        "delay": 150,
+        "duration": 700,
+        "fill": "both",
+        "easing": "linear"
+      },
+      "keyframes": [
+        {
+          "offset": null,
+          "easing": "linear",
+          "composite": "auto",
+          "transform": "scaleX(1)",
+          "computedOffset": 0
+        },
+        {
+          "offset": 0.5,
+          "easing": "linear",
+          "composite": "auto",
+          "transform": "scaleX(0)",
+          "computedOffset": 0.5
+        },
+        {
+          "offset": null,
+          "easing": "linear",
+          "composite": "auto",
+          "transform": "scaleX(0)",
+          "computedOffset": 1
+        }
+      ]
+    },
+    {
+      "target": "IMG",
+      "timing": {
+        "delay": 150,
+        "duration": 700,
+        "fill": "both",
+        "easing": "linear"
+      },
+      "keyframes": [
+        {
+          "offset": null,
+          "easing": "linear",
+          "composite": "auto",
+          "transform": "scaleX(0)",
+          "computedOffset": 0
+        },
+        {
+          "offset": 0.5,
+          "easing": "linear",
+          "composite": "auto",
+          "transform": "scaleX(0)",
+          "computedOffset": 0.5
+        },
+        {
+          "offset": null,
+          "easing": "linear",
+          "composite": "auto",
+          "transform": "scaleX(1)",
+          "computedOffset": 1
+        }
+      ]
+    }
+  ],
+  "computed": [
+    {
+      "target": "motion-card",
+      "transform": "matrix(1, 0, 0, 1, 225.496, 59)",
+      "opacity": "1"
+    },
+    {
+      "target": "IMG",
+      "transform": "matrix(0.2, 0, 0, 1, 0, 0)",
+      "opacity": "1"
+    },
+    {
+      "target": "IMG",
+      "transform": "matrix(0, 0, 0, 1, 0, 0)",
+      "opacity": "1"
+    }
+  ],
+  "marks": [],
+  "arrows": 0
+}
