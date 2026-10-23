@@ -57,9 +57,9 @@ function startTwoPlayerGame() {
         (doc as any).__pileFlights = 0;
         new MutationObserver((records) => {
           records.forEach((r) => r.addedNodes.forEach((n) => {
-            if ((n as HTMLElement).dataset?.test === 'flying-pile') (doc as any).__pileFlights++;
+            if ((n as HTMLElement).dataset?.test === 'motion-card') (doc as any).__pileFlights++;
           }));
-        }).observe(doc.body, { childList: true });
+        }).observe(doc.body, { childList: true, subtree: true });
       });
       cy.window().then((w) => {
         const pinia = (w.document.querySelector('#app') as any).__vue_app__.config.globalProperties.$pinia;
@@ -75,7 +75,7 @@ function startTwoPlayerGame() {
       cy.get('[data-test="reveal"]').should('exist');
       cy.get('[data-test="reveal"]', { timeout: 6000 }).should('not.exist');
       cy.document().should((doc) => expect((doc as any).__pileFlights).to.be.greaterThan(0));
-      cy.get('[data-test="flying-pile"]', { timeout: 3000 }).should('not.exist');
+      cy.get('[data-test="motion-card"]', { timeout: 3000 }).should('not.exist');
     });
   });
 });

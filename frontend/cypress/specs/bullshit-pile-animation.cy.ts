@@ -23,8 +23,8 @@ describe('Bullshit card-to-pile animation and sound', () => {
       startGame();
       cy.get('[data-test="hand-card-0"]').click();
       cy.get('[data-test="discard"]').click();
-      cy.get('[data-test="flying-card"]').should('exist');
-      cy.get('[data-test="flying-card"]', { timeout: 3000 }).should('not.exist');
+      cy.get('[data-test="motion-card"]').should('exist');
+      cy.get('[data-test="motion-card"]', { timeout: 3000 }).should('not.exist');
       cy.window().then((w) => {
         expect(w.document.documentElement.scrollHeight).to.be.at.most(w.innerHeight);
       });

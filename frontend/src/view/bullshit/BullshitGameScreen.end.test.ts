@@ -5,18 +5,23 @@ import { setActivePinia, createPinia } from 'pinia';
 import { createRouter, createMemoryHistory } from 'vue-router';
 import PrimeVue from 'primevue/config';
 
-type Settle = { onSettled?: () => void; reduceMotion: boolean };
-const take = vi.fn((..._a: unknown[]) => 1);
+// The layer is a stub that records what the screen asks it to play; the real keyframes are covered by
+// BullshitGameScreen.flights.test.ts.
+const take = vi.fn((..._a: unknown[]) => ({ endsInMs: 0 }));
 let reduced = false;
-vi.mock('../../composables/usePileAnimation', async (orig) => ({
-  ...(await orig<typeof import('../../composables/usePileAnimation')>()),
-  flyCardsToPile: () => 0,
-  flyPileToTaker: (...a: unknown[]) => take(...a),
-}));
-vi.mock('../../animation', async (orig) => ({
-  ...(await orig<typeof import('../../animation')>()),
-  prefersReducedMotion: () => reduced,
-}));
+vi.mock('../../animation', async (orig) => {
+  const { defineComponent, h } = await import('vue');
+  return {
+    ...(await orig<typeof import('../../animation')>()),
+    CardMotionLayer: defineComponent({
+      props: ['resolve', 'zIndex'],
+      setup(_, { expose }) {
+        expose({ play: (...a: unknown[]) => take(...a) });
+        return () => h('div', { 'data-test': 'motion-layer' });
+      },
+    }),
+  };
+});
 vi.mock('../../composables/useCardSound', () => ({ cardSound: { play: vi.fn() } }));
 
 import BullshitGameScreen from './BullshitGameScreen.vue';
@@ -44,18 +49,32 @@ const truthfulCall = {
 };
 const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '/games', name: 'games', component: { template: '<div/>' } }] });
 
+let measured = true;
 function setup(initial: BullshitState) {
   const store = useBullshitStore();
   store.applyEvent({ type: 'seat-change', seat: 0 });
   store.applyEvent({ type: 'state-update', state: initial });
   const wrapper = mount(BullshitGameScreen, { props: { gameId: 'g1' }, global: { plugins: [router, PrimeVue] } });
+  if (measured) {
+    // The pile and the taker have a place on screen (happy-dom measures nothing).
+    const rect = (left: number, top: number, width: number, height: number) => ({ left, top, width, height }) as DOMRect;
+    const pile = wrapper.element.querySelector('.pile-well > .playing_card');
+    if (pile) vi.spyOn(pile, 'getBoundingClientRect').mockReturnValue(rect(200, 100, 90, 130));
+    const zone = wrapper.element.querySelector('.my-zone');
+    if (zone) vi.spyOn(zone, 'getBoundingClientRect').mockReturnValue(rect(300, 600, 200, 120));
+  }
   return { store, wrapper };
 }
 const tick = async (ms: number) => { vi.advanceTimersByTime(ms); await nextTick(); };
+const original = Element.prototype.animate;
 
 describe('Bullshit end screen waits for the last turn to play out', () => {
-  beforeEach(() => { setActivePinia(createPinia()); localStorage.clear(); take.mockClear(); take.mockImplementation(() => 1); reduced = false; vi.useFakeTimers(); });
-  afterEach(() => vi.useRealTimers());
+  beforeEach(() => {
+    setActivePinia(createPinia()); localStorage.clear(); take.mockClear(); reduced = false; measured = true; vi.useFakeTimers();
+    window.matchMedia = ((q: string) => ({ matches: reduced, media: q, addEventListener() {}, removeEventListener() {} })) as typeof window.matchMedia;
+    Element.prototype.animate = (() => ({ finished: new Promise(() => {}), cancel() {} })) as unknown as typeof Element.prototype.animate;
+  });
+  afterEach(() => { vi.useRealTimers(); Element.prototype.animate = original; });
 
   it('keeps the table, the verdict and the pile flight before the end screen', async () => {
     const { store, wrapper } = setup(state(null, { pendingWinner: { state: 'PENDING', playerId: '1' } }));
@@ -68,11 +87,10 @@ describe('Bullshit end screen waits for the last turn to play out', () => {
 
     await tick(REVEAL_HOLD_MS);                   // the verdict goes away, the pile flies to its taker
     expect(take).toHaveBeenCalledTimes(1);
-    await tick(2000);                             // the flight has not reported landing yet
+    expect((take.mock.calls[0][0] as unknown[]).length).toBe(1);
+    await tick(459);                              // the one copy (460 ms) has not landed yet
     expect(wrapper.find('[data-test="end"]').exists()).toBe(false);
-
-    (take.mock.calls[0][3] as Settle).onSettled!();  // the last ghost lands
-    await nextTick();
+    await tick(1);                                // it lands
     await tick(END_SCREEN_DELAY_MS - 1);
     expect(wrapper.find('[data-test="end"]').exists()).toBe(false);
     await tick(1);
@@ -82,7 +100,6 @@ describe('Bullshit end screen waits for the last turn to play out', () => {
 
   it('shows the end screen right after the verdict when nothing flies (reduced motion)', async () => {
     reduced = true;
-    take.mockImplementation(() => 0);
     const { store, wrapper } = setup(state(null, { pendingWinner: { state: 'PENDING', playerId: '1' } }));
     store.applyEvent({ type: 'state-update', state: state('1') });
     store.applyEvent(truthfulCall);
@@ -91,16 +108,19 @@ describe('Bullshit end screen waits for the last turn to play out', () => {
     expect(wrapper.find('[data-test="end"]').exists()).toBe(false);
     await tick(END_SCREEN_DELAY_MS);
     expect(wrapper.find('[data-test="end"]').exists()).toBe(true);
-    expect((take.mock.calls[0][3] as Settle).reduceMotion).toBe(true);
+    expect(take).not.toHaveBeenCalled();
     wrapper.unmount();
   });
 
-  it('never blocks forever when the flight never reports landing (safety bound)', async () => {
+  it('does not wait for a flight when the pile has no place on screen', async () => {
+    measured = false;
     const { store, wrapper } = setup(state(null));
     store.applyEvent({ type: 'state-update', state: state('1') });
     store.applyEvent(truthfulCall);
     await nextTick();
-    await tick(30_000);
+    await tick(REVEAL_HOLD_MS);
+    await tick(END_SCREEN_DELAY_MS);
+    expect(take).not.toHaveBeenCalled();
     expect(wrapper.find('[data-test="end"]').exists()).toBe(true);
     wrapper.unmount();
   });

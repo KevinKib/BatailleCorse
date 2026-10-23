@@ -1,22 +1,27 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { nextTick } from 'vue';
 import { mount } from '@vue/test-utils';
 import { setActivePinia, createPinia } from 'pinia';
 import { createRouter, createMemoryHistory } from 'vue-router';
 import PrimeVue from 'primevue/config';
 
-const fly = vi.fn(() => 1);
-const take = vi.fn(() => 1);
+// The layer is a stub that records what the screen asks it to play; the real keyframes are covered by
+// BullshitGameScreen.flights.test.ts.
+const layerPlay = vi.fn((..._a: unknown[]) => ({ endsInMs: 0 }));
 const play = vi.fn();
-vi.mock('../../composables/usePileAnimation', async (orig) => ({
-  ...(await orig<typeof import('../../composables/usePileAnimation')>()),
-  flyCardsToPile: (...a: unknown[]) => (fly as (...x: unknown[]) => number)(...a),
-  flyPileToTaker: (...a: unknown[]) => (take as (...x: unknown[]) => number)(...a),
-}));
-vi.mock('../../animation', async (orig) => ({
-  ...(await orig<typeof import('../../animation')>()),
-  prefersReducedMotion: () => false,
-}));
+vi.mock('../../animation', async (orig) => {
+  const { defineComponent, h } = await import('vue');
+  return {
+    ...(await orig<typeof import('../../animation')>()),
+    CardMotionLayer: defineComponent({
+      props: ['resolve', 'zIndex'],
+      setup(_, { expose }) {
+        expose({ play: (...a: unknown[]) => layerPlay(...a) });
+        return () => h('div', { 'data-test': 'motion-layer' });
+      },
+    }),
+  };
+});
 vi.mock('../../composables/useCardSound', () => ({ cardSound: { play: (n: number) => play(n) } }));
 
 import BullshitGameScreen from './BullshitGameScreen.vue';
@@ -42,21 +47,36 @@ function setup() {
   store.applyEvent({ type: 'seat-change', seat: 0 });
   store.applyEvent({ type: 'state-update', state: state(0) });
   const wrapper = mount(BullshitGameScreen, { props: { gameId: 'g1' }, global: { plugins: [router, PrimeVue] }, attachTo: document.body });
+  // The places on screen (happy-dom measures nothing).
+  const root = wrapper.element as HTMLElement;
+  const at = (el: Element | null, r: Partial<DOMRect>) => vi.spyOn(el as Element, 'getBoundingClientRect').mockReturnValue(r as DOMRect);
+  at(root.querySelector('[data-test="hand-card-1"]'), { left: 100, top: 500, width: 60, height: 90 });
+  at(root.querySelector('.pile-well > .playing_card'), { left: 200, top: 100, width: 90, height: 130 });
+  at(root.querySelector('.my-zone'), { left: 300, top: 600, width: 200, height: 120 });
+  at(root.querySelector('[data-seat="1"] .seat-card'), { left: 500, top: 20, width: 40, height: 60 });
   return { store, wrapper };
 }
 
 describe('BullshitGameScreen pile animation and sound', () => {
-  beforeEach(() => { setActivePinia(createPinia()); localStorage.clear(); fly.mockClear(); take.mockClear(); play.mockClear(); });
+  const original = Element.prototype.animate;
+  beforeEach(() => {
+    setActivePinia(createPinia()); localStorage.clear(); layerPlay.mockClear(); play.mockClear();
+    window.matchMedia = ((q: string) => ({ matches: false, media: q, addEventListener() {}, removeEventListener() {} })) as typeof window.matchMedia;
+    Element.prototype.animate = (() => ({ finished: new Promise(() => {}), cancel() {} })) as unknown as typeof Element.prototype.animate;
+  });
+  afterEach(() => { Element.prototype.animate = original; });
 
   it('flies the selected hand cards to the pile on Discard', async () => {
     const { store, wrapper } = setup();
     vi.spyOn(store, 'discard').mockImplementation(() => {});
     await wrapper.get('[data-test="hand-card-1"]').trigger('click');
     await wrapper.get('[data-test="discard"]').trigger('click');
-    expect(fly).toHaveBeenCalledTimes(1);
-    const [sources, , opts] = fly.mock.calls[0] as unknown as [HTMLElement[], unknown, { reduceMotion: boolean }];
-    expect(sources).toEqual([wrapper.get('[data-test="hand-card-1"]').element]);
-    expect(opts.reduceMotion).toBe(false);
+    expect(layerPlay).toHaveBeenCalledTimes(1);
+    const [movements, options] = layerPlay.mock.calls[0] as unknown as [{ card: unknown; from: unknown }[], unknown];
+    expect(movements).toHaveLength(1);
+    expect(movements[0].card).toEqual(hand[1]);
+    expect(movements[0].from).toEqual({ kind: 'rect', rect: { left: 100, top: 500, width: 60, height: 90 } });
+    expect(options).toEqual({ marksOnly: false, startInMs: 0, still: false });
     expect(store.discard).toHaveBeenCalled();
     wrapper.unmount();
   });
@@ -114,15 +134,16 @@ describe('BullshitGameScreen pile animation and sound', () => {
       const { store, wrapper } = setup();
       store.applyEvent(call(1));
       await nextTick();
-      expect(take).not.toHaveBeenCalled();
+      expect(layerPlay).not.toHaveBeenCalled();
       vi.advanceTimersByTime(3000);
       await nextTick();
-      expect(take).toHaveBeenCalledTimes(1);
-      const [source, target, size, opts] = take.mock.calls[0] as unknown as [HTMLElement, unknown, number, { reduceMotion: boolean }];
-      expect(source).toBeTruthy();
-      expect(target).toBeTruthy();
-      expect(size).toBe(2);
-      expect(opts.reduceMotion).toBe(false);
+      expect(layerPlay).toHaveBeenCalledTimes(1);
+      const [movements, options] = layerPlay.mock.calls[0] as unknown as [{ card: unknown; from: unknown; to: unknown }[], unknown];
+      expect(movements).toHaveLength(2);                // one back per card of the pile, at most three
+      expect(movements[0].card).toBeNull();
+      expect(movements[0].from).toEqual({ kind: 'rect', rect: { left: 200, top: 100, width: 90, height: 130 } });
+      expect(movements[0].to).toEqual({ kind: 'rect', rect: { left: 500, top: 20, width: 40, height: 60 } });
+      expect(options).toEqual({ marksOnly: false, startInMs: 0, still: false });
       wrapper.unmount();
       vi.useRealTimers();
     });
@@ -130,14 +151,12 @@ describe('BullshitGameScreen pile animation and sound', () => {
     it('flies it to my own zone when I am the taker', async () => {
       vi.useFakeTimers();
       const { store, wrapper } = setup();
-      const zone = wrapper.get('.my-zone').element;
-      const rectSpy = vi.spyOn(zone, 'getBoundingClientRect');
       store.applyEvent(call(0));
       await nextTick();
       vi.advanceTimersByTime(3000);
       await nextTick();
-      expect(take).toHaveBeenCalledTimes(1);
-      expect(rectSpy).toHaveBeenCalled();
+      expect(layerPlay).toHaveBeenCalledTimes(1);
+      expect((layerPlay.mock.calls[0][0] as { to: unknown }[])[0].to).toEqual({ kind: 'rect', rect: { left: 300, top: 600, width: 200, height: 120 } });
       wrapper.unmount();
       vi.useRealTimers();
     });

@@ -21,8 +21,10 @@ import BullshitHand from '../../components/bullshit/BullshitHand.vue';
 import GameLobby from '../../components/lobby/GameLobby.vue';
 import { findGame } from '../../model/games';
 import { useI18n } from '../../composables/useI18n';
-import { flyCardsToPile, flyPileToTaker } from '../../composables/usePileAnimation';
-import { prefersReducedMotion } from '../../animation';
+import { CardMotionLayer, canAnimate, useTableMotion, type MotionPlan } from '../../animation';
+import {
+  BULLSHIT_LAYER_LEVEL, BULLSHIT_QUEUE, planDiscard, planTake, resolveAnchor, settleMs, type BullshitAnchor,
+} from '../../model/bullshit/motion';
 import { cardSound } from '../../composables/useCardSound';
 import { useBullshitHotkeys } from '../../composables/useBullshitHotkeys';
 import { useHotkeySettings } from '../../composables/useHotkeySettings';
@@ -102,14 +104,22 @@ const { enabled: soundEnabled, toggle: toggleSound } = useSoundPreference();
 const pileCardEl = () => pileWell.value?.querySelector<HTMLElement>(':scope > .playing_card') ?? pileWell.value;
 const opponentsRing = ref<HTMLElement | null>(null);
 
+// The cards that fly are drawn by the shared card layer (no log to follow here: the screen hands it a plan when a
+// card leaves my hand or a pile is taken, and the layer never waits for, or gates, anything).
+const layer = ref<{ play: (m: MotionPlan<BullshitAnchor>['movements'], o?: { marksOnly?: boolean; startInMs?: number; still?: boolean }) => unknown } | null>(null);
+const motion = useTableMotion<never, BullshitAnchor>({ layer, bounds: BULLSHIT_QUEUE });
+
 function discard() {
   const hand = store.game?.myHand ?? [];
   const sources = store.selectedCards
     .map(c => hand.findIndex(h => h.name === c.name))
     .filter(i => i >= 0)
-    .map(i => document.querySelector<HTMLElement>(`[data-test="hand-card-${i}"]`))
-    .filter((el): el is HTMLElement => el !== null);
-  flyCardsToPile(sources, pileCardEl()?.getBoundingClientRect() ?? null, { reduceMotion: prefersReducedMotion() });
+    .flatMap(i => {
+      const el = document.querySelector<HTMLElement>(`[data-test="hand-card-${i}"]`);
+      return el ? [{ rect: el.getBoundingClientRect(), card: hand[i] }] : [];
+    });
+  const plan = planDiscard(sources, pileCardEl()?.getBoundingClientRect() ?? null);
+  if (plan) void motion.play(plan);
   store.discard();
 }
 
@@ -119,6 +129,12 @@ const myZone = ref<HTMLElement | null>(null);
 // The last turn must play out before the end screen: from the moment a verdict shows until the
 // pile has landed (or nothing flies), `settling` holds the end screen back. It is state, not a delay.
 const settling = ref(false);
+let settleTimer: ReturnType<typeof setTimeout> | null = null;
+function settleAfter(ms: number) {
+  if (settleTimer) clearTimeout(settleTimer);
+  settleTimer = setTimeout(() => { settleTimer = null; settling.value = false; }, ms);
+}
+onBeforeUnmount(() => { if (settleTimer) clearTimeout(settleTimer); });
 watch(() => store.reveal, (current, previous) => {
   if (current) settling.value = true;
   // Only when a verdict ends (shown, then cleared); a new verdict replacing it, or a table that
@@ -128,10 +144,14 @@ watch(() => store.reveal, (current, previous) => {
   const destination = previous.pickerSeat === store.mySeat
     ? myZone.value
     : opponentsRing.value?.querySelector<HTMLElement>(`[data-seat="${previous.pickerSeat}"] .seat-card`);
-  const flights = flyPileToTaker(pileCardEl(), destination?.getBoundingClientRect() ?? null,
-    previous.revealedCards.length,
-    { reduceMotion: prefersReducedMotion(), onSettled: () => { settling.value = false; } });
-  if (flights === 0) settling.value = false;
+  const plan = planTake(pileCardEl()?.getBoundingClientRect() ?? null, destination?.getBoundingClientRect() ?? null,
+    previous.revealedCards.length);
+  // Nothing flies (reduced motion, no Web Animations, no place to fly from or to): nothing to wait for.
+  if (!plan || !canAnimate()) { settling.value = false; return; }
+  void motion.play(plan).then(played => {
+    if (played.motion) settleAfter(played.startInMs + settleMs(plan));
+    else settling.value = false;
+  });
 });
 
 // End screen: shown once the game is over AND the verdict/flight are done (reduced motion: no
@@ -259,6 +279,7 @@ function leaveLobby() {
     </div>
 
     <template v-else>
+      <CardMotionLayer ref="layer" :resolve="resolveAnchor" :z-index="BULLSHIT_LAYER_LEVEL" />
       <RulesPanel :rules="messages.bullshit" />
 
       <div class="top-bar">
