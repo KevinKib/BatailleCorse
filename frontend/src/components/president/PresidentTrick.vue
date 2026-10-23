@@ -127,7 +127,9 @@ const chipTexts = computed(() => props.chips.flatMap((chip) => {
 /* Fixed places: a text that comes or goes (who played, the badge, a chip) never moves the cards. */
 .trick {
   --pile-card-w: var(--president-pile-card-w, 52px);
-  --pile-line-h: 30px;
+  /* How much of a card the next one covers (a share of its width). */
+  --pile-overlap: var(--president-pile-overlap, 0.45);
+  --pile-line-h: var(--president-pile-line-h, 30px);
   display: flex; flex-direction: column; align-items: center; gap: var(--space-1); min-width: 0; width: 100%;
 }
 .trick-plate {
@@ -142,7 +144,7 @@ const chipTexts = computed(() => props.chips.flatMap((chip) => {
 /* Swept away: the place stays (the badge does not jump), the cards do not show. */
 .trick-cards--swept { visibility: hidden; }
 .trick-card { display: block; width: var(--pile-card-w); }
-.trick-card + .trick-card { margin-left: calc(var(--pile-card-w) * -0.45); }
+.trick-card + .trick-card { margin-left: calc(var(--pile-card-w) * var(--pile-overlap) * -1); }
 .trick-card :deep(.playing_card) { display: block; width: 100%; height: auto; aspect-ratio: 167.575 / 243.1375; }
 .trick-line { display: flex; align-items: center; justify-content: center; width: 100%; height: var(--pile-line-h); min-width: 0; }
 .trick-by, .trick-empty { margin: 0; font-size: 0.75rem; color: rgba(255, 255, 255, 0.85); text-align: center; }
@@ -254,10 +256,14 @@ const chipTexts = computed(() => props.chips.flatMap((chip) => {
    rows, a second column past that), the closed badge under the cards. The felt never scrolls inside itself, nor does the
    pile reach the seat at the top of the ring, whatever the rules in force. */
 @media all {
-  .trick { --pile-line-h: 30px; flex-direction: row; justify-content: center; align-items: center; gap: var(--space-2); }
+  .trick { flex-direction: row; justify-content: center; align-items: center; gap: var(--space-2); }
   /* The plate keeps one size whatever it shows (cards and who played, or cards and the closed badge), so that the cards
      never move when a trick closes: the rings drawn on them a moment earlier stay on them. */
-  .trick-plate { flex: 0 0 calc(var(--pile-card-w) * 2.8 + 10px); width: calc(var(--pile-card-w) * 2.8 + 10px); min-width: 0; }
+  /* Room for four cards side by side (one card and three uncovered strips) and the rings drawn round them. */
+  .trick-plate {
+    --plate-w: calc(var(--pile-card-w) * (1.15 + 3 * (1 - var(--pile-overlap))) + 10px);
+    flex: 0 0 var(--plate-w); width: var(--plate-w); min-width: 0;
+  }
   .trick-closed--line { flex-direction: column; flex-wrap: nowrap; gap: 0; padding: 2px 6px; }
   .trick-closed--line .trick-closed-leader::before { content: none; }
   .trick-closed-reason { font-size: 0.66rem; letter-spacing: 0; }

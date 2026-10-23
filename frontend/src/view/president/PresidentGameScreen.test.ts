@@ -79,6 +79,13 @@ describe('PresidentGameScreen', () => {
     expect(wrapper.get('[data-test="connecting"]').text()).toContain(messagesEn.presidentUi.connecting);
   });
 
+  // On a phone the opponents sit in rows of four: past four opponents a second row takes room from the pile, whose cards
+  // are then a size smaller (the felt does not scroll).
+  it.each([[3, false], [5, false], [6, true], [8, true]])('given%iPlayers_thenTheTableIsCrowded_%s', async (players, crowded) => {
+    const { wrapper } = await mountRoom(room(playing({ players: seatsOf(players) })));
+    expect(wrapper.get('[data-test="president-table"]').classes().includes('table-frame--two-rows')).toBe(crowded);
+  });
+
   it('givenALobby_thenShowsTheSharedLobbyWithTheClassicCardAndAddBot', async () => {
     const { wrapper } = await mountRoom(room(lobby(2) as unknown as PresidentState));
     expect(wrapper.get('[data-test="lobby"]').text()).toContain('President');
