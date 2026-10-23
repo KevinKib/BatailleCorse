@@ -1,4 +1,4 @@
-import type { LegTempo } from '../kobo/tempo';
+import type { LegTempo } from '../../animation';
 
 /**
  * The tempo of President's animations (option B of the animations canvas, spec §11 decision 7), in one place. Shorter

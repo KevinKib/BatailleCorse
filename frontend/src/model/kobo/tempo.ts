@@ -5,13 +5,7 @@
  * A move reads as: hold (the copy sits on its source) -> flight -> hold after landing (the copy stays on its
  * destination). Everything is in milliseconds. Purely visual: no rule of the game depends on it.
  */
-export interface LegTempo {
-  /** The card waits on its source before it leaves, so the eye can find it. */
-  holdBeforeMs: number;
-  flightMs: number;
-  /** The card stays on its destination once landed, so its face can be read. */
-  holdAfterMs: number;
-}
+import type { LegTempo } from '../../animation';
 
 export const TEMPO = {
   /** The moves of other seats: the hard ones to follow, hence the slowest. */

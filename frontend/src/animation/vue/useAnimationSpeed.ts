@@ -1,10 +1,6 @@
 import { ref, type Ref } from 'vue';
-import { prefersReducedMotion } from './usePileAnimation';
-
-/** How fast a table plays its animations: the pace of today's Fast is the old default, Normal is twice as slow. */
-export type AnimationSpeed = 'normal' | 'fast' | 'instant';
-
-export const ANIMATION_SPEEDS: readonly AnimationSpeed[] = ['normal', 'fast', 'instant'];
+import { prefersReducedMotion } from '../core/reducedMotion';
+import { ANIMATION_SPEEDS, nextAnimationSpeed, type AnimationSpeed } from '../core/speed';
 
 /** Where the player's choice is kept (per browser). */
 export const ANIMATION_SPEED_KEY = 'animationSpeed';
@@ -20,11 +16,6 @@ export interface AnimationSpeedOptions {
 }
 
 const isSpeed = (value: unknown): value is AnimationSpeed => ANIMATION_SPEEDS.includes(value as AnimationSpeed);
-
-/** Normal, then Fast, then Instant, then Normal again. */
-export function nextAnimationSpeed(speed: AnimationSpeed): AnimationSpeed {
-  return ANIMATION_SPEEDS[(ANIMATION_SPEEDS.indexOf(speed) + 1) % ANIMATION_SPEEDS.length];
-}
 
 function defaultStorage(): SpeedStorage | null {
   try {

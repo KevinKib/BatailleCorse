@@ -35,21 +35,15 @@ import { rematchButtonFor } from '../../model/RematchButton';
 import { ruleChips } from '../../model/president/chips';
 import { hintText } from '../../model/president/hint';
 import { format } from '../../locales/format';
-import CardMotionLayer from '../../components/table/CardMotionLayer.vue';
-import AnimationSpeedButton from '../../components/table/AnimationSpeedButton.vue';
-import type { MotionRect, MotionTarget } from '../../components/table/motionTarget';
-import { useAnimationSpeed } from '../../composables/useAnimationSpeed';
-import { prefersReducedMotion } from '../../composables/usePileAnimation';
-import { useSeatBubbles } from '../../composables/useSeatBubbles';
-import { useInFlightCounts } from '../../composables/useInFlightCounts';
-import { createTempoQueue } from '../../model/table/queue';
-import { eventSpanMs } from '../../model/table/motion';
 import {
-  planBubbles, planMovements, planSweep, sourcesFor, speedFactor, sweepStartMs, type PendingSources, type PlaySources,
+  AnimationSpeedButton, CardMotionLayer, createTempoQueue, eventSpanMs, prefersReducedMotion, speedFactor, useAnimationSpeed,
+  useDisplayedState, useInFlightCounts, useSeatBubbles, type MotionRect, type MotionTarget,
+} from '../../animation';
+import {
+  planBubbles, planMovements, planSweep, sourcesFor, sweepStartMs, type PendingSources, type PlaySources,
   type PresidentAnchor, type PresidentMovement,
 } from '../../model/president/motion';
 import { closedPile, pileView, type PileView } from '../../model/president/trickView';
-import { useDisplayedState } from '../../composables/useDisplayedState';
 import { planExchangeFlights } from '../../model/president/exchangeMotion';
 import { exchangeRecap } from '../../model/president/exchangeRecap';
 import { ackDelayMs, exchangeViewStatus } from '../../model/president/exchangeView';

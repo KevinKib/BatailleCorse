@@ -5,7 +5,7 @@ import { useRouter } from 'vue-router';
 import { useMangolaStore, STUCK_START_KEY } from '../../state/Mangola.store';
 import { useMangolaBootstrap } from '../../composables/useMangolaBootstrap';
 import { useSowingAnimation } from '../../composables/useSowingAnimation';
-import { useAnimationSpeed } from '../../composables/useAnimationSpeed';
+import { useAnimationSpeed } from '../../animation';
 import { useEndScreen } from '../../composables/useEndScreen';
 import { useSeatDisconnectCountdown } from '../../composables/useSeatDisconnectCountdown';
 import { useLeaveGuard } from '../../composables/useLeaveGuard';

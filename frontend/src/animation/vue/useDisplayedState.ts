@@ -1,5 +1,5 @@
 import { shallowRef, type ShallowRef } from 'vue';
-import { createDisplayQueue, type Displayed } from '../model/president/displayQueue';
+import { createDisplayQueue, type Displayed } from '../core/displayQueue';
 
 /**
  * The state a table shows (`createDisplayQueue`) with its timers: a state reserved for a move is shown `revealIn` ms

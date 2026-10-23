@@ -12,6 +12,9 @@ vi.mock('../../composables/usePileAnimation', async (orig) => ({
   ...(await orig<typeof import('../../composables/usePileAnimation')>()),
   flyCardsToPile: (...a: unknown[]) => (fly as (...x: unknown[]) => number)(...a),
   flyPileToTaker: (...a: unknown[]) => (take as (...x: unknown[]) => number)(...a),
+}));
+vi.mock('../../animation', async (orig) => ({
+  ...(await orig<typeof import('../../animation')>()),
   prefersReducedMotion: () => false,
 }));
 vi.mock('../../composables/useCardSound', () => ({ cardSound: { play: (n: number) => play(n) } }));

@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { flushPromises, mount } from '@vue/test-utils';
 import CardMotionLayer from './CardMotionLayer.vue';
-import type { MotionTarget } from './motionTarget';
-import type { TableMovement } from '../../model/table/motion';
+import type { MotionTarget } from '../dom/rect';
+import type { TableMovement } from '../core/movement';
 
 // Characterisation of the layer's keyframes, durations and delays, written on the code as it was before the shared
 // module: the layer must keep producing these, byte for byte, when it moves and when it gains optional fields.

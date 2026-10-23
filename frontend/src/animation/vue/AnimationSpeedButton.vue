@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import type { AnimationSpeed } from '../../composables/useAnimationSpeed';
+import type { AnimationSpeed } from '../core/speed';
 import { format } from '../../locales/format';
 
 // The animation speed button shared by the tables that animate (Mangola, President): three small chevrons lit one

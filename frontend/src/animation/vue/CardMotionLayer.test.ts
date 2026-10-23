@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { flushPromises, mount } from '@vue/test-utils';
 import CardMotionLayer from './CardMotionLayer.vue';
-import type { MotionTarget } from './motionTarget';
-import type { TableMovement } from '../../model/table/motion';
+import type { MotionTarget } from '../dom/rect';
+import type { TableMovement } from '../core/movement';
 
 // The shared layer as President uses it (Kobo's use is covered by KoboMotionLayer.test.ts): string places, a ring
 // without a flight, still rings, ring durations given by the table.

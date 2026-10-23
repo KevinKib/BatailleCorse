@@ -14,7 +14,7 @@ import { END_SCREEN_DELAY_MS } from '../../composables/useEndScreen';
 import webSocketService from '../../service/WebSocketService';
 import { setConnectionOnline } from '../../composables/useConnectionStatus';
 import { messagesEn } from '../../locales/en';
-import { ANIMATION_SPEED_KEY } from '../../composables/useAnimationSpeed';
+import { ANIMATION_SPEED_KEY } from '../../animation';
 
 const ui = messagesEn.mangolaUi;
 

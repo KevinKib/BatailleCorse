@@ -1,15 +1,6 @@
 const FLIGHT_MS = 380;
 const STAGGER_MS = 70;
 
-export function prefersReducedMotion(): boolean {
-  try {
-    return typeof window.matchMedia === 'function'
-      && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  } catch {
-    return false;
-  }
-}
-
 // Flies a copy of each source card (a hand card) to the pile. The copies are fixed-position
 // ghosts on <body>, so the layout never moves (no scroll, no reflow) and they vanish when
 // landed. Returns how many ghosts were launched: 0 under reduced motion, or without a target

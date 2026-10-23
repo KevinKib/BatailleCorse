@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { flyCardsToPile, flyPileToTaker, prefersReducedMotion } from './usePileAnimation';
+import { flyCardsToPile, flyPileToTaker } from './usePileAnimation';
 
 const rect = (left: number, top: number, width = 50, height = 70) =>
   ({ left, top, width, height, right: left + width, bottom: top + height, x: left, y: top }) as DOMRect;
@@ -57,18 +57,6 @@ describe('flyCardsToPile', () => {
     // @ts-expect-error simulate an engine without the Web Animations API
     delete HTMLElement.prototype.animate;
     expect(flyCardsToPile([fakeSource(10)], target, { reduceMotion: false })).toBe(0);
-  });
-});
-
-describe('prefersReducedMotion', () => {
-  it('reads the media query and tolerates a missing matchMedia', () => {
-    const original = window.matchMedia;
-    window.matchMedia = ((q: string) => ({ matches: q.includes('reduce') })) as typeof window.matchMedia;
-    expect(prefersReducedMotion()).toBe(true);
-    // @ts-expect-error no matchMedia
-    window.matchMedia = undefined;
-    expect(prefersReducedMotion()).toBe(false);
-    window.matchMedia = original;
   });
 });
 

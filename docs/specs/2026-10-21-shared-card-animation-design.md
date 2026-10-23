@@ -128,7 +128,7 @@ frontend/src/animation/
     reducedMotion.ts        prefersReducedMotion, canAnimate
     freshEntries.ts         freshEntries(log, knownHead): the new entries, oldest first
     heldValues.ts           a value per place kept until a time (Kobo's DisplayedHold, generic)
-    displayedTimeline.ts    states with the time from which each is shown (5.6)
+    displayQueue.ts         the states a table shows, held back until their picture is over (lifted from #294, 5.6)
     *.test.ts
   dom/
     rect.ts                 MotionRect, MotionTarget, CARD_RATIO, visibleRect, cardAt, cardIn
@@ -139,7 +139,7 @@ frontend/src/animation/
     AnimationSpeedButton.vue
     useAnimationSpeed.ts
     useTableMotion.ts       the orchestrator (5.3)
-    useDisplayedState.ts    (5.6)
+    useDisplayedState.ts    the timers of the display queue (lifted from #294, 5.6)
     useInFlightCounts.ts
     useSeatBubbles.ts       generic on the bubble kind
     useTableSettled.ts      the settle logic of usePresidentEndSequence
@@ -171,6 +171,7 @@ export { default as CardMotionLayer } from './vue/CardMotionLayer.vue';
 export { default as AnimationSpeedButton } from './vue/AnimationSpeedButton.vue';
 export { useAnimationSpeed } from './vue/useAnimationSpeed';
 export { useTableMotion, type MotionPlan, type Played, type TableMotion } from './vue/useTableMotion';
+export { createDisplayQueue, type Displayed } from './core/displayQueue';
 export { useDisplayedState } from './vue/useDisplayedState';
 export { useInFlightCounts } from './vue/useInFlightCounts';
 export { useSeatBubbles } from './vue/useSeatBubbles';
@@ -307,26 +308,29 @@ The owner's feedback behind PR #294: the texts of the President table (the "N or
 the chips, the counts, the closed-trick badge) change before the cards that explain them have landed. The general
 answer:
 
-- `core/displayedTimeline.ts`: a list of `{ state, visibleAt }`; `at(now)` is the newest state whose time has come
-  (the oldest one before that). Pure, tested with a fake clock. Its lag is capped by the queue's `maxLagMs`, so the
-  text never falls further behind the game than the picture does.
-- `vue/useDisplayedState(source, motion)`: watches `source` (the store's state); each state that comes with an
-  admitted event becomes visible at that event's `endsAt` (`onPlayed`); a state with no event, a still table, or
-  the first state shows at once. Returns `displayed: Readonly<Ref<S | null>>`.
+PR #294 merged before this module (2026-10-22), with a generic layer that chunk 0 lifted into `animation/` under its own
+names, unchanged in behaviour (it supersedes the `displayedTimeline` / `useDisplayedState(source, motion)` sketch this
+section first had; #294 is the owner's live request and wins where they differ):
+
+- `core/displayQueue.ts`, `createDisplayQueue<S, E>()` and `Displayed<S, E>` (`{ state, entry }`): the states of the
+  game in the order the server sent them, each held back until its picture is over. A state is `reserve`d when it
+  arrives and becomes `ready` when its picture is over; it is shown only once every state before it is, so a later
+  state never overtakes an earlier one. `show` is a state with no picture of its own, `flush` shows everything that
+  waits, `reset` starts over from a first state. Pure; tested with no clock.
+- `vue/useDisplayedState<S, E>({ maxLagMs, onReveal })`: the queue with its timers. `reserve(state, entry)` returns a
+  slot; `revealIn(slot, ms)` tells the state `ms` later (when its cards have landed), never later than `maxLagMs`
+  after it arrived, so the texts catch up with the game even if a picture is lost; `show`, `flush`, `reset`,
+  `waiting`, `cancel`. `displayed: ShallowRef<Displayed<S, E> | null>`; `onReveal` is told each move as it is shown
+  (its bubbles pop then). The orchestrator's `Played.endsAt` (`onPlayed`) is what a table passes to `revealIn`
+  (`endsAt - now()`).
 - A table reads `displayed` for what it **says** (texts, counts, badges, banners) and the store's state for what it
   **lets you do** (buttons, legal plays, clicks). Kobo's slot-revision hold (`model/kobo/displayed.ts`) is the
   narrower case of "judge a click on what is shown" and is rebuilt on `heldValues`, unchanged in behaviour.
 
-**Alignment with PR #294** (`fix/president-texts-follow-animation`, draft, no code yet when this was written):
-
-- If #294 merges first with a President-only displayed layer, chunk 0 of the plan lifts its generic part into
-  `animation/` keeping its exported names (re-exported from the President file until the President chunk), and
-  this section is amended to its design where they differ: #294 is the owner's live request and wins on behaviour.
-- If this module merges first, #294 builds on `useDisplayedState` (the plan's chunk 0 is short and docs-led, so the
-  author of #294 is told in the PR).
-- In both cases the President migration chunk starts only after #294 is merged, because both rewrite the same part
-  of `PresidentGameScreen.vue`. PR #293 (`fix/president-completion-offer`, also open) touches the same file and the
-  same rule applies.
+**Alignment with PRs #294 and #293** (`fix/president-texts-follow-animation`, `fix/president-completion-offer`, both
+merged before chunk 0): chunk 0 moved `createDisplayQueue` (from `model/president/displayQueue.ts`) and
+`useDisplayedState` (from `composables/`) into `animation/` with their tests, and `PresidentGameScreen.vue` now imports
+them from the barrel (imports only). The President migration chunk still owns the rest of that screen.
 
 ## 6. Migration, game by game
 
@@ -334,7 +338,7 @@ Each migration is one PR, behaviour-preserving, proved before it is merged (sect
 
 1. **Chunk 0, the module.** Move the shared pieces (3.1, 3.2 generic parts) into `animation/`, update every import
    (Kobo, President, Mangola, Bullshit), write the new pieces (`useTableMotion`, `defineAnchors`, `freshEntries`,
-   `heldValues`, `displayedTimeline`, `useDisplayedState`, `useTableSettled`, the README) with their unit tests on
+   `heldValues`, `displayQueue`, `useDisplayedState`, `useTableSettled`, the README) with their unit tests on
    fakes. No screen uses the new pieces yet. Behaviour identical; all suites green.
 2. **Kobo.** `KoboGameScreen` uses `useTableMotion` (log, `plan` = `planMovements` with its context, `prepare` =
    the one-frame wait for my drawn face, `onPlayed` = `holdDisplayed(planHold(...))` with `endsAt`), `defineAnchors`
@@ -382,7 +386,7 @@ slides from point to point" would be a visible change (section 9).
   (exhaustive kinds, a throwing resolver gives null, nothing measured gives null); `useTableMotion` (fresh entries
   only, oldest first; the first log is not replayed; still when Instant or reduced motion: `marksOnly` and `still`
   passed, no admission; a full queue gives rings only; `followUps` played at `startInMs + atMs`; `onPlayed` gets
-  `endsAt`; `play` for non-log plans shares the queue; `backlogMs`); `useDisplayedState` (follows `endsAt`, shows at
+  `endsAt`; `play` for non-log plans shares the queue; `backlogMs`); `useDisplayedState` and `createDisplayQueue` (in order, shows at
   once when still, never lags past `maxLagMs`); `useTableSettled`; the boundaries test of 5.1.
 - **Characterisation tests first (strict TDD of a refactor).** Before a screen is migrated, its chunk adds a test on
   today's code that drives a scripted log through the screen with a stubbed layer and records every

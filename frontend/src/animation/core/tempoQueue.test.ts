@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createTempoQueue } from './queue';
+import { createTempoQueue } from './tempoQueue';
 
 describe('createTempoQueue (shared)', () => {
   const at = (t: { now: number }) => () => t.now;

@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ref } from 'vue';
 import { useSowingAnimation } from './useSowingAnimation';
-import type { AnimationSpeed } from './useAnimationSpeed';
+import type { AnimationSpeed } from '../animation';
 import { mangolaState } from '../model/mangola/mangolaFixtures';
 import { boardOf, sow } from '../model/mangola/sowingFixtures';
 import { planSowing, SPEED_PROFILES } from '../model/mangola/trace';

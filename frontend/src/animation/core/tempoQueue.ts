@@ -1,3 +1,5 @@
+import type { QueueBounds } from './tempo';
+
 export interface Admission {
   /** Wait this long before playing the event. */
   startInMs: number;
@@ -5,18 +7,10 @@ export interface Admission {
   motion: boolean;
 }
 
-/** How far a table's picture may fall behind its game. */
-export interface QueueBounds {
-  /** More events than this waiting to start: the extra ones only get their markers, at once. */
-  maxQueued: number;
-  /** An event that would start later than this after it arrived only gets its markers, at once. */
-  maxLagMs: number;
-}
-
 /**
  * Plays the events of a burst one after the other (each starts when the previous flight is over) while keeping the
  * table from lagging behind the game: past the bounds, an event is not queued for motion. Shared by every table that
- * animates (Kobo, President). Pure apart from the clock it is given.
+ * animates. Pure apart from the clock it is given.
  */
 export function createTempoQueue(now: () => number, bounds: QueueBounds) {
   let busyUntil = 0;
