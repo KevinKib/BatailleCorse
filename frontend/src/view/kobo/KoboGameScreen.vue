@@ -24,12 +24,14 @@ import { useKoboMatchCoach } from '../../composables/useKoboMatchCoach';
 import KoboEventLog from '../../components/kobo/KoboEventLog.vue';
 import KoboScoreSheet from '../../components/kobo/KoboScoreSheet.vue';
 import KoboFinalTotals from '../../components/kobo/KoboFinalTotals.vue';
-import KoboMotionLayer, { type MotionRect, type MotionTarget } from '../../components/kobo/KoboMotionLayer.vue';
 import KoboSoundToggle from '../../components/kobo/KoboSoundToggle.vue';
 import { planHold } from '../../model/kobo/displayed';
-import { eventSpanMs, planMovements, type MotionAnchor, type Movement } from '../../model/kobo/motion';
-import { createTempoQueue } from '../../model/kobo/queue';
-import { prefersReducedMotion } from '../../animation';
+import { planMovements, type MotionAnchor, type Movement } from '../../model/kobo/motion';
+import { TEMPO } from '../../model/kobo/tempo';
+import {
+  CARD_RATIO, CardMotionLayer, canAnimate, defineAnchors, useTableMotion,
+  type CardMotionLayerPlay, type MotionPlan,
+} from '../../animation';
 import type { KoboLogEntry } from '../../model/kobo/KoboEvents';
 import type { KoboState } from '../../model/kobo/KoboState';
 import type Card from '../../model/Card';
@@ -194,64 +196,35 @@ watch(yourTurn, (mine, was) => { if (mine && !was) sound.play('turn'); });
 // state, the clicks and the one-click match never wait for it (nothing here is read back), and a place that cannot
 // be found just skips the picture.
 const screenEl = ref<HTMLElement | null>(null);
-const motionLayer = ref<InstanceType<typeof KoboMotionLayer> | null>(null);
-const CARD_RATIO = 243.1375 / 167.575;
+const motionLayer = ref<{ play: CardMotionLayerPlay<MotionAnchor> } | null>(null);
 const SEAT_CARD_W = 34;
 
-const visibleRect = (el: Element): MotionRect | null => {
-  const r = el.getBoundingClientRect();
-  return r.width > 0 && r.height > 0 ? { left: r.left, top: r.top, width: r.width, height: r.height } : null;
-};
-const find = (selector: string) => screenEl.value?.querySelector<HTMLElement>(selector) ?? null;
-
-/** The card inside a place (its picture, or a card-sized rectangle in the middle of an empty place). */
-function cardIn(host: Element | null): MotionTarget | null {
-  if (!host) return null;
-  const card = host.querySelector<HTMLElement>('.playing_card');
-  const rect = card ? visibleRect(card) : null;
-  if (card && rect) return { rect, cards: [card] };
-  // An empty pile place is a card-sized dashed outline: use its rectangle so that a card leaving it or landing on
-  // it has the same size and position as when the place holds a card (no jump between the two).
-  const placeholder = host.querySelector<HTMLElement>('.pile-empty');
-  const placeholderRect = placeholder ? visibleRect(placeholder) : null;
-  if (placeholderRect) return { rect: placeholderRect, cards: [] };
-  const box = visibleRect(host);
-  if (!box) return null;
-  const width = Math.min(box.width, SEAT_CARD_W + 10);
-  const height = width * CARD_RATIO;
-  return { rect: { left: box.left + (box.width - width) / 2, top: box.top + (box.height - height) / 2, width, height }, cards: [] };
-}
-
-function resolveAnchor(anchor: MotionAnchor): MotionTarget | null {
-  switch (anchor.kind) {
-    case 'draw': return cardIn(find('[data-test="draw-pile"]'));
-    case 'discard': return cardIn(find('[data-test="discard-pile"]'));
-    case 'hand': return cardIn(find('[data-test="drawn-zone"]'));
-    case 'slot':
-      return cardIn(find(`[data-test="slot-${anchor.seat}-${anchor.slot}"]`)
-        ?? find(`[data-test="slot-empty-${anchor.seat}-${anchor.slot}"]`));
-    case 'newSlot': {
-      const prefix = `slot-${anchor.seat}-`;
-      const slots = [...(screenEl.value?.querySelectorAll<HTMLElement>(`button[data-test^="${prefix}"]`) ?? [])];
-      const number = (el: HTMLElement) => Number(el.dataset.test?.slice(prefix.length));
-      const last = slots.reduce<HTMLElement | null>((best, el) => (!best || number(el) > number(best) ? el : best), null);
-      return cardIn(last);
-    }
-    case 'seat': {
-      const host = anchor.seat === store.mySeat ? find('[data-test="my-zone"]') : find(`.seat-slot[data-seat="${anchor.seat}"]`);
-      const box = host ? visibleRect(host) : null;
-      if (!box) return null;
-      return { rect: { left: box.left + (box.width - SEAT_CARD_W) / 2, top: box.top, width: SEAT_CARD_W, height: SEAT_CARD_W * CARD_RATIO }, cards: [] };
-    }
-    case 'table': {
-      const cards = [...(screenEl.value?.querySelectorAll<HTMLElement>('button[data-test^="slot-"] .playing_card') ?? [])]
-        .filter(card => visibleRect(card) !== null);
-      return cards.length > 0 ? { rect: { left: 0, top: 0, width: 1, height: 1 }, cards } : null;
-    }
-  }
-}
-
-const tempoQueue = createTempoQueue(() => Date.now());
+// Kobo's places, one resolver per kind of anchor (the shared `cardIn` is the card inside a place: its picture, the
+// outline of an empty pile, or a card-sized rectangle in the middle of the place).
+const resolveAnchor = defineAnchors<MotionAnchor>(() => screenEl.value, {
+  draw: (_, q) => q.cardIn(q.find('[data-test="draw-pile"]')),
+  discard: (_, q) => q.cardIn(q.find('[data-test="discard-pile"]')),
+  hand: (_, q) => q.cardIn(q.find('[data-test="drawn-zone"]')),
+  slot: (a, q) => q.cardIn(q.find(`[data-test="slot-${a.seat}-${a.slot}"]`)
+    ?? q.find(`[data-test="slot-empty-${a.seat}-${a.slot}"]`)),
+  newSlot: (a, q) => {
+    const prefix = `slot-${a.seat}-`;
+    const number = (el: HTMLElement) => Number(el.dataset.test?.slice(prefix.length));
+    const last = q.findAll(`button[data-test^="${prefix}"]`)
+      .reduce<HTMLElement | null>((best, el) => (!best || number(el) > number(best) ? el : best), null);
+    return q.cardIn(last);
+  },
+  seat: (a, q) => {
+    const host = a.seat === store.mySeat ? q.find('[data-test="my-zone"]') : q.find(`.seat-slot[data-seat="${a.seat}"]`);
+    const box = q.rect(host);
+    if (!box) return null;
+    return { rect: { left: box.left + (box.width - SEAT_CARD_W) / 2, top: box.top, width: SEAT_CARD_W, height: SEAT_CARD_W * CARD_RATIO }, cards: [] };
+  },
+  table: (_, q) => {
+    const cards = q.findAll('button[data-test^="slot-"] .playing_card').filter(card => q.rect(card) !== null);
+    return cards.length > 0 ? { rect: { left: 0, top: 0, width: 1, height: 1 }, cards } : null;
+  },
+});
 
 const nextFrame = () => new Promise<void>(resolve => {
   if (typeof requestAnimationFrame === 'function') requestAnimationFrame(() => resolve());
@@ -268,43 +241,48 @@ watch(() => store.game, (next, previous) => {
   if (seen) lastDrawnFace = seen;
 }, { flush: 'sync' });
 
-async function playEvent(entry: KoboLogEntry) {
+// The state before each event, kept for the hold that follows its flights (read when the event is admitted).
+const gameBeforeEntry = new WeakMap<KoboLogEntry, KoboState | null>();
+
+/** The movements an event stands for (and its sounds): the shared orchestrator asks for them as each entry arrives. */
+function planEvent(entry: KoboLogEntry): MotionPlan<MotionAnchor> | null {
   const data = entry.data;
-  if (data?.action === 'MATCH' && data.success === false) sound.play('miss');
+  const missed = data?.action === 'MATCH' && data.success === false;
+  if (missed) sound.play('miss');
   const before = gameBefore;
   const moves = planMovements(entry, store.mySeat, {
     drawnFace: before?.drawnCard ?? lastDrawnFace,
     discardBefore: before ? before.discardTop : undefined,
   });
-  if (moves.length === 0) return;
-  if (moves.some(m => m.kind !== 'reveal') && !(data?.action === 'MATCH' && data.success === false)) sound.play('card');
-  await nextTick();
-  // The face of the card I draw comes with the state, which may land a moment after the event: wait one frame for it.
-  const flipsWithoutFace = (list: Movement[]) => list.some(m => m.flip && !m.card);
-  const withFace = (list: Movement[]) => list.map(m => (m.flip && !m.card ? { ...m, card: store.game?.drawnCard ?? null } : m));
-  let ready = withFace(moves);
-  if (flipsWithoutFace(ready)) { await nextFrame(); ready = withFace(moves); }
-  // Events of a burst play one after the other, within bounds (see `TEMPO.queue`): past them an event only gets its
-  // rings, at once. Under reduced motion nothing flies, so there is nothing to wait for.
-  const admission = prefersReducedMotion() ? { startInMs: 0, motion: false } : tempoQueue.admit(eventSpanMs(ready));
-  // The table already shows the state of this event, so its copies are set up now (they hold the places and show
-  // the old cards there) and only start flying when their turn comes: nothing is drawn late over a changed table.
-  motionLayer.value?.play(ready, { marksOnly: !admission.motion, startInMs: admission.startInMs });
-  // Until its copies have landed the table still shows the old cards: a tap on one is judged on what is shown.
-  if (admission.motion && typeof Element.prototype.animate === 'function') {
-    store.holdDisplayed(planHold(before, ready, Date.now() + admission.startInMs + eventSpanMs(ready)));
-  }
+  if (moves.length === 0) return null;
+  if (moves.some(m => m.kind !== 'reveal') && !missed) sound.play('card');
+  gameBeforeEntry.set(entry, before);
+  return { movements: moves };
 }
 
-// The log is newest first: what is new is what comes before the head I already knew.
-watch(() => store.events, (events, previous) => {
-  const known = previous?.[0] ?? null;
-  const fresh: KoboLogEntry[] = [];
-  for (const entry of events) {
-    if (entry === known) break;
-    fresh.push(entry);
-  }
-  fresh.reverse().forEach(entry => { void playEvent(entry); });
+// The face of the card I draw comes with the state, which may land a moment after the event: wait one frame for it.
+async function awaitFace(_entry: KoboLogEntry, plan: MotionPlan<MotionAnchor>): Promise<MotionPlan<MotionAnchor>> {
+  await nextTick();
+  const withFace = (list: Movement[]) => list.map(m => (m.flip && !m.card ? { ...m, card: store.game?.drawnCard ?? null } : m));
+  let ready = withFace(plan.movements);
+  if (ready.some(m => m.flip && !m.card)) { await nextFrame(); ready = withFace(plan.movements); }
+  return { movements: ready };
+}
+
+// Events of a burst play one after the other, within bounds (see `TEMPO.queue`): past them an event only gets its
+// rings, at once. Under reduced motion nothing flies. The table already shows the state of an event, so its copies are
+// set up at once (they hold the places and show the old cards there) and only start flying when their turn comes.
+useTableMotion<KoboLogEntry, MotionAnchor>({
+  layer: motionLayer,
+  bounds: TEMPO.queue,
+  log: () => store.events,
+  plan: planEvent,
+  prepare: awaitFace,
+  // Until its copies have landed the table still shows the old cards: a tap on one is judged on what is shown.
+  onPlayed: (played, entry) => {
+    if (!played.motion || !canAnimate() || !entry) return;
+    store.holdDisplayed(planHold(gameBeforeEntry.get(entry) ?? null, played.plan.movements, played.endsAt));
+  },
 });
 
 // --- Announcements ---------------------------------------------------------------------------------------------
@@ -376,7 +354,8 @@ watch(() => [store.game?.round, store.game?.phase, store.game?.currentSeat, live
       </div>
 
       <!-- The cards that travel (a picture only, hidden from assistive technology), and the one live region. -->
-      <KoboMotionLayer ref="motionLayer" :resolve="resolveAnchor" />
+      <CardMotionLayer ref="motionLayer" :resolve="resolveAnchor" :mark-ms="TEMPO.markMs"
+                       :mark-reduced-ms="TEMPO.markReducedMs" arrow-id="kobo-arrow-head" />
       <p class="sr-only" role="status" aria-live="polite" aria-atomic="true" data-test="kobo-live">{{ liveSpoken }}</p>
 
       <Transition name="forfeit-fade">

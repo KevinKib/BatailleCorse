@@ -1,0 +1,293 @@
+{
+  "layerHtml": "<div data-v-e6bb3fda=\"\" data-v-340b5ee6=\"\" class=\"motion-layer\" data-test=\"motion-layer\" aria-hidden=\"true\"><svg data-v-e6bb3fda=\"\" class=\"motion-arrows\" xmlns=\"http://www.w3.org/2000/svg\"><defs data-v-e6bb3fda=\"\"><marker data-v-e6bb3fda=\"\" id=\"kobo-arrow-head\" viewBox=\"0 0 10 10\" refX=\"8\" refY=\"5\" markerWidth=\"6\" markerHeight=\"6\" orient=\"auto-start-reverse\"><path data-v-e6bb3fda=\"\" d=\"M0 0 L10 5 L0 10 z\" fill=\"currentColor\"></path></marker></defs></svg><div data-v-e6bb3fda=\"\" class=\"mark\" data-test=\"motion-mark\" data-role=\"to\" style=\"left: 188.5px; top: 465.266px; width: 54px; height: 74.7344px; animation-duration: 2000ms;\"></div><div data-v-e6bb3fda=\"\" class=\"under\" data-test=\"motion-under\" style=\"left: 192.5px; top: 469.266px; width: 46px; height: 66.7344px;\"><img data-v-e6bb3fda=\"\" src=\"/src/resources/cards/png/card_back.png?inline\" alt=\"\" width=\"50\" height=\"72.54587498135164\" class=\"playing_card face\"></div><div data-v-e6bb3fda=\"\" class=\"under\" data-test=\"motion-under\" style=\"left: 192.5px; top: 469.266px; width: 46px; height: 66.7344px;\"><img data-v-e6bb3fda=\"\" src=\"/src/resources/cards/png/card_back.png?inline\" alt=\"\" width=\"50\" height=\"72.54587498135164\" class=\"playing_card face\"></div><div data-v-e6bb3fda=\"\" class=\"ghost\" data-test=\"motion-card\" data-ghost=\"3\" data-kind=\"travel\" style=\"width: 44px; height: 63.8281px; transform: translate(230.594px, 59px);\"><img data-v-e6bb3fda=\"\" src=\"/src/resources/cards/png/card_back.png?inline\" alt=\"\" width=\"50\" height=\"72.54587498135164\" class=\"playing_card face\" data-face=\"back\"><img data-v-e6bb3fda=\"\" src=\"/src/resources/cards/png/card_2_spade.png?inline\" alt=\"\" width=\"50\" height=\"72.54587498135164\" class=\"playing_card face\" data-face=\"front\"></div><div data-v-e6bb3fda=\"\" class=\"ghost\" data-test=\"motion-card\" data-ghost=\"5\" data-kind=\"travel\" style=\"width: 46px; height: 66.7344px; transform: translate(192.5px, 469.266px);\"><img data-v-e6bb3fda=\"\" src=\"/src/resources/cards/png/card_back.png?inline\" alt=\"\" width=\"50\" height=\"72.54587498135164\" class=\"playing_card face\" data-face=\"back\"><img data-v-e6bb3fda=\"\" src=\"/src/resources/cards/png/card_queen_heart.png?inline\" alt=\"\" width=\"50\" height=\"72.54587498135164\" class=\"playing_card face\" data-face=\"front\"></div></div>",
+  "animations": [
+    {
+      "target": "motion-mark",
+      "timing": {
+        "delay": 0,
+        "duration": 2000,
+        "fill": "both",
+        "easing": "linear"
+      },
+      "keyframes": [
+        {
+          "offset": 0,
+          "easing": "ease-out",
+          "composite": "auto",
+          "transform": "scale(1.12)",
+          "opacity": "0",
+          "computedOffset": 0
+        },
+        {
+          "offset": 0.08,
+          "easing": "ease-out",
+          "composite": "auto",
+          "transform": "scale(1)",
+          "opacity": "1",
+          "computedOffset": 0.08
+        },
+        {
+          "offset": 0.7,
+          "easing": "ease-out",
+          "composite": "auto",
+          "opacity": "1",
+          "computedOffset": 0.7
+        },
+        {
+          "offset": 1,
+          "easing": "ease-out",
+          "composite": "auto",
+          "transform": "none",
+          "opacity": "0",
+          "computedOffset": 1
+        }
+      ]
+    },
+    {
+      "target": "motion-card",
+      "timing": {
+        "delay": 150,
+        "duration": 1000,
+        "fill": "both",
+        "easing": "linear"
+      },
+      "keyframes": [
+        {
+          "offset": null,
+          "easing": "cubic-bezier(0.2, 0.8, 0.2, 1)",
+          "composite": "auto",
+          "transform": "translate(230.594px, 59px) scale(1)",
+          "computedOffset": 0
+        },
+        {
+          "offset": 0.7,
+          "easing": "linear",
+          "composite": "auto",
+          "transform": "translate(192.5px, 469.268px) scale(1.04545)",
+          "computedOffset": 0.7
+        },
+        {
+          "offset": null,
+          "easing": "linear",
+          "composite": "auto",
+          "transform": "translate(192.5px, 469.268px) scale(1.04545)",
+          "computedOffset": 1
+        }
+      ]
+    },
+    {
+      "target": "IMG",
+      "timing": {
+        "delay": 150,
+        "duration": 1000,
+        "fill": "both",
+        "easing": "linear"
+      },
+      "keyframes": [
+        {
+          "offset": null,
+          "easing": "linear",
+          "composite": "auto",
+          "transform": "scaleX(1)",
+          "computedOffset": 0
+        },
+        {
+          "offset": 0.7,
+          "easing": "linear",
+          "composite": "auto",
+          "transform": "scaleX(1)",
+          "computedOffset": 0.7
+        },
+        {
+          "offset": 0.85,
+          "easing": "linear",
+          "composite": "auto",
+          "transform": "scaleX(0)",
+          "computedOffset": 0.85
+        },
+        {
+          "offset": null,
+          "easing": "linear",
+          "composite": "auto",
+          "transform": "scaleX(0)",
+          "computedOffset": 1
+        }
+      ]
+    },
+    {
+      "target": "IMG",
+      "timing": {
+        "delay": 150,
+        "duration": 1000,
+        "fill": "both",
+        "easing": "linear"
+      },
+      "keyframes": [
+        {
+          "offset": null,
+          "easing": "linear",
+          "composite": "auto",
+          "transform": "scaleX(0)",
+          "computedOffset": 0
+        },
+        {
+          "offset": 0.85,
+          "easing": "linear",
+          "composite": "auto",
+          "transform": "scaleX(0)",
+          "computedOffset": 0.85
+        },
+        {
+          "offset": null,
+          "easing": "linear",
+          "composite": "auto",
+          "transform": "scaleX(1)",
+          "computedOffset": 1
+        }
+      ]
+    },
+    {
+      "target": "motion-card",
+      "timing": {
+        "delay": 150,
+        "duration": 1000,
+        "fill": "both",
+        "easing": "linear"
+      },
+      "keyframes": [
+        {
+          "offset": null,
+          "easing": "cubic-bezier(0.2, 0.8, 0.2, 1)",
+          "composite": "auto",
+          "transform": "translate(192.5px, 469.266px) scale(1)",
+          "computedOffset": 0
+        },
+        {
+          "offset": 0.7,
+          "easing": "linear",
+          "composite": "auto",
+          "transform": "translate(157px, 58.9976px) scale(0.956522)",
+          "computedOffset": 0.7
+        },
+        {
+          "offset": null,
+          "easing": "linear",
+          "composite": "auto",
+          "transform": "translate(157px, 58.9976px) scale(0.956522)",
+          "computedOffset": 1
+        }
+      ]
+    },
+    {
+      "target": "IMG",
+      "timing": {
+        "delay": 150,
+        "duration": 700,
+        "fill": "both",
+        "easing": "linear"
+      },
+      "keyframes": [
+        {
+          "offset": null,
+          "easing": "linear",
+          "composite": "auto",
+          "transform": "scaleX(1)",
+          "computedOffset": 0
+        },
+        {
+          "offset": 0.5,
+          "easing": "linear",
+          "composite": "auto",
+          "transform": "scaleX(0)",
+          "computedOffset": 0.5
+        },
+        {
+          "offset": null,
+          "easing": "linear",
+          "composite": "auto",
+          "transform": "scaleX(0)",
+          "computedOffset": 1
+        }
+      ]
+    },
+    {
+      "target": "IMG",
+      "timing": {
+        "delay": 150,
+        "duration": 700,
+        "fill": "both",
+        "easing": "linear"
+      },
+      "keyframes": [
+        {
+          "offset": null,
+          "easing": "linear",
+          "composite": "auto",
+          "transform": "scaleX(0)",
+          "computedOffset": 0
+        },
+        {
+          "offset": 0.5,
+          "easing": "linear",
+          "composite": "auto",
+          "transform": "scaleX(0)",
+          "computedOffset": 0.5
+        },
+        {
+          "offset": null,
+          "easing": "linear",
+          "composite": "auto",
+          "transform": "scaleX(1)",
+          "computedOffset": 1
+        }
+      ]
+    }
+  ],
+  "computed": [
+    {
+      "target": "motion-mark",
+      "transform": "matrix(1, 0, 0, 1, 0, 0)",
+      "opacity": "1"
+    },
+    {
+      "target": "motion-card",
+      "transform": "matrix(1.04388, 0, 0, 1.04388, 193.819, 455.058)",
+      "opacity": "1"
+    },
+    {
+      "target": "IMG",
+      "transform": "matrix(1, 0, 0, 1, 0, 0)",
+      "opacity": "1"
+    },
+    {
+      "target": "IMG",
+      "transform": "matrix(0, 0, 0, 1, 0, 0)",
+      "opacity": "1"
+    },
+    {
+      "target": "motion-card",
+      "transform": "matrix(0.958028, 0, 0, 0.958028, 158.23, 73.2076)",
+      "opacity": "1"
+    },
+    {
+      "target": "IMG",
+      "transform": "matrix(0.2, 0, 0, 1, 0, 0)",
+      "opacity": "1"
+    },
+    {
+      "target": "IMG",
+      "transform": "matrix(0, 0, 0, 1, 0, 0)",
+      "opacity": "1"
+    }
+  ],
+  "marks": [
+    {
+      "role": "to",
+      "left": 188.5,
+      "top": 465.265625,
+      "width": 54,
+      "height": 74.734375
+    }
+  ],
+  "arrows": 0
+}

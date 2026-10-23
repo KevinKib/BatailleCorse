@@ -1,3 +1,4 @@
+import { liveHeld, mergeHeld, type Held } from '../../animation';
 import type { Movement, MotionAnchor } from './motion';
 import type { KoboState } from './KoboState';
 import { slotKey } from './interaction';
@@ -49,24 +50,32 @@ export function planHold(before: KoboState | null, movements: Movement[], until:
   return { slots, discard };
 }
 
+// The holds are the shared `heldValues` (a value per place until a time): the slots by their key, the discard rank as
+// the place `discard`. These two adapters only convert between Kobo's shape and the shared one.
+const DISCARD = 'discard';
+const slotsHeld = (slots: DisplayedHold['slots']): Held<number> =>
+  Object.fromEntries(Object.entries(slots).map(([key, h]) => [key, { value: h.revision, until: h.until }]));
+const slotsOf = (held: Held<number>): DisplayedHold['slots'] =>
+  Object.fromEntries(Object.entries(held).map(([key, h]) => [key, { revision: h.value, until: h.until }]));
+const discardHeld = (discard: DisplayedHold['discard']): Held<string> =>
+  discard ? { [DISCARD]: { value: discard.rank, until: discard.until } } : {};
+const discardOf = (held: Held<string>): DisplayedHold['discard'] =>
+  held[DISCARD] ? { rank: held[DISCARD].value, until: held[DISCARD].until } : null;
+
 /** Adds a new hold to the one in force: a place already held keeps the value it showed first, and the later end. */
 export function mergeHold(current: DisplayedHold, incoming: DisplayedHold): DisplayedHold {
-  const slots = { ...current.slots };
-  for (const [key, held] of Object.entries(incoming.slots)) {
-    const known = slots[key];
-    slots[key] = known ? { revision: known.revision, until: Math.max(known.until, held.until) } : held;
-  }
-  const discard = current.discard && incoming.discard
-    ? { rank: current.discard.rank, until: Math.max(current.discard.until, incoming.discard.until) }
-    : current.discard ?? incoming.discard;
-  return { slots, discard };
+  return {
+    slots: slotsOf(mergeHeld(slotsHeld(current.slots), slotsHeld(incoming.slots))),
+    discard: discardOf(mergeHeld(discardHeld(current.discard), discardHeld(incoming.discard))),
+  };
 }
 
 /** What is still held at `now`: a value whose flight has landed (end time reached) is dropped. */
 export function liveHold(hold: DisplayedHold, now: number): DisplayedHold {
-  const slots = Object.fromEntries(Object.entries(hold.slots).filter(([, h]) => h.until > now));
-  const discard = hold.discard && hold.discard.until > now ? hold.discard : null;
-  return { slots, discard };
+  return {
+    slots: slotsOf(liveHeld(slotsHeld(hold.slots), now)),
+    discard: discardOf(liveHeld(discardHeld(hold.discard), now)),
+  };
 }
 
 export function displayedOf(hold: DisplayedHold): KoboDisplayed {
