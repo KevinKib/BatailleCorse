@@ -4,7 +4,7 @@ import CardMotionLayer from './CardMotionLayer.vue';
 import type { MotionTarget } from '../dom/rect';
 import type { TableMovement } from '../core/movement';
 
-// The shared layer as President uses it (Kobo's use is covered by KoboMotionLayer.test.ts): string places, a ring
+// The shared layer as President uses it (the flights are covered by CardMotionLayer.flight.test.ts): string places, a ring
 // without a flight, still rings, ring durations given by the table.
 type Move = TableMovement<string>;
 const move = (over: Partial<Move> = {}): Move => ({
