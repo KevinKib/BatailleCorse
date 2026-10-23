@@ -1,8 +1,13 @@
 import { ref, type Ref } from 'vue';
-import type { SeatBubble } from '../model/president/motion';
 
-export interface ShownBubble {
-  kind: SeatBubble['kind'];
+/** A bubble over a seat: what a move said that a card cannot show. `K` is the game's own kinds. */
+export interface SeatBubble<K extends string = string> {
+  seat: number;
+  kind: K;
+}
+
+export interface ShownBubble<K extends string = string> {
+  kind: K;
   /** Changes with every bubble, so the same kind twice pops twice. */
   key: number;
 }
@@ -12,12 +17,12 @@ export interface ShownBubble {
  * each shows at once, a burst `gapMs` apart, for the life it is given; a new bubble on a seat replaces the old one.
  * Purely visual.
  */
-export function useSeatBubbles(options: { gapMs: number }): {
-  bySeat: Ref<Record<number, ShownBubble>>;
-  show: (bubble: SeatBubble, lifeMs: number) => void;
+export function useSeatBubbles<K extends string = string>(options: { gapMs: number }): {
+  bySeat: Ref<Record<number, ShownBubble<K>>>;
+  show: (bubble: SeatBubble<K>, lifeMs: number) => void;
   cancel: () => void;
 } {
-  const bySeat = ref<Record<number, ShownBubble>>({});
+  const bySeat = ref<Record<number, ShownBubble<K>>>({}) as Ref<Record<number, ShownBubble<K>>>;
   const timers = new Set<ReturnType<typeof setTimeout>>();
   let nextFreeAt = 0;
   let counter = 0;
@@ -27,7 +32,7 @@ export function useSeatBubbles(options: { gapMs: number }): {
     timers.add(timer);
   };
 
-  function pop(bubble: SeatBubble, lifeMs: number) {
+  function pop(bubble: SeatBubble<K>, lifeMs: number) {
     const key = ++counter;
     bySeat.value = { ...bySeat.value, [bubble.seat]: { kind: bubble.kind, key } };
     later(lifeMs, () => {
@@ -37,7 +42,7 @@ export function useSeatBubbles(options: { gapMs: number }): {
     });
   }
 
-  function show(bubble: SeatBubble, lifeMs: number) {
+  function show(bubble: SeatBubble<K>, lifeMs: number) {
     const now = Date.now();
     const at = Math.max(now, nextFreeAt);
     nextFreeAt = at + options.gapMs;

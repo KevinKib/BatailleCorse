@@ -29,7 +29,7 @@ import KoboSoundToggle from '../../components/kobo/KoboSoundToggle.vue';
 import { planHold } from '../../model/kobo/displayed';
 import { eventSpanMs, planMovements, type MotionAnchor, type Movement } from '../../model/kobo/motion';
 import { createTempoQueue } from '../../model/kobo/queue';
-import { prefersReducedMotion } from '../../composables/usePileAnimation';
+import { prefersReducedMotion } from '../../animation';
 import type { KoboLogEntry } from '../../model/kobo/KoboEvents';
 import type { KoboState } from '../../model/kobo/KoboState';
 import type Card from '../../model/Card';

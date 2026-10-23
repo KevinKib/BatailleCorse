@@ -1,6 +1,4 @@
-import type { AnimationSpeed } from '../../composables/useAnimationSpeed';
-import { eventSpanMs, scaleMovements, type TableMovement } from '../table/motion';
-import type { MotionRect } from '../../components/table/motionTarget';
+import { eventSpanMs, scaleMovements, type MotionRect, type TableMovement } from '../../animation';
 import type { PresidentLogEntry } from './eventLog';
 import { PRESIDENT_TEMPO } from './tempo';
 
@@ -25,11 +23,6 @@ export type PresidentMovement = TableMovement<PresidentAnchor>;
 export interface SeatBubble {
   seat: number;
   kind: 'pass' | 'outForbidden' | 'completed';
-}
-
-/** How long the animations last at a speed, as a share of Normal (0: nothing moves). */
-export function speedFactor(speed: AnimationSpeed): number {
-  return speed === 'normal' ? 1 : speed === 'fast' ? 0.5 : 0;
 }
 
 /** Where each card of my play was on screen when I played it, by card name. */

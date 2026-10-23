@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { ANIMATION_SPEED_KEY, nextAnimationSpeed, useAnimationSpeed, type SpeedStorage } from './useAnimationSpeed';
+import { ANIMATION_SPEED_KEY, useAnimationSpeed, type SpeedStorage } from './useAnimationSpeed';
 
 function memory(initial: Record<string, string> = {}): SpeedStorage & { data: Record<string, string> } {
   const data = { ...initial };
@@ -9,14 +9,6 @@ function memory(initial: Record<string, string> = {}): SpeedStorage & { data: Re
     setItem: (key, value) => { data[key] = value; },
   };
 }
-
-describe('nextAnimationSpeed', () => {
-  it('cycles Normal, Fast, Instant, Normal', () => {
-    expect(nextAnimationSpeed('normal')).toBe('fast');
-    expect(nextAnimationSpeed('fast')).toBe('instant');
-    expect(nextAnimationSpeed('instant')).toBe('normal');
-  });
-});
 
 describe('useAnimationSpeed', () => {
   it('defaults to Normal', () => {

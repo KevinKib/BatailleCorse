@@ -1,7 +1,7 @@
 import type Card from '../Card';
 import type { KoboLogEntry } from './KoboEvents';
-import { MOTION_MAX_MS, TEMPO, type LegTempo } from './tempo';
-import { eventSpanMs, type TableMovement } from '../table/motion';
+import { MOTION_MAX_MS, TEMPO } from './tempo';
+import { eventSpanMs, type LegTempo, type TableMovement } from '../../animation';
 
 /**
  * Where a card flies from or to, as the table names it (the component turns it into a rectangle). Purely visual:
@@ -21,7 +21,7 @@ export type MotionAnchor =
   | { kind: 'table' };
 
 /**
- * A Kobo movement: the shared table movement (`model/table/motion.ts`) between Kobo's places. Kobo uses `travel`
+ * A Kobo movement: the shared table movement (`animation/core/movement.ts`) between Kobo's places. Kobo uses `travel`
  * (the flip of the card I draw, the turn face down of the card I saw), `glance` (a peek) and `reveal` (the end of a
  * round); its rings are on slots only (the piles speak for themselves).
  */

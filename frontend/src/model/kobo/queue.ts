@@ -1,10 +1,10 @@
 import { TEMPO } from './tempo';
-import { createTempoQueue as createSharedTempoQueue } from '../table/queue';
+import { createTempoQueue as createSharedTempoQueue } from '../../animation';
 
-export type { Admission } from '../table/queue';
+export type { Admission } from '../../animation';
 
 /**
- * Kobo's queue of events: the shared table queue (`model/table/queue.ts`) within the bounds of `TEMPO.queue`. Plays
+ * Kobo's queue of events: the shared table queue (`animation/core/tempoQueue.ts`) within the bounds of `TEMPO.queue`. Plays
  * the events of a burst one after the other while keeping the table from lagging behind the game. Pure apart from
  * the clock it is given.
  */

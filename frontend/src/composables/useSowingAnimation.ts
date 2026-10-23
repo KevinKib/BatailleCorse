@@ -3,7 +3,7 @@ import type { MangolaLastMove, MangolaState, MangolaStep } from '../model/mangol
 import { boardMarks, NO_BOARD_MARKS, type BoardMarks } from '../model/mangola/marks';
 import { sowingFrames, type HandPosition, type SowingFrame } from '../model/mangola/replay';
 import { SPEED_PROFILES } from '../model/mangola/trace';
-import type { AnimationSpeed } from './useAnimationSpeed';
+import type { AnimationSpeed } from '../animation';
 
 /** More states than this waiting behind an animation: the older ones are dropped and the newest is shown at once. */
 export const MAX_QUEUED_STATES = 2;

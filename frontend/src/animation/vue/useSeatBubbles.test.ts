@@ -1,9 +1,18 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { useSeatBubbles } from './useSeatBubbles';
 
 describe('useSeatBubbles', () => {
   beforeEach(() => { vi.useFakeTimers(); });
   afterEach(() => { vi.useRealTimers(); });
+
+  it('givenAGamesKinds_thenTheBubblesAreTypedOnThem', () => {
+    const bubbles = useSeatBubbles<'pass' | 'completed'>({ gapMs: 200 });
+    bubbles.show({ seat: 2, kind: 'completed' }, 1000);
+    expectTypeOf(bubbles.bySeat.value[2].kind).toEqualTypeOf<'pass' | 'completed'>();
+    expect(bubbles.bySeat.value[2].kind).toBe('completed');
+    // @ts-expect-error a kind the game does not have
+    bubbles.cancel(); bubbles.show({ seat: 2, kind: 'nope' }, 1000);
+  });
 
   it('givenABubble_thenItShowsAtOnceOnItsSeatAndGoesAfterItsLife', () => {
     const bubbles = useSeatBubbles({ gapMs: 200 });

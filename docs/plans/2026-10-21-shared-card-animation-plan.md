@@ -77,7 +77,10 @@ Alone and first: every other chunk compiles against it. No screen uses the new p
 4. **Alignment with #294:** at launch, read PR #294. If it is merged, lift its generic displayed layer into
    `animation/` with its names (re-exported from its President file until chunk 2) and amend spec 5.6; if it is
    still open, comment on #294 with the `useDisplayedState` signature so its author can build on it (that comment
-   is the orchestrator's call: ask before posting).
+   is the orchestrator's call: ask before posting). **Done in chunk 0:** #294 and #293 were already merged, so
+   `createDisplayQueue` (`animation/core/displayQueue.ts`) and `useDisplayedState` (`animation/vue/`) were lifted with
+   their tests and their names unchanged (no re-export file: the boundary rule makes games import the barrel), and
+   spec 5.6 was amended to #294's design in place of the `displayedTimeline` sketch.
 5. Suites. Cypress: `kobo-animations`, `president-animations`, `president-soft-rings`, `mangola-animation-speed`,
    `bullshit-pile-animation` (the imports moved under them).
 

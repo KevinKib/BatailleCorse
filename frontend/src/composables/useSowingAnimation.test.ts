@@ -6,7 +6,7 @@ import { boardOf, sow } from '../model/mangola/sowingFixtures';
 import { MAX_TOTAL_MS, planSowing } from '../model/mangola/trace';
 import type { MangolaState } from '../model/mangola/MangolaState';
 import { pitFromName } from '../model/mangola/geometry';
-import type { AnimationSpeed } from './useAnimationSpeed';
+import type { AnimationSpeed } from '../animation';
 
 const POSITIONS: { name: string; before: string; pit: string }[] = [
   { name: 'PICK/DROP/SKIP_EMPTY (E1)', before: 'a2:3', pit: 'a2' },

@@ -5,9 +5,9 @@ import type { MangolaCell } from '../../model/mangola/board';
 import { NO_BOARD_MARKS, type BoardMarks } from '../../model/mangola/marks';
 import type { HandPosition } from '../../model/mangola/replay';
 import { SPEED_PROFILES } from '../../model/mangola/trace';
-import type { AnimationSpeed } from '../../composables/useAnimationSpeed';
+import type { AnimationSpeed } from '../../animation';
 import MangolaPit from './MangolaPit.vue';
-import AnimationSpeedButton from '../table/AnimationSpeedButton.vue';
+import { AnimationSpeedButton } from '../../animation';
 
 // The Mangola board, presentational only: the 4 x 8 grid exactly as the viewer sees it (`rows` comes from the
 // store, own half at the bottom), the chevrons, the divider between the inner rows and the marks of the

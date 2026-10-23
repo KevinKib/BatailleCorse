@@ -1,5 +1,5 @@
 import type Card from '../Card';
-import { scaleMovements } from '../table/motion';
+import { scaleMovements } from '../../animation';
 import type { PresidentAnchor, PresidentMovement } from './motion';
 import type { PresidentExchangePair, PresidentState } from './PresidentState';
 import { PRESIDENT_TEMPO } from './tempo';

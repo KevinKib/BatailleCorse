@@ -1,10 +1,10 @@
 <script setup lang="ts" generic="Anchor">
 import { computed, nextTick, onBeforeUnmount, ref } from 'vue';
-import PlayingCard from '../PlayingCard.vue';
+import PlayingCard from '../../components/PlayingCard.vue';
 import type Card from '../../model/Card';
-import type { TableMovement } from '../../model/table/motion';
-import { prefersReducedMotion } from '../../composables/usePileAnimation';
-import type { MotionRect, MotionTarget } from './motionTarget';
+import type { TableMovement } from '../core/movement';
+import { canAnimate, prefersReducedMotion } from '../core/reducedMotion';
+import type { MotionRect, MotionTarget } from '../dom/rect';
 
 // The cards that travel, shared by every table that animates (Kobo, President). A layer over the whole screen
 // (fixed, no pointer events, hidden from assistive technology) where each movement of the table is played as a copy
@@ -25,7 +25,9 @@ const props = withDefaults(defineProps<{
   markStyle?: 'glow' | 'soft';
   /** The id of the arrow head marker (unique on the page). */
   arrowId?: string;
-}>(), { markMs: 2000, markReducedMs: 1500, markStyle: 'glow', arrowId: 'table-arrow-head' });
+  /** The level of the layer over the page; default (the style sheet's 1600): over the table and under the notices. */
+  zIndex?: number;
+}>(), { markMs: 2000, markReducedMs: 1500, markStyle: 'glow', arrowId: 'table-arrow-head', zIndex: undefined });
 /** How far a ring stands off the card it surrounds. */
 const markPad = computed(() => props.markStyle === 'soft' ? 2 : 4);
 
@@ -58,10 +60,6 @@ function show(el: HTMLElement) {
   if (left > 0) { hidden.set(el, left); return; }
   hidden.delete(el);
   el.style.removeProperty('opacity');
-}
-
-function canAnimate(): boolean {
-  return !prefersReducedMotion() && typeof Element.prototype.animate === 'function';
 }
 
 function playReveal(movement: Movement) {
@@ -111,9 +109,11 @@ function showMarks(movements: Movement[], forceStill = false) {
 /**
  * Plays the movements of one event. Never throws, never waits: a failure only costs the picture. `marksOnly`: the
  * backlog is full, so the rings show at once and the flights are skipped. `still`: the rings do not animate either
- * (a table set to play no animation).
+ * (a table set to play no animation). Returns when its flights are over, counted from now (`endsInMs`: the longest
+ * wait + delay + flight + hold after landing it scheduled, 0 when it played nothing).
  */
-function play(movements: Movement[], options: { marksOnly?: boolean; startInMs?: number; still?: boolean } = {}) {
+function play(movements: Movement[], options: { marksOnly?: boolean; startInMs?: number; still?: boolean } = {}): { endsInMs: number } {
+  let endsInMs = 0;
   // `startInMs`: this event waits behind the previous one. It is set up at once (the table already shows the new
   // state: the places the copies land on are hidden and show their old card meanwhile) but its copies stay
   // invisible until their turn, and its rings come with them.
@@ -132,11 +132,13 @@ function play(movements: Movement[], options: { marksOnly?: boolean; startInMs?:
     ring();
   }
   try {
-    if (options.marksOnly || !canAnimate()) return;
+    if (options.marksOnly || !canAnimate()) return { endsInMs };
+    const endOf = (m: Movement) => wait + m.delayMs + m.durationMs + m.holdAfterMs;
     for (const movement of movements) {
       // A ring is only its marks, already shown above.
       if (movement.kind === 'ring') continue;
       if (movement.kind === 'reveal') {
+        endsInMs = Math.max(endsInMs, endOf(movement));
         if (wait > 0) {
           const timer = setTimeout(() => { markTimers.delete(timer); playReveal(movement); }, wait);
           markTimers.add(timer);
@@ -150,6 +152,7 @@ function play(movements: Movement[], options: { marksOnly?: boolean; startInMs?:
       const to = props.resolve(movement.to);
       if (!from || !to || from.rect.width <= 0 || to.rect.width <= 0) continue;
       const id = ++counter;
+      endsInMs = Math.max(endsInMs, endOf(movement));
       const hideCards = movement.kind === 'travel' ? to.cards : [];
       ghosts.value.push({ id, movement, from: from.rect, to: to.rect, hide: hideCards, waitMs: wait });
       if (movement.kind === 'travel') {
@@ -177,6 +180,7 @@ function play(movements: Movement[], options: { marksOnly?: boolean; startInMs?:
   } catch {
     /* a picture is never worth an error */
   }
+  return { endsInMs };
 }
 
 function launch(id: number) {
@@ -192,22 +196,37 @@ function launch(id: number) {
   const startMs = waitMs + movement.delayMs;
   const centre = (r: MotionRect, scale: number) =>
     `translate(${r.left}px, ${r.top}px) scale(${scale})`;
-  const scale = to.width / from.width;
+  const landing = movement.kind === 'travel' ? movement.landing : undefined;
+  const fitted = to.width / from.width;
+  const scale = landing?.scaleTo === 'centre' ? Math.min(1, Math.max(0.3, fitted)) : fitted;
   const start = centre(from, 1);
   const land = centre({ ...to, left: to.left + (to.width - from.width * scale) / 2, top: to.top + (to.height - from.height * scale) / 2 }, scale);
+  const easing = movement.easing ?? EASING;
   // One animation: the hold before is its delay (the copy waits on its source), then the flight, then the hold
   // after landing (the copy stays on its destination, so its face can be read). Keyframe offsets cut the three.
   const total = movement.durationMs + movement.holdAfterMs;
   const flight = movement.durationMs / total;
-  const frames: Keyframe[] = movement.kind === 'glance'
-    ? [
-      { transform: start, easing: EASING },
+  let frames: Keyframe[];
+  if (movement.kind === 'glance') {
+    frames = [
+      { transform: start, easing },
       { transform: midway(from, to), offset: flight * 0.35 },
-      { transform: midway(from, to), offset: flight * 0.65, easing: EASING },
+      { transform: midway(from, to), offset: flight * 0.65, easing },
       { transform: start, offset: flight },
       { transform: start },
-    ]
-    : [{ transform: start, easing: EASING }, { transform: land, offset: flight }, { transform: land }];
+    ];
+  } else if (landing) {
+    // Dropped on the destination: it turns by `tiltDeg` on the way and, once landed, may fade away.
+    const tilted = `${land} rotate(${landing.tiltDeg}deg)`;
+    const seen = landing.fade ? { opacity: 1 } : {};
+    frames = [
+      { transform: `${start} rotate(0deg)`, ...seen, easing },
+      { transform: tilted, ...seen, offset: flight },
+      { transform: tilted, ...(landing.fade ? { opacity: 0 } : {}) },
+    ];
+  } else {
+    frames = [{ transform: start, easing }, { transform: land, offset: flight }, { transform: land }];
+  }
 
   ghost.hide.forEach(hide);
   const release = () => { ghost.hide.forEach(show); finish(); };
@@ -272,7 +291,7 @@ defineExpose({ play });
 </script>
 
 <template>
-  <div ref="root" class="motion-layer" data-test="motion-layer" aria-hidden="true">
+  <div ref="root" class="motion-layer" data-test="motion-layer" aria-hidden="true" :style="zIndex === undefined ? undefined : { zIndex }">
     <svg class="motion-arrows" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <marker :id="arrowId" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">

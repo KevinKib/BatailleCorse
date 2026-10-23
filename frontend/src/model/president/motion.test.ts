@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { planBubbles, planMovements, planSweep, sourcesFor, speedFactor, sweepStartMs } from './motion';
+import { planBubbles, planMovements, planSweep, sourcesFor, sweepStartMs } from './motion';
+import { speedFactor } from '../../animation';
 import { PRESIDENT_TEMPO } from './tempo';
 import type { PresidentLogEntry } from './eventLog';
 import { buildPresidentCard as card } from '../fixtures/president';
@@ -101,12 +102,6 @@ describe('planMovements', () => {
     for (const m of planMovements(entry({ cards: four }), ME)) {
       expect(m.delayMs + m.durationMs + m.holdAfterMs).toBeLessThanOrEqual(MOTION_MAX_MS);
     }
-  });
-});
-
-describe('speedFactor', () => {
-  it.each([['normal', 1], ['fast', 0.5], ['instant', 0]] as const)('%s', (speed, factor) => {
-    expect(speedFactor(speed)).toBe(factor);
   });
 });
 
