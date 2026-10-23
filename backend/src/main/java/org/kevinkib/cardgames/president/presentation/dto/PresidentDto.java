@@ -72,8 +72,8 @@ public record PresidentDto(
 
     /**
      * The plays of one rank at the top of the trick, in succession: public, since every card is on the table. With
-     * two plays or more the holder of the missing cards may complete the four (that holder alone gets
-     * {@code completion}).
+     * two plays or more, a lone card or a lone pair, the holder of the missing cards may complete the four (that
+     * holder alone gets {@code completion}).
      */
     public record ChainDto(String rank, List<CardDto> cards, int plays) {
     }

@@ -284,7 +284,8 @@ public final class Round {
 
     /**
      * The cards that complete the four when the seat holds all of them and the window is open (the chain at the
-     * top of the trick holds two plays or more, or is a lone card), in turn or out of turn; nothing otherwise.
+     * top of the trick holds two plays or more, or is a lone card or a lone pair), in turn or out of turn; nothing
+     * otherwise.
      */
     public List<Card> completion(PlayerId seat) {
         if (phase != Phase.PLAYING || seat == null || seat.id() == null
@@ -328,12 +329,13 @@ public final class Round {
     }
 
     /**
-     * The completion window is open: the chain holds two plays or more, or a single card that three more of its
-     * rank can complete (the cumulative count reaches four with a play of exactly the cards missing). It never works
-     * the other way round (a lone card on a triple), and a 2 is never left on top of a trick.
+     * The completion window is open: the chain holds two plays or more, or a single play of one card or a pair that
+     * as many cards or more of its rank can complete (the cumulative count reaches four with a play of exactly the
+     * cards missing). It never works the other way round (a lone card on a triple), and a 2 is never left on top of
+     * a trick.
      */
     private boolean windowOpen(Chain chain) {
-        return chain.plays() >= 2 || (chain.cards().size() == 1 && chain.rank() != order.topRank());
+        return chain.plays() >= 2 || (chain.cards().size() <= 2 && chain.rank() != order.topRank());
     }
 
     /**
