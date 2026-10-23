@@ -80,9 +80,10 @@ one event after the other; past `maxQueued` / `maxLagMs` only the rings show, at
 calls `onPlayed(played, entry)` with `endsAt`, the timestamp at which its flights are over. `motion.play(plan)` does
 the same for a change that does not come from the log (President's exchange, Bullshit's own discard).
 
-The escape hatches, and nothing else, are for a game's oddities: `prepare` (wait for a face, for a held pile),
-`followUps` (movements that start later in the same event), `spanMs` (an event that holds the queue longer than its
-flights), `onPlayed` (holds, counts, end gating) and `play`.
+The escape hatches, and nothing else, are for a game's oddities: `prepare` (wait for a face, before admission),
+`beforePlay` (wait after admission, keeping the event's place in the queue from its arrival: President's held pile;
+the wait comes off the start), `followUps` (movements that start later in the same event), `spanMs` (an event that
+holds the queue longer than its flights), `onPlayed` (holds, counts, end gating) and `play`.
 
 ### Texts follow the picture
 

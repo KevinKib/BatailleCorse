@@ -42,6 +42,13 @@ export interface TableMotionOptions<E, A> {
   plan?: (entry: E, context: { factor: number; still: boolean }) => MotionPlan<A> | null;
   /** Awaited before admission (Kobo: one frame for my drawn face; President: the held pile); may return another plan. */
   prepare?: (entry: E, plan: MotionPlan<A>) => Promise<MotionPlan<A>> | MotionPlan<A>;
+  /**
+   * Awaited for a log entry once it is admitted (its place in the queue is kept from its arrival), before the layer
+   * plays it (President: the held pile of the trick before clears, then the DOM shows the new state). The time it takes
+   * comes off the event's start. Not asked for a plan given to `play`, nor for one with nothing to move. If it throws,
+   * the entry's picture is skipped.
+   */
+  beforePlay?: (admitted: Played<A>, entry: E) => Promise<void> | void;
   /** Told once an event is admitted and handed to the layer (`entry` is null for a plan given to `play`). */
   onPlayed?: (played: Played<A>, entry: E | null) => void;
 }
@@ -74,28 +81,39 @@ export function useTableMotion<E, A>(options: TableMotionOptions<E, A>): TableMo
   const stillNow = () => speed.value === 'instant' || prefersReducedMotion();
   const still = computed(stillNow);
 
-  /** Admits one plan through the queue, hands it to the layer, and reports. Never throws. */
+  /**
+   * Admits one plan through the queue, hands it to the layer, and reports. Never throws, except from `beforePlay`
+   * (the caller then skips the entry).
+   */
   async function admit(plan: MotionPlan<A>, entry: E | null, isStill: boolean): Promise<Played<A>> {
     const nothing = plan.movements.length === 0 && !(plan.followUps?.length);
-    const admission = isStill || nothing
+    const { motion, startInMs: admittedStartInMs } = isStill || nothing
       ? { startInMs: 0, motion: false }
       : queue.admit(plan.spanMs ?? eventSpanMs(plan.movements));
+    const report = (startInMs: number): Played<A> => ({
+      plan, motion, still: isStill, startInMs,
+      endsAt: now() + (motion ? startInMs + eventSpanMs(plan.movements) : 0),
+    });
+    let startInMs = admittedStartInMs;
+    if (!nothing && entry !== null && options.beforePlay) {
+      const admittedAt = now();
+      await options.beforePlay(report(admittedStartInMs), entry);
+      // The place in the queue was kept from the arrival: the time the wait took comes off the start.
+      startInMs = Math.max(0, admittedStartInMs - (now() - admittedAt));
+    }
     if (!nothing) {
       try {
-        options.layer.value?.play(plan.movements, { marksOnly: !admission.motion, startInMs: admission.startInMs, still: isStill });
-        if (admission.motion) {
+        options.layer.value?.play(plan.movements, { marksOnly: !motion, startInMs, still: isStill });
+        if (motion) {
           for (const followUp of plan.followUps ?? []) {
-            options.layer.value?.play(followUp.movements, { startInMs: admission.startInMs + followUp.atMs, still: false });
+            options.layer.value?.play(followUp.movements, { startInMs: startInMs + followUp.atMs, still: false });
           }
         }
       } catch {
         /* a picture is never worth an error */
       }
     }
-    const played: Played<A> = {
-      plan, motion: admission.motion, still: isStill, startInMs: admission.startInMs,
-      endsAt: now() + (admission.motion ? admission.startInMs + eventSpanMs(plan.movements) : 0),
-    };
+    const played = report(startInMs);
     try {
       options.onPlayed?.(played, entry);
     } catch {

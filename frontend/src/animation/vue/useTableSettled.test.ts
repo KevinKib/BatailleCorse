@@ -86,6 +86,33 @@ describe('useTableSettled', () => {
     expect(t.isDone()).toBe(false);
   });
 
+  it('givenACallback_thenItIsToldInTheTimerThatSettlesTheTable_beforeAnyPromiseCallback', () => {
+    const t = settle();
+    t.state.settleMs = 500;
+    const then = vi.fn();
+    void t.settled.whenSettled(then);
+    vi.advanceTimersByTime(499);
+    expect(then).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(1);
+    expect(then).toHaveBeenCalledTimes(1);
+  });
+
+  it('givenACallbackOnAnIdleTableWithNoRest_thenItIsToldAtOnce', () => {
+    const then = vi.fn();
+    void settle().settled.whenSettled(then);
+    expect(then).toHaveBeenCalledTimes(1);
+  });
+
+  it('givenACancelledWaitWithACallback_thenItIsNeverTold', () => {
+    const t = settle();
+    t.state.backlogMs = 1000;
+    const then = vi.fn();
+    void t.settled.whenSettled(then);
+    t.settled.cancel();
+    vi.advanceTimersByTime(5000);
+    expect(then).not.toHaveBeenCalled();
+  });
+
   it('givenANewWait_thenTheOldOneIsReplaced', async () => {
     const t = settle();
     t.state.backlogMs = 1000;

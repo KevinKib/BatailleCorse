@@ -17,10 +17,12 @@ export interface TableSettledSource {
  * a round, a final screen): the queue has nothing left (`backlogMs`), no picture is held (`busy`) and `settleMs` of
  * rest have passed with nothing new. Purely visual: the game itself never waits for it.
  *
- * `whenSettled()` starts a wait (a new one replaces the one before; a cancelled or replaced wait never ends).
+ * `whenSettled()` starts a wait (a new one replaces the one before; a cancelled or replaced wait never ends). `then`, if
+ * given, is told in the very timer that finds the table settled (or at once when it already is), before the promise's
+ * callbacks: for a sheet that must show in the same turn of the event loop.
  */
 export function useTableSettled(source: TableSettledSource): {
-  whenSettled: () => Promise<void>;
+  whenSettled: (then?: () => void) => Promise<void>;
   cancel: () => void;
 } {
   let timer: ReturnType<typeof setTimeout> | null = null;
@@ -43,9 +45,9 @@ export function useTableSettled(source: TableSettledSource): {
     done();
   }
 
-  function whenSettled(): Promise<void> {
+  function whenSettled(then?: () => void): Promise<void> {
     cancel();
-    return new Promise<void>(resolve => step(resolve, false));
+    return new Promise<void>(resolve => step(() => { try { then?.(); } finally { resolve(); } }, false));
   }
 
   if (getCurrentScope()) onScopeDispose(cancel);
