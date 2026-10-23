@@ -955,6 +955,22 @@ describe('PresidentGameScreen', () => {
         expect(wrapper.get('[data-test="phase-text"]').text()).toBe('P1 is playing');
       });
 
+      it('givenAnOpponentsLonePairInFlight_thenCompleteShowsAtOnce_beforeTheTextsTellThePlay', async () => {
+        const { wrapper, store } = await mountRoom(room(playing({ currentSeat: 1, players: four() })));
+        const pair = [card('4', 'SPADE'), card('4', 'HEART')];
+        store.applyEvent({ type: 'state-update', state: playing({
+          version: 2, currentSeat: 2, players: four({ 1: { handSize: 6 } }), availableActions: ['COMPLETE'],
+          completion: [card('4', 'DIAMOND'), card('4', 'CLUB')],
+          trick: buildPresidentTrick({ leader: 1, plays: [{ seat: 1, cards: pair }], top: { kind: 'SET', rank: '4', count: 2 },
+            constraint: 'BEAT', chain: { rank: '4', cards: pair, plays: 1 } }),
+        }) });
+        store.applyEvent(event(1, 'PLAY', { cards: pair }));
+        await flushPromises();
+        // The pair is still flying (the texts still say P1 is playing), but the button follows the latest state.
+        expect(wrapper.get('[data-test="phase-text"]').text()).toBe('P1 is playing');
+        expect(wrapper.find('[data-test="complete"]').exists()).toBe(true);
+      });
+
       it('givenTheInstantSpeed_thenTheTextsAreTheLatestStateAtOnce', async () => {
         localStorage.setItem('animationSpeed', 'instant');
         const { wrapper, store } = await mountRoom(room(playing({ currentSeat: 1, players: four() })));
