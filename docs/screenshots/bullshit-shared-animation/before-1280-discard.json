@@ -1,0 +1,20 @@
+[
+  {
+    "left": 591.6,
+    "top": 300.7,
+    "width": 90.3,
+    "height": 126.1,
+    "opacity": 0.316786,
+    "level": "3000",
+    "picture": "/src/resources/cards/png/card_ace_heart.png?inline"
+  },
+  {
+    "left": 596.1,
+    "top": 295.9,
+    "width": 92.2,
+    "height": 127.3,
+    "opacity": 1,
+    "level": "3000",
+    "picture": "/src/resources/cards/png/card_ace_spade.png?inline"
+  }
+]

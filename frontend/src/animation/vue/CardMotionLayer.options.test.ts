@@ -80,16 +80,24 @@ describe('CardMotionLayer options', () => {
   });
 
   describe('landing', () => {
+    // A copy that is dropped on its place and fades: the easing shapes the whole animation (the fade included), as it
+    // did when Bullshit drew its own copies; the frames carry none.
     it('givenATiltAndAFade_thenTheCopyLandsTiltedAndFadesAtTheEnd', async () => {
       await run([move({ landing: { tiltDeg: 5, fade: true } })]);
       expect(calls[0]).toEqual({
         frames: [
-          { transform: 'translate(0px, 10px) scale(1) rotate(0deg)', opacity: 1, easing: 'cubic-bezier(.2,.8,.2,1)' },
+          { transform: 'translate(0px, 10px) scale(1) rotate(0deg)', opacity: 1 },
           { transform: 'translate(200px, 30px) scale(2) rotate(5deg)', opacity: 1, offset: 0.8 },
           { transform: 'translate(200px, 30px) scale(2) rotate(5deg)', opacity: 0 },
         ],
-        options: { duration: 500, delay: 100, fill: 'both' },
+        options: { duration: 500, delay: 100, easing: 'cubic-bezier(.2,.8,.2,1)', fill: 'both' },
       });
+    });
+
+    it('givenALandingAndAnEasing_thenTheEasingShapesTheWholeAnimation', async () => {
+      await run([move({ landing: { tiltDeg: 5, fade: true }, easing: 'cubic-bezier(0.22, 0.8, 0.3, 1)' })]);
+      expect(calls[0].options.easing).toBe('cubic-bezier(0.22, 0.8, 0.3, 1)');
+      expect(calls[0].frames.every(f => !('easing' in f))).toBe(true);
     });
 
     it('givenATiltWithoutAFade_thenTheCopyStaysVisible', async () => {
@@ -104,9 +112,27 @@ describe('CardMotionLayer options', () => {
     });
 
     it('givenScaleToCentre_thenTheCopyShrinksAtMostToAThirdAndIsCentredOnThePlace', async () => {
-      await run([move({ landing: { tiltDeg: 0, fade: true, scaleTo: 'centre' } })]);
+      const { w } = await run([move({ landing: { tiltDeg: 0, fade: true, scaleTo: 'centre' } })]);
       // 40 px wide into an 80 px place: never enlarged (scale 1), centred on the place.
       expect(calls[0].frames[1].transform).toBe('translate(220px, 59px) scale(1) rotate(0deg)');
+      // It turns and shrinks about its own centre.
+      expect(w.get('[data-ghost]').attributes('style')).toContain('transform-origin: center');
+    });
+
+    it('givenScaleToCentreIntoASmallerPlace_thenTheCopyShrinksAboutItsCentreOntoTheCentreOfThePlace', async () => {
+      places.small = { rect: { left: 100, top: 100, width: 20, height: 30 }, cards: [] };
+      try {
+        await run([move({ to: 'small', landing: { tiltDeg: 6, fade: true, scaleTo: 'centre' } })]);
+        // Scale 0.5; the full-size 40 x 58 box is placed so that its centre (110, 115) is the place's centre.
+        expect(calls[0].frames[1].transform).toBe('translate(90px, 86px) scale(0.5) rotate(6deg)');
+      } finally {
+        delete places.small;
+      }
+    });
+
+    it('givenNoScaleToCentre_thenTheCopyScalesFromItsTopLeftCorner', async () => {
+      const { w } = await run([move({ landing: { tiltDeg: 0, fade: true } })]);
+      expect(w.get('[data-ghost]').attributes('style')).not.toContain('transform-origin');
     });
 
     it('givenScaleToCentreIntoATinyPlace_thenTheScaleStopsAt0.3', async () => {

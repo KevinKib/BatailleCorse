@@ -200,7 +200,10 @@ function launch(id: number) {
   const fitted = to.width / from.width;
   const scale = landing?.scaleTo === 'centre' ? Math.min(1, Math.max(0.3, fitted)) : fitted;
   const start = centre(from, 1);
-  const land = centre({ ...to, left: to.left + (to.width - from.width * scale) / 2, top: to.top + (to.height - from.height * scale) / 2 }, scale);
+  // `centre`: the copy shrinks about its own centre, so its full-size box is placed on the centre of the place.
+  const land = landing?.scaleTo === 'centre'
+    ? centre({ ...to, left: to.left + to.width / 2 - from.width / 2, top: to.top + to.height / 2 - from.height / 2 }, scale)
+    : centre({ ...to, left: to.left + (to.width - from.width * scale) / 2, top: to.top + (to.height - from.height * scale) / 2 }, scale);
   const easing = movement.easing ?? EASING;
   // One animation: the hold before is its delay (the copy waits on its source), then the flight, then the hold
   // after landing (the copy stays on its destination, so its face can be read). Keyframe offsets cut the three.
@@ -220,7 +223,7 @@ function launch(id: number) {
     const tilted = `${land} rotate(${landing.tiltDeg}deg)`;
     const seen = landing.fade ? { opacity: 1 } : {};
     frames = [
-      { transform: `${start} rotate(0deg)`, ...seen, easing },
+      { transform: `${start} rotate(0deg)`, ...seen },
       { transform: tilted, ...seen, offset: flight },
       { transform: tilted, ...(landing.fade ? { opacity: 0 } : {}) },
     ];
@@ -232,7 +235,10 @@ function launch(id: number) {
   const release = () => { ghost.hide.forEach(show); finish(); };
   // The cards come back whatever happens to the animation (cut, late, never started).
   const safety = setTimeout(release, startMs + total + 250);
-  const options: KeyframeAnimationOptions = { duration: total, delay: startMs, fill: 'both' };
+  // A dropped copy (`landing`) is eased as a whole, its fade included; the other movements ease their flight only.
+  const options: KeyframeAnimationOptions = landing
+    ? { duration: total, delay: startMs, easing, fill: 'both' }
+    : { duration: total, delay: startMs, fill: 'both' };
   try {
     track(el.animate(frames, options), () => { clearTimeout(safety); release(); });
     // Behind another movement: the copy is not seen until its turn comes.
@@ -310,7 +316,7 @@ defineExpose({ play });
       <PlayingCard v-else class="face" :hidden="true" rank="ace" suit="spade" />
     </div>
     <div v-for="g in ghosts" :key="g.id" class="ghost" data-test="motion-card" :data-ghost="g.id"
-         :data-kind="g.movement.kind" :style="{ width: g.from.width + 'px', height: g.from.height + 'px', transform: `translate(${g.from.left}px, ${g.from.top}px)` }">
+         :data-kind="g.movement.kind" :style="{ width: g.from.width + 'px', height: g.from.height + 'px', transform: `translate(${g.from.left}px, ${g.from.top}px)`, transformOrigin: g.movement.landing?.scaleTo === 'centre' ? 'center' : undefined }">
       <template v-if="(g.movement.flip || g.movement.turnDown) && g.movement.card">
         <PlayingCard data-face="back" :hidden="true" rank="ace" suit="spade" class="face" />
         <PlayingCard data-face="front" :rank="g.movement.card.rank" :suit="g.movement.card.suit" class="face" />
