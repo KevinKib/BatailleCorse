@@ -40,11 +40,12 @@ export interface TableMovement<Anchor> {
   /**
    * How the copy lands, for a table that wants more than "arrives and stays" (Bullshit's cards dropped on a pile):
    * it turns by `tiltDeg` on the way, `fade` makes it vanish once landed, `scaleTo` is the size it lands at (`target`:
-   * the place's width, the default; `centre`: at most its own size, at least a third, centred on the place). Absent:
-   * today's keyframes, exactly.
+   * the place's width, the default; `centre`: at most its own size, at least a third, shrinking about its own centre
+   * onto the centre of the place). A dropped copy is eased as a whole, its fade included. Absent: today's keyframes,
+   * exactly.
    */
   landing?: { tiltDeg: number; fade: boolean; scaleTo?: 'target' | 'centre' };
-  /** The easing of the flight, as a CSS timing function. Absent: the layer's own. */
+  /** The easing of the flight, as a CSS timing function (of the whole animation when `landing` is set). Absent: the layer's own. */
   easing?: string;
 }
 
