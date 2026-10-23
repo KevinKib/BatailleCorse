@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { appendEntry, toLogEntry, MAX_LOG } from './eventLog';
+import { planBubbles, planMovements } from './motion';
 import type { PresidentEventData } from './PresidentEvents';
 import { buildPresidentCard as card, buildPresidentState, buildPresidentTrick } from '../fixtures/president';
 
@@ -51,6 +52,20 @@ describe('toLogEntry', () => {
     ['a play by the seat to play', 'PLAY', 1, false],
   ])('givenOutOfTurnDetection (%s)', (_label, type, seat, expected) => {
     expect(toLogEntry(1, type, data({ seat }), before)?.outOfTurn).toBe(expected);
+  });
+
+  // The server names a completion out of turn COMPLETION twice: the event type and the data's action.
+  it('givenACompletionOutOfTurnAsTheServerSendsIt_thenItIsAPlayThatClosesTheTrick', () => {
+    const entry = toLogEntry(3, 'COMPLETION', data({
+      seat: 2, action: 'COMPLETION', cards: [card('7', 'DIAMOND'), card('7', 'SPADE')], trickWinner: 2, trickEndReason: 'QUAD',
+    }), before);
+    expect(entry).toMatchObject({ eventType: 'COMPLETION', action: 'PLAY', seat: 2, outOfTurn: true });
+    expect(entry?.cards.map(c => c.name)).toEqual(['DIAMOND_7', 'SPADE_7']);
+    expect(entry?.closure).toMatchObject({ winner: 2, reason: 'QUAD', closer: 2, size: 4 });
+    // ... so its cards fly from the completer's fan, and the completer gets the "Four completed" bubble
+    const flights = planMovements(entry!, 0).filter(m => m.kind === 'travel');
+    expect(flights.map(m => m.from)).toEqual([{ kind: 'fanTop', seat: 2 }, { kind: 'fanTop', seat: 2 }]);
+    expect(planBubbles(entry!)).toContainEqual({ seat: 2, kind: 'completed' });
   });
 
   it('givenAForbiddenFinish_thenTheEntrySaysSo', () => {
