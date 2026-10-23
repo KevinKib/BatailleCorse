@@ -620,7 +620,7 @@ const rematchButton = computed(() =>
         {{ ui.table.offline }}
       </div>
 
-      <div class="table-frame" :class="{ 'table-frame--round-end': sheetOpen }" data-test="president-table" role="region" :aria-label="ui.table.opponents"
+      <div class="table-frame" :class="{ 'table-frame--round-end': sheetOpen, 'table-frame--two-rows': opponents.length > 4 }" data-test="president-table" role="region" :aria-label="ui.table.opponents"
            :style="{ '--opponent-columns': columns }">
         <div class="opponents-ring" data-test="opponents">
           <div
@@ -794,7 +794,8 @@ const rematchButton = computed(() =>
   border: var(--table-felt-border);
   box-shadow: var(--table-felt-shadow);
   isolation: isolate;
-  --president-pile-card-w: clamp(48px, 7.5vh, 62px);
+  /* The pile cards take the room the middle of the felt keeps for them (owner feedback: "the central card is small"). */
+  --president-pile-card-w: clamp(48px, 9.5vh, 76px);
 }
 /* Wide screens: opponents on the ellipse, the trick in the middle. */
 .opponents-ring { position: absolute; inset: 64px 90px 64px; }
@@ -907,8 +908,15 @@ const rematchButton = computed(() =>
     overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior: contain;
-    --president-pile-card-w: 40px;
+    /* One row of opponents leaves the pile a tall place; it shares it with a second row past four opponents. */
+    --president-pile-card-w: 56px;
+    --president-pile-overlap: 0.55;
   }
+  /* Two rows of opponents: the pile keeps every pixel the felt has under them (no padding over and under it, a slimmer
+     line under the cards), so that its cards stay larger than the plates' (the felt still never scrolls). */
+  .table-frame--two-rows { --president-pile-card-w: 48px; --president-pile-line-h: 28px; }
+  .table-frame--two-rows .opponents-ring { padding-top: 2px; }
+  .table-frame--two-rows .table-center { padding-top: 0; padding-bottom: 0; }
   .opponents-ring {
     position: static;
     display: grid;
