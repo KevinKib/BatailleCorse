@@ -84,6 +84,44 @@ public record SessionGame(GameId id, String gameType, GameOptions options, Map<P
     }
 
     /**
+     * Claims the seat right after the last human and returns it: the bots from that seat on shift up one seat, with
+     * their names, seat options and internal tokens (they carry no identity), and no human moves. Used when a human
+     * comes back through Play again, so the re-seated bots stay after every human and the host may remove them
+     * ({@link #removeBot} refuses a bot with a human after it). The room is full if no seat is free.
+     */
+    public SessionPlayer claimSeatAheadOfBots(String name) {
+        List<SessionPlayer> ordered = seats();
+        if (ordered.stream().allMatch(SessionPlayer::isClaimed)) {
+            throw new NoFreeSeatException(id);
+        }
+        List<SessionPlayer> occupants = ordered.stream().filter(SessionPlayer::isClaimed).toList();
+        int position = 0;
+        for (int i = 0; i < occupants.size(); i++) {
+            if (!occupants.get(i).isBot()) {
+                position = i + 1;
+            }
+        }
+        SessionPlayer newcomer = new SessionPlayer(ordered.get(position).id(), SessionToken.generate());
+        newcomer.claim(name);
+        players.clear();
+        for (int i = 0; i < ordered.size(); i++) {
+            PlayerId seatId = ordered.get(i).id();
+            SessionPlayer seat;
+            if (i < position) {
+                seat = occupants.get(i);
+            } else if (i == position) {
+                seat = newcomer;
+            } else if (i <= occupants.size()) {
+                seat = occupants.get(i - 1).movedTo(seatId);
+            } else {
+                seat = ordered.get(i);
+            }
+            players.put(seatId, seat);
+        }
+        return newcomer;
+    }
+
+    /**
      * Claims the lowest-numbered free seat for a computer player. Bots are numbered over bots only
      * ("Bot 1", "Bot 2", ...) when no name is given.
      */

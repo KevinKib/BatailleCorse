@@ -13,6 +13,8 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 
@@ -62,16 +64,48 @@ class SessionServicePlayAgainTest {
     }
 
     @Test
-    void givenBotsAndTwoHumans_whenPlayAgain_thenSecondHumanJoinsAfterTheBots() {
+    void givenBotsAndTwoHumans_whenPlayAgain_thenSecondHumanSitsBeforeTheBots() {
         service.joinRoom(id, "Bob");
         service.addBot(id, hostToken);
+        service.setSeatOption(id, hostToken, 2, "tier", "2");
         service.startGame(id, hostToken);
 
         service.playAgain(id, "Alice");
         JoinResult second = service.playAgain(id, "Bob");
 
-        assertThat(second.playerId(), is(new PlayerId(2)));
-        assertThat(service.botSeats(id), is(Set.of(new PlayerId(1))));
+        assertThat(second.playerId(), is(new PlayerId(1)));
+        assertThat(service.botSeats(id), is(Set.of(new PlayerId(2))));
+        assertThat(service.seatOptions(id, new PlayerId(2)), is(Map.of("tier", "2")));
+        assertThat(service.seats(id).get(2).name(), is("Bot 1"));
+        assertThat(service.seats(id).get(1).name(), is("Bob"));
+    }
+
+    @Test
+    void givenBotsAndTwoHumans_whenBothPlayAgain_thenTheHostMayRemoveEveryBot() {
+        service.joinRoom(id, "Bob");
+        service.addBot(id, hostToken);
+        service.addBot(id, hostToken);
+        service.startGame(id, hostToken);
+
+        JoinResult host = service.playAgain(id, "Bob");
+        JoinResult guest = service.playAgain(id, "Alice");
+
+        assertThat(service.lobbyView(id, host.token()).removableBotSeats(), contains(2, 3));
+        assertThat(service.lobbyView(id, guest.token()).removableBotSeats(), is(empty()));
+        service.removeBot(id, host.token(), 2);
+        assertThat(service.botSeats(id), is(Set.of(new PlayerId(2))));
+        assertThat(service.seats(id).get(1).name(), is("Alice"));
+    }
+
+    @Test
+    void givenAReopenedLobby_whenAStrangerJoinsThroughTheLink_thenTheyStillTakeTheLowestFreeSeat() {
+        service.addBot(id, hostToken);
+        service.startGame(id, hostToken);
+        service.playAgain(id, "Alice");
+
+        JoinResult stranger = service.joinRoom(id, "Carl");
+
+        assertThat(stranger.playerId(), is(new PlayerId(2)));
     }
 
     @Test
@@ -107,7 +141,7 @@ class SessionServicePlayAgainTest {
 
         service.playAgain(id, "Bob");
 
-        assertThat(service.botSeats(id), is(Set.of(new PlayerId(1))));
+        assertThat(service.botSeats(id), is(Set.of(new PlayerId(2))));
     }
 
     @Test
