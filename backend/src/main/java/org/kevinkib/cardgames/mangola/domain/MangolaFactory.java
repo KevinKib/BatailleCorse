@@ -22,6 +22,8 @@ public class MangolaFactory implements GameFactory {
 
     public static final String GAME_TYPE = "mangola";
     public static final String FIRST_PLAYER_KEY = "firstPlayer";
+    /** The host option for the sowing direction (the descriptor itself comes with the host option chunk). */
+    public static final String DIRECTION_KEY = "direction";
     /** The seat option that carries the level of a computer seat. */
     public static final String LEVEL_KEY = "level";
 

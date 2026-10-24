@@ -1,4 +1,5 @@
 import type { LobbyView } from '../lobby/LobbyView';
+import type { MangolaDirection } from './direction';
 
 export type MangolaPhase = 'PLACEMENT' | 'PLAY' | 'FINISHED';
 
@@ -59,6 +60,11 @@ export interface MangolaState {
   currentSeat: number;
   /** The seat that owns side A (rows 1 and 2). */
   seatA: number;
+  /**
+   * The sowing direction chosen by the host. The server always sends it; optional here so that the fixtures
+   * written before it compile, and an absent one reads as the default (`directionOf`).
+   */
+  direction?: MangolaDirection;
   /**
    * The 32 pits, `row * 8 + column` (row 0 is the row named "1", column 0 the column named "a"). During a hidden
    * placement the viewer sees its own draft and null for each of the opponent's 16 pits.

@@ -62,6 +62,11 @@ describe('viewerRows', () => {
 });
 
 describe('arrowOf (the direction a seed travels on screen)', () => {
+  it('takes the game direction and ignores it for now (the screen mapping follows in a later chunk)', () => {
+    expect(arrowOf(8, 'A', 'clockwise')).toBe('right');
+    expect(arrowOf(8, 'A', 'anticlockwise')).toBe('right');
+  });
+
   it('side A seen from below: the inner row goes right, turns down at h, the outer row goes left, turns up at a', () => {
     expect(arrowOf(8, 'A')).toBe('right');
     expect(arrowOf(14, 'A')).toBe('right');

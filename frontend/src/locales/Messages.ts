@@ -256,6 +256,7 @@ export interface OptionsMessages {
   president: Record<string, OptionTexts>;
   mangola: {
     firstPlayer: OptionTexts;          // `label`, then `host` / `guest` / `random`
+    direction: OptionTexts;            // `label`, then `anticlockwise` / `clockwise`
     level: OptionTexts;                // a bot seat's level: `label`, then `random` (Easy) / `greedy` (Medium) / `expert` (Expert)
   };
 }
