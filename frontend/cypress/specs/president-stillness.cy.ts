@@ -161,7 +161,7 @@ SCREENS.forEach(([width, height]) => {
           scriptedPass(carol);
         });
         stillAcross('going out', () => { playTriple('8'); },
-          () => { cy.get('[data-test="my-zone"] [data-test="seat-out"]').should('have.text', 'Out, place 1'); });
+          () => { cy.get('[data-test="my-zone"] [data-test="seat-out"]').should('have.attr', 'data-place', '1').and('contain.text', '1st'); });
         ['7', '6', '5', '4', '3'].forEach((rank) => {
           scriptedPlay(bob, rank, 3);
           scriptedPass(carol);
