@@ -3,7 +3,8 @@
 // bot sits on seat 2 and answers at once under the test profile.
 //  1. Bob leads a lone 5; the bot is next, so Alice, who holds the three other 5s, is out of turn: the bot waits the
 //     completion grace, the Complete button shows, and pressing it closes the trick for Alice.
-//  2. Alice leads a lone 5; Bob is next and the bot holds the three other 5s: it completes out of turn, and the
+//  2. The same with a lone pair: Bob leads a pair of 4s, Alice holds the other two and completes out of turn.
+//  3. Alice leads a lone 5; Bob is next and the bot holds the three other 5s: it completes out of turn, and the
 //     completion is drawn (a flight with its arrow from the bot's seat, the "Four completed" bubble, the closed trick).
 import { hostLobby, joinGuests, noHorizontalScroll, scriptedPlay } from '../support/presidentRoom';
 
@@ -20,6 +21,13 @@ const HUMAN_COMPLETES = deal(
   ['5H', '5D', '5C', '6H', '6D', '6C', '6S', '7H', '7D', '7C', '7S', '8H', '8D', '8C', '8S', '9H', '9D', 'JS'],
   ['KH', '5S', '3H', '3D', '3C', '3S', '4H', '4D', '4C', '4S', '10H', '10D', '10C', '10S', 'JH', 'JD', 'JC'],
   ['9S', '9C', 'QH', 'QD', 'QC', 'QS', 'KD', 'KC', 'KS', 'AH', 'AD', 'AC', 'AS', '2H', '2D', '2C', '2S'],
+);
+
+const HUMAN_COMPLETES_PAIR = deal(
+  // Alice holds the 4D 4C and only full fours otherwise: she can complete Bob's pair of 4s and nothing else.
+  ['4D', '4C', '5H', '5D', '5C', '5S', '6H', '6D', '6C', '6S', '7H', '7D', '7C', '7S', '8H', '8D', '8C', '8S'],
+  ['KH', '4S', '4H', '3H', '3D', '3C', '3S', '9H', '9D', '9C', '9S', '10H', '10D', '10C', '10S', 'JH', 'JD'],
+  ['JC', 'JS', 'QH', 'QD', 'QC', 'QS', 'KD', 'KC', 'KS', 'AH', 'AD', 'AC', 'AS', '2H', '2D', '2C', '2S'],
 );
 
 const BOT_COMPLETES = deal(
@@ -72,6 +80,26 @@ function startWith(cards: string[]) {
         cy.get('[data-test="trick-closed-reason"]').should('have.text', 'Four of a kind');
         cy.get('[data-test="my-zone"] [data-test="seat-bubble"]').should('have.attr', 'data-kind', 'completed');
         ['HEART_5', 'DIAMOND_5', 'CLUB_5'].forEach((card) => cy.get(`[data-card="${card}"]`).should('not.exist'));
+        noHorizontalScroll();
+      });
+    });
+
+    it('offers Complete on a lone pair to the human who holds the other pair, out of turn', () => {
+      startWith(HUMAN_COMPLETES_PAIR).then((bob: any) => {
+        cy.get('[data-test="complete"]').should('not.exist');
+
+        scriptedPlay(bob, '4', 2);
+        cy.get('[data-test="trick-card"]').should('have.length', 2);
+        cy.get('[data-test="complete"]').should('be.visible').and('have.text', 'Complete the four');
+        noHorizontalScroll();
+        // Still out of turn when Alice presses it: the bot on turn is waiting for her.
+        cy.get('[data-test="phase-text"]').should('contain.text', 'is playing');
+        cy.get('[data-test="complete"]').click();
+
+        cy.get('[data-test="phase-text"]').should('have.text', 'Your turn');
+        cy.get('[data-test="trick-closed-reason"]').should('have.text', 'Four of a kind');
+        cy.get('[data-test="my-zone"] [data-test="seat-bubble"]').should('have.attr', 'data-kind', 'completed');
+        ['DIAMOND_4', 'CLUB_4'].forEach((card) => cy.get(`[data-card="${card}"]`).should('not.exist'));
         noHorizontalScroll();
       });
     });

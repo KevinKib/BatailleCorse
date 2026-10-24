@@ -715,6 +715,50 @@ class PresidentBotCoordinatorTest {
     }
 
     @Test
+    void aBotOnTurnWaitsTheGraceWhileAHumanHoldsTheOtherPairOfALonePair() throws Exception {
+        President game = register(aPresident().leader(0).withHand("4S 4H 3C").withHand("6S 7S 8C")
+                .withHand("8S 9S 9D").withHand("4D 4C 10H").build(), 1, 2);
+        start(game);
+        actions.play(game.getId(), HUMAN, cards("4S 4H"));
+
+        assertThat(game.currentSeat(), is(BOT));
+        assertThat(game.completion(HUMAN_HOLDER).size(), is(2));
+        assertThat(scheduler.pending().size(), is(1));
+        assertThat(scheduler.pending().get(0).delay(), is(GRACE));
+
+        actions.play(game.getId(), HUMAN_HOLDER, cards("4D 4C"));
+        assertThat(game.currentSeat(), is(HUMAN_HOLDER));
+        assertThat(game.trick().plays(), is(empty()));
+    }
+
+    @Test
+    void aBotOnTurnWaitsTheGraceWhileAHumanHoldsTheLastTwoOfTwoSingles() throws Exception {
+        // the host leads 4S, the human on seat 1 answers 4H (equal play): the bot on seat 2 is bound, seat 3 holds 4D 4C
+        President game = register(aPresident().leader(0).withHand("4S 3C").withHand("4H 7S")
+                .withHand("8S 9S 9D").withHand("4D 4C 10H").build(), 2);
+        start(game);
+        actions.play(game.getId(), HUMAN, cards("4S"));
+        actions.play(game.getId(), new PlayerId(1), cards("4H"));
+
+        assertThat(game.currentSeat(), is(new PlayerId(2)));
+        assertThat(game.completion(HUMAN_HOLDER).size(), is(2));
+        assertThat(scheduler.pending().size(), is(1));
+        assertThat(scheduler.pending().get(0).delay(), is(GRACE));
+    }
+
+    @Test
+    void aLoneTripleOpensNoWindowSoTheBotThinksAsUsual() throws Exception {
+        President game = register(aPresident().leader(0).withHand("4S 4H 4D 3C").withHand("6S 7S 8C")
+                .withHand("8S 9S 9D").withHand("4C 10H").build(), 1, 2);
+        start(game);
+        actions.play(game.getId(), HUMAN, cards("4S 4H 4D"));
+
+        assertThat(game.completion(HUMAN_HOLDER).isEmpty(), is(true));
+        assertThat(scheduler.pending().size(), is(1));
+        assertThat(scheduler.pending().get(0).delay(), is(DELAY));
+    }
+
+    @Test
     void aBotOnTurnThinksAsUsualWhenNoHumanHoldsACompletion() throws Exception {
         President game = register(aPresident().leader(0).withHand("5S 3C").withHand("6S 7S 4C")
                 .withHand("8S 9S 4D").withHand("5H 5D 10H").build(), 1, 2);

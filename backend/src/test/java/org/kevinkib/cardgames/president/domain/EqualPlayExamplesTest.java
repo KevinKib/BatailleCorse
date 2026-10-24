@@ -58,7 +58,8 @@ class EqualPlayExamplesTest {
                         step("3:pass", "ok", "cur=0 plays=3 bound=no chain=9x3 open=yes holder=-")),
                 example("2 pair chain: the second pair closes the trick at once, B leads",
                         "4S 4H 3C | 4D 4C 5C | 8C 8D | 9C 9D", 0,
-                        step("0:4S+4H", "ok", "cur=1 plays=1 bound=no chain=4x2 open=no holder=-"),
+                        // a lone pair offers the other pair as a completion (B holds it, in turn here)
+                        step("0:4S+4H", "ok", "cur=1 plays=1 bound=no chain=4x2 open=no holder=1"),
                         step("1:4D+4C", "closed:QUAD:1", "cur=1 plays=0 bound=no chain=- open=no holder=-")),
                 example("3 B, who already played in the chain, completes before D acts",
                         "9S 3C | 9H 9C 4C | 9D 5C | 6C 7C", 0,

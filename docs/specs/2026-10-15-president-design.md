@@ -149,13 +149,15 @@ The owner's rules, always in force: equal play is a fixed rule, not an option (d
   - **Window** [O]: it opens as soon as the chain holds two plays (at least one equal play), **or as soon as
     the top of the trick is a single card** [O, decided 2026-10-19, reversing item 19: the holder of the three
     other cards of its rank may then play exactly those three, in turn or out of turn, through the same COMPLETE
-    action]. It stays open until the next **play** is made on the trick, or the trick closes. Passes, even
+    action], **or as soon as the top of the trick is a lone pair** [O, owner feedback 2026-10-23: "someone plays a
+    double 4, I hold the other two 4s"; the holder of the other pair may play it, in turn or out of turn]. It stays open until the next **play** is made on the trick, or the trick closes. Passes, even
     several around the table, do not close it, since the chain stays the top. The completion needs exactly the
     cards still missing, so it works only with the full set: never with fewer, and never the other way round
     (a lone card does not finish a triple, a single does not finish a pair: a smaller group never completes on
     a bigger one). As any completion it is never compulsory (`mustPlay` ignores it) and is not listed in
     `legalPlays`. The cases: single then the three others, legal; single then a pair of the rest or three of
-    another rank, illegal; pair then the other pair, legal; pair or triple then a smaller group, illegal.
+    another rank, illegal; pair (alone or after other plays) then the other pair, legal, out of turn as well; pair or
+    triple then a smaller group, illegal (a lone triple opens no window).
   - **Optional** [O]: the holder may keep the cards; there is no penalty.
   - This is the only out-of-turn play of the game (3.4).
 
@@ -168,7 +170,8 @@ The test contract of the PR that ships equal play (plan, V1). Four players A, B,
    holds 9♣ and plays it: the four 9s are down, the trick closes (reason `QUAD`) and D leads the next trick.
    Had D held no 9, D could only pass; D could not play a 10.
 2. **Pair chain.** A leads 4♠ 4♥; B plays 4♦ 4♣ (an equal pair): the four 4s are down, the trick closes at
-   once and B leads. C and D never act in that trick.
+   once and B leads. C and D never act in that trick. Had C held 4♦ 4♣ instead, C could play them out of turn
+   on A's lone pair, before B acts, with the same result for C (owner feedback, 2026-10-23).
 3. **Interruption by B, who already played in the chain.** A leads 9♠; B plays 9♥ (C is bound); C plays 9♦
    (D is bound). Now B holds 9♣, the last 9: before D acts, B plays 9♣ out of turn; the trick closes and B
    leads. D, bound and holding no 9, could only have passed, which would not have closed the window
