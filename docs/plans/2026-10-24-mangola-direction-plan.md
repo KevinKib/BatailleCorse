@@ -45,6 +45,7 @@ chunk; test-first visible in git (`test:` commit before `feat:`); frontend paths
 | `state/Mangola.store.ts`, `view/mangola/MangolaGameScreen.vue` | D3 only | |
 | `cypress/specs/mangola-game.cy.ts` | D3 only (pin the direction for the keyboard test) | |
 | `model/mangola/trace.ts`, `composables/useSowingAnimation.ts` | none here | the speed follow-up only |
+| `model/mangola/board.ts`, `MangolaBoard.vue` (outside this plan) | D0, D1, D3 | the "visible seeds" work (`docs/specs/2026-10-24-mangola-seeds-visible-notes.md`, option A) touches `seedDisplay` in `board.ts`, `MangolaPit.vue` and the hand in `MangolaBoard.vue`: different functions and lines; whichever merges second rebases |
 
 ## D0 `feat: Mangola direction contract` (S, under 30 minutes)
 
