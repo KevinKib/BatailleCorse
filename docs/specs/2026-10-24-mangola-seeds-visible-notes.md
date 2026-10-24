@@ -1,6 +1,7 @@
 # Mangola: visible seeds and exact counts (design notes)
 
-Date: 2026-10-24. Status: options on a Claude Design canvas, waiting for the owner's choice. No code yet.
+Date: 2026-10-24. Status: option A chosen by the owner and implemented (PR #318): the badge shows on every non-empty
+pit (no threshold), and a pile of 17 or more reads as a pile with its exact count on the badge.
 
 Canvas: https://claude.ai/artifact/Q8psFVR5zdyJSWvbKpDNnN (today's rendering plus options A, B and C, on a real
 64-seed position, at 375 × 667 and 1280 × 720, felt and a light variant, with the sowing animation in four steps).

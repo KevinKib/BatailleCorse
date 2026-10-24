@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useI18n } from '../../composables/useI18n';
 import { format, plural } from '../../locales/format';
-import { seedDisplay, type Arrow } from '../../model/mangola/board';
+import { seedLayout, showsCount, type Arrow } from '../../model/mangola/board';
 
 // One pit of the Mangola board, presentational only: a real button whose whole grid cell is the hit area (the
-// visible pit is inset inside it), exact seed dots up to eight, the written number above, a faint chevron for the
-// direction a seed leaves it, and the marks of the opponent's last move. The board and the placement editor
+// visible pit is inset inside it), every seed drawn (dice up to eight, then a pile that grows from the centre), the
+// exact count in a badge in the corner, a faint chevron for the direction a seed leaves it, and the marks of the opponent's last move. The board and the placement editor
 // decide what a press means.
 const props = withDefaults(defineProps<{
   name: string;                       // a1..h4
@@ -41,14 +41,24 @@ const emit = defineEmits<{ press: [] }>();
 
 const ui = useI18n().mangolaUi;
 
-// Dice-like places on a 3 x 3 grid (0..8, row by row): the same count always draws the same, and 7 and 8 differ.
-const DOT_PLACES: number[][] = [
-  [], [4], [0, 8], [0, 4, 8], [0, 2, 6, 8], [0, 2, 4, 6, 8], [0, 2, 3, 5, 6, 8], [0, 2, 3, 4, 5, 6, 8], [0, 1, 2, 3, 5, 6, 7, 8],
-];
+const percent = (share: number): string => `${(share * 100).toFixed(2)}%`;
+const seeds = computed(() => seedLayout(props.count).map(seed => ({
+  left: percent(seed.x - seed.size / 2),
+  top: percent(seed.y - seed.size / 2),
+  width: percent(seed.size),
+  height: percent(seed.size),
+})));
 
-const display = computed(() => seedDisplay(props.count));
-const dots = computed(() => (display.value.kind === 'dots' ? DOT_PLACES[display.value.count] : []));
-
+// The badge turns gold for a moment when the count of a pit that was showing changes (a new element restarts the
+// animation); a pit revealed from hidden does not flash.
+const changed = ref(false);
+const flashKey = ref(0);
+watch(() => props.count, (now, before) => {
+  if (before !== null && now !== null && now > 0 && now !== before) {
+    changed.value = true;
+    flashKey.value++;
+  }
+});
 const label = computed(() => {
   const words: string[] = [
     props.count === null ? ui.pit.hidden : plural(ui.pit.seeds, props.count),
@@ -90,18 +100,9 @@ function press(): void {
     @click="press"
   >
     <span class="mg-pit__bowl">
-      <span v-if="display.kind === 'dots'" class="mg-pit__dots" aria-hidden="true">
-        <span
-          v-for="place in dots"
-          :key="place"
-          class="mg-pit__seed"
-          data-test="seed"
-          :style="{ gridRow: Math.floor(place / 3) + 1, gridColumn: (place % 3) + 1 }"
-        ></span>
+      <span v-if="seeds.length > 0" class="mg-pit__seeds" aria-hidden="true">
+        <span v-for="(seed, i) in seeds" :key="i" class="mg-pit__seed" data-test="seed" :style="seed"></span>
       </span>
-      <span v-else-if="display.kind === 'number'" class="mg-pit__number" data-test="pit-number" aria-hidden="true">{{ display.count }}</span>
-      <!-- Shown on hover and focus when the pit draws dots; the dots stay the exact count. -->
-      <span v-if="display.kind === 'dots'" class="mg-pit__count" data-test="pit-count" aria-hidden="true">{{ display.count }}</span>
       <span
         v-if="captured && capturedSeeds !== null"
         class="mg-pit__taken"
@@ -109,6 +110,14 @@ function press(): void {
         aria-hidden="true"
       >-{{ capturedSeeds }}</span>
     </span>
+    <span
+      v-if="showsCount(count)"
+      :key="flashKey"
+      class="mg-pit__count"
+      data-test="pit-count"
+      :data-changed="changed ? 'true' : undefined"
+      aria-hidden="true"
+    >{{ count }}</span>
     <svg class="mg-pit__chevron" data-test="chevron" :data-arrow="arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false">
       <path d="M3 1.5 L7 5 L3 8.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
     </svg>
@@ -151,44 +160,43 @@ function press(): void {
   box-shadow: inset 0 0 0 2.5px var(--gold), 0 0 8px rgba(var(--accent-active-rgb), 0.5);
 }
 
-.mg-pit__dots {
-  display: grid;
-  grid-template: repeat(3, 1fr) / repeat(3, 1fr);
-  place-items: center;
-  width: 68%;
-  height: 68%;
-}
+/* Seeds are placed in percent of the bowl, so the pit never changes size whatever it holds. */
+.mg-pit__seeds { position: absolute; inset: 0; }
 .mg-pit__seed {
-  width: 78%;
-  aspect-ratio: 1;
+  position: absolute;
   border-radius: 50%;
   background: radial-gradient(circle at 35% 30%, #fffdf6, var(--gold-soft) 60%, var(--gold-deep));
-}
-.mg-pit__number {
-  font-size: clamp(0.85rem, 4.2vw, 1.15rem);
-  font-weight: 700;
-  line-height: 1;
-  color: var(--gold-soft);
+  box-shadow: 0 0.6px 1.2px rgba(0, 0, 0, 0.65);
 }
 
+/* The exact count: a dark pill with white text in the top-right corner of the cell, where the round bowl leaves room
+   and the direction chevrons (middles of the edges) do not go. */
 .mg-pit__count {
   position: absolute;
-  top: -2px;
-  right: -2px;
-  min-width: 1.2em;
-  padding: 0 0.25em;
+  top: 0;
+  right: 0;
+  z-index: 2;
+  box-sizing: border-box;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 3px;
   border-radius: 999px;
   background: rgba(0, 0, 0, 0.82);
   color: #fff;
-  font-size: 0.7rem;
-  line-height: 1.3;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 14px;
   text-align: center;
-  opacity: 0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
   pointer-events: none;
 }
-.mg-pit:hover .mg-pit__count,
-.mg-pit:focus-visible .mg-pit__count { opacity: 1; }
-
+@media (min-width: 640px) {
+  .mg-pit__count { top: 2px; right: 2px; min-width: 18px; height: 18px; font-size: 12px; line-height: 18px; }
+}
+@keyframes mg-count-flash {
+  from { background: var(--gold); color: #1b1b1b; }
+  to { background: rgba(0, 0, 0, 0.82); color: #fff; }
+}
 .mg-pit:focus-visible { outline: 2px solid var(--gold); outline-offset: -2px; border-radius: 0.4rem; }
 
 /* The opponent's last move: a solid ring on where it started and on where it ended, a dashed ring with -n on
@@ -227,7 +235,7 @@ function press(): void {
 .mg-pit__chevron[data-arrow='up'] { top: -1%; left: 39%; transform: rotate(-90deg); }
 
 @media (prefers-reduced-motion: no-preference) {
-  .mg-pit__count { transition: opacity 120ms ease-out; }
+  .mg-pit__count[data-changed='true'] { animation: mg-count-flash var(--mg-flash, 540ms) ease-out; }
   .mg-pit[data-chosen='true'] .mg-pit__bowl { animation: mg-chosen-pulse 700ms ease-in-out infinite; }
 }
 @keyframes mg-chosen-pulse {

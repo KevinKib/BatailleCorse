@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { MAX_DOTS, arrowOf, rowsWithBoard, seedDisplay, sideOfSeat, viewerRows } from './board';
+import { DOT_SIZE, MAX_DOTS, arrowOf, rowsWithBoard, seedLayout, showsCount, sideOfSeat, viewerRows } from './board';
 import { mangolaState, placementState } from './mangolaFixtures';
 
 describe('sideOfSeat', () => {
@@ -87,22 +87,85 @@ describe('arrowOf (the direction a seed travels on screen)', () => {
   });
 });
 
-describe('seedDisplay', () => {
-  it('shows exact dots up to eight seeds', () => {
+describe('seedLayout', () => {
+  const dist = (a: { x: number; y: number }, b: { x: number; y: number }) => Math.hypot(a.x - b.x, a.y - b.y);
+
+  it('draws no seed for an empty or a hidden pit', () => {
+    expect(seedLayout(0)).toEqual([]);
+    expect(seedLayout(null)).toEqual([]);
+  });
+
+  it('draws exactly one seed per seed, for 1 to 64', () => {
+    for (let n = 1; n <= 64; n++) expect(seedLayout(n)).toHaveLength(n);
+  });
+
+  it('keeps the dice layout up to eight seeds, all of the same size', () => {
     expect(MAX_DOTS).toBe(8);
-    for (let n = 0; n <= 8; n++) expect(seedDisplay(n)).toEqual({ kind: 'dots', count: n });
+    expect(seedLayout(1)).toEqual([{ x: 0.5, y: 0.5, size: DOT_SIZE }]);
+    for (let n = 1; n <= MAX_DOTS; n++) {
+      expect(new Set(seedLayout(n).map(p => p.size))).toEqual(new Set([DOT_SIZE]));
+    }
+    // 7 and 8 differ, as dice do.
+    expect(seedLayout(7)).not.toEqual(seedLayout(8).slice(0, 7));
   });
 
-  it('writes the number above eight', () => {
-    expect(seedDisplay(9)).toEqual({ kind: 'number', count: 9 });
-    expect(seedDisplay(41)).toEqual({ kind: 'number', count: 41 });
+  it('is deterministic: the same count always draws the same', () => {
+    for (const n of [3, 9, 12, 30, 64]) expect(seedLayout(n)).toEqual(seedLayout(n));
   });
 
-  it('shows nothing for a hidden pit', () => {
-    expect(seedDisplay(null)).toEqual({ kind: 'hidden' });
+  it('keeps every seed inside the bowl, for 1 to 64', () => {
+    for (let n = 1; n <= 64; n++) {
+      for (const p of seedLayout(n)) {
+        expect(Math.hypot(p.x - 0.5, p.y - 0.5) + p.size / 2).toBeLessThanOrEqual(0.5);
+      }
+    }
+  });
+
+  it('keeps seeds from piling on each other: no overlap beyond the pile rule, for 1 to 64', () => {
+    for (let n = 2; n <= 64; n++) {
+      const seeds = seedLayout(n);
+      for (let i = 0; i < seeds.length; i++) {
+        for (let j = i + 1; j < seeds.length; j++) {
+          const smaller = Math.min(seeds[i].size, seeds[j].size);
+          expect(dist(seeds[i], seeds[j])).toBeGreaterThanOrEqual(smaller * 0.8);
+        }
+      }
+    }
+  });
+
+  it('shrinks the seeds only past 16 and past 32 seeds', () => {
+    const sizeOf = (n: number) => new Set(seedLayout(n).map(p => p.size)).size === 1 ? seedLayout(n)[0].size : NaN;
+    for (let n = 9; n <= 16; n++) expect(sizeOf(n)).toBe(sizeOf(9));
+    for (let n = 17; n <= 32; n++) expect(sizeOf(n)).toBe(sizeOf(17));
+    for (let n = 33; n <= 64; n++) expect(sizeOf(n)).toBe(sizeOf(33));
+    expect(sizeOf(17)).toBeLessThan(sizeOf(16));
+    expect(sizeOf(33)).toBeLessThan(sizeOf(32));
+    expect(sizeOf(9)).toBeLessThan(DOT_SIZE);
+  });
+
+  it('never moves a seed when one lands, except at the 9th seed and at the two shrinks (16 to 17, 32 to 33)', () => {
+    for (let n = 9; n < 64; n++) {
+      if (n === 16 || n === 32) continue;
+      expect(seedLayout(n + 1).slice(0, n)).toEqual(seedLayout(n));
+    }
+  });
+
+  it('fills the bowl at 16, 32 and 64 seeds without leaving the centre empty', () => {
+    for (const n of [16, 32, 64]) {
+      const nearest = Math.min(...seedLayout(n).map(p => dist(p, { x: 0.5, y: 0.5 })));
+      expect(nearest).toBeLessThan(0.08);
+    }
   });
 });
 
+describe('badge', () => {
+  it('shows the exact count on every non-empty pit and nothing otherwise', () => {
+    expect(showsCount(1)).toBe(true);
+    expect(showsCount(17)).toBe(true);
+    expect(showsCount(0)).toBe(false);
+    expect(showsCount(null)).toBe(false);
+  });
+});
 describe('rowsWithBoard', () => {
   it('shows the counts of another board on the same cells, leaving the rest untouched', () => {
     const rows = viewerRows(mangolaState(), 0);
