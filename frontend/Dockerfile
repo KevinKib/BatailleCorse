@@ -22,6 +22,15 @@ FROM base AS build
 # Run app
 RUN NODE_OPTIONS="--max-old-space-size=2048" npm run build
 
+# ---- E2E stage ----
+# Serves the production build with `vite preview` for Cypress (docker-compose.e2e.yml): no dev
+# server, no on-the-fly transforms, no hot reload. vite.config.mjs gives preview the dev server's
+# port and its /api and /connect proxy to the backend.
+FROM build AS e2e
+
+EXPOSE 5173
+
+CMD ["npx", "vite", "preview"]
 
 # ---- Production stage ----
 FROM nginx:alpine AS prod
