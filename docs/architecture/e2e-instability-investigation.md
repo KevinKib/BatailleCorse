@@ -5,6 +5,9 @@ Date: 2026-10-14. Scope: the Cypress suite (`frontend/cypress`), the stacks it r
 lobby command lost before the first STOMP connection, late hydrate after Leave, 800 ms route fade, Windows
 standby) and the friction F3 / recommendation R11 of `new-game-retrospective-three-men-morris.md`. Part of #28.
 
+Follow-up (2026-10-24): `e2e-cypress-report.md` measures what the suite costs the agents and what it found
+over 332 runs, with recommendations.
+
 Rule followed: measure first. Code changes were made only on a throwaway branch (`scratch/flakyroot-probe`,
 never pushed) or outside the repository, except one one-line fix proven before/after and shipped separately
 (#196, merged).
