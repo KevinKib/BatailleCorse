@@ -18,7 +18,7 @@ import EndGameOverlay from '../../components/EndGameOverlay.vue';
 import ForfeitBanner from '../../components/ForfeitBanner.vue';
 import RulesPanel from '../../components/RulesPanel.vue';
 import GameTimer from '../../components/GameTimer.vue';
-import PresidentExchangeRecap from '../../components/president/PresidentExchangeRecap.vue';
+import PresidentExchangeBoard from '../../components/president/PresidentExchangeBoard.vue';
 import PresidentExchangePanel from '../../components/president/PresidentExchangePanel.vue';
 import PresidentActionBar from '../../components/president/PresidentActionBar.vue';
 import PresidentHand from '../../components/president/PresidentHand.vue';
@@ -47,8 +47,10 @@ import {
 } from '../../model/president/motion';
 import { closedPile, pileView, type PileView } from '../../model/president/trickView';
 import { planExchangeFlights } from '../../model/president/exchangeMotion';
-import { exchangeRecap } from '../../model/president/exchangeRecap';
-import { ackDelayMs, exchangeViewStatus } from '../../model/president/exchangeView';
+import { exchangeBoard } from '../../model/president/exchangeBoard';
+import { titleKey } from '../../model/president/titles';
+import type { PresidentTitleKey } from '../../locales/Messages';
+import { ackDelayMs, exchangeViewStatus, SUMMARY_READ_MS } from '../../model/president/exchangeView';
 import { PRESIDENT_TEMPO } from '../../model/president/tempo';
 import { endKind, endTimings } from '../../model/president/endSequence';
 import type { PresidentLogEntry } from '../../model/president/eventLog';
@@ -419,20 +421,14 @@ async function playExchange(change: { before: PresidentState; after: PresidentSt
   const moves = planExchangeFlights(change.before, change.after, store.mySeat, factor.value);
   const opensView = change.after.phase === 'EXCHANGE_VIEW' && change.before.phase !== 'EXCHANGE_VIEW';
   if (moves.length === 0) {
-    // Nothing flies: the summary is on screen already, its three seconds start now.
-    if (opensView) armAcknowledgement(ackDelayMs({ flightsEndMs: 0, factor: speedNow }));
+    // Nothing flies: the board is on screen already, its three seconds start now.
+    if (opensView) armAcknowledgement(0, speedNow);
     return;
   }
-  // The summary comes in once the flights and their rings are over: it moves the hand, which the flights and the rings
-  // were measured on.
-  recapHeld.value = true;
-  await nextTick();
   // Same queue, speed and rings as the plays.
   const admission = await motion.play({ movements: moves });
   const endMs = admission.still ? PRESIDENT_TEMPO.markReducedMs
     : Math.max(PRESIDENT_TEMPO.markMs, eventSpanMs(moves) + Math.max(...moves.map(m => m.holdAfterMs)));
-  const release = setTimeout(() => { landingTimers.delete(release); recapHeld.value = false; }, admission.startInMs + endMs);
-  landingTimers.add(release);
   if (admission.motion) {
     const flights = moves.filter(m => m.kind === 'travel');
     for (const m of flights) {
@@ -451,9 +447,9 @@ async function playExchange(change: { before: PresidentState; after: PresidentSt
       }
     }
   }
-  // The table has seen the exchange once the flights have landed and the summary has been read: that is when this
+  // The table has seen the exchange once the flights have landed and the board has been read: that is when this
   // screen tells the server (rings stand for the flights under reduced motion; Instant does not wait).
-  if (opensView) armAcknowledgement(ackDelayMs({ flightsEndMs: admission.startInMs + endMs, factor: speedNow }));
+  if (opensView) armAcknowledgement(admission.startInMs + endMs, speedNow);
 }
 watch(() => store.stateChange, change => { if (change) void playExchange(change); });
 
@@ -470,10 +466,15 @@ function acknowledgeExchange() {
   clearAcknowledgement();
   store.seeExchange();
 }
-function armAcknowledgement(delayMs: number) {
+// The reading time the board draws as its bar: it starts when the last flight has landed and lasts as long as the
+// reading (the same moment and the same time as the acknowledgement counts from).
+const reading = ref<{ startsInMs: number; durationMs: number; key: number } | null>(null);
+function armAcknowledgement(flightsEndMs: number, speedNow: number) {
   const g = store.game;
   if (!g || g.phase !== 'EXCHANGE_VIEW' || ackArmedRound === g.round) return;
   ackArmedRound = g.round;
+  reading.value = { startsInMs: flightsEndMs, durationMs: SUMMARY_READ_MS * speedNow, key: g.round };
+  const delayMs = ackDelayMs({ flightsEndMs, factor: speedNow });
   if (delayMs <= 0) acknowledgeExchange();
   else ackTimer = setTimeout(acknowledgeExchange, delayMs);
 }
@@ -484,34 +485,36 @@ watch(() => store.game?.phase === 'EXCHANGE_VIEW', inView => {
 });
 onBeforeUnmount(clearAcknowledgement);
 
-// The summary of the exchange stays over the action bar until it is closed (once per round).
-const closedRecapRound = ref<number | null>(null);
-const recapHeld = ref(false);
-const RECAP_PHONE_MS = 8000;
-let recapTimer: ReturnType<typeof setTimeout> | null = null;
-onBeforeUnmount(() => { if (recapTimer) clearTimeout(recapTimer); });
-const recap = computed(() => store.game ? exchangeRecap(store.game, store.mySeat) : []);
-const showRecap = computed(() => recap.value.length > 0 && closedRecapRound.value !== store.game?.round && !recapHeld.value);
-// On a phone the summary is a banner over the felt: it goes by itself after a few seconds (the cross closes it sooner).
-watch(showRecap, shown => {
-  if (recapTimer) clearTimeout(recapTimer);
-  recapTimer = null;
-  if (!shown || !narrow.value) return;
-  const round = store.game?.round ?? null;
-  recapTimer = setTimeout(() => { closedRecapRound.value = round; }, RECAP_PHONE_MS);
-}, { immediate: true });
-// A page opened on the view (a reload) has no flights to wait for: the summary shows now and is read for three seconds.
-watch(showRecap, shown => {
+// --- The board "The exchange" (spec 2026-10-24, section 5) -----------------------------------------------------------
+// It sits in the pile's slot while the table shows the exchange or its view, for every seat, and leaves with the first
+// trick. A row is done only once its legs have landed: the legs still flying are kept here (a later chunk fills them
+// from the sequenced flights; empty, the board says the state as it is).
+const flyingLegs = ref<ReadonlySet<string>>(new Set());
+const board = computed(() => {
+  const g = shown.value;
+  return g ? exchangeBoard(g, store.mySeat, flyingLegs.value) : null;
+});
+const titleOf = (seat: number): string | null => {
+  const title = shown.value?.players.find(p => p.seat === seat)?.title;
+  return title ? ui.titles[titleKey(title) as PresidentTitleKey] : null;
+};
+// The Seen button: while the view waits for me. It goes at once when pressed, before the server's answer.
+const seenRound = ref<number | null>(null);
+const canSeeExchange = computed(() => shown.value?.phase === 'EXCHANGE_VIEW'
+  && !(store.me?.sawExchange ?? false) && seenRound.value !== shown.value.round);
+const boardReading = computed(() => shown.value?.phase === 'EXCHANGE_VIEW' ? reading.value : null);
+// A page opened on the view (a reload) has no flights to wait for: the board shows now and is read for three seconds.
+watch(() => board.value !== null && shown.value?.phase === 'EXCHANGE_VIEW', visible => {
   const g = store.game;
-  if (!shown || g?.phase !== 'EXCHANGE_VIEW') return;
+  if (!visible || g?.phase !== 'EXCHANGE_VIEW') return;
   // The change that opens the view has its flights: `playExchange` arms the timer, from where they end.
   const change = store.stateChange;
   if (change && change.after.version === g.version && change.before.phase !== 'EXCHANGE_VIEW') return;
-  armAcknowledgement(ackDelayMs({ flightsEndMs: 0, factor: speedFactor(speed.value) }));
+  armAcknowledgement(0, speedFactor(speed.value));
 }, { immediate: true });
-// The cross closes the summary and says the exchange has been seen, without waiting for the three seconds.
-function closeRecap() {
-  closedRecapRound.value = store.game?.round ?? null;
+// Seen says the exchange has been seen, without waiting for the three seconds.
+function seeExchange() {
+  seenRound.value = store.game?.round ?? null;
   if (store.game?.phase === 'EXCHANGE_VIEW') acknowledgeExchange();
 }
 
@@ -658,9 +661,15 @@ const rematchButton = computed(() =>
               :still="still" />
           </div>
         </div>
-        <div class="table-center" role="region" :aria-label="ui.table.pile">
-          <PresidentTrick :trick="shown?.trick ?? store.game.trick" :pile="shownPile" :display="toldPile" :swept="pileSwept" :still="still" :my-seat="store.mySeat"
+        <div class="table-center" :class="{ 'table-center--board': board }" role="region" :aria-label="ui.table.pile">
+          <!-- During the exchange the board covers the plate, which stays laid out and hidden: nothing moves. -->
+          <PresidentTrick :class="{ 'trick-under--covered': board }" :aria-hidden="board ? 'true' : undefined"
+                          :trick="shown?.trick ?? store.game.trick" :pile="shownPile" :display="toldPile" :swept="pileSwept" :still="still" :my-seat="store.mySeat"
                           :name-of="displayName" :chips="chips" :notes="trickNotes" />
+          <div v-if="board" class="board-slot">
+            <PresidentExchangeBoard :board="board" :name-of="displayName" :title-of="titleOf" :my-seat="store.mySeat"
+                                    :can-see="canSeeExchange" :reading="boardReading" :still="still" @seen="seeExchange()" />
+          </div>
         </div>
       </div>
 
@@ -691,7 +700,7 @@ const rematchButton = computed(() =>
             :still="still" />
           <PresidentHand :cards="store.hand" :selected="selectedNames" :received="receivedNames" :landing="landing"
                          :min-count="dealtCount" @toggle="name => store.toggleCard(name)" />
-          <!-- One place for what I can do: the action bar, or the exchange panel; the summary of the exchange floats over it. -->
+          <!-- One place for what I can do: the action bar, or the exchange panel. -->
           <div class="controls" data-test="controls">
             <PresidentExchangePanel
               v-if="isExchange"
@@ -719,9 +728,6 @@ const rematchButton = computed(() =>
               @primary="playSelected()"
               @pass="store.pass()"
               @clear="store.clearSelection()" />
-            <div v-if="showRecap" class="recap-slot">
-              <PresidentExchangeRecap :lines="recap" :name-of="displayName" @close="closeRecap()" />
-            </div>
           </div>
         </div>
       </div>
@@ -828,6 +834,9 @@ const rematchButton = computed(() =>
   width: min(27rem, 54%);
   z-index: 1;
 }
+/* The board covers the trick plate (same box, hidden under it); it never takes a pixel of layout. */
+.trick-under--covered { visibility: hidden; }
+.board-slot { position: absolute; inset: 0; z-index: 2; }
 
 /* My place: it has one height whatever it holds (my zone in any phase, or the round sheet over it), so that the felt
    above never resizes. */
@@ -851,8 +860,6 @@ const rematchButton = computed(() =>
 }
 /* What I can do (the action bar or the exchange panel): one height for every phase. */
 .controls { position: relative; width: 100%; height: var(--controls-h); }
-/* The summary of the exchange floats over the top of the controls (the wide screen; a phone has it as a banner). */
-.recap-slot { position: absolute; z-index: 3; top: 0; left: 0; right: 0; }
 /* The round sheet rises over my place and the bottom of the felt: its room is its content, up to a share of the screen,
    and it scrolls inside itself beyond that. The felt does not resize for it. */
 .sheet-slot {
@@ -941,7 +948,7 @@ const rematchButton = computed(() =>
   .seat-slot { position: static; transform: none; min-width: 0; --seat-label-max: 5.5rem; }
   .my-zone { padding-top: var(--space-1); }
   .table-center {
-    position: static; transform: none; width: auto; flex: 1 1 auto; display: flex; align-items: center; justify-content: center;
+    position: relative; transform: none; width: auto; flex: 1 1 auto; display: flex; align-items: center; justify-content: center;
     padding: var(--space-1) var(--space-2);
   }
 }

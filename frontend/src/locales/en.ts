@@ -329,10 +329,6 @@ export const messagesEn: Messages = {
         other: '{player} gave back {n} cards. Waiting for the others.',
       },
       idle: 'You neither give nor receive. Waiting for the others.',
-      pairs: 'Exchanges at the table',
-      pair: { one: '{high} and {low}: {n} card, {state}', other: '{high} and {low}: {n} cards, {state}' },
-      pending: 'pending',
-      done: 'done',
       board: {
         title: 'The exchange',
         neutral: 'You are Neutral: no exchange for you',
@@ -349,16 +345,6 @@ export const messagesEn: Messages = {
           one: '{low} gives {high} their best card, {high} gives one back: {state}',
           other: '{low} gives {high} their {n} best cards, {high} gives {n} back: {state}',
         },
-      },
-      recap: {
-        title: 'The exchange',
-        given: '{low} gave {high}:',
-        returned: '{high} gave back:',
-        counts: {
-          one: '{low} gave their best card to {high}, who gave one back.',
-          other: '{low} gave their {n} best cards to {high}, who gave {n} back.',
-        },
-        close: 'Close the exchange summary',
       },
     },
     roundOver: { ready: 'Next round', waiting: 'Waiting for the others', place: '{n}. {player}', finalScores: 'Final scores' },

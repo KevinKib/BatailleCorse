@@ -66,14 +66,13 @@ describe('PresidentExchangePanel', () => {
   });
 
   describe('Neutral', () => {
-    it('isOutOfTheExchangeAndSeesThePairs', () => {
+    it('isOutOfTheExchangeAndTheBoardTellsThePairs', () => {
       const w = mountPanel(2, 'NEUTRAL');
       expect(text(w, 'exchange-role')).toBe('You are Neutral');
       expect(text(w, 'exchange-instruction')).toBe('You neither give nor receive. Waiting for the others.');
       expect(w.find('[data-test="exchange-give"]').exists()).toBe(false);
       expect(w.find('[data-test="exchange-suggest"]').exists()).toBe(false);
-      const pairs = w.findAll('[data-test="exchange-pair"]').map(p => p.text());
-      expect(pairs).toEqual(['Ann and Ed: 2 cards, pending', 'Ben and Di: 1 card, pending']);
+      expect(w.find('[data-test="exchange-pair"]').exists()).toBe(false);
     });
   });
 
@@ -104,8 +103,7 @@ describe('PresidentExchangePanel', () => {
     const w = mountPanel(0, 'PRESIDENT', { pairs: [{ high: 0, low: 4, count: 2, done: true }, PAIRS[1]] });
     expect(text(w, 'exchange-instruction')).toBe('You gave 2 cards back to Ed. Waiting for the others.');
     expect(w.find('[data-test="exchange-give"]').exists()).toBe(false);
-    const pairs = w.findAll('[data-test="exchange-pair"]').map(p => p.text());
-    expect(pairs[0]).toBe('Ann and Ed: 2 cards, done');
+    expect(w.find('[data-test="exchange-pair"]').exists()).toBe(false);
   });
 
   it('theRoleIsReadAsTextWithoutColour', () => {
