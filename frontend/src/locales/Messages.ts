@@ -384,6 +384,7 @@ export interface PresidentUiMessages {
   /** The news of the table, said in the polite list region ('{player}', '{place}' = "1st", '{n}' cards, '{cards}' names). */
   announce: {
     out: string;                       // '{player}', '{place}'
+    card: string;                      // '{card}': a card named inside a sentence ("the ace of clubs")
     outYou: string;                    // '{place}'
     best: PluralForms;                 // '{low}', '{high}', '{n}': a pair that is not mine
     bestMine: PluralForms;             // '{high}', '{cards}': I gave my best cards

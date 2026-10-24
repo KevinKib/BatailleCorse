@@ -417,6 +417,89 @@ describe('PresidentGameScreen', () => {
       });
     });
 
+    describe('the legs in flight (a row says done only once its cards have landed)', () => {
+      const four = (extra: Partial<PresidentState> = {}) => playing({
+        round: 2, phase: 'EXCHANGE', legalPlays: [], version: 2,
+        players: seatsOf(4, { 0: { title: 'PRESIDENT' }, 1: { title: 'VICE_PRESIDENT' }, 2: { title: 'VICE_SCUM' }, 3: { title: 'SCUM' } }),
+        exchange: [{ high: 0, low: 3, count: 2, done: false }, { high: 1, low: 2, count: 1, done: false }],
+        availableActions: ['GIVE_BACK'], toGiveBack: 2,
+        received: buildPresidentHand(['KING', 'HEART'], ['ACE', 'CLUB']), given: [],
+        ...extra,
+      });
+      const over = () => playing({ round: 1, phase: 'ROUND_OVER', legalPlays: [], availableActions: ['READY'], players: seatsOf(4) });
+      const states = (wrapper: { findAll: (s: string) => { attributes: (n: string) => string | undefined }[] }) =>
+        wrapper.findAll('[data-test="board-row"]').map(r => r.attributes('data-state'));
+      const news = (wrapper: { findAll: (s: string) => { text: () => string }[] }) =>
+        wrapper.findAll('[data-test="president-announcements"] li').map(li => li.text());
+      const afterTimers = async (ms: number) => { vi.advanceTimersByTime(ms); await flushPromises(); };
+
+      beforeEach(() => { vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] }); });
+      afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {}))); });
+
+      it('givenTheDeal_thenARowStaysGivingUntilItsBestCardsHaveLanded_pairByPair', async () => {
+        const { wrapper, store } = await mountRoom(room(over()));
+        store.applyEvent({ type: 'state-update', state: four() });
+        await flushPromises();
+        expect(states(wrapper)).toEqual(['giving', 'giving']);
+        await afterTimers(1100);
+        expect(states(wrapper)).toEqual(['choosing', 'giving']);
+        await afterTimers(1500);
+        expect(states(wrapper)).toEqual(['choosing', 'choosing']);
+      });
+
+      it('givenAGiveBack_thenTheRowReturnsUntilItsCardsHaveLandedThenIsDone', async () => {
+        const { wrapper, store } = await mountRoom(room(four()));
+        store.applyEvent({
+          type: 'state-update',
+          state: four({ version: 3, exchange: [{ high: 0, low: 3, count: 2, done: true }, { high: 1, low: 2, count: 1, done: false }] }),
+        });
+        await flushPromises();
+        expect(states(wrapper)).toEqual(['returning', 'choosing']);
+        await afterTimers(2500);
+        expect(states(wrapper)).toEqual(['done', 'choosing']);
+      });
+
+      it('givenInstant_thenNothingIsInFlight_andTheRowsAreAsTheStateSaysAtOnce', async () => {
+        localStorage.setItem('animationSpeed', 'instant');
+        const { wrapper, store } = await mountRoom(room(over()));
+        store.applyEvent({ type: 'state-update', state: four() });
+        await flushPromises();
+        expect(states(wrapper)).toEqual(['choosing', 'choosing']);
+        expect(news(wrapper)).toEqual([]);
+      });
+
+      it('givenAReload_thenTheRowsAreAsTheStateSaysAndNothingIsAnnounced', async () => {
+        const { wrapper } = await mountRoom(room(four()));
+        await afterTimers(5000);
+        expect(states(wrapper)).toEqual(['choosing', 'choosing']);
+        expect(news(wrapper)).toEqual([]);
+      });
+
+      it('givenTheDeal_thenEachLegIsAnnouncedWhenItLands_withTheCardsInMyOwnPair', async () => {
+        const { wrapper, store } = await mountRoom(room(over()));
+        store.applyEvent({ type: 'state-update', state: four() });
+        await flushPromises();
+        expect(news(wrapper)).toEqual([]);
+        await afterTimers(1100);
+        expect(news(wrapper)).toEqual(['P3 gave you the king of hearts and the ace of clubs']);
+        await afterTimers(1500);
+        expect(news(wrapper)).toEqual(['P3 gave you the king of hearts and the ace of clubs', 'P2 gave their best card to P1']);
+      });
+
+      it('givenAGiveBack_thenTheLegIsAnnouncedWhenItLands', async () => {
+        const { wrapper, store } = await mountRoom(room(four()));
+        store.applyEvent({
+          type: 'state-update',
+          state: four({ version: 3, exchange: [{ high: 0, low: 3, count: 2, done: true }, { high: 1, low: 2, count: 1, done: false }],
+            given: buildPresidentHand(['3', 'CLUB'], ['4', 'HEART']) }),
+        });
+        await flushPromises();
+        expect(news(wrapper)).toEqual([]);
+        await afterTimers(2500);
+        expect(news(wrapper)).toEqual(['You gave the 3 of clubs and the 4 of hearts back to P3']);
+      });
+    });
+
     describe('the exchange view (the table waits for every human to see the exchange)', () => {
       const phaseLine = (wrapper: { get: (s: string) => { text: () => string } }) => wrapper.get('[data-test="phase-text"]').text();
       const viewing = (overrides: Partial<PresidentState> = {}) => exchanging({
