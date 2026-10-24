@@ -3,6 +3,19 @@ import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
 import svgLoader from 'vite-svg-loader'
 
+// The backend is the Compose service `backend`, so both proxies only resolve on the Compose network.
+const backendProxy = {
+  "/connect": {
+    target: "http://backend:8080",
+    ws: true,
+    changeOrigin: true
+  },
+  "/api": {
+    target: "http://backend:8080",
+    changeOrigin: true
+  }
+}
+
 export default defineConfig({
   plugins: [vue(), tailwindcss(), svgLoader()],
   test: {
@@ -25,17 +38,15 @@ export default defineConfig({
       // is published on another host port (parallel dev stacks, see CLAUDE.md).
       clientPort: Number(process.env.VITE_HMR_CLIENT_PORT) || 5173,
     },
-    proxy: {
-      "/connect": {
-        target: "http://backend:8080",
-        ws: true,
-        changeOrigin: true
-      },
-      "/api": {
-        target: "http://backend:8080",
-        changeOrigin: true
-      }
-    }
+    proxy: backendProxy,
+  },
+  // `vite preview` serves the production build for the e2e stack (frontend Dockerfile, target e2e)
+  // on the dev server's container port, so the Compose port mappings stay the same.
+  preview: {
+    host: true,
+    port: 5173,
+    strictPort: true,
+    proxy: backendProxy,
   },
   // Absolute base so asset URLs (/assets/...) resolve correctly on deep links
   // like /room/:id. A relative base ('./') breaks hard-loaded nested routes:

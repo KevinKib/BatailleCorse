@@ -1,18 +1,22 @@
 version: "3.9"
 
+# E2E stack for Cypress (Spring profile `test`). Unlike docker-compose.dev.yml, nothing is
+# bind-mounted and nothing compiles at start-up: the images hold a prebuilt backend jar and the
+# frontend's production build, so a started stack is ready in seconds and rebuilds reuse the
+# Docker layer cache and the BuildKit Maven cache. `up --build` rebuilds what changed.
 services:
   frontend:
     build:
       context: ./frontend
-      target: dev
       dockerfile: Dockerfile
+      target: e2e
     ports:
       - "5173:5173"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    environment:
-      - CHOKIDAR_USEPOLLING=true
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:5173/ || exit 1"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
     depends_on:
       backend:
         condition: service_healthy
@@ -21,24 +25,22 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-      target: dev
+      target: run
+      secrets:
+        - maven_settings
     ports:
       - "8080:8080"
-      - "5005:5005"
-    volumes:
-      - ./backend:/app
-      - backend_m2:/root/.m2/repository
-      - ./deploy/docker/settings.xml:/root/.m2/settings.xml:ro
     environment:
       - SPRING_PROFILES_ACTIVE=test
     healthcheck:
       # Spring Boot's Tomcat only accepts TCP connections once the context is
       # fully started, so a successful connect means the app is ready to serve.
       test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/localhost/8080'"]
-      interval: 5s
+      interval: 2s
       timeout: 3s
-      retries: 60
+      retries: 30
       start_period: 60s
 
-volumes:
-  backend_m2:
+secrets:
+  maven_settings:
+    file: deploy/docker/settings.xml

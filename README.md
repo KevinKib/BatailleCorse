@@ -43,15 +43,29 @@ npm run test:watch # watch mode
 
 ### End-to-end tests (Cypress)
 
-The e2e specs drive the real app, so they need the full stack running. The Vite dev
-server proxies `/api` and `/connect` (WebSocket) to the Docker service `backend:8080`,
-so the stack must be started with Docker Compose — that proxy target only resolves on
-the Compose network.
+The e2e specs drive the real app, so they need the full stack running. The e2e stack
+(`docker-compose.e2e.yml`, Spring profile `test`) is not the dev stack: nothing is
+bind-mounted and nothing compiles at start-up.
 
-1. Start the e2e stack (backend on `:8080`, Vite dev server on `:5173`):
+- Backend: the `run` target of `backend/Dockerfile` (the production image) runs a jar built
+  during `docker compose build`. Maven resolves dependencies with `deploy/docker/settings.xml`
+  passed as a build secret, in an image layer that only changes with `pom.xml`, so later
+  builds only recompile.
+- Frontend: the `e2e` target of `frontend/Dockerfile` serves the production build with
+  `vite preview`, which proxies `/api` and `/connect` (WebSocket) to the Docker service
+  `backend:8080` like the dev server does (that target only resolves on the Compose
+  network). No hot reload: `VITE_HMR_CLIENT_PORT` has no effect on this stack.
+
+A source change reaches the stack only through a rebuild, so always start it with `--build`
+(unchanged layers are reused). Measured on 2026-10-24 (details in `docs/harnesses.md`): about
+3 minutes the first time or after a `pom.xml` change, under a minute after a code change,
+about 25 s without changes, against 4 to 13 minutes for the former stack, which compiled
+inside the container at every start.
+
+1. Start the e2e stack (backend on `:8080`, frontend on `:5173`) and wait for both healthchecks:
 
    ```sh
-   docker compose -f docker-compose.e2e.yml up --build
+   docker compose -f docker-compose.e2e.yml up --build -d --wait
    ```
 
 2. In a second terminal, run Cypress from the `frontend` directory (it targets

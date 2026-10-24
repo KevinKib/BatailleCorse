@@ -2,12 +2,22 @@
 FROM maven:3.9-eclipse-temurin-22 AS build
 
 WORKDIR /app
-COPY . .
 
+# Dependencies live in an image layer keyed on pom.xml, not in a BuildKit cache mount: Docker
+# Desktop's builder garbage-collects cache mounts past 2.7 GiB (shared with every build context),
+# which emptied the Maven repository between two builds. A code change now reuses this layer and
+# only compiles. The repository path is explicit so no VOLUME of the base image can drop it.
+ENV MAVEN_REPO=/opt/maven-repo
+COPY pom.xml .
 RUN --mount=type=secret,id=maven_settings \
-    --mount=type=cache,target=/root/.m2 \
-    mvn clean package -DskipTests \
-    -s /run/secrets/maven_settings
+    mvn -B -q dependency:go-offline \
+    -Dmaven.repo.local=$MAVEN_REPO -s /run/secrets/maven_settings
+
+COPY src ./src
+# Tests are neither compiled nor run here: the test suites run outside the image (mvn test, CI).
+RUN --mount=type=secret,id=maven_settings \
+    mvn -B clean package -Dmaven.test.skip=true \
+    -Dmaven.repo.local=$MAVEN_REPO -s /run/secrets/maven_settings
 
 # ---- Dev stage ----
 FROM maven:3.9-eclipse-temurin-22 AS dev
@@ -23,7 +33,9 @@ RUN sed -i 's/\r$//' /entrypoint-dev.sh && chmod +x /entrypoint-dev.sh
 ENTRYPOINT ["/entrypoint-dev.sh"]
 
 # ---- Run stage ----
-FROM eclipse-temurin:22-jdk
+# Last stage, so the default target of the production build. The e2e stack (docker-compose.e2e.yml)
+# selects it by name (`target: run`) to start a prebuilt jar instead of compiling in the container.
+FROM eclipse-temurin:22-jdk AS run
 
 ARG APP_NAME=bataillecorse-backend
 ARG VERSION=1.0-SNAPSHOT

@@ -2,6 +2,13 @@
 node_modules/
 dist/
 
+# Tests are not part of the bundle. Keeping them (and the screenshots Cypress writes) out of the
+# context means editing a spec or a run's output does not invalidate `COPY . .` and rebuild the
+# bundle of the e2e image (Dockerfile, target e2e). The dev stack bind-mounts the folder anyway.
+cypress/
+cypress.config.ts
+**/*.test.ts
+
 # IDE / OS noise
 .idea/
 *.iml

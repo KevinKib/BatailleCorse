@@ -64,12 +64,42 @@ Priority 1 of #312, from `docs/architecture/e2e-cypress-report.md`.
 |---|---|---|
 | Cypress is 26 % of agents' active time (42 % with stack waits) and caught no regression after the fact; agents replayed whole spec families | An agent runs only the specs of the feature it touched (those its brief names as new or updated), once; a failing spec is rerun alone at most once to tell a load flake from a real failure; a whole family (all `president-*`, all `kobo-*`) is replayed only by the integration chunk of a plan or when the owner asks; the report lists the specs run and the total Cypress time. No e2e coverage is deleted | `CLAUDE.md` (Tests section), `docs/architecture/e2e-cypress-report.md` (next steps) |
 
+## 2026-10-24: faster e2e stack (prebuilt backend, vite preview)
+
+Issue #312, priority 2 (`docs/architecture/e2e-cypress-report.md`: the stack wait was 16 % of the agents' active time,
+and a cold backend once never answered within 18 minutes).
+
+| Friction | Fix | Where |
+|---|---|---|
+| The e2e backend compiled and started with `mvn spring-boot:run` inside its container: 5 to 13 minutes from an empty Maven volume, beyond the healthcheck window | The e2e backend is the production image (`target: run`): jar built during `docker compose build` with `settings.xml` as a build secret, started with `java -jar`, same healthcheck | `docker-compose.e2e.yml`, `backend/Dockerfile` |
+| The BuildKit cache mount of the Maven repository was emptied between two builds (Docker Desktop's GC caps cache mounts and build contexts at 2.7 GiB), so each build downloaded about 710 artifacts again | Dependencies resolved in an image layer keyed on `pom.xml` (`dependency:go-offline`), then the sources are compiled with `-Dmaven.test.skip=true` | `backend/Dockerfile` (also the production build) |
+| Cypress hit the Vite dev server: 355 requests and 4 to 14 s per cold page under load, plus a polling watcher | The e2e frontend serves the production build with `vite preview`, with the dev server's container port and its `/api` and `/connect` proxy (guarded by `src/viteConfig.test.ts`) | `frontend/Dockerfile` (target `e2e`), `frontend/vite.config.mjs` |
+| Screenshots written by Cypress and spec edits invalidated `COPY . .` and rebuilt the bundle | `cypress/`, `cypress.config.ts` and `*.test.ts` left out of the frontend build context | `frontend/.dockerignore` |
+
+Measured on 2026-10-24 on the development laptop with four other sessions' stacks running (16 cores):
+
+| Start (`up --build -d --wait`) | Former stack | New stack |
+|---|---|---|
+| Cold (empty Maven repository) | 12 min 49 s until the backend answered (Maven in the container, then a 125 s Spring dev start); `--wait` gave up at 7 min 07 s, backend unhealthy | backend image 3 min 09 s (dependency layer 2 min 42 s, once per `pom.xml` change); 1 min 53 s for the first version, whose cache mount still held part of the repository |
+| Backend code changed | 3 min 39 s with a warm Maven volume (the container compiles at every start) | 21 s backend image build, then the start below |
+| Nothing changed | 3 min 39 s (same) | 24 to 27 s until both healthchecks pass (Spring starts in 5.5 s) |
+| Frontend code changed | no rebuild (bind mount), but every page transformed on the fly | 22 s bundle rebuild, then the start above |
+
+Same six specs, once each, on each stack (`president-game`, `kobo-animations`, `bullshit-pile-animation`,
+`morris-game`, `president-stillness`, `mangola-animation-speed`): 50 of 50 tests green on both; Cypress time 15 min 11 s
+on the former stack (1:19, 0:34, 0:24, 1:49, 9:50, 1:12) against 8 min 57 s on the new one (1:00, 0:13, 0:05, 0:33,
+6:40, 0:23).
+
+The developer stack (`docker-compose.dev.yml`, `dev` targets) is unchanged. A source change reaches the e2e stack only
+through `up --build`; `VITE_HMR_CLIENT_PORT` has no effect there (still written by `scripts/free-ports.sh`, harmless).
+
 ## Inventory (versioned in this project)
 
 | Item | Role |
 |---|---|
 | `CLAUDE.md` | Language, domain architecture rules, tracking, test suites, e2e rule, dev environment and offset-ports model |
-| `frontend/vite.config.mjs` | `VITE_HMR_CLIENT_PORT`: hot reload follows the published port |
+| `frontend/vite.config.mjs` | `VITE_HMR_CLIENT_PORT`: hot reload follows the published port; `preview` serves the e2e build with the dev proxy |
+| `docker-compose.e2e.yml`, `backend/Dockerfile` (target `run`), `frontend/Dockerfile` (target `e2e`) | E2E stack from prebuilt images: jar and production bundle |
 | `docs/harnesses.md` | This document |
 | `docs/architecture/add-a-game.md`, `docs/architecture/game-conventions.md` | Checklist and naming rules an agent follows to add a game |
 | `.github/workflows/ci.yml` | GitHub Actions: backend tests and frontend tests + build on push to `main` and on pull requests (no e2e yet) |
