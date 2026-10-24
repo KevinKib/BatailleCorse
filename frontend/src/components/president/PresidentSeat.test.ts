@@ -51,10 +51,52 @@ describe('PresidentSeat', () => {
     expect(wrapper.get('[data-test="seat-passed"]').text()).toBe('Passed');
   });
 
-  it('givenASeatThatIsOut_thenItShowsItsPlaceAndNotThePassMarker', () => {
-    const wrapper = mountSeat({ player: buildPresidentPlayer(1, { out: true, place: 2, handSize: 0, passed: true }) });
-    expect(wrapper.get('[data-test="seat-out"]').text()).toBe('Out, place 2');
+  it('givenASeatThatIsOut_thenItShowsAMedalWithItsPlaceAndNotThePassMarker', () => {
+    const wrapper = mountSeat({ fan: true, player: buildPresidentPlayer(1, { out: true, place: 2, handSize: 0, passed: true }) });
+    const medal = wrapper.get('[data-test="seat-out"]');
+    expect(medal.attributes('data-place')).toBe('2');
+    expect(medal.get('[data-test="seat-medal-place"]').text()).toBe('2nd');
+    expect(medal.get('[data-test="seat-medal-word"]').text()).toBe('Out');
     expect(wrapper.find('[data-test="seat-passed"]').exists()).toBe(false);
+  });
+
+  it('givenAMedal_thenItsVisibleTextIsHiddenFromAssistiveTechnologyAndItsLabelSaysItAll', () => {
+    const wrapper = mountSeat({ fan: true, player: buildPresidentPlayer(1, { out: true, place: 1, handSize: 0 }) });
+    const medal = wrapper.get('[data-test="seat-out"]');
+    expect(medal.get('[data-test="seat-medal-place"]').attributes('aria-hidden')).toBe('true');
+    expect(medal.get('[data-test="seat-medal-word"]').attributes('aria-hidden')).toBe('true');
+    const label = medal.get('.sr-only');
+    expect(label.text()).toBe('Out, 1st place');
+  });
+
+  it.each([[1, '1st'], [2, '2nd'], [3, '3rd'], [4, '4th']])('givenPlace_%i_thenTheMedalReads_%s', (place, text) => {
+    const wrapper = mountSeat({ fan: true, player: buildPresidentPlayer(1, { out: true, place, handSize: 0 }) });
+    expect(wrapper.get('[data-test="seat-medal-place"]').text()).toBe(text);
+  });
+
+  it('givenMyOwnPlateThatIsOut_thenTheMedalIsTheCompactSideVariantBesideMyName', () => {
+    const wrapper = mountSeat({ player: buildPresidentPlayer(1, { out: true, place: 1, handSize: 0 }) });
+    const medal = wrapper.get('.seat-markers--side [data-test="seat-out"]');
+    expect(medal.classes()).toContain('medal--side');
+    expect(medal.get('[data-test="seat-medal-place"]').text()).toBe('1st');
+  });
+
+  it('givenAFinishedSeat_thenTheLabelIsFinishedGoldOutlined_neverDimmed', () => {
+    const wrapper = mountSeat({ fan: true, player: buildPresidentPlayer(1, { out: true, place: 1, handSize: 0 }) });
+    expect(wrapper.classes()).toContain('president-seat--finished');
+    expect(wrapper.classes()).toContain('president-seat--out');
+  });
+
+  it('givenAForbiddenFinish_thenNotFinished_noGoldOutline', () => {
+    const wrapper = mountSeat({ fan: true, player: buildPresidentPlayer(1, { out: true, place: null, handSize: 0, forbiddenFinish: true }) });
+    expect(wrapper.classes()).not.toContain('president-seat--finished');
+    expect(wrapper.find('[data-test="seat-medal-place"]').exists()).toBe(false);
+  });
+
+  it('givenASeatStillInTheGame_thenNoMedalAndNotFinished', () => {
+    const wrapper = mountSeat({ fan: true });
+    expect(wrapper.classes()).not.toContain('president-seat--finished');
+    expect(wrapper.find('[data-test="seat-out"]').exists()).toBe(false);
   });
 
   it('givenAForbiddenFinisher_thenItIsOutOnATwoWithoutAPlace', () => {
@@ -101,6 +143,13 @@ describe('PresidentSeat', () => {
       expect(bubble.attributes('aria-hidden')).toBe('true');
     });
 
+    it('givenAnOutBubbleWithItsPlace_thenItReadsOutDotPlace_inGold', () => {
+      const bubble = mountSeat({ bubble: { kind: 'out', vars: { place: '1st' }, key: 1 } }).get('[data-test="seat-bubble"]');
+      expect(bubble.text()).toBe('Out · 1st');
+      expect(bubble.attributes('data-kind')).toBe('out');
+      expect(bubble.classes()).toContain('seat-bubble--out');
+    });
+
     it('givenAPassedSeat_thenThePlateIsDimmed', () => {
       expect(mountSeat({ player: buildPresidentPlayer(1, { passed: true }) }).classes()).toContain('president-seat--passed');
     });
@@ -117,9 +166,9 @@ describe('PresidentSeat', () => {
       expect(w.find('.seat-hand [data-test="seat-fan"]').exists()).toBe(true);
     });
 
-    it('givenASeatThatIsOut_thenItsPlaceTakesTheFansPlace', () => {
+    it('givenASeatThatIsOut_thenItsMedalTakesTheFansPlace', () => {
       const w = compact({ player: buildPresidentPlayer(1, { out: true, place: 2, handSize: 0 }) });
-      expect(overlay(w).get('[data-test="seat-out"]').text()).toBe('Out, place 2');
+      expect(overlay(w).get('[data-test="seat-out"] [data-test="seat-medal-place"]').text()).toBe('2nd');
       expect(w.find('.fan-picture').classes()).toContain('fan-picture--reserved');
     });
 

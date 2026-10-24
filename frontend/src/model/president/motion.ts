@@ -117,11 +117,17 @@ export function planSweep(entry: PresidentLogEntry, mySeat: number, factor = 1):
   return factor > 0 ? scaleMovements(moves, factor) : moves;
 }
 
-/** The bubbles of a move: a pass, a forbidden finish ("Out on a 2"), a four completed out of turn. Pure. */
+/**
+ * The bubbles of a move: a pass, a forbidden finish ("Out on a 2"), a finish ("Out · 1st"), a four completed out of
+ * turn. A move that completes the four and empties the hand says "Out" only (the closing badge says the four: two
+ * bubbles on one seat would replace each other). Pure.
+ */
 export function planBubbles(entry: PresidentLogEntry): SeatBubble[] {
   const bubbles: SeatBubble[] = [];
+  const finished = entry.outPlace !== null && !entry.outForbidden;
   if (entry.action === 'PASS') bubbles.push({ seat: entry.seat, kind: 'pass' });
-  if (entry.outOfTurn) bubbles.push({ seat: entry.seat, kind: 'completed' });
+  if (finished) bubbles.push({ seat: entry.seat, kind: 'out', place: entry.outPlace as number });
+  else if (entry.outOfTurn) bubbles.push({ seat: entry.seat, kind: 'completed' });
   if (entry.outForbidden) bubbles.push({ seat: entry.seat, kind: 'outForbidden' });
   return bubbles;
 }

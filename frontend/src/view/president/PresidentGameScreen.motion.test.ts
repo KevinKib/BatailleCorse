@@ -293,6 +293,86 @@ describe('PresidentGameScreen pictures (characterisation)', () => {
     expect(recording.lines).toMatchSnapshot();
   });
 
+  describe('a seat finishing', () => {
+    const lastCard = card('ACE', 'HEART');
+    const base = (me = 0) => playing({
+      currentSeat: 2, players: seatsOf(4, { 2: { handSize: 1 } }),
+      trick: buildPresidentTrick({ leader: me, plays: [{ seat: me, cards: [king] }] }),
+    });
+    const finished = (seat: number) => playing({
+      version: 2, currentSeat: 3, players: seatsOf(4, { [seat]: { handSize: 0, out: true, place: 1 } }),
+      trick: buildPresidentTrick({ leader: 0, plays: [{ seat, cards: [lastCard] }], top: { kind: 'SET', rank: 'ACE', count: 1 } }),
+    });
+    const announced = (wrapper: Wrapper) => wrapper.findAll('[data-test="president-announcements"] li').map(li => li.text());
+    const medalOf = (wrapper: Wrapper, seat: number) => wrapper.find(`.seat-slot[data-seat="${seat}"] [data-test="seat-out"]`);
+
+    it('anOpponentGoesOut_thenTheBubbleTheMedalAndTheAnnouncementComeWhenTheMoveIsTold_notWhenItsStateArrives', async () => {
+      const { store, wrapper } = await mountTable(base());
+      store.applyEvent({ type: 'state-update', state: finished(2) });
+      store.applyEvent(event(2, 'PLAY', { cards: [lastCard], outPlace: 1 }));
+      await flushPromises();
+      // The latest state says it already; the table does not, while the last card is in flight.
+      expect(store.game?.players[2].out).toBe(true);
+      const told: string[] = [];
+      for (let t = 0; t < 4000; t += 50) {
+        await vi.advanceTimersByTimeAsync(50);
+        await flushPromises();
+        const bubble = wrapper.find('.seat-slot[data-seat="2"] [data-test="seat-bubble"]');
+        told.push(`${bubble.exists() ? bubble.text() : '-'}|${medalOf(wrapper, 2).exists() ? 'medal' : '-'}|${announced(wrapper).join(';') || '-'}`);
+      }
+      const first = told.findIndex(line => line.startsWith('Out · 1st'));
+      expect(first).toBeGreaterThanOrEqual(0);
+      expect(told[first]).toBe('Out · 1st|medal|P2 is out, 1st');
+      // Nothing of it before: bubble, medal and announcement are born together.
+      expect(told.slice(0, first).every(line => line === '-|-|-')).toBe(true);
+      // The bubble has a life: it is gone while the medal stays.
+      expect(told[told.length - 1]).toBe('-|medal|P2 is out, 1st');
+    });
+
+    it('iGoOut_thenTheAnnouncementSaysYou_andTheMedalIsOnMyPlate', async () => {
+      const { store, wrapper } = await mountTable(playing({ currentSeat: 0, players: seatsOf(4, { 0: { handSize: 1 } }) }));
+      store.applyEvent({ type: 'state-update', state: finished(0) });
+      store.applyEvent(event(0, 'PLAY', { cards: [lastCard], outPlace: 1 }));
+      await flushPromises();
+      await watchFor(wrapper, 1500);
+      expect(announced(wrapper)).toEqual(['You are out, 1st']);
+      expect(wrapper.find('[data-test="my-zone"] [data-test="seat-out"]').attributes('data-place')).toBe('1');
+    });
+
+    it('aForbiddenFinish_isNotAnnouncedAsAPlace_andKeepsItsOwnBubble', async () => {
+      const { store, wrapper } = await mountTable(base());
+      store.applyEvent({ type: 'state-update', state: playing({
+        version: 2, currentSeat: 3, players: seatsOf(4, { 2: { handSize: 0, out: true, place: 4, forbiddenFinish: true } }),
+      }) });
+      store.applyEvent(event(2, 'PLAY', { cards: [card('2', 'HEART')], outForbidden: true, outPlace: 4 }));
+      await flushPromises();
+      const seen = new Set<string>();
+      for (let t = 0; t < 3000; t += 50) {
+        await vi.advanceTimersByTimeAsync(50);
+        await flushPromises();
+        const bubble = wrapper.find('.seat-slot[data-seat="2"] [data-test="seat-bubble"]');
+        if (bubble.exists()) seen.add(bubble.text());
+      }
+      expect([...seen]).toEqual(['Out on a 2']);
+      expect(announced(wrapper)).toEqual([]);
+      // No medal for a forbidden finish: the red marker stays, and the name is not dimmed either.
+      expect(wrapper.find('.seat-slot[data-seat="2"] [data-test="seat-medal-place"]').exists()).toBe(false);
+      expect(wrapper.find('.seat-slot[data-seat="2"] .marker--forbidden').exists()).toBe(true);
+    });
+
+    it('atInstant_theFinishIsToldAtOnce_withoutAPop', async () => {
+      localStorage.setItem('animationSpeed', 'instant');
+      const { store, wrapper } = await mountTable(base());
+      store.applyEvent({ type: 'state-update', state: finished(2) });
+      store.applyEvent(event(2, 'PLAY', { cards: [lastCard], outPlace: 1 }));
+      await flushPromises();
+      expect(wrapper.find('.seat-slot[data-seat="2"] [data-test="seat-bubble"]').text()).toBe('Out · 1st');
+      expect(wrapper.find('.seat-slot[data-seat="2"] [data-test="seat-bubble"]').classes()).toContain('seat-bubble--still');
+      expect(medalOf(wrapper, 2).exists()).toBe(true);
+      expect(announced(wrapper)).toEqual(['P2 is out, 1st']);
+    });
+  });
+
   async function burst() {
     const { store, wrapper } = await mountTable(playing({
       currentSeat: 1, trick: buildPresidentTrick({ leader: 0, plays: [{ seat: 0, cards: [king] }] }),

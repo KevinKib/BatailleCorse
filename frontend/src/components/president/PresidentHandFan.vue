@@ -19,7 +19,7 @@ const width = computed(() => layout.value.backs > 0
 
 <template>
   <span class="hand-fan" data-test="seat-fan" :data-count="count">
-    <span class="fan-stage">
+    <span class="fan-stage" :style="{ '--fan-h': `${layout.cardW * 1.451}px` }">
       <span class="fan-picture fan-picture--reserved" :style="{ minHeight: `${layout.cardW * 1.451}px` }" aria-hidden="true">
         <span v-if="layout.backs > 0" class="fan-backs" :style="{ width: `${width}px`, '--fan-card-w': `${layout.cardW}px` }">
           <span v-for="i in layout.backs" :key="i" class="fan-back" data-test="fan-back"

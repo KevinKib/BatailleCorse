@@ -58,7 +58,8 @@ function playTriple(rank: string, goesOut = false) {
             scriptedPass(carol);
           });
           playTriple('8', true);
-          cy.get('[data-test="my-zone"] [data-test="seat-out"]').should('have.text', 'Out, place 1');
+          cy.get('[data-test="my-zone"] [data-test="seat-out"]').should('have.attr', 'data-place', '1')
+            .and('contain.text', '1st').and('contain.text', 'Out, 1st place');
 
           // Seat 1 leads next and goes out second, seat 2 passing.
           scriptedPlay(bob, '7', 3);
