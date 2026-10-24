@@ -21,7 +21,14 @@ export const PRESIDENT_TEMPO = {
   /** Bubbles that come in a burst pop this far apart (they are not queued with the flights). */
   bubbleGapMs: 200,
   /** The cards of the exchange wait for their flights to land, but never longer than this behind the state. */
-  countLagMaxMs: 2000,
+  countLagMaxMs: 6500,
+  /** The pairs of the exchange fly one after the other (read by the sequencing chunk). */
+  exchange: {
+    /** A pair starts this long after the previous pair's last card has landed. */
+    pairGapMs: 250,
+    /** The sequenced deal never lasts longer than this at Normal speed: past it the pairs overlap. */
+    maxSpanMs: 6000,
+  },
   /**
    * The texts of the table show a move once its cards have landed (after the moves before it, sweeps included), but
    * never longer than this after its state arrived: past it, they catch up with the game.

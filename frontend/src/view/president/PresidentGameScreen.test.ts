@@ -169,6 +169,17 @@ describe('PresidentGameScreen', () => {
     expect(wrapper.get('[data-test="round"]').text()).toBe('Round 2 of 5');
   });
 
+  it('givenTheTable_thenAnEmptyPoliteListRegionForTheNewsSitsNextToTheTurnRegion', async () => {
+    const { wrapper } = await mountRoom(room(playing()));
+    const region = wrapper.get('[data-test="president-announcements"]');
+    expect(region.element.tagName).toBe('UL');
+    expect(region.attributes('aria-live')).toBe('polite');
+    expect(region.attributes('aria-relevant')).toBe('additions');
+    expect(region.classes()).toContain('sr-only');
+    expect(region.findAll('li')).toHaveLength(0);
+    expect(wrapper.find('[data-test="president-live"]').exists()).toBe(true);
+  });
+
   it.each([3, 5, 8])('given%dPlayers_thenEveryOpponentHasASeat', async (n) => {
     const { wrapper } = await mountRoom(room(playing({
       players: seatsOf(n),

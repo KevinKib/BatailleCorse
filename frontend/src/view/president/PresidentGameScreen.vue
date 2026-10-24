@@ -12,6 +12,7 @@ import { useConnectionStatus } from '../../composables/useConnectionStatus';
 import { useNarrowScreen } from '../../composables/useNarrowScreen';
 import { usePresidentEndSequence } from '../../composables/usePresidentEndSequence';
 import { useI18n } from '../../composables/useI18n';
+import { useLiveAnnouncements } from '../../composables/useLiveAnnouncements';
 import GameLobby from '../../components/lobby/GameLobby.vue';
 import EndGameOverlay from '../../components/EndGameOverlay.vue';
 import ForfeitBanner from '../../components/ForfeitBanner.vue';
@@ -223,7 +224,9 @@ const inFlight = useInFlightCounts({ maxLagMs: PRESIDENT_TEMPO.countLagMaxMs });
 // The cards of the exchange still flying into my hand: their place in the hand waits for them.
 const landing = ref<string[]>([]);
 const landingTimers = new Set<ReturnType<typeof setTimeout>>();
-onBeforeUnmount(() => { bubbles.cancel(); inFlight.cancel(); landingTimers.forEach(clearTimeout); endHold(); });
+// The news of the table for assistive technology; the finish and the exchange feed it in their own chunks.
+const announcements = useLiveAnnouncements();
+onBeforeUnmount(() => { bubbles.cancel(); inFlight.cancel(); announcements.cancel(); landingTimers.forEach(clearTimeout); endHold(); });
 
 /** A seat as a place: my hand zone (a card in its middle) or an opponent's fan (a card the height of it). */
 function seatTarget(seat: number, q: DomQuery): MotionTarget | null {
@@ -606,6 +609,9 @@ const rematchButton = computed(() =>
       <CardMotionLayer ref="motionLayer" :resolve="resolveAnchor" :mark-ms="PRESIDENT_TEMPO.markMs"
                        :mark-reduced-ms="PRESIDENT_TEMPO.markReducedMs" mark-style="soft" arrow-id="president-arrow-head" />
       <p class="sr-only" role="status" aria-live="polite" aria-atomic="true" data-test="president-live">{{ liveSpoken }}</p>
+      <ul class="sr-only" aria-live="polite" aria-relevant="additions" data-test="president-announcements">
+        <li v-for="item in announcements.items.value" :key="item.key">{{ item.text }}</li>
+      </ul>
 
       <Transition name="forfeit-fade">
         <ForfeitBanner

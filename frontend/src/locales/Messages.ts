@@ -61,6 +61,14 @@ export interface RulesMessages {
 }
 
 // Singular / other forms of a message; both contain `{n}` for the count.
+/** The four English ordinal forms (`Intl.PluralRules` type `ordinal`): '{n}' = the number (1st, 2nd, 3rd, 4th). */
+export interface OrdinalForms {
+  one: string;
+  two: string;
+  few: string;
+  other: string;
+}
+
 export interface PluralForms {
   one: string;
   other: string;
@@ -262,6 +270,7 @@ export interface PresidentUiMessages {
   playerLabel: string;                 // '{n}' = 1-based seat number, for a player without a name
   botLabel: string;                    // '{n}'
   titles: Record<PresidentTitleKey, string>;
+  ordinal: OrdinalForms;               // a place: '1st', '2nd'... ('{n}')
   ranks: Record<string, string>;       // by backend rank label (`JACK`...); a number is its own name
   suits: Record<string, string>;       // by backend suit (`HEART`...)
   cardLabel: string;                   // '{rank}', '{suit}': accessible name of a card
@@ -285,6 +294,7 @@ export interface PresidentUiMessages {
     out: string;                       // '{n}' = place taken
     outForbidden: string;              // went out on a forbidden finish, no place until the round ends
     outForbiddenPlace: string;         // the same once the round is over, with the place '{n}'
+    medal: { out: string; label: string }; // the medal of a seat that went out: its word, and its accessible text ('{place}' = "1st")
     ready: string;
     emptyTrick: string;                // nothing on the table
     playedBy: string;                  // '{player}': who made the top play
@@ -338,6 +348,16 @@ export interface PresidentUiMessages {
     pair: PluralForms;                 // '{high}', '{low}', '{n}', '{state}'
     pending: string;
     done: string;
+    /** The board "The exchange" that sits in the pile's slot during the exchange. */
+    board: {
+      title: string;                   // header and region name
+      neutral: string;                 // I am in no pair
+      choosing: string;                // '{player}', '{n}': the high seat has not given back yet
+      youChoose: string;               // '{n}': the same when I am the high seat
+      seen: string;                    // name of the Seen button
+      states: { giving: string; choosing: string; returning: string; done: string }; // accessible names of a row's mark
+      row: PluralForms;                // the full sentence of a pair, for screen readers: '{high}', '{low}', '{n}', '{state}'
+    };
     /** The summary shown after the exchange, once the play has begun. */
     recap: {
       title: string;
@@ -373,6 +393,17 @@ export interface PresidentUiMessages {
     rematchFailed: string;
   };
   live: { yourTurn: string };
+  /** The news of the table, said in the polite list region ('{player}', '{place}' = "1st", '{n}' cards, '{cards}' names). */
+  announce: {
+    out: string;                       // '{player}', '{place}'
+    outYou: string;                    // '{place}'
+    best: PluralForms;                 // '{low}', '{high}', '{n}': a pair that is not mine
+    bestMine: PluralForms;             // '{high}', '{cards}': I gave my best cards
+    bestToMe: PluralForms;             // '{low}', '{cards}': I received the best cards
+    back: PluralForms;                 // '{high}', '{low}', '{n}'
+    backMine: PluralForms;             // '{low}', '{cards}': I gave cards back
+    backToMe: PluralForms;             // '{high}', '{cards}': I got cards back
+  };
   /** The pictures of the table (spec §11 decision 7): the trick indicator, the closed-trick badge, the seat bubbles. */
   motion: {
     trickCount: PluralForms;           // '{n}' = cards in the trick
@@ -381,7 +412,7 @@ export interface PresidentUiMessages {
     binding: { orNothing: string; played: string }; // equal play: "9 or nothing", and '{n}' of the four played
     leads: string;                     // '{player}' takes the lead
     youLead: string;
-    bubbles: { pass: string; outForbidden: string; completed: string };
+    bubbles: { pass: string; outForbidden: string; completed: string; out: string }; // out: '{place}' = "1st"
     speed: string;                     // '{speed}': name of the speed button (states are read out)
     speeds: { normal: string; fast: string; instant: string };
   };

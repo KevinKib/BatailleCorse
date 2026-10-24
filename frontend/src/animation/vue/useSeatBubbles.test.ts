@@ -14,6 +14,16 @@ describe('useSeatBubbles', () => {
     bubbles.cancel(); bubbles.show({ seat: 2, kind: 'nope' }, 1000);
   });
 
+  it('givenABubbleWithVars_thenTheShownBubbleCarriesThemUntouchedAndANewBubbleReplacesThem', () => {
+    const bubbles = useSeatBubbles({ gapMs: 0 });
+    bubbles.show({ seat: 1, kind: 'out', vars: { place: '1st', n: 3 } }, 1000);
+    expect(bubbles.bySeat.value[1]?.vars).toEqual({ place: '1st', n: 3 });
+    bubbles.show({ seat: 1, kind: 'out', vars: { place: '2nd' } }, 1000);
+    expect(bubbles.bySeat.value[1]?.vars).toEqual({ place: '2nd' });
+    bubbles.show({ seat: 2, kind: 'pass' }, 1000);
+    expect(bubbles.bySeat.value[2]?.vars).toBeUndefined();
+  });
+
   it('givenABubble_thenItShowsAtOnceOnItsSeatAndGoesAfterItsLife', () => {
     const bubbles = useSeatBubbles({ gapMs: 200 });
     bubbles.show({ seat: 1, kind: 'pass' }, 1000);
