@@ -3,10 +3,13 @@ import { effectScope } from 'vue';
 import { useSowingAnimation, MAX_QUEUED_STATES } from './useSowingAnimation';
 import { mangolaState } from '../model/mangola/mangolaFixtures';
 import { boardOf, sow } from '../model/mangola/sowingFixtures';
-import { MAX_TOTAL_MS, planSowing } from '../model/mangola/trace';
+import { planSowing } from '../model/mangola/trace';
 import type { MangolaState } from '../model/mangola/MangolaState';
 import { pitFromName } from '../model/mangola/geometry';
 import type { AnimationSpeed } from '../animation';
+
+/** Longer than any sowing of these tests: the animation has no cap, so the tests wait for it with a wide margin. */
+const ENOUGH_MS = 1_000_000;
 
 const POSITIONS: { name: string; before: string; pit: string }[] = [
   { name: 'PICK/DROP/SKIP_EMPTY (E1)', before: 'a2:3', pit: 'a2' },
@@ -93,7 +96,7 @@ describe('useSowingAnimation', () => {
       anim.push(start(position.before));
       const next = played(position.before, position.pit, 2);
       anim.push(next);
-      vi.advanceTimersByTime(MAX_TOTAL_MS + 100);
+      vi.advanceTimersByTime(ENOUGH_MS + 100);
       expect(anim.animating.value).toBe(false);
       expect(anim.displayBoard.value).toEqual(next.board);
       expect(anim.shownState.value).toBe(next);
@@ -139,7 +142,7 @@ describe('useSowingAnimation', () => {
     expect(anim.hand.value).toBeNull();
     expect(anim.displayBoard.value).toEqual(next.board);
     // No timer is left to change the board afterwards.
-    vi.advanceTimersByTime(MAX_TOTAL_MS);
+    vi.advanceTimersByTime(ENOUGH_MS);
     expect(anim.displayBoard.value).toEqual(next.board);
   });
 
@@ -180,7 +183,7 @@ describe('useSowingAnimation', () => {
     // The reply started right after: its hand is on screen.
     expect(anim.animating.value).toBe(true);
     expect(anim.announced.value?.version).toBe(3);
-    vi.advanceTimersByTime(MAX_TOTAL_MS + 50);
+    vi.advanceTimersByTime(ENOUGH_MS + 50);
     expect(anim.animating.value).toBe(false);
     expect(anim.displayBoard.value).toEqual(reply.board);
     expect(anim.shownState.value).toBe(reply);
@@ -193,7 +196,7 @@ describe('useSowingAnimation', () => {
     const states = sequence(before, ['a2', 'h4', 'a4', 'a1']);
     expect(states.length).toBeGreaterThan(MAX_QUEUED_STATES + 1);
     states.forEach(state => anim.push(state));
-    vi.advanceTimersByTime(10 * MAX_TOTAL_MS);
+    vi.advanceTimersByTime(10 * ENOUGH_MS);
     const last = states[states.length - 1];
     expect(anim.animating.value).toBe(false);
     expect(anim.displayBoard.value).toEqual(last.board);
@@ -206,7 +209,7 @@ describe('useSowingAnimation', () => {
     anim.push(start('a2:3 h4:2', 5));
     const next = played('a2:3 h4:2', 'a2', 6);
     anim.push(next);
-    vi.advanceTimersByTime(MAX_TOTAL_MS + 50);
+    vi.advanceTimersByTime(ENOUGH_MS + 50);
     anim.push(start('a2:3 h4:2', 5));
     anim.push(next);
     expect(anim.animating.value).toBe(false);
@@ -255,11 +258,11 @@ describe('useSowingAnimation', () => {
     anim.push(other);
     expect(anim.animating.value).toBe(false);
     expect(anim.displayBoard.value).toEqual(other.board);
-    vi.advanceTimersByTime(MAX_TOTAL_MS);
+    vi.advanceTimersByTime(ENOUGH_MS);
     expect(anim.displayBoard.value).toEqual(other.board);
   });
 
-  it('a 600-seed sowing ends within the cap', () => {
+  it('a 600-seed sowing ends, however long it lasts', () => {
     const anim = make();
     const before = 'a2:20 b2:20 c2:20 d2:20 e2:20 f2:20 g2:20 h2:20 h1:20 g1:20';
     const { drops } = sow(boardOf(before), 'a2');
@@ -267,7 +270,7 @@ describe('useSowingAnimation', () => {
     anim.push(start(before));
     const next = played(before, 'a2', 2);
     anim.push(next);
-    vi.advanceTimersByTime(MAX_TOTAL_MS + 10);
+    vi.advanceTimersByTime(ENOUGH_MS + 10);
     expect(anim.animating.value).toBe(false);
     expect(anim.displayBoard.value).toEqual(next.board);
   });
@@ -278,7 +281,7 @@ describe('useSowingAnimation', () => {
     const next = played('a2:2 c2:1 c3:2 c4:3', 'a2', 2);
     anim.push(next);
     expect(anim.marks.value.captured).toEqual([]);
-    vi.advanceTimersByTime(MAX_TOTAL_MS + 50);
+    vi.advanceTimersByTime(ENOUGH_MS + 50);
     expect(anim.marks.value.start).toBe(pitFromName('a2'));
     expect(anim.marks.value.captured).toEqual([
       { pit: pitFromName('c3'), seeds: 2 },
