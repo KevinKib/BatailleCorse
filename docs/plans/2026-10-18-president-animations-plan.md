@@ -4,6 +4,13 @@ Spec: `docs/specs/2026-10-15-president-design.md`, section 11, decision 7 (owner
 2026-10-18; canvas https://claude.ai/artifact/PYAx7CWL4NcxEDXTitPaGT, option B). Written by Claude Opus 5.5 on
 `origin/main` at `e133ff7`.
 
+> **Note (2026-10-24), history kept as written.** The shared motion pieces this plan created have since moved into
+> the shared animation module `frontend/src/animation/` (spec `docs/specs/2026-10-21-shared-card-animation-design.md`,
+> map `docs/architecture/card-animation.md`): `model/table/motion.ts` is `animation/core/movement.ts`,
+> `model/table/queue.ts` is `animation/core/tempoQueue.ts`, `components/table/CardMotionLayer.vue` and
+> `AnimationSpeedButton.vue` are in `animation/vue/`, and Kobo's `KoboMotionLayer.vue` and `model/kobo/queue.ts` are
+> gone. `components/table/TotalsTable.vue` stays where it is.
+
 **Goal:** the President table shows what happens as pictures, not lines of text: a play flies to the pile, a pass
 pops a bubble, a closed trick says why on the pile itself, and the table looks like Kobo's (room, felt, rings,
 arrows, score table) with Mangola's speed button. Frontend only: the server already sends every fact needed

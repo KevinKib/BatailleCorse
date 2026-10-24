@@ -112,6 +112,11 @@ The request is architectural: write the spec (`docs/specs/YYYY-MM-DD-<id>-*-desi
 - [ ] `src/view/<pkg>/<Pascal>GameScreen.vue` (+ test): composes the shared chrome (`GameTimer`, `RulesPanel`,
       `GameLobby`, `EndGameOverlay`, `DisconnectOverlay`, `ForfeitBanner`…). It can land in PR 4 or the entry PR.
 - [ ] Every visible text goes through `src/locales/` (`<camel>Ui`, rules at `<camel>`), never inline.
+- [ ] A table whose cards move: plug it into the shared animation module, never copy another game's loop.
+      `src/model/<pkg>/tempo.ts` (its numbers), `src/model/<pkg>/motion.ts` (its anchors and a pure plan per event,
+      tested), then in the screen `defineAnchors`, `useTableMotion` and `CardMotionLayer`, imported from the barrel
+      `src/animation` (a file inside it is refused by `animation/boundaries.test.ts`: **FAILS**). Recipe and example:
+      `src/animation/README.md`; map: `docs/architecture/card-animation.md`.
 
 ### 3.2 Entry PR: shared files
 

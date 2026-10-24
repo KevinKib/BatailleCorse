@@ -6,7 +6,7 @@ import type { TableMovement } from '../core/movement';
 import { canAnimate, prefersReducedMotion } from '../core/reducedMotion';
 import type { MotionRect, MotionTarget } from '../dom/rect';
 
-// The cards that travel, shared by every table that animates (Kobo, President). A layer over the whole screen
+// The cards that travel, shared by every table that animates (Kobo, President, Bullshit). A layer over the whole screen
 // (fixed, no pointer events, hidden from assistive technology) where each movement of the table is played as a copy
 // of the card flying from where it was to where it lands. It is only a picture of what the state already says:
 // nothing waits for it, nothing reads it back, a movement whose places cannot be found is skipped, and what the table

@@ -104,6 +104,7 @@ Paths relative to `frontend/src/`.
 | Screen texts | `<camel>Ui` | `bullshitUi`, `koboUi`, `threeMenMorrisUi`, `batailleCorseUi` [V] |
 | Option texts | `options.<camel>` (keys match the backend `labelKey`) | `options.bullshit`, `options.bataillecorse` [V] |
 | Unit tests | next to the file, `<File>.test.ts` (Vitest) | [V] |
+| Animation of a table | `model/<pkg>/motion.ts` (anchor type `<Pascal>Anchor`, pure plans), `model/<pkg>/tempo.ts` (its numbers), over the shared `animation/` module | `PresidentAnchor` in `model/president/motion.ts` + `tempo.ts`, `BullshitAnchor` [V]; Kobo's anchor is `MotionAnchor`, Bullshit keeps its numbers in `motion.ts` [D: `<Pascal>Anchor`, `tempo.ts`] |
 
 Components internal to a game's folder may use a shorter name (`MorrisBoard.vue`); the extension points above
 (session, store, bootstrap, screen, config export) use the full `<Pascal>` prefix [D].
@@ -119,6 +120,7 @@ Components internal to a game's folder may use a shorter name (`MorrisBoard.vue`
 | `useGameRooms` | `composables/useGameRooms.ts` | key → `{ create, join }` for the Game home and the join page |
 | `gameChoice` | `locales/gameChoice.ts` | picker texts of a game; throws when missing |
 | Shared chrome | `components/` (`GameTimer`, `RulesPanel`, `EndGameOverlay`, `DisconnectOverlay`, `ForfeitBanner`, `lobby/GameLobby`…) | timer, rules, Back, overlays, lobby |
+| Card animation | `animation/` (import the barrel `animation/index.ts` only): `useTableMotion`, `defineAnchors`, `CardMotionLayer`, `useDisplayedState`, `useTableSettled`, `useAnimationSpeed` + `AnimationSpeedButton`… | flights, rings, burst queue, speed, reduced motion, texts that follow the picture; guide `animation/README.md`, map `docs/architecture/card-animation.md` |
 
 Do not start from Bataille Corse (`application/GameSession.ts`, `view/alpha/`): it stays outside the generic
 session (see `docs/architecture/new-game-retrospective-three-men-morris.md`, F10).

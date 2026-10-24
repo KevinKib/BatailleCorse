@@ -3,6 +3,10 @@
 Spec: `docs/specs/2026-10-21-shared-card-animation-design.md`. **Produced by Claude Opus 5.5** on `origin/main` at
 `93b892c` (2026-10-21). To be approved by the owner before any implementation.
 
+**Status (2026-10-24):** chunks 0 to 3 merged (#297, #301, #302, #303), chunk 4 in #304. The emptied files were
+removed by the chunks themselves (`KoboMotionLayer.vue`, `model/kobo/queue.ts`, `usePileAnimation.ts` and their tests):
+nothing is left for `git rm`.
+
 **Goal:** one frontend module, `frontend/src/animation/`, that any table plugs into in about 30 lines (flights,
 rings, arrows, burst queue, speed, Instant, reduced motion, texts that follow the picture), with Kobo, President and
 Bullshit moved onto it and **no visible change**.
