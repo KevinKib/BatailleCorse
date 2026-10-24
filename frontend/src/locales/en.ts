@@ -379,6 +379,7 @@ export const messagesEn: Messages = {
     announce: {
       out: '{player} is out, {place}',
       outYou: 'You are out, {place}',
+      card: 'the {card}',
       best: { one: '{low} gave their best card to {high}', other: '{low} gave their {n} best cards to {high}' },
       bestMine: { one: 'You gave {cards} to {high}', other: 'You gave {cards} to {high}' },
       bestToMe: { one: '{low} gave you {cards}', other: '{low} gave you {cards}' },

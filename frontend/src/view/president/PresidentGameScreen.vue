@@ -35,7 +35,7 @@ import { seatPositions } from '../../model/table/seatRing';
 import { rematchButtonFor } from '../../model/RematchButton';
 import { ruleChips } from '../../model/president/chips';
 import { hintText } from '../../model/president/hint';
-import { format, ordinal } from '../../locales/format';
+import { format, ordinal, plural } from '../../locales/format';
 import {
   AnimationSpeedButton, CARD_RATIO, CardMotionLayer, defineAnchors, eventSpanMs, speedFactor, useAnimationSpeed,
   useDisplayedState, useInFlightCounts, useSeatBubbles, useTableMotion, visibleRect, type CardMotionLayerPlay, type DomQuery,
@@ -46,7 +46,8 @@ import {
   type PresidentAnchor,
 } from '../../model/president/motion';
 import { closedPile, pileView, type PileView } from '../../model/president/trickView';
-import { planExchangeFlights } from '../../model/president/exchangeMotion';
+import { exchangeLandings, planExchangeFlights } from '../../model/president/exchangeMotion';
+import { cardLabel } from '../../model/president/cardLabel';
 import { exchangeBoard } from '../../model/president/exchangeBoard';
 import { titleKey } from '../../model/president/titles';
 import type { PresidentTitleKey } from '../../locales/Messages';
@@ -419,6 +420,10 @@ async function playExchange(change: { before: PresidentState; after: PresidentSt
   // The speed as it is (0 at Instant): the summary is read for its three seconds times this.
   const speedNow = speedFactor(speed.value);
   const moves = planExchangeFlights(change.before, change.after, store.mySeat, factor.value);
+  // Before the new state is rendered (this watcher runs pre-flush): its legs are in flight, so no row says "done" early.
+  const landings = exchangeLandings(change.after, moves);
+  const legs = Object.keys(landings);
+  if (!still.value) for (const key of legs) startLeg(key);
   const opensView = change.after.phase === 'EXCHANGE_VIEW' && change.before.phase !== 'EXCHANGE_VIEW';
   if (moves.length === 0) {
     // Nothing flies: the board is on screen already, its three seconds start now.
@@ -428,6 +433,11 @@ async function playExchange(change: { before: PresidentState; after: PresidentSt
   // The DOM follows the new state before the flights are measured on it, then the same queue, speed and rings as the plays.
   await nextTick();
   const admission = await motion.play({ movements: moves });
+  // Each leg lands with its last card (never later than the counts wait); with no motion nothing was in flight.
+  for (const key of legs) {
+    if (!admission.motion) { endLeg(key, null); continue; }
+    scheduleLegEnd(key, Math.min(admission.startInMs + landings[key], PRESIDENT_TEMPO.countLagMaxMs), change.after);
+  }
   const endMs = admission.still ? PRESIDENT_TEMPO.markReducedMs
     : Math.max(PRESIDENT_TEMPO.markMs, eventSpanMs(moves) + Math.max(...moves.map(m => m.holdAfterMs)));
   if (admission.motion) {
@@ -491,6 +501,59 @@ onBeforeUnmount(clearAcknowledgement);
 // trick. A row is done only once its legs have landed: the legs still flying are kept here (a later chunk fills them
 // from the sequenced flights; empty, the board says the state as it is).
 const flyingLegs = ref<ReadonlySet<string>>(new Set());
+const legTimers = new Map<string, ReturnType<typeof setTimeout>>();
+function startLeg(key: string) {
+  flyingLegs.value = new Set([...flyingLegs.value, key]);
+  // The plan may never come (no place to fly between): the leg is over when the counts stop waiting.
+  const timer = setTimeout(() => endLeg(key, null), PRESIDENT_TEMPO.countLagMaxMs);
+  clearLegTimer(key);
+  legTimers.set(key, timer);
+}
+function clearLegTimer(key: string) {
+  const timer = legTimers.get(key);
+  if (timer) clearTimeout(timer);
+  legTimers.delete(key);
+}
+/** A leg's landing, told when its last card arrives (the announcement only when `state` is given: motion played). */
+function scheduleLegEnd(key: string, inMs: number, state: PresidentState) {
+  clearLegTimer(key);
+  legTimers.set(key, setTimeout(() => endLeg(key, state), inMs));
+}
+/** A leg lands: its row may say so, and the screen reader hears it (not under Instant, reduced motion or a reload). */
+function endLeg(key: string, announceFor: PresidentState | null) {
+  clearLegTimer(key);
+  if (!flyingLegs.value.has(key)) return;
+  const next = new Set(flyingLegs.value);
+  next.delete(key);
+  flyingLegs.value = next;
+  const text = announceFor ? legAnnouncement(key, announceFor) : null;
+  if (text) announcements.announce(text);
+}
+onBeforeUnmount(() => { legTimers.forEach(clearTimeout); legTimers.clear(); });
+const listFormat = new Intl.ListFormat('en', { type: 'conjunction' });
+/** What a leg that has landed says, from the state that sent it (the cards by name in my own pair only). */
+function legAnnouncement(key: string, state: PresidentState): string | null {
+  const [pairKey, leg] = key.split(':');
+  const pair = state.exchange.find(p => `${p.high}-${p.low}` === pairKey);
+  if (!pair || (leg !== 'best' && leg !== 'back')) return null;
+  const asLow = pair.low === store.mySeat;
+  const mine = asLow || pair.high === store.mySeat;
+  const faces = !mine ? [] : leg === 'best' ? (asLow ? state.given : state.received) : (asLow ? state.received : state.given);
+  const cards = faces.length > 0
+    ? listFormat.format(faces.slice(0, pair.count).map(c => format(ui.announce.card, { card: cardLabel(c, ui, false).toLowerCase() })))
+    : null;
+  const low = displayName(pair.low);
+  const high = displayName(pair.high);
+  const say = ui.announce;
+  if (leg === 'best') {
+    if (cards && asLow) return plural(say.bestMine, pair.count, { high, cards });
+    if (cards) return plural(say.bestToMe, pair.count, { low, cards });
+    return plural(say.best, pair.count, { low, high });
+  }
+  if (cards && !asLow) return plural(say.backMine, pair.count, { low, cards });
+  if (cards) return plural(say.backToMe, pair.count, { high, cards });
+  return plural(say.back, pair.count, { high, low });
+}
 const board = computed(() => {
   const g = shown.value;
   return g ? exchangeBoard(g, store.mySeat, flyingLegs.value) : null;
