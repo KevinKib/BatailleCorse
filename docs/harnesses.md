@@ -56,6 +56,14 @@ Actions R1 and R2 of `docs/architecture/new-game-retrospective-three-men-morris.
 | Each plan invented its own names for the same things (F5); one game had four identifiers | One kebab-case game id and its derived forms (`<pkg>`, `<Pascal>`, `<camel>`) for every layer, legacy names listed, choices to confirm listed | `docs/architecture/game-conventions.md` |
 | Shared extension points forgotten silently (F6) and `context-map.md` / `CLAUDE.md` behind (F9) | Executable checklist: PR order with one entry PR, every shared file with "fails if forgotten" or "silent", tests, determinism seam, TDD commit order, docs; context map and game list refreshed; one pointer line in `CLAUDE.md` | `docs/architecture/add-a-game.md`, `docs/architecture/context-map.md`, `CLAUDE.md` |
 
+## 2026-10-24: agents run only the Cypress specs of their feature
+
+Priority 1 of #312, from `docs/architecture/e2e-cypress-report.md`.
+
+| Friction | Fix | Where |
+|---|---|---|
+| Cypress is 26 % of agents' active time (42 % with stack waits) and caught no regression after the fact; agents replayed whole spec families | An agent runs only the specs of the feature it touched (those its brief names as new or updated), once; a failing spec is rerun alone at most once to tell a load flake from a real failure; a whole family (all `president-*`, all `kobo-*`) is replayed only by the integration chunk of a plan or when the owner asks; the report lists the specs run and the total Cypress time. No e2e coverage is deleted | `CLAUDE.md` (Tests section), `docs/architecture/e2e-cypress-report.md` (next steps) |
+
 ## Inventory (versioned in this project)
 
 | Item | Role |
