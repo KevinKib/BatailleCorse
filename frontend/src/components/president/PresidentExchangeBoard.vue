@@ -41,7 +41,7 @@ const barShown = () => props.reading !== null && !props.still && props.reading.d
 
 <template>
   <section class="exchange-board" :class="{ 'exchange-board--still': still }" data-test="exchange-board" role="region"
-           :aria-label="text.title">
+           :aria-label="text.title" :style="{ '--rows': board.rows.length }">
     <header class="head">
       <h3 class="title" data-test="board-title">{{ text.title }}</h3>
       <p v-if="board.neutral" class="neutral" data-test="board-neutral">{{ text.neutral }}</p>
@@ -121,11 +121,14 @@ const barShown = () => props.reading !== null && !props.still && props.reading.d
 .seen--off { visibility: hidden; }
 .rows {
   flex: 1 1 auto; min-height: 0; margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 2px;
-  overflow-y: auto; overscroll-behavior: contain;
+  overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain;
 }
 .row {
-  position: relative; flex: none; display: grid; grid-template-columns: minmax(0, 1fr) auto auto minmax(0, 1fr) 16px; align-items: center;
-  column-gap: 4px; min-height: 22px; font-size: 0.65rem; color: rgba(255, 255, 255, 0.75);
+  /* The rows share the room the board has: one line each, more or less airy, never past 40 px. */
+  --row-h: clamp(22px, calc((100cqh - 46px) / var(--rows, 2)), 40px);
+  --card-h: clamp(17px, calc(var(--row-h) - 6px), 30px);
+  position: relative; flex: none; display: grid; grid-template-columns: minmax(0, 1fr) auto auto minmax(0, 1fr) auto; align-items: center;
+  column-gap: 4px; min-height: var(--row-h); font-size: clamp(10.4px, calc(var(--row-h) * 0.4), 14.5px); color: rgba(255, 255, 255, 0.75);
 }
 .row--mine { color: #fff; font-weight: 700; }
 .sentence {
@@ -135,17 +138,19 @@ const barShown = () => props.reading !== null && !props.still && props.reading.d
 .seat { display: flex; flex-direction: column; min-width: 0; line-height: 1.05; }
 .seat--low { align-items: flex-end; text-align: right; }
 .name, .rank { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
-.rank { font-size: 0.55rem; font-weight: 400; color: rgba(255, 255, 255, 0.55); }
+.rank { font-size: 0.85em; font-weight: 400; color: rgba(255, 255, 255, 0.55); }
 .leg { display: inline-flex; align-items: center; gap: 2px; min-width: 0; }
 .leg--dim { opacity: 0.55; }
-.choosing { font-size: 0.6rem; font-weight: 400; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.arrow { font-size: 0.5rem; color: var(--gold); }
+.choosing { font-size: 0.92em; font-weight: 400; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.arrow { font-size: 0.8em; color: var(--gold); }
 .cards { display: inline-flex; }
-.cards :deep(.playing_card) { display: block; width: 12px; height: 17px; }
-.cards :deep(.playing_card:nth-child(n + 3)) { margin-left: -6px; }
+/* A leg of four cards stays under 40 px on a phone: the cards past the second overlap by half. */
+.cards :deep(.playing_card) { display: block; height: var(--card-h); width: calc(var(--card-h) * 0.7); }
+.cards :deep(.playing_card:nth-child(n + 3)) { margin-left: calc(var(--card-h) * -0.35); }
 .mark {
-  box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px;
-  border-radius: 50%; border: 1px dashed rgba(255, 255, 255, 0.55); font-size: 0.5rem;
+  box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;
+  width: clamp(14px, calc(var(--row-h) * 0.55), 20px); height: clamp(14px, calc(var(--row-h) * 0.55), 20px);
+  border-radius: 50%; border: 1px dashed rgba(255, 255, 255, 0.55); font-size: 0.7em;
 }
 .mark--done { border: 1px solid rgb(var(--accent-positive-rgb)); background: rgba(var(--accent-positive-rgb), 0.2); color: rgb(var(--accent-positive-rgb)); }
 .mark--returning { border-style: solid; }
@@ -160,13 +165,8 @@ const barShown = () => props.reading !== null && !props.still && props.reading.d
 /* Wide: bigger rows and cards. */
 @media (min-width: 768px) {
   .title { font-size: 0.7rem; }
-  .row { min-height: 26px; font-size: 0.75rem; grid-template-columns: minmax(0, 1fr) auto auto minmax(0, 1fr) 18px; column-gap: 8px; }
-  .rank { font-size: 0.6rem; }
-  .choosing { font-size: 0.7rem; }
+  .row { grid-template-columns: minmax(0, 1fr) auto auto minmax(0, 1fr) auto; column-gap: 8px; }
   .neutral { font-size: 0.7rem; }
-  .cards :deep(.playing_card) { width: 14px; height: 20px; }
-  .cards :deep(.playing_card:nth-child(n + 3)) { margin-left: -7px; }
-  .mark { width: 16px; height: 16px; }
 }
 /* Too little height for the title: it stays for assistive technology only. */
 @container exchange-board (max-height: 79px) {

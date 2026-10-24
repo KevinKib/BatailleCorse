@@ -73,8 +73,14 @@ function browserPass() {
           cy.get('[data-test="exchange-received"]')
             .should('have.text', 'Carol gave you their 2 best cards. They are tagged in your hand.');
           cy.get('[data-test="exchange-instruction"]').should('have.text', 'Choose 2 cards to give to Carol.');
-          cy.get('[data-test="exchange-pair"]').should('have.length', 1)
-            .and('have.text', 'Alice and Carol: 2 cards, pending');
+          // The pair is the board's, in the pile's slot (the panel no longer lists it).
+          cy.get('[data-test="exchange-pair"]').should('not.exist');
+          cy.get('.table-center [data-test="exchange-board"]').should('be.visible');
+          cy.get('[data-test="board-row"]').should('have.length', 1);
+          cy.get('[data-test="board-low"]').should('contain.text', 'Carol');
+          cy.get('[data-test="board-high"]').should('contain.text', 'Alice');
+          cy.get('[data-test="board-back"]').should('have.text', 'You choose 2');
+          cy.get('[data-test="board-row"] [data-test="board-best"] img').should('have.length', 2);
           cy.get('[data-test^="hand-card-"]').should('have.length', 20);
           // The two cards that came from the Scum wear a visible tag and nothing else does.
           cy.get('[data-received="true"]').should('have.length', 2);
@@ -156,7 +162,10 @@ function browserPass() {
           cy.get('[data-test="exchange-role"]').should('have.text', 'You are the Scum');
           cy.get('[data-test="exchange-instruction"]')
             .should('have.text', 'Your 2 best cards went to Bob. Waiting for them to give 2 back.');
-          cy.get('[data-test="exchange-pair"]').should('have.text', 'Bob and Alice: 2 cards, pending');
+          cy.get('[data-test="exchange-pair"]').should('not.exist');
+          cy.get('[data-test="board-low"]').should('contain.text', 'Alice');
+          cy.get('[data-test="board-high"]').should('contain.text', 'Bob');
+          cy.get('[data-test="board-back"]').should('have.text', 'Bob is choosing 2');
           cy.get('[data-test="exchange-give"]').should('not.exist');
           cy.get('[data-test="exchange-suggest"]').should('not.exist');
           cy.get('[data-test^="hand-card-"]').should('have.length', 15);

@@ -425,7 +425,8 @@ async function playExchange(change: { before: PresidentState; after: PresidentSt
     if (opensView) armAcknowledgement(0, speedNow);
     return;
   }
-  // Same queue, speed and rings as the plays.
+  // The DOM follows the new state before the flights are measured on it, then the same queue, speed and rings as the plays.
+  await nextTick();
   const admission = await motion.play({ movements: moves });
   const endMs = admission.still ? PRESIDENT_TEMPO.markReducedMs
     : Math.max(PRESIDENT_TEMPO.markMs, eventSpanMs(moves) + Math.max(...moves.map(m => m.holdAfterMs)));
@@ -948,7 +949,7 @@ const rematchButton = computed(() =>
   .seat-slot { position: static; transform: none; min-width: 0; --seat-label-max: 5.5rem; }
   .my-zone { padding-top: var(--space-1); }
   .table-center {
-    position: relative; transform: none; width: auto; flex: 1 1 auto; display: flex; align-items: center; justify-content: center;
+    position: relative; left: auto; bottom: auto; transform: none; width: auto; flex: 1 1 auto; display: flex; align-items: center; justify-content: center;
     padding: var(--space-1) var(--space-2);
   }
 }

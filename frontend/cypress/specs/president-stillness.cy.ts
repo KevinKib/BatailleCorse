@@ -2,7 +2,7 @@
 // and goes never moves the seats, the pile, my plate, my hand or the buttons by more than 1 px, on a phone and on a
 // wide screen. The probe (support/presidentStillness.ts) records the boxes of those regions before and after each change
 // of state: a selection, my turn starting and ending, a pass, a play, the closing badge, a seat going out, the equal
-// play chain and its Complete button, the end of a round, the exchange and its recap.
+// play chain and its Complete button, the end of a round, the exchange and its board.
 import {
   awaitState, hostLobby, joinGuests, noHorizontalScroll, scriptedPass, scriptedPlay, scriptedReady, threePlayerDeal,
 } from '../support/presidentRoom';
@@ -132,8 +132,9 @@ SCREENS.forEach(([width, height]) => {
   });
 });
 
-// The end of a round, the exchange and its recap (3 players on the fixed deals of president-exchange): the felt keeps
-// its size when the round sheet takes the place of my zone, when the exchange panel does, and when the recap comes.
+// The end of a round and the exchange with its board (3 players on the fixed deals of president-exchange): the felt keeps
+// its size when the round sheet takes the place of my zone, when the exchange panel does, when the board comes into the
+// pile's slot with the exchange, and when it leaves with the first trick.
 const SUITS = ['HEART', 'DIAMOND', 'CLUB'];
 function playTriple(rank: string) {
   myTurn();
@@ -142,7 +143,7 @@ function playTriple(rank: string) {
 }
 
 SCREENS.forEach(([width, height]) => {
-  scenario(`holds still through the end of a round, the exchange and its recap at ${width}x${height}`, () => {
+  scenario(`holds still through the end of a round and the exchange board at ${width}x${height}`, () => {
     cy.viewport(width, height);
     hostLobby('Alice').then((id) => {
       joinGuests(id, ['Bob', 'Carol']).then(([bob, carol]) => {
@@ -169,22 +170,30 @@ SCREENS.forEach(([width, height]) => {
         stillAcross('the round is over: the sheet', () => { scriptedPlay(bob, 'ACE', 2); },
           () => { cy.get('[data-test="sheet-slot"] [data-test="round-over"]', { timeout: 120000 }).should('be.visible'); });
         cy.screenshot(`president-still-sheet-${width}x${height}`, { capture: 'viewport' });
-        stillAcross('the exchange panel replaces the sheet', () => {
+        stillAcross('the exchange panel replaces the sheet and the board comes into the pile\'s slot', () => {
           cy.get('[data-test="ready"]').click();
           scriptedReady(bob);
           scriptedReady(carol);
-        }, () => { cy.get('[data-test="exchange-panel"]', { timeout: 120000 }).should('be.visible'); });
+        }, () => {
+          cy.get('[data-test="exchange-panel"]', { timeout: 120000 }).should('be.visible');
+          cy.get('.table-center [data-test="exchange-board"]').should('be.visible');
+        });
         cy.screenshot(`president-still-exchange-${width}x${height}`, { capture: 'viewport' });
         awaitState(bob, 'the exchange is pending', (s) => s.phase === 'EXCHANGE' && s.exchange.length === 1);
         stillAcross('choosing the cards to give', () => { cy.get('[data-test="exchange-suggest"]').click(); },
           () => { cy.get('[aria-pressed="true"]').should('have.length', 2); });
-        stillAcross('the exchange is done', () => { cy.get('[data-test="exchange-give"]').should('not.be.disabled').click(); },
-          () => { cy.get('[data-test="exchange-panel"]').should('not.exist'); cy.get('[data-test="phase-text"]', { timeout: 10000 }).should('have.text', 'Carol is playing'); });
-        stillAcross('the recap of the exchange comes in', () => { /* it follows the flights */ },
-          () => { cy.get('[data-test="exchange-recap"]', { timeout: 20000 }).should('be.visible'); });
-        cy.screenshot(`president-still-recap-${width}x${height}`, { capture: 'viewport' });
-        stillAcross('closing the recap', () => { cy.get('[data-test="recap-close"]').click({ force: true }); },
-          () => { cy.get('[data-test="exchange-recap"]').should('not.exist'); });
+        stillAcross('the exchange is given back: the view opens on the same board', () => { cy.get('[data-test="exchange-give"]').should('not.be.disabled').click(); },
+          () => {
+            cy.get('[data-test="exchange-panel"]').should('not.exist');
+            cy.get('.table-center [data-test="exchange-board"]').should('be.visible');
+            cy.get('[data-test="board-seen"]', { timeout: 20000 }).should('not.have.class', 'seen--off');
+          });
+        cy.screenshot(`president-still-board-${width}x${height}`, { capture: 'viewport' });
+        stillAcross('Seen: the board leaves with the first trick', () => { cy.get('[data-test="board-seen"]').click({ force: true }); },
+          () => {
+            cy.get('[data-test="exchange-board"]', { timeout: 10000 }).should('not.exist');
+            cy.get('[data-test="phase-text"]', { timeout: 10000 }).should('have.text', 'Carol is playing');
+          });
         noHorizontalScroll();
         expectNothingMoved();
       });
