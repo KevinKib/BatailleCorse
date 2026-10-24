@@ -244,7 +244,7 @@ The most-run specs were geometry guards under construction: `president-table-fit
 
 ## 6. Proposed next steps
 
-1. Track these recommendations as a checklist: #312.
+1. Track these recommendations as a checklist: #312. Rule applied: see CLAUDE.md.
 2. Start with items 2, 3 and 4 (stack speed and grace): they cut the environmental failures that dominate the
    cost, and the CI subset (item 1) depends on a stack that starts reliably.
 3. Then the CI subset (item 1), with retries and logging (item 5).
