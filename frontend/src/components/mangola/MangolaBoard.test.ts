@@ -270,17 +270,17 @@ describe('MangolaBoard during a sowing animation', () => {
     it('slides the hand in the time of the speed', async () => {
       const props = { hand: { pit: 8, seeds: 2 }, activePit: 8, animating: true };
       const w = board({ ...props, speed: 'normal' });
-      expect(w.get('[data-test="sowing-hand"]').attributes('style')).toContain('180ms');
+      expect(w.get('[data-test="sowing-hand"]').attributes('style')).toContain('125ms');
       await w.setProps({ speed: 'fast' });
-      expect(w.get('[data-test="sowing-hand"]').attributes('style')).toContain('90ms');
+      expect(w.get('[data-test="sowing-hand"]').attributes('style')).toContain('62.5ms');
     });
 
     it('times the gold flash of a changing count with the speed, and none at all when instant', async () => {
       const root = (w: ReturnType<typeof board>) => w.get('[data-test="mangola-board"]').attributes('style');
       const w = board({ speed: 'normal' });
-      expect(root(w)).toContain('--mg-flash: 540ms');
+      expect(root(w)).toContain('--mg-flash: 375ms');
       await w.setProps({ speed: 'fast' });
-      expect(root(w)).toContain('--mg-flash: 270ms');
+      expect(root(w)).toContain('--mg-flash: 187.5ms');
       await w.setProps({ speed: 'instant' });
       expect(root(w)).toContain('--mg-flash: 0ms');
     });
