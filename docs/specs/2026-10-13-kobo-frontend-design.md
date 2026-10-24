@@ -288,6 +288,10 @@ lands on the discard pile, the existing card sound on discard growth (Bullshit p
 under `prefers-reduced-motion` (sound keeps its own toggle). The end screen waits for nothing but its
 short delay. No animation of swaps beyond the highlight.
 
+> Note (2026-10-24), history kept as written: `usePileAnimation` is gone (Bullshit's flights moved onto the shared
+> animation module); Kobo's travelling cards (K7b, then the shared module) are described in
+> `docs/architecture/card-animation.md`.
+
 ## 10. Testing
 
 - **Vitest**: `interaction.ts` (every row of section 5.4), `slotPosition`, the store reducer (version

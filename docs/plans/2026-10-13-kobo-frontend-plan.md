@@ -192,6 +192,10 @@ Read-only rendering, no action yet. `ui-change` before/after.
 Status: K7b done in PR #206 (`feat/kobo-animations`, ready for review): the motion, announcement and
 sound items below. K7a (click actions) was merged earlier (#201).
 
+> Note (2026-10-24), history kept as written: `KoboMotionLayer` and `model/kobo/queue.ts` are gone. Kobo's flights
+> are played by the shared animation module (`frontend/src/animation/`: `CardMotionLayer`, `useTableMotion`, the
+> tempo queue), see `docs/architecture/card-animation.md`; `model/kobo/motion.ts` and `tempo.ts` stay Kobo's.
+
 - [x] Travelling cards (design B of the owner's canvas): `model/kobo/motion.ts` plans an event into
       movements (pure, tested, each under 700 ms); `KoboMotionLayer` plays them as copies over the table
       (fixed layer, no pointer events, hidden from assistive technology, skipped when a place cannot be

@@ -662,7 +662,9 @@ titles, a revolution active, an exchange pending). The options are kept for cont
       final totals. The shared parts are extracted into shared components, CSS tokens and models
       (`components/table/`, `model/table/`, `:root` tokens), never copied; Kobo's and Mangola's look and
       behaviour do not change (their tests and Cypress specs stay green). A new visual is first looked for in
-      the other tables; only what President alone needs is written for it.
+      the other tables; only what President alone needs is written for it. (Note, 2026-10-24: the shared motion
+      pieces of `components/table/` and `model/table/` have since moved into `frontend/src/animation/`; see
+      `docs/architecture/card-animation.md`.)
    3. **Option B, the grammar of a move.** A card that moves waits a moment on its source (dashed ring), flies
       about 700 ms (an opponent: hold 180 ms, flight 700 ms, hold after 250 ms; me: 100 + 480 + 250 ms), lands
       with a plain ring on its destination; an opponent's move also gets a faint dotted arrow. Events that come

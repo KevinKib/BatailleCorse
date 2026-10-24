@@ -3,6 +3,13 @@
 Written by Claude Opus 5.5 on `origin/main` at `93b892c` (2026-10-21). Plan:
 `docs/plans/2026-10-21-shared-card-animation-plan.md`. Tracking: roadmap issue #1.
 
+**Status (2026-10-24): implemented** (chunks 0 to 3: #297, #301, #302, #303; integration: #304). Sections 3 and 6
+describe the code as it was before the move: `model/table/*`, `components/table/CardMotionLayer.vue`,
+`motionTarget.ts`, `KoboMotionLayer.vue`, `model/kobo/queue.ts` and `usePileAnimation.ts` no longer exist. The code as
+it is: `frontend/src/animation/README.md` and `docs/architecture/card-animation.md`. Two refinements of 5.2 landed in
+the chunks: `useTableMotion` gained `beforePlay` (President's held pile, awaited after admission) and `MotionPlan` is
+exported from `core/movement.ts`.
+
 ## 1. Request
 
 Owner, 2026-10-21: "the animation execution of the President game is an example for many other games; modularize

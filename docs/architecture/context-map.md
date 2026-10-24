@@ -237,6 +237,10 @@ Spec: `docs/specs/2026-10-12-backend-mutualization-design.md`. The presentation 
 - **`SessionToken(String)` is tolerant** (#155): a value that is not a UUID becomes a name-based (version 3) UUID that no seat holds, so a malformed token is an unknown token everywhere (REST 403, WebSocket commands ignored) instead of an exception.
 - **Shared test kit** (`src/test/.../presentation/support`): `RecordingMessaging` (records seat, game and token messages), `StompTestClient` (STOMP client for the integration tests, with `Frames` that wait on received frames), `SessionTable` (in-memory repository, `SessionService` and `RecordingMessaging` over given factories).
 
+## Shared frontend card animation
+
+Not a backend context, listed here so that a new game finds it: the pictures of a card table (flights, rings, arrows, the burst queue, the speed setting, reduced motion, texts that follow the picture) live once in `frontend/src/animation/` (`core/` pure, `dom/` measuring, `vue/` the layer and composables, one barrel), used by Kobo, President and Bullshit; Mangola uses only its speed setting; Bataille Corse and Morris keep their own (spec `docs/specs/2026-10-21-shared-card-animation-design.md`). Map: `docs/architecture/card-animation.md`; usage guide: `frontend/src/animation/README.md`. The backend is unaware of it: the picture never gates the state (Bataille Corse's `awaitAnimation` excepted).
+
 ## Relationship
 
 `sessionmanagement` has a **Conformist** relationship to the shared kernel: it speaks the kernel's language (`Game`, `GameFactory`, `GameId`, `PlayerId`) without translation, and never a concrete game's. The game contexts implement the kernel and know nothing of sessions; their `presentation` layer is the only place where a game meets the session core.
