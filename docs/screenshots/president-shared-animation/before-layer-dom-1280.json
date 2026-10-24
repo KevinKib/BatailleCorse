@@ -1,0 +1,566 @@
+{
+  "table": {
+    "layer": {
+      "marks": [],
+      "ghosts": [],
+      "arrows": 0,
+      "zIndex": "1600"
+    },
+    "table": {
+      "phase": "Your turn",
+      "by": null,
+      "closed": null,
+      "count": null,
+      "note": null,
+      "seats": [
+        "1:17 cards",
+        "2:17 cards"
+      ],
+      "pile": null
+    }
+  },
+  "my-play": {
+    "layer": {
+      "marks": [
+        {
+          "role": "from",
+          "rect": {
+            "left": 956.9,
+            "top": 415.7,
+            "width": 69,
+            "height": 98.3
+          },
+          "border": "1px dashed color(srgb 0.960784 0.784314 0.258824 / 0.95)",
+          "shadow": "none",
+          "radius": "6px"
+        },
+        {
+          "role": "to",
+          "rect": {
+            "left": 488.6,
+            "top": 205.6,
+            "width": 72.4,
+            "height": 103.2
+          },
+          "border": "1px solid color(srgb 0.960784 0.784314 0.258824 / 0.95)",
+          "shadow": "none",
+          "radius": "6px"
+        }
+      ],
+      "ghosts": [
+        {
+          "card": "",
+          "animations": [
+            {
+              "keyframes": [
+                {
+                  "offset": 0,
+                  "transform": "translate(958.906px, 417.703px) scale(1)",
+                  "easing": "cubic-bezier(0.2, 0.8, 0.2, 1)"
+                },
+                {
+                  "offset": 0.7,
+                  "transform": "translate(490.562px, 207.611px) scale(1.05216)",
+                  "easing": "linear"
+                },
+                {
+                  "offset": 1,
+                  "transform": "translate(490.562px, 207.611px) scale(1.05216)",
+                  "easing": "linear"
+                }
+              ],
+              "delay": 100,
+              "duration": 730,
+              "fill": "both"
+            }
+          ]
+        }
+      ],
+      "arrows": 0,
+      "zIndex": "1600"
+    },
+    "table": {
+      "phase": "Bob is playing",
+      "by": null,
+      "closed": null,
+      "count": null,
+      "note": null,
+      "seats": [
+        "1:17 cards",
+        "2:17 cards"
+      ],
+      "pile": "trick-cards"
+    }
+  },
+  "my-play-landed": {
+    "layer": {
+      "marks": [],
+      "ghosts": [],
+      "arrows": 0,
+      "zIndex": "1600"
+    },
+    "table": {
+      "phase": "Bob is playing",
+      "by": "You played",
+      "closed": null,
+      "count": "1 card in the trick",
+      "note": null,
+      "seats": [
+        "1:17 cards",
+        "2:17 cards"
+      ],
+      "pile": "trick-cards"
+    }
+  },
+  "cut": {
+    "layer": {
+      "marks": [
+        {
+          "role": "from",
+          "rect": {
+            "left": 378.9,
+            "top": 154.6,
+            "width": 34.8,
+            "height": 41.1
+          },
+          "border": "1px dashed color(srgb 0.960784 0.784314 0.258824 / 0.95)",
+          "shadow": "none",
+          "radius": "6px"
+        },
+        {
+          "role": "to",
+          "rect": {
+            "left": 488.6,
+            "top": 205.6,
+            "width": 72.4,
+            "height": 103.2
+          },
+          "border": "1px solid color(srgb 0.960784 0.784314 0.258824 / 0.95)",
+          "shadow": "none",
+          "radius": "6px"
+        }
+      ],
+      "ghosts": [
+        {
+          "card": "",
+          "animations": [
+            {
+              "keyframes": [
+                {
+                  "offset": 0,
+                  "transform": "translate(380.913px, 156.569px) scale(1)",
+                  "easing": "cubic-bezier(0.2, 0.8, 0.2, 1)"
+                },
+                {
+                  "offset": 0.7,
+                  "transform": "translate(490.562px, 215.958px) scale(2.22172)",
+                  "easing": "linear"
+                },
+                {
+                  "offset": 1,
+                  "transform": "translate(490.562px, 215.958px) scale(2.22172)",
+                  "easing": "linear"
+                }
+              ],
+              "delay": 180,
+              "duration": 950,
+              "fill": "both"
+            }
+          ]
+        },
+        {
+          "card": "",
+          "animations": [
+            {
+              "keyframes": [
+                {
+                  "offset": 0,
+                  "transform": "translate(490.562px, 207.609px) scale(1)",
+                  "easing": "cubic-bezier(0.2, 0.8, 0.2, 1)"
+                },
+                {
+                  "offset": 0.9,
+                  "transform": "translate(343.374px, 158.408px) scale(0.321699)",
+                  "easing": "linear"
+                },
+                {
+                  "offset": 1,
+                  "transform": "translate(343.374px, 158.408px) scale(0.321699)",
+                  "easing": "linear"
+                }
+              ],
+              "delay": 1930,
+              "duration": 660,
+              "fill": "both"
+            },
+            {
+              "keyframes": [
+                {
+                  "offset": 0,
+                  "opacity": "0",
+                  "easing": "linear"
+                },
+                {
+                  "offset": 1,
+                  "opacity": "0",
+                  "easing": "linear"
+                }
+              ],
+              "delay": 0,
+              "duration": 1930,
+              "fill": "none"
+            }
+          ]
+        },
+        {
+          "card": "",
+          "animations": [
+            {
+              "keyframes": [
+                {
+                  "offset": 0,
+                  "transform": "translate(490.562px, 207.609px) scale(1)",
+                  "easing": "cubic-bezier(0.2, 0.8, 0.2, 1)"
+                },
+                {
+                  "offset": 0.9,
+                  "transform": "translate(343.374px, 158.408px) scale(0.321699)",
+                  "easing": "linear"
+                },
+                {
+                  "offset": 1,
+                  "transform": "translate(343.374px, 158.408px) scale(0.321699)",
+                  "easing": "linear"
+                }
+              ],
+              "delay": 2020,
+              "duration": 660,
+              "fill": "both"
+            },
+            {
+              "keyframes": [
+                {
+                  "offset": 0,
+                  "opacity": "0",
+                  "easing": "linear"
+                },
+                {
+                  "offset": 1,
+                  "opacity": "0",
+                  "easing": "linear"
+                }
+              ],
+              "delay": 0,
+              "duration": 1930,
+              "fill": "none"
+            }
+          ]
+        }
+      ],
+      "arrows": 1,
+      "zIndex": "1600"
+    },
+    "table": {
+      "phase": "Bob is playing",
+      "by": "You played",
+      "closed": null,
+      "count": "1 card in the trick",
+      "note": null,
+      "seats": [
+        "1:17 cards",
+        "2:17 cards"
+      ],
+      "pile": "trick-cards"
+    }
+  },
+  "cut-badge": {
+    "layer": {
+      "marks": [
+        {
+          "role": "from",
+          "rect": {
+            "left": 378.9,
+            "top": 154.6,
+            "width": 34.8,
+            "height": 41.1
+          },
+          "border": "1px dashed color(srgb 0.960784 0.784314 0.258824 / 0.95)",
+          "shadow": "none",
+          "radius": "6px"
+        },
+        {
+          "role": "to",
+          "rect": {
+            "left": 488.6,
+            "top": 205.6,
+            "width": 72.4,
+            "height": 103.2
+          },
+          "border": "1px solid color(srgb 0.960784 0.784314 0.258824 / 0.95)",
+          "shadow": "none",
+          "radius": "6px"
+        }
+      ],
+      "ghosts": [
+        {
+          "card": "",
+          "animations": [
+            {
+              "keyframes": [
+                {
+                  "offset": 0,
+                  "transform": "translate(380.913px, 156.569px) scale(1)",
+                  "easing": "cubic-bezier(0.2, 0.8, 0.2, 1)"
+                },
+                {
+                  "offset": 0.7,
+                  "transform": "translate(490.562px, 215.958px) scale(2.22172)",
+                  "easing": "linear"
+                },
+                {
+                  "offset": 1,
+                  "transform": "translate(490.562px, 215.958px) scale(2.22172)",
+                  "easing": "linear"
+                }
+              ],
+              "delay": 180,
+              "duration": 950,
+              "fill": "both"
+            }
+          ]
+        },
+        {
+          "card": "",
+          "animations": [
+            {
+              "keyframes": [
+                {
+                  "offset": 0,
+                  "transform": "translate(490.562px, 207.609px) scale(1)",
+                  "easing": "cubic-bezier(0.2, 0.8, 0.2, 1)"
+                },
+                {
+                  "offset": 0.9,
+                  "transform": "translate(343.374px, 158.408px) scale(0.321699)",
+                  "easing": "linear"
+                },
+                {
+                  "offset": 1,
+                  "transform": "translate(343.374px, 158.408px) scale(0.321699)",
+                  "easing": "linear"
+                }
+              ],
+              "delay": 1930,
+              "duration": 660,
+              "fill": "both"
+            },
+            {
+              "keyframes": [
+                {
+                  "offset": 0,
+                  "opacity": "0",
+                  "easing": "linear"
+                },
+                {
+                  "offset": 1,
+                  "opacity": "0",
+                  "easing": "linear"
+                }
+              ],
+              "delay": 0,
+              "duration": 1930,
+              "fill": "none"
+            }
+          ]
+        },
+        {
+          "card": "",
+          "animations": [
+            {
+              "keyframes": [
+                {
+                  "offset": 0,
+                  "transform": "translate(490.562px, 207.609px) scale(1)",
+                  "easing": "cubic-bezier(0.2, 0.8, 0.2, 1)"
+                },
+                {
+                  "offset": 0.9,
+                  "transform": "translate(343.374px, 158.408px) scale(0.321699)",
+                  "easing": "linear"
+                },
+                {
+                  "offset": 1,
+                  "transform": "translate(343.374px, 158.408px) scale(0.321699)",
+                  "easing": "linear"
+                }
+              ],
+              "delay": 2020,
+              "duration": 660,
+              "fill": "both"
+            },
+            {
+              "keyframes": [
+                {
+                  "offset": 0,
+                  "opacity": "0",
+                  "easing": "linear"
+                },
+                {
+                  "offset": 1,
+                  "opacity": "0",
+                  "easing": "linear"
+                }
+              ],
+              "delay": 0,
+              "duration": 1930,
+              "fill": "none"
+            }
+          ]
+        }
+      ],
+      "arrows": 1,
+      "zIndex": "1600"
+    },
+    "table": {
+      "phase": "Bob is playing",
+      "by": null,
+      "closed": "Closed by a 2Bob leads",
+      "count": "2 cards in the trick",
+      "note": "Bob closed the trick with a 2.",
+      "seats": [
+        "1:16 cards",
+        "2:17 cards"
+      ],
+      "pile": "trick-cards"
+    }
+  },
+  "sweep": {
+    "layer": {
+      "marks": [],
+      "ghosts": [
+        {
+          "card": "",
+          "animations": [
+            {
+              "keyframes": [
+                {
+                  "offset": 0,
+                  "transform": "translate(490.562px, 207.609px) scale(1)",
+                  "easing": "cubic-bezier(0.2, 0.8, 0.2, 1)"
+                },
+                {
+                  "offset": 0.9,
+                  "transform": "translate(343.374px, 158.408px) scale(0.321699)",
+                  "easing": "linear"
+                },
+                {
+                  "offset": 1,
+                  "transform": "translate(343.374px, 158.408px) scale(0.321699)",
+                  "easing": "linear"
+                }
+              ],
+              "delay": 1930,
+              "duration": 660,
+              "fill": "both"
+            },
+            {
+              "keyframes": [
+                {
+                  "offset": 0,
+                  "opacity": "0",
+                  "easing": "linear"
+                },
+                {
+                  "offset": 1,
+                  "opacity": "0",
+                  "easing": "linear"
+                }
+              ],
+              "delay": 0,
+              "duration": 1930,
+              "fill": "none"
+            }
+          ]
+        },
+        {
+          "card": "",
+          "animations": [
+            {
+              "keyframes": [
+                {
+                  "offset": 0,
+                  "transform": "translate(490.562px, 207.609px) scale(1)",
+                  "easing": "cubic-bezier(0.2, 0.8, 0.2, 1)"
+                },
+                {
+                  "offset": 0.9,
+                  "transform": "translate(343.374px, 158.408px) scale(0.321699)",
+                  "easing": "linear"
+                },
+                {
+                  "offset": 1,
+                  "transform": "translate(343.374px, 158.408px) scale(0.321699)",
+                  "easing": "linear"
+                }
+              ],
+              "delay": 2020,
+              "duration": 660,
+              "fill": "both"
+            },
+            {
+              "keyframes": [
+                {
+                  "offset": 0,
+                  "opacity": "0",
+                  "easing": "linear"
+                },
+                {
+                  "offset": 1,
+                  "opacity": "0",
+                  "easing": "linear"
+                }
+              ],
+              "delay": 0,
+              "duration": 1930,
+              "fill": "none"
+            }
+          ]
+        }
+      ],
+      "arrows": 0,
+      "zIndex": "1600"
+    },
+    "table": {
+      "phase": "Bob is playing",
+      "by": null,
+      "closed": "Closed by a 2Bob leads",
+      "count": "2 cards in the trick",
+      "note": "Bob closed the trick with a 2.",
+      "seats": [
+        "1:16 cards",
+        "2:17 cards"
+      ],
+      "pile": "trick-cards"
+    }
+  },
+  "after-sweep": {
+    "layer": {
+      "marks": [],
+      "ghosts": [],
+      "arrows": 0,
+      "zIndex": "1600"
+    },
+    "table": {
+      "phase": "Bob is playing",
+      "by": null,
+      "closed": "Closed by a 2Bob leads",
+      "count": "2 cards in the trick",
+      "note": "Bob closed the trick with a 2.",
+      "seats": [
+        "1:16 cards",
+        "2:17 cards"
+      ],
+      "pile": "trick-cards trick-cards--swept"
+    }
+  }
+}

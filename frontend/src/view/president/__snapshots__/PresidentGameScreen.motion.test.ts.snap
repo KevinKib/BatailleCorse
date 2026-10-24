@@ -1,0 +1,5786 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`PresidentGameScreen pictures (characterisation) > aBurstOfClosedTricks_atInstant 1`] = `
+[
+  {
+    "layer": {
+      "arrowId": "president-arrow-head",
+      "markMs": 1600,
+      "markReducedMs": 1500,
+      "markStyle": "soft",
+    },
+  },
+  {
+    "at": 0,
+    "movements": [
+      {
+        "actor": 1,
+        "byOpponent": true,
+        "card": "CLUB_2",
+        "delayMs": 180,
+        "durationMs": 700,
+        "flip": false,
+        "from": {
+          "kind": "fanTop",
+          "seat": 1,
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 89,
+            "top": 178,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "travel",
+        "marks": [
+          {
+            "kind": "fanTop",
+            "seat": 1,
+          },
+          {
+            "index": 0,
+            "kind": "pileCard",
+          },
+        ],
+        "marksAt": [
+          {
+            "cards": 0,
+            "rect": {
+              "height": 58,
+              "left": 89,
+              "top": 178,
+              "width": 40,
+            },
+          },
+          {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 157,
+              "top": 314,
+              "width": 40,
+            },
+          },
+        ],
+        "to": {
+          "index": 0,
+          "kind": "pileCard",
+        },
+        "toAt": {
+          "cards": 1,
+          "rect": {
+            "height": 58,
+            "left": 157,
+            "top": 314,
+            "width": 40,
+          },
+        },
+        "turnDown": false,
+      },
+      {
+        "actor": 1,
+        "byOpponent": false,
+        "card": null,
+        "delayMs": 880,
+        "durationMs": 0,
+        "flip": false,
+        "from": {
+          "kind": "pile",
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 155,
+            "top": 310,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "ring",
+        "marks": [],
+        "marksAt": [],
+        "to": {
+          "kind": "seat",
+          "seat": 1,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 74.0126471646702,
+            "top": 148,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+    ],
+    "play": {
+      "marksOnly": true,
+      "startInMs": 0,
+      "still": true,
+    },
+  },
+  {
+    "at": 0,
+    "movements": [
+      {
+        "actor": 1,
+        "byOpponent": true,
+        "card": "CLUB_2",
+        "delayMs": 180,
+        "durationMs": 700,
+        "flip": false,
+        "from": {
+          "kind": "fanTop",
+          "seat": 1,
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 89,
+            "top": 178,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "travel",
+        "marks": [
+          {
+            "kind": "fanTop",
+            "seat": 1,
+          },
+          {
+            "index": 0,
+            "kind": "pileCard",
+          },
+        ],
+        "marksAt": [
+          {
+            "cards": 0,
+            "rect": {
+              "height": 58,
+              "left": 89,
+              "top": 178,
+              "width": 40,
+            },
+          },
+          {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 157,
+              "top": 314,
+              "width": 40,
+            },
+          },
+        ],
+        "to": {
+          "index": 0,
+          "kind": "pileCard",
+        },
+        "toAt": {
+          "cards": 1,
+          "rect": {
+            "height": 58,
+            "left": 157,
+            "top": 314,
+            "width": 40,
+          },
+        },
+        "turnDown": false,
+      },
+      {
+        "actor": 1,
+        "byOpponent": false,
+        "card": null,
+        "delayMs": 880,
+        "durationMs": 0,
+        "flip": false,
+        "from": {
+          "kind": "pile",
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 155,
+            "top": 310,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "ring",
+        "marks": [],
+        "marksAt": [],
+        "to": {
+          "kind": "seat",
+          "seat": 1,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 74.0126471646702,
+            "top": 148,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+    ],
+    "play": {
+      "marksOnly": true,
+      "startInMs": 0,
+      "still": true,
+    },
+  },
+  {
+    "at": 0,
+    "movements": [
+      {
+        "actor": 1,
+        "byOpponent": true,
+        "card": "CLUB_2",
+        "delayMs": 180,
+        "durationMs": 700,
+        "flip": false,
+        "from": {
+          "kind": "fanTop",
+          "seat": 1,
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 89,
+            "top": 178,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "travel",
+        "marks": [
+          {
+            "kind": "fanTop",
+            "seat": 1,
+          },
+          {
+            "index": 0,
+            "kind": "pileCard",
+          },
+        ],
+        "marksAt": [
+          {
+            "cards": 0,
+            "rect": {
+              "height": 58,
+              "left": 89,
+              "top": 178,
+              "width": 40,
+            },
+          },
+          {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 157,
+              "top": 314,
+              "width": 40,
+            },
+          },
+        ],
+        "to": {
+          "index": 0,
+          "kind": "pileCard",
+        },
+        "toAt": {
+          "cards": 1,
+          "rect": {
+            "height": 58,
+            "left": 157,
+            "top": 314,
+            "width": 40,
+          },
+        },
+        "turnDown": false,
+      },
+      {
+        "actor": 1,
+        "byOpponent": false,
+        "card": null,
+        "delayMs": 880,
+        "durationMs": 0,
+        "flip": false,
+        "from": {
+          "kind": "pile",
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 155,
+            "top": 310,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "ring",
+        "marks": [],
+        "marksAt": [],
+        "to": {
+          "kind": "seat",
+          "seat": 1,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 74.0126471646702,
+            "top": 148,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+    ],
+    "play": {
+      "marksOnly": true,
+      "startInMs": 0,
+      "still": true,
+    },
+  },
+  {
+    "at": 0,
+    "movements": [
+      {
+        "actor": 1,
+        "byOpponent": true,
+        "card": "CLUB_2",
+        "delayMs": 180,
+        "durationMs": 700,
+        "flip": false,
+        "from": {
+          "kind": "fanTop",
+          "seat": 1,
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 89,
+            "top": 178,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "travel",
+        "marks": [
+          {
+            "kind": "fanTop",
+            "seat": 1,
+          },
+          {
+            "index": 0,
+            "kind": "pileCard",
+          },
+        ],
+        "marksAt": [
+          {
+            "cards": 0,
+            "rect": {
+              "height": 58,
+              "left": 89,
+              "top": 178,
+              "width": 40,
+            },
+          },
+          {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 157,
+              "top": 314,
+              "width": 40,
+            },
+          },
+        ],
+        "to": {
+          "index": 0,
+          "kind": "pileCard",
+        },
+        "toAt": {
+          "cards": 1,
+          "rect": {
+            "height": 58,
+            "left": 157,
+            "top": 314,
+            "width": 40,
+          },
+        },
+        "turnDown": false,
+      },
+      {
+        "actor": 1,
+        "byOpponent": false,
+        "card": null,
+        "delayMs": 880,
+        "durationMs": 0,
+        "flip": false,
+        "from": {
+          "kind": "pile",
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 155,
+            "top": 310,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "ring",
+        "marks": [],
+        "marksAt": [],
+        "to": {
+          "kind": "seat",
+          "seat": 1,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 74.0126471646702,
+            "top": 148,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+    ],
+    "play": {
+      "marksOnly": true,
+      "startInMs": 0,
+      "still": true,
+    },
+  },
+  {
+    "at": 0,
+    "movements": [
+      {
+        "actor": 1,
+        "byOpponent": true,
+        "card": "CLUB_2",
+        "delayMs": 180,
+        "durationMs": 700,
+        "flip": false,
+        "from": {
+          "kind": "fanTop",
+          "seat": 1,
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 89,
+            "top": 178,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "travel",
+        "marks": [
+          {
+            "kind": "fanTop",
+            "seat": 1,
+          },
+          {
+            "index": 0,
+            "kind": "pileCard",
+          },
+        ],
+        "marksAt": [
+          {
+            "cards": 0,
+            "rect": {
+              "height": 58,
+              "left": 89,
+              "top": 178,
+              "width": 40,
+            },
+          },
+          {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 157,
+              "top": 314,
+              "width": 40,
+            },
+          },
+        ],
+        "to": {
+          "index": 0,
+          "kind": "pileCard",
+        },
+        "toAt": {
+          "cards": 1,
+          "rect": {
+            "height": 58,
+            "left": 157,
+            "top": 314,
+            "width": 40,
+          },
+        },
+        "turnDown": false,
+      },
+      {
+        "actor": 1,
+        "byOpponent": false,
+        "card": null,
+        "delayMs": 880,
+        "durationMs": 0,
+        "flip": false,
+        "from": {
+          "kind": "pile",
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 155,
+            "top": 310,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "ring",
+        "marks": [],
+        "marksAt": [],
+        "to": {
+          "kind": "seat",
+          "seat": 1,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 74.0126471646702,
+            "top": 148,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+    ],
+    "play": {
+      "marksOnly": true,
+      "startInMs": 0,
+      "still": true,
+    },
+  },
+  {
+    "at": 0,
+    "movements": [
+      {
+        "actor": 1,
+        "byOpponent": true,
+        "card": "CLUB_2",
+        "delayMs": 180,
+        "durationMs": 700,
+        "flip": false,
+        "from": {
+          "kind": "fanTop",
+          "seat": 1,
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 89,
+            "top": 178,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "travel",
+        "marks": [
+          {
+            "kind": "fanTop",
+            "seat": 1,
+          },
+          {
+            "index": 0,
+            "kind": "pileCard",
+          },
+        ],
+        "marksAt": [
+          {
+            "cards": 0,
+            "rect": {
+              "height": 58,
+              "left": 89,
+              "top": 178,
+              "width": 40,
+            },
+          },
+          {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 157,
+              "top": 314,
+              "width": 40,
+            },
+          },
+        ],
+        "to": {
+          "index": 0,
+          "kind": "pileCard",
+        },
+        "toAt": {
+          "cards": 1,
+          "rect": {
+            "height": 58,
+            "left": 157,
+            "top": 314,
+            "width": 40,
+          },
+        },
+        "turnDown": false,
+      },
+      {
+        "actor": 1,
+        "byOpponent": false,
+        "card": null,
+        "delayMs": 880,
+        "durationMs": 0,
+        "flip": false,
+        "from": {
+          "kind": "pile",
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 155,
+            "top": 310,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "ring",
+        "marks": [],
+        "marksAt": [],
+        "to": {
+          "kind": "seat",
+          "seat": 1,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 74.0126471646702,
+            "top": 148,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+    ],
+    "play": {
+      "marksOnly": true,
+      "startInMs": 0,
+      "still": true,
+    },
+  },
+  {
+    "at": 0,
+    "movements": [
+      {
+        "actor": 1,
+        "byOpponent": true,
+        "card": "DIAMOND_3",
+        "delayMs": 180,
+        "durationMs": 700,
+        "flip": false,
+        "from": {
+          "kind": "fanTop",
+          "seat": 1,
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 89,
+            "top": 178,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "travel",
+        "marks": [
+          {
+            "kind": "fanTop",
+            "seat": 1,
+          },
+          {
+            "index": 0,
+            "kind": "pileCard",
+          },
+        ],
+        "marksAt": [
+          {
+            "cards": 0,
+            "rect": {
+              "height": 58,
+              "left": 89,
+              "top": 178,
+              "width": 40,
+            },
+          },
+          {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 157,
+              "top": 314,
+              "width": 40,
+            },
+          },
+        ],
+        "to": {
+          "index": 0,
+          "kind": "pileCard",
+        },
+        "toAt": {
+          "cards": 1,
+          "rect": {
+            "height": 58,
+            "left": 157,
+            "top": 314,
+            "width": 40,
+          },
+        },
+        "turnDown": false,
+      },
+    ],
+    "play": {
+      "marksOnly": true,
+      "startInMs": 0,
+      "still": true,
+    },
+  },
+  {
+    "at": 0,
+    "look": "phase=P2 is playing | by=P1 played | binding=- | closed=- | note=- | count=1 card in the trick | pile= | cards=1/0 | seats=1:8 cards/8 2:8 cards/8 3:8 cards/8 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING | chips=After a pass: play again | recap=false | bar=true | sheet=false | end=false | round=Round 1 of 5",
+  },
+]
+`;
+
+exports[`PresidentGameScreen pictures (characterisation) > aBurstOfClosedTricks_pastTheQueueBounds 1`] = `
+[
+  {
+    "layer": {
+      "arrowId": "president-arrow-head",
+      "markMs": 1600,
+      "markReducedMs": 1500,
+      "markStyle": "soft",
+    },
+  },
+  {
+    "at": 0,
+    "movements": [
+      {
+        "actor": 1,
+        "byOpponent": true,
+        "card": "CLUB_2",
+        "delayMs": 180,
+        "durationMs": 700,
+        "flip": false,
+        "from": {
+          "kind": "fanTop",
+          "seat": 1,
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 89,
+            "top": 178,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "travel",
+        "marks": [
+          {
+            "kind": "fanTop",
+            "seat": 1,
+          },
+          {
+            "index": 0,
+            "kind": "pileCard",
+          },
+        ],
+        "marksAt": [
+          {
+            "cards": 0,
+            "rect": {
+              "height": 58,
+              "left": 89,
+              "top": 178,
+              "width": 40,
+            },
+          },
+          {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 157,
+              "top": 314,
+              "width": 40,
+            },
+          },
+        ],
+        "to": {
+          "index": 0,
+          "kind": "pileCard",
+        },
+        "toAt": {
+          "cards": 1,
+          "rect": {
+            "height": 58,
+            "left": 157,
+            "top": 314,
+            "width": 40,
+          },
+        },
+        "turnDown": false,
+      },
+      {
+        "actor": 1,
+        "byOpponent": false,
+        "card": null,
+        "delayMs": 880,
+        "durationMs": 0,
+        "flip": false,
+        "from": {
+          "kind": "pile",
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 155,
+            "top": 310,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "ring",
+        "marks": [],
+        "marksAt": [],
+        "to": {
+          "kind": "seat",
+          "seat": 1,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 74.0126471646702,
+            "top": 148,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+    ],
+    "play": {
+      "marksOnly": false,
+      "startInMs": 0,
+      "still": false,
+    },
+  },
+  {
+    "at": 0,
+    "movements": [
+      {
+        "actor": 1,
+        "byOpponent": false,
+        "card": "CLUB_2",
+        "delayMs": 0,
+        "durationMs": 620,
+        "flip": false,
+        "from": {
+          "index": 0,
+          "kind": "pileCard",
+        },
+        "fromAt": {
+          "cards": 1,
+          "rect": {
+            "height": 58,
+            "left": 157,
+            "top": 314,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 40,
+        "kind": "travel",
+        "marks": [],
+        "marksAt": [],
+        "to": {
+          "kind": "seat",
+          "seat": 1,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 74.0126471646702,
+            "top": 148,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+      {
+        "actor": 1,
+        "byOpponent": false,
+        "card": "HEART_KING",
+        "delayMs": 90,
+        "durationMs": 620,
+        "flip": false,
+        "from": {
+          "kind": "pileSlot",
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 155,
+            "top": 314,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 40,
+        "kind": "travel",
+        "marks": [],
+        "marksAt": [],
+        "to": {
+          "kind": "seat",
+          "seat": 1,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 74.0126471646702,
+            "top": 148,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+      {
+        "actor": 1,
+        "byOpponent": false,
+        "card": null,
+        "delayMs": 710,
+        "durationMs": 0,
+        "flip": false,
+        "from": {
+          "kind": "pile",
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 155,
+            "top": 310,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "ring",
+        "marks": [],
+        "marksAt": [],
+        "to": {
+          "kind": "seat",
+          "seat": 1,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 74.0126471646702,
+            "top": 148,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+    ],
+    "play": {
+      "startInMs": 1930,
+      "still": false,
+    },
+  },
+  {
+    "at": 0,
+    "look": "phase=P1 is playing | by=You played | binding=- | closed=- | note=- | count=1 card in the trick | pile= | cards=0/1 | seats=1:8 cards/8 2:8 cards/8 3:8 cards/8 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING | chips=After a pass: play again | recap=false | bar=true | sheet=false | end=false | round=Round 1 of 5",
+  },
+  {
+    "at": 900,
+    "look": "phase=P1 is playing | by=- | binding=- | closed=Four of a kindP1 leads | note=P1 closed the trick with four of a kind. | count=2 cards in the trick | pile= | cards=0/1 | seats=1:8 cards/8 2:8 cards/8 3:8 cards/8 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING | chips=After a pass: play again | recap=false | bar=true | sheet=false | end=false | round=Round 1 of 5",
+  },
+  {
+    "at": 1950,
+    "look": "phase=P1 is playing | by=- | binding=- | closed=Four of a kindP1 leads | note=P1 closed the trick with four of a kind. | count=2 cards in the trick | pile=trick-cards--swept | cards=0/1 | seats=1:8 cards/8 2:8 cards/8 3:8 cards/8 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING | chips=After a pass: play again | recap=false | bar=true | sheet=false | end=false | round=Round 1 of 5",
+  },
+  {
+    "at": 2680,
+    "movements": [
+      {
+        "actor": 1,
+        "byOpponent": true,
+        "card": "CLUB_2",
+        "delayMs": 180,
+        "durationMs": 700,
+        "flip": false,
+        "from": {
+          "kind": "fanTop",
+          "seat": 1,
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 89,
+            "top": 178,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "travel",
+        "marks": [
+          {
+            "kind": "fanTop",
+            "seat": 1,
+          },
+          {
+            "index": 0,
+            "kind": "pileCard",
+          },
+        ],
+        "marksAt": [
+          {
+            "cards": 0,
+            "rect": {
+              "height": 58,
+              "left": 89,
+              "top": 178,
+              "width": 40,
+            },
+          },
+          {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 157,
+              "top": 314,
+              "width": 40,
+            },
+          },
+        ],
+        "to": {
+          "index": 0,
+          "kind": "pileCard",
+        },
+        "toAt": {
+          "cards": 1,
+          "rect": {
+            "height": 58,
+            "left": 157,
+            "top": 314,
+            "width": 40,
+          },
+        },
+        "turnDown": false,
+      },
+      {
+        "actor": 1,
+        "byOpponent": false,
+        "card": null,
+        "delayMs": 880,
+        "durationMs": 0,
+        "flip": false,
+        "from": {
+          "kind": "pile",
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 155,
+            "top": 310,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "ring",
+        "marks": [],
+        "marksAt": [],
+        "to": {
+          "kind": "seat",
+          "seat": 1,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 74.0126471646702,
+            "top": 148,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+    ],
+    "play": {
+      "marksOnly": false,
+      "startInMs": 0,
+      "still": false,
+    },
+  },
+  {
+    "at": 2680,
+    "movements": [
+      {
+        "actor": 1,
+        "byOpponent": false,
+        "card": "CLUB_2",
+        "delayMs": 0,
+        "durationMs": 620,
+        "flip": false,
+        "from": {
+          "index": 0,
+          "kind": "pileCard",
+        },
+        "fromAt": {
+          "cards": 1,
+          "rect": {
+            "height": 58,
+            "left": 157,
+            "top": 314,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 40,
+        "kind": "travel",
+        "marks": [],
+        "marksAt": [],
+        "to": {
+          "kind": "seat",
+          "seat": 1,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 74.0126471646702,
+            "top": 148,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+      {
+        "actor": 1,
+        "byOpponent": false,
+        "card": null,
+        "delayMs": 620,
+        "durationMs": 0,
+        "flip": false,
+        "from": {
+          "kind": "pile",
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 155,
+            "top": 310,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "ring",
+        "marks": [],
+        "marksAt": [],
+        "to": {
+          "kind": "seat",
+          "seat": 1,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 74.0126471646702,
+            "top": 148,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+    ],
+    "play": {
+      "startInMs": 1930,
+      "still": false,
+    },
+  },
+  {
+    "at": 2700,
+    "look": "phase=P1 is playing | by=- | binding=- | closed=Four of a kindP1 leads | note=P1 closed the trick with four of a kind. | count=2 cards in the trick | pile= | cards=0/1 | seats=1:8 cards/8 2:8 cards/8 3:8 cards/8 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING | chips=After a pass: play again | recap=false | bar=true | sheet=false | end=false | round=Round 1 of 5",
+  },
+  {
+    "at": 3600,
+    "look": "phase=P1 is playing | by=- | binding=- | closed=Four of a kindP1 leads | note=P1 closed the trick with four of a kind. | count=1 card in the trick | pile= | cards=0/1 | seats=1:8 cards/8 2:8 cards/8 3:8 cards/8 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING | chips=After a pass: play again | recap=false | bar=true | sheet=false | end=false | round=Round 1 of 5",
+  },
+  {
+    "at": 4650,
+    "look": "phase=P1 is playing | by=- | binding=- | closed=Four of a kindP1 leads | note=P1 closed the trick with four of a kind. | count=1 card in the trick | pile=trick-cards--swept | cards=0/1 | seats=1:8 cards/8 2:8 cards/8 3:8 cards/8 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING | chips=After a pass: play again | recap=false | bar=true | sheet=false | end=false | round=Round 1 of 5",
+  },
+  {
+    "at": 5270,
+    "movements": [
+      {
+        "actor": 1,
+        "byOpponent": true,
+        "card": "CLUB_2",
+        "delayMs": 180,
+        "durationMs": 700,
+        "flip": false,
+        "from": {
+          "kind": "fanTop",
+          "seat": 1,
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 89,
+            "top": 178,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "travel",
+        "marks": [
+          {
+            "kind": "fanTop",
+            "seat": 1,
+          },
+          {
+            "index": 0,
+            "kind": "pileCard",
+          },
+        ],
+        "marksAt": [
+          {
+            "cards": 0,
+            "rect": {
+              "height": 58,
+              "left": 89,
+              "top": 178,
+              "width": 40,
+            },
+          },
+          {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 157,
+              "top": 314,
+              "width": 40,
+            },
+          },
+        ],
+        "to": {
+          "index": 0,
+          "kind": "pileCard",
+        },
+        "toAt": {
+          "cards": 1,
+          "rect": {
+            "height": 58,
+            "left": 157,
+            "top": 314,
+            "width": 40,
+          },
+        },
+        "turnDown": false,
+      },
+      {
+        "actor": 1,
+        "byOpponent": false,
+        "card": null,
+        "delayMs": 880,
+        "durationMs": 0,
+        "flip": false,
+        "from": {
+          "kind": "pile",
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 155,
+            "top": 310,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "ring",
+        "marks": [],
+        "marksAt": [],
+        "to": {
+          "kind": "seat",
+          "seat": 1,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 74.0126471646702,
+            "top": 148,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+    ],
+    "play": {
+      "marksOnly": true,
+      "startInMs": 0,
+      "still": false,
+    },
+  },
+  {
+    "at": 5270,
+    "movements": [
+      {
+        "actor": 1,
+        "byOpponent": true,
+        "card": "CLUB_2",
+        "delayMs": 180,
+        "durationMs": 700,
+        "flip": false,
+        "from": {
+          "kind": "fanTop",
+          "seat": 1,
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 89,
+            "top": 178,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "travel",
+        "marks": [
+          {
+            "kind": "fanTop",
+            "seat": 1,
+          },
+          {
+            "index": 0,
+            "kind": "pileCard",
+          },
+        ],
+        "marksAt": [
+          {
+            "cards": 0,
+            "rect": {
+              "height": 58,
+              "left": 89,
+              "top": 178,
+              "width": 40,
+            },
+          },
+          {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 157,
+              "top": 314,
+              "width": 40,
+            },
+          },
+        ],
+        "to": {
+          "index": 0,
+          "kind": "pileCard",
+        },
+        "toAt": {
+          "cards": 1,
+          "rect": {
+            "height": 58,
+            "left": 157,
+            "top": 314,
+            "width": 40,
+          },
+        },
+        "turnDown": false,
+      },
+      {
+        "actor": 1,
+        "byOpponent": false,
+        "card": null,
+        "delayMs": 880,
+        "durationMs": 0,
+        "flip": false,
+        "from": {
+          "kind": "pile",
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 155,
+            "top": 310,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "ring",
+        "marks": [],
+        "marksAt": [],
+        "to": {
+          "kind": "seat",
+          "seat": 1,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 74.0126471646702,
+            "top": 148,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+    ],
+    "play": {
+      "marksOnly": true,
+      "startInMs": 0,
+      "still": false,
+    },
+  },
+  {
+    "at": 5270,
+    "movements": [
+      {
+        "actor": 1,
+        "byOpponent": true,
+        "card": "CLUB_2",
+        "delayMs": 180,
+        "durationMs": 700,
+        "flip": false,
+        "from": {
+          "kind": "fanTop",
+          "seat": 1,
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 89,
+            "top": 178,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "travel",
+        "marks": [
+          {
+            "kind": "fanTop",
+            "seat": 1,
+          },
+          {
+            "index": 0,
+            "kind": "pileCard",
+          },
+        ],
+        "marksAt": [
+          {
+            "cards": 0,
+            "rect": {
+              "height": 58,
+              "left": 89,
+              "top": 178,
+              "width": 40,
+            },
+          },
+          {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 157,
+              "top": 314,
+              "width": 40,
+            },
+          },
+        ],
+        "to": {
+          "index": 0,
+          "kind": "pileCard",
+        },
+        "toAt": {
+          "cards": 1,
+          "rect": {
+            "height": 58,
+            "left": 157,
+            "top": 314,
+            "width": 40,
+          },
+        },
+        "turnDown": false,
+      },
+      {
+        "actor": 1,
+        "byOpponent": false,
+        "card": null,
+        "delayMs": 880,
+        "durationMs": 0,
+        "flip": false,
+        "from": {
+          "kind": "pile",
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 155,
+            "top": 310,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "ring",
+        "marks": [],
+        "marksAt": [],
+        "to": {
+          "kind": "seat",
+          "seat": 1,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 74.0126471646702,
+            "top": 148,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+    ],
+    "play": {
+      "marksOnly": true,
+      "startInMs": 0,
+      "still": false,
+    },
+  },
+  {
+    "at": 5270,
+    "movements": [
+      {
+        "actor": 1,
+        "byOpponent": true,
+        "card": "CLUB_2",
+        "delayMs": 180,
+        "durationMs": 700,
+        "flip": false,
+        "from": {
+          "kind": "fanTop",
+          "seat": 1,
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 89,
+            "top": 178,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "travel",
+        "marks": [
+          {
+            "kind": "fanTop",
+            "seat": 1,
+          },
+          {
+            "index": 0,
+            "kind": "pileCard",
+          },
+        ],
+        "marksAt": [
+          {
+            "cards": 0,
+            "rect": {
+              "height": 58,
+              "left": 89,
+              "top": 178,
+              "width": 40,
+            },
+          },
+          {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 157,
+              "top": 314,
+              "width": 40,
+            },
+          },
+        ],
+        "to": {
+          "index": 0,
+          "kind": "pileCard",
+        },
+        "toAt": {
+          "cards": 1,
+          "rect": {
+            "height": 58,
+            "left": 157,
+            "top": 314,
+            "width": 40,
+          },
+        },
+        "turnDown": false,
+      },
+      {
+        "actor": 1,
+        "byOpponent": false,
+        "card": null,
+        "delayMs": 880,
+        "durationMs": 0,
+        "flip": false,
+        "from": {
+          "kind": "pile",
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 155,
+            "top": 310,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "ring",
+        "marks": [],
+        "marksAt": [],
+        "to": {
+          "kind": "seat",
+          "seat": 1,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 74.0126471646702,
+            "top": 148,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+    ],
+    "play": {
+      "marksOnly": true,
+      "startInMs": 0,
+      "still": false,
+    },
+  },
+  {
+    "at": 5270,
+    "movements": [
+      {
+        "actor": 1,
+        "byOpponent": true,
+        "card": "DIAMOND_3",
+        "delayMs": 180,
+        "durationMs": 700,
+        "flip": false,
+        "from": {
+          "kind": "fanTop",
+          "seat": 1,
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 89,
+            "top": 178,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "travel",
+        "marks": [
+          {
+            "kind": "fanTop",
+            "seat": 1,
+          },
+          {
+            "index": 0,
+            "kind": "pileCard",
+          },
+        ],
+        "marksAt": [
+          {
+            "cards": 0,
+            "rect": {
+              "height": 58,
+              "left": 89,
+              "top": 178,
+              "width": 40,
+            },
+          },
+          {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 157,
+              "top": 314,
+              "width": 40,
+            },
+          },
+        ],
+        "to": {
+          "index": 0,
+          "kind": "pileCard",
+        },
+        "toAt": {
+          "cards": 1,
+          "rect": {
+            "height": 58,
+            "left": 157,
+            "top": 314,
+            "width": 40,
+          },
+        },
+        "turnDown": false,
+      },
+    ],
+    "play": {
+      "marksOnly": true,
+      "startInMs": 0,
+      "still": false,
+    },
+  },
+  {
+    "at": 5300,
+    "look": "phase=P2 is playing | by=P1 played | binding=- | closed=- | note=- | count=1 card in the trick | pile= | cards=1/0 | seats=1:8 cards/8 2:8 cards/8 3:8 cards/8 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING | chips=After a pass: play again | recap=false | bar=true | sheet=false | end=false | round=Round 1 of 5",
+  },
+]
+`;
+
+exports[`PresidentGameScreen pictures (characterisation) > aCutAndALead_atFast 1`] = `
+[
+  {
+    "layer": {
+      "arrowId": "president-arrow-head",
+      "markMs": 1600,
+      "markReducedMs": 1500,
+      "markStyle": "soft",
+    },
+  },
+  {
+    "at": 0,
+    "movements": [
+      {
+        "actor": 1,
+        "byOpponent": true,
+        "card": "CLUB_2",
+        "delayMs": 90,
+        "durationMs": 350,
+        "flip": false,
+        "from": {
+          "kind": "fanTop",
+          "seat": 1,
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 89,
+            "top": 178,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 125,
+        "kind": "travel",
+        "marks": [
+          {
+            "kind": "fanTop",
+            "seat": 1,
+          },
+          {
+            "index": 0,
+            "kind": "pileCard",
+          },
+        ],
+        "marksAt": [
+          {
+            "cards": 0,
+            "rect": {
+              "height": 58,
+              "left": 89,
+              "top": 178,
+              "width": 40,
+            },
+          },
+          {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 157,
+              "top": 314,
+              "width": 40,
+            },
+          },
+        ],
+        "to": {
+          "index": 0,
+          "kind": "pileCard",
+        },
+        "toAt": {
+          "cards": 1,
+          "rect": {
+            "height": 58,
+            "left": 157,
+            "top": 314,
+            "width": 40,
+          },
+        },
+        "turnDown": false,
+      },
+      {
+        "actor": 1,
+        "byOpponent": false,
+        "card": null,
+        "delayMs": 440,
+        "durationMs": 0,
+        "flip": false,
+        "from": {
+          "kind": "pile",
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 155,
+            "top": 310,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 125,
+        "kind": "ring",
+        "marks": [],
+        "marksAt": [],
+        "to": {
+          "kind": "seat",
+          "seat": 1,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 74.0126471646702,
+            "top": 148,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+    ],
+    "play": {
+      "marksOnly": false,
+      "startInMs": 0,
+      "still": false,
+    },
+  },
+  {
+    "at": 0,
+    "movements": [
+      {
+        "actor": 1,
+        "byOpponent": false,
+        "card": "CLUB_2",
+        "delayMs": 0,
+        "durationMs": 310,
+        "flip": false,
+        "from": {
+          "index": 0,
+          "kind": "pileCard",
+        },
+        "fromAt": {
+          "cards": 1,
+          "rect": {
+            "height": 58,
+            "left": 157,
+            "top": 314,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 20,
+        "kind": "travel",
+        "marks": [],
+        "marksAt": [],
+        "to": {
+          "kind": "seat",
+          "seat": 1,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 74.0126471646702,
+            "top": 148,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+      {
+        "actor": 1,
+        "byOpponent": false,
+        "card": "CLUB_ACE",
+        "delayMs": 45,
+        "durationMs": 310,
+        "flip": false,
+        "from": {
+          "kind": "pileSlot",
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 155,
+            "top": 314,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 20,
+        "kind": "travel",
+        "marks": [],
+        "marksAt": [],
+        "to": {
+          "kind": "seat",
+          "seat": 1,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 74.0126471646702,
+            "top": 148,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+      {
+        "actor": 1,
+        "byOpponent": false,
+        "card": "HEART_KING",
+        "delayMs": 90,
+        "durationMs": 310,
+        "flip": false,
+        "from": {
+          "kind": "pileSlot",
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 155,
+            "top": 314,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 20,
+        "kind": "travel",
+        "marks": [],
+        "marksAt": [],
+        "to": {
+          "kind": "seat",
+          "seat": 1,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 74.0126471646702,
+            "top": 148,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+      {
+        "actor": 1,
+        "byOpponent": false,
+        "card": null,
+        "delayMs": 400,
+        "durationMs": 0,
+        "flip": false,
+        "from": {
+          "kind": "pile",
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 155,
+            "top": 310,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 125,
+        "kind": "ring",
+        "marks": [],
+        "marksAt": [],
+        "to": {
+          "kind": "seat",
+          "seat": 1,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 74.0126471646702,
+            "top": 148,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+    ],
+    "play": {
+      "startInMs": 965,
+      "still": false,
+    },
+  },
+  {
+    "at": 0,
+    "look": "phase=P1 is playing | by=P3 played | binding=- | closed=- | note=- | count=2 cards in the trick | pile= | cards=0/1 | seats=1:8 cards/8 2:8 cards/8 3:8 cards/8 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING | chips=After a pass: play again | recap=false | bar=true | sheet=false | end=false | round=Round 1 of 5",
+  },
+  {
+    "at": 450,
+    "look": "phase=P1 is playing | by=- | binding=- | closed=Closed by a 2P1 leads | note=P1 closed the trick with a 2. | count=3 cards in the trick | pile= | cards=0/1 | seats=1:7 cards/7 2:8 cards/8 3:8 cards/8 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING | chips=After a pass: play again | recap=false | bar=true | sheet=false | end=false | round=Round 1 of 5",
+  },
+  {
+    "at": 900,
+    "look": "phase=P1 is playing | by=- | binding=- | closed=Closed by a 2P1 leads | note=P1 closed the trick with a 2. | count=3 cards in the trick | pile= | cards=0/1 | seats=1:7 cards/7 2:8 cards/8 3:8 cards/8 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING | chips=After a pass: play again | recap=false | bar=true | sheet=false | end=false | round=Round 1 of 5",
+  },
+  {
+    "at": 1000,
+    "look": "phase=P1 is playing | by=- | binding=- | closed=Closed by a 2P1 leads | note=P1 closed the trick with a 2. | count=3 cards in the trick | pile=trick-cards--swept | cards=0/1 | seats=1:7 cards/7 2:8 cards/8 3:8 cards/8 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING | chips=After a pass: play again | recap=false | bar=true | sheet=false | end=false | round=Round 1 of 5",
+  },
+  {
+    "at": 1405,
+    "movements": [
+      {
+        "actor": 1,
+        "byOpponent": true,
+        "card": "DIAMOND_3",
+        "delayMs": 90,
+        "durationMs": 350,
+        "flip": false,
+        "from": {
+          "kind": "fanTop",
+          "seat": 1,
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 87,
+            "top": 174,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 125,
+        "kind": "travel",
+        "marks": [
+          {
+            "kind": "fanTop",
+            "seat": 1,
+          },
+          {
+            "index": 0,
+            "kind": "pileCard",
+          },
+        ],
+        "marksAt": [
+          {
+            "cards": 0,
+            "rect": {
+              "height": 58,
+              "left": 87,
+              "top": 174,
+              "width": 40,
+            },
+          },
+          {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 155,
+              "top": 310,
+              "width": 40,
+            },
+          },
+        ],
+        "to": {
+          "index": 0,
+          "kind": "pileCard",
+        },
+        "toAt": {
+          "cards": 1,
+          "rect": {
+            "height": 58,
+            "left": 155,
+            "top": 310,
+            "width": 40,
+          },
+        },
+        "turnDown": false,
+      },
+    ],
+    "play": {
+      "marksOnly": false,
+      "startInMs": 0,
+      "still": false,
+    },
+  },
+  {
+    "at": 1450,
+    "look": "phase=P1 is playing | by=- | binding=- | closed=Closed by a 2P1 leads | note=P1 closed the trick with a 2. | count=3 cards in the trick | pile= | cards=1/0 | seats=1:7 cards/7 2:8 cards/8 3:8 cards/8 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING | chips=After a pass: play again | recap=false | bar=true | sheet=false | end=false | round=Round 1 of 5",
+  },
+  {
+    "at": 1850,
+    "look": "phase=P2 is playing | by=P1 played | binding=- | closed=- | note=- | count=1 card in the trick | pile= | cards=1/0 | seats=1:6 cards/6 2:8 cards/8 3:8 cards/8 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING | chips=To beat: 1 × 3|After a pass: play again | recap=false | bar=true | sheet=false | end=false | round=Round 1 of 5",
+  },
+]
+`;
+
+exports[`PresidentGameScreen pictures (characterisation) > aCutAndALead_atInstant 1`] = `
+[
+  {
+    "layer": {
+      "arrowId": "president-arrow-head",
+      "markMs": 1600,
+      "markReducedMs": 1500,
+      "markStyle": "soft",
+    },
+  },
+  {
+    "at": 0,
+    "movements": [
+      {
+        "actor": 1,
+        "byOpponent": true,
+        "card": "CLUB_2",
+        "delayMs": 180,
+        "durationMs": 700,
+        "flip": false,
+        "from": {
+          "kind": "fanTop",
+          "seat": 1,
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 87,
+            "top": 174,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "travel",
+        "marks": [
+          {
+            "kind": "fanTop",
+            "seat": 1,
+          },
+          {
+            "index": 0,
+            "kind": "pileCard",
+          },
+        ],
+        "marksAt": [
+          {
+            "cards": 0,
+            "rect": {
+              "height": 58,
+              "left": 87,
+              "top": 174,
+              "width": 40,
+            },
+          },
+          {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 155,
+              "top": 310,
+              "width": 40,
+            },
+          },
+        ],
+        "to": {
+          "index": 0,
+          "kind": "pileCard",
+        },
+        "toAt": {
+          "cards": 1,
+          "rect": {
+            "height": 58,
+            "left": 155,
+            "top": 310,
+            "width": 40,
+          },
+        },
+        "turnDown": false,
+      },
+      {
+        "actor": 1,
+        "byOpponent": false,
+        "card": null,
+        "delayMs": 880,
+        "durationMs": 0,
+        "flip": false,
+        "from": {
+          "kind": "pile",
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 153,
+            "top": 306,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "ring",
+        "marks": [],
+        "marksAt": [],
+        "to": {
+          "kind": "seat",
+          "seat": 1,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 74.0126471646702,
+            "top": 148,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+    ],
+    "play": {
+      "marksOnly": true,
+      "startInMs": 0,
+      "still": true,
+    },
+  },
+  {
+    "at": 0,
+    "look": "phase=P1 is playing | by=- | binding=- | closed=Closed by a 2P1 leads | note=P1 closed the trick with a 2. | count=3 cards in the trick | pile= | cards=0/1 | seats=1:7 cards/7 2:8 cards/8 3:8 cards/8 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING | chips=After a pass: play again | recap=false | bar=true | sheet=false | end=false | round=Round 1 of 5",
+  },
+  {
+    "at": 900,
+    "movements": [
+      {
+        "actor": 1,
+        "byOpponent": true,
+        "card": "DIAMOND_3",
+        "delayMs": 180,
+        "durationMs": 700,
+        "flip": false,
+        "from": {
+          "kind": "fanTop",
+          "seat": 1,
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 85,
+            "top": 170,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "travel",
+        "marks": [
+          {
+            "kind": "fanTop",
+            "seat": 1,
+          },
+          {
+            "index": 0,
+            "kind": "pileCard",
+          },
+        ],
+        "marksAt": [
+          {
+            "cards": 0,
+            "rect": {
+              "height": 58,
+              "left": 85,
+              "top": 170,
+              "width": 40,
+            },
+          },
+          {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 153,
+              "top": 306,
+              "width": 40,
+            },
+          },
+        ],
+        "to": {
+          "index": 0,
+          "kind": "pileCard",
+        },
+        "toAt": {
+          "cards": 1,
+          "rect": {
+            "height": 58,
+            "left": 153,
+            "top": 306,
+            "width": 40,
+          },
+        },
+        "turnDown": false,
+      },
+    ],
+    "play": {
+      "marksOnly": true,
+      "startInMs": 0,
+      "still": true,
+    },
+  },
+  {
+    "at": 900,
+    "look": "phase=P2 is playing | by=P1 played | binding=- | closed=- | note=- | count=1 card in the trick | pile= | cards=1/0 | seats=1:6 cards/6 2:8 cards/8 3:8 cards/8 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING | chips=To beat: 1 × 3|After a pass: play again | recap=false | bar=true | sheet=false | end=false | round=Round 1 of 5",
+  },
+]
+`;
+
+exports[`PresidentGameScreen pictures (characterisation) > aCutAndALead_underReducedMotion 1`] = `
+[
+  {
+    "layer": {
+      "arrowId": "president-arrow-head",
+      "markMs": 1600,
+      "markReducedMs": 1500,
+      "markStyle": "soft",
+    },
+  },
+  {
+    "at": 0,
+    "movements": [
+      {
+        "actor": 1,
+        "byOpponent": true,
+        "card": "CLUB_2",
+        "delayMs": 180,
+        "durationMs": 700,
+        "flip": false,
+        "from": {
+          "kind": "fanTop",
+          "seat": 1,
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 87,
+            "top": 174,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "travel",
+        "marks": [
+          {
+            "kind": "fanTop",
+            "seat": 1,
+          },
+          {
+            "index": 0,
+            "kind": "pileCard",
+          },
+        ],
+        "marksAt": [
+          {
+            "cards": 0,
+            "rect": {
+              "height": 58,
+              "left": 87,
+              "top": 174,
+              "width": 40,
+            },
+          },
+          {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 155,
+              "top": 310,
+              "width": 40,
+            },
+          },
+        ],
+        "to": {
+          "index": 0,
+          "kind": "pileCard",
+        },
+        "toAt": {
+          "cards": 1,
+          "rect": {
+            "height": 58,
+            "left": 155,
+            "top": 310,
+            "width": 40,
+          },
+        },
+        "turnDown": false,
+      },
+      {
+        "actor": 1,
+        "byOpponent": false,
+        "card": null,
+        "delayMs": 880,
+        "durationMs": 0,
+        "flip": false,
+        "from": {
+          "kind": "pile",
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 153,
+            "top": 306,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "ring",
+        "marks": [],
+        "marksAt": [],
+        "to": {
+          "kind": "seat",
+          "seat": 1,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 74.0126471646702,
+            "top": 148,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+    ],
+    "play": {
+      "marksOnly": true,
+      "startInMs": 0,
+      "still": true,
+    },
+  },
+  {
+    "at": 0,
+    "look": "phase=P1 is playing | by=- | binding=- | closed=Closed by a 2P1 leads | note=P1 closed the trick with a 2. | count=3 cards in the trick | pile= | cards=0/1 | seats=1:7 cards/7 2:8 cards/8 3:8 cards/8 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING | chips=After a pass: play again | recap=false | bar=true | sheet=false | end=false | round=Round 1 of 5",
+  },
+  {
+    "at": 900,
+    "movements": [
+      {
+        "actor": 1,
+        "byOpponent": true,
+        "card": "DIAMOND_3",
+        "delayMs": 180,
+        "durationMs": 700,
+        "flip": false,
+        "from": {
+          "kind": "fanTop",
+          "seat": 1,
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 85,
+            "top": 170,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "travel",
+        "marks": [
+          {
+            "kind": "fanTop",
+            "seat": 1,
+          },
+          {
+            "index": 0,
+            "kind": "pileCard",
+          },
+        ],
+        "marksAt": [
+          {
+            "cards": 0,
+            "rect": {
+              "height": 58,
+              "left": 85,
+              "top": 170,
+              "width": 40,
+            },
+          },
+          {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 153,
+              "top": 306,
+              "width": 40,
+            },
+          },
+        ],
+        "to": {
+          "index": 0,
+          "kind": "pileCard",
+        },
+        "toAt": {
+          "cards": 1,
+          "rect": {
+            "height": 58,
+            "left": 153,
+            "top": 306,
+            "width": 40,
+          },
+        },
+        "turnDown": false,
+      },
+    ],
+    "play": {
+      "marksOnly": true,
+      "startInMs": 0,
+      "still": true,
+    },
+  },
+  {
+    "at": 900,
+    "look": "phase=P2 is playing | by=P1 played | binding=- | closed=- | note=- | count=1 card in the trick | pile= | cards=1/0 | seats=1:6 cards/6 2:8 cards/8 3:8 cards/8 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING | chips=To beat: 1 × 3|After a pass: play again | recap=false | bar=true | sheet=false | end=false | round=Round 1 of 5",
+  },
+]
+`;
+
+exports[`PresidentGameScreen pictures (characterisation) > aCutClosesTheTrick_theBadgeHolds_theCardsSweep_thenTheWinnersLeadFliesIn 1`] = `
+[
+  {
+    "layer": {
+      "arrowId": "president-arrow-head",
+      "markMs": 1600,
+      "markReducedMs": 1500,
+      "markStyle": "soft",
+    },
+  },
+  {
+    "at": 0,
+    "movements": [
+      {
+        "actor": 1,
+        "byOpponent": true,
+        "card": "CLUB_2",
+        "delayMs": 180,
+        "durationMs": 700,
+        "flip": false,
+        "from": {
+          "kind": "fanTop",
+          "seat": 1,
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 89,
+            "top": 178,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "travel",
+        "marks": [
+          {
+            "kind": "fanTop",
+            "seat": 1,
+          },
+          {
+            "index": 0,
+            "kind": "pileCard",
+          },
+        ],
+        "marksAt": [
+          {
+            "cards": 0,
+            "rect": {
+              "height": 58,
+              "left": 89,
+              "top": 178,
+              "width": 40,
+            },
+          },
+          {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 157,
+              "top": 314,
+              "width": 40,
+            },
+          },
+        ],
+        "to": {
+          "index": 0,
+          "kind": "pileCard",
+        },
+        "toAt": {
+          "cards": 1,
+          "rect": {
+            "height": 58,
+            "left": 157,
+            "top": 314,
+            "width": 40,
+          },
+        },
+        "turnDown": false,
+      },
+      {
+        "actor": 1,
+        "byOpponent": false,
+        "card": null,
+        "delayMs": 880,
+        "durationMs": 0,
+        "flip": false,
+        "from": {
+          "kind": "pile",
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 155,
+            "top": 310,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "ring",
+        "marks": [],
+        "marksAt": [],
+        "to": {
+          "kind": "seat",
+          "seat": 1,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 74.0126471646702,
+            "top": 148,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+    ],
+    "play": {
+      "marksOnly": false,
+      "startInMs": 0,
+      "still": false,
+    },
+  },
+  {
+    "at": 0,
+    "movements": [
+      {
+        "actor": 1,
+        "byOpponent": false,
+        "card": "CLUB_2",
+        "delayMs": 0,
+        "durationMs": 620,
+        "flip": false,
+        "from": {
+          "index": 0,
+          "kind": "pileCard",
+        },
+        "fromAt": {
+          "cards": 1,
+          "rect": {
+            "height": 58,
+            "left": 157,
+            "top": 314,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 40,
+        "kind": "travel",
+        "marks": [],
+        "marksAt": [],
+        "to": {
+          "kind": "seat",
+          "seat": 1,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 74.0126471646702,
+            "top": 148,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+      {
+        "actor": 1,
+        "byOpponent": false,
+        "card": "CLUB_ACE",
+        "delayMs": 90,
+        "durationMs": 620,
+        "flip": false,
+        "from": {
+          "kind": "pileSlot",
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 155,
+            "top": 314,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 40,
+        "kind": "travel",
+        "marks": [],
+        "marksAt": [],
+        "to": {
+          "kind": "seat",
+          "seat": 1,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 74.0126471646702,
+            "top": 148,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+      {
+        "actor": 1,
+        "byOpponent": false,
+        "card": "HEART_KING",
+        "delayMs": 180,
+        "durationMs": 620,
+        "flip": false,
+        "from": {
+          "kind": "pileSlot",
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 155,
+            "top": 314,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 40,
+        "kind": "travel",
+        "marks": [],
+        "marksAt": [],
+        "to": {
+          "kind": "seat",
+          "seat": 1,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 74.0126471646702,
+            "top": 148,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+      {
+        "actor": 1,
+        "byOpponent": false,
+        "card": null,
+        "delayMs": 800,
+        "durationMs": 0,
+        "flip": false,
+        "from": {
+          "kind": "pile",
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 155,
+            "top": 310,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "ring",
+        "marks": [],
+        "marksAt": [],
+        "to": {
+          "kind": "seat",
+          "seat": 1,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 74.0126471646702,
+            "top": 148,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+    ],
+    "play": {
+      "startInMs": 1930,
+      "still": false,
+    },
+  },
+  {
+    "at": 0,
+    "look": "phase=P1 is playing | by=P3 played | binding=- | closed=- | note=- | count=2 cards in the trick | pile= | cards=0/1 | seats=1:8 cards/8 2:8 cards/8 3:8 cards/8 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING | chips=After a pass: play again | recap=false | bar=true | sheet=false | end=false | round=Round 1 of 5",
+  },
+  {
+    "at": 900,
+    "look": "phase=P1 is playing | by=- | binding=- | closed=Closed by a 2P1 leads | note=P1 closed the trick with a 2. | count=3 cards in the trick | pile= | cards=0/1 | seats=1:7 cards/7 2:8 cards/8 3:8 cards/8 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING | chips=After a pass: play again | recap=false | bar=true | sheet=false | end=false | round=Round 1 of 5",
+  },
+  {
+    "at": 900,
+    "look": "phase=P1 is playing | by=- | binding=- | closed=Closed by a 2P1 leads | note=P1 closed the trick with a 2. | count=3 cards in the trick | pile= | cards=0/1 | seats=1:7 cards/7 2:8 cards/8 3:8 cards/8 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING | chips=After a pass: play again | recap=false | bar=true | sheet=false | end=false | round=Round 1 of 5",
+  },
+  {
+    "at": 1950,
+    "look": "phase=P1 is playing | by=- | binding=- | closed=Closed by a 2P1 leads | note=P1 closed the trick with a 2. | count=3 cards in the trick | pile=trick-cards--swept | cards=0/1 | seats=1:7 cards/7 2:8 cards/8 3:8 cards/8 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING | chips=After a pass: play again | recap=false | bar=true | sheet=false | end=false | round=Round 1 of 5",
+  },
+  {
+    "at": 2770,
+    "movements": [
+      {
+        "actor": 1,
+        "byOpponent": true,
+        "card": "DIAMOND_3",
+        "delayMs": 180,
+        "durationMs": 700,
+        "flip": false,
+        "from": {
+          "kind": "fanTop",
+          "seat": 1,
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 87,
+            "top": 174,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "travel",
+        "marks": [
+          {
+            "kind": "fanTop",
+            "seat": 1,
+          },
+          {
+            "index": 0,
+            "kind": "pileCard",
+          },
+        ],
+        "marksAt": [
+          {
+            "cards": 0,
+            "rect": {
+              "height": 58,
+              "left": 87,
+              "top": 174,
+              "width": 40,
+            },
+          },
+          {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 155,
+              "top": 310,
+              "width": 40,
+            },
+          },
+        ],
+        "to": {
+          "index": 0,
+          "kind": "pileCard",
+        },
+        "toAt": {
+          "cards": 1,
+          "rect": {
+            "height": 58,
+            "left": 155,
+            "top": 310,
+            "width": 40,
+          },
+        },
+        "turnDown": false,
+      },
+    ],
+    "play": {
+      "marksOnly": false,
+      "startInMs": 0,
+      "still": false,
+    },
+  },
+  {
+    "at": 2800,
+    "look": "phase=P1 is playing | by=- | binding=- | closed=Closed by a 2P1 leads | note=P1 closed the trick with a 2. | count=3 cards in the trick | pile= | cards=1/0 | seats=1:7 cards/7 2:8 cards/8 3:8 cards/8 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING | chips=After a pass: play again | recap=false | bar=true | sheet=false | end=false | round=Round 1 of 5",
+  },
+  {
+    "at": 3650,
+    "look": "phase=P2 is playing | by=P1 played | binding=- | closed=- | note=- | count=1 card in the trick | pile= | cards=1/0 | seats=1:6 cards/6 2:8 cards/8 3:8 cards/8 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING | chips=To beat: 1 × 3|After a pass: play again | recap=false | bar=true | sheet=false | end=false | round=Round 1 of 5",
+  },
+]
+`;
+
+exports[`PresidentGameScreen pictures (characterisation) > aFourCompletedOutOfTurn_thenAForbiddenFinish 1`] = `
+[
+  {
+    "layer": {
+      "arrowId": "president-arrow-head",
+      "markMs": 1600,
+      "markReducedMs": 1500,
+      "markStyle": "soft",
+    },
+  },
+  {
+    "at": 0,
+    "movements": [
+      {
+        "actor": 2,
+        "byOpponent": true,
+        "card": "DIAMOND_7",
+        "delayMs": 180,
+        "durationMs": 700,
+        "flip": false,
+        "from": {
+          "kind": "fanTop",
+          "seat": 2,
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 117,
+            "top": 234,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "travel",
+        "marks": [
+          {
+            "kind": "fanTop",
+            "seat": 2,
+          },
+          {
+            "index": 0,
+            "kind": "pileCard",
+          },
+        ],
+        "marksAt": [
+          {
+            "cards": 0,
+            "rect": {
+              "height": 58,
+              "left": 117,
+              "top": 234,
+              "width": 40,
+            },
+          },
+          {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 157,
+              "top": 314,
+              "width": 40,
+            },
+          },
+        ],
+        "to": {
+          "index": 0,
+          "kind": "pileCard",
+        },
+        "toAt": {
+          "cards": 1,
+          "rect": {
+            "height": 58,
+            "left": 157,
+            "top": 314,
+            "width": 40,
+          },
+        },
+        "turnDown": false,
+      },
+      {
+        "actor": 2,
+        "byOpponent": false,
+        "card": null,
+        "delayMs": 880,
+        "durationMs": 0,
+        "flip": false,
+        "from": {
+          "kind": "pile",
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 155,
+            "top": 310,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "ring",
+        "marks": [],
+        "marksAt": [],
+        "to": {
+          "kind": "seat",
+          "seat": 2,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 102.0126471646702,
+            "top": 204,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+    ],
+    "play": {
+      "marksOnly": false,
+      "startInMs": 0,
+      "still": false,
+    },
+  },
+  {
+    "at": 0,
+    "movements": [
+      {
+        "actor": 2,
+        "byOpponent": false,
+        "card": "DIAMOND_7",
+        "delayMs": 0,
+        "durationMs": 620,
+        "flip": false,
+        "from": {
+          "index": 0,
+          "kind": "pileCard",
+        },
+        "fromAt": {
+          "cards": 1,
+          "rect": {
+            "height": 58,
+            "left": 157,
+            "top": 314,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 40,
+        "kind": "travel",
+        "marks": [],
+        "marksAt": [],
+        "to": {
+          "kind": "seat",
+          "seat": 2,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 102.0126471646702,
+            "top": 204,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+      {
+        "actor": 2,
+        "byOpponent": false,
+        "card": "CLUB_7",
+        "delayMs": 90,
+        "durationMs": 620,
+        "flip": false,
+        "from": {
+          "kind": "pileSlot",
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 155,
+            "top": 314,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 40,
+        "kind": "travel",
+        "marks": [],
+        "marksAt": [],
+        "to": {
+          "kind": "seat",
+          "seat": 2,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 102.0126471646702,
+            "top": 204,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+      {
+        "actor": 2,
+        "byOpponent": false,
+        "card": "HEART_7",
+        "delayMs": 180,
+        "durationMs": 620,
+        "flip": false,
+        "from": {
+          "kind": "pileSlot",
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 155,
+            "top": 314,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 40,
+        "kind": "travel",
+        "marks": [],
+        "marksAt": [],
+        "to": {
+          "kind": "seat",
+          "seat": 2,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 102.0126471646702,
+            "top": 204,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+      {
+        "actor": 2,
+        "byOpponent": false,
+        "card": "SPADE_7",
+        "delayMs": 270,
+        "durationMs": 620,
+        "flip": false,
+        "from": {
+          "kind": "pileSlot",
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 155,
+            "top": 314,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 40,
+        "kind": "travel",
+        "marks": [],
+        "marksAt": [],
+        "to": {
+          "kind": "seat",
+          "seat": 2,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 102.0126471646702,
+            "top": 204,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+      {
+        "actor": 2,
+        "byOpponent": false,
+        "card": null,
+        "delayMs": 890,
+        "durationMs": 0,
+        "flip": false,
+        "from": {
+          "kind": "pile",
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 155,
+            "top": 310,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "ring",
+        "marks": [],
+        "marksAt": [],
+        "to": {
+          "kind": "seat",
+          "seat": 2,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 102.0126471646702,
+            "top": 204,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+    ],
+    "play": {
+      "startInMs": 1930,
+      "still": false,
+    },
+  },
+  {
+    "at": 0,
+    "look": "phase=P3 is playing | by=P1 played | binding=- | closed=- | note=- | count=3 cards in the trick | pile= | cards=0/1 | seats=1:8 cards/8 2:8 cards/8 3:8 cards/8 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING | chips=To beat: 3 × 7|After a pass: play again | recap=false | bar=true | sheet=false | end=false | round=Round 1 of 5",
+  },
+  {
+    "at": 900,
+    "look": "phase=P2 is playing | by=- | binding=- | closed=Four of a kindP2 leads | note=P2 closed the trick with four of a kind. | count=4 cards in the trick | pile= | cards=0/1 | seats=1:8 cards/8 2:7 cards/7(Four completed) 3:8 cards/8 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING | chips=After a pass: play again | recap=false | bar=true | sheet=false | end=false | round=Round 1 of 5",
+  },
+  {
+    "at": 1950,
+    "look": "phase=P2 is playing | by=- | binding=- | closed=Four of a kindP2 leads | note=P2 closed the trick with four of a kind. | count=4 cards in the trick | pile=trick-cards--swept | cards=0/1 | seats=1:8 cards/8 2:7 cards/7(Four completed) 3:8 cards/8 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING | chips=After a pass: play again | recap=false | bar=true | sheet=false | end=false | round=Round 1 of 5",
+  },
+  {
+    "at": 2300,
+    "look": "phase=P2 is playing | by=- | binding=- | closed=Four of a kindP2 leads | note=P2 closed the trick with four of a kind. | count=4 cards in the trick | pile=trick-cards--swept | cards=0/1 | seats=1:8 cards/8 2:7 cards/7 3:8 cards/8 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING | chips=After a pass: play again | recap=false | bar=true | sheet=false | end=false | round=Round 1 of 5",
+  },
+  {
+    "at": 2860,
+    "movements": [
+      {
+        "actor": 2,
+        "byOpponent": true,
+        "card": "HEART_2",
+        "delayMs": 180,
+        "durationMs": 700,
+        "flip": false,
+        "from": {
+          "kind": "fanTop",
+          "seat": 2,
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 115,
+            "top": 230,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "travel",
+        "marks": [
+          {
+            "kind": "fanTop",
+            "seat": 2,
+          },
+          {
+            "index": 0,
+            "kind": "pileCard",
+          },
+        ],
+        "marksAt": [
+          {
+            "cards": 0,
+            "rect": {
+              "height": 58,
+              "left": 115,
+              "top": 230,
+              "width": 40,
+            },
+          },
+          {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 155,
+              "top": 310,
+              "width": 40,
+            },
+          },
+        ],
+        "to": {
+          "index": 0,
+          "kind": "pileCard",
+        },
+        "toAt": {
+          "cards": 1,
+          "rect": {
+            "height": 58,
+            "left": 155,
+            "top": 310,
+            "width": 40,
+          },
+        },
+        "turnDown": false,
+      },
+      {
+        "actor": 2,
+        "byOpponent": false,
+        "card": null,
+        "delayMs": 880,
+        "durationMs": 0,
+        "flip": false,
+        "from": {
+          "kind": "pile",
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 153,
+            "top": 306,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "ring",
+        "marks": [],
+        "marksAt": [],
+        "to": {
+          "kind": "seat",
+          "seat": 3,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 130.0126471646702,
+            "top": 260,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+    ],
+    "play": {
+      "marksOnly": false,
+      "startInMs": 0,
+      "still": false,
+    },
+  },
+  {
+    "at": 2860,
+    "movements": [
+      {
+        "actor": 3,
+        "byOpponent": false,
+        "card": "HEART_2",
+        "delayMs": 0,
+        "durationMs": 620,
+        "flip": false,
+        "from": {
+          "index": 0,
+          "kind": "pileCard",
+        },
+        "fromAt": {
+          "cards": 1,
+          "rect": {
+            "height": 58,
+            "left": 155,
+            "top": 310,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 40,
+        "kind": "travel",
+        "marks": [],
+        "marksAt": [],
+        "to": {
+          "kind": "seat",
+          "seat": 3,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 130.0126471646702,
+            "top": 260,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+      {
+        "actor": 3,
+        "byOpponent": false,
+        "card": null,
+        "delayMs": 620,
+        "durationMs": 0,
+        "flip": false,
+        "from": {
+          "kind": "pile",
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 153,
+            "top": 306,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "ring",
+        "marks": [],
+        "marksAt": [],
+        "to": {
+          "kind": "seat",
+          "seat": 3,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 130.0126471646702,
+            "top": 260,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+    ],
+    "play": {
+      "startInMs": 1930,
+      "still": false,
+    },
+  },
+  {
+    "at": 2900,
+    "look": "phase=P2 is playing | by=- | binding=- | closed=Four of a kindP2 leads | note=P2 closed the trick with four of a kind. | count=4 cards in the trick | pile= | cards=0/1 | seats=1:8 cards/8 2:7 cards/7 3:8 cards/8 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING | chips=After a pass: play again | recap=false | bar=true | sheet=false | end=false | round=Round 1 of 5",
+  },
+  {
+    "at": 3750,
+    "look": "phase=P3 is playing | by=- | binding=- | closed=Closed by a 2P3 leads | note=P2 closed the trick with a 2 and went out: they will finish last. | count=1 card in the trick | pile= | cards=0/1 | seats=1:8 cards/8 2:0 cards/0(Out on a 2) 3:8 cards/8 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING | chips=After a pass: play again | recap=false | bar=true | sheet=false | end=false | round=Round 1 of 5",
+  },
+  {
+    "at": 4800,
+    "look": "phase=P3 is playing | by=- | binding=- | closed=Closed by a 2P3 leads | note=P2 closed the trick with a 2 and went out: they will finish last. | count=1 card in the trick | pile=trick-cards--swept | cards=0/1 | seats=1:8 cards/8 2:0 cards/0(Out on a 2) 3:8 cards/8 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING | chips=After a pass: play again | recap=false | bar=true | sheet=false | end=false | round=Round 1 of 5",
+  },
+  {
+    "at": 5150,
+    "look": "phase=P3 is playing | by=- | binding=- | closed=Closed by a 2P3 leads | note=P2 closed the trick with a 2 and went out: they will finish last. | count=1 card in the trick | pile=trick-cards--swept | cards=0/1 | seats=1:8 cards/8 2:0 cards/0 3:8 cards/8 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING | chips=After a pass: play again | recap=false | bar=true | sheet=false | end=false | round=Round 1 of 5",
+  },
+]
+`;
+
+exports[`PresidentGameScreen pictures (characterisation) > an exchange round > atFast 1`] = `
+[
+  {
+    "layer": {
+      "arrowId": "president-arrow-head",
+      "markMs": 1600,
+      "markReducedMs": 1500,
+      "markStyle": "soft",
+    },
+  },
+  {
+    "at": 0,
+    "movements": [
+      {
+        "actor": 3,
+        "byOpponent": true,
+        "card": "HEART_KING",
+        "delayMs": 90,
+        "durationMs": 350,
+        "flip": false,
+        "from": {
+          "kind": "seat",
+          "seat": 3,
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 130.0126471646702,
+            "top": 260,
+            "width": 39.97470567065961,
+          },
+        },
+        "holdAfterMs": 125,
+        "kind": "travel",
+        "marks": [
+          {
+            "kind": "seat",
+            "seat": 3,
+          },
+          {
+            "kind": "seat",
+            "seat": 0,
+          },
+        ],
+        "marksAt": [
+          {
+            "cards": 0,
+            "rect": {
+              "height": 58.00000000000001,
+              "left": 130.0126471646702,
+              "top": 260,
+              "width": 39.97470567065961,
+            },
+          },
+          {
+            "cards": 0,
+            "rect": {
+              "height": 63.84036998358944,
+              "left": 171,
+              "top": 343.0798150082053,
+              "width": 44,
+            },
+          },
+        ],
+        "to": {
+          "kind": "seat",
+          "seat": 0,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 63.84036998358944,
+            "left": 171,
+            "top": 343.0798150082053,
+            "width": 44,
+          },
+        },
+        "turnDown": false,
+      },
+      {
+        "actor": 3,
+        "byOpponent": true,
+        "card": "CLUB_ACE",
+        "delayMs": 120,
+        "durationMs": 350,
+        "flip": false,
+        "from": {
+          "kind": "seat",
+          "seat": 3,
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 130.0126471646702,
+            "top": 260,
+            "width": 39.97470567065961,
+          },
+        },
+        "holdAfterMs": 125,
+        "kind": "travel",
+        "marks": [
+          {
+            "kind": "seat",
+            "seat": 3,
+          },
+          {
+            "kind": "seat",
+            "seat": 0,
+          },
+        ],
+        "marksAt": [
+          {
+            "cards": 0,
+            "rect": {
+              "height": 58.00000000000001,
+              "left": 130.0126471646702,
+              "top": 260,
+              "width": 39.97470567065961,
+            },
+          },
+          {
+            "cards": 0,
+            "rect": {
+              "height": 63.84036998358944,
+              "left": 171,
+              "top": 343.0798150082053,
+              "width": 44,
+            },
+          },
+        ],
+        "to": {
+          "kind": "seat",
+          "seat": 0,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 63.84036998358944,
+            "left": 171,
+            "top": 343.0798150082053,
+            "width": 44,
+          },
+        },
+        "turnDown": false,
+      },
+    ],
+    "play": {
+      "marksOnly": false,
+      "startInMs": 0,
+      "still": false,
+    },
+  },
+  {
+    "at": 0,
+    "look": "phase=- | by=- | binding=- | closed=- | note=- | count=- | pile=- | cards=0/0 | seats=1:8 cards/8 2:8 cards/8 3:13 cards/13 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING~,CLUB_ACE~ | chips=After a pass: play again | recap=false | bar=false | sheet=false | end=false | round=Round 2 of 5",
+  },
+  {
+    "at": 450,
+    "look": "phase=- | by=- | binding=- | closed=- | note=- | count=- | pile=- | cards=0/0 | seats=1:8 cards/8 2:8 cards/8 3:12 cards/12 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING,CLUB_ACE~ | chips=After a pass: play again | recap=false | bar=false | sheet=false | end=false | round=Round 2 of 5",
+  },
+  {
+    "at": 500,
+    "look": "phase=- | by=- | binding=- | closed=- | note=- | count=- | pile=- | cards=0/0 | seats=1:8 cards/8 2:8 cards/8 3:11 cards/11 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING,CLUB_ACE | chips=After a pass: play again | recap=false | bar=false | sheet=false | end=false | round=Round 2 of 5",
+  },
+  {
+    "at": 2500,
+    "movements": [
+      {
+        "actor": 0,
+        "byOpponent": false,
+        "card": "CLUB_3",
+        "delayMs": 50,
+        "durationMs": 240,
+        "flip": false,
+        "from": {
+          "kind": "seat",
+          "seat": 0,
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 63.84036998358944,
+            "left": 175,
+            "top": 351.0798150082053,
+            "width": 44,
+          },
+        },
+        "holdAfterMs": 125,
+        "kind": "travel",
+        "marks": [
+          {
+            "kind": "seat",
+            "seat": 0,
+          },
+          {
+            "kind": "seat",
+            "seat": 3,
+          },
+        ],
+        "marksAt": [
+          {
+            "cards": 0,
+            "rect": {
+              "height": 63.84036998358944,
+              "left": 175,
+              "top": 351.0798150082053,
+              "width": 44,
+            },
+          },
+          {
+            "cards": 0,
+            "rect": {
+              "height": 58.00000000000001,
+              "left": 130.0126471646702,
+              "top": 260,
+              "width": 39.97470567065961,
+            },
+          },
+        ],
+        "to": {
+          "kind": "seat",
+          "seat": 3,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 130.0126471646702,
+            "top": 260,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+      {
+        "actor": 0,
+        "byOpponent": false,
+        "card": "HEART_9",
+        "delayMs": 80,
+        "durationMs": 240,
+        "flip": false,
+        "from": {
+          "kind": "seat",
+          "seat": 0,
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 63.84036998358944,
+            "left": 175,
+            "top": 351.0798150082053,
+            "width": 44,
+          },
+        },
+        "holdAfterMs": 125,
+        "kind": "travel",
+        "marks": [
+          {
+            "kind": "seat",
+            "seat": 0,
+          },
+          {
+            "kind": "seat",
+            "seat": 3,
+          },
+        ],
+        "marksAt": [
+          {
+            "cards": 0,
+            "rect": {
+              "height": 63.84036998358944,
+              "left": 175,
+              "top": 351.0798150082053,
+              "width": 44,
+            },
+          },
+          {
+            "cards": 0,
+            "rect": {
+              "height": 58.00000000000001,
+              "left": 130.0126471646702,
+              "top": 260,
+              "width": 39.97470567065961,
+            },
+          },
+        ],
+        "to": {
+          "kind": "seat",
+          "seat": 3,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 130.0126471646702,
+            "top": 260,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+    ],
+    "play": {
+      "marksOnly": false,
+      "startInMs": 0,
+      "still": false,
+    },
+  },
+  {
+    "at": 2500,
+    "look": "phase=The exchange | by=- | binding=- | closed=- | note=- | count=- | pile=- | cards=0/0 | seats=1:8 cards/8 2:8 cards/8 3:11 cards/11 | me=- | hand=SPADE_9,HEART_KING,CLUB_ACE | chips=After a pass: play again | recap=false | bar=true | sheet=false | end=false | round=Round 2 of 5",
+  },
+  {
+    "at": 2800,
+    "look": "phase=The exchange | by=- | binding=- | closed=- | note=- | count=- | pile=- | cards=0/0 | seats=1:8 cards/8 2:8 cards/8 3:12 cards/12 | me=- | hand=SPADE_9,HEART_KING,CLUB_ACE | chips=After a pass: play again | recap=false | bar=true | sheet=false | end=false | round=Round 2 of 5",
+  },
+  {
+    "at": 2850,
+    "look": "phase=The exchange | by=- | binding=- | closed=- | note=- | count=- | pile=- | cards=0/0 | seats=1:8 cards/8 2:8 cards/8 3:13 cards/13 | me=- | hand=SPADE_9,HEART_KING,CLUB_ACE | chips=After a pass: play again | recap=false | bar=true | sheet=false | end=false | round=Round 2 of 5",
+  },
+  {
+    "at": 4100,
+    "look": "phase=The exchange | by=- | binding=- | closed=- | note=- | count=- | pile=- | cards=0/0 | seats=1:8 cards/8 2:8 cards/8 3:13 cards/13 | me=- | hand=SPADE_9,HEART_KING,CLUB_ACE | chips=After a pass: play again | recap=true | bar=true | sheet=false | end=false | round=Round 2 of 5",
+  },
+  {
+    "acknowledged": true,
+    "at": 5600,
+  },
+]
+`;
+
+exports[`PresidentGameScreen pictures (characterisation) > an exchange round > atInstant 1`] = `
+[
+  {
+    "layer": {
+      "arrowId": "president-arrow-head",
+      "markMs": 1600,
+      "markReducedMs": 1500,
+      "markStyle": "soft",
+    },
+  },
+  {
+    "at": 0,
+    "movements": [
+      {
+        "actor": 3,
+        "byOpponent": true,
+        "card": "HEART_KING",
+        "delayMs": 180,
+        "durationMs": 700,
+        "flip": false,
+        "from": {
+          "kind": "seat",
+          "seat": 3,
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 130.0126471646702,
+            "top": 260,
+            "width": 39.97470567065961,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "travel",
+        "marks": [
+          {
+            "kind": "seat",
+            "seat": 3,
+          },
+          {
+            "kind": "seat",
+            "seat": 0,
+          },
+        ],
+        "marksAt": [
+          {
+            "cards": 0,
+            "rect": {
+              "height": 58.00000000000001,
+              "left": 130.0126471646702,
+              "top": 260,
+              "width": 39.97470567065961,
+            },
+          },
+          {
+            "cards": 0,
+            "rect": {
+              "height": 63.84036998358944,
+              "left": 171,
+              "top": 343.0798150082053,
+              "width": 44,
+            },
+          },
+        ],
+        "to": {
+          "kind": "seat",
+          "seat": 0,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 63.84036998358944,
+            "left": 171,
+            "top": 343.0798150082053,
+            "width": 44,
+          },
+        },
+        "turnDown": false,
+      },
+      {
+        "actor": 3,
+        "byOpponent": true,
+        "card": "CLUB_ACE",
+        "delayMs": 240,
+        "durationMs": 700,
+        "flip": false,
+        "from": {
+          "kind": "seat",
+          "seat": 3,
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 130.0126471646702,
+            "top": 260,
+            "width": 39.97470567065961,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "travel",
+        "marks": [
+          {
+            "kind": "seat",
+            "seat": 3,
+          },
+          {
+            "kind": "seat",
+            "seat": 0,
+          },
+        ],
+        "marksAt": [
+          {
+            "cards": 0,
+            "rect": {
+              "height": 58.00000000000001,
+              "left": 130.0126471646702,
+              "top": 260,
+              "width": 39.97470567065961,
+            },
+          },
+          {
+            "cards": 0,
+            "rect": {
+              "height": 63.84036998358944,
+              "left": 171,
+              "top": 343.0798150082053,
+              "width": 44,
+            },
+          },
+        ],
+        "to": {
+          "kind": "seat",
+          "seat": 0,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 63.84036998358944,
+            "left": 171,
+            "top": 343.0798150082053,
+            "width": 44,
+          },
+        },
+        "turnDown": false,
+      },
+    ],
+    "play": {
+      "marksOnly": true,
+      "startInMs": 0,
+      "still": true,
+    },
+  },
+  {
+    "at": 0,
+    "look": "phase=- | by=- | binding=- | closed=- | note=- | count=- | pile=- | cards=0/0 | seats=1:8 cards/8 2:8 cards/8 3:11 cards/11 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING,CLUB_ACE | chips=After a pass: play again | recap=false | bar=false | sheet=false | end=false | round=Round 2 of 5",
+  },
+  {
+    "at": 2500,
+    "movements": [
+      {
+        "actor": 0,
+        "byOpponent": false,
+        "card": "CLUB_3",
+        "delayMs": 100,
+        "durationMs": 480,
+        "flip": false,
+        "from": {
+          "kind": "seat",
+          "seat": 0,
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 63.84036998358944,
+            "left": 175,
+            "top": 351.0798150082053,
+            "width": 44,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "travel",
+        "marks": [
+          {
+            "kind": "seat",
+            "seat": 0,
+          },
+          {
+            "kind": "seat",
+            "seat": 3,
+          },
+        ],
+        "marksAt": [
+          {
+            "cards": 0,
+            "rect": {
+              "height": 63.84036998358944,
+              "left": 175,
+              "top": 351.0798150082053,
+              "width": 44,
+            },
+          },
+          {
+            "cards": 0,
+            "rect": {
+              "height": 58.00000000000001,
+              "left": 130.0126471646702,
+              "top": 260,
+              "width": 39.97470567065961,
+            },
+          },
+        ],
+        "to": {
+          "kind": "seat",
+          "seat": 3,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 130.0126471646702,
+            "top": 260,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+      {
+        "actor": 0,
+        "byOpponent": false,
+        "card": "HEART_9",
+        "delayMs": 160,
+        "durationMs": 480,
+        "flip": false,
+        "from": {
+          "kind": "seat",
+          "seat": 0,
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 63.84036998358944,
+            "left": 175,
+            "top": 351.0798150082053,
+            "width": 44,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "travel",
+        "marks": [
+          {
+            "kind": "seat",
+            "seat": 0,
+          },
+          {
+            "kind": "seat",
+            "seat": 3,
+          },
+        ],
+        "marksAt": [
+          {
+            "cards": 0,
+            "rect": {
+              "height": 63.84036998358944,
+              "left": 175,
+              "top": 351.0798150082053,
+              "width": 44,
+            },
+          },
+          {
+            "cards": 0,
+            "rect": {
+              "height": 58.00000000000001,
+              "left": 130.0126471646702,
+              "top": 260,
+              "width": 39.97470567065961,
+            },
+          },
+        ],
+        "to": {
+          "kind": "seat",
+          "seat": 3,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 130.0126471646702,
+            "top": 260,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+    ],
+    "play": {
+      "marksOnly": true,
+      "startInMs": 0,
+      "still": true,
+    },
+  },
+  {
+    "acknowledged": true,
+    "at": 2500,
+  },
+  {
+    "at": 2500,
+    "look": "phase=The exchange | by=- | binding=- | closed=- | note=- | count=- | pile=- | cards=0/0 | seats=1:8 cards/8 2:8 cards/8 3:13 cards/13 | me=- | hand=SPADE_9,HEART_KING,CLUB_ACE | chips=After a pass: play again | recap=false | bar=true | sheet=false | end=false | round=Round 2 of 5",
+  },
+  {
+    "at": 4000,
+    "look": "phase=The exchange | by=- | binding=- | closed=- | note=- | count=- | pile=- | cards=0/0 | seats=1:8 cards/8 2:8 cards/8 3:13 cards/13 | me=- | hand=SPADE_9,HEART_KING,CLUB_ACE | chips=After a pass: play again | recap=true | bar=true | sheet=false | end=false | round=Round 2 of 5",
+  },
+]
+`;
+
+exports[`PresidentGameScreen pictures (characterisation) > an exchange round > theDealsCardsFlyToMyHand_thenMyReturnsFly_thenTheSummaryIsReadAndAcknowledged 1`] = `
+[
+  {
+    "layer": {
+      "arrowId": "president-arrow-head",
+      "markMs": 1600,
+      "markReducedMs": 1500,
+      "markStyle": "soft",
+    },
+  },
+  {
+    "at": 0,
+    "movements": [
+      {
+        "actor": 3,
+        "byOpponent": true,
+        "card": "HEART_KING",
+        "delayMs": 180,
+        "durationMs": 700,
+        "flip": false,
+        "from": {
+          "kind": "seat",
+          "seat": 3,
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 130.0126471646702,
+            "top": 260,
+            "width": 39.97470567065961,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "travel",
+        "marks": [
+          {
+            "kind": "seat",
+            "seat": 3,
+          },
+          {
+            "kind": "seat",
+            "seat": 0,
+          },
+        ],
+        "marksAt": [
+          {
+            "cards": 0,
+            "rect": {
+              "height": 58.00000000000001,
+              "left": 130.0126471646702,
+              "top": 260,
+              "width": 39.97470567065961,
+            },
+          },
+          {
+            "cards": 0,
+            "rect": {
+              "height": 63.84036998358944,
+              "left": 171,
+              "top": 343.0798150082053,
+              "width": 44,
+            },
+          },
+        ],
+        "to": {
+          "kind": "seat",
+          "seat": 0,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 63.84036998358944,
+            "left": 171,
+            "top": 343.0798150082053,
+            "width": 44,
+          },
+        },
+        "turnDown": false,
+      },
+      {
+        "actor": 3,
+        "byOpponent": true,
+        "card": "CLUB_ACE",
+        "delayMs": 240,
+        "durationMs": 700,
+        "flip": false,
+        "from": {
+          "kind": "seat",
+          "seat": 3,
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 130.0126471646702,
+            "top": 260,
+            "width": 39.97470567065961,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "travel",
+        "marks": [
+          {
+            "kind": "seat",
+            "seat": 3,
+          },
+          {
+            "kind": "seat",
+            "seat": 0,
+          },
+        ],
+        "marksAt": [
+          {
+            "cards": 0,
+            "rect": {
+              "height": 58.00000000000001,
+              "left": 130.0126471646702,
+              "top": 260,
+              "width": 39.97470567065961,
+            },
+          },
+          {
+            "cards": 0,
+            "rect": {
+              "height": 63.84036998358944,
+              "left": 171,
+              "top": 343.0798150082053,
+              "width": 44,
+            },
+          },
+        ],
+        "to": {
+          "kind": "seat",
+          "seat": 0,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 63.84036998358944,
+            "left": 171,
+            "top": 343.0798150082053,
+            "width": 44,
+          },
+        },
+        "turnDown": false,
+      },
+    ],
+    "play": {
+      "marksOnly": false,
+      "startInMs": 0,
+      "still": false,
+    },
+  },
+  {
+    "at": 0,
+    "look": "phase=- | by=- | binding=- | closed=- | note=- | count=- | pile=- | cards=0/0 | seats=1:8 cards/8 2:8 cards/8 3:13 cards/13 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING~,CLUB_ACE~ | chips=After a pass: play again | recap=false | bar=false | sheet=false | end=false | round=Round 2 of 5",
+  },
+  {
+    "at": 900,
+    "look": "phase=- | by=- | binding=- | closed=- | note=- | count=- | pile=- | cards=0/0 | seats=1:8 cards/8 2:8 cards/8 3:12 cards/12 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING,CLUB_ACE~ | chips=After a pass: play again | recap=false | bar=false | sheet=false | end=false | round=Round 2 of 5",
+  },
+  {
+    "at": 950,
+    "look": "phase=- | by=- | binding=- | closed=- | note=- | count=- | pile=- | cards=0/0 | seats=1:8 cards/8 2:8 cards/8 3:11 cards/11 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING,CLUB_ACE | chips=After a pass: play again | recap=false | bar=false | sheet=false | end=false | round=Round 2 of 5",
+  },
+  {
+    "at": 2500,
+    "movements": [
+      {
+        "actor": 0,
+        "byOpponent": false,
+        "card": "CLUB_3",
+        "delayMs": 100,
+        "durationMs": 480,
+        "flip": false,
+        "from": {
+          "kind": "seat",
+          "seat": 0,
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 63.84036998358944,
+            "left": 175,
+            "top": 351.0798150082053,
+            "width": 44,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "travel",
+        "marks": [
+          {
+            "kind": "seat",
+            "seat": 0,
+          },
+          {
+            "kind": "seat",
+            "seat": 3,
+          },
+        ],
+        "marksAt": [
+          {
+            "cards": 0,
+            "rect": {
+              "height": 63.84036998358944,
+              "left": 175,
+              "top": 351.0798150082053,
+              "width": 44,
+            },
+          },
+          {
+            "cards": 0,
+            "rect": {
+              "height": 58.00000000000001,
+              "left": 130.0126471646702,
+              "top": 260,
+              "width": 39.97470567065961,
+            },
+          },
+        ],
+        "to": {
+          "kind": "seat",
+          "seat": 3,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 130.0126471646702,
+            "top": 260,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+      {
+        "actor": 0,
+        "byOpponent": false,
+        "card": "HEART_9",
+        "delayMs": 160,
+        "durationMs": 480,
+        "flip": false,
+        "from": {
+          "kind": "seat",
+          "seat": 0,
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 63.84036998358944,
+            "left": 175,
+            "top": 351.0798150082053,
+            "width": 44,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "travel",
+        "marks": [
+          {
+            "kind": "seat",
+            "seat": 0,
+          },
+          {
+            "kind": "seat",
+            "seat": 3,
+          },
+        ],
+        "marksAt": [
+          {
+            "cards": 0,
+            "rect": {
+              "height": 63.84036998358944,
+              "left": 175,
+              "top": 351.0798150082053,
+              "width": 44,
+            },
+          },
+          {
+            "cards": 0,
+            "rect": {
+              "height": 58.00000000000001,
+              "left": 130.0126471646702,
+              "top": 260,
+              "width": 39.97470567065961,
+            },
+          },
+        ],
+        "to": {
+          "kind": "seat",
+          "seat": 3,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 130.0126471646702,
+            "top": 260,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+    ],
+    "play": {
+      "marksOnly": false,
+      "startInMs": 0,
+      "still": false,
+    },
+  },
+  {
+    "at": 2500,
+    "look": "phase=The exchange | by=- | binding=- | closed=- | note=- | count=- | pile=- | cards=0/0 | seats=1:8 cards/8 2:8 cards/8 3:11 cards/11 | me=- | hand=SPADE_9,HEART_KING,CLUB_ACE | chips=After a pass: play again | recap=false | bar=true | sheet=false | end=false | round=Round 2 of 5",
+  },
+  {
+    "at": 3100,
+    "look": "phase=The exchange | by=- | binding=- | closed=- | note=- | count=- | pile=- | cards=0/0 | seats=1:8 cards/8 2:8 cards/8 3:12 cards/12 | me=- | hand=SPADE_9,HEART_KING,CLUB_ACE | chips=After a pass: play again | recap=false | bar=true | sheet=false | end=false | round=Round 2 of 5",
+  },
+  {
+    "at": 3150,
+    "look": "phase=The exchange | by=- | binding=- | closed=- | note=- | count=- | pile=- | cards=0/0 | seats=1:8 cards/8 2:8 cards/8 3:13 cards/13 | me=- | hand=SPADE_9,HEART_KING,CLUB_ACE | chips=After a pass: play again | recap=false | bar=true | sheet=false | end=false | round=Round 2 of 5",
+  },
+  {
+    "at": 4100,
+    "look": "phase=The exchange | by=- | binding=- | closed=- | note=- | count=- | pile=- | cards=0/0 | seats=1:8 cards/8 2:8 cards/8 3:13 cards/13 | me=- | hand=SPADE_9,HEART_KING,CLUB_ACE | chips=After a pass: play again | recap=true | bar=true | sheet=false | end=false | round=Round 2 of 5",
+  },
+  {
+    "acknowledged": true,
+    "at": 7100,
+  },
+]
+`;
+
+exports[`PresidentGameScreen pictures (characterisation) > an exchange round > underReducedMotion 1`] = `
+[
+  {
+    "layer": {
+      "arrowId": "president-arrow-head",
+      "markMs": 1600,
+      "markReducedMs": 1500,
+      "markStyle": "soft",
+    },
+  },
+  {
+    "at": 0,
+    "movements": [
+      {
+        "actor": 3,
+        "byOpponent": true,
+        "card": "HEART_KING",
+        "delayMs": 180,
+        "durationMs": 700,
+        "flip": false,
+        "from": {
+          "kind": "seat",
+          "seat": 3,
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 130.0126471646702,
+            "top": 260,
+            "width": 39.97470567065961,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "travel",
+        "marks": [
+          {
+            "kind": "seat",
+            "seat": 3,
+          },
+          {
+            "kind": "seat",
+            "seat": 0,
+          },
+        ],
+        "marksAt": [
+          {
+            "cards": 0,
+            "rect": {
+              "height": 58.00000000000001,
+              "left": 130.0126471646702,
+              "top": 260,
+              "width": 39.97470567065961,
+            },
+          },
+          {
+            "cards": 0,
+            "rect": {
+              "height": 63.84036998358944,
+              "left": 171,
+              "top": 343.0798150082053,
+              "width": 44,
+            },
+          },
+        ],
+        "to": {
+          "kind": "seat",
+          "seat": 0,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 63.84036998358944,
+            "left": 171,
+            "top": 343.0798150082053,
+            "width": 44,
+          },
+        },
+        "turnDown": false,
+      },
+      {
+        "actor": 3,
+        "byOpponent": true,
+        "card": "CLUB_ACE",
+        "delayMs": 240,
+        "durationMs": 700,
+        "flip": false,
+        "from": {
+          "kind": "seat",
+          "seat": 3,
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 130.0126471646702,
+            "top": 260,
+            "width": 39.97470567065961,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "travel",
+        "marks": [
+          {
+            "kind": "seat",
+            "seat": 3,
+          },
+          {
+            "kind": "seat",
+            "seat": 0,
+          },
+        ],
+        "marksAt": [
+          {
+            "cards": 0,
+            "rect": {
+              "height": 58.00000000000001,
+              "left": 130.0126471646702,
+              "top": 260,
+              "width": 39.97470567065961,
+            },
+          },
+          {
+            "cards": 0,
+            "rect": {
+              "height": 63.84036998358944,
+              "left": 171,
+              "top": 343.0798150082053,
+              "width": 44,
+            },
+          },
+        ],
+        "to": {
+          "kind": "seat",
+          "seat": 0,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 63.84036998358944,
+            "left": 171,
+            "top": 343.0798150082053,
+            "width": 44,
+          },
+        },
+        "turnDown": false,
+      },
+    ],
+    "play": {
+      "marksOnly": true,
+      "startInMs": 0,
+      "still": true,
+    },
+  },
+  {
+    "at": 0,
+    "look": "phase=- | by=- | binding=- | closed=- | note=- | count=- | pile=- | cards=0/0 | seats=1:8 cards/8 2:8 cards/8 3:11 cards/11 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING,CLUB_ACE | chips=After a pass: play again | recap=false | bar=false | sheet=false | end=false | round=Round 2 of 5",
+  },
+  {
+    "at": 2500,
+    "movements": [
+      {
+        "actor": 0,
+        "byOpponent": false,
+        "card": "CLUB_3",
+        "delayMs": 100,
+        "durationMs": 480,
+        "flip": false,
+        "from": {
+          "kind": "seat",
+          "seat": 0,
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 63.84036998358944,
+            "left": 175,
+            "top": 351.0798150082053,
+            "width": 44,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "travel",
+        "marks": [
+          {
+            "kind": "seat",
+            "seat": 0,
+          },
+          {
+            "kind": "seat",
+            "seat": 3,
+          },
+        ],
+        "marksAt": [
+          {
+            "cards": 0,
+            "rect": {
+              "height": 63.84036998358944,
+              "left": 175,
+              "top": 351.0798150082053,
+              "width": 44,
+            },
+          },
+          {
+            "cards": 0,
+            "rect": {
+              "height": 58.00000000000001,
+              "left": 130.0126471646702,
+              "top": 260,
+              "width": 39.97470567065961,
+            },
+          },
+        ],
+        "to": {
+          "kind": "seat",
+          "seat": 3,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 130.0126471646702,
+            "top": 260,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+      {
+        "actor": 0,
+        "byOpponent": false,
+        "card": "HEART_9",
+        "delayMs": 160,
+        "durationMs": 480,
+        "flip": false,
+        "from": {
+          "kind": "seat",
+          "seat": 0,
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 63.84036998358944,
+            "left": 175,
+            "top": 351.0798150082053,
+            "width": 44,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "travel",
+        "marks": [
+          {
+            "kind": "seat",
+            "seat": 0,
+          },
+          {
+            "kind": "seat",
+            "seat": 3,
+          },
+        ],
+        "marksAt": [
+          {
+            "cards": 0,
+            "rect": {
+              "height": 63.84036998358944,
+              "left": 175,
+              "top": 351.0798150082053,
+              "width": 44,
+            },
+          },
+          {
+            "cards": 0,
+            "rect": {
+              "height": 58.00000000000001,
+              "left": 130.0126471646702,
+              "top": 260,
+              "width": 39.97470567065961,
+            },
+          },
+        ],
+        "to": {
+          "kind": "seat",
+          "seat": 3,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 130.0126471646702,
+            "top": 260,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+    ],
+    "play": {
+      "marksOnly": true,
+      "startInMs": 0,
+      "still": true,
+    },
+  },
+  {
+    "acknowledged": true,
+    "at": 2500,
+  },
+  {
+    "at": 2500,
+    "look": "phase=The exchange | by=- | binding=- | closed=- | note=- | count=- | pile=- | cards=0/0 | seats=1:8 cards/8 2:8 cards/8 3:13 cards/13 | me=- | hand=SPADE_9,HEART_KING,CLUB_ACE | chips=After a pass: play again | recap=false | bar=true | sheet=false | end=false | round=Round 2 of 5",
+  },
+  {
+    "at": 4000,
+    "look": "phase=The exchange | by=- | binding=- | closed=- | note=- | count=- | pile=- | cards=0/0 | seats=1:8 cards/8 2:8 cards/8 3:13 cards/13 | me=- | hand=SPADE_9,HEART_KING,CLUB_ACE | chips=After a pass: play again | recap=true | bar=true | sheet=false | end=false | round=Round 2 of 5",
+  },
+]
+`;
+
+exports[`PresidentGameScreen pictures (characterisation) > myPlayMeasuredAtTheClick_aPass_anOpponentPair_andAnotherPass 1`] = `
+[
+  {
+    "layer": {
+      "arrowId": "president-arrow-head",
+      "markMs": 1600,
+      "markReducedMs": 1500,
+      "markStyle": "soft",
+    },
+  },
+  {
+    "at": 0,
+    "selected": [
+      "HEART_9",
+      "SPADE_9",
+    ],
+    "sent": "play",
+  },
+  {
+    "at": 120,
+    "movements": [
+      {
+        "actor": 0,
+        "byOpponent": false,
+        "card": "HEART_9",
+        "delayMs": 100,
+        "durationMs": 480,
+        "flip": false,
+        "from": {
+          "height": 58,
+          "kind": "rect",
+          "left": 173,
+          "top": 346,
+          "width": 40,
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 173,
+            "top": 346,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "travel",
+        "marks": [
+          {
+            "height": 58,
+            "kind": "rect",
+            "left": 173,
+            "top": 346,
+            "width": 40,
+          },
+          {
+            "index": 0,
+            "kind": "pileCard",
+          },
+        ],
+        "marksAt": [
+          {
+            "cards": 0,
+            "rect": {
+              "height": 58,
+              "left": 173,
+              "top": 346,
+              "width": 40,
+            },
+          },
+          {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 157,
+              "top": 314,
+              "width": 40,
+            },
+          },
+        ],
+        "to": {
+          "index": 0,
+          "kind": "pileCard",
+        },
+        "toAt": {
+          "cards": 1,
+          "rect": {
+            "height": 58,
+            "left": 157,
+            "top": 314,
+            "width": 40,
+          },
+        },
+        "turnDown": false,
+      },
+      {
+        "actor": 0,
+        "byOpponent": false,
+        "card": "SPADE_9",
+        "delayMs": 160,
+        "durationMs": 480,
+        "flip": false,
+        "from": {
+          "height": 58,
+          "kind": "rect",
+          "left": 175,
+          "top": 350,
+          "width": 40,
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 175,
+            "top": 350,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "travel",
+        "marks": [
+          {
+            "height": 58,
+            "kind": "rect",
+            "left": 175,
+            "top": 350,
+            "width": 40,
+          },
+          {
+            "index": 1,
+            "kind": "pileCard",
+          },
+        ],
+        "marksAt": [
+          {
+            "cards": 0,
+            "rect": {
+              "height": 58,
+              "left": 175,
+              "top": 350,
+              "width": 40,
+            },
+          },
+          {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 159,
+              "top": 318,
+              "width": 40,
+            },
+          },
+        ],
+        "to": {
+          "index": 1,
+          "kind": "pileCard",
+        },
+        "toAt": {
+          "cards": 1,
+          "rect": {
+            "height": 58,
+            "left": 159,
+            "top": 318,
+            "width": 40,
+          },
+        },
+        "turnDown": false,
+      },
+    ],
+    "play": {
+      "marksOnly": false,
+      "startInMs": 0,
+      "still": false,
+    },
+  },
+  {
+    "at": 120,
+    "look": "phase=P1 is playing | by=- | binding=- | closed=- | note=- | count=- | pile= | cards=2/0 | seats=1:8 cards/8 2:8 cards/8 3:8 cards/8 | me=- | hand=CLUB_3,HEART_KING | chips=After a pass: play again | recap=false | bar=true | sheet=false | end=false | round=Round 1 of 5",
+  },
+  {
+    "at": 770,
+    "look": "phase=P1 is playing | by=You played | binding=- | closed=- | note=- | count=2 cards in the trick | pile= | cards=2/0 | seats=1:8 cards/8 2:8 cards/8 3:8 cards/8 | me=- | hand=CLUB_3,HEART_KING | chips=To beat: 2 × 9|After a pass: play again | recap=false | bar=true | sheet=false | end=false | round=Round 1 of 5",
+  },
+  {
+    "at": 820,
+    "movements": [
+      {
+        "actor": 2,
+        "byOpponent": true,
+        "card": "HEART_KING",
+        "delayMs": 180,
+        "durationMs": 700,
+        "flip": false,
+        "from": {
+          "kind": "fanTop",
+          "seat": 2,
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 120,
+            "top": 240,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "travel",
+        "marks": [
+          {
+            "kind": "fanTop",
+            "seat": 2,
+          },
+          {
+            "index": 0,
+            "kind": "pileCard",
+          },
+        ],
+        "marksAt": [
+          {
+            "cards": 0,
+            "rect": {
+              "height": 58,
+              "left": 120,
+              "top": 240,
+              "width": 40,
+            },
+          },
+          {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 160,
+              "top": 320,
+              "width": 40,
+            },
+          },
+        ],
+        "to": {
+          "index": 0,
+          "kind": "pileCard",
+        },
+        "toAt": {
+          "cards": 1,
+          "rect": {
+            "height": 58,
+            "left": 160,
+            "top": 320,
+            "width": 40,
+          },
+        },
+        "turnDown": false,
+      },
+      {
+        "actor": 2,
+        "byOpponent": true,
+        "card": "SPADE_KING",
+        "delayMs": 240,
+        "durationMs": 700,
+        "flip": false,
+        "from": {
+          "kind": "fanTop",
+          "seat": 2,
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 120,
+            "top": 240,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "travel",
+        "marks": [
+          {
+            "kind": "fanTop",
+            "seat": 2,
+          },
+          {
+            "index": 1,
+            "kind": "pileCard",
+          },
+        ],
+        "marksAt": [
+          {
+            "cards": 0,
+            "rect": {
+              "height": 58,
+              "left": 120,
+              "top": 240,
+              "width": 40,
+            },
+          },
+          {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 162,
+              "top": 324,
+              "width": 40,
+            },
+          },
+        ],
+        "to": {
+          "index": 1,
+          "kind": "pileCard",
+        },
+        "toAt": {
+          "cards": 1,
+          "rect": {
+            "height": 58,
+            "left": 162,
+            "top": 324,
+            "width": 40,
+          },
+        },
+        "turnDown": false,
+      },
+    ],
+    "play": {
+      "marksOnly": false,
+      "startInMs": 0,
+      "still": false,
+    },
+  },
+  {
+    "at": 820,
+    "look": "phase=P2 is playing | by=You played | binding=- | closed=- | note=- | count=2 cards in the trick | pile= | cards=2/0 | seats=1:8 cards/8(Pass) 2:8 cards/8 3:8 cards/8 | me=- | hand=CLUB_3,HEART_KING | chips=To beat: 2 × 9|After a pass: play again | recap=false | bar=true | sheet=false | end=false | round=Round 1 of 5",
+  },
+  {
+    "at": 1770,
+    "look": "phase=Your turn | by=P2 played | binding=- | closed=- | note=- | count=4 cards in the trick | pile= | cards=2/0 | seats=1:8 cards/8(Pass) 2:6 cards/6 3:8 cards/8(Pass) | me=- | hand=CLUB_3,HEART_KING | chips=To beat: 2 × King|After a pass: play again | recap=false | bar=true | sheet=false | end=false | round=Round 1 of 5",
+  },
+  {
+    "at": 2220,
+    "look": "phase=Your turn | by=P2 played | binding=- | closed=- | note=- | count=4 cards in the trick | pile= | cards=2/0 | seats=1:8 cards/8 2:6 cards/6 3:8 cards/8(Pass) | me=- | hand=CLUB_3,HEART_KING | chips=To beat: 2 × King|After a pass: play again | recap=false | bar=true | sheet=false | end=false | round=Round 1 of 5",
+  },
+  {
+    "at": 3170,
+    "look": "phase=Your turn | by=P2 played | binding=- | closed=- | note=- | count=4 cards in the trick | pile= | cards=2/0 | seats=1:8 cards/8 2:6 cards/6 3:8 cards/8 | me=- | hand=CLUB_3,HEART_KING | chips=To beat: 2 × King|After a pass: play again | recap=false | bar=true | sheet=false | end=false | round=Round 1 of 5",
+  },
+]
+`;
+
+exports[`PresidentGameScreen pictures (characterisation) > the end of a round and of the match > aForfeitEndsTheMatch_thenTheFinalScoresAfterTheTableSettles 1`] = `
+[
+  {
+    "layer": {
+      "arrowId": "president-arrow-head",
+      "markMs": 1600,
+      "markReducedMs": 1500,
+      "markStyle": "soft",
+    },
+  },
+  {
+    "at": 0,
+    "look": "phase=- | by=- | binding=- | closed=- | note=- | count=- | pile=- | cards=0/0 | seats=1:8 cards/8 2:8 cards/8 3:8 cards/8 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING | chips=After a pass: play again | recap=false | bar=false | sheet=false | end=false | round=Round 2 of 5",
+  },
+  {
+    "at": 1200,
+    "look": "phase=- | by=- | binding=- | closed=- | note=- | count=- | pile=- | cards=0/0 | seats= | me=- | hand= | chips= | recap=false | bar=false | sheet=false | end=true | round=-",
+  },
+]
+`;
+
+exports[`PresidentGameScreen pictures (characterisation) > the end of a round and of the match > theLastPlayOfARound_thenTheSheet 1`] = `
+[
+  {
+    "layer": {
+      "arrowId": "president-arrow-head",
+      "markMs": 1600,
+      "markReducedMs": 1500,
+      "markStyle": "soft",
+    },
+  },
+  {
+    "at": 0,
+    "movements": [
+      {
+        "actor": 1,
+        "byOpponent": true,
+        "card": "HEART_ACE",
+        "delayMs": 180,
+        "durationMs": 700,
+        "flip": false,
+        "from": {
+          "kind": "fanTop",
+          "seat": 1,
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 75,
+            "top": 150,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "travel",
+        "marks": [
+          {
+            "kind": "fanTop",
+            "seat": 1,
+          },
+          {
+            "index": 0,
+            "kind": "pileCard",
+          },
+        ],
+        "marksAt": [
+          {
+            "cards": 0,
+            "rect": {
+              "height": 58,
+              "left": 75,
+              "top": 150,
+              "width": 40,
+            },
+          },
+          {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 143,
+              "top": 286,
+              "width": 40,
+            },
+          },
+        ],
+        "to": {
+          "index": 0,
+          "kind": "pileCard",
+        },
+        "toAt": {
+          "cards": 1,
+          "rect": {
+            "height": 58,
+            "left": 143,
+            "top": 286,
+            "width": 40,
+          },
+        },
+        "turnDown": false,
+      },
+      {
+        "actor": 1,
+        "byOpponent": false,
+        "card": null,
+        "delayMs": 880,
+        "durationMs": 0,
+        "flip": false,
+        "from": {
+          "kind": "pile",
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 141,
+            "top": 282,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "ring",
+        "marks": [],
+        "marksAt": [],
+        "to": {
+          "kind": "seat",
+          "seat": 1,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 74.0126471646702,
+            "top": 148,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+    ],
+    "play": {
+      "marksOnly": false,
+      "startInMs": 0,
+      "still": false,
+    },
+  },
+  {
+    "at": 0,
+    "movements": [
+      {
+        "actor": 1,
+        "byOpponent": false,
+        "card": "HEART_ACE",
+        "delayMs": 0,
+        "durationMs": 620,
+        "flip": false,
+        "from": {
+          "index": 0,
+          "kind": "pileCard",
+        },
+        "fromAt": {
+          "cards": 1,
+          "rect": {
+            "height": 58,
+            "left": 143,
+            "top": 286,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 40,
+        "kind": "travel",
+        "marks": [],
+        "marksAt": [],
+        "to": {
+          "kind": "seat",
+          "seat": 1,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 74.0126471646702,
+            "top": 148,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+      {
+        "actor": 1,
+        "byOpponent": false,
+        "card": "HEART_KING",
+        "delayMs": 90,
+        "durationMs": 620,
+        "flip": false,
+        "from": {
+          "kind": "pileSlot",
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 141,
+            "top": 286,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 40,
+        "kind": "travel",
+        "marks": [],
+        "marksAt": [],
+        "to": {
+          "kind": "seat",
+          "seat": 1,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 74.0126471646702,
+            "top": 148,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+      {
+        "actor": 1,
+        "byOpponent": false,
+        "card": null,
+        "delayMs": 710,
+        "durationMs": 0,
+        "flip": false,
+        "from": {
+          "kind": "pile",
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 141,
+            "top": 282,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "ring",
+        "marks": [],
+        "marksAt": [],
+        "to": {
+          "kind": "seat",
+          "seat": 1,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 74.0126471646702,
+            "top": 148,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+    ],
+    "play": {
+      "startInMs": 1930,
+      "still": false,
+    },
+  },
+  {
+    "at": 0,
+    "look": "phase=- | by=You played | binding=- | closed=- | note=- | count=1 card in the trick | pile= | cards=0/1 | seats=1:1 card/1 2:8 cards/8 3:8 cards/8 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING | chips=After a pass: play again | recap=false | bar=false | sheet=false | end=false | round=Round 2 of 5",
+  },
+  {
+    "at": 900,
+    "look": "phase=- | by=- | binding=- | closed=- | note=P1 went out and the trick is closed. | count=- | pile= | cards=0/1 | seats=1:8 cards/8 2:8 cards/8 3:8 cards/8 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING | chips=After a pass: play again | recap=false | bar=false | sheet=false | end=false | round=Round 2 of 5",
+  },
+  {
+    "at": 1950,
+    "look": "phase=- | by=- | binding=- | closed=- | note=P1 went out and the trick is closed. | count=- | pile=trick-cards--swept | cards=0/1 | seats=1:8 cards/8 2:8 cards/8 3:8 cards/8 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING | chips=After a pass: play again | recap=false | bar=false | sheet=false | end=false | round=Round 2 of 5",
+  },
+  {
+    "at": 2700,
+    "look": "phase=- | by=- | binding=- | closed=- | note=P1 went out and the trick is closed. | count=- | pile=- | cards=0/0 | seats=1:8 cards/8 2:8 cards/8 3:8 cards/8 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING | chips=After a pass: play again | recap=false | bar=false | sheet=false | end=false | round=Round 2 of 5",
+  },
+  {
+    "at": 3800,
+    "look": "phase=- | by=- | binding=- | closed=- | note=P1 went out and the trick is closed. | count=- | pile=- | cards=0/0 | seats=1:8 cards/8 2:8 cards/8 3:8 cards/8 | me=- | hand= | chips=After a pass: play again | recap=false | bar=false | sheet=true | end=false | round=Round 2 of 5",
+  },
+]
+`;
+
+exports[`PresidentGameScreen pictures (characterisation) > the end of a round and of the match > theLastPlayOfTheMatch_thenTheSheet_thenTheFinalScoresOnceContinued 1`] = `
+[
+  {
+    "layer": {
+      "arrowId": "president-arrow-head",
+      "markMs": 1600,
+      "markReducedMs": 1500,
+      "markStyle": "soft",
+    },
+  },
+  {
+    "at": 0,
+    "movements": [
+      {
+        "actor": 1,
+        "byOpponent": true,
+        "card": "HEART_ACE",
+        "delayMs": 180,
+        "durationMs": 700,
+        "flip": false,
+        "from": {
+          "kind": "fanTop",
+          "seat": 1,
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 75,
+            "top": 150,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "travel",
+        "marks": [
+          {
+            "kind": "fanTop",
+            "seat": 1,
+          },
+          {
+            "index": 0,
+            "kind": "pileCard",
+          },
+        ],
+        "marksAt": [
+          {
+            "cards": 0,
+            "rect": {
+              "height": 58,
+              "left": 75,
+              "top": 150,
+              "width": 40,
+            },
+          },
+          {
+            "cards": 1,
+            "rect": {
+              "height": 58,
+              "left": 143,
+              "top": 286,
+              "width": 40,
+            },
+          },
+        ],
+        "to": {
+          "index": 0,
+          "kind": "pileCard",
+        },
+        "toAt": {
+          "cards": 1,
+          "rect": {
+            "height": 58,
+            "left": 143,
+            "top": 286,
+            "width": 40,
+          },
+        },
+        "turnDown": false,
+      },
+      {
+        "actor": 1,
+        "byOpponent": false,
+        "card": null,
+        "delayMs": 880,
+        "durationMs": 0,
+        "flip": false,
+        "from": {
+          "kind": "pile",
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 141,
+            "top": 282,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "ring",
+        "marks": [],
+        "marksAt": [],
+        "to": {
+          "kind": "seat",
+          "seat": 1,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 74.0126471646702,
+            "top": 148,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+    ],
+    "play": {
+      "marksOnly": false,
+      "startInMs": 0,
+      "still": false,
+    },
+  },
+  {
+    "at": 0,
+    "movements": [
+      {
+        "actor": 1,
+        "byOpponent": false,
+        "card": "HEART_ACE",
+        "delayMs": 0,
+        "durationMs": 620,
+        "flip": false,
+        "from": {
+          "index": 0,
+          "kind": "pileCard",
+        },
+        "fromAt": {
+          "cards": 1,
+          "rect": {
+            "height": 58,
+            "left": 143,
+            "top": 286,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 40,
+        "kind": "travel",
+        "marks": [],
+        "marksAt": [],
+        "to": {
+          "kind": "seat",
+          "seat": 1,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 74.0126471646702,
+            "top": 148,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+      {
+        "actor": 1,
+        "byOpponent": false,
+        "card": "HEART_KING",
+        "delayMs": 90,
+        "durationMs": 620,
+        "flip": false,
+        "from": {
+          "kind": "pileSlot",
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 141,
+            "top": 286,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 40,
+        "kind": "travel",
+        "marks": [],
+        "marksAt": [],
+        "to": {
+          "kind": "seat",
+          "seat": 1,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 74.0126471646702,
+            "top": 148,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+      {
+        "actor": 1,
+        "byOpponent": false,
+        "card": null,
+        "delayMs": 710,
+        "durationMs": 0,
+        "flip": false,
+        "from": {
+          "kind": "pile",
+        },
+        "fromAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58,
+            "left": 141,
+            "top": 282,
+            "width": 40,
+          },
+        },
+        "holdAfterMs": 250,
+        "kind": "ring",
+        "marks": [],
+        "marksAt": [],
+        "to": {
+          "kind": "seat",
+          "seat": 1,
+        },
+        "toAt": {
+          "cards": 0,
+          "rect": {
+            "height": 58.00000000000001,
+            "left": 74.0126471646702,
+            "top": 148,
+            "width": 39.97470567065961,
+          },
+        },
+        "turnDown": false,
+      },
+    ],
+    "play": {
+      "startInMs": 1930,
+      "still": false,
+    },
+  },
+  {
+    "at": 0,
+    "look": "phase=- | by=You played | binding=- | closed=- | note=- | count=1 card in the trick | pile= | cards=0/1 | seats=1:1 card/1 2:8 cards/8 3:8 cards/8 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING | chips=After a pass: play again | recap=false | bar=false | sheet=false | end=false | round=Round 2 of 5",
+  },
+  {
+    "at": 900,
+    "look": "phase=- | by=- | binding=- | closed=- | note=P1 went out and the trick is closed. | count=- | pile= | cards=0/1 | seats=1:8 cards/8 2:8 cards/8 3:8 cards/8 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING | chips=After a pass: play again | recap=false | bar=false | sheet=false | end=false | round=Round 2 of 5",
+  },
+  {
+    "at": 1950,
+    "look": "phase=- | by=- | binding=- | closed=- | note=P1 went out and the trick is closed. | count=- | pile=trick-cards--swept | cards=0/1 | seats=1:8 cards/8 2:8 cards/8 3:8 cards/8 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING | chips=After a pass: play again | recap=false | bar=false | sheet=false | end=false | round=Round 2 of 5",
+  },
+  {
+    "at": 2700,
+    "look": "phase=- | by=- | binding=- | closed=- | note=P1 went out and the trick is closed. | count=- | pile=- | cards=0/0 | seats=1:8 cards/8 2:8 cards/8 3:8 cards/8 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING | chips=After a pass: play again | recap=false | bar=false | sheet=false | end=false | round=Round 2 of 5",
+  },
+  {
+    "at": 3800,
+    "look": "phase=- | by=- | binding=- | closed=- | note=P1 went out and the trick is closed. | count=- | pile=- | cards=0/0 | seats=1:8 cards/8 2:8 cards/8 3:8 cards/8 | me=- | hand= | chips=After a pass: play again | recap=false | bar=false | sheet=true | end=false | round=Round 2 of 5",
+  },
+  {
+    "at": 7000,
+    "look": "phase=- | by=- | binding=- | closed=- | note=- | count=- | pile=- | cards=0/0 | seats= | me=- | hand= | chips= | recap=false | bar=false | sheet=false | end=true | round=-",
+  },
+]
+`;

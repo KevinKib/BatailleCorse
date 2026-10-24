@@ -195,6 +195,59 @@ describe('useTableMotion', () => {
     expect(t.play.mock.calls[1][1].startInMs).toBe(1000);
   });
 
+  it('givenABeforePlay_thenEachEntryIsAdmittedOnArrivalAndWaitsForItBeforeTheLayer_theWaitComingOffItsStart', async () => {
+    let release: () => void = () => {};
+    const held = new Promise<void>(resolve => { release = resolve; });
+    const seen: [number, boolean, number][] = [];
+    const t = table({
+      beforePlay: async (admitted, e) => {
+        seen.push([e.id, admitted.motion, admitted.startInMs]);
+        if (e.id === 1) await held;
+      },
+    });
+    await t.push(entry(1), entry(2));
+    // Both admitted at once, in order (the second behind the first's 500 ms); the first is not played while it waits.
+    expect(seen).toEqual([[1, true, 0], [2, true, 500]]);
+    expect(t.motion.backlogMs()).toBe(1000);
+    await vi.waitFor(() => expect(t.play).toHaveBeenCalledTimes(1));
+    expect(t.play.mock.calls[0][1].startInMs).toBe(500);
+    t.clock.now += 300;
+    release();
+    await vi.waitFor(() => expect(t.play).toHaveBeenCalledTimes(2));
+    // The second (no wait of its own) was played first, at its admitted start; the first waited 300 ms and starts at once.
+    expect(t.play.mock.calls.map(c => [c[1].startInMs])).toEqual([[500], [0]]);
+  });
+
+  it('givenABeforePlay_thenOnPlayedGetsTheStartLeftAfterTheWait', async () => {
+    const played: Played<string>[] = [];
+    const t = table({
+      beforePlay: async () => { t.clock.now += 200; },
+      onPlayed: p => { played.push(p); },
+    });
+    await t.push(entry(1), entry(2));
+    await vi.waitFor(() => expect(played).toHaveLength(2));
+    // Each wait takes 200 ms of the clock. The first, admitted at 0 ms, starts at once once both waits are over (400 ms
+    // later); the second, admitted 200 ms in behind the first (300 ms to go), has 100 ms left.
+    expect(played.map(p => [p.startInMs, p.endsAt])).toEqual([[0, 10_900], [100, 11_000]]);
+  });
+
+  it('givenABeforePlay_thenItIsNotAskedForANonLogPlanNorForAPlanWithNothingToMove', async () => {
+    const beforePlay = vi.fn();
+    const t = table({ plan: () => ({ movements: [] }), beforePlay });
+    await t.push(entry(1));
+    await t.motion.play({ movements: [move()] });
+    expect(beforePlay).not.toHaveBeenCalled();
+    expect(t.play).toHaveBeenCalledTimes(1);
+  });
+
+  it('givenABeforePlayThatThrows_thenThePictureIsSkippedAndTheNextEntryStillPlays', async () => {
+    const onPlayed = vi.fn();
+    const t = table({ beforePlay: (_p, e) => { if (e.id === 1) throw new Error('boom'); }, onPlayed });
+    await t.push(entry(1), entry(2));
+    await vi.waitFor(() => expect(t.play).toHaveBeenCalledTimes(1));
+    expect(onPlayed).toHaveBeenCalledTimes(1);
+  });
+
   it('givenAPlanThatIsNotFromTheLog_thenPlayShareTheQueueAndReportsWithNoEntry', async () => {
     const played: [Played<string>, Entry | null][] = [];
     const t = table({ onPlayed: (p, e) => { played.push([p, e]); } });

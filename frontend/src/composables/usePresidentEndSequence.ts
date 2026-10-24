@@ -1,8 +1,6 @@
 import { onScopeDispose, ref, watch } from 'vue';
+import { useTableSettled } from '../animation';
 import type { EndKind } from '../model/president/endSequence';
-
-/** How often a held picture is looked at again. */
-const POLL_MS = 100;
 
 /**
  * Sequences the end of a round on the President table (owner feedback, 2026-10-19): the game finishes visually (the
@@ -14,9 +12,9 @@ const POLL_MS = 100;
  * - `abandoned` (a forfeit): no round to show, the final scores show once the table has settled.
  * - A page opened on an ended game (a reload) shows its sheet, or the final scores, at once: nothing is playing.
  *
- * The table has settled when the tempo queue has nothing left (`backlogMs`), no picture is held (`busy`) and the
- * `settleMs` of rest have passed with nothing new, after a short `graceMs` that lets the last move of the round reach
- * the queue (the state arrives before its event). Purely visual: the game itself never waits for it.
+ * The table has settled (`useTableSettled`) when the tempo queue has nothing left (`backlogMs`), no picture is held
+ * (`busy`) and the `settleMs` of rest have passed with nothing new, after a short `graceMs` that lets the last move of
+ * the round reach the queue (the state arrives before its event). Purely visual: the game itself never waits for it.
  */
 export function usePresidentEndSequence(source: {
   kind: () => EndKind;
@@ -28,29 +26,19 @@ export function usePresidentEndSequence(source: {
 }) {
   const sheetVisible = ref(false);
   const finalVisible = ref(false);
-  let timer: ReturnType<typeof setTimeout> | null = null;
+  const settled = useTableSettled({
+    backlogMs: source.backlogMs, busy: source.busy, settleMs: () => source.timings().settleMs,
+  });
+  let grace: ReturnType<typeof setTimeout> | null = null;
 
-  function stopTimer() {
-    if (timer !== null) { clearTimeout(timer); timer = null; }
+  function stop() {
+    if (grace !== null) { clearTimeout(grace); grace = null; }
+    settled.cancel();
   }
 
   function reveal(kind: EndKind) {
     if (kind === 'abandoned') finalVisible.value = true;
     else sheetVisible.value = true;
-  }
-
-  function wait(ms: number, then: () => void) {
-    stopTimer();
-    timer = setTimeout(() => { timer = null; then(); }, ms);
-  }
-
-  function step(kind: EndKind, afterSettle: boolean) {
-    if (source.busy()) return wait(POLL_MS, () => step(kind, false));
-    const backlog = source.backlogMs();
-    if (backlog > 0) return wait(backlog, () => step(kind, false));
-    const { settleMs } = source.timings();
-    if (!afterSettle && settleMs > 0) return wait(settleMs, () => step(kind, true));
-    reveal(kind);
   }
 
   function immediately(kind: EndKind) {
@@ -62,20 +50,23 @@ export function usePresidentEndSequence(source: {
   if (initial !== 'none') immediately(initial);
 
   watch(source.kind, (kind, previous) => {
-    stopTimer();
+    stop();
     if (kind === 'none') {
       sheetVisible.value = false;
       finalVisible.value = false;
       return;
     }
     if (kind === previous) return;
-    wait(source.timings().graceMs, () => step(kind, false));
+    grace = setTimeout(() => {
+      grace = null;
+      void settled.whenSettled(() => reveal(kind));
+    }, source.timings().graceMs);
   });
 
   /** The last round's sheet is read: on to the final scores. */
   function continueToFinal() { finalVisible.value = true; }
 
-  onScopeDispose(stopTimer);
+  onScopeDispose(stop);
 
   return { sheetVisible, finalVisible, continueToFinal };
 }
