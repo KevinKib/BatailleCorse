@@ -21,7 +21,7 @@ import BullshitHand from '../../components/bullshit/BullshitHand.vue';
 import GameLobby from '../../components/lobby/GameLobby.vue';
 import { findGame } from '../../model/games';
 import { useI18n } from '../../composables/useI18n';
-import { CardMotionLayer, canAnimate, useTableMotion, type MotionPlan } from '../../animation';
+import { CardMotionLayer, canAnimate, useTableMotion, type CardMotionLayerPlay } from '../../animation';
 import {
   BULLSHIT_LAYER_LEVEL, BULLSHIT_QUEUE, planDiscard, planTake, resolveAnchor, settleMs, type BullshitAnchor,
 } from '../../model/bullshit/motion';
@@ -107,7 +107,7 @@ const opponentsRing = ref<HTMLElement | null>(null);
 
 // The cards that fly are drawn by the shared card layer (no log to follow here: the screen hands it a plan when a
 // card leaves my hand or a pile is taken, and the layer never waits for, or gates, anything).
-const layer = ref<{ play: (m: MotionPlan<BullshitAnchor>['movements'], o?: { marksOnly?: boolean; startInMs?: number; still?: boolean }) => unknown } | null>(null);
+const layer = ref<{ play: CardMotionLayerPlay<BullshitAnchor> } | null>(null);
 const motion = useTableMotion<never, BullshitAnchor>({ layer, bounds: BULLSHIT_QUEUE });
 
 function discard() {
