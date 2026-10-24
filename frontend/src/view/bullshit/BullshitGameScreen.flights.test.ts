@@ -149,24 +149,41 @@ describe('Bullshit flights (characterisation)', () => {
       wrapper.unmount();
     });
 
-    // Today the copy is taken from the place `hand-card-<n>` where n is the card's index in the hand as the server
-    // sent it, while the places are numbered in the order they are displayed (sorted). With a hand that is not in
-    // display order the copy starts from, and shows, the card sitting at that other place. Kept as it is: any
-    // change of it is a visible change for the owner to decide.
-    it('draws each copy from the place numbered by the card index in the hand, shown or not in that order', async () => {
+    // The places are numbered in the order they are displayed (sorted), not in the order the server sent the hand: the
+    // copy of a card starts from the place of that card and shows its face (it used to start from, and show, the card
+    // sitting at the place numbered by the card's index in the server's hand).
+    it('draws each copy from the place of the played card, whatever order the server sent the hand in', async () => {
       const reversed = [hand[1], hand[0]];             // sent as KING, ACE; displayed as ACE (0), KING (1)
       const ctx = setup(state(null, reversed));
       vi.spyOn(ctx.store, 'discard').mockImplementation(() => {});
-      await ctx.wrapper.get('[data-test="hand-card-0"]').trigger('click');   // the ace, which is index 1 of the hand
+      await ctx.wrapper.get('[data-test="hand-card-0"]').trigger('click');   // the ace, displayed first
       await ctx.wrapper.get('[data-test="discard"]').trigger('click');
       await flushPromises();
       const root = ctx.wrapper.element as HTMLElement;
       const pictureOf = (el: Element) => (el.matches('img') ? el : el.querySelector('img'))?.getAttribute('src');
       expect(flights).toHaveLength(1);
-      expect(flights[0].frames[0].transform).toBe('translate(100px, 500px) scale(1) rotate(0deg)');
+      expect(flights[0].frames[0].transform).toBe('translate(30px, 500px) scale(1) rotate(0deg)');
       expect(pictureOf(flights[0].el)).toBeTruthy();
-      expect(pictureOf(flights[0].el)).toBe(pictureOf(root.querySelector('[data-test="hand-card-1"]')!));
-      expect(pictureOf(flights[0].el)).not.toBe(pictureOf(root.querySelector('[data-test="hand-card-0"]')!));
+      expect(pictureOf(flights[0].el)).toBe(pictureOf(root.querySelector('[data-test="hand-card-0"]')!));
+      expect(pictureOf(flights[0].el)).not.toBe(pictureOf(root.querySelector('[data-test="hand-card-1"]')!));
+      ctx.wrapper.unmount();
+    });
+
+    it('draws each copy of a multi-card discard from its own place, in the order the cards were picked', async () => {
+      const ctx = setup(state(null, [hand[1], hand[0]]));   // sent as KING, ACE; displayed as ACE (0), KING (1)
+      vi.spyOn(ctx.store, 'discard').mockImplementation(() => {});
+      await ctx.wrapper.get('[data-test="hand-card-1"]').trigger('click');   // the king first
+      await ctx.wrapper.get('[data-test="hand-card-0"]').trigger('click');   // then the ace
+      await ctx.wrapper.get('[data-test="discard"]').trigger('click');
+      await flushPromises();
+      const root = ctx.wrapper.element as HTMLElement;
+      const pictureOf = (el: Element) => (el.matches('img') ? el : el.querySelector('img'))?.getAttribute('src');
+      expect(flights.map(f => f.frames[0].transform)).toEqual([
+        'translate(100px, 500px) scale(1) rotate(0deg)', 'translate(30px, 500px) scale(1) rotate(0deg)',
+      ]);
+      expect(flights.map(f => pictureOf(f.el))).toEqual([
+        pictureOf(root.querySelector('[data-test="hand-card-1"]')!), pictureOf(root.querySelector('[data-test="hand-card-0"]')!),
+      ]);
       ctx.wrapper.unmount();
     });
 

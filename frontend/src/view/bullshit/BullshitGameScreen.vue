@@ -23,7 +23,7 @@ import { findGame } from '../../model/games';
 import { useI18n } from '../../composables/useI18n';
 import { CardMotionLayer, canAnimate, useTableMotion, type CardMotionLayerPlay } from '../../animation';
 import {
-  BULLSHIT_LAYER_LEVEL, BULLSHIT_QUEUE, planDiscard, planTake, resolveAnchor, settleMs, type BullshitAnchor,
+  BULLSHIT_LAYER_LEVEL, BULLSHIT_QUEUE, displayedPlaces, planDiscard, planTake, resolveAnchor, settleMs, type BullshitAnchor,
 } from '../../model/bullshit/motion';
 import { cardSound } from '../../composables/useCardSound';
 import { useBullshitHotkeys } from '../../composables/useBullshitHotkeys';
@@ -112,12 +112,10 @@ const motion = useTableMotion<never, BullshitAnchor>({ layer, bounds: BULLSHIT_Q
 
 function discard() {
   const hand = store.game?.myHand ?? [];
-  // The copy starts from the place numbered by the card's index in the hand, and shows the card displayed there (the
-  // places are numbered in display order): the two differ when the hand is not sent in display order, as before.
+  // The places of the hand are numbered in display order, so each copy starts from the place of its card in the
+  // displayed (sorted) hand, whatever order the server sent the hand in.
   const shown = sortHand(hand, handSortMode.value);
-  const sources = store.selectedCards
-    .map(c => hand.findIndex(h => h.name === c.name))
-    .filter(i => i >= 0)
+  const sources = displayedPlaces(shown, store.selectedCards)
     .flatMap(i => {
       const el = document.querySelector<HTMLElement>(`[data-test="hand-card-${i}"]`);
       return el ? [{ rect: el.getBoundingClientRect(), card: shown[i] }] : [];

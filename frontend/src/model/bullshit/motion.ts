@@ -39,6 +39,14 @@ export function resolveAnchor(anchor: BullshitAnchor): MotionTarget {
 }
 
 /**
+ * The place of each selected card among the cards as they are displayed (the places of the hand are numbered in display
+ * order, not in the order the server sent the hand). Follows the selection order; a card that is not shown has no place.
+ */
+export function displayedPlaces(shown: readonly Card[], selected: readonly Card[]): number[] {
+  return selected.map(c => shown.findIndex(s => s.name === c.name)).filter(i => i >= 0);
+}
+
+/**
  * My discarded cards, each from the place it had in my hand to the pile: it grows to the pile card's width, lands on
  * its corner, tilted a little more for each card (cards dropped on a pile) and fades once landed. Null when there is
  * nothing to fly or nowhere to fly it to.
