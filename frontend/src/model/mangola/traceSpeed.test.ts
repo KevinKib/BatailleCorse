@@ -28,9 +28,9 @@ describe('speed profiles', () => {
     expect(SPEED_PROFILES.instant).toMatchObject({ tickMs: 0, handSlideMs: 0, leadInMs: 0 });
   });
 
-  it('the pause before the seeds leave is 500 ms in Normal, half of that in Fast, none in Instant', () => {
-    expect(SPEED_PROFILES.normal.leadInMs).toBe(500);
-    expect(SPEED_PROFILES.fast.leadInMs).toBe(250);
+  it('the pause before the seeds leave is 700 ms in Normal, half of that in Fast, none in Instant', () => {
+    expect(SPEED_PROFILES.normal.leadInMs).toBe(700);
+    expect(SPEED_PROFILES.fast.leadInMs).toBe(350);
     expect(SPEED_PROFILES.instant.leadInMs).toBe(0);
   });
 });
