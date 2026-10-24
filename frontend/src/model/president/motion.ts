@@ -22,7 +22,9 @@ export type PresidentMovement = TableMovement<PresidentAnchor>;
 /** A bubble over a seat: what a move said that a card cannot show. */
 export interface SeatBubble {
   seat: number;
-  kind: 'pass' | 'outForbidden' | 'completed';
+  kind: 'pass' | 'outForbidden' | 'completed' | 'out';
+  /** The place a seat went out in, for an `out` bubble. */
+  place?: number;
 }
 
 /** Where each card of my play was on screen when I played it, by card name. */

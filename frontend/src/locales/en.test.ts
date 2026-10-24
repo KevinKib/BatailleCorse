@@ -290,9 +290,33 @@ describe('President messages', () => {
     expect(m.binding.orNothing).toBe('or nothing');
     expect(m.binding.played).toContain('{n}');
     expect(m.trickCount.other).toContain('{n}');
-    expect(m.bubbles).toEqual({ pass: 'Pass', outForbidden: 'Out on a 2', completed: 'Four completed' });
+    expect(m.bubbles).toEqual({ pass: 'Pass', outForbidden: 'Out on a 2', completed: 'Four completed', out: 'Out · {place}' });
     expect(m.speed).toContain('{speed}');
     expect(m.speeds).toEqual({ normal: 'Normal', fast: 'Fast', instant: 'Instant' });
+  });
+
+  it('givenTheFinishAndExchangeVisibility_thenTheirTextsAreWritten', () => {
+    const ui = messagesEn.presidentUi;
+    expect(ui.ordinal).toEqual({ one: '{n}st', two: '{n}nd', few: '{n}rd', other: '{n}th' });
+    expect(ui.motion.bubbles.out).toBe('Out · {place}');
+    expect(ui.table.medal).toEqual({ out: 'Out', label: 'Out, {place} place' });
+    const b = ui.exchange.board;
+    expect(b.title).toBe('The exchange');
+    expect(b.neutral).toBe('You are Neutral: no exchange for you');
+    expect(b.choosing).toBe('{player} is choosing {n}');
+    expect(b.youChoose).toBe('You choose {n}');
+    expect(b.seen).toBe('I have seen the exchange');
+    for (const state of ['giving', 'choosing', 'returning', 'done'] as const) expect(b.states[state], state).toBeTruthy();
+    for (const form of [b.row.one, b.row.other]) for (const hole of ['{high}', '{low}', '{state}']) expect(form).toContain(hole);
+    expect(b.row.other).toContain('{n}');
+    expect(ui.announce.out).toBe('{player} is out, {place}');
+    expect(ui.announce.outYou).toBe('You are out, {place}');
+    for (const key of ['best', 'bestMine', 'bestToMe', 'back', 'backMine', 'backToMe'] as const) {
+      expect(ui.announce[key].one, key).toBeTruthy();
+      expect(ui.announce[key].other, key).toBeTruthy();
+    }
+    expect(ui.announce.bestMine.other).toContain('{cards}');
+    expect(ui.announce.bestToMe.other).toContain('{cards}');
   });
 
   it('givenABotSeat_thenItsPresidentLevelsAreNamed', () => {

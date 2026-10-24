@@ -123,7 +123,8 @@ settled, for a sheet that must show in that turn of the event loop. President's 
 ### Smaller pieces
 
 - `useSeatBubbles({ gapMs })`: a short bubble over a seat ("Pass"), outside the queue: a burst pops `gapMs` apart, a new
-  bubble on a seat replaces the old one.
+  bubble on a seat replaces the old one. A bubble may carry `vars` (values for the game's own text, e.g. a place), passed
+  through untouched.
 - `useInFlightCounts({ maxLagMs })`: a seat's card count kept as it was until its flying cards land (never longer
   than `maxLagMs`); President's exchange uses it.
 - `useAnimationSpeed()` + `AnimationSpeedButton`: Normal / Fast / Instant, kept in `localStorage`

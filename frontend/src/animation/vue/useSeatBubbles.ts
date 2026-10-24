@@ -4,10 +4,13 @@ import { ref, type Ref } from 'vue';
 export interface SeatBubble<K extends string = string> {
   seat: number;
   kind: K;
+  /** Values for the game's own text of this bubble ("{place}"); passed through untouched. */
+  vars?: Record<string, string | number>;
 }
 
 export interface ShownBubble<K extends string = string> {
   kind: K;
+  vars?: Record<string, string | number>;
   /** Changes with every bubble, so the same kind twice pops twice. */
   key: number;
 }
@@ -34,7 +37,7 @@ export function useSeatBubbles<K extends string = string>(options: { gapMs: numb
 
   function pop(bubble: SeatBubble<K>, lifeMs: number) {
     const key = ++counter;
-    bySeat.value = { ...bySeat.value, [bubble.seat]: { kind: bubble.kind, key } };
+    bySeat.value = { ...bySeat.value, [bubble.seat]: { kind: bubble.kind, vars: bubble.vars, key } };
     later(lifeMs, () => {
       if (bySeat.value[bubble.seat]?.key !== key) return;
       const { [bubble.seat]: _gone, ...rest } = bySeat.value;

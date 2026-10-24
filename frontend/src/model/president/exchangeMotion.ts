@@ -34,7 +34,15 @@ export function planExchangeFlights(
   return scaleMovements(moves, factor);
 }
 
-/** The faces I may see: the low title's best cards are the low seat's `given` and the high seat's `received`. */
+/**
+ * When each leg of the exchange lands, in ms from the start of its plan, by `exchangeLegKey`. Declared by the shared
+ * contract (nothing in flight is tracked yet): the pair-by-pair chunk implements it. Pure.
+ */
+export function exchangeLandings(_after: PresidentState, _moves: PresidentMovement[]): Record<string, number> {
+  return {};
+}
+
+/** The faces I may see:the low title's best cards are the low seat's `given` and the high seat's `received`. */
 function faces(state: PresidentState, mySeat: number, pair: PresidentExchangePair, leg: 'taken' | 'returned'): Card[] {
   if (mySeat === pair.low) return leg === 'taken' ? state.given : state.received;
   if (mySeat === pair.high) return leg === 'taken' ? state.received : state.given;

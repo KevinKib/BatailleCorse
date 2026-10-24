@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { planExchangeFlights } from './exchangeMotion';
+import { exchangeLandings, planExchangeFlights } from './exchangeMotion';
 import { PRESIDENT_TEMPO } from './tempo';
 import { buildPresidentCard as card, buildPresidentState } from '../fixtures/president';
 import type { PresidentState } from './PresidentState';
@@ -84,5 +84,18 @@ describe('planExchangeFlights', () => {
 
   it('givenAStateWithoutAnExchange_thenNothingFlies', () => {
     expect(planExchangeFlights(roundOver, buildPresidentState({ round: 2 }), 0)).toEqual([]);
+  });
+});
+
+describe('exchangeLandings (declared by the shared contract, implemented by the pair-by-pair chunk)', () => {
+  it('givenAnyMoves_thenItIsEmptyForNow', () => {
+    expect(exchangeLandings(exchange({}), [])).toEqual({});
+  });
+});
+
+describe('the exchange tempo', () => {
+  it('givenTheApprovedNumbers_thenPairsAreSpacedAndTheDealCappedAndTheCountsWaitForThem', () => {
+    expect(PRESIDENT_TEMPO.exchange).toEqual({ pairGapMs: 250, maxSpanMs: 6000 });
+    expect(PRESIDENT_TEMPO.countLagMaxMs).toBe(6500);
   });
 });
