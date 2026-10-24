@@ -1,125 +1,141 @@
-# Mangola sowing direction: plan
+# Mangola sowing direction (host option): plan
 
-Spec: `docs/specs/2026-10-24-mangola-direction-design.md`. **Produced by Opus 5.5** on 2026-10-24 from
-`origin/main` at `9c3deb02`. Canvas for the UI choice: https://claude.ai/artifact/7vo1Ky6GsTFdiZEhBttvd7
+Spec: `docs/specs/2026-10-24-mangola-direction-design.md`. **Produced by Opus 5.5** on 2026-10-24, **rewritten on
+2026-10-25** from `origin/main` at `8b8a33ad` after the owner's decision (host option, default anticlockwise).
+Canvas: https://claude.ai/artifact/7vo1Ky6GsTFdiZEhBttvd7 (option A).
 
 ## Key decisions (from the spec)
 
-1. **The other direction is the same game in a mirror** (both loops reversed = the board mirrored left to right;
-   checked on 381,660 sowings, 0 mismatches). So the direction is drawn by the client: the engine, the contract
-   and the bots do not change.
-2. **Each player picks it on the table** (canvas option B, recommended, waits for the owner [Q1]): a button next
-   to the speed button, kept in the browser like the speed.
-3. **Default anticlockwise** (documented Mangola, base spec), clockwise one tap away [Q2].
-4. **Frontend only**: three chunks, the middle two in parallel; one new Cypress spec.
-5. **Merge rule:** this is Mangola. **Every PR of this plan needs the owner's explicit merge accord**, the
-   docs-only one included (the orchestrator merges only after that accord).
+1. **Engine and bots unchanged; the direction is the board's orientation.** Both loops reversed = the board
+   mirrored left to right (381,660 sowings, 0 mismatches; committed as a property test in H1). The client swaps the
+   column order; `Sowing`, `MangolaGeometry`, `MangolaRules`, the bots, the `arrange` order and the `sow` pits stay.
+2. **Server is the single source of truth.** Host option `direction` (`anticlockwise` | `clockwise`) in
+   `MangolaFactory`, held by the `Mangola` aggregate as `SowingDirection` (not in `MangolaRules`), sent as
+   `MangolaDto.direction`; both clients draw from it. Rematch, reconnect and hydrate come from existing plumbing.
+3. **Lobby: the shared option row** "Sowing direction" under "First player", host only, locked at Start,
+   editable again in the lobby reopened by Play again (value kept). No new lobby component.
+4. **Default anticlockwise for everyone**: existing geometry-dependent unit tests pin `clockwise` in their
+   fixtures, new cases cover the default; `mangola-game.cy.ts` follows the new default.
+5. **Merge rule: every implementation PR of this plan (H0 to H3) needs the owner's explicit merge accord**: it
+   touches the Mangola backend domain and its session options (H2 is frontend only but ships the switch of default
+   that the owner must see). The orchestrator merges none of them on its own.
 
-This plan is executed only after the owner answers Q1 and Q2. If the answer to Q1 is A or C, the section
-"If the owner picks A or C" replaces chunk D2's scope and adds a backend chunk.
-
-**Tests (every PR):** `cd backend && mvn -s ../deploy/docker/settings.xml test` (unchanged code, still run);
-`cd frontend && npm test && npx vite build`. Cypress only in D3 (issue #312 rule: only the specs named there,
-once; a failing one rerun alone at most once), on a shifted-port e2e stack with its own compose project name.
-Dev environment for D3 only (manual check of the toggle).
+**Tests (every PR):** `cd backend && mvn -s ../deploy/docker/settings.xml test`; `cd frontend && npm test && npx
+vite build`. Cypress only in H3 (issue #312 rule: only the specs named there, once; a failing one rerun alone at
+most once), on a shifted-port e2e stack with its own compose project name. Dev environment for H3 only (manual
+check of the lobby choice and of both tables), on shifted ports, URL given to the owner.
 
 **Conventions:** branches `feat/mangola-direction-...`; a draft PR with its real number at the start of each
-chunk; test-first visible in git (`test:` commit before `feat:`); frontend paths relative to `frontend/src/`.
+chunk; test-first visible in git (`test:` commit before `feat:`); frontend paths relative to `frontend/src/`,
+backend paths relative to `backend/src/main/java/org/kevinkib/cardgames/`.
 
 ## Status
 
 | Chunk | Title | Cost | Needs | Runs |
 |-------|-------|------|-------|------|
-| D0 | `feat: Mangola direction contract (types and locale keys)` | S (< 30 min) | Q1, Q2 answered | first, alone |
-| D1 | `feat: mirror the Mangola board for the anticlockwise view` | S | D0 merged | parallel with D2 |
-| D2 | `feat: Mangola direction preference and button` | S | D0 merged | parallel with D1 |
-| D3 | `feat: choose the Mangola sowing direction on the table` | M | D1, D2 merged | last (integration) |
+| H0 | `feat: Mangola sowing direction contract` | S (< 30 min) | this plan merged | first, alone |
+| H1 | `feat: Mangola sowing direction host option (backend)` | M | H0 merged | parallel with H2 |
+| H2 | `feat: draw the Mangola board in the game's direction` | M | H0 merged | parallel with H1 |
+| H3 | `feat: Mangola direction chosen in the lobby, end to end` | M | H1, H2 merged | last (integration) |
 
 ## Files at risk of conflict
 
 | File | Chunks | Handling |
 |------|--------|----------|
-| `locales/Messages.ts`, `locales/en.ts`, `locales/en.test.ts` | D0 (keys and texts), D3 (rules sentence only if D0 left it out) | D0 writes every key; D1 and D2 do not touch locales |
-| `model/mangola/board.ts`, `board.test.ts` | D0 (signature with a defaulted parameter), D1 (behaviour) | series D0 then D1 |
-| `components/mangola/MangolaBoard.vue` | D3 only (footer) | the speed follow-up PR also touches it (hand slide): rebase, footer lines vs style lines |
-| `state/Mangola.store.ts`, `view/mangola/MangolaGameScreen.vue` | D3 only | |
-| `cypress/specs/mangola-game.cy.ts` | D3 only (pin the direction for the keyboard test) | |
-| `model/mangola/trace.ts`, `composables/useSowingAnimation.ts` | none here | the speed follow-up only |
-| `model/mangola/board.ts`, `MangolaBoard.vue` (outside this plan) | D0, D1, D3 | the "visible seeds" work (`docs/specs/2026-10-24-mangola-seeds-visible-notes.md`, option A) touches `seedDisplay` in `board.ts`, `MangolaPit.vue` and the hand in `MangolaBoard.vue`: different functions and lines; whichever merges second rebases |
+| `mangola/domain/Mangola.java`, `mangola/presentation/dto/MangolaDto.java` | H0 (field, accessor, DTO field), H1 (constructor with a direction) | series H0 then H1; H2 does not touch the backend |
+| `mangola/domain/MangolaFactory.java`, `MangolaFactoryTest.java` | H1 only | |
+| `locales/Messages.ts`, `locales/en.ts`, `locales/en.test.ts` | H0 only (option texts and the rules sentence) | H1, H2, H3 do not touch locales |
+| `model/mangola/MangolaState.ts`, `model/mangola/direction.ts` | H0 only | |
+| `model/mangola/board.ts`, `board.test.ts` | H0 (signatures, parameter ignored), H2 (behaviour) | series H0 then H2 |
+| `state/Mangola.store.ts`, `Mangola.store.test.ts`, `components/mangola/MangolaBoard.test.ts`, `MangolaPlacementEditor.test.ts` | H2 only | |
+| `cypress/specs/mangola-game.cy.ts`, `mangola-lobby.cy.ts`, new `mangola-direction.cy.ts` | H3 only | |
+| `components/mangola/MangolaBoard.vue`, `model/mangola/trace.ts` | none here (H2 needs no change in the board component: it draws `rows`) | the speed follow-up (`2026-10-24-mangola-speed-findings.md`, no PR yet) touches them: no overlap |
+| `docs/specs/2026-10-15-mangola-design.md` | H3 only (Board paragraph) | |
 
-## D0 `feat: Mangola direction contract` (S, under 30 minutes)
+## H0 `feat: Mangola sowing direction contract` (S, under 30 minutes)
 
-Shared interfaces, no behaviour change, nothing deleted.
+Shared interfaces, no visible behaviour change, nothing deleted.
 
-- `model/mangola/direction.ts`: `export type MangolaDirection = 'clockwise' | 'anticlockwise'`,
-  `export const MANGOLA_DIRECTIONS`, `export const DEFAULT_MANGOLA_DIRECTION: MangolaDirection` (the Q2 answer),
-  `export const MANGOLA_DIRECTION_KEY = 'mangolaDirection'`, `export function otherDirection(d)`.
-- `model/mangola/board.ts`: `arrowOf(pit, viewer, direction = 'clockwise')` and
-  `viewerRows(state, seat, direction = 'clockwise')` accept the parameter and ignore it (D1 implements it).
-- Locales (`Messages.ts`, `en.ts`): `mangolaUi.board.direction` ("Sowing direction: {direction}"),
-  `mangolaUi.board.directions` (`clockwise`: "Clockwise", `anticlockwise`: "Anticlockwise"), and the rules
-  sentence in `mangola` "The board" ("The button under the board turns the direction you see; the game is the
-  same either way."). `en.test.ts`: no empty leaf.
-- Tests: `direction.test.ts` (`otherDirection` both ways); the locale test.
+- Backend: `mangola/domain/SowingDirection.java` (`ANTICLOCKWISE("anticlockwise")`, `CLOCKWISE("clockwise")`,
+  `key()`, `fromKey`, `DEFAULT = ANTICLOCKWISE`, Javadoc: the board's orientation, the loops are the same pits);
+  `Mangola`: field `direction`, `direction()`, the existing constructors and `fromLayout` overloads set
+  `SowingDirection.DEFAULT` (call sites untouched); `MangolaDto.direction` (`String`, after `seatA`, always written,
+  `game.direction().key()`); `MangolaFactory.DIRECTION_KEY = "direction"` (constant only, no descriptor yet).
+- Frontend: `model/mangola/direction.ts` (`MangolaDirection`, `MANGOLA_DIRECTIONS`, `DEFAULT_MANGOLA_DIRECTION`,
+  `directionOf(state)`: absent or unknown reads as the default); `MangolaState.direction?: MangolaDirection`
+  (optional, so the existing fixtures compile; the server always sends it); `board.ts`:
+  `arrowOf(pit, viewer, direction: MangolaDirection = 'clockwise')`, parameter ignored for now.
+- Locales (`Messages.ts`, `en.ts`): `options.mangola.direction` (`label`: "Sowing direction", `anticlockwise`:
+  "Anticlockwise", `clockwise`: "Clockwise"); the rules sentence in `mangola` "The board": "The small arrows show the
+  direction: anticlockwise unless the host chose clockwise in the lobby." `en.test.ts`: no empty leaf.
+- Tests first: `SowingDirectionTest` (keys, `fromKey` both ways and unknown, default), a DTO test (`direction` is
+  `anticlockwise` for a default game, both viewers), `direction.test.ts` (`directionOf`).
 
-## D1 `feat: mirror the Mangola board for the anticlockwise view` (S, parallel with D2)
+## H1 `feat: Mangola sowing direction host option (backend)` (M, parallel with H2)
 
-- `board.ts`: `screenPosition(pit, viewer, direction)`: anticlockwise uses `COLUMNS - 1 - column` for viewer A
-  and `column` for viewer B (rows unchanged); `arrowOf` and `viewerRows` pass the direction.
-- Test first (`board.test.ts`): for both viewers, anticlockwise puts `h2` at the bottom half's left and `a2` at
-  its right (viewer A), the chevrons are today's mirrored (`arrowOf(8, 'A', 'anticlockwise')` is `left`,
-  `arrowOf(15, 'A', ...)` `down`, `arrowOf(7, 'A', ...)` `right`, `arrowOf(0, 'A', ...)` `up`; the B side and
-  viewer B likewise); every pit appears exactly once; the clockwise cases unchanged.
-- Out of scope: the store, components, locales.
+- `MangolaFactory`: the descriptor `direction` after `firstPlayer` (`CHOICE`, `["anticlockwise", "clockwise"]`,
+  default `anticlockwise`, `options.mangola.direction`); `create` reads it and calls
+  `new Mangola(id, MangolaRules.OWNER, seatA, direction)` (new constructor in `Mangola`).
+- `MangolaMirrorTest` (domain test package): reference reversed-loop sowing written in the test (each pit's next
+  is its predecessor in `MangolaGeometry.loop(side)`, same rules as `Sowing`), a seeded generator, a few thousand
+  random boards; for every legal pit, `Sowing.sow` on the mirrored board at the mirrored pit equals the mirror of the
+  reference (board, endless flag, trace pits mapped by `m`). Guards the claim that the option needs no engine
+  change.
+- Tests first: `MangolaFactoryTest` (descriptor list now two entries; `validate(none)` fills both; an unknown
+  direction is refused; `create` gives `CLOCKWISE` and `ANTICLOCKWISE`), DTO (`clockwise` written for a clockwise
+  game, placement and play), `MangolaRestAndLifecycleTest` (line 80: keys `["firstPlayer", "direction"]`; the host
+  sets `clockwise`, the started game's DTO says so for both seats; the guest's `setOptions` refused; Play again keeps
+  `clockwise` in the reopened lobby and the next game).
+- Out of scope, and the review checks it: `Sowing`, `MangolaGeometry`, `MangolaRules`, `domain/bot/*`,
+  `MangolaBotCoordinator`, `sessionmanagement/*`, the frontend.
 
-## D2 `feat: Mangola direction preference and button` (S, parallel with D1)
+## H2 `feat: draw the Mangola board in the game's direction` (M, parallel with H1)
 
-- `composables/useMangolaDirection.ts`: `{ direction: Ref<MangolaDirection>, toggle(): void }`, storage injected
-  (default `localStorage`, tolerant of a missing or failing storage), key `MANGOLA_DIRECTION_KEY`, default
-  `DEFAULT_MANGOLA_DIRECTION`, an unknown stored value falls back to the default. Shape and tests copied from
-  `animation/vue/useAnimationSpeed.ts`.
-- `components/mangola/MangolaDirectionButton.vue`: props `direction`, `names`, `label`; emits `toggle`; a 44 px
-  round button like `AnimationSpeedButton` (a stroke loop icon, the direction's short name), its own polite live
-  region that reads the new direction after a tap, a visible focus ring. **Explicit `color: #fff`** (do not
-  inherit: see `2026-10-24-mangola-button-colour-findings.md`).
-- Tests first: composable (default, toggle, persisted, storage throwing), button (name, emits, live text).
-- Out of scope: wiring into the board or the store.
+- `board.ts`: `screenPosition(pit, viewer, direction)`: clockwise unchanged; anticlockwise
+  `[ROWS - 1 - row, COLUMNS - 1 - column]` for viewer A, `[row, column]` for viewer B; `arrowOf` uses it;
+  `viewerRows(state, seat)` reads `directionOf(state)` (signature unchanged).
+- `Mangola.store.ts`: `arrowOf(pit)` passes `directionOf(game)`.
+- Default switch in the existing tests: fixtures of `board.test.ts`, `Mangola.store.test.ts` (rows lines 91 and
+  95, arrows 101 and 103), `MangolaBoard.test.ts` (keyboard edges line 74, hand positions 159 to 172) pin
+  `direction: 'clockwise'` so their assertions keep their meaning; `MangolaPlacementEditor.test.ts` comments say
+  which direction the fixture draws.
+- Tests first (new): `board.test.ts` anticlockwise cases for both viewers (cells and arrows of every pit; viewer A:
+  `a2` at the bottom half's right points left, `h2` at its left points down, `h1` right, `a1` up; viewer B and side
+  B likewise; every pit once; a missing `direction` draws anticlockwise); store (rows and arrows follow
+  `game.direction`, a new state with the other direction redraws); `MangolaBoard.test.ts` (the right arrow from
+  `a2` reaches nothing at the edge for viewer A anticlockwise, the left arrow reaches `b2`; the hand on `b2` sits
+  at the mirrored left); placement editor (anticlockwise: clicking `a2` adds to loop index 0, and `a2` is the last
+  cell of its row); `MangolaGameScreen.test.ts` (the rules sentence is shown).
+- Out of scope: the backend, locales, Cypress, `MangolaBoard.vue` (no change expected; if one is needed, say why
+  in the PR).
 
-## D3 `feat: choose the Mangola sowing direction on the table` (M, integration)
+## H3 `feat: Mangola direction chosen in the lobby, end to end` (M, integration)
 
-- Rebase on D1 and D2. `MangolaGameScreen.vue` calls `useMangolaDirection()`; the store's `rows` and `arrowOf`
-  use it (the store gets a `direction` ref or setter; keep `store.rows` the single source so the placement editor
-  and the board stay mirrored together). `MangolaBoard.vue` footer: the direction button beside the speed button
-  (left group), Skip keeps the right, the legend centred; at 375 px nothing overlaps (as the speed spec checks).
-- Rules panel sentence visible (from D0).
-- `cypress/specs/mangola-game.cy.ts`: pin `clockwise` through storage for the keyboard test (line 154), or change
-  the key; no other existing spec depends on columns.
-- New `cypress/specs/mangola-direction.cy.ts`: default anticlockwise (the chevron of `h2` points down for the
-  host), toggle to clockwise and back, the choice survives a reload, the placement editor is mirrored, a sowing
-  from a mirrored board ends on the pits the server says (board frame vs the DOM's pit counts).
-- Cypress run (issue #312): **only** `mangola-direction.cy.ts` and `mangola-game.cy.ts`, once each; report the
-  time. Dev stack on shifted ports for a manual check, URL given to the owner.
-- Docs: base spec "Board" paragraph corrected (today's screen is clockwise; both directions offered), this spec's
-  UI section filled with the owner's choice, `docs/harnesses.md` not concerned.
-
-## If the owner picks A or C
-
-- **D2 becomes** `feat: Mangola direction host option (backend)` (M): `SowingDirection` enum in `mangola/domain`,
-  host option `direction` (`CHOICE`, values `clockwise|anticlockwise`, default from Q2, label key
-  `options.mangola.direction`) in `MangolaFactory.optionDescriptors`, carried by `Mangola` and `MangolaDto.direction`;
-  engine: A1 (unchanged, client mirrors) or A2 (follows it: `MangolaGeometry.next(pit, direction)`, `Sowing`
-  reads `rules.direction()`, `arrange` order kept clockwise, a JUnit property test of the mirror). Recommended A1
-  only if the owner accepts a display-only domain value; else A2 (L instead of M).
-  Tests: factory options, DTO, `PerGameConfigTest`/lobby descriptor tests, rematch keeps the option.
-- **D3** reads the direction from the DTO instead of the browser (A) or uses the DTO value as the default of the
-  player's preference (C); the lobby needs no code (`GameLobby` renders the descriptor), only the locale labels.
-- Files at risk added: `MangolaFactory.java`, `Mangola.java`, `MangolaDto.java`, frontend `MangolaState.ts`.
+- Rebase on H1 and H2; make `MangolaState.direction` required (the server always sends it) if every fixture
+  compiles, else leave it optional and say so.
+- Lobby unit test (`GameLobby.test.ts` or `MangolaGameScreen.test.ts`): a Mangola lobby with both descriptors shows
+  "Sowing direction" with "Anticlockwise" selected for the host, plain text for the guest.
+- Cypress, issue #312 rule, **only these three specs, once each**, total time reported:
+  - new `mangola-direction.cy.ts`: default anticlockwise on both tables (host's `h2` chevron points down, the
+    guest's view likewise mirrored); the host picks clockwise, the guest's lobby shows it before Start; both tables
+    draw clockwise; a reload keeps it (hydrate); Play again keeps it; a sowing on the mirrored board ends on the pits
+    the server frame says.
+  - `mangola-game.cy.ts`: the keyboard test (line 154) takes `{leftarrow}` from `a2` to `b2` and `{rightarrow}` back
+    (the real default, not pinned).
+  - `mangola-lobby.cy.ts`: the direction row (host chips, default Anticlockwise, a guest's forged `setOptions`
+    refused, read-only text for the guest).
+- Dev stack on shifted ports (own compose project) for the owner's manual check, URL in the PR.
+- Docs: base spec Board paragraph (the app draws the anticlockwise board by default; clockwise is the mirrored
+  board, a host option, see this spec); this spec's status line ("implemented in #..."); roadmap issue #1 comment
+  after merge.
 
 ## Other playtest items (separate PRs, not part of this plan)
 
 - **Button text colour** (`2026-10-24-mangola-button-colour-findings.md`): one small PR, `fix: always use the dark
-  colour scheme`, independent of D0 to D3 (touches `main.ts`, `App.vue`; D2's button is already explicit).
-  Not Mangola domain, but it changes every game's colours: owner's accord before merge.
+  colour scheme`, independent of H0 to H3 (touches `main.ts`, `App.vue`). Not Mangola domain, but it changes every
+  game's colours: owner's accord before merge. (The first version's direction button, which this finding also
+  concerned, is dropped.)
 - **Speed** (`2026-10-24-mangola-speed-findings.md`): nothing before the owner agrees on the "current / proposed"
-  table; then one PR on `model/mangola/trace.ts` and `traceSpeed.test.ts` (and `MangolaBoard.vue`'s slide time),
-  which conflicts with D3 only in `MangolaBoard.vue` (rebase).
+  table; then one PR on `model/mangola/trace.ts`, `traceSpeed.test.ts` and `MangolaBoard.vue`'s slide time. No
+  overlap with H0 to H3 (H2 leaves `MangolaBoard.vue` alone).
+- **Visible seeds**: merged (#318); its seed code in `board.ts` (`seedLayout`, `showsCount`) and `MangolaPit.vue` is not touched here.
