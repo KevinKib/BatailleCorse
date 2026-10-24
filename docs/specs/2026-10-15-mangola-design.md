@@ -423,7 +423,7 @@ position). The options are kept for context; the chosen one is marked **Chosen**
    frontend PR (N5), whose evidence includes the legibility of the dots at 375 px.
 2. **Sowing animation.** **(a) A "hand" token travelling pit to pit that accelerates, with a Skip button or a
    tap to jump to the end. Chosen (owner, 2026-10-15).** Timing (revised 2026-10-25, owner decision in
-   `2026-10-24-mangola-speed-findings.md`): a constant tick per seed, 250 ms in Normal (owner) and 125 ms in Fast (proposed, awaiting owner agreement), the
+   `2026-10-24-mangola-speed-findings.md`): a constant tick per seed, 250 ms in Normal and 125 ms in Fast, the
    same from the first seed to the last whatever the length of the move; pauses of 1.5 ticks, no floor, no cap
    on the move (Skip ends it); the hand slides in half a tick. Originally: tick 2400 ms / seeds dropped, clamped
    to 60..280 ms, halving toward the end, cap 4.5 s. With `prefers-reduced-motion` the final board is shown at once. Not chosen: (b) lap by lap;

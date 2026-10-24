@@ -12,7 +12,7 @@ export interface SpeedProfile {
 
 export type TraceSpeed = 'normal' | 'fast' | 'instant';
 
-/** Owner decision for Normal; Fast is proposed, awaiting owner agreement. */
+/** Owner decision: a constant time per seed. */
 export const NORMAL_TICK_MS = 250;
 export const FAST_TICK_MS = 125;
 

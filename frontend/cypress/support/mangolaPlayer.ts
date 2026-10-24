@@ -16,8 +16,8 @@ export const pitName = (pit: number) => `${String.fromCharCode(97 + (pit % 8))}$
 
 export const pitEl = (pit: number) => cy.get(`[data-test="pit-${pitName(pit)}"]`);
 
-/** My turn on the board: the pit I may sow is selectable (a pit is inert while a sowing is shown). */
-export const canSow = (pit: number) => cy.get(`[data-test="pit-${pitName(pit)}"]`, { timeout: 20000 }).should('have.attr', 'data-selectable', 'true');
+/** My turn on the board: the pit I may sow is selectable (a pit is inert while a sowing is shown; a long move has no cap, 60 s covers any move of these specs). */
+export const canSow = (pit: number) => cy.get(`[data-test="pit-${pitName(pit)}"]`, { timeout: 60000 }).should('have.attr', 'data-selectable', 'true');
 
 /**
  * The browser as the host (seat 0, who starts: the option is set to Host) against a scripted guest, in the
