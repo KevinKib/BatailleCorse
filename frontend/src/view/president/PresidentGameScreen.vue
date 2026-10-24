@@ -35,7 +35,7 @@ import { seatPositions } from '../../model/table/seatRing';
 import { rematchButtonFor } from '../../model/RematchButton';
 import { ruleChips } from '../../model/president/chips';
 import { hintText } from '../../model/president/hint';
-import { format } from '../../locales/format';
+import { format, ordinal } from '../../locales/format';
 import {
   AnimationSpeedButton, CARD_RATIO, CardMotionLayer, defineAnchors, eventSpanMs, speedFactor, useAnimationSpeed,
   useDisplayedState, useInFlightCounts, useSeatBubbles, useTableMotion, visibleRect, type CardMotionLayerPlay, type DomQuery,
@@ -109,9 +109,16 @@ watch(online, (isOnline, wasOnline) => {
 // state: nothing the player can do waits for a picture. Under Instant or reduced motion, both are the same.
 const display = useDisplayedState<PresidentState, PresidentLogEntry>({
   maxLagMs: PRESIDENT_TEMPO.displayLagMaxMs,
-  // A move's bubbles ("Pass", "Four completed") pop when the move is told, with its other texts.
+  // A move's bubbles ("Pass", "Out · 1st", "Four completed") pop when the move is told, with its other texts; a finish is
+  // announced to assistive technology at the same moment.
   onReveal: (entry) => {
-    for (const bubble of planBubbles(entry)) bubbles.show(bubble, PRESIDENT_TEMPO.bubbleMs * (speedFactor(speed.value) || 1));
+    for (const bubble of planBubbles(entry)) {
+      const place = bubble.place === undefined ? undefined : ordinal(bubble.place, ui.ordinal);
+      bubbles.show(place === undefined ? bubble : { ...bubble, vars: { place } }, PRESIDENT_TEMPO.bubbleMs * (speedFactor(speed.value) || 1));
+      if (bubble.kind === 'out' && place !== undefined) {
+        announcements.announce(format(bubble.seat === store.mySeat ? ui.announce.outYou : ui.announce.out, { player: displayName(bubble.seat), place }));
+      }
+    }
   },
 });
 onBeforeUnmount(() => display.cancel());

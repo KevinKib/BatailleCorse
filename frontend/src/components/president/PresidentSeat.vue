@@ -7,7 +7,7 @@ import type { SeatBubble } from '../../model/president/motion';
 import type { PresidentPlayer } from '../../model/president/PresidentState';
 import { titleKey } from '../../model/president/titles';
 import { useI18n } from '../../composables/useI18n';
-import { plural } from '../../locales/format';
+import { format, plural } from '../../locales/format';
 import type { PresidentTitleKey } from '../../locales/Messages';
 
 // The name plate of an opponent (or of me): name, title as text, cards held, and the markers of the moment.
@@ -33,13 +33,15 @@ const props = defineProps<{
   /** The match has titles to come (more than one round): the line under the name is kept free for them. */
   reserveTitle?: boolean;
   /** A bubble over the plate ("Pass"...); a new `key` pops it again. */
-  bubble?: { kind: SeatBubble['kind']; key: number } | null;
+  bubble?: { kind: SeatBubble['kind']; key: number; vars?: Record<string, string | number> } | null;
   /** No pop (reduced motion, Instant). */
   still?: boolean;
 }>();
 const ui = useI18n().presidentUi;
 const shownCount = computed(() => props.count ?? props.player.handSize);
 const title = computed(() => props.player.title ? ui.titles[titleKey(props.player.title) as PresidentTitleKey] : null);
+/** A seat that went out for good (a forbidden finish has no place yet and keeps its red marker): medal, gold outline. */
+const finished = computed(() => props.player.out && !props.player.forbiddenFinish && props.player.place !== null);
 const hasMarkers = computed(() =>
   Boolean(props.current || props.player.out || props.player.passed || (props.showReady && props.player.ready)));
 </script>
@@ -47,12 +49,12 @@ const hasMarkers = computed(() =>
 <template>
   <div class="president-seat"
        :class="{
-         'president-seat--out': player.out, 'president-seat--disconnected': disconnected,
+         'president-seat--out': player.out, 'president-seat--finished': finished, 'president-seat--disconnected': disconnected,
          'president-seat--passed': player.passed && !player.out, 'president-seat--mine': !fan,
        }"
        :data-seat="player.seat">
     <span v-if="bubble" :key="bubble.key" class="seat-bubble" :class="[`seat-bubble--${bubble.kind}`, { 'seat-bubble--still': still }]"
-          data-test="seat-bubble" :data-kind="bubble.kind" aria-hidden="true">{{ ui.motion.bubbles[bubble.kind] }}</span>
+          data-test="seat-bubble" :data-kind="bubble.kind" aria-hidden="true">{{ format(ui.motion.bubbles[bubble.kind], bubble.vars ?? {}) }}</span>
     <span class="seat-label" :class="{ 'seat-label--active': current }" data-test="seat-label" :title="label"><i class="turn-dot" :class="{ 'turn-dot--on': current }" aria-hidden="true"></i>{{ label }}</span>
     <template v-if="fan">
       <span v-if="title" class="seat-title" data-test="seat-title">{{ title }}</span>
@@ -69,7 +71,7 @@ const hasMarkers = computed(() =>
     <!-- Mine: the title and the markers stand beside the name, the count on its other side. -->
     <span v-if="!fan" class="seat-side">
       <span v-if="title" class="seat-title" data-test="seat-title">{{ title }}</span>
-      <PresidentSeatMarkers v-if="hasMarkers" class="seat-markers seat-markers--side" :player="player" :current="current"
+      <PresidentSeatMarkers v-if="hasMarkers" class="seat-markers seat-markers--side" :player="player" :current="current" side
                             :show-ready="showReady" :narrow="narrow" :compact="compact" />
     </span>
     <span v-if="disconnected" class="seat-badge-slot"><SeatDisconnectBadge :seconds-remaining="secondsRemaining ?? null" /></span>
@@ -139,7 +141,9 @@ const hasMarkers = computed(() =>
 }
 .seat-hand { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; max-width: 100%; }
 .seat-markers--overlay { pointer-events: none; }
-.president-seat--out .seat-label { opacity: 0.7; }
+/* A seat that is out is not dimmed: it succeeded. Finishing outlines the name in gold (a border only, no shadow: the
+   turn ring stays distinct). */
+.president-seat--finished .seat-label { border-color: var(--gold); }
 /* A seat that passed sits back while the trick lasts. */
 .president-seat--passed .seat-label, .president-seat--passed :deep(.fan-picture) { opacity: 0.55; }
 .seat-badge-slot { position: absolute; top: 100%; left: 50%; z-index: 2; transform: translateX(-50%); }
@@ -194,6 +198,8 @@ const hasMarkers = computed(() =>
 .seat-bubble--outForbidden::after { border-top-color: rgb(var(--accent-negative-rgb)); }
 .seat-bubble--completed { background: var(--gold); }
 .seat-bubble--completed::after { border-top-color: var(--gold); }
+.seat-bubble--out { background: var(--gold); }
+.seat-bubble--out::after { border-top-color: var(--gold); }
 .seat-bubble--still { animation: none; }
 @keyframes bubble-pop {
   from { opacity: 0; transform: translate(-50%, 6px) scale(0.6); }

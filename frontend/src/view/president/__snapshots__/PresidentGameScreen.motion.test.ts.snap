@@ -5492,10 +5492,14 @@ exports[`PresidentGameScreen pictures (characterisation) > the end of a round an
   },
   {
     "at": 900,
-    "look": "phase=- | by=- | binding=- | closed=- | note=P1 went out and the trick is closed. | count=- | pile= | cards=0/1 | seats=1:8 cards/8 2:8 cards/8 3:8 cards/8 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING | chips=After a pass: play again | recap=false | bar=false | sheet=false | end=false | round=Round 2 of 5",
+    "look": "phase=- | by=- | binding=- | closed=- | note=P1 went out and the trick is closed. | count=- | pile= | cards=0/1 | seats=1:8 cards/8(Out · 1st) 2:8 cards/8 3:8 cards/8 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING | chips=After a pass: play again | recap=false | bar=false | sheet=false | end=false | round=Round 2 of 5",
   },
   {
     "at": 1950,
+    "look": "phase=- | by=- | binding=- | closed=- | note=P1 went out and the trick is closed. | count=- | pile=trick-cards--swept | cards=0/1 | seats=1:8 cards/8(Out · 1st) 2:8 cards/8 3:8 cards/8 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING | chips=After a pass: play again | recap=false | bar=false | sheet=false | end=false | round=Round 2 of 5",
+  },
+  {
+    "at": 2300,
     "look": "phase=- | by=- | binding=- | closed=- | note=P1 went out and the trick is closed. | count=- | pile=trick-cards--swept | cards=0/1 | seats=1:8 cards/8 2:8 cards/8 3:8 cards/8 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING | chips=After a pass: play again | recap=false | bar=false | sheet=false | end=false | round=Round 2 of 5",
   },
   {
@@ -5764,10 +5768,14 @@ exports[`PresidentGameScreen pictures (characterisation) > the end of a round an
   },
   {
     "at": 900,
-    "look": "phase=- | by=- | binding=- | closed=- | note=P1 went out and the trick is closed. | count=- | pile= | cards=0/1 | seats=1:8 cards/8 2:8 cards/8 3:8 cards/8 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING | chips=After a pass: play again | recap=false | bar=false | sheet=false | end=false | round=Round 2 of 5",
+    "look": "phase=- | by=- | binding=- | closed=- | note=P1 went out and the trick is closed. | count=- | pile= | cards=0/1 | seats=1:8 cards/8(Out · 1st) 2:8 cards/8 3:8 cards/8 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING | chips=After a pass: play again | recap=false | bar=false | sheet=false | end=false | round=Round 2 of 5",
   },
   {
     "at": 1950,
+    "look": "phase=- | by=- | binding=- | closed=- | note=P1 went out and the trick is closed. | count=- | pile=trick-cards--swept | cards=0/1 | seats=1:8 cards/8(Out · 1st) 2:8 cards/8 3:8 cards/8 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING | chips=After a pass: play again | recap=false | bar=false | sheet=false | end=false | round=Round 2 of 5",
+  },
+  {
+    "at": 2300,
     "look": "phase=- | by=- | binding=- | closed=- | note=P1 went out and the trick is closed. | count=- | pile=trick-cards--swept | cards=0/1 | seats=1:8 cards/8 2:8 cards/8 3:8 cards/8 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING | chips=After a pass: play again | recap=false | bar=false | sheet=false | end=false | round=Round 2 of 5",
   },
   {

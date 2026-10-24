@@ -121,6 +121,18 @@ describe('planBubbles', () => {
   it('givenAPlayOutOfTurn_thenAFourCompletedBubble', () => {
     expect(planBubbles(entry({ outOfTurn: true }))).toEqual([{ seat: 1, kind: 'completed' }]);
   });
+
+  it('givenAFinish_thenAnOutBubbleWithThePlace', () => {
+    expect(planBubbles(entry({ outPlace: 1 }))).toEqual([{ seat: 1, kind: 'out', place: 1 }]);
+  });
+
+  it('givenAFourCompletedOutOfTurnThatEmptiesTheHand_thenOutAloneNotTwoBubbles', () => {
+    expect(planBubbles(entry({ outOfTurn: true, outPlace: 2 }))).toEqual([{ seat: 1, kind: 'out', place: 2 }]);
+  });
+
+  it('givenAForbiddenFinishWithAPlace_thenOnlyTheOutOnATwoBubble', () => {
+    expect(planBubbles(entry({ outForbidden: true, outPlace: 4 }))).toEqual([{ seat: 1, kind: 'outForbidden' }]);
+  });
 });
 
 describe('planSweep', () => {
