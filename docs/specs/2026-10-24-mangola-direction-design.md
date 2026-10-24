@@ -1,52 +1,75 @@
-# Mangola: sowing direction mode
+# Mangola: sowing direction, a host option
 
 Plan: `docs/plans/2026-10-24-mangola-direction-plan.md`. Written by Claude Opus 5.5 on 2026-10-24 from `origin/main`
-at `9c3deb02`, after the owner's playtest. Base spec: `docs/specs/2026-10-15-mangola-design.md`. Companion findings
-of the same playtest: `2026-10-24-mangola-button-colour-findings.md`, `2026-10-24-mangola-speed-findings.md`.
+at `9c3deb02`, after the owner's playtest; **rewritten on 2026-10-25 from `origin/main` at `8b8a33ad`** after the
+owner's decision on the first version (a per-player toggle, canvas option B, recommended then and now dropped).
+Base spec: `docs/specs/2026-10-15-mangola-design.md`. Companion findings of the same playtest:
+`2026-10-24-mangola-button-colour-findings.md`, `2026-10-24-mangola-speed-findings.md`.
 
-Legend as in the base spec: **[V]** verified by reading the code at `9c3deb02` (file names given); **[C]** computed
-by a throwaway script (not committed); **[O]** owner's words; **[Q]** owner question, listed at the end.
+Legend as in the base spec: **[V]** verified by reading the code at `8b8a33ad` (file names given); **[C]** computed
+by a throwaway script (not committed); **[O]** owner's words or decision.
 
-## The request
+## The request and the owner's decision
 
 The owner, after playing [O]: "il faudrait un mode pour modifier le sens du jeu ... en priorité implémente l'autre
 sens de jeu c'est le plus important". "Le sens du jeu" is the sowing direction: the seeds travel round each
 player's loop of 16 pits one way; the owner wants to be able to play the other way round.
 
+Decision on the first version of this spec [O]:
+
+- **The direction is the same for both players**: it is a **host option in the lobby** (canvas option A,
+  https://claude.ai/artifact/7vo1Ky6GsTFdiZEhBttvd7), not a button each player flips on the table.
+- **The default is anticlockwise.** Today the app shows clockwise: the default changes for everyone, existing
+  rooms, unit tests and Cypress specs included.
+
 ## Key decisions
 
-1. **The two directions are the same game seen in a mirror, so the direction is a view, not a rule.** Reversing
-   both loops gives exactly the game of the board mirrored left to right (columns `a` and `h` swapped): every
-   sowing, capture, relay, endless check, legal move, bot decision and result corresponds pit for pit [V, C].
-   The engine, the wire contract and the bots stay as they are; the client draws the board mirrored.
-2. **Each player chooses for themselves, on the table** (canvas option B, recommended; the UI choice is the
-   owner's [Q1]): a toggle next to the animation speed button, kept in the browser like the speed. Nothing on the
-   server, so rematch, reconnect and hydrate are unaffected by construction.
-3. **Default: anticlockwise** (the documented Mangola and what the base spec states), the current clockwise view
-   one tap away [Q2].
-4. **No backend change in the recommended option, so no new rule, no DTO field and no event.** The host option
-   (canvas option A) would need a small backend change (an option descriptor and a DTO field), described below
-   as the alternative; it does not change the engine either.
-5. **Frontend only, in parallel chunks** (plan): a shared contract first, then the model mirror and the
-   preference with its button in parallel, then the wiring with one Cypress spec.
+1. **The engine and the bots do not change; the direction is how the board is laid out on screen.** Reversing
+   both loops is exactly the board mirrored left to right (proof below, 381,660 sowings, 0 mismatches), and the
+   engine has no notion of left or right. The engine as written, read with column `a` on side A's **right**, *is*
+   the anticlockwise game the base spec describes; the frontend draws `a` on the left, which is why the app shows
+   clockwise today. So `Sowing`, `MangolaGeometry`, `MangolaRules`, the bots, the `arrange` order and the `sow` pit
+   numbers stay as they are.
+2. **The server is the single source of truth for both clients.** A host option `direction`
+   (`anticlockwise` | `clockwise`, default `anticlockwise`) declared by `MangolaFactory`, held by the `Mangola`
+   aggregate as a value `SowingDirection` (not a rule switch: it is not in `MangolaRules`), and sent to every viewer
+   as `MangolaDto.direction`. Both clients draw from that field, so both always see the same direction; rematch,
+   reconnect and hydrate follow from the existing plumbing (options kept by `playAgain`, state re-read from the DTO).
+3. **The lobby control is the shared option row, no new component.** "Sowing direction: Anticlockwise /
+   Clockwise" under "First player"; only the host changes it, the guest reads it; it locks when the game starts and
+   unlocks in the lobby reopened by Play again, keeping its value.
+4. **Each player still sees their own half at the bottom; both see the chosen direction.** A half turn keeps a
+   rotation's sense, so anticlockwise seen from above is anticlockwise from either seat. The client only swaps the
+   column order of its existing screen mapping.
+5. **Mangola domain touched, so every implementation PR needs the owner's explicit merge accord** (the plan's
+   four chunks: a short shared contract, then backend and frontend in parallel, then the integration with Cypress).
 
 ## What the app does today [V]
 
-- **Engine** (`mangola/domain/MangolaGeometry.java`): seat A's loop is `a2 b2 ... h2 h1 g1 ... a1` (inner row
-  left to right as written, then the outer row back), seat B's `a4 ... h4 h3 ... a3`. `Sowing.sow` follows
-  `MangolaGeometry.next`. `facing` and `behind` are the pits of the same column across the middle line.
+- **Engine** (`mangola/domain/MangolaGeometry.java`): seat A's loop is `a2 b2 ... h2 h1 g1 ... a1` (inner row,
+  then the outer row back), seat B's `a4 ... h4 h3 ... a3`. `Sowing.sow` follows `MangolaGeometry.next` (its only
+  three calls to the geometry's order). `facing` and `behind` are the pits of the same column across the middle line.
 - **Screen** (`frontend/src/model/mangola/board.ts`, `screenPosition`): each viewer sees their own half at the
   bottom; side A is drawn as written (row 4 on top, columns `a` to `h` left to right), side B turned by half a
-  turn. So **every viewer sees every loop run clockwise**: my inner row (second from the bottom) runs to the
-  right, my outer row back to the left; the chevrons say so (`board.test.ts`: `arrowOf(8, 'A')` is `right`,
-  `arrowOf(15, 'A')` is `down`, `arrowOf(7, 'A')` is `left`, `arrowOf(0, 'A')` is `up`). Screenshot of the
-  playtest stack in `2026-10-24-mangola-button-colour-findings.md` shows the same chevrons.
+  turn. So **every viewer sees every loop run clockwise** (`board.test.ts`: `arrowOf(8, 'A')` is `right`,
+  `arrowOf(15, 'A')` is `down`, `arrowOf(7, 'A')` is `left`, `arrowOf(0, 'A')` is `up`).
 - **The base spec says the opposite**: "Seen from above, both loops run anticlockwise; seen by each player from
-  their own side, their inner row runs from their right to their left" (`2026-10-15-mangola-design.md`, Board).
-  That would be true with column `a` on the player's right; the frontend put it on the left. The documented
-  Mangola is sown anticlockwise (base spec, "Name and origin", rank 1). The owner played the clockwise version.
-- The rules panel does not name a direction ("The small arrows show the direction", `locales/en.ts`, `mangola`),
-  so no rule text is wrong either way.
+  their own side, their inner row runs from their right to their left" (`2026-10-15-mangola-design.md`, Board,
+  from `plateau.js`). That is the same engine with column `a` on the player's right. The documented Mangola is
+  sown anticlockwise (base spec, "Name and origin", rank 1).
+- **Options**: `MangolaFactory.optionDescriptors()` declares one host option, `firstPlayer`; `create` reads it.
+  `SessionService.updateOptions` (host only, `openLobbyOwnedBy`, before the start) validates the merged map with
+  `GameFactory.validate` (defaults filled); `SessionService.playAgain` re-creates the lobby with
+  `existing.options()`. The session core never reads a key (`GameOptions` is opaque).
+- **Once the game starts the client has no lobby view**: `Mangola.store.ts` keeps `MangolaState` only (its comment:
+  a reload mid-game has no lobby data). So a value both clients need during play must be in the game DTO. The Three
+  Men's Morris `variant` is the precedent: host option, carried by the game, written in `ThreeMenMorrisDto`.
+- **Lobby UI**: `GameLobby.vue` renders every descriptor through `LobbyGameOptions.vue` (radio chips
+  `option-<key>-<value>` for the host when `canEditOptions`, plain text for the others); labels come from the
+  descriptor's `labelKey` (`options.mangola.firstPlayer` in `locales/en.ts`).
+- **Rules panel** (`locales/en.ts`, `mangola`, "The board"): "The small arrows show the direction." No direction
+  is named, so no rule text is wrong either way. **README**: no Mangola rule text (checked: no match for Mangola,
+  sow, direction).
 
 ## Why the direction is a mirror [V, C]
 
@@ -60,99 +83,135 @@ Let `m(pit)` swap the column (`a` with `h`, `b` with `g` ...) and keep the row. 
   and positions, never in terms of a column letter.
 
 So sowing pit `p` the other way round on board `B` gives `m` of sowing `m(p)` the usual way on `m(B)`.
-**Computed check [C]:** a reversed-loop port of the sowing (loops built independently, each pit's next being its
-predecessor) against the app's own `sowingFixtures.sow` on the mirrored board: 20,000 random boards of 64 seeds,
-every pit with two seeds or more, **381,660 sowings, 0 mismatches**. The domain PR of the alternative (if ever
-built) would turn this into a property test.
+**Computed check [C]:** a reversed-loop port of the sowing against the app's own `sowingFixtures.sow` on the
+mirrored board: 20,000 random boards of 64 seeds, every pit with two seeds or more, **381,660 sowings,
+0 mismatches**. The backend chunk turns this into a committed property test, so that a future rule depending on a
+column letter (none today) breaks a test instead of silently breaking the option.
 
 Consequences:
 
-- A player who sees the board mirrored plays the other direction **exactly**; nothing on the server needs to know.
-- The bots are unchanged and exactly as strong: they play the same game (their evaluation and the layout search
-  use counts, mobility and same-column exposure, all mirror-invariant).
-- Two players may even see different directions at the same table: they still play one game, the pit names
-  (`c2`, ...) stay attached to the same pits on both screens.
+- Drawing the board mirrored plays the other direction **exactly**; the engine does not need to know.
+- The bots are unchanged and exactly as strong in both directions: they play the same game in pit terms (their
+  evaluation and layout search use counts, mobility and same-column exposure, all mirror-invariant; their layout
+  catalogue is in loop order, which the mirror preserves pit for pit).
+- The pit names (`c2` ...) stay attached to the same pits: the live region ("Bob sowed c3"), the accessible names
+  and the `data-test` hooks are right in both directions. Under anticlockwise, side A's viewer has `h` on the left
+  and `a` on the right; the names are not printed on the board, only spoken.
 
-## Options weighed
+## Where the option lives (options weighed)
 
-| | A. Host option in the lobby | **B. Player toggle on the table (recommended)** | C. Host default + player toggle |
+| | **A1. Aggregate value, engine untouched (chosen)** | A2. Rule switch, engine follows it | Option only, no aggregate field |
 |---|---|---|---|
-| Who chooses | the host, for both | each player, for themselves | host for the room, each player may flip |
-| Where | a "Sowing direction" row under "First player" in the shared lobby | a button beside the speed button under the board | both places |
-| Backend | option descriptor `direction` in `MangolaFactory`, carried by the aggregate and `MangolaDto.direction`; engine untouched (or made to follow it, see below) | none | as A |
-| Rematch, reconnect | the options are kept by `SessionService.playAgain`; the DTO carries it | kept in the browser (`localStorage`), like the speed | both |
-| Two players see | the same | each their own | the room's unless flipped |
-| Cost (chunks) | 4 (one backend PR needing the owner's merge accord) | 3, frontend only | 5 |
-| Risk | a domain field that the engine ignores is misleading; making the engine follow it costs a geometry per direction and a layout-order rule | none on the server; the two screens can differ (harmless, names stay right) | two settings for one thing |
+| Domain | `SowingDirection` held by `Mangola`, read by nothing in the engine | `MangolaRules.direction`, `MangolaGeometry.next(pit, direction)`, `Sowing` and every bot path read it | none |
+| Who tells the clients | `MangolaDto.direction` | `MangolaDto.direction` | nobody once the game has started: the client has no lobby view in play (see above) |
+| Engine, bots, `arrange` order | unchanged | `next` per direction; the `arrange` payload order must be pinned to one direction or the contract moves; the layout catalogue becomes direction-dependent | unchanged |
+| Screen | the client swaps the column order by direction | the client must still pick a column order, the same one for both directions (else it shows the mirror of the mirror) | — |
+| Risk | a domain value the engine ignores: documented as the board's orientation, guarded by the mirror property test | a change in the core of a protected domain for no observable difference | does not work for reloads and hydrate |
 
-Recommendation: **B**. It delivers the owner's priority with the smallest change, cannot break a game on the
-server, and lets each player keep the habit they have (the owner and a guest who learnt it the other way can
-both be at ease). A is the right choice if the owner wants the room to impose one direction "like a real board";
-C only if both needs are real.
+Observationally A1 and A2 are the same game: both deliver "the seeds go the other way round". A2 would rewrite the
+sowing core of a domain the owner protects, to obtain what a column swap gives; the "option only" variant cannot
+reach a reloaded client. **A1 is chosen.** The value is not put in `MangolaRules` because that record is the rule
+set the engine and the bots consume (`LayoutRequest` carries it); a switch none of them reads would mislead.
 
-Canvas (Claude Design, 3 options on the real lobby and table, plus a board showing both directions):
-https://claude.ai/artifact/7vo1Ky6GsTFdiZEhBttvd7 . **The UI section below waits for the owner's choice [Q1].**
+## The design
 
-## What changes (option B)
+### Backend (Mangola context only; the session core is untouched)
 
-- **Model** (`model/mangola/board.ts`): `screenPosition(pit, viewer, direction)` mirrors the column for
-  `anticlockwise` (`COLUMNS - 1 - column` for side A, `column` for side B, i.e. the current B formula swapped);
-  `arrowOf(pit, viewer, direction)` and `viewerRows(state, seat, direction)` take the direction and pass it on.
-  `nextPit`, `loopOf` and the layout order (`draft.ts`) do **not** change: the server's pits and the `arrange`
-  payload are the same in both directions.
-- **Preference**: `type MangolaDirection = 'clockwise' | 'anticlockwise'`; a composable `useMangolaDirection()`
-  shaped like `useAnimationSpeed` (injected storage, `toggle()`, survives storage errors), key `mangolaDirection`,
-  default `anticlockwise` [Q2].
-- **Store** (`state/Mangola.store.ts`): `rows` and `arrowOf` read the direction (the store receives it, or the
-  screen passes it; the plan fixes one).
-- **Screen and board**: a direction button next to `AnimationSpeedButton` in `MangolaBoard.vue`'s footer, with its
-  own live announcement; the placement editor follows `store.rows`, so it is mirrored too (it must be, or a seed
-  placed on screen would land on the other pit).
-- **What follows by itself** (all keyed by pit, not by screen position): the travelling hand and its slides
-  (`handStyle` finds the pit's cell in `rows`), the captured and chosen-pit marks, the live-region sentence
-  ("Bob sowed c3"), the pits' accessible names, the keyboard arrows (they move on screen), the trace replay
-  (`replay.ts`, explicit pits).
-- **Rules panel**: one sentence in `mangola` "The board" section: seeds go the way of the small arrows; the button
-  under the board turns the direction you see, and the game is the same either way.
-- **Locales**: `mangolaUi.board.direction` (accessible name with `{direction}`), `mangolaUi.board.directions`
-  (`clockwise`, `anticlockwise`: the button's short names), the rules sentence.
+- **`mangola/domain/SowingDirection.java`**: `enum SowingDirection { ANTICLOCKWISE("anticlockwise"),
+  CLOCKWISE("clockwise") }` with `key()`, `fromKey(String)` (unknown key: `IllegalArgumentException`, as
+  `FirstPlayer`), `DEFAULT = ANTICLOCKWISE`. Javadoc: the way both loops run seen from above with side A at the
+  bottom; the pits and their loops are the same in both, the board is mirrored (column `a` on side A's right when
+  anticlockwise).
+- **`MangolaFactory`**: `DIRECTION_KEY = "direction"`; a second descriptor after `firstPlayer`:
+  `new OptionDescriptor("direction", CHOICE, ["anticlockwise", "clockwise"], "anticlockwise",
+  "options.mangola.direction")`; `create` reads it (`map(SowingDirection::fromKey).orElse(DEFAULT)`) and passes it to
+  the aggregate. `GameFactory.validate` then refuses an unknown value and fills the default, with no new code.
+- **`Mangola`**: a final field `direction` and `direction()`; the existing constructor `(id, rules, seatA)` and the
+  `fromLayout` overloads keep their signatures and use `SowingDirection.DEFAULT` (44 test call sites stay as they
+  are); a new constructor `(id, rules, seatA, direction)` for the factory. Nothing else in the aggregate reads it.
+- **`MangolaDto`**: a field `String direction` (the key, always written, after `seatA`), `game.direction().key()`.
+- **Unchanged, on purpose**: `Sowing`, `MangolaGeometry`, `MangolaRules`, `MangolaBoard`, the bots and
+  `MangolaBotCoordinator`, `MangolaEventData` (each broadcast already carries the full DTO), the payloads, the
+  session core (`SessionService`, `LobbyView`, `GameOptions`).
 
-## What stays the same
+### Lobby
 
-The engine (`Sowing`, `MangolaGeometry`, `MangolaRules`), the wire contract (DTO, events, `arrange` order, `sow`
-pit numbers), the placement phase and its hidden information, the stuck-start check, endless detection, the bots
-and their timing, the lobby options, rematch, presence and forfeit, and the speed setting.
+- The shared option row, rendered by `LobbyGameOptions` from the descriptor: label "Sowing direction", values
+  "Anticlockwise" (first, the default) and "Clockwise". Locale keys `options.mangola.direction`
+  (`label`, `anticlockwise`, `clockwise`) in `Messages.ts` and `en.ts`. Test hooks come for free:
+  `option-direction`, `option-direction-anticlockwise`, `option-direction-clockwise`.
+- **Who**: the host only (`canEditOptions`); the guest sees the value as text and gets every change live (the
+  lobby broadcast). A forged `setOptions` from the guest is refused as for `firstPlayer`.
+- **When it locks**: at Start (a started room's options cannot change). **Play again** reopens the lobby with the
+  same options: the next game keeps the direction, and the host may change it before starting again.
 
-## Alternative A, if chosen (for the plan, not recommended)
+### Table (frontend)
 
-- **Domain**: an enum `SowingDirection { CLOCKWISE, ANTICLOCKWISE }` read by `MangolaFactory` from a host option
-  `direction` (default `anticlockwise`), held by the aggregate and exposed as `MangolaDto.direction`. Two ways:
-  (A1) the engine ignores it and the client mirrors (cheap, but a domain value with no domain effect); (A2) the
-  engine follows it: `MangolaGeometry.next(pit, direction)`, `Sowing` reads `rules.direction()`, the bots get it
-  through the rules they already receive; `arrange` keeps the **clockwise** loop order as its payload order (so
-  the contract does not move) and the frontend's `nextPit` and arrows take the direction from the DTO. A2 is the
-  honest model; it costs the geometry tables per direction and a Java property test of the mirror.
-- **Lobby**: nothing to build; `GameLobby` renders a new `CHOICE` descriptor (labels `options.mangola.direction`).
-- **Rematch** keeps the option (`SessionService.playAgain`); **reconnect and hydrate** read it from the DTO.
-- Every backend PR on Mangola needs the owner's explicit merge accord.
+- **`model/mangola/direction.ts`**: `type MangolaDirection = 'anticlockwise' | 'clockwise'`,
+  `DEFAULT_MANGOLA_DIRECTION = 'anticlockwise'`, `directionOf(state)` (the DTO's value; an absent or unknown one
+  reads as the default).
+- **`MangolaState.direction: MangolaDirection`** (always sent by the server).
+- **`board.ts`**: `screenPosition(pit, viewer, direction)`: clockwise is today's mapping; anticlockwise swaps the
+  column, `COLUMNS - 1 - column` for viewer A and `column` for viewer B (rows unchanged). `arrowOf(pit, viewer,
+  direction)` passes it on; `viewerRows(state, seat)` reads `directionOf(state)`, so its callers do not change.
+  `nextPit`, `loopOf` and the layout order (`draft.ts`) do **not** change.
+- **Store**: `arrowOf` passes `directionOf(game)`; `rows` follows by itself.
+- **What follows by itself** (all keyed by pit, not by screen position): the placement editor (it draws
+  `store.rows`, so it is mirrored with the board, as it must be: a seed placed on screen lands on the pit under the
+  finger), the travelling hand and its slides (`handStyle` finds the pit's cell in `rows`), the captured and
+  chosen-pit marks, the live region, the pits' accessible names, the keyboard arrows (they move on the screen grid),
+  the trace replay (`replay.ts`, explicit pits).
+- **What each player sees**: the same direction (one value from the server); each their own half at the bottom.
+  With anticlockwise, from either seat: my inner row runs from my right to my left, my outer row back to the right;
+  the opponent's loop likewise seen from above. The chevrons show it.
+- **Rules panel** (`mangola`, "The board"): "The small arrows show the direction." becomes "The small arrows show
+  the direction: anticlockwise unless the host chose clockwise in the lobby."
+
+### Default switch to anticlockwise: impact
+
+- **Existing rooms and running games**: state is in memory, so no migration; a room created without the option
+  gets the default. Players used to the playtest's clockwise see the board mirrored: the host can pick clockwise.
+- **Backend tests**: `MangolaFactoryTest` (the descriptor list and `validate(none)` gain `direction`),
+  `MangolaRestAndLifecycleTest` (line 80, descriptor keys `["firstPlayer", "direction"]`). The engine and bot tests
+  do not change.
+- **Frontend unit tests** whose assertions depend on columns, today written for clockwise with fixtures that carry
+  no direction: `board.test.ts`, `Mangola.store.test.ts` (rows order, lines 91 and 95; arrows, lines 101 and 103),
+  `MangolaBoard.test.ts` (keyboard edges, line 74; hand positions, lines 159 to 172), `MangolaPlacementEditor.test.ts`
+  (comments on left and right; it clicks by name). Rule: an existing test keeps its meaning by pinning
+  `direction: 'clockwise'` in its fixture; the default (anticlockwise) gets its own new cases.
+- **Cypress** (the e2e server gives the default): `mangola-game.cy.ts` line 154 steps from `a2` to `b2` with the
+  right arrow; under anticlockwise `b2` is to the **left** of `a2` for the host: the test takes the left arrow
+  then the right one (it tests the real default, it does not pin clockwise). `mangola-lobby.cy.ts` asserts only
+  `option-firstPlayer`: unaffected, gains the direction cases. The other Mangola specs click pits by name or
+  measure the footer: unaffected.
+- **Docs**: the base spec's Board paragraph gains one sentence (the app draws it this way by default; clockwise is
+  the mirrored board, a host option, this spec); README: nothing.
 
 ## Tests
 
-- Model: `board.test.ts` gains the anticlockwise cases (every pit's screen cell and arrow for both sides and both
-  viewers: the mirror of today's assertions; for viewer A, `a2` (now at the right end) points left, `h2` (left
-  end) down, `h1` right, `a1` up); `viewerRows`
-  keeps 4 rows of 8 with the same pits.
-- Preference: default, toggle, storage read and write, a broken storage (as `useAnimationSpeed.test.ts`).
-- Board and screen: the button's name and live announcement, the footer layout (no overlap with the legend,
-  with Skip, at 375 px), the placement editor mirrored.
-- Cypress: one new spec `mangola-direction.cy.ts` (toggle, chevrons reversed, column order reversed, the choice
-  survives a reload, a sowing still lands on the right pits). The existing spec `mangola-game.cy.ts` steps from
-  `a2` to `b2` with the right arrow (line 154): with an anticlockwise default it must pin `clockwise` through
-  storage or take the other key. Other Mangola specs click pits by name and are unaffected.
+- **Backend**: factory (descriptor list, default, `validate` fills and refuses, `create` reads both values),
+  aggregate (default direction, constructor with a direction), DTO (`direction` written for both values, for both
+  viewers, in placement and play), lobby and rematch through the REST and lifecycle test (the option is listed,
+  set by the host, refused from the guest, kept by Play again), and **`MangolaMirrorTest`**: a reversed-loop
+  reference sowing written in the test, random boards (seeded generator), `sow(m(B), m(p))` equals `m` of the
+  reversed sowing of `(B, p)` (final board, endless flag, trace pits) on every legal pit.
+- **Frontend**: `direction.test.ts` (`directionOf`), `board.test.ts` (every pit's cell and arrow, both
+  directions, both viewers; for viewer A anticlockwise: `a2` at the bottom half's right points left, `h2` at its
+  left points down, `h1` right, `a1` up; every pit once), store (rows and arrows follow `game.direction`, and a new
+  state with another direction redraws), board (keyboard and hand positions in both directions), screen (rules
+  sentence), lobby (the two-value row from a descriptor, host and guest).
+- **Cypress**: a new `mangola-direction.cy.ts` (default anticlockwise for both players: the host's and the
+  guest's chevrons; the host picks clockwise in the lobby, the guest's lobby shows it, both tables show it; a
+  reload keeps it; Play again keeps it; a sowing on the mirrored board lands on the pits the server says);
+  `mangola-game.cy.ts` (keyboard test updated) and `mangola-lobby.cy.ts` (the new row) run once each.
+
+## Dropped from the first version
+
+The per-player toggle on the table (`useMangolaDirection`, `MangolaDirectionButton`, the `localStorage` key, the
+footer layout checks for a second round button) and option C. The mirror proof, the file list of what follows by
+itself and the test ideas are kept above.
 
 ## Owner questions
 
-- **Q1 Where is the direction chosen?** Recommended: B, each player on the table. Alternatives: A, the host in the
-  lobby for both; C, both. Canvas: https://claude.ai/artifact/7vo1Ky6GsTFdiZEhBttvd7
-- **Q2 Default direction.** Recommended: anticlockwise (the documented Mangola and the base spec). Alternative:
-  keep clockwise, the direction of the playtest. The answer may also tell which way the owner played as a child.
+None open: the owner chose the host option and the anticlockwise default. The labels ("Sowing direction",
+"Anticlockwise", "Clockwise") are proposals the owner can reword at review.
