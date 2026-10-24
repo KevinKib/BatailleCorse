@@ -16,9 +16,13 @@ export type TraceSpeed = 'normal' | 'fast' | 'instant';
 export const NORMAL_TICK_MS = 250;
 export const FAST_TICK_MS = 125;
 
+/** Owner decision (findings spec): the pause on an opponent's chosen pit, before the seeds leave. */
+export const NORMAL_LEAD_IN_MS = 700;
+export const FAST_LEAD_IN_MS = 350;
+
 export const SPEED_PROFILES: Record<TraceSpeed, SpeedProfile> = {
-  normal: { tickMs: NORMAL_TICK_MS, handSlideMs: NORMAL_TICK_MS / 2, leadInMs: 500 },
-  fast: { tickMs: FAST_TICK_MS, handSlideMs: FAST_TICK_MS / 2, leadInMs: 250 },
+  normal: { tickMs: NORMAL_TICK_MS, handSlideMs: NORMAL_TICK_MS / 2, leadInMs: NORMAL_LEAD_IN_MS },
+  fast: { tickMs: FAST_TICK_MS, handSlideMs: FAST_TICK_MS / 2, leadInMs: FAST_LEAD_IN_MS },
   instant: { tickMs: 0, handSlideMs: 0, leadInMs: 0 },
 };
 

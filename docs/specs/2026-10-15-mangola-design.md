@@ -425,7 +425,8 @@ position). The options are kept for context; the chosen one is marked **Chosen**
    tap to jump to the end. Chosen (owner, 2026-10-15).** Timing (revised 2026-10-25, owner decision in
    `2026-10-24-mangola-speed-findings.md`): a constant tick per seed, 250 ms in Normal and 125 ms in Fast, the
    same from the first seed to the last whatever the length of the move; pauses of 1.5 ticks, no floor, no cap
-   on the move (Skip ends it); the hand slides in half a tick. Originally: tick 2400 ms / seeds dropped, clamped
+   on the move (Skip ends it); the hand slides in half a tick; an opponent's move first rests on its chosen pit, 700 ms in Normal and 350 ms in Fast
+   (was 500 and 250), my own move does not. Originally: tick 2400 ms / seeds dropped, clamped
    to 60..280 ms, halving toward the end, cap 4.5 s. With `prefers-reduced-motion` the final board is shown at once. Not chosen: (b) lap by lap;
    (c) no animation plus a "replay last move" control with a step slider; (c)'s replay is a possible later
    addition, not part of the first frontend PRs.

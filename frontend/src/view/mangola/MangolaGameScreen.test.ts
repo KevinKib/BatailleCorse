@@ -509,7 +509,7 @@ describe('MangolaGameScreen', () => {
       expect(pit(wrapper, 'h4').attributes('data-chosen')).toBe('true');
       expect(wrapper.get('[data-test="sowing-hand"]').attributes('data-pit')).toBe('31');
       expect(pit(wrapper, 'h4').attributes('aria-label')).toContain('2 seeds'); // not picked up yet
-      await vi.advanceTimersByTimeAsync(499);
+      await vi.advanceTimersByTimeAsync(699);
       expect(pit(wrapper, 'h4').attributes('data-chosen')).toBe('true');
       await vi.advanceTimersByTimeAsync(2);
       expect(pit(wrapper, 'h4').attributes('data-chosen')).toBeUndefined();
