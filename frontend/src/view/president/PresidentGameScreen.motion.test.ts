@@ -142,7 +142,7 @@ function look(wrapper: Wrapper): string {
     `me=${mine.exists() ? mine.text() : '-'}`,
     `hand=${wrapper.findAll('[data-test^="hand-card-"]').map(c => `${c.attributes('data-card')}${c.classes().includes('landing') ? '~' : ''}`).join(',')}`,
     `chips=${wrapper.findAll('[data-test="rule-chip"]').map(c => c.text()).join('|')}`,
-    `recap=${wrapper.find('[data-test="exchange-recap"]').exists()}`,
+    `board=${wrapper.findAll('[data-test="board-row"]').map(r => r.attributes('data-state')).join('+') || '-'}`,
     `bar=${wrapper.find('[data-test="action-bar"]').exists()}`,
     `sheet=${wrapper.find('[data-test="round-over"]').exists()}`,
     `end=${wrapper.find('[data-test="end"]').exists()}`,

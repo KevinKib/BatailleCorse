@@ -93,6 +93,7 @@ function playTriple(rank: string, goesOut = false) {
 
           // Round 2 opens on the exchange: Alice (President) chooses two cards to give back (the panel's own
           // behaviour is in president-exchange.cy.ts).
+          cy.get('[data-test="exchange-board"]', { timeout: 10000 }).should('be.visible');
           cy.get('[data-test="exchange-instruction"]', { timeout: 10000 }).should('have.text', 'Choose 2 cards to give to Carol.');
           cy.get('[data-test="round"]').should('have.text', 'Round 2 of 5');
           cy.get('[data-test="seat-title"]').should('exist');

@@ -5,7 +5,7 @@
 //  1. the server waits in EXCHANGE_VIEW: the browser reads "Waiting for Bob to see the exchange", Play and Pass are
 //     disabled although the browser is the first lead, then Bob acknowledges and the browser's turn starts;
 //  2. against a bot (the third seat), a held human keeps the bot from playing, then the play begins;
-//  3. a reload during the view shows the summary again (no flights) and acknowledges after the same reading time;
+//  3. a reload during the view shows the board again (no flights) and acknowledges after the same reading time;
 //  4. a seat that never acknowledges is let through by the server timeout (20 s by default);
 //  5. at the Instant speed the browser acknowledges at once.
 // Every wait is on a DOM state or a frame; the one fixed wait (2) is the negative check "nothing moved".
@@ -92,7 +92,8 @@ function serverStillWaits(observer: Guest) {
         cy.get('[data-test="phase-text"]', { timeout: 20000 }).should('have.text', WAITING_FOR_BOB);
         cy.get('[data-test="play"]').should('be.disabled');
         cy.get('[data-test="pass"]').should('be.disabled');
-        cy.get('[data-test="exchange-recap"]').should('be.visible');
+        cy.get('[data-test="exchange-board"]').should('be.visible');
+        cy.get('[data-test="board-seen"]').should('have.class', 'seen--off');
         // The server agrees: Carol and the browser have seen it, Bob has not, and nobody has played.
         awaitState(carol, 'the browser and Carol have seen the exchange, Bob has not', (s) =>
           s.phase === 'EXCHANGE_VIEW' && s.trick.plays.length === 0
@@ -156,7 +157,7 @@ describe('President exchange synchronisation, reload and timeout', () => {
     cy.window().then((win) => win.localStorage.removeItem('animationSpeed'));
   });
 
-  it('a reload during the view shows the summary again, without flights, and still waits for Bob', () => {
+  it('a reload during the view shows the board again, without flights, and still waits for Bob', () => {
     startAtTheView().then(({ id, bob, carol }) => {
       serverStillWaits(carol);
       // The `test` profile forfeits a seat that stays disconnected for 5 s (presence.forfeit-grace-seconds), and a reload
@@ -169,8 +170,9 @@ describe('President exchange synchronisation, reload and timeout', () => {
         cy.reload();
       });
       cy.get('[data-test="president-table"]', { timeout: 10000 }).should('be.visible');
-      // No flights after a reload: the summary is on screen at once, and the table reads the exchange.
-      cy.get('[data-test="exchange-recap"]', { timeout: 10000 }).should('be.visible');
+      // No flights after a reload: the board is on screen at once, and the table reads the exchange.
+      cy.get('[data-test="exchange-board"]', { timeout: 10000 }).should('be.visible');
+      cy.get('[data-test="board-bar"]').should('exist');
       cy.then(() => clearInterval(keepAlive));
       cy.get('[data-test="motion-card"]').should('not.exist');
       cy.get('[data-test="play"]').should('be.disabled');
@@ -196,7 +198,7 @@ describe('President exchange synchronisation, reload and timeout', () => {
 });
 
 describe('President exchange synchronisation at the Instant speed', () => {
-  it('acknowledges at once instead of reading the summary for 3 s', () => {
+  it('acknowledges at once instead of reading the board for 3 s', () => {
     cy.viewport(375, 667);
     cy.window().then((win) => win.localStorage.removeItem('animationSpeed'));
     startAtTheView(() => {
@@ -204,7 +206,7 @@ describe('President exchange synchronisation at the Instant speed', () => {
       cy.get('[data-test="speed-button"]').click();
       cy.get('[data-test="speed-button"]').should('have.attr', 'aria-label', 'Animation speed: Instant');
     }).then(({ bob, carol }) => {
-      // The view is already open (Bob's state); the Normal speed would still be reading the summary here.
+      // The view is already open (Bob's state); the Normal speed would still be reading the board here.
       cy.get('[data-test="phase-text"]', { timeout: 2500 }).should('have.text', WAITING_FOR_BOB);
       awaitState(carol, 'the browser has seen the exchange', (s) =>
         s.phase === 'EXCHANGE_VIEW' && s.players.find((p: any) => p.seat === 0).sawExchange);

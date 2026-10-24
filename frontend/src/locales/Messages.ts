@@ -344,10 +344,6 @@ export interface PresidentUiMessages {
     taken: PluralForms;                // my best `{n}` went to '{player}', who owes `{n}` back
     returned: PluralForms;             // '{player}' gave `{n}` back to me
     idle: string;                      // a Neutral
-    pairs: string;                     // label of the list of pairs
-    pair: PluralForms;                 // '{high}', '{low}', '{n}', '{state}'
-    pending: string;
-    done: string;
     /** The board "The exchange" that sits in the pile's slot during the exchange. */
     board: {
       title: string;                   // header and region name
@@ -357,14 +353,6 @@ export interface PresidentUiMessages {
       seen: string;                    // name of the Seen button
       states: { giving: string; choosing: string; returning: string; done: string }; // accessible names of a row's mark
       row: PluralForms;                // the full sentence of a pair, for screen readers: '{high}', '{low}', '{n}', '{state}'
-    };
-    /** The summary shown after the exchange, once the play has begun. */
-    recap: {
-      title: string;
-      given: string;                   // '{low}', '{high}': before the cards the low title gave (known in my pair only)
-      returned: string;                // '{high}': before the cards given back
-      counts: PluralForms;             // a pair that is not mine: '{low}', '{high}', '{n}' (cards each way)
-      close: string;                   // tooltip and name of the close button
     };
   };
   roundOver: { ready: string; waiting: string; place: string; finalScores: string };  // place: '{n}', '{player}'

@@ -327,63 +327,94 @@ describe('PresidentGameScreen', () => {
       }
     });
 
-    it('givenTheLastGiveBack_thenThePlayBeginsAndTheSummaryTellsWhoGaveWhatToWhom_untilItIsClosed', async () => {
-      const done = exchanging({
+    describe('the board "The exchange" in the pile\'s slot', () => {
+      const board = (wrapper: { find: (s: string) => { exists: () => boolean } }) => wrapper.find('[data-test="exchange-board"]');
+      const doneState = (overrides: Partial<PresidentState> = {}) => exchanging({
         phase: 'PLAYING', availableActions: ['PLAY'], toGiveBack: 0, exchange: [{ high: 0, low: 2, count: 2, done: true }],
         received: buildPresidentHand(['KING', 'HEART'], ['ACE', 'CLUB']), given: buildPresidentHand(['3', 'CLUB'], ['9', 'HEART']),
+        ...overrides,
       });
-      const { wrapper } = await mountRoom(room(done));
-      expect(wrapper.find('[data-test="exchange-panel"]').exists()).toBe(false);
-      expect(wrapper.find('[data-test="action-bar"]').exists()).toBe(true);
-      const lines = wrapper.findAll('[data-test="recap-line"]');
-      expect(lines).toHaveLength(1);
-      expect(lines[0].get('[data-test="recap-given"]').text()).toBe('P2 gave P0:');
-      expect(lines[0].get('[data-test="recap-given-cards"]').findAll('img').map(i => i.attributes('alt'))).toEqual(['King of hearts', 'Ace of clubs']);
-      expect(lines[0].get('[data-test="recap-returned-cards"]').findAll('img').map(i => i.attributes('alt'))).toEqual(['3 of clubs', '9 of hearts']);
-      await wrapper.get('[data-test="recap-close"]').trigger('click');
-      expect(wrapper.find('[data-test="exchange-recap"]').exists()).toBe(false);
-    });
 
-    it('givenTheLastGiveBackJustLanded_thenTheSummaryWaitsForTheFlightsToEnd', async () => {
-      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
-      try {
-        const { wrapper, store } = await mountRoom(room(exchanging({ availableActions: [], toGiveBack: 0 }), 2));
-        store.applyEvent({
-          type: 'state-update',
-          state: exchanging({
-            version: 2, phase: 'PLAYING', availableActions: [], toGiveBack: 0, exchange: [{ high: 0, low: 2, count: 2, done: true }],
-            received: buildPresidentHand(['3', 'CLUB'], ['9', 'HEART']), given: buildPresidentHand(['KING', 'HEART'], ['ACE', 'CLUB']),
-          }),
-        });
-        await flushPromises();
-        expect(wrapper.find('[data-test="exchange-recap"]').exists()).toBe(false);
-        vi.advanceTimersByTime(4000);
-        await flushPromises();
-        expect(wrapper.find('[data-test="exchange-recap"]').exists()).toBe(true);
-      } finally {
-        vi.useRealTimers();
-      }
-    });
+      it('givenTheExchange_thenTheBoardSitsInTheTableCenterOverTheTrickPlateWhichStaysLaidOutButCovered', async () => {
+        const { wrapper } = await mountRoom(room(exchanging()));
+        const center = wrapper.get('.table-center');
+        expect(center.classes()).toContain('table-center--board');
+        expect(center.find('[data-test="exchange-board"]').exists()).toBe(true);
+        expect(center.find('[data-test="trick-stage"]').exists()).toBe(true);
+        const plate = center.get('[data-test="trick"]');
+        expect(plate.classes()).toContain('trick-under--covered');
+        expect(plate.attributes('aria-hidden')).toBe('true');
+      });
 
-    it('givenAPhone_thenTheSummaryBannerGoesByItselfAfterAFewSeconds', async () => {
-      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
-      vi.stubGlobal('matchMedia', (query: string) => ({
-        matches: query.includes('max-width'), media: query, addEventListener: () => {}, removeEventListener: () => {},
-      }));
-      try {
-        const done = exchanging({
-          phase: 'PLAYING', availableActions: ['PLAY'], toGiveBack: 0, exchange: [{ high: 0, low: 2, count: 2, done: true }],
-          received: buildPresidentHand(['KING', 'HEART'], ['ACE', 'CLUB']), given: buildPresidentHand(['3', 'CLUB'], ['9', 'HEART']),
-        });
-        const { wrapper } = await mountRoom(room(done));
-        expect(wrapper.find('[data-test="exchange-recap"]').exists()).toBe(true);
-        vi.advanceTimersByTime(8500);
-        await flushPromises();
+      it('givenAPair_thenItsRowNamesTheTwoSeatsAndTheirTitles', async () => {
+        const { wrapper } = await mountRoom(room(exchanging()));
+        const rows = wrapper.findAll('[data-test="board-row"]');
+        expect(rows).toHaveLength(1);
+        expect(rows[0].get('[data-test="board-low"]').text()).toContain('P2');
+        expect(rows[0].get('[data-test="board-low"]').text()).toContain('Scum');
+        expect(rows[0].get('[data-test="board-high"]').text()).toContain('P0');
+        expect(rows[0].attributes('data-state')).toBe('choosing');
+      });
+
+      it('givenIAmNeutral_thenIStillSeeTheBoardAndItSaysThereIsNoExchangeForMe', async () => {
+        const { wrapper } = await mountRoom(room(exchanging({ availableActions: [], toGiveBack: 0 }), 1));
+        expect(board(wrapper).exists()).toBe(true);
+        expect(wrapper.get('[data-test="board-neutral"]').text()).toBe('You are Neutral: no exchange for you');
+      });
+
+      it('givenTheGiveBackIsAwaited_thenTheRowIsChoosingAndTheHighSeatSaysItIsChoosing', async () => {
+        const { wrapper } = await mountRoom(room(exchanging(), 2));
+        expect(wrapper.get('[data-test="board-row"]').attributes('data-state')).toBe('choosing');
+        expect(wrapper.get('[data-test="board-back"]').text()).toBe('P0 is choosing 2');
+      });
+
+      it('givenIAmTheHighSeatChoosing_thenTheSecondLegSaysYouChoose', async () => {
+        const { wrapper } = await mountRoom(room(exchanging()));
+        expect(wrapper.get('[data-test="board-back"]').text()).toBe('You choose 2');
+      });
+
+      it('givenThePlayBegins_thenThereIsNoBoardAndNoSummaryAnyMore', async () => {
+        const { wrapper } = await mountRoom(room(doneState()));
+        expect(wrapper.find('[data-test="exchange-panel"]').exists()).toBe(false);
+        expect(wrapper.find('[data-test="action-bar"]').exists()).toBe(true);
+        expect(board(wrapper).exists()).toBe(false);
         expect(wrapper.find('[data-test="exchange-recap"]').exists()).toBe(false);
-      } finally {
-        vi.unstubAllGlobals();
-        vi.useRealTimers();
-      }
+        expect(wrapper.get('.table-center').classes()).not.toContain('table-center--board');
+        expect(wrapper.get('[data-test="trick"]').classes()).not.toContain('trick-under--covered');
+      });
+
+      it('givenTheFirstTrickStartsAfterTheView_thenTheBoardLeavesWithIt', async () => {
+        vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+        try {
+          const { wrapper, store } = await mountRoom(room(exchanging({
+            phase: 'EXCHANGE_VIEW', availableActions: [], toGiveBack: 0, exchange: [{ high: 0, low: 2, count: 2, done: true }],
+          })));
+          expect(board(wrapper).exists()).toBe(true);
+          store.applyEvent({ type: 'state-update', state: doneState({ version: 2 }) });
+          await flushPromises();
+          expect(board(wrapper).exists()).toBe(false);
+        } finally {
+          vi.useRealTimers();
+        }
+      });
+
+      it('givenAPhone_thenThereIsNoBannerAndNoTimerThatClosesAnything_theBoardIsTheSameForEverySeat', async () => {
+        vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+        vi.stubGlobal('matchMedia', (query: string) => ({
+          matches: query.includes('max-width'), media: query, addEventListener: () => {}, removeEventListener: () => {},
+        }));
+        try {
+          const { wrapper } = await mountRoom(room(exchanging(), 1));
+          expect(board(wrapper).exists()).toBe(true);
+          expect(wrapper.find('[data-test="exchange-recap"]').exists()).toBe(false);
+          vi.advanceTimersByTime(20000);
+          await flushPromises();
+          expect(board(wrapper).exists()).toBe(true);
+        } finally {
+          vi.unstubAllGlobals();
+          vi.useRealTimers();
+        }
+      });
     });
 
     describe('the exchange view (the table waits for every human to see the exchange)', () => {
@@ -439,10 +470,11 @@ describe('PresidentGameScreen', () => {
         expect(phaseLine(wrapper)).toBe(ui.starting);
       });
 
-      it('givenAReload_thenTheSummaryShowsAtOnce_andTheAcknowledgementComesAfterThreeSeconds', async () => {
+      it('givenAReload_thenTheBoardShowsAtOnce_andTheAcknowledgementComesAfterThreeSeconds', async () => {
         const { wrapper, store } = await mountRoom(room(viewing({ players: nobodySaw() })));
         const ack = spyAck(store);
-        expect(wrapper.find('[data-test="exchange-recap"]').exists()).toBe(true);
+        expect(wrapper.find('[data-test="exchange-board"]').exists()).toBe(true);
+        expect(wrapper.find('[data-test="exchange-recap"]').exists()).toBe(false);
         await afterTimers(2900);
         expect(ack).not.toHaveBeenCalled();
         await afterTimers(200);
@@ -467,14 +499,65 @@ describe('PresidentGameScreen', () => {
         expect(spy).toHaveBeenCalledTimes(1);
       });
 
-      it('whenTheSummaryCrossIsPressed_thenItAcknowledgesAtOnce_andOnlyOnce', async () => {
+      it('whenTheSeenButtonIsPressed_thenItAcknowledgesAtOnce_andOnlyOnce_andTheButtonGoes', async () => {
         const { wrapper, store } = await mountRoom(room(viewing({ players: nobodySaw() })));
         const ack = spyAck(store);
-        await wrapper.get('[data-test="recap-close"]').trigger('click');
+        expect(wrapper.get('[data-test="board-seen"]').classes()).not.toContain('seen--off');
+        await wrapper.get('[data-test="board-seen"]').trigger('click');
         expect(ack).toHaveBeenCalledTimes(1);
-        expect(wrapper.find('[data-test="exchange-recap"]').exists()).toBe(false);
+        expect(wrapper.get('[data-test="board-seen"]').classes()).toContain('seen--off');
+        expect(wrapper.find('[data-test="exchange-board"]').exists()).toBe(true);
         await afterTimers(5000);
         expect(ack).toHaveBeenCalledTimes(1);
+      });
+
+      it('givenIHaveSeenTheExchange_thenTheSeenButtonKeepsItsPlaceButIsOutOfReach', async () => {
+        const { wrapper } = await mountRoom(room(viewing({ players: iSaw(2), availableActions: [] })));
+        expect(wrapper.get('[data-test="board-seen"]').classes()).toContain('seen--off');
+      });
+
+      it('givenTheExchangeIsNotInTheView_thenThereIsNoSeenButtonToPress', async () => {
+        const { wrapper } = await mountRoom(room(exchanging()));
+        expect(wrapper.get('[data-test="board-seen"]').classes()).toContain('seen--off');
+      });
+
+      describe('the reading bar', () => {
+        const fill = (wrapper: { get: (s: string) => { attributes: (n: string) => string | undefined } }) =>
+          wrapper.get('[data-test="board-bar-fill"]').attributes('style') ?? '';
+        const over = () => playing({ round: 1, phase: 'ROUND_OVER', legalPlays: [], availableActions: ['READY'] });
+
+        it('givenAReload_thenTheBarReadsForThreeSecondsFromNow', async () => {
+          const { wrapper } = await mountRoom(room(viewing({ players: nobodySaw() })));
+          expect(fill(wrapper)).toContain('animation-duration: 3000ms');
+          expect(fill(wrapper)).toContain('animation-delay: 0ms');
+        });
+
+        it('givenFast_thenTheBarReadsForOneAndAHalfSeconds', async () => {
+          localStorage.setItem('animationSpeed', 'fast');
+          const { wrapper } = await mountRoom(room(viewing({ players: nobodySaw() })));
+          expect(fill(wrapper)).toContain('animation-duration: 1500ms');
+        });
+
+        it('givenInstant_thenThereIsNoBar', async () => {
+          localStorage.setItem('animationSpeed', 'instant');
+          const { wrapper } = await mountRoom(room(viewing({ players: nobodySaw() })));
+          expect(wrapper.find('[data-test="board-bar"]').exists()).toBe(false);
+        });
+
+        it('givenTheChangeThatOpensTheView_thenTheBarWaitsForTheFlightsToEnd', async () => {
+          const { wrapper, store } = await mountRoom(room(over()));
+          vi.spyOn(store, 'seeExchange').mockImplementation(() => true);
+          store.applyEvent({ type: 'state-update', state: viewing({ version: 2, players: nobodySaw() }) });
+          await flushPromises();
+          const delay = Number(/animation-delay: (\d+)ms/.exec(fill(wrapper))?.[1]);
+          expect(delay).toBeGreaterThan(0);
+          expect(fill(wrapper)).toContain('animation-duration: 3000ms');
+        });
+
+        it('givenTheExchangeIsNotInTheView_thenThereIsNoBar', async () => {
+          const { wrapper } = await mountRoom(room(exchanging()));
+          expect(wrapper.find('[data-test="board-bar"]').exists()).toBe(false);
+        });
       });
 
       describe('after the flights of the state that opened the view', () => {
@@ -565,9 +648,10 @@ describe('PresidentGameScreen', () => {
       });
     });
 
-    it('givenNoExchangeThisRound_thenThereIsNoSummary', async () => {
+    it('givenNoExchangeThisRound_thenThereIsNoBoard_andTheTrickPlateIsNotCovered', async () => {
       const { wrapper } = await mountRoom(room(playing()));
-      expect(wrapper.find('[data-test="exchange-recap"]').exists()).toBe(false);
+      expect(wrapper.find('[data-test="exchange-board"]').exists()).toBe(false);
+      expect(wrapper.get('[data-test="trick"]').classes()).not.toContain('trick-under--covered');
     });
   });
 

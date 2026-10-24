@@ -1,7 +1,8 @@
 // What 3 to 8 players need on a phone (spec section 11, decision 1: the ring of opponents; the arc is the fallback):
 // every plate stays inside the screen, nothing scrolls sideways, the page never scrolls, the buttons and the hand keep
 // 44 px targets, the opponents never hide the trick, the felt never scrolls inside itself.
-import { hostLobby, joinGuests, noHorizontalScroll, scriptedPass, scriptedPlay } from '../support/presidentRoom';
+import { awaitState, hostLobby, joinGuests, noHorizontalScroll, scriptedPass, scriptedPlay } from '../support/presidentRoom';
+import { autoplay, connectMyself } from '../support/presidentAutoplay';
 import { midRoundDeal, scriptedLead } from '../support/presidentMidRound';
 
 const NAMES = ['Bob', 'Carol', 'Dan', 'Erin', 'Fay', 'Gus', 'Hal'];
@@ -169,5 +170,50 @@ MID_CASES.forEach(([width, height, counts]) => {
         });
       });
     });
+  });
+});
+
+// The board "The exchange" in the pile's slot (round 2 of 8 players: two pairs): it fills the pile's slot (.table-center), and neither
+// the felt, the page nor the board's own rows scroll. The worst case is the smallest phone. (Seven bots answer at once;
+// a scripted twin of the browser's seat plays round 1 and leaves the reading of the exchange to the page.)
+[[360, 640]].forEach(([width, height]) => {
+  it(`fits the exchange board with 8 players at ${width}x${height}`, () => {
+    cy.viewport(width, height);
+    cy.window().then((win) => win.localStorage.removeItem('animationSpeed'));
+    hostLobby('Alice').then((id) => joinGuests(id, ['Bob']).then(([bob]) => {
+      for (let i = 0; i < 6; i++) cy.get('[data-test="add-bot"]').click();
+      cy.get('[data-test="player-count"]').should('contain.text', '8 / 8');
+      // Bob plays by itself but holds the exchange view back, so that the board stays up while it is measured.
+      autoplay(id, bob, { seeExchange: false });
+      cy.wrap(null, { log: false }).as('twin');
+      connectMyself(id).then((me) => { autoplay(id, me, { ready: false }); cy.wrap(me, { log: false }).as('twin'); });
+      cy.get('[data-test="start"]').should('not.be.disabled').click();
+      cy.get('[data-test="round-over-title"]', { timeout: 120000 }).should('have.text', 'Round 1 is over');
+      cy.get('[data-test="motion-card"]', { timeout: 20000 }).should('not.exist');
+      cy.get('[data-test="ready"]').click();
+      cy.get('[data-test="phase-text"]', { timeout: 60000 }).should('have.text', 'Waiting for Bob to see the exchange');
+      cy.get('[data-test="exchange-board"]').should(($board) => {
+        const doc = $board[0].ownerDocument;
+        const box = $board[0].getBoundingClientRect();
+        const pile = doc.querySelector('.table-center')!.getBoundingClientRect();
+        const rows = doc.querySelector('[data-test="board-rows"]') as HTMLElement;
+        const felt = doc.querySelector('[data-test="president-table"]') as HTMLElement;
+        expect(doc.querySelectorAll('[data-test="board-row"]').length, 'a row per pair').to.eq(2);
+        expect(box.left, 'board left').to.be.at.least(pile.left - 4);
+        expect(box.right, 'board right').to.be.at.most(pile.right + 4);
+        expect(box.top, 'board top').to.be.at.least(pile.top - 4);
+        expect(box.bottom, 'board bottom').to.be.at.most(pile.bottom + 4);
+        expect(rows.scrollHeight, 'rows scroll inside the board').to.be.at.most(rows.clientHeight + 1);
+        expect(felt.scrollHeight, 'felt content height').to.be.at.most(felt.clientHeight + 1);
+        expect(doc.documentElement.scrollWidth, 'page width').to.be.at.most(doc.documentElement.clientWidth);
+        expect(doc.documentElement.scrollHeight, 'page height').to.be.at.most(doc.defaultView!.innerHeight);
+      });
+      cy.screenshot(`president-exchange-board-8p-${width}x${height}`, { capture: 'viewport' });
+      cy.then(() => bob.seeExchange());
+      cy.get('@twin').then((me) => {
+        awaitState(me as any, 'round 2 is on', (st) => st.round === 2 && st.phase === 'PLAYING');
+        cy.then(() => (me as any).disconnect());
+      });
+    }));
   });
 });

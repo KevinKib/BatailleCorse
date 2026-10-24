@@ -8,8 +8,8 @@ import type { PresidentExchangePair, PresidentTitle } from '../../model/presiden
 import type { PresidentTitleKey } from '../../locales/Messages';
 import { format, plural } from '../../locales/format';
 
-// The exchange step at the table (round 2 and later): who I am, what I got, what I owe and to whom, and the pairs
-// the others are in. A high rank picks the cards in their own hand (the ones received are tagged there) and gives
+// The exchange step at the table (round 2 and later): who I am, what I got, what I owe and to whom (the pairs of
+// the others are the board's, in the pile's slot). A high rank picks the cards in their own hand (the ones received are tagged there) and gives
 // them with the button; Suggest only selects. Everyone else reads a waiting line. The server judges every give.
 const props = defineProps<{
   pairs: PresidentExchangePair[];
@@ -46,13 +46,6 @@ const receivedText = computed(() =>
     ? plural(ui.exchange.received, props.receivedCount, vars.value)
     : '');
 const giveLabel = computed(() => plural(ui.exchange.give, view.value.count, vars.value));
-const pairLines = computed(() => props.pairs.map(p => ({
-  key: `${p.high}-${p.low}`,
-  mine: p.high === props.mySeat || p.low === props.mySeat,
-  text: plural(ui.exchange.pair, p.count, {
-    high: props.nameOf(p.high), low: props.nameOf(p.low), state: p.done ? ui.exchange.done : ui.exchange.pending,
-  }),
-})));
 </script>
 
 <template>
@@ -68,11 +61,6 @@ const pairLines = computed(() => props.pairs.map(p => ({
       <Button v-if="selectedCount > 0" data-test="exchange-clear" class="action" :label="ui.actions.clear"
               severity="secondary" variant="text" rounded @click="emit('clear')" />
     </div>
-    <ul class="pairs" :aria-label="ui.exchange.pairs">
-      <li v-for="line in pairLines" :key="line.key" data-test="exchange-pair" :class="{ mine: line.mine }">
-        {{ line.text }}
-      </li>
-    </ul>
   </section>
 </template>
 
@@ -86,20 +74,12 @@ const pairLines = computed(() => props.pairs.map(p => ({
 .instruction { font-size: 0.85rem; font-weight: 700; color: #fff; }
 .buttons { display: flex; flex-wrap: nowrap; justify-content: center; gap: 8px; }
 .action.p-button { min-height: 44px; min-width: 88px; }
-.pairs {
-  list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center;
-  gap: 2px 12px; font-size: 0.75rem; color: rgba(255, 255, 255, 0.7);
-}
-.pairs .mine { color: rgba(255, 255, 255, 0.95); font-weight: 700; }
-/* A phone: my title stands beside my name, so the role line is for screen readers; the pairs are one line, mine first. */
+/* A phone: my title stands beside my name, so the role line is for screen readers (the board in the pile's slot says the pairs). */
 @media (max-width: 767px) {
   .role {
     position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0);
     white-space: nowrap; border: 0;
   }
   .exchange { position: relative; }
-  .pairs { flex-wrap: nowrap; height: 1rem; overflow: hidden; font-size: 0.7rem; }
-  .pairs li { white-space: nowrap; }
-  .pairs .mine { order: -1; }
 }
 </style>
