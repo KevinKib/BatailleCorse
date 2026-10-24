@@ -422,9 +422,11 @@ position). The options are kept for context; the chosen one is marked **Chosen**
    343 px; the 44 px touch target needs the gap to count as target or a 2-row zoom: to settle in the
    frontend PR (N5), whose evidence includes the legibility of the dots at 375 px.
 2. **Sowing animation.** **(a) A "hand" token travelling pit to pit that accelerates, with a Skip button or a
-   tap to jump to the end. Chosen (owner, 2026-10-15).** Timing: tick 2400 ms / seeds dropped, clamped to
-   60..280 ms per seed, halving toward the end of the trace; pauses of 1.5 ticks (minimum 200 ms); total
-   cap 4.5 s; with `prefers-reduced-motion` the final board is shown at once. Not chosen: (b) lap by lap;
+   tap to jump to the end. Chosen (owner, 2026-10-15).** Timing (revised 2026-10-25, owner decision in
+   `2026-10-24-mangola-speed-findings.md`): a constant tick per seed, 250 ms in Normal and 125 ms in Fast, the
+   same from the first seed to the last whatever the length of the move; pauses of 1.5 ticks, no floor, no cap
+   on the move (Skip ends it); the hand slides in half a tick. Originally: tick 2400 ms / seeds dropped, clamped
+   to 60..280 ms, halving toward the end, cap 4.5 s. With `prefers-reduced-motion` the final board is shown at once. Not chosen: (b) lap by lap;
    (c) no animation plus a "replay last move" control with a step slider; (c)'s replay is a possible later
    addition, not part of the first frontend PRs.
 3. **Placement screen.** **(a) Tap a pit to add a seed, a "Remove" toggle (instead of a long press) to remove

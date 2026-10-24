@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import {
-  MAX_TOTAL_MS, MIN_PAUSE_MS, TICK_MAX_MS, TICK_MIN_MS,
   capturedCount, dropCount, lastMoveMarks, planSowing, tickMs,
 } from './trace';
 import type { MangolaStep } from './MangolaState';
@@ -8,18 +7,11 @@ import type { MangolaStep } from './MangolaState';
 const drops = (n: number, from = 8): MangolaStep[] =>
   Array.from({ length: n }, (_, i) => ({ type: 'DROP' as const, pit: from + i }));
 
-describe('tickMs (base time of one dropped seed)', () => {
-  it('is 2400 ms shared among the dropped seeds', () => {
-    expect(tickMs(10)).toBe(240);
-    expect(tickMs(12)).toBe(200);
-  });
-
-  it('is clamped between 60 and 280 ms', () => {
-    expect(TICK_MIN_MS).toBe(60);
-    expect(TICK_MAX_MS).toBe(280);
-    expect(tickMs(2)).toBe(280);
-    expect(tickMs(0)).toBe(280);
-    expect(tickMs(200)).toBe(60);
+describe('tickMs (time of one dropped seed)', () => {
+  it('is a constant of the speed: 125 ms in Fast, 250 ms in Normal, 0 in Instant', () => {
+    expect(tickMs('fast')).toBe(125);
+    expect(tickMs('normal')).toBe(250);
+    expect(tickMs('instant')).toBe(0);
   });
 });
 
@@ -40,46 +32,25 @@ describe('planSowing', () => {
     expect(plan.totalMs).toBeCloseTo(last.atMs + last.durationMs, 6);
   });
 
-  it('a drop lasts the tick, halving linearly toward the last drop of the trace', () => {
-    const plan = planSowing(drops(10));
-    const durations = plan.steps.map(s => s.durationMs);
-    expect(durations[0]).toBeCloseTo(240, 6);
-    expect(durations[9]).toBeCloseTo(120, 6);
-    for (let i = 1; i < durations.length; i++) expect(durations[i]).toBeLessThan(durations[i - 1]);
+  it('every drop lasts the same tick from the first seed to the last, whatever the length of the move', () => {
+    for (const n of [1, 2, 10, 40, 150, 600]) {
+      for (const speed of ['fast', 'normal'] as const) {
+        const durations = planSowing(drops(n), speed).steps.map(s => s.durationMs);
+        expect(new Set(durations)).toEqual(new Set([tickMs(speed)]));
+      }
+    }
   });
 
-  it('a lone drop lasts the full tick', () => {
-    expect(planSowing(drops(1)).steps[0].durationMs).toBe(280);
+  it('every other step is a pause of 1.5 ticks, with no minimum', () => {
+    const trace: MangolaStep[] = [{ type: 'PICK', pit: 8, count: 40 }, ...drops(40, 9)];
+    expect(planSowing(trace, 'fast').steps[0].durationMs).toBe(187.5);
+    expect(planSowing(trace, 'normal').steps[0].durationMs).toBe(375);
   });
 
-  it('every other step is a pause of 1.5 ticks, never under 200 ms', () => {
-    expect(MIN_PAUSE_MS).toBe(200);
-    // 10 drops: tick 240, so a pause before the first drop is 360 ms.
-    const plan = planSowing([{ type: 'PICK', pit: 8, count: 10 }, ...drops(10, 9)]);
-    expect(plan.steps[0].durationMs).toBeCloseTo(360, 6);
-    // 120 drops: tick 60, 1.5 ticks is 90 ms, lifted to 200 ms (before the cap scales anything).
-    const small = planSowing([{ type: 'RELAY', pit: 8, count: 3 }, ...drops(3, 9)]);
-    expect(small.steps[0].durationMs).toBeGreaterThanOrEqual(MIN_PAUSE_MS);
-  });
-
-  it('lifts a short pause to 200 ms', () => {
-    const plan = planSowing([{ type: 'PICK', pit: 8, count: 40 }, ...drops(40, 9)].slice(0, 41));
-    // 40 drops: tick 60, 1.5 ticks = 90 ms, so the pause is 200 ms; the cap (4.5 s) is not reached.
-    expect(plan.totalMs).toBeLessThanOrEqual(MAX_TOTAL_MS);
-    expect(plan.steps[0].durationMs).toBe(200);
-  });
-
-  it('caps the whole animation at 4.5 s, scaling every step', () => {
+  it('has no cap on the whole move: it lasts what its steps last', () => {
     const trace: MangolaStep[] = [{ type: 'PICK', pit: 8, count: 600 }, ...drops(600, 9)];
-    const plan = planSowing(trace);
-    expect(MAX_TOTAL_MS).toBe(4500);
-    expect(plan.totalMs).toBeCloseTo(4500, 6);
-    const last = plan.steps[plan.steps.length - 1];
-    expect(last.atMs + last.durationMs).toBeCloseTo(4500, 6);
-  });
-
-  it('does not stretch a short trace', () => {
-    expect(planSowing(drops(4)).totalMs).toBeLessThan(MAX_TOTAL_MS);
+    expect(planSowing(trace, 'fast').totalMs).toBe(187.5 + 600 * 125);
+    expect(planSowing(trace, 'normal').totalMs).toBe(375 + 600 * 250);
   });
 });
 
