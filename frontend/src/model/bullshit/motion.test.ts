@@ -1,10 +1,32 @@
 import { describe, it, expect } from 'vitest';
-import { planDiscard, planTake, settleMs, resolveAnchor, TAKE_GHOSTS } from './motion';
+import { planDiscard, planTake, settleMs, resolveAnchor, displayedPlaces, TAKE_GHOSTS } from './motion';
+import { sortHand } from './sortHand';
+import { CLAIM_MODE_RANK, CLAIM_MODE_SUIT } from './claimMode';
 
 const rect = (left: number, top: number, width: number, height: number) => ({ left, top, width, height });
 const ace = { rank: 'ACE', suit: 'HEART', name: 'HEART_ACE' };
 const king = { rank: 'KING', suit: 'SPADE', name: 'SPADE_KING' };
 const at = (r: ReturnType<typeof rect>) => ({ kind: 'rect', rect: r });
+
+describe('displayedPlaces', () => {
+  const c = (rank: string, suit: string) => ({ rank, suit, name: `${suit}_${rank}` });
+  // Sent by the server in no particular order.
+  const sent = [c('KING', 'SPADE'), c('ACE', 'HEART'), c('7', 'CLUB'), c('7', 'SPADE'), c('2', 'DIAMOND')];
+
+  for (const mode of [CLAIM_MODE_RANK, CLAIM_MODE_SUIT]) {
+    it(`givenAHandSentUnsorted_thenEachSelectedCardHasItsPlaceInTheDisplayOrder_${mode}`, () => {
+      const shown = sortHand(sent, mode);
+      const places = displayedPlaces(shown, [sent[0], sent[2]]);
+      expect(places.map(p => shown[p].name)).toEqual([sent[0].name, sent[2].name]);
+    });
+  }
+
+  it('givenSeveralCards_thenPlacesFollowTheSelectionOrderAndUnknownCardsAreDropped', () => {
+    const shown = sortHand(sent, CLAIM_MODE_RANK);
+    expect(displayedPlaces(shown, [sent[3], c('QUEEN', 'CLUB'), sent[1]]).map(p => shown[p].name))
+      .toEqual([sent[3].name, sent[1].name]);
+  });
+});
 
 describe('planDiscard', () => {
   const pile = rect(200, 100, 90, 130);

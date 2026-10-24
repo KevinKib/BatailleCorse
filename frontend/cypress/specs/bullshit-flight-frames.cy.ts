@@ -85,6 +85,48 @@ function record(name: string, width: number) {
       record('discard', width);
     });
 
+    // The hand is sent in an order that is not the display order (reversed): each copy must still start from the place
+    // of the card that was played, and show its face (it used to take those of the card at the same index in the sent hand).
+    it('starts each copy of a discard from the place of the played card, whatever order the hand was sent in', () => {
+      cy.window().then((w) => {
+        const pinia = (w.document.querySelector('#app') as any).__vue_app__.config.globalProperties.$pinia;
+        const store = pinia._s.get('bullshit-store');
+        store.applyEvent({ type: 'state-update', state: { ...store.game, myHand: [...store.game.myHand].reverse() } });
+      });
+      cy.clock();
+      freezeCopiesAt(0);
+      const places: { left: number; top: number; picture: string | null }[] = [];
+      const place = (n: number) => cy.get(`[data-test="hand-card-${n}"]`).then(($el) => {
+        const r = $el[0].getBoundingClientRect();
+        places.push({ left: r.left, top: r.top, picture: $el.find('img').attr('src') ?? null });
+      });
+      // Two cards picked from the left of the fan, in a non-trivial order: the second place first.
+      cy.get('[data-test="hand-card-1"]').click({ force: true });
+      cy.get('[data-test="hand-card-0"]').click({ force: true });
+      place(1);
+      place(0);
+      cy.get('[data-test="discard"]').click();
+      cy.get(GHOSTS).should('have.length', 2);
+      // `--env tag=before|after`: a screenshot to compare (copied from cypress/screenshots to docs/screenshots/bullshit-discard-source/).
+      const tag = Cypress.env('tag') as string | undefined;
+      if (tag) cy.screenshot(`${tag}-${width}-discard-source`, { capture: 'viewport', overwrite: true });
+      cy.document().then((doc) => {
+        const copies = Array.from(doc.querySelectorAll(GHOSTS)).map((el) => {
+          const r = el.getBoundingClientRect();
+          return { left: r.left, top: r.top, picture: (el.matches('img') ? el : el.querySelector('img'))?.getAttribute('src') ?? null };
+        });
+        // At the start of the flight a copy sits exactly on its hand place and shows the same picture.
+        copies.sort((a, b) => a.left - b.left);
+        const expected = [...places].sort((a, b) => a.left - b.left);
+        copies.forEach((c, i) => {
+          expect(c.picture, `picture of copy ${i}`).to.equal(expected[i].picture);
+          expect(c.left, `left of copy ${i}`).to.be.closeTo(expected[i].left, 1);
+          // A picked card is lifted (and a hovered one too), so the vertical position is only roughly the same.
+          expect(c.top, `top of copy ${i}`).to.be.closeTo(expected[i].top, 12);
+        });
+      });
+    });
+
     it('freezes the pile on its way to the taker', () => {
       cy.clock();
       freezeCopiesAt(300);
