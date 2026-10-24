@@ -107,6 +107,9 @@ function onGridClick(): void {
   if (props.animating) emit('skip');
 }
 
+// The gold flash of a count that changes lasts as long as three hand slides: none at all when instant.
+const boardStyle = computed(() => ({ '--mg-flash': `${SPEED_PROFILES[props.speed].handSlideMs * 3}ms` }));
+
 // Where the hand is: the screen cell of its pit, as a share of the grid (8 columns, 4 rows).
 const handStyle = computed(() => {
   if (!props.hand) return null;
@@ -125,7 +128,7 @@ const handStyle = computed(() => {
 </script>
 
 <template>
-  <div ref="root" class="mg-board" role="group" data-test="mangola-board" :aria-label="ui.board.label">
+  <div ref="root" class="mg-board" role="group" data-test="mangola-board" :aria-label="ui.board.label" :style="boardStyle">
     <p class="mg-board__legend mg-board__legend--top">{{ ui.board.opponentSide }}</p>
     <div class="mg-board__grid" @click="onGridClick">
       <div v-for="(row, r) in rows" :key="r" class="mg-board__row" data-test="board-row" :data-half="r < 2 ? 'top' : 'bottom'">
@@ -203,7 +206,7 @@ const handStyle = computed(() => {
 .mg-board__hand {
   position: absolute;
   display: grid;
-  place-items: center;
+  place-items: start center; /* the top edge of the pit: the seed that lands in the bowl stays visible */
   width: 12.5%;
   height: 25%;
   pointer-events: none;
@@ -221,6 +224,7 @@ const handStyle = computed(() => {
   font-weight: 700;
   line-height: 1;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.55);
+  transform: translateY(-50%); /* centred on the edge of the cell */
 }
 @media (prefers-reduced-motion: no-preference) {
   .mg-board__hand { transition: left var(--mg-slide, 90ms) linear, top var(--mg-slide, 90ms) linear; }

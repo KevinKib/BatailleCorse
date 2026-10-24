@@ -274,6 +274,16 @@ describe('MangolaBoard during a sowing animation', () => {
       await w.setProps({ speed: 'fast' });
       expect(w.get('[data-test="sowing-hand"]').attributes('style')).toContain('90ms');
     });
+
+    it('times the gold flash of a changing count with the speed, and none at all when instant', async () => {
+      const root = (w: ReturnType<typeof board>) => w.get('[data-test="mangola-board"]').attributes('style');
+      const w = board({ speed: 'normal' });
+      expect(root(w)).toContain('--mg-flash: 540ms');
+      await w.setProps({ speed: 'fast' });
+      expect(root(w)).toContain('--mg-flash: 270ms');
+      await w.setProps({ speed: 'instant' });
+      expect(root(w)).toContain('--mg-flash: 0ms');
+    });
   });
 
   it('flags the pit the opponent chose', () => {

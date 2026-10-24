@@ -22,32 +22,58 @@ describe('MangolaPit', () => {
     expect(pit({ count: 0 }).attributes('aria-label')).toBe('Pit b3, 0 seeds');
   });
 
-  it('shows exactly as many dots as seeds up to eight', () => {
-    for (let n = 1; n <= 8; n++) {
-      const w = pit({ count: n });
-      expect(w.findAll('[data-test="seed"]')).toHaveLength(n);
-      expect(w.find('[data-test="pit-number"]').exists()).toBe(false);
+  it('draws exactly one seed per seed, for 1 to 64', () => {
+    for (let n = 1; n <= 64; n++) {
+      expect(pit({ count: n }).findAll('[data-test="seed"]')).toHaveLength(n);
     }
   });
 
-  it('keeps the count in the DOM for hover and focus when it shows dots', () => {
-    const w = pit({ count: 3 });
-    expect(w.get('[data-test="pit-count"]').text()).toBe('3');
+  it('places each seed inside the bowl with a size in percent, so the pit never changes size', () => {
+    const seed = pit({ count: 12 }).findAll('[data-test="seed"]')[0];
+    const style = seed.attributes('style') ?? '';
+    expect(style).toMatch(/left: [\d.]+%/);
+    expect(style).toMatch(/top: [\d.]+%/);
+    expect(style).toMatch(/width: [\d.]+%/);
+    expect(seed.attributes('aria-hidden')).toBeUndefined(); // hidden by the container, not per seed
   });
 
-  it('writes the number above eight, with no dots', () => {
-    const w = pit({ count: 9 });
-    expect(w.findAll('[data-test="seed"]')).toHaveLength(0);
-    expect(w.get('[data-test="pit-number"]').text()).toBe('9');
-    expect(pit({ count: 32 }).get('[data-test="pit-number"]').text()).toBe('32');
+  it('writes the exact count in a badge on every non-empty pit, with or without a pile', () => {
+    for (const n of [1, 5, 8, 9, 12, 17, 30, 64]) {
+      const badge = pit({ count: n }).get('[data-test="pit-count"]');
+      expect(badge.text()).toBe(String(n));
+      expect(badge.attributes('aria-hidden')).toBe('true');
+    }
   });
 
-  it('an empty pit shows neither dots nor a number', () => {
+  it('never writes the number in the middle of the bowl any more', () => {
+    expect(pit({ count: 30 }).find('[data-test="pit-number"]').exists()).toBe(false);
+  });
+
+  it('keeps the exact count in the name of the pit, whatever the pile', () => {
+    expect(pit({ count: 30 }).attributes('aria-label')).toBe('Pit b3, 30 seeds');
+    expect(pit({ count: 12 }).attributes('aria-label')).toBe('Pit b3, 12 seeds');
+  });
+
+  it('an empty pit shows neither seeds nor a badge', () => {
     const w = pit({ count: 0 });
     expect(w.findAll('[data-test="seed"]')).toHaveLength(0);
-    expect(w.find('[data-test="pit-number"]').exists()).toBe(false);
+    expect(w.find('[data-test="pit-count"]').exists()).toBe(false);
   });
 
+  it('flashes the badge when the count changes, not when the pit first shows', async () => {
+    const w = pit({ count: 5 });
+    expect(w.get('[data-test="pit-count"]').attributes('data-changed')).toBeUndefined();
+    await w.setProps({ count: 6 });
+    expect(w.get('[data-test="pit-count"]').attributes('data-changed')).toBe('true');
+    await w.setProps({ count: 6 });
+    expect(w.get('[data-test="pit-count"]').attributes('data-changed')).toBe('true');
+  });
+
+  it('does not flash when a hidden pit is revealed', async () => {
+    const w = pit({ count: null });
+    await w.setProps({ count: 4 });
+    expect(w.get('[data-test="pit-count"]').attributes('data-changed')).toBeUndefined();
+  });
   it('a hidden pit says so and shows no seeds', () => {
     const w = pit({ count: null });
     expect(w.attributes('aria-label')).toBe('Pit b3, hidden');
