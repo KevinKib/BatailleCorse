@@ -8,7 +8,7 @@ import { resolveMorrisSession, useMorrisBootstrap } from './useMorrisBootstrap';
 import { useThreeMenMorrisStore } from '../state/ThreeMenMorris.store';
 
 // The game is not in the registry yet (it joins `GAMES` with its screen): the bootstrap takes its definition.
-const base = '/games/three-men-morris';
+const base = '/three-men-morris';
 const game: GameDefinition = {
   key: 'three-men-morris',
   gameHomeRoute: base,

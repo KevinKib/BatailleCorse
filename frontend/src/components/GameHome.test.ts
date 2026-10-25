@@ -13,7 +13,7 @@ import { messagesEn } from '../locales/en';
 async function mountHome(key: 'bataillecorse' | 'bullshit', query = '',
   createLobby: (name?: string) => Promise<string> = vi.fn().mockResolvedValue('g1')) {
   const router = createAppRouter(createMemoryHistory());
-  await router.push(`/games/${key}${query}`);
+  await router.push(`/${key}${query}`);
   await router.isReady();
   const wrapper = mount(GameHome, {
     props: { game: findGame(key)!, createLobby },
@@ -42,21 +42,21 @@ describe('GameHome', () => {
       await wrapper.get('[data-test="new-game"]').trigger('click');
       await flushPromises();
       expect(createLobby).toHaveBeenCalledTimes(1);
-      expect(router.currentRoute.value.path).toBe(`/games/${key}/room/g7`);
+      expect(router.currentRoute.value.path).toBe(`/${key}/room/g7`);
     });
 
     it(`given_${key}_whenJoinGame_thenLeadsToItsJoinForm`, async () => {
       const { wrapper, router } = await mountHome(key);
       await wrapper.get('[data-test="join-game"]').trigger('click');
       await flushPromises();
-      expect(router.currentRoute.value.path).toBe(`/games/${key}/join`);
+      expect(router.currentRoute.value.path).toBe(`/${key}/join`);
     });
 
     it(`given_${key}_whenBack_thenLeadsToTheGameSelection`, async () => {
       const { wrapper, router } = await mountHome(key);
       await wrapper.get('[data-test="back"]').trigger('click');
       await flushPromises();
-      expect(router.currentRoute.value.path).toBe('/games');
+      expect(router.currentRoute.value.path).toBe('/');
     });
   }
 
@@ -78,7 +78,7 @@ describe('GameHome', () => {
     await wrapper.get('[data-test="new-game"]').trigger('click');
     await flushPromises();
     expect(createLobby).toHaveBeenCalledWith('Alice');
-    expect(router.currentRoute.value.path).toBe('/games/bullshit/room/g42');
+    expect(router.currentRoute.value.path).toBe('/bullshit/room/g42');
   });
 
   it('givenBlankName_whenNewGame_thenCreatesTheLobbyWithoutName', async () => {
@@ -111,7 +111,7 @@ describe('GameHome', () => {
     const alert = wrapper.get('[data-test="create-error"]');
     expect(alert.text()).toBe(messagesEn.home.createFailed);
     expect(alert.attributes('role')).toBe('alert');
-    expect(router.currentRoute.value.path).toBe('/games/bullshit');
+    expect(router.currentRoute.value.path).toBe('/bullshit');
     expect((wrapper.get('[data-test="new-game"]').element as HTMLButtonElement).disabled).toBe(false);
   });
 

@@ -1,11 +1,11 @@
 // Turn cue, accessible hand and verdict region, and the end-of-game line on the Bullshit table.
 function startTwoPlayerGame() {
   // Enter through the menu so the WebSocket is connected before we create (see bullshit-table-and-lobby).
-  cy.visit('/games');
+  cy.visit('/');
   cy.get('[data-test="play-bullshit"]').click();
   cy.get('[data-test="name"]').type('Alice');
   cy.get('[data-test="new-game"]').click();
-  cy.url({ timeout: 10000 }).should('match', /\/games\/bullshit\/room\/.+/);
+  cy.url({ timeout: 10000 }).should('match', /\/bullshit\/room\/.+/);
   // The Game home fades out while the room fades in (800 ms): continue once the room is alone on the page.
   cy.get('[data-test="start-panel"]').should('not.exist');
   cy.url().then((url) => cy.request('POST', `/api/bullshit/game/${url.split('/room/')[1]}/join`, { name: 'Bob' }));

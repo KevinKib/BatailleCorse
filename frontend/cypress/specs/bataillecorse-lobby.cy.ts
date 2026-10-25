@@ -22,10 +22,10 @@ describe('Bataille Corse lobby', () => {
     cy.request('POST', '/api/lobby', { gameType: 'bataille-corse', name: 'Hosty' }).then((res) => {
       const { gameId, token } = res.body as { gameId: string; token: string };
       connectScriptedPlayer(gameId, token, 0).then((host) => {
-        cy.visit(`/games/bataillecorse/join/${gameId}`);
+        cy.visit(`/bataillecorse/join/${gameId}`);
         cy.get('[data-test="name"]').clear().type('Zoe');
         cy.get('[data-test="submit"]').click();
-        cy.url({ timeout: 10000 }).should('include', `/games/bataillecorse/room/${gameId}`);
+        cy.url({ timeout: 10000 }).should('include', `/bataillecorse/room/${gameId}`);
         cy.get('[data-test="lobby"]').should('be.visible').and('contain.text', 'Hosty');
         cy.get('[data-test="start"]').should('not.exist');
         cy.get('[data-test="waiting-host"]').scrollIntoView().should('be.visible');
@@ -55,7 +55,7 @@ describe('Bataille Corse lobby', () => {
   it('Leave goes to the Game selection and forgets the seat', () => {
     cy.openBatailleCorseLobby().then((gameId) => {
       cy.get('[data-test="leave-lobby"]').click();
-      cy.location('pathname', { timeout: 10000 }).should('eq', '/games');
+      cy.location('pathname', { timeout: 10000 }).should('eq', '/');
       cy.window().then((win) => expect(win.localStorage.getItem(`tokens:${gameId}`)).to.eq(null));
     });
   });

@@ -3,10 +3,10 @@
 const WIDTHS: Array<[number, number]> = [[375, 667], [1280, 720]];
 
 const VIEWS: Array<{ name: string; path: string; texts: string[] }> = [
-  { name: 'Bataille Corse home', path: '/games/bataillecorse', texts: ['Bataille Corse', 'New game', 'Join game', 'Back'] },
-  { name: 'Bataille Corse join', path: '/games/bataillecorse/join', texts: ['Join game', 'Back'] },
-  { name: 'Bullshit home', path: '/games/bullshit', texts: ['Bullshit', 'New game', 'Join game', 'Back'] },
-  { name: 'Bullshit join', path: '/games/bullshit/join', texts: ['Game ID', 'Join game', 'Back'] },
+  { name: 'Bataille Corse home', path: '/bataillecorse', texts: ['Bataille Corse', 'New game', 'Join game', 'Back'] },
+  { name: 'Bataille Corse join', path: '/bataillecorse/join', texts: ['Join game', 'Back'] },
+  { name: 'Bullshit home', path: '/bullshit', texts: ['Bullshit', 'New game', 'Join game', 'Back'] },
+  { name: 'Bullshit join', path: '/bullshit/join', texts: ['Game ID', 'Join game', 'Back'] },
 ];
 
 describe('Game home, create and join panels fit the viewport', () => {

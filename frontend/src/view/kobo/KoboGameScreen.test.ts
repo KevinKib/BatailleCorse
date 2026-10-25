@@ -29,7 +29,7 @@ async function mountRoom(setup: (store: ReturnType<typeof useKoboStore>) => void
   vi.spyOn(store, 'hydrate').mockImplementation(() => {});
   vi.spyOn(store, 'restore').mockImplementation(() => {});
   const router = createAppRouter(createMemoryHistory());
-  await router.push('/games/kobo/room/k1');
+  await router.push('/kobo/room/k1');
   await router.isReady();
   const Root = defineComponent({ render: () => h(RouterView) });
   const wrapper = mount(Root, { global: { plugins: [router, PrimeVue] } });
@@ -1130,6 +1130,6 @@ describe('KoboGameScreen', () => {
     });
     store.removedByHost = true;
     await flushPromises();
-    expect(router.currentRoute.value.fullPath).toBe('/games?removed=1');
+    expect(router.currentRoute.value.fullPath).toBe('/?removed=1');
   });
 });

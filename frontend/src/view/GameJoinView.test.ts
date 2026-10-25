@@ -26,7 +26,7 @@ describe('GameJoinView', () => {
   it('givenABullshitInviteLink_thenJoinsThroughTheBullshitStore', async () => {
     const bullshit = vi.spyOn(useBullshitStore(), 'join').mockResolvedValue();
     const bataille = vi.spyOn(useBatailleCorseStore(), 'join').mockResolvedValue();
-    const { wrapper } = await mountJoin('/games/bullshit/join/abc');
+    const { wrapper } = await mountJoin('/bullshit/join/abc');
     await wrapper.get('form').trigger('submit');
     await flushPromises();
     expect(bullshit).toHaveBeenCalledWith('abc', undefined);
@@ -36,7 +36,7 @@ describe('GameJoinView', () => {
   it('givenABatailleCorseInviteLink_thenJoinsThroughTheBatailleCorseStore', async () => {
     const bullshit = vi.spyOn(useBullshitStore(), 'join').mockResolvedValue();
     const bataille = vi.spyOn(useBatailleCorseStore(), 'join').mockResolvedValue();
-    const { wrapper } = await mountJoin('/games/bataillecorse/join/xyz');
+    const { wrapper } = await mountJoin('/bataillecorse/join/xyz');
     await wrapper.get('form').trigger('submit');
     await flushPromises();
     expect(bataille).toHaveBeenCalledWith('xyz', undefined);
@@ -46,7 +46,7 @@ describe('GameJoinView', () => {
   it('givenAKoboInviteLink_thenJoinsThroughTheKoboStore', async () => {
     const kobo = vi.spyOn(useKoboStore(), 'join').mockResolvedValue();
     const bullshit = vi.spyOn(useBullshitStore(), 'join').mockResolvedValue();
-    const { wrapper } = await mountJoin('/games/kobo/join/k1');
+    const { wrapper } = await mountJoin('/kobo/join/k1');
     await wrapper.get('form').trigger('submit');
     await flushPromises();
     expect(kobo).toHaveBeenCalledWith('k1', undefined);
@@ -56,7 +56,7 @@ describe('GameJoinView', () => {
   it('givenTheRoomRegistry_thenTheViewJoinsThroughItAndNotThroughAHardCodedStore', async () => {
     const join = vi.fn().mockResolvedValue(undefined);
     const spy = vi.spyOn(rooms, 'useGameRooms').mockReturnValue(() => ({ create: vi.fn(), join }));
-    const { wrapper } = await mountJoin('/games/bullshit/join/abc');
+    const { wrapper } = await mountJoin('/bullshit/join/abc');
     await wrapper.get('form').trigger('submit');
     await flushPromises();
     expect(spy).toHaveBeenCalled();

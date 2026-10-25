@@ -17,7 +17,7 @@ import { useBatailleCorseStore } from '../state/BatailleCorse.store';
 
 async function mountAtRoom(id: string) {
   const router = createAppRouter(createMemoryHistory());
-  await router.push(`/games/bataillecorse/room/${id}`);
+  await router.push(`/bataillecorse/room/${id}`);
   await router.isReady();
   const Probe = defineComponent({
     setup() { useGameBootstrap({ revealImmediatelyIfOver: () => {} }); return () => h('div'); },
@@ -33,7 +33,7 @@ describe('useGameBootstrap restore failures', () => {
 
   it('givenNoStoredToken_thenGoesToTheJoinFormWithTheIdPrefilled', async () => {
     const router = await mountAtRoom('g1');
-    expect(router.currentRoute.value.fullPath).toBe('/games/bataillecorse/join/g1');
+    expect(router.currentRoute.value.fullPath).toBe('/bataillecorse/join/g1');
   });
 
   it.each(['{not json', '42', 'null', '[1]'])('givenCorruptedStoredToken_%s_thenGoesToTheJoinFormAndForgetsIt', async (raw) => {
@@ -41,7 +41,7 @@ describe('useGameBootstrap restore failures', () => {
     const fetchMock = vi.fn();
     vi.stubGlobal('fetch', fetchMock);
     const router = await mountAtRoom('g1');
-    expect(router.currentRoute.value.fullPath).toBe('/games/bataillecorse/join/g1');
+    expect(router.currentRoute.value.fullPath).toBe('/bataillecorse/join/g1');
     expect(localStorage.getItem('tokens:g1')).toBeNull();
     expect(fetchMock).not.toHaveBeenCalled();
   });
@@ -50,7 +50,7 @@ describe('useGameBootstrap restore failures', () => {
     localStorage.setItem('tokens:g1', JSON.stringify({ 0: 'tok' }));
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 404 }));
     const router = await mountAtRoom('g1');
-    expect(router.currentRoute.value.path).toBe('/games/bataillecorse');
+    expect(router.currentRoute.value.path).toBe('/bataillecorse');
     expect(router.currentRoute.value.query.gone).toBe('1');
     expect(localStorage.getItem('tokens:g1')).toBeNull();
   });
@@ -59,7 +59,7 @@ describe('useGameBootstrap restore failures', () => {
     localStorage.setItem('tokens:g1', JSON.stringify({ 1: 'tok' }));
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 403 }));
     const router = await mountAtRoom('g1');
-    expect(router.currentRoute.value.path).toBe('/games/bataillecorse');
+    expect(router.currentRoute.value.path).toBe('/bataillecorse');
     expect(router.currentRoute.value.query.lost).toBe('1');
     expect(localStorage.getItem('tokens:g1')).toBeNull();
   });
@@ -68,7 +68,7 @@ describe('useGameBootstrap restore failures', () => {
     localStorage.setItem('tokens:g1', JSON.stringify({ 1: 'tok' }));
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 502 }));
     const router = await mountAtRoom('g1');
-    expect(router.currentRoute.value.path).toBe('/games/bataillecorse/room/g1');
+    expect(router.currentRoute.value.path).toBe('/bataillecorse/room/g1');
     expect(localStorage.getItem('tokens:g1')).not.toBeNull();
   });
 
@@ -82,7 +82,7 @@ describe('useGameBootstrap restore failures', () => {
     expect(fetchMock.mock.calls[0][0]).toBe('/api/game/g1?token=tok-1');
     expect(useBatailleCorseStore().myPlayerIndex).toBe(1);
     expect(useBatailleCorseStore().phase).toBe('lobby');
-    expect(router.currentRoute.value.path).toBe('/games/bataillecorse/room/g1');
+    expect(router.currentRoute.value.path).toBe('/bataillecorse/room/g1');
   });
 
   it('givenAnOldSoloEntryWithTwoTokens_thenIgnoresItAndGoesToTheJoinForm', async () => {
@@ -90,7 +90,7 @@ describe('useGameBootstrap restore failures', () => {
     const fetchMock = vi.fn();
     vi.stubGlobal('fetch', fetchMock);
     const router = await mountAtRoom('g1');
-    expect(router.currentRoute.value.fullPath).toBe('/games/bataillecorse/join/g1');
+    expect(router.currentRoute.value.fullPath).toBe('/bataillecorse/join/g1');
     expect(localStorage.getItem('tokens:g1')).toBeNull();
     expect(fetchMock).not.toHaveBeenCalled();
   });

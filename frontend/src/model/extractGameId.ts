@@ -1,6 +1,6 @@
 /**
  * Accepts either a bare game id or a pasted invite link
- * (`https://host/games/bullshit/join/<id>`) and returns the id.
+ * (`https://host/bullshit/join/<id>`, or the older `/games/bullshit/join/<id>`) and returns the id.
  */
 export function extractGameId(input: string): string {
   const trimmed = input.trim();

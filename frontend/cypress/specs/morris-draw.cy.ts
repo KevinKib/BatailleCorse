@@ -16,7 +16,7 @@ const offerButton = () => cy.get('[data-test="draw-offer"]');
 
 /** The browser as White (host, through the UI) against a scripted Black, both pieces down, White to move. */
 function inMovementPhase(): Cypress.Chainable<Scripted> {
-  cy.visit('/games/three-men-morris');
+  cy.visit('/three-men-morris');
   cy.get('[data-test="name"]').type('Alice');
   cy.get('[data-test="new-game"]').click();
   cy.get('[data-test="lobby"]', { timeout: 10000 }).should('be.visible');

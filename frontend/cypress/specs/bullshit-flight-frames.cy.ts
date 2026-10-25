@@ -10,11 +10,11 @@ const SUITS = ['HEART', 'SPADE', 'DIAMOND', 'CLUB'];
 const FIXED = RANKS.flatMap(rank => SUITS.map(suit => [rank, suit]));
 
 function startTwoPlayerGame() {
-  cy.visit('/games');
+  cy.visit('/');
   cy.get('[data-test="play-bullshit"]').click();
   cy.get('[data-test="name"]').type('Alice');
   cy.get('[data-test="new-game"]').click();
-  cy.url({ timeout: 10000 }).should('match', /\/games\/bullshit\/room\/.+/);
+  cy.url({ timeout: 10000 }).should('match', /\/bullshit\/room\/.+/);
   cy.get('[data-test="start-panel"]').should('not.exist');
   cy.url().then((url) => cy.request('POST', `/api/bullshit/game/${url.split('/room/')[1]}/join`, { name: 'Bob' }));
   cy.get('[data-test="start"]', { timeout: 10000 }).should('not.be.disabled').click();

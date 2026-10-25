@@ -4,10 +4,10 @@ import { connectScriptedPlayer, joinAsScriptedPlayer } from '../support/stompPla
 const roomId = () => cy.location('pathname').then((path) => path.split('/room/')[1]);
 
 function hostLobby(name: string) {
-  cy.visit('/games/bullshit');
+  cy.visit('/bullshit');
   cy.get('[data-test="name"]').type(name);
   cy.get('[data-test="new-game"]').click();
-  cy.url({ timeout: 10000 }).should('match', /\/games\/bullshit\/room\/.+/);
+  cy.url({ timeout: 10000 }).should('match', /\/bullshit\/room\/.+/);
   cy.get('[data-test="start-panel"]').should('not.exist');
   cy.get('[data-test="lobby"]').should('be.visible');
 }
@@ -17,10 +17,10 @@ function guestLobby(hostName: string, guestName: string) {
   return cy.request('POST', '/api/lobby', { gameType: 'bullshit', name: hostName }).then((res) => {
     const { gameId, token } = res.body as { gameId: string; token: string };
     return connectScriptedPlayer(gameId, token, 0).then((host) => {
-      cy.visit(`/games/bullshit/join/${gameId}`);
+      cy.visit(`/bullshit/join/${gameId}`);
       cy.get('[data-test="name"]').type(guestName);
       cy.get('[data-test="submit"]').click();
-      cy.url({ timeout: 10000 }).should('include', `/games/bullshit/room/${gameId}`);
+      cy.url({ timeout: 10000 }).should('include', `/bullshit/room/${gameId}`);
       cy.get('[data-test="lobby"]').should('be.visible');
       return cy.wrap({ host, gameId });
     });
@@ -59,10 +59,10 @@ describe('Shared lobby', () => {
     cy.request('POST', '/api/lobby', { gameType: 'president', name: 'Hosty' }).then((res) => {
       const { gameId, token } = res.body as { gameId: string; token: string };
       connectScriptedPlayer(gameId, token, 0).then((host) => {
-        cy.visit(`/games/president/join/${gameId}`);
+        cy.visit(`/president/join/${gameId}`);
         cy.get('[data-test="name"]').type('Zoe');
         cy.get('[data-test="submit"]').click();
-        cy.url({ timeout: 10000 }).should('include', `/games/president/room/${gameId}`);
+        cy.url({ timeout: 10000 }).should('include', `/president/room/${gameId}`);
         cy.get('[data-test="lobby"]').should('be.visible');
         cy.then(() => host.publish('/app/lobby/addBot', {}));
         cy.get('[data-test="player-count"]').should('contain.text', '3 / 8');
@@ -75,7 +75,7 @@ describe('Shared lobby', () => {
     });
   });
 
-  it('frees the seat of a guest who leaves, and sends them to /games', () => {
+  it('frees the seat of a guest who leaves, and sends them to /', () => {
     hostLobby('Alice');
     roomId().then((id) => {
       cy.get('[data-test="add-bot"]').click();
@@ -93,12 +93,12 @@ describe('Shared lobby', () => {
     });
   });
 
-  it('sends the leaving browser to /games and forgets its token', () => {
+  it('sends the leaving browser to / and forgets its token', () => {
     guestLobby('Hosty', 'Zoe').then(({ host, gameId }) => {
       // The host has seen the guest arrive: the guest's socket is up and its seat is bound.
       cy.wrap(host.frames).should(() => expect(host.lastState().players.filter((p: { joined: boolean }) => p.joined)).to.have.length(2));
       cy.get('[data-test="leave-lobby"]').click();
-      cy.location('pathname').should('eq', '/games');
+      cy.location('pathname').should('eq', '/');
       cy.window().then((win) => expect(win.localStorage.getItem(`bullshit:tokens:${gameId}`)).to.eq(null));
       cy.wrap(host.frames).should(() => {
         expect(host.lastState().players.filter((p: { joined: boolean }) => p.joined), 'the seat reopens').to.have.length(1);
@@ -204,7 +204,7 @@ describe('Shared lobby', () => {
         host.publish('/app/lobby/leave', {});
         // Nothing sits at the table any more: the lobby is removed.
         cy.request({ url: `/api/bullshit/game/${gameId}?token=${token}`, failOnStatusCode: false }).its('status').should('eq', 404);
-        cy.visit(`/games/bullshit/join/${gameId}`);
+        cy.visit(`/bullshit/join/${gameId}`);
         cy.get('[data-test="name"]').type('Zoe');
         cy.get('[data-test="submit"]').click();
         cy.get('[data-test="join-error"]').should('be.visible').and('contain.text', 'No game found');

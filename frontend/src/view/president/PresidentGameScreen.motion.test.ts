@@ -103,7 +103,7 @@ async function mountTable(state: PresidentState, mySeat = 0) {
     return true;
   });
   const router = createAppRouter(createMemoryHistory());
-  await router.push('/games/president/room/p1');
+  await router.push('/president/room/p1');
   await router.isReady();
   const Root = defineComponent({ render: () => h(RouterView) });
   const wrapper = mount(Root, { attachTo: document.body, global: { plugins: [router, PrimeVue] } });

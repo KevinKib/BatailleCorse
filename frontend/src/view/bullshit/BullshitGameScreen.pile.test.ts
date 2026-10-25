@@ -40,7 +40,7 @@ function state(pile: number): BullshitState {
     pendingWinner: { state: 'NONE' }, outcome: { status: 'ONGOING' },
   } as BullshitState;
 }
-const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '/games', name: 'games', component: { template: '<div/>' } }] });
+const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '/', name: 'games', component: { template: '<div/>' } }] });
 
 function setup() {
   const store = useBullshitStore();

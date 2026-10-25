@@ -13,7 +13,7 @@ describe('President lobby', () => {
         cy.get('[data-test="start"]').should('be.disabled');
         cy.get('[data-test="start-hint"]').should('contain.text', 'Waiting for 2 more players');
         cy.get('[data-test="preset-title"]').should('have.text', 'Classic');
-        cy.get('[data-test="invite-link"]').invoke('val').should('match', new RegExp(`/games/president/join/${id}$`));
+        cy.get('[data-test="invite-link"]').invoke('val').should('match', new RegExp(`/president/join/${id}$`));
         noHorizontalScroll();
 
         joinGuests(id, ['Bob', 'Carol']).then(() => {
@@ -54,7 +54,7 @@ describe('President lobby', () => {
       joinGuests(id, ['Bob', 'Carol', 'Dan', 'Erin', 'Fay', 'Gus', 'Hal']).then(() => {
         cy.get('[data-test="player-count"]').should('contain.text', '8 / 8');
         cy.clearLocalStorage();
-        cy.visit(`/games/president/join/${id}`);
+        cy.visit(`/president/join/${id}`);
         cy.get('[data-test="name"]').type('Ivy');
         cy.get('[data-test="submit"]').click();
         cy.get('[data-test="join-error"]', { timeout: 10000 }).should('contain.text', 'This lobby is full.');

@@ -24,10 +24,10 @@ export const canSow = (pit: number) => cy.get(`[data-test="pit-${pitName(pit)}"]
  * placement phase of a free game. Yields the guest and the game id.
  */
 export function asHostInPlacement(): Cypress.Chainable<{ id: string; bob: Scripted }> {
-  cy.visit('/games/mangola');
+  cy.visit('/mangola');
   cy.get('[data-test="name"]').type('Alice');
   cy.get('[data-test="new-game"]').click();
-  cy.url({ timeout: 10000 }).should('match', /\/games\/mangola\/room\/.+/);
+  cy.url({ timeout: 10000 }).should('match', /\/mangola\/room\/.+/);
   cy.get('[data-test="lobby"]', { timeout: 10000 }).should('be.visible');
   cy.get('[data-test="option-firstPlayer-host"]').check({ force: true });
   cy.get('[data-test="option-firstPlayer"] .choice--on').should('contain.text', 'Host');

@@ -8,7 +8,7 @@ import { useKoboStore } from '../state/Kobo.store';
 import { findGame, type GameDefinition } from '../model/games';
 
 // Kobo is not on the Game selection yet (its screen comes later): a definition built by hand stands in for it.
-const kobo = { ...findGame('bullshit')!, key: 'kobo', gameHomeRoute: '/games/kobo', joinRoute: (id?: string) => (id ? `/games/kobo/join/${id}` : '/games/kobo/join'), roomRoute: (id: string) => `/games/kobo/room/${id}` } as GameDefinition;
+const kobo = { ...findGame('bullshit')!, key: 'kobo', gameHomeRoute: '/kobo', joinRoute: (id?: string) => (id ? `/kobo/join/${id}` : '/kobo/join'), roomRoute: (id: string) => `/kobo/room/${id}` } as GameDefinition;
 
 describe('resolveKoboSession', () => {
   beforeEach(() => { localStorage.clear(); });
@@ -32,7 +32,7 @@ describe('useKoboBootstrap', () => {
       history: createMemoryHistory(),
       routes: [{ path: '/:pathMatch(.*)*', component: { render: () => h('div') } }],
     });
-    await router.push(`/games/kobo/room/${id}`);
+    await router.push(`/kobo/room/${id}`);
     await router.isReady();
     const Probe = defineComponent({
       setup() { useKoboBootstrap(id, kobo); return () => h('div'); },
@@ -44,7 +44,7 @@ describe('useKoboBootstrap', () => {
 
   it('without a stored token leads to the Kobo join form', async () => {
     const router = await mountAtRoom('g1');
-    expect(router.currentRoute.value.path).toBe('/games/kobo/join/g1');
+    expect(router.currentRoute.value.path).toBe('/kobo/join/g1');
   });
 
   it('restores the stored seat into the Kobo store and hydrates', async () => {
@@ -55,7 +55,7 @@ describe('useKoboBootstrap', () => {
     const router = await mountAtRoom('g1');
     expect(restore).toHaveBeenCalledWith('g1', 1, 'tok');
     expect(hydrate).toHaveBeenCalled();
-    expect(router.currentRoute.value.path).toBe('/games/kobo/room/g1');
+    expect(router.currentRoute.value.path).toBe('/kobo/room/g1');
   });
 
   it('a game that is gone leads to the Kobo home and forgets the token', async () => {
@@ -64,7 +64,7 @@ describe('useKoboBootstrap', () => {
     vi.spyOn(store, 'restore').mockImplementation(() => {});
     vi.spyOn(store, 'hydrate').mockResolvedValue('gone');
     const router = await mountAtRoom('g1');
-    expect(router.currentRoute.value.path).toBe('/games/kobo');
+    expect(router.currentRoute.value.path).toBe('/kobo');
     expect(router.currentRoute.value.query.gone).toBe('1');
     expect(localStorage.getItem('kobo:tokens:g1')).toBeNull();
   });

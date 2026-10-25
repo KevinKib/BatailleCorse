@@ -13,7 +13,7 @@ describe('Kobo lobby', () => {
         cy.get('[data-test="add-bot"]').should('be.visible').and('not.be.disabled');
         cy.get('[data-test="start"]').should('be.disabled');
         cy.get('[data-test="start-hint"]').should('contain.text', 'Waiting for 1 more player');
-        cy.get('[data-test="invite-link"]').invoke('val').should('match', new RegExp(`/games/kobo/join/${id}$`));
+        cy.get('[data-test="invite-link"]').invoke('val').should('match', new RegExp(`/kobo/join/${id}$`));
         cy.get('.local-preferences').should('not.exist');
         noHorizontalScroll();
 
@@ -52,7 +52,7 @@ describe('Kobo lobby', () => {
 
         // The seventh player is turned away with the dedicated message (a fresh browser: no seat of mine here).
         cy.clearLocalStorage();
-        cy.visit(`/games/kobo/join/${id}`);
+        cy.visit(`/kobo/join/${id}`);
         cy.get('[data-test="name"]').type('Gus');
         cy.get('[data-test="submit"]').click();
         cy.get('[data-test="join-error"]', { timeout: 10000 }).should('contain.text', 'This lobby is full.');

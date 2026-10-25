@@ -5,10 +5,10 @@ export type Guest = ScriptedPlayer & { token: string; seat: number };
 
 /** Creates a Kobo room as the host and yields its id once the lobby shows. */
 export function hostLobby(name: string) {
-  cy.visit('/games/kobo');
+  cy.visit('/kobo');
   cy.get('[data-test="name"]').type(name);
   cy.get('[data-test="new-game"]').click();
-  cy.url({ timeout: 10000 }).should('match', /\/games\/kobo\/room\/.+/);
+  cy.url({ timeout: 10000 }).should('match', /\/kobo\/room\/.+/);
   cy.get('[data-test="lobby"]', { timeout: 10000 }).should('be.visible');
   return cy.location('pathname').then((path) => path.split('/room/')[1]);
 }
@@ -59,7 +59,7 @@ export function startKoboTableAsGuest(players: number, deal: string[] = []) {
     const { gameId, token } = created.body as { gameId: string; token: string };
     return cy.request('POST', `/api/kobo/game/${gameId}/join`, { name: 'Zed' }).then((joined) => {
       const me = joined.body as { playerId: number; token: string };
-      cy.visit(`/games/kobo/room/${gameId}`, {
+      cy.visit(`/kobo/room/${gameId}`, {
         onBeforeLoad: (win) => win.localStorage.setItem(`kobo:tokens:${gameId}`, JSON.stringify({ [me.playerId]: me.token })),
       });
       cy.get('[data-test="lobby"]', { timeout: 10000 }).should('be.visible');

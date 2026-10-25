@@ -2,13 +2,13 @@ import { describe, it, expect } from 'vitest';
 import { GAMES, findGame, type GameDefinition, type GameKey } from './games';
 
 describe('game registry', () => {
-  it('givenEveryGame_thenEachDeclaresItsRoutesUnderGamesKey', () => {
+  it('givenEveryGame_thenEachDeclaresItsRoutesUnderTheirKey', () => {
     expect(GAMES.map(g => g.key)).toEqual(['bataillecorse', 'bullshit', 'kobo', 'three-men-morris', 'president', 'mangola']);
     for (const g of GAMES) {
-      expect(g.gameHomeRoute).toBe(`/games/${g.key}`);
-      expect(g.joinRoute()).toBe(`/games/${g.key}/join`);
-      expect(g.joinRoute('abc')).toBe(`/games/${g.key}/join/abc`);
-      expect(g.roomRoute('abc')).toBe(`/games/${g.key}/room/abc`);
+      expect(g.gameHomeRoute).toBe(`/${g.key}`);
+      expect(g.joinRoute()).toBe(`/${g.key}/join`);
+      expect(g.joinRoute('abc')).toBe(`/${g.key}/join/abc`);
+      expect(g.roomRoute('abc')).toBe(`/${g.key}/room/abc`);
     }
   });
 
@@ -65,7 +65,7 @@ describe('game registry', () => {
     expect(president?.supportsBots).toBe(true);
     expect(president?.hotkeys).toBeUndefined();
     expect(president?.picker).toEqual({ icon: 'pi pi-crown', severity: 'contrast' });
-    expect(president?.roomRoute('abc')).toBe('/games/president/room/abc');
+    expect(president?.roomRoute('abc')).toBe('/president/room/abc');
   });
 
   it('givenTheGameKeyIsOpen_thenAnUnknownKeyIsNotRegistered', () => {
@@ -75,7 +75,7 @@ describe('game registry', () => {
 
   it('givenAGameWithoutShortcuts_thenItsDefinitionNeedsNoHotkeys', () => {
     const quiet: GameDefinition = {
-      key: 'kobo', gameHomeRoute: '/games/kobo', joinRoute: () => '/', roomRoute: () => '/',
+      key: 'kobo', gameHomeRoute: '/kobo', joinRoute: () => '/', roomRoute: () => '/',
       supportsBots: false, picker: { icon: 'pi pi-star', severity: 'info' },
     };
     expect(quiet.hotkeys).toBeUndefined();

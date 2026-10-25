@@ -4,11 +4,11 @@ const SUIT_ORDER = ['heart', 'diamond', 'club', 'spade'];
 const RANK_ORDER = ['ace', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'jack', 'queen', 'king'];
 
 function startSuitGame() {
-  cy.visit('/games');
+  cy.visit('/');
   cy.get('[data-test="play-bullshit"]').click();
   cy.get('[data-test="name"]').type('Alice');
   cy.get('[data-test="new-game"]').click();
-  cy.url({ timeout: 10000 }).should('match', /\/games\/bullshit\/room\/.+/);
+  cy.url({ timeout: 10000 }).should('match', /\/bullshit\/room\/.+/);
   // The host picks the options in the lobby; the server's answer marks the choice.
   cy.contains('[data-test="lobby"] label', 'By suit').click();
   cy.get('[data-test="option-claimMode"] .choice--on').should('contain.text', 'By suit');

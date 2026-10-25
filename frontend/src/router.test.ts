@@ -10,24 +10,20 @@ async function resolveAt(path: string) {
 }
 
 describe('app router', () => {
-  it('givenRoot_thenRedirectsToGamePicker', async () => {
-    expect((await resolveAt('/')).fullPath).toBe('/games');
-  });
-
-  it('givenGames_thenShowsGamePickerWithoutRedirecting', async () => {
-    const route = await resolveAt('/games');
-    expect(route.fullPath).toBe('/games');
+  it('givenRoot_thenShowsGamePickerWithoutRedirecting', async () => {
+    const route = await resolveAt('/');
+    expect(route.fullPath).toBe('/');
     expect(route.name).toBe('games');
   });
 
   it('givenUnknownRoute_thenRedirectsToGamePicker', async () => {
-    expect((await resolveAt('/nope/at/all')).fullPath).toBe('/games');
+    expect((await resolveAt('/nope/at/all')).fullPath).toBe('/');
   });
 
   it('givenAGameHome_thenStaysUnderItsOwnPathForBothGames', async () => {
     for (const key of ['bataillecorse', 'bullshit', 'kobo', 'three-men-morris', 'president', 'mangola']) {
-      const route = await resolveAt(`/games/${key}`);
-      expect(route.fullPath).toBe(`/games/${key}`);
+      const route = await resolveAt(`/${key}`);
+      expect(route.fullPath).toBe(`/${key}`);
       expect(route.name).toBe('game-home');
       expect(route.params.game).toBe(key);
     }
@@ -35,34 +31,50 @@ describe('app router', () => {
 
   it('givenInviteLinks_thenTheyAreNotRedirected', async () => {
     for (const key of ['bataillecorse', 'bullshit', 'kobo', 'three-men-morris', 'president', 'mangola']) {
-      const join = await resolveAt(`/games/${key}/join/abc`);
-      expect(join.fullPath).toBe(`/games/${key}/join/abc`);
+      const join = await resolveAt(`/${key}/join/abc`);
+      expect(join.fullPath).toBe(`/${key}/join/abc`);
       expect(join.name).toBe('game-join');
       expect(join.params.id).toBe('abc');
-      expect((await resolveAt(`/games/${key}/join`)).name).toBe('game-join');
+      expect((await resolveAt(`/${key}/join`)).name).toBe('game-join');
     }
-    expect((await resolveAt('/games/bullshit/room/abc')).name).toBe('bullshit-room');
-    expect((await resolveAt('/games/bataillecorse/room/abc')).name).toBe('room');
-    expect((await resolveAt('/games/kobo/room/abc')).name).toBe('kobo-room');
-    expect((await resolveAt('/games/three-men-morris/room/abc')).name).toBe('three-men-morris-room');
-    expect((await resolveAt('/games/president/room/abc')).name).toBe('president-room');
-    expect((await resolveAt('/games/mangola/room/abc')).name).toBe('mangola-room');
+    expect((await resolveAt('/bullshit/room/abc')).name).toBe('bullshit-room');
+    expect((await resolveAt('/bataillecorse/room/abc')).name).toBe('room');
+    expect((await resolveAt('/kobo/room/abc')).name).toBe('kobo-room');
+    expect((await resolveAt('/three-men-morris/room/abc')).name).toBe('three-men-morris-room');
+    expect((await resolveAt('/president/room/abc')).name).toBe('president-room');
+    expect((await resolveAt('/mangola/room/abc')).name).toBe('mangola-room');
   });
 
   it('givenLegacyCreatePaths_thenRedirectToTheGameHome', async () => {
-    expect((await resolveAt('/games/bataillecorse/create')).fullPath).toBe('/games/bataillecorse');
-    expect((await resolveAt('/games/bullshit/create')).fullPath).toBe('/games/bullshit');
-    expect((await resolveAt('/games/three-men-morris/create')).fullPath).toBe('/games/three-men-morris');
+    expect((await resolveAt('/bataillecorse/create')).fullPath).toBe('/bataillecorse');
+    expect((await resolveAt('/bullshit/create')).fullPath).toBe('/bullshit');
+    expect((await resolveAt('/three-men-morris/create')).fullPath).toBe('/three-men-morris');
   });
 
   it('givenTheRemovedCreatePages_thenLeadToTheGameHome', async () => {
-    expect((await resolveAt('/games/bataillecorse/new')).fullPath).toBe('/games/bataillecorse');
-    expect((await resolveAt('/games/bullshit/new')).fullPath).toBe('/games/bullshit');
-    expect((await resolveAt('/games/three-men-morris/new')).fullPath).toBe('/games/three-men-morris');
+    expect((await resolveAt('/bataillecorse/new')).fullPath).toBe('/bataillecorse');
+    expect((await resolveAt('/bullshit/new')).fullPath).toBe('/bullshit');
+    expect((await resolveAt('/three-men-morris/new')).fullPath).toBe('/three-men-morris');
   });
 
   it('givenAGameAbsentFromTheRegistry_thenRedirectsToTheGameSelection', async () => {
-    expect((await resolveAt('/games/chess')).fullPath).toBe('/games');
-    expect((await resolveAt('/games/chess/join/abc')).fullPath).toBe('/games');
+    expect((await resolveAt('/chess')).fullPath).toBe('/');
+    expect((await resolveAt('/chess/join/abc')).fullPath).toBe('/');
+  });
+
+  it('givenLegacyGamesPrefix_thenOldLinksRedirectToTheNewPaths', async () => {
+    expect((await resolveAt('/games')).fullPath).toBe('/');
+    expect((await resolveAt('/games/')).fullPath).toBe('/');
+    expect((await resolveAt('/games/bullshit')).fullPath).toBe('/bullshit');
+    expect((await resolveAt('/games/president/join/abc')).fullPath).toBe('/president/join/abc');
+    expect((await resolveAt('/games/president/join/abc')).name).toBe('game-join');
+    expect((await resolveAt('/games/mangola/room/abc')).fullPath).toBe('/mangola/room/abc');
+    expect((await resolveAt('/games/mangola/room/abc')).name).toBe('mangola-room');
+    expect((await resolveAt('/games/bataillecorse/room/abc')).fullPath).toBe('/bataillecorse/room/abc');
+    expect((await resolveAt('/games/bullshit/join/abc?x=1')).fullPath).toBe('/bullshit/join/abc?x=1');
+  });
+
+  it('givenLegacyPrefixWithAnUnknownGame_thenEndsOnTheGamePicker', async () => {
+    expect((await resolveAt('/games/chess')).fullPath).toBe('/');
   });
 });

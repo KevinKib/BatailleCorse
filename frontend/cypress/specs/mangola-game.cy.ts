@@ -138,7 +138,7 @@ describe('Mangola game', () => {
     playFromTwoPerPit().then(({ bob }) => {
       cy.on('window:confirm', (text) => { expect(text).to.contain('forfeit'); return true; });
       cy.get('[data-test="leave"]').click();
-      cy.location('pathname').should('eq', '/games');
+      cy.location('pathname').should('eq', '/');
       cy.wrap(null).should(() => {
         const frame = bob.frames.find((f) => f.eventType === 'FORFEIT');
         expect(frame, 'Bob got the forfeit').to.exist;

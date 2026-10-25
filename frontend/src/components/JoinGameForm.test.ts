@@ -9,7 +9,7 @@ import { findGame } from '../model/games';
 import { messagesEn } from '../locales/en';
 import { HttpError } from '../model/HttpError';
 
-async function mountForm(key: 'bataillecorse' | 'bullshit', join: (id: string, name?: string) => Promise<void>, path = `/games/${key}/join`) {
+async function mountForm(key: 'bataillecorse' | 'bullshit', join: (id: string, name?: string) => Promise<void>, path = `/${key}/join`) {
   setActivePinia(createPinia());
   localStorage.clear();
   const router = createAppRouter(createMemoryHistory());
@@ -25,7 +25,7 @@ async function mountForm(key: 'bataillecorse' | 'bullshit', join: (id: string, n
 
 describe('JoinGameForm', () => {
   it('givenInviteLink_thenIdIsPrefilled', async () => {
-    const { wrapper } = await mountForm('bullshit', vi.fn(), '/games/bullshit/join/abc');
+    const { wrapper } = await mountForm('bullshit', vi.fn(), '/bullshit/join/abc');
     expect((wrapper.get('[data-test="game-id"]').element as HTMLInputElement).value).toBe('abc');
   });
 
@@ -40,12 +40,12 @@ describe('JoinGameForm', () => {
     it(`given_${key}_whenFullLinkPasted_thenJoinsWithBareIdAndEntersTheRoom`, async () => {
       const join = vi.fn().mockResolvedValue(undefined);
       const { wrapper, router } = await mountForm(key, join);
-      await wrapper.get('[data-test="game-id"]').setValue(`http://localhost:5173/games/${key}/join/xyz`);
+      await wrapper.get('[data-test="game-id"]').setValue(`http://localhost:5173/${key}/join/xyz`);
       await wrapper.get('[data-test="name"]').setValue('Zoe');
       await wrapper.get('form').trigger('submit');
       await flushPromises();
       expect(join).toHaveBeenCalledWith('xyz', 'Zoe');
-      expect(router.currentRoute.value.path).toBe(`/games/${key}/room/xyz`);
+      expect(router.currentRoute.value.path).toBe(`/${key}/room/xyz`);
     });
   }
 
@@ -60,36 +60,36 @@ describe('JoinGameForm', () => {
 
   it('givenRefusedJoin_thenStaysOnTheFormWithItsErrorLine', async () => {
     const join = vi.fn().mockRejectedValue(new Error('Join failed: 404'));
-    const { wrapper, router } = await mountForm('bataillecorse', join, '/games/bataillecorse/join/abc');
+    const { wrapper, router } = await mountForm('bataillecorse', join, '/bataillecorse/join/abc');
     await wrapper.get('form').trigger('submit');
     await flushPromises();
     expect(wrapper.get('[data-test="join-error"]').text()).toBe(messagesEn.join.failed);
     expect(wrapper.get('[data-test="join-error"]').attributes('role')).toBe('alert');
-    expect(router.currentRoute.value.path).toBe('/games/bataillecorse/join/abc');
+    expect(router.currentRoute.value.path).toBe('/bataillecorse/join/abc');
   });
 
   it('givenInviteToADeletedLobby_thenTheFormSaysTheGameNoLongerExists', async () => {
     const join = vi.fn().mockRejectedValue(new HttpError('Join failed: 404', 404));
-    const { wrapper, router } = await mountForm('bullshit', join, '/games/bullshit/join/abc');
+    const { wrapper, router } = await mountForm('bullshit', join, '/bullshit/join/abc');
     await wrapper.get('form').trigger('submit');
     await flushPromises();
     expect(wrapper.get('[data-test="join-error"]').text()).toBe(messagesEn.join.notFound);
-    expect(router.currentRoute.value.path).toBe('/games/bullshit/join/abc');
+    expect(router.currentRoute.value.path).toBe('/bullshit/join/abc');
   });
 
   it('givenAFullLobby_thenTheFormSaysItIsFull', async () => {
     const join = vi.fn().mockRejectedValue(new HttpError('Join failed: 409', 409, 'full'));
-    const { wrapper, router } = await mountForm('bullshit', join, '/games/bullshit/join/abc');
+    const { wrapper, router } = await mountForm('bullshit', join, '/bullshit/join/abc');
     await wrapper.get('form').trigger('submit');
     await flushPromises();
     expect(wrapper.get('[data-test="join-error"]').text()).toBe('This lobby is full.');
     expect(messagesEn.join.full).toBe('This lobby is full.');
-    expect(router.currentRoute.value.path).toBe('/games/bullshit/join/abc');
+    expect(router.currentRoute.value.path).toBe('/bullshit/join/abc');
   });
 
   it('givenAStartedGame_thenTheFormSaysItAlreadyStarted', async () => {
     const join = vi.fn().mockRejectedValue(new HttpError('Join failed: 409', 409, 'started'));
-    const { wrapper } = await mountForm('bataillecorse', join, '/games/bataillecorse/join/abc');
+    const { wrapper } = await mountForm('bataillecorse', join, '/bataillecorse/join/abc');
     await wrapper.get('form').trigger('submit');
     await flushPromises();
     expect(wrapper.get('[data-test="join-error"]').text()).toBe('This game has already started.');
@@ -97,7 +97,7 @@ describe('JoinGameForm', () => {
 
   it('givenAConflictWithoutReason_thenTheFormKeepsTheGenericLine', async () => {
     const join = vi.fn().mockRejectedValue(new HttpError('Join failed: 409', 409));
-    const { wrapper } = await mountForm('bullshit', join, '/games/bullshit/join/abc');
+    const { wrapper } = await mountForm('bullshit', join, '/bullshit/join/abc');
     await wrapper.get('form').trigger('submit');
     await flushPromises();
     expect(wrapper.get('[data-test="join-error"]').text()).toBe(messagesEn.join.failed);
@@ -107,6 +107,6 @@ describe('JoinGameForm', () => {
     const { wrapper, router } = await mountForm('bullshit', vi.fn());
     await wrapper.get('[data-test="back"]').trigger('click');
     await flushPromises();
-    expect(router.currentRoute.value.path).toBe('/games/bullshit');
+    expect(router.currentRoute.value.path).toBe('/bullshit');
   });
 });

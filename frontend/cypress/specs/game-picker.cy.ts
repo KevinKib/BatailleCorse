@@ -1,4 +1,4 @@
-// The entry point (/ and /games) is a page that offers every game; no game's menu
+// The entry point (/ and the old /games) is a page that offers every game; no game's menu
 // advertises another one, and Back always leads to the picker.
 import { GAMES } from '../../src/model/games';
 
@@ -6,15 +6,20 @@ import { GAMES } from '../../src/model/games';
 const VIEWPORTS: Array<[number, number]> = [[375, 667], [360, 640], [390, 844], [768, 1024], [1280, 720]];
 
 describe('Game picker', () => {
-  it('redirects / and unknown routes to /games', () => {
+  it('redirects / and unknown routes to /', () => {
     cy.visit('/');
-    cy.location('pathname').should('eq', '/games');
+    cy.location('pathname').should('eq', '/');
     cy.visit('/this/does/not/exist');
-    cy.location('pathname').should('eq', '/games');
+    cy.location('pathname').should('eq', '/');
+  });
+
+  it('sends an old /games/... invite link to the same page without the prefix', () => {
+    cy.visit('/games/president/join/abc');
+    cy.location('pathname').should('eq', '/president/join/abc');
   });
 
   it('shows the title and every game with description, player count and Play', () => {
-    cy.visit('/games');
+    cy.visit('/');
     cy.get('[data-test="picker-title"]').should('be.visible').and('contain.text', 'Card Games');
 
     cy.get('[data-test="choice-bataillecorse"]').within(() => {
@@ -56,71 +61,71 @@ describe('Game picker', () => {
   });
 
   it('plays President: Game home with New game and Join game, Back returns to the picker', () => {
-    cy.visit('/games');
+    cy.visit('/');
     cy.get('[data-test="play-president"]').click();
-    cy.location('pathname').should('eq', '/games/president');
+    cy.location('pathname').should('eq', '/president');
     cy.contains('h1', 'President').should('be.visible');
     cy.contains('button', 'New game').should('be.visible');
     cy.contains('button', 'Join game').should('be.visible');
     cy.get('[data-test="back"]').click();
-    cy.location('pathname').should('eq', '/games');
+    cy.location('pathname').should('eq', '/');
   });
 
   it('plays Mangola: Game home with New game and Join game, Back returns to the picker', () => {
-    cy.visit('/games');
+    cy.visit('/');
     cy.get('[data-test="play-mangola"]').click();
-    cy.location('pathname').should('eq', '/games/mangola');
+    cy.location('pathname').should('eq', '/mangola');
     cy.contains('h1', 'Mangola').should('be.visible');
     cy.contains('button', 'New game').should('be.visible');
     cy.contains('button', 'Join game').should('be.visible');
     cy.get('[data-test="back"]').click();
-    cy.location('pathname').should('eq', '/games');
+    cy.location('pathname').should('eq', '/');
   });
 
   it("plays Three Men's Morris: Game home with New game and Join game, Back returns to the picker", () => {
-    cy.visit('/games');
+    cy.visit('/');
     cy.get('[data-test="play-three-men-morris"]').click();
-    cy.location('pathname').should('eq', '/games/three-men-morris');
+    cy.location('pathname').should('eq', '/three-men-morris');
     cy.contains('button', 'New game').should('be.visible');
     cy.contains('button', 'Join game').should('be.visible');
     cy.get('[data-test="back"]').click();
-    cy.location('pathname').should('eq', '/games');
+    cy.location('pathname').should('eq', '/');
   });
 
   it('plays Bataille Corse: Game home without any Bullshit button, Back returns to the picker', () => {
-    cy.visit('/games');
+    cy.visit('/');
     cy.get('[data-test="play-bataillecorse"]').click();
-    cy.location('pathname').should('eq', '/games/bataillecorse');
+    cy.location('pathname').should('eq', '/bataillecorse');
     cy.contains('button', 'New game').should('be.visible');
     cy.contains('button', 'Join game').should('be.visible');
     cy.contains('Play Bullshit').should('not.exist');
     cy.get('[data-test="back"]').click();
-    cy.location('pathname').should('eq', '/games');
+    cy.location('pathname').should('eq', '/');
   });
 
   it('plays Bullshit: Game home with New game and Join game, Back returns to the picker', () => {
-    cy.visit('/games');
+    cy.visit('/');
     cy.get('[data-test="play-bullshit"]').click();
-    cy.location('pathname').should('eq', '/games/bullshit');
+    cy.location('pathname').should('eq', '/bullshit');
     cy.contains('button', 'New game').should('be.visible');
     cy.contains('button', 'Join game').should('be.visible');
     cy.get('[data-test="back"]').click();
-    cy.location('pathname').should('eq', '/games');
+    cy.location('pathname').should('eq', '/');
   });
 
   it('plays Kobo: Game home with New game and Join game, Back returns to the picker', () => {
-    cy.visit('/games');
+    cy.visit('/');
     cy.get('[data-test="play-kobo"]').click();
-    cy.location('pathname').should('eq', '/games/kobo');
+    cy.location('pathname').should('eq', '/kobo');
     cy.contains('h1', 'Kobo').should('be.visible');
     cy.contains('button', 'New game').should('be.visible');
     cy.contains('button', 'Join game').should('be.visible');
     cy.get('[data-test="back"]').click();
-    cy.location('pathname').should('eq', '/games');
+    cy.location('pathname').should('eq', '/');
   });
 
   it('is operable with the keyboard (focus is visible on the Play buttons)', () => {
-    cy.visit('/games');
+    cy.visit('/');
     cy.get('[data-test="play-bataillecorse"]').focus().should('have.focus');
     cy.get('[data-test="play-bataillecorse"]').then(($el) => {
       const style = getComputedStyle($el[0]);
@@ -131,7 +136,7 @@ describe('Game picker', () => {
   VIEWPORTS.forEach(([width, height]) => {
     it(`fits every game with no scrolling at ${width}x${height}`, () => {
       cy.viewport(width, height);
-      cy.visit('/games');
+      cy.visit('/');
       cy.get('[data-test^="choice-"]').should('have.length', GAMES.length);
       GAMES.forEach(({ key }) => {
         cy.get(`[data-test="play-${key}"]`).should('be.visible').then(($el) => {

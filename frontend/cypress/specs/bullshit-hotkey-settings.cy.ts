@@ -1,10 +1,10 @@
 // Configurable keyboard shortcuts of the Bullshit table (WCAG 2.1.4): remap, turn off, keep the rest.
 function startTwoPlayerGame() {
-  cy.visit('/games');
+  cy.visit('/');
   cy.get('[data-test="play-bullshit"]').click();
   cy.get('[data-test="name"]').type('Alice');
   cy.get('[data-test="new-game"]').click();
-  cy.url({ timeout: 10000 }).should('match', /\/games\/bullshit\/room\/.+/);
+  cy.url({ timeout: 10000 }).should('match', /\/bullshit\/room\/.+/);
   // The Game home fades out while the room fades in: continue once the room is alone.
   cy.get('[data-test="start-panel"]').should('not.exist');
   cy.url().then((url) => cy.request('POST', `/api/bullshit/game/${url.split('/room/')[1]}/join`, { name: 'Bob' }));

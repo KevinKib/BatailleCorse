@@ -43,7 +43,7 @@ async function mountAt(finished: boolean, inLobby = false) {
   localStorage.setItem('bullshit:tokens:g1', JSON.stringify({ 0: 'tok' }));
   vi.spyOn(store, 'forfeit').mockImplementation(() => {});
   const router = createAppRouter(createMemoryHistory());
-  await router.push('/games/bullshit/room/g1');
+  await router.push('/bullshit/room/g1');
   await router.isReady();
   // Rendered through RouterView so the route-leave guard is registered like in the app.
   const Root = defineComponent({ render: () => h(RouterView) });
@@ -52,14 +52,14 @@ async function mountAt(finished: boolean, inLobby = false) {
   return { router, wrapper };
 }
 
-describe('BullshitGameScreen exit paths lead to /games', () => {
+describe('BullshitGameScreen exit paths lead to the game picker (/)', () => {
   beforeEach(() => { vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {}))); setActivePinia(createPinia()); localStorage.clear(); });
 
   it('givenFinishedGame_whenBackToHome_thenGoesToGamePicker', async () => {
     const { router, wrapper } = await mountAt(true);
     await wrapper.get('.end-home-button').trigger('click');
     await flushPromises();
-    expect(router.currentRoute.value.fullPath).toBe('/games');
+    expect(router.currentRoute.value.fullPath).toBe('/');
   });
 
   it('givenMidGame_whenBackConfirmed_thenGoesToGamePicker', async () => {
@@ -67,7 +67,7 @@ describe('BullshitGameScreen exit paths lead to /games', () => {
     window.confirm = () => true;
     await wrapper.get('[data-test="leave"]').trigger('click');
     await flushPromises();
-    expect(router.currentRoute.value.fullPath).toBe('/games');
+    expect(router.currentRoute.value.fullPath).toBe('/');
   });
 
   it('givenMidGame_whenBackDeclined_thenStaysOnTable', async () => {
@@ -75,7 +75,7 @@ describe('BullshitGameScreen exit paths lead to /games', () => {
     window.confirm = () => false;
     await wrapper.get('[data-test="leave"]').trigger('click');
     await flushPromises();
-    expect(router.currentRoute.value.fullPath).toBe('/games/bullshit/room/g1');
+    expect(router.currentRoute.value.fullPath).toBe('/bullshit/room/g1');
   });
 
   it('givenLobby_whenLeave_thenTheSeatIsGivenUpAndItGoesToGamePicker', async () => {
@@ -85,7 +85,7 @@ describe('BullshitGameScreen exit paths lead to /games', () => {
     await wrapper.get('[data-test="leave-lobby"]').trigger('click');
     await flushPromises();
     expect(leave).toHaveBeenCalledTimes(1);
-    expect(router.currentRoute.value.fullPath).toBe('/games');
+    expect(router.currentRoute.value.fullPath).toBe('/');
   });
 
   it('givenLobbyAndTheLeaveCouldNotBeSent_whenLeave_thenStaysInTheLobbyWithTheError', async () => {
@@ -95,7 +95,7 @@ describe('BullshitGameScreen exit paths lead to /games', () => {
     vi.spyOn(webSocketService, 'publish').mockImplementation(() => { throw new TypeError('no underlying STOMP connection'); });
     await wrapper.get('[data-test="leave-lobby"]').trigger('click');
     await flushPromises();
-    expect(router.currentRoute.value.fullPath).toBe('/games/bullshit/room/g1');
+    expect(router.currentRoute.value.fullPath).toBe('/bullshit/room/g1');
     expect(wrapper.get('[data-test="lobby-error"]').exists()).toBe(true);
   });
 
@@ -110,6 +110,6 @@ describe('BullshitGameScreen exit paths lead to /games', () => {
     await wrapper.get('[data-cy="play-again"]').trigger('click');
     await flushPromises();
     expect(wrapper.find('[data-test="lobby"]').exists()).toBe(true);
-    expect(router.currentRoute.value.fullPath).toBe('/games/bullshit/room/g1');
+    expect(router.currentRoute.value.fullPath).toBe('/bullshit/room/g1');
   });
 });

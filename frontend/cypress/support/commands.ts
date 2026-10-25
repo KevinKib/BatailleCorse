@@ -10,10 +10,10 @@ declare global {
 }
 
 Cypress.Commands.add('openBatailleCorseLobby', (name?: string) => {
-  cy.visit('/games/bataillecorse');
+  cy.visit('/bataillecorse');
   if (name) cy.get('[data-test="name"]').clear().type(name);
   cy.get('[data-test="new-game"]').click();
-  cy.url({ timeout: 10000 }).should('match', /\/games\/bataillecorse\/room\/.+/);
+  cy.url({ timeout: 10000 }).should('match', /\/bataillecorse\/room\/.+/);
   // The lobby is drawn from the server's answer on my seat channel: the room is live once it shows.
   cy.get('[data-test="lobby"]', { timeout: 10000 }).should('be.visible');
   return cy.location('pathname').then((path) => path.split('/room/')[1]);

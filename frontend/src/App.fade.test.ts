@@ -13,8 +13,8 @@ function setup() {
   const router = createRouter({
     history: createMemoryHistory(),
     routes: [
-      { path: '/games', component: view('picker') },
-      { path: '/games/bullshit', component: view('bullshit') },
+      { path: '/', component: view('picker') },
+      { path: '/bullshit', component: view('bullshit') },
     ],
   });
   const wrapper = mount(App, { global: { plugins: [router], stubs: { transition: false } }, attachTo: document.body });
@@ -36,11 +36,11 @@ describe('App route fade', () => {
 
   it('shows a single view once the fades are over, after Back right after a selection', async () => {
     const { wrapper, views, go } = setup();
-    await go('/games');
+    await go('/');
     vi.advanceTimersByTime(ROUTE_FADE_MS + 300);
-    await go('/games/bullshit');
+    await go('/bullshit');
     vi.advanceTimersByTime(100);
-    await go('/games');
+    await go('/');
     // The Bullshit enter fade would end now: the view is leaving and must stay faded out, not pop back.
     vi.advanceTimersByTime(ROUTE_FADE_MS + 150);
     const bullshit = views().find(v => v.dataset.view === 'bullshit');
@@ -55,10 +55,10 @@ describe('App route fade', () => {
 
   it('never keeps more than the entering view and the one just left, however fast it goes back and forth', async () => {
     const { wrapper, views, go } = setup();
-    await go('/games');
+    await go('/');
     vi.advanceTimersByTime(ROUTE_FADE_MS + 300);
     for (let i = 0; i < 6; i++) {
-      await go(i % 2 === 0 ? '/games/bullshit' : '/games');
+      await go(i % 2 === 0 ? '/bullshit' : '/');
       vi.advanceTimersByTime(60);
       expect(views().length).toBeLessThanOrEqual(2);
     }

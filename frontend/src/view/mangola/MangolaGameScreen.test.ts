@@ -33,7 +33,7 @@ async function mountScreen(view: MangolaState | LobbyView | null, mySeat = 0) {
   if (view) store.applyEvent({ type: 'state-update', state: view });
   localStorage.setItem('mangola:tokens:g1', JSON.stringify({ [mySeat]: 'tok' }));
   const router = createAppRouter(createMemoryHistory());
-  await router.push('/games/mangola/room/g1');
+  await router.push('/mangola/room/g1');
   await router.isReady();
   // Rendered through RouterView so the route-leave guard is registered like in the app.
   const Root = defineComponent({ render: () => h(RouterView) });
@@ -473,7 +473,7 @@ describe('MangolaGameScreen', () => {
       await wrapper.get('[data-test="leave"]').trigger('click');
       await flushPromises();
       expect(forfeit).toHaveBeenCalled();
-      expect(router.currentRoute.value.fullPath).toBe('/games');
+      expect(router.currentRoute.value.fullPath).toBe('/');
     });
 
     it('Back declined stays on the table', async () => {
@@ -483,7 +483,7 @@ describe('MangolaGameScreen', () => {
       await wrapper.get('[data-test="leave"]').trigger('click');
       await flushPromises();
       expect(forfeit).not.toHaveBeenCalled();
-      expect(router.currentRoute.value.fullPath).toBe('/games/mangola/room/g1');
+      expect(router.currentRoute.value.fullPath).toBe('/mangola/room/g1');
     });
 
     it('Leave lobby frees the seat and goes to the Game selection', async () => {
@@ -491,7 +491,7 @@ describe('MangolaGameScreen', () => {
       vi.spyOn(store, 'leave').mockReturnValue(true);
       await wrapper.get('[data-test="leave-lobby"]').trigger('click');
       await flushPromises();
-      expect(router.currentRoute.value.fullPath).toBe('/games');
+      expect(router.currentRoute.value.fullPath).toBe('/');
     });
   });
 

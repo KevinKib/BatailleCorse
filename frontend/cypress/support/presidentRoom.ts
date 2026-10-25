@@ -9,10 +9,10 @@ Cypress.config('defaultCommandTimeout', 10000);
 
 /** Creates a President room as the host and yields its id once the lobby shows. */
 export function hostLobby(name: string) {
-  cy.visit('/games/president');
+  cy.visit('/president');
   cy.get('[data-test="name"]').type(name);
   cy.get('[data-test="new-game"]').click();
-  cy.url({ timeout: 10000 }).should('match', /\/games\/president\/room\/.+/);
+  cy.url({ timeout: 10000 }).should('match', /\/president\/room\/.+/);
   cy.get('[data-test="lobby"]', { timeout: 10000 }).should('be.visible');
   return cy.location('pathname').then((path) => path.split('/room/')[1]);
 }

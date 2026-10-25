@@ -23,7 +23,7 @@ export interface GameHotkeys {
 /**
  * What the Game selection, the router and the Game home need to know about a game. "New game" creates the
  * lobby straight away (`POST /api/lobby`) and the player lands in it.
- * Exits from a game never use it: they always lead to the Game selection (`/games`).
+ * Exits from a game never use it: they always lead to the Game selection (`/`).
  */
 export interface GameDefinition {
   key: GameKey;
@@ -41,7 +41,7 @@ export interface GameDefinition {
 type GameTraits = Pick<GameDefinition, 'supportsBots' | 'picker' | 'hotkeys'>;
 
 function define(key: GameKey, traits: GameTraits): GameDefinition {
-  const base = `/games/${key}`;
+  const base = `/${key}`;
   return {
     key,
     gameHomeRoute: base,

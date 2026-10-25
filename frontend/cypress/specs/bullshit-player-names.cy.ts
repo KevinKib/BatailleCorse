@@ -3,11 +3,11 @@ const LONG_NAME = 'Bartholomew-Maximilian-Longname';
 
 function createRoom(name: string) {
   // Enter through the menu so the WebSocket is connected before we create (see bullshit-table-and-lobby).
-  cy.visit('/games');
+  cy.visit('/');
   cy.get('[data-test="play-bullshit"]').click();
   cy.get('[data-test="name"]').type(name);
   cy.get('[data-test="new-game"]').click();
-  cy.url({ timeout: 10000 }).should('match', /\/games\/bullshit\/room\/.+/);
+  cy.url({ timeout: 10000 }).should('match', /\/bullshit\/room\/.+/);
   // The Game home fades out while the room fades in: continue once the room is alone.
   cy.get('[data-test="start-panel"]').should('not.exist');
   return cy.url().then((url) => url.split('/room/')[1]);

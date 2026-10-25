@@ -1,7 +1,7 @@
 describe('Create game', () => {
   it('New game opens the lobby, a bot fills the second seat, Start deals the cards', () => {
     cy.openBatailleCorseLobby().then((gameId) => {
-      cy.url().should('include', `/games/bataillecorse/room/${gameId}`);
+      cy.url().should('include', `/bataillecorse/room/${gameId}`);
       cy.get('[data-test="start"]').should('be.disabled');
       cy.get('[data-test="add-bot"]').click();
       cy.get('[data-test="start"]').should('not.be.disabled').click();

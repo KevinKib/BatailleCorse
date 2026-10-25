@@ -9,7 +9,7 @@ const theirs = () => cy.get('[data-test^="point-"][data-owner="black"]');
 
 /** The host's lobby with a bot on seat 1; `variant` picks the radio when it is not Tapatan. */
 function lobbyWithBot(variant?: 'achi' | 'six') {
-  cy.visit('/games/three-men-morris');
+  cy.visit('/three-men-morris');
   cy.get('[data-test="name"]').type('Alice');
   cy.get('[data-test="new-game"]').click();
   cy.get('[data-test="lobby"]', { timeout: 10000 }).should('be.visible');
