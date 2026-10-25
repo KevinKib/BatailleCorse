@@ -2,27 +2,13 @@
 import { createApp } from 'vue';
 import App from './App.vue';
 import PrimeVue from 'primevue/config';
-import Aura from '@primeuix/themes/aura';
-import Nora from '@primeuix/themes/nora';
-import Lara from '@primeuix/themes/lara';
+import { primeVueConfig } from './primeVueConfig';
 
 import webSocketService from './service/WebSocketService';
 import { createPinia } from 'pinia';
 
 const app = createApp(App);
-app.use(PrimeVue, {
-  theme: {
-    preset: Aura,
-    options: {
-      prefix: 'p',
-      darkModeSelector: 'system',
-      cssLayer: {
-        name: 'primevue',
-        order: 'theme, base, primevue'
-      }
-    }
-  }
-});
+app.use(PrimeVue, primeVueConfig);
 
 import { createAppRouter } from './router';
 
