@@ -2,6 +2,7 @@ package org.kevinkib.cardgames.sessionmanagement.core.application;
 
 import org.kevinkib.cardgames.game.OptionDescriptor;
 import org.kevinkib.cardgames.game.PlayerId;
+import org.kevinkib.cardgames.sessionmanagement.core.domain.LobbyVisibility;
 import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionGame;
 import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionPlayer;
 
@@ -20,8 +21,7 @@ import java.util.Map;
  * player carries its {@code seatOptions} (defaults filled), a human none. {@code lobbyVersion} increases with
  * every mutation of the lobby: a client ignores a view older than the one it holds. A player carries
  * {@code disconnected} while its connection is known to be down, so the host can see whom to remove.
- * {@code privateGame} is true when the host hid the game from the public list (always false until the
- * session core stores it).
+ * {@code privateGame} is true when the host hid the game from the public list.
  */
 public record LobbyView(
         boolean started,
@@ -82,7 +82,7 @@ public record LobbyView(
                 host && !optionDescriptors.isEmpty(),
                 removableBotSeats,
                 lobby.lobbyVersion(),
-                false);
+                lobby.visibility() == LobbyVisibility.PRIVATE);
     }
 
     /** A bot's options with the game's defaults filled in; a human or free seat carries none. */

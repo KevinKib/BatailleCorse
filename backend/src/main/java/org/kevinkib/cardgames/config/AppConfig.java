@@ -21,6 +21,7 @@ import org.kevinkib.cardgames.presentation.bot.TaskSchedulerBotScheduler;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameCleanupService;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameDirectory;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameEvictionListener;
+import org.kevinkib.cardgames.sessionmanagement.core.application.PublicLobbiesEvictionNotifier;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameFactories;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
 import org.kevinkib.cardgames.sessionmanagement.core.application.port.SessionRepository;
@@ -185,6 +186,12 @@ public class AppConfig {
     @Bean
     public GameEvictionListener presenceEvictionCleanup() {
         return new PresenceEvictionCleanup(connectionRegistry(), forfeitLog());
+    }
+
+    /** An evicted room leaves the public game lists. */
+    @Bean
+    public GameEvictionListener publicLobbiesEvictionNotifier(SessionService sessionService) {
+        return new PublicLobbiesEvictionNotifier(sessionService);
     }
 
     @Bean

@@ -2,7 +2,6 @@ package org.kevinkib.cardgames.presentation;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.kobo.domain.KoboFactory;
 import org.kevinkib.cardgames.presentation.support.StompTestClient;
@@ -32,7 +31,6 @@ import static org.hamcrest.Matchers.not;
  * It needs the real {@code SessionService.publicLobbies / setPrivate / listener} of B1: the integration chunk
  * removes the {@code @Disabled}.
  */
-@Disabled("needs B1")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class PublicLobbyListIT {
 
@@ -127,7 +125,7 @@ class PublicLobbyListIT {
         StompSession viewer = stomp.connect();
         Frames frames = stomp.subscribe(viewer, "/topic/lobbies/" + TYPE);
 
-        post("/api/game/" + gameId + "/join", "{\"name\":\"Bob\"}");
+        post("/api/kobo/game/" + gameId + "/join", "{\"name\":\"Bob\"}");
 
         Map<String, Object> list = frames.await(f -> lists(f, gameId) && lobbies(f).stream()
                 .anyMatch(l -> gameId.equals(l.get("gameId")) && Integer.valueOf(2).equals(l.get("joined"))));

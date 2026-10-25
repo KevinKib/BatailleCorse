@@ -12,14 +12,29 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public record SessionGame(GameId id, String gameType, GameOptions options, Map<PlayerId, SessionPlayer> players,
-                          AtomicLong version) {
+                          AtomicLong version, AtomicReference<LobbyVisibility> visibilityHolder) {
+
+    public SessionGame(GameId id, String gameType, GameOptions options, Map<PlayerId, SessionPlayer> players,
+                       AtomicLong version) {
+        this(id, gameType, options, players, version, new AtomicReference<>(LobbyVisibility.PUBLIC));
+    }
 
     public SessionGame(GameId id, String gameType, GameOptions options, Map<PlayerId, SessionPlayer> players) {
         this(id, gameType, options, players, new AtomicLong());
+    }
+
+    /** Whether the lobby is listed in the public game list; {@link LobbyVisibility#PUBLIC} until the host says otherwise. */
+    public LobbyVisibility visibility() {
+        return visibilityHolder.get();
+    }
+
+    public void setVisibility(LobbyVisibility visibility) {
+        visibilityHolder.set(visibility);
     }
 
     /** Counter of the lobby's mutations; carried by every lobby view. */
