@@ -1,5 +1,8 @@
 # Mangola: sowing direction, a host option
 
+Status: implemented in #322 (contract), #324 (backend option), #326 (board drawn in the direction) and #327 (lobby
+end to end, Cypress `mangola-direction.cy.ts`).
+
 Plan: `docs/plans/2026-10-24-mangola-direction-plan.md`. Written by Claude Opus 5.5 on 2026-10-24 from `origin/main`
 at `9c3deb02`, after the owner's playtest; **rewritten on 2026-10-25 from `origin/main` at `8b8a33ad`** after the
 owner's decision on the first version (a per-player toggle, canvas option B, recommended then and now dropped).
