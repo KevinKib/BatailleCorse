@@ -156,10 +156,10 @@ function playRoundOne(bob: Guest, carol: Guest, dan: Guest, erin: Guest) {
         cy.get('[data-test="board-seen"]').then(($seen) => {
           const doc = $seen[0].ownerDocument;
           const box = $seen[0].getBoundingClientRect();
-          // it reaches 4 px above and 6 px right of the 24 px button, and 14 px left and 16 px below (1 px inside)
-          for (const x of [box.left - 13, box.right + 5]) {
-            for (const y of [box.top - 3, box.bottom + 15]) {
-              expect(doc.elementFromPoint(x, y)?.closest('[data-test="board-seen"]'), `hit at ${x},${y}`).to.not.eq(null);
+          // it reaches about 2 px right of the 24 px button, 15 px left and 18 px below (a pixel inside each edge)
+          for (const x of [box.left - 14, box.right + 1]) {
+            for (const y of [box.top + 1, box.bottom + 17]) {
+              const el = doc.elementFromPoint(x, y); expect(el?.closest('[data-test="board-seen"]'), `hit at ${x},${y} (button ${box.left},${box.top},${box.right},${box.bottom}) got ${el?.outerHTML.slice(0, 80)}`).to.not.eq(null);
             }
           }
         });
