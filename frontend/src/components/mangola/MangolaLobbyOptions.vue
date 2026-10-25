@@ -2,7 +2,9 @@
 import { computed } from 'vue';
 import LobbyGameOptions from '../lobby/LobbyGameOptions.vue';
 import LobbyCustomise from '../lobby/LobbyCustomise.vue';
+import LobbyPrivateOption from '../lobby/LobbyPrivateOption.vue';
 import type { OptionDescriptor } from '../../model/lobby/LobbyView';
+import type { LobbyPrivacy } from '../../model/lobby/LobbyPrivacy';
 
 // The options of a Mangola lobby, through the shared lobby's options slot. The common ones (who starts) stay in
 // sight; the sowing direction sits behind the "Customise" disclosure, since almost every game keeps the default.
@@ -12,6 +14,8 @@ const props = defineProps<{
   descriptors: OptionDescriptor[];
   options: Record<string, string>;
   editable: boolean;
+  /** The Private game switch, which sits at the top of the Customise panel. */
+  privacy?: LobbyPrivacy;
 }>();
 const emit = defineEmits<{ 'set-option': [key: string, value: string] }>();
 
@@ -32,8 +36,10 @@ const nonDefault = computed(() =>
       :options="options"
       :editable="editable"
       @set-option="(key, value) => emit('set-option', key, value)" />
-    <LobbyCustomise v-if="customised.length" panel-id="mangola-all-options" :reveal="nonDefault">
+    <LobbyCustomise v-if="customised.length || privacy" panel-id="mangola-all-options" :reveal="nonDefault">
+      <LobbyPrivateOption v-if="privacy" :model-value="privacy.value" :editable="privacy.editable" @change="privacy.set" />
       <LobbyGameOptions
+        v-if="customised.length"
         :descriptors="customised"
         :options="options"
         :editable="editable"

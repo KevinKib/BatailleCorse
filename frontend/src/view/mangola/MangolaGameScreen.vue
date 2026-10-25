@@ -171,12 +171,15 @@ function leaveLobby() {
       @remove-seat="seat => store.removeSeat(seat)"
       @set-seat-option="(seat, key, value) => store.setSeatOption(seat, key, value)"
       @rename="name => store.rename(name)"
+      @set-private="value => store.setPrivate(value)"
+      privacy-in-options
       @set-option="(key, value) => store.setOption(key, value)">
-      <template #options="{ descriptors, options, editable, setOption }">
+      <template #options="{ descriptors, options, editable, setOption, privacy }">
         <MangolaLobbyOptions
           :descriptors="descriptors"
           :options="options"
           :editable="editable"
+          :privacy="privacy"
           @set-option="setOption" />
       </template>
     </GameLobby>

@@ -15,7 +15,8 @@
       @remove-seat="seat => batailleCorseStore.removeSeat(seat)"
       @set-option="(key, value) => batailleCorseStore.setOption(key, value)"
       @set-seat-option="(seat, key, value) => batailleCorseStore.setSeatOption(seat, key, value)"
-      @rename="name => batailleCorseStore.rename(name)" />
+      @rename="name => batailleCorseStore.rename(name)"
+      @set-private="value => batailleCorseStore.setPrivate(value)" />
   </div>
 
   <!-- First server answer not here yet (e.g. arriving through an invite link): a neutral felt screen, not the

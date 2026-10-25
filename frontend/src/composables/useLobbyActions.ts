@@ -17,6 +17,7 @@ export function useLobbyActions(ctx: LobbyActionsContext) {
   return {
     setOption: (key: string, value: string) => send('setOptions', { values: { [key]: value } }),
     setSeatOption: (seat: number, key: string, value: string) => send('setSeatOption', { seat, key, value }),
+    setPrivate: (privateGame: boolean) => send('setPrivate', { privateGame }),
     rename: (name: string) => send('rename', { name }),
     addBot: () => send('addBot'),
     removeBot: (seat: number) => send('removeBot', { seat }),

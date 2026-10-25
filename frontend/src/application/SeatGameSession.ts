@@ -245,6 +245,7 @@ export default class SeatGameSession<
 
   /** Host only: change one game option; the answer is the next lobby view. */
   setOption(key: string, value: string): void { this.lobby.setOption(key, value); }
+  setPrivate(privateGame: boolean): void { this.lobby.setPrivate(privateGame); }
 
   /** Host only: change one option of a computer seat. */
   setSeatOption(seat: number, key: string, value: string): void { this.lobby.setSeatOption(seat, key, value); }
