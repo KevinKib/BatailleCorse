@@ -5,6 +5,7 @@ import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.presentation.api.ErrorResponse;
 import org.kevinkib.cardgames.presentation.api.GameActionPayload;
 import org.kevinkib.cardgames.presentation.api.LobbyOptionsPayload;
+import org.kevinkib.cardgames.presentation.api.LobbyPrivatePayload;
 import org.kevinkib.cardgames.presentation.api.LobbyRenamePayload;
 import org.kevinkib.cardgames.presentation.api.LobbySeatOptionPayload;
 import org.kevinkib.cardgames.presentation.api.LobbySeatPayload;
@@ -113,6 +114,13 @@ public class LobbyController {
         handle(payload.gameId(), payload.token(), "Seat option changed.",
                 gameId -> sessionService.setSeatOption(gameId, payload.token(), payload.seat(), payload.key(),
                         payload.value()));
+    }
+
+    @MessageMapping("/lobby/setPrivate")
+    public void setPrivate(@Payload LobbyPrivatePayload payload) {
+        handle(payload.gameId(), payload.token(),
+                payload.privateGame() ? "Game made private." : "Game made public.",
+                gameId -> sessionService.setPrivate(gameId, payload.token(), payload.privateGame()));
     }
 
     /**
