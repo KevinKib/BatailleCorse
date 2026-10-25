@@ -225,6 +225,7 @@ export interface LobbyMessages {
   waitingForPlayers: PluralForms;    // '{n}' = players still needed
   waitingForHost: string;
   nowHost: string;                   // announced when the host seat passes to me
+  customise: string;                 // disclosure that opens the options a game keeps out of sight by default
 }
 
 // Texts of the game options a lobby renders from the backend descriptors. A descriptor's `labelKey`
@@ -283,7 +284,6 @@ export interface PresidentUiMessages {
     classicSummary: string;
     customTitle: string;               // the same card once the host changed an option
     customSummary: string;
-    customise: string;                 // disclosure that opens every option
     reset: string;                     // host: back to Classic
   };
   table: {

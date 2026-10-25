@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
 import { Button } from 'primevue';
 import LobbyGameOptions from '../lobby/LobbyGameOptions.vue';
+import LobbyCustomise from '../lobby/LobbyCustomise.vue';
 import { useI18n } from '../../composables/useI18n';
 import type { OptionDescriptor } from '../../model/lobby/LobbyView';
 
@@ -18,7 +19,6 @@ const props = defineProps<{
 const emit = defineEmits<{ 'set-option': [key: string, value: string] }>();
 
 const ui = useI18n().presidentUi.lobby;
-const open = ref(false);
 
 const valueOf = (d: OptionDescriptor) => props.options[d.key] ?? d.defaultValue;
 // Classic is the defaults: it changes no key.
@@ -39,18 +39,13 @@ function backToClassic() {
               severity="secondary" variant="outlined" rounded size="small" @click="backToClassic" />
     </div>
 
-    <button type="button" class="customise" data-test="customise" :aria-expanded="open"
-            aria-controls="president-all-options" @click="open = !open">
-      <i :class="open ? 'pi pi-chevron-up' : 'pi pi-chevron-down'" aria-hidden="true"></i>
-      {{ ui.customise }}
-    </button>
-    <div v-if="open" id="president-all-options">
+    <LobbyCustomise panel-id="president-all-options">
       <LobbyGameOptions
         :descriptors="descriptors"
         :options="options"
         :editable="editable"
         @set-option="(key, value) => emit('set-option', key, value)" />
-    </div>
+    </LobbyCustomise>
   </div>
 </template>
 
@@ -72,21 +67,4 @@ function backToClassic() {
 .preset-title { font-weight: 700; font-size: 0.9rem; line-height: 1.25rem; }
 .preset-summary { font-size: 0.8125rem; line-height: 1.2rem; color: rgba(255, 255, 255, 0.85); }
 .preset-reset.p-button { align-self: flex-start; min-height: 44px; margin-top: 4px; }
-.customise {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-height: 44px;
-  padding: 4px 12px;
-  font: inherit;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.9);
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
-  cursor: pointer;
-}
-.customise:focus-visible { outline: 2px solid rgba(232, 201, 109, 0.7); outline-offset: 1px; }
 </style>
