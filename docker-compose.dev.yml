@@ -25,6 +25,10 @@ services:
     ports:
       - "8080:8080"
       - "5005:5005"
+    environment:
+      # application.properties logs STOMP frames at INFO (production); the dev stack wants them at DEBUG.
+      - LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_MESSAGING=DEBUG
+      - LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB_SOCKET=DEBUG
     volumes:
       - ./backend:/app
       - backend_m2:/root/.m2/repository
