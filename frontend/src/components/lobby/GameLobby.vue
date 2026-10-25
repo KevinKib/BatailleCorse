@@ -56,7 +56,7 @@ onBeforeUnmount(() => { if (noticeTimer) clearTimeout(noticeTimer); });
 </script>
 
 <template>
-  <div class="titlescreen">
+  <div class="titlescreen" style="--fan-lift: 48px">
     <div data-test="lobby" class="title-panel">
       <LocalPreferences :game="game" />
       <TitleCardFan class="lobby-fan" />
@@ -164,7 +164,7 @@ onBeforeUnmount(() => { if (noticeTimer) clearTimeout(noticeTimer); });
 }
 .lobby-fan { display: none; }
 @media (min-height: 800px) {
-  .titlescreen { padding: 100px 16px 24px; }
+  .titlescreen { padding: calc(100px + var(--fan-lift)) 16px 24px; }
   .lobby-fan { display: block; }
 }
 
@@ -268,6 +268,6 @@ onBeforeUnmount(() => { if (noticeTimer) clearTimeout(noticeTimer); });
   .game-title { font-size: 1.75rem; }
 }
 @media (max-width: 480px) and (min-height: 800px) {
-  .titlescreen { padding: 88px 12px 16px; }
+  .titlescreen { padding: calc(100px + var(--fan-lift)) 12px 16px; }
 }
 </style>

@@ -49,7 +49,8 @@ function fanStyle(i: number) {
 <style scoped>
 .deco-cards {
   position: absolute;
-  top: -95px;
+  /* --fan-lift (set by the lobby, shared by every game) raises the fan; other screens leave it unset. */
+  top: calc(-95px - var(--fan-lift, 0px));
   left: 50%;
   transform: translateX(-50%);
   width: 360px;
