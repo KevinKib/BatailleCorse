@@ -39,10 +39,33 @@ class MangolaFactoryTest {
     }
 
     @Test
-    void theOnlyGameOptionIsWhoStartsWithItsDefault() {
+    void theGameOptionsAreWhoStartsThenTheSowingDirectionEachWithItsDefault() {
         assertEquals(List.of(
                 new OptionDescriptor("firstPlayer", OptionType.CHOICE, List.of("host", "guest", "random"),
-                        "random", "options.mangola.firstPlayer")), factory.optionDescriptors());
+                        "random", "options.mangola.firstPlayer"),
+                new OptionDescriptor("direction", OptionType.CHOICE, List.of("anticlockwise", "clockwise"),
+                        "anticlockwise", "options.mangola.direction")), factory.optionDescriptors());
+    }
+
+    @Test
+    void theDirectionOptionIsReadIntoTheGameAndDefaultsToAnticlockwise() {
+        assertEquals(SowingDirection.CLOCKWISE, create(factory, Map.of("direction", "clockwise")).direction());
+        assertEquals(SowingDirection.ANTICLOCKWISE,
+                create(factory, Map.of("direction", "anticlockwise")).direction());
+        assertEquals(SowingDirection.ANTICLOCKWISE, create(factory, Map.of()).direction());
+        assertEquals(SowingDirection.ANTICLOCKWISE, ((Mangola) factory.create(GameId.generate(), 2)).direction());
+    }
+
+    @Test
+    void theDirectionDoesNotDisturbWhoStarts() {
+        assertEquals(GUEST, create(factory, Map.of("firstPlayer", "guest", "direction", "clockwise")).seatA());
+    }
+
+    @Test
+    void anUnknownDirectionIsRefusedByValidateAndByCreate() {
+        assertThrows(InvalidOptionException.class,
+                () -> factory.validate(GameOptions.of(Map.of("direction", "sideways"))));
+        assertThrows(IllegalArgumentException.class, () -> create(factory, Map.of("direction", "sideways")));
     }
 
     @Test
@@ -56,9 +79,12 @@ class MangolaFactoryTest {
 
     @Test
     void validateCompletesTheDefaultsAndRefusesUnknownKeysAndValues() {
-        assertEquals(GameOptions.of(Map.of("firstPlayer", "random")), factory.validate(GameOptions.none()));
-        assertEquals(GameOptions.of(Map.of("firstPlayer", "guest")),
+        assertEquals(GameOptions.of(Map.of("firstPlayer", "random", "direction", "anticlockwise")),
+                factory.validate(GameOptions.none()));
+        assertEquals(GameOptions.of(Map.of("firstPlayer", "guest", "direction", "anticlockwise")),
                 factory.validate(GameOptions.of(Map.of("firstPlayer", "guest"))));
+        assertEquals(GameOptions.of(Map.of("firstPlayer", "random", "direction", "clockwise")),
+                factory.validate(GameOptions.of(Map.of("direction", "clockwise"))));
         // the set-up is always free placement (owner decision 2026-10-15): an old client's "setup" is an unknown option
         assertThrows(InvalidOptionException.class, () -> factory.validate(GameOptions.of(Map.of("setup", "free"))));
         assertThrows(InvalidOptionException.class,

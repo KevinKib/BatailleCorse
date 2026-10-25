@@ -6,6 +6,7 @@ import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.mangola.domain.Mangola;
 import org.kevinkib.cardgames.mangola.domain.MangolaFactory;
+import org.kevinkib.cardgames.mangola.domain.SowingDirection;
 import org.kevinkib.cardgames.mangola.presentation.dto.MangolaDto;
 import org.kevinkib.cardgames.presentation.api.JoinGamePayload;
 import org.kevinkib.cardgames.presentation.api.Response;
@@ -21,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
@@ -68,7 +70,7 @@ class MangolaRestAndLifecycleTest {
     }
 
     @Test
-    void getGame_beforeTheStart_returnsTheLobbyWithItsOnlyOption() {
+    void getGame_beforeTheStart_returnsTheLobbyWithItsTwoOptions() {
         RoomCreated room = table.sessions.createRoom(MangolaFactory.GAME_TYPE, "Alice");
 
         ResponseEntity<?> response = table.rest.getGame(room.gameId(), room.hostToken());
@@ -77,7 +79,56 @@ class MangolaRestAndLifecycleTest {
         LobbyView lobby = (LobbyView) response.getBody();
         assertThat(lobby.minPlayers(), is(2));
         assertThat(lobby.maxPlayers(), is(2));
-        assertThat(lobby.optionDescriptors().stream().map(d -> d.key()).toList(), is(List.of("firstPlayer")));
+        assertThat(lobby.optionDescriptors().stream().map(d -> d.key()).toList(), is(List.of("firstPlayer", "direction")));
+    }
+
+    @Test
+    void theHostSetsTheDirection_theStartedGameCarriesItForBothSeats_andTheGuestCannotChangeIt() {
+        RoomCreated room = table.sessions.createRoom(MangolaFactory.GAME_TYPE, "Alice");
+        GameId id = new GameId(room.gameId());
+        JoinResponseDto guest = table.rest.joinGame(room.gameId(), new JoinGamePayload("Bob")).getBody();
+
+        assertThrows(RuntimeException.class,
+                () -> table.sessions.updateOptions(id, guest.token(), Map.of("direction", "clockwise")));
+        table.sessions.updateOptions(id, room.hostToken(), Map.of("direction", "clockwise"));
+        LobbyView lobby = (LobbyView) table.rest.getGame(room.gameId(), guest.token()).getBody();
+        assertThat(lobby.options().get("direction"), is("clockwise"));
+
+        Mangola game = (Mangola) table.sessions.startGame(id, room.hostToken());
+
+        assertThat(game.direction(), is(SowingDirection.CLOCKWISE));
+        for (String token : List.of(room.hostToken(), guest.token())) {
+            MangolaDto dto = (MangolaDto) table.rest.getGame(room.gameId(), token).getBody();
+            assertThat(dto.direction(), is("clockwise"));
+        }
+    }
+
+    @Test
+    void aRoomLeftAtTheDefaultStartsAnticlockwise() {
+        RoomCreated room = table.sessions.createRoom(MangolaFactory.GAME_TYPE, "Alice");
+        table.rest.joinGame(room.gameId(), new JoinGamePayload("Bob"));
+
+        Mangola game = (Mangola) table.sessions.startGame(new GameId(room.gameId()), room.hostToken());
+
+        assertThat(game.direction(), is(SowingDirection.ANTICLOCKWISE));
+    }
+
+    @Test
+    void playAgain_keepsTheDirectionInTheReopenedLobbyAndTheNextGame() {
+        RoomCreated room = table.sessions.createRoom(MangolaFactory.GAME_TYPE, "Alice");
+        GameId id = new GameId(room.gameId());
+        table.sessions.updateOptions(id, room.hostToken(), Map.of("direction", "clockwise"));
+        table.rest.joinGame(room.gameId(), new JoinGamePayload("Bob"));
+        Mangola game = (Mangola) table.sessions.startGame(id, room.hostToken());
+        game.forfeit(SEAT_1);
+
+        JoinResponseDto again = table.rest.playAgain(room.gameId(), new JoinGamePayload("Bob")).getBody();
+
+        LobbyView lobby = (LobbyView) table.rest.getGame(room.gameId(), again.token()).getBody();
+        assertThat(lobby.options().get("direction"), is("clockwise"));
+        table.rest.joinGame(room.gameId(), new JoinGamePayload("Alice"));
+        Mangola next = (Mangola) table.sessions.startGame(id, again.token());
+        assertThat(next.direction(), is(SowingDirection.CLOCKWISE));
     }
 
     @Test
@@ -112,7 +163,7 @@ class MangolaRestAndLifecycleTest {
         assertThat(again.getBody().playerId(), is(0));
         assertThat(table.sessions.findGame(new GameId(room.gameId())).isPresent(), is(false));
         LobbyView lobby = (LobbyView) table.rest.getGame(room.gameId(), again.getBody().token()).getBody();
-        assertThat(lobby.options(), is(Map.of("firstPlayer", "guest")));
+        assertThat(lobby.options(), is(Map.of("firstPlayer", "guest", "direction", "anticlockwise")));
     }
 
     // ---- session core hosts the game
