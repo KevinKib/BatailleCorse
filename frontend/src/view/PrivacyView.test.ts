@@ -48,8 +48,10 @@ describe('PrivacyView', () => {
     expect(text).toContain('only in the memory of the server');
     expect(text).toContain('No accounts');
     expect(text).toContain('No advertising');
-    // The one third party: the font is fetched from Google Fonts (frontend/index.html).
-    expect(text).toContain('Google Fonts');
+    // No third party at all: the font is served by the site itself (frontend/src/fonts.css).
+    expect(text).toContain('font of the site is served by the site itself');
+    expect(text).toContain('nothing is sent to a third party');
+    expect(text).not.toContain('Google');
   });
 
   it('givenThePublicGamesListIsNotBuilt_thenThePageSaysItIsNotCoveredYet', async () => {
