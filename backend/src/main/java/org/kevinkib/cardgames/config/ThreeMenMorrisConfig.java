@@ -2,6 +2,7 @@ package org.kevinkib.cardgames.config;
 
 import org.kevinkib.cardgames.threemenmorris.presentation.dto.ThreeMenMorrisDto;
 import org.kevinkib.cardgames.threemenmorris.domain.ThreeMenMorris;
+import org.kevinkib.cardgames.threemenmorris.presentation.bot.MorrisBotLevels;
 import org.kevinkib.cardgames.presentation.state.SeatStateBroadcaster;
 import org.kevinkib.cardgames.presentation.GameMessagingService;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
@@ -61,9 +62,11 @@ public class ThreeMenMorrisConfig {
 
     @Bean
     public SeatStateBroadcaster<ThreeMenMorris, ThreeMenMorrisDto> threeMenMorrisStateBroadcaster(
-            GameMessagingService gameMessagingService, SessionService sessionService) {
+            GameMessagingService gameMessagingService, SessionService sessionService,
+            BotSeatOptions botSeatOptions) {
         return new SeatStateBroadcaster<>(gameMessagingService, sessionService::botSeats, sessionService::seatNames,
-                (game, viewer, names, bots) -> ThreeMenMorrisDto.forViewer(game, viewer, names));
+                (game, viewer, names, bots) -> ThreeMenMorrisDto.forViewer(game, viewer, names, bots,
+                        MorrisBotLevels.of(game.getId(), bots, botSeatOptions)));
     }
 
     @Bean

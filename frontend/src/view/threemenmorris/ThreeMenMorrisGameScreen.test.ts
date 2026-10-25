@@ -151,6 +151,16 @@ describe('ThreeMenMorrisGameScreen', () => {
       expect(tags.map(t => t.get('[data-test="tag-name"]').text())).toEqual(['Bot 1 (Expert)', 'Alice']);
     });
 
+    it('shows the level after a reload mid-game: the game view carries the bot flag and the level, no lobby seen', async () => {
+      const game = morrisState();
+      const { wrapper } = await mountScreen({
+        ...game,
+        players: game.players.map(p => (p.seat === 1 ? { ...p, name: 'Bot 1', bot: true, level: 'perfect' } : p)),
+      });
+      const tags = wrapper.findAll('[data-test="player-tag"]');
+      expect(tags.map(t => t.get('[data-test="tag-name"]').text())).toEqual(['Bot 1 (Expert)', 'Alice']);
+    });
+
     it('has neither a shortcut gear nor a sound toggle nor a bot', async () => {
       const { wrapper } = await mountScreen(morrisState());
       expect(wrapper.find('[data-test="hotkeys-button"]').exists()).toBe(false);

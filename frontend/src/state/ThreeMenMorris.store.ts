@@ -43,7 +43,7 @@ export const useThreeMenMorrisStore = defineStore('three-men-morris-store', () =
   const state = ref<MorrisView | null>(null);
   const gameId = ref<string | null>(null);
   const mySeat = ref<number>(0);
-  // The level of each computer seat, read from the lobby: the game view does not carry it (a reload mid-game loses it).
+  // The level of each computer seat: the game view's `level`, else the one remembered from the lobby.
   const botLevels = ref<Record<number, string>>({});
   // The piece I picked before choosing where it goes: a pure UI state, the server judges the move.
   const selected = ref<number | null>(null);
@@ -81,7 +81,11 @@ export const useThreeMenMorrisStore = defineStore('three-men-morris-store', () =
         selected.value = null;
         state.value = event.state;
         room.onStateUpdate(event.state.started);
-        if (!event.state.started) botLevels.value = botLevelsOf(event.state.players);
+        // The lobby records the levels; the game view carries them too (a reload mid-game has no lobby) and, when
+        // it does, what it says stands over the lobby's, which stays the fallback for a server that says nothing.
+        botLevels.value = event.state.started
+          ? { ...botLevels.value, ...botLevelsOf(event.state.players) }
+          : botLevelsOf(event.state.players);
         if (!event.state.started) { lastMove.value = null; lastRemoval.value = null; drawNotice.value = null; }
         break;
       case 'game-id-change': gameId.value = event.gameId; break;

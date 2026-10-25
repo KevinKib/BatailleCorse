@@ -30,6 +30,10 @@ export interface MorrisPlayer {
   colour?: MorrisColour;
   /** Pieces removed so far; written only on mill variants (Six Men's Morris). */
   lost?: number;
+  /** True for a computer seat; left out by the server for a human. */
+  bot?: boolean;
+  /** The level key of a computer seat (random, greedy, perfect); left out for a human. */
+  level?: string | null;
 }
 
 /** A pending removal: `seat` closed the mill `mill` (three points) and must now take an opponent piece. */

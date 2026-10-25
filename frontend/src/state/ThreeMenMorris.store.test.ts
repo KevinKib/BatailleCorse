@@ -537,6 +537,35 @@ describe('ThreeMenMorris store', () => {
   });
 
   describe('computer levels', () => {
+    it('reads the level of each computer seat from the game view, so a reload mid-game knows it', () => {
+      const store = seated(0);
+      store.applyEvent({ type: 'state-update', state: morrisState({
+        players: [
+          { seat: 0, name: 'Alice', current: true, piecesToPlace: 3 },
+          { seat: 1, name: 'Bot 1', current: false, piecesToPlace: 3, bot: true, level: 'perfect' },
+        ],
+      }) });
+      expect(store.botLevels).toEqual({ 1: 'perfect' });
+    });
+
+    it('prefers the level of the game view and falls back to the one recorded from the lobby', () => {
+      const store = seated(0);
+      store.applyEvent({ type: 'state-update', state: lobbyView({
+        players: [{ seat: 0, name: 'Alice', joined: true },
+          { seat: 1, name: 'Bot 1', joined: true, bot: true, seatOptions: { level: 'greedy' } }],
+      }) });
+      const withLevel = (level?: string) => morrisState({
+        players: [
+          { seat: 0, name: 'Alice', current: true, piecesToPlace: 3 },
+          { seat: 1, name: 'Bot 1', current: false, piecesToPlace: 3, bot: true, level },
+        ],
+      });
+      store.applyEvent({ type: 'state-update', state: withLevel() });
+      expect(store.botLevels).toEqual({ 1: 'greedy' });
+      store.applyEvent({ type: 'state-update', state: withLevel('perfect') });
+      expect(store.botLevels).toEqual({ 1: 'perfect' });
+    });
+
     it('remembers the level of each computer seat from the lobby, and forgets it on leaving', () => {
       const store = seated(0);
       store.applyEvent({ type: 'state-update', state: lobbyView({

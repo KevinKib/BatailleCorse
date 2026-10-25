@@ -18,6 +18,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * One player's view of a Mangola game, the only projection of the aggregate. {@code board} holds the 32 pits
@@ -45,8 +46,14 @@ public record MangolaDto(
         Outcome outcome,
         boolean draftOnlyEndless) {
 
-    /** {@code seeds} is the seeds on the seat's side, null while that side is hidden from the viewer. */
-    public record PlayerDto(int seat, String name, boolean current, String side, Integer seeds, boolean ready) {
+    /**
+     * {@code seeds} is the seeds on the seat's side, null while that side is hidden from the viewer. {@code bot}
+     * (a computer seat) and {@code level} (its level key, easy / medium / expert) are additive: left out of the
+     * JSON for a human seat, so a client reads an absent {@code bot} as false and an absent {@code level} as unknown.
+     */
+    public record PlayerDto(int seat, String name, boolean current, String side, Integer seeds, boolean ready,
+                            @JsonInclude(JsonInclude.Include.NON_DEFAULT) boolean bot,
+                            @JsonInclude(JsonInclude.Include.NON_NULL) String level) {
     }
 
     /** The last move played, so that a client reconnecting mid-animation can still show it. */
@@ -109,6 +116,12 @@ public record MangolaDto(
     }
 
     public static MangolaDto forViewer(Mangola game, PlayerId viewer, Map<PlayerId, String> names) {
+        return forViewer(game, viewer, names, Set.of(), Map.of());
+    }
+
+    /** {@code bots} are the computer seats and {@code levels} the level key of those that have one. */
+    public static MangolaDto forViewer(Mangola game, PlayerId viewer, Map<PlayerId, String> names,
+                                       Set<PlayerId> bots, Map<PlayerId, String> levels) {
         synchronized (game) {
             List<PlayerId> seats = game.getPlayerIds();
             // both ready is the reveal: a game that ends during the placement never reveals anything
@@ -134,7 +147,7 @@ public record MangolaDto(
                 }
                 players.add(new PlayerDto(seat.id(), names.get(seat),
                         game.phase() == Phase.PLAY && seat.equals(game.currentSeat()), side.name(), seeds,
-                        game.isReady(seat)));
+                        game.isReady(seat), bots.contains(seat), bots.contains(seat) ? levels.get(seat) : null));
             }
 
             MangolaResult result = game.result();

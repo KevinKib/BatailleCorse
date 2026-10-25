@@ -609,6 +609,16 @@ describe('MangolaGameScreen', () => {
       expect(thinking(wrapper).text()).toBe('Bot 1 (Expert) is thinking…');
     });
 
+    it('shows the level after a reload mid-game: the game view carries the bot flag and the level, no lobby seen', async () => {
+      const before = beforeOpponentMove();
+      const { wrapper } = await mountScreen({
+        ...before,
+        players: before.players.map(p => (p.seat === 1 ? { ...p, name: 'Bot 1', bot: true, level: 'expert' } : p)),
+      });
+      expect(wrapper.findAll('[data-test="tag-name"]').map(t => t.text())).toEqual(['Bot 1 (Expert)', 'Alice']);
+      expect(thinking(wrapper).text()).toBe('Bot 1 (Expert) is thinking…');
+    });
+
     it('keeps its place when empty, so the board does not move', async () => {
       const { wrapper, store } = await mountScreen(botLobby());
       store.applyEvent({ type: 'state-update', state: mangolaState() }); // my turn
