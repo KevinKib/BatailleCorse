@@ -506,6 +506,18 @@ describe('Mangola store', () => {
       expect(store.botSeats).toEqual([1]);
     });
 
+    it('remembers the level of each computer seat from the lobby, and forgets it when removed', () => {
+      const store = seated(0);
+      store.applyEvent({ type: 'state-update', state: lobbyView({
+        players: [{ seat: 0, name: 'Alice', joined: true },
+          { seat: 1, name: 'Bot 1', joined: true, bot: true, seatOptions: { level: 'expert' } }],
+      }) });
+      store.applyEvent({ type: 'state-update', state: mangolaState() });
+      expect(store.botLevels).toEqual({ 1: 'expert' });
+      store.applyEvent({ type: 'removed' });
+      expect(store.botLevels).toEqual({});
+    });
+
     it('knows none when the game was joined after the lobby (a reload), or against a human', () => {
       const store = seated(0);
       store.applyEvent({ type: 'state-update', state: mangolaState() });

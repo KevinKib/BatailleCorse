@@ -49,7 +49,7 @@ describe("Three Men's Morris against a bot", () => {
     mine().should('have.length', 1);
     theirs().should('have.length', 1);
     cy.get('[data-test="turn-hint"]').should('contain.text', 'Your turn');
-    cy.get('[data-test="tag-name"]').first().should('have.text', 'Bot 1');
+    cy.get('[data-test="tag-name"]').first().should('have.text', 'Bot 1 (Expert)');
   });
 
   it("Six at Easy: the bot closes its first mill (0 1 2, the first free points) and takes my first piece", () => {
@@ -74,7 +74,7 @@ describe("Three Men's Morris against a bot", () => {
     mine().should('have.length', 2);
     cy.get('[data-test="removal-banner"]').should('not.exist');
     cy.get('[data-test="turn-hint"]').should('contain.text', 'Your turn');
-    cy.get('[data-test="tag-name"]').first().should('have.text', 'Bot 1');
+    cy.get('[data-test="tag-name"]').first().should('have.text', 'Bot 1 (Easy)');
   });
 
   SIZES.forEach(([width, height]) => {

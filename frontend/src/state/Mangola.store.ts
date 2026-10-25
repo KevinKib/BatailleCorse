@@ -14,6 +14,7 @@ import {
 import { lastMoveMarks, type LastMoveMarks } from '../model/mangola/trace';
 import { useSeatPresence, FORFEIT_NOTICE_HOLD_MS } from '../composables/useSeatPresence';
 import { useSeatRoom } from '../composables/useSeatRoom';
+import { botLevelsOf } from '../model/lobby/botLevel';
 import type { ForfeitEventData } from '../model/SeatLifecycleEvents';
 
 export { FORFEIT_NOTICE_HOLD_MS };
@@ -34,6 +35,8 @@ export const useMangolaStore = defineStore('mangola-store', () => {
   // The computer seats, read from the lobby: the game view does not say which seat is one, so a player who
   // reloads in the middle of a game has none (the screen then just says it is waiting).
   const botSeats = ref<number[]>([]);
+  // Their levels (easy / medium / expert), remembered from the lobby for the same reason.
+  const botLevels = ref<Record<number, string>>({});
   const mySeat = ref<number>(0);
 
   // The layout being edited: 16 counts in the order of my loop. It follows the server's draft (so a reload or a
@@ -80,7 +83,10 @@ export const useMangolaStore = defineStore('mangola-store', () => {
     switch (event.type) {
       case 'state-update':
         state.value = event.state;
-        if (!event.state.started) botSeats.value = event.state.players.filter(p => p.bot === true).map(p => p.seat);
+        if (!event.state.started) {
+          botSeats.value = event.state.players.filter(p => p.bot === true).map(p => p.seat);
+          botLevels.value = botLevelsOf(event.state.players);
+        }
         room.onStateUpdate(event.state.started);
         if (event.state.started && event.state.phase === 'PLACEMENT') {
           // My unsent edit stands over what the server says; otherwise the server's draft is the truth.
@@ -98,6 +104,7 @@ export const useMangolaStore = defineStore('mangola-store', () => {
       case 'removed':
         state.value = null;
         botSeats.value = [];
+        botLevels.value = {};
         forgetDraft();
         gameId.value = null;
         room.onRemoved();
@@ -213,6 +220,7 @@ export const useMangolaStore = defineStore('mangola-store', () => {
   const leave = () => room.leave(() => {
     state.value = null;
     botSeats.value = [];
+    botLevels.value = {};
     forgetDraft();
     gameId.value = null;
   });
@@ -220,7 +228,7 @@ export const useMangolaStore = defineStore('mangola-store', () => {
   const playAgain = () => room.playAgain(() => { presence.reset(); forgetDraft(); });
 
   return {
-    state, game, lobby, botSeats, lobbyError, removedByHost, starting, gameId, mySeat, rematch, lastForfeit, gamePhase,
+    state, game, lobby, botSeats, botLevels, lobbyError, removedByHost, starting, gameId, mySeat, rematch, lastForfeit, gamePhase,
     disconnections: presence.disconnections,
     liveDisconnections: presence.liveDisconnections,
     forfeitNotice: presence.forfeitNotice,
