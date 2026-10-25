@@ -7,19 +7,26 @@ import org.kevinkib.cardgames.game.OptionDescriptor;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.core.application.port.SessionRepository;
 import org.kevinkib.cardgames.sessionmanagement.core.application.port.UsageStatistics;
+import org.kevinkib.cardgames.sessionmanagement.core.domain.LobbyVisibility;
 import org.kevinkib.cardgames.sessionmanagement.core.domain.NoFreeSeatException;
 import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionGame;
 import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionPlayer;
 import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionToken;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * Session use cases. Every operation that reads or mutates a lobby's seats or options, and the computation of the
@@ -29,6 +36,8 @@ import java.util.function.Function;
  */
 public class SessionService implements GameDirectory {
 
+    private static final Logger log = LoggerFactory.getLogger(SessionService.class);
+
     private final SessionRepository repository;
     private final GameFactories gameFactories;
     private final UsageStatistics statistics;
@@ -36,6 +45,10 @@ public class SessionService implements GameDirectory {
     private final Set<GameId> reportedFinished = new HashSet<>();
     private volatile Consumer<GameId> lobbyRemovalListener = removed -> { };
     private volatile Consumer<String> publicLobbiesListener = gameType -> { };
+    /** Game types whose public list changed during the running use case. Guarded by this service's lock. */
+    private final Set<String> changedTypes = new LinkedHashSet<>();
+    /** Per game type, how many times its public list changed: the version of the list. Guarded by the lock. */
+    private final Map<String, Long> listVersions = new HashMap<>();
 
     public SessionService(SessionRepository repository, GameFactories gameFactories) {
         this(repository, gameFactories, UsageStatistics.NONE);
@@ -47,10 +60,12 @@ public class SessionService implements GameDirectory {
         this.statistics = statistics;
     }
 
-    public synchronized JoinResult joinRoom(GameId id, String name) {
-        JoinResult joined = join(id, lobby -> lobby.claimNextFreeSeat(name));
-        statistics.seatJoined(repository.loadSessionGame(id).gameType());
-        return joined;
+    public JoinResult joinRoom(GameId id, String name) {
+        return notifying(() -> {
+            JoinResult joined = join(id, lobby -> lobby.claimNextFreeSeat(name));
+            statistics.seatJoined(repository.loadSessionGame(id).gameType());
+            return joined;
+        });
     }
 
     /**
@@ -80,6 +95,7 @@ public class SessionService implements GameDirectory {
         try {
             SessionPlayer claimed = claim.apply(lobby);
             lobby.bumpVersion();
+            changed(lobby.gameType());
             return new JoinResult(claimed.id(), claimed.token().uuid().toString(), lobbyViews(id));
         } catch (NoFreeSeatException e) {
             throw new RoomFullException(id);
@@ -93,7 +109,11 @@ public class SessionService implements GameDirectory {
      * shifting up (so they stay removable by the host); the first caller takes seat 0 and becomes host. Synchronized so a burst of simultaneous
      * Play-Again calls reopen exactly once before any of them claims a seat.
      */
-    public synchronized JoinResult playAgain(GameId id, String name) {
+    public JoinResult playAgain(GameId id, String name) {
+        return notifying(() -> playAgainUnderLock(id, name));
+    }
+
+    private JoinResult playAgainUnderLock(GameId id, String name) {
         SessionGame existing = repository.loadSessionGame(id);
         String type = existing.gameType();
         GameOptions options = existing.options();
@@ -102,11 +122,12 @@ public class SessionService implements GameDirectory {
             reportFinished(running.get());
             reportedFinished.remove(id);
             statistics.rematch(type);
-            repository.remove(id);
             SessionGame fresh = SessionGame.create(id, gameFactories.maxPlayers(type), type, options);
             fresh.claimBotsOf(existing);
-            // The reopened lobby continues the version of the one it replaces: a client never sees it go backwards.
-            repository.saveLobby(new SessionGame(id, type, options, fresh.players(), existing.version()));
+            // The reopened lobby continues the version of the one it replaces (a client never sees it go backwards)
+            // and keeps its visibility.
+            repository.reopen(new SessionGame(id, type, options, fresh.players(), existing.version(),
+                    existing.visibilityHolder()));
         }
         return join(id, lobby -> lobby.claimSeatAheadOfBots(name));
     }
@@ -120,23 +141,32 @@ public class SessionService implements GameDirectory {
     }
 
     /**
-     * Creates a room, hidden from the public game list from the start when {@code privateGame}. The flag is
-     * accepted but not stored yet.
+     * Creates a room, hidden from the public game list from the start when {@code privateGame}: it is never
+     * public, not even for a moment.
      */
-    public synchronized RoomCreated createRoom(String gameType, String hostName, GameOptions options,
-                                               boolean privateGame) {
-        GameId id = GameId.generate();
-        SessionGame lobby = SessionGame.create(id, gameFactories.maxPlayers(gameType), gameType, options);
-        lobby.claimHost(hostName);
-        repository.saveLobby(lobby);
-        statistics.gameCreated(gameType);
-        SessionToken hostToken = lobby.findTokenByPlayer(new PlayerId(0))
-                .orElseThrow(() -> new IllegalStateException("Host seat has no token"));
-        return new RoomCreated(id.uuid().toString(), hostToken.uuid().toString());
+    public RoomCreated createRoom(String gameType, String hostName, GameOptions options, boolean privateGame) {
+        return notifying(() -> {
+            GameId id = GameId.generate();
+            SessionGame lobby = SessionGame.create(id, gameFactories.maxPlayers(gameType), gameType, options);
+            lobby.claimHost(hostName);
+            if (privateGame) {
+                lobby.setVisibility(LobbyVisibility.PRIVATE);
+            }
+            repository.saveLobby(lobby);
+            statistics.gameCreated(gameType);
+            changed(gameType);
+            SessionToken hostToken = lobby.findTokenByPlayer(new PlayerId(0))
+                    .orElseThrow(() -> new IllegalStateException("Host seat has no token"));
+            return new RoomCreated(id.uuid().toString(), hostToken.uuid().toString());
+        });
     }
 
     /** Host-only: fills the lowest free seat of a not-yet-started room with a computer player. */
-    public synchronized PlayerId addBot(GameId id, String hostToken) {
+    public PlayerId addBot(GameId id, String hostToken) {
+        return notifying(() -> addBotUnderLock(id, hostToken));
+    }
+
+    private PlayerId addBotUnderLock(GameId id, String hostToken) {
         SessionGame lobby = openLobbyOwnedBy(id, hostToken);
         if (!gameFactories.supportsBots(lobby.gameType())) {
             throw new BotsNotSupportedException(id, lobby.gameType());
@@ -145,6 +175,7 @@ public class SessionService implements GameDirectory {
             PlayerId bot = lobby.claimBot(null).id();
             lobby.bumpVersion();
             statistics.botAdded(lobby.gameType());
+            changed(lobby.gameType());
             return bot;
         } catch (NoFreeSeatException e) {
             throw new RoomFullException(id);
@@ -152,33 +183,48 @@ public class SessionService implements GameDirectory {
     }
 
     /** {@link #addBot} and the resulting views, in one critical section. */
-    public synchronized List<AddressedLobbyView> addBotViews(GameId id, String hostToken) {
-        addBot(id, hostToken);
-        return lobbyViews(id);
+    public List<AddressedLobbyView> addBotViews(GameId id, String hostToken) {
+        return notifying(() -> {
+            addBotUnderLock(id, hostToken);
+            return lobbyViews(id);
+        });
     }
 
     /** {@link #removeBot} and the resulting views, in one critical section. */
-    public synchronized List<AddressedLobbyView> removeBotViews(GameId id, String hostToken, int seat) {
-        removeBot(id, hostToken, seat);
-        return lobbyViews(id);
+    public List<AddressedLobbyView> removeBotViews(GameId id, String hostToken, int seat) {
+        return notifying(() -> {
+            removeBotUnderLock(id, hostToken, seat);
+            return lobbyViews(id);
+        });
     }
 
     /**
      * Host-only: removes another human from a not-yet-started room, connected or not (see
      * {@link SessionGame#removeHuman}). Returns the removed player's token and the remaining humans' views.
      */
-    public synchronized SeatRemoval removeSeat(GameId id, String hostToken, int seat) {
-        SessionGame lobby = openLobbyOwnedBy(id, hostToken);
-        SessionToken removed = lobby.removeHuman(new PlayerId(seat));
-        lobby.bumpVersion();
-        return new SeatRemoval(removed.uuid().toString(), lobbyViews(id));
+    public SeatRemoval removeSeat(GameId id, String hostToken, int seat) {
+        return notifying(() -> {
+            SessionGame lobby = openLobbyOwnedBy(id, hostToken);
+            SessionToken removed = lobby.removeHuman(new PlayerId(seat));
+            lobby.bumpVersion();
+            changed(lobby.gameType());
+            return new SeatRemoval(removed.uuid().toString(), lobbyViews(id));
+        });
     }
 
     /** Host-only: frees a bot seat of a not-yet-started room (see {@link SessionGame#removeBot}). */
-    public synchronized void removeBot(GameId id, String hostToken, int seat) {
+    public void removeBot(GameId id, String hostToken, int seat) {
+        notifying(() -> {
+            removeBotUnderLock(id, hostToken, seat);
+            return null;
+        });
+    }
+
+    private void removeBotUnderLock(GameId id, String hostToken, int seat) {
         SessionGame lobby = openLobbyOwnedBy(id, hostToken);
         lobby.removeBot(new PlayerId(seat));
         lobby.bumpVersion();
+        changed(lobby.gameType());
     }
 
     /**
@@ -191,7 +237,8 @@ public class SessionService implements GameDirectory {
         Map<String, String> merged = new HashMap<>(lobby.options().values());
         merged.putAll(changes);
         GameOptions validated = gameFactories.validate(lobby.gameType(), GameOptions.of(merged));
-        repository.saveLobby(new SessionGame(lobby.id(), lobby.gameType(), validated, lobby.players(), lobby.version()));
+        repository.saveLobby(new SessionGame(lobby.id(), lobby.gameType(), validated, lobby.players(), lobby.version(),
+                lobby.visibilityHolder()));
         lobby.bumpVersion();
         return lobbyViews(id);
     }
@@ -200,15 +247,18 @@ public class SessionService implements GameDirectory {
      * Occupant-only: renames the caller's own seat in a not-yet-started room (see {@link SessionGame#renameSeat}).
      * Returns the per-viewer lobby views, computed in the same critical section.
      */
-    public synchronized List<AddressedLobbyView> renameSeat(GameId id, String token, String name) {
-        if (repository.findGame(id).isPresent()) {
-            throw new GameAlreadyStartedException(id);
-        }
-        SessionGame lobby = repository.loadSessionGame(id);
-        PlayerId actor = lobby.findPlayerByToken(new SessionToken(token)).orElseThrow(InvalidTokenException::new);
-        lobby.renameSeat(actor, name);
-        lobby.bumpVersion();
-        return lobbyViews(id);
+    public List<AddressedLobbyView> renameSeat(GameId id, String token, String name) {
+        return notifying(() -> {
+            if (repository.findGame(id).isPresent()) {
+                throw new GameAlreadyStartedException(id);
+            }
+            SessionGame lobby = repository.loadSessionGame(id);
+            PlayerId actor = lobby.findPlayerByToken(new SessionToken(token)).orElseThrow(InvalidTokenException::new);
+            lobby.renameSeat(actor, name);
+            lobby.bumpVersion();
+            changed(lobby.gameType());
+            return lobbyViews(id);
+        });
     }
 
     /**
@@ -261,7 +311,7 @@ public class SessionService implements GameDirectory {
      * resolved from the token inside the lock, so of two simultaneous departures the second sees the shifted seats.
      */
     public LeaveResult leaveLobby(GameId id, String token) {
-        LeaveResult result = leaveUnderLock(id, token);
+        LeaveResult result = notifying(() -> leaveUnderLock(id, token));
         if (result.lobbyRemoved()) {
             lobbyRemovalListener.accept(id);
         }
@@ -277,9 +327,11 @@ public class SessionService implements GameDirectory {
         lobby.vacate(leaver);
         if (lobby.players().values().stream().noneMatch(seat -> seat.isClaimed() && !seat.isBot())) {
             repository.remove(id);
+            changed(lobby.gameType());
             return new LeaveResult(true, List.of());
         }
         lobby.bumpVersion();
+        changed(lobby.gameType());
         return new LeaveResult(false, lobbyViews(id));
     }
 
@@ -288,28 +340,35 @@ public class SessionService implements GameDirectory {
      * Returns the views to publish; empty when nothing changed (same state, unknown token, or the game started).
      */
     @Override
-    public synchronized List<AddressedLobbyView> markSeatConnection(GameId id, String token, boolean connected) {
-        if (repository.findGame(id).isPresent()) {
-            return List.of();
-        }
-        SessionGame lobby;
-        try {
-            lobby = repository.loadSessionGame(id);
-        } catch (IllegalArgumentException unknownLobby) {
-            return List.of();
-        }
-        if (!lobby.markConnection(new SessionToken(token), connected)) {
-            return List.of();
-        }
-        lobby.bumpVersion();
-        return lobbyViews(id);
+    public List<AddressedLobbyView> markSeatConnection(GameId id, String token, boolean connected) {
+        return notifying(() -> {
+            if (repository.findGame(id).isPresent()) {
+                return List.<AddressedLobbyView>of();
+            }
+            SessionGame lobby;
+            try {
+                lobby = repository.loadSessionGame(id);
+            } catch (IllegalArgumentException unknownLobby) {
+                return List.<AddressedLobbyView>of();
+            }
+            if (!lobby.markConnection(new SessionToken(token), connected)) {
+                return List.<AddressedLobbyView>of();
+            }
+            lobby.bumpVersion();
+            changed(lobby.gameType());
+            return lobbyViews(id);
+        });
     }
 
     public String gameType(GameId id) {
         return repository.loadSessionGame(id).gameType();
     }
 
-    public synchronized Game startGame(GameId id, String hostToken) {
+    public Game startGame(GameId id, String hostToken) {
+        return notifying(() -> startGameUnderLock(id, hostToken));
+    }
+
+    private Game startGameUnderLock(GameId id, String hostToken) {
         if (repository.findGame(id).isPresent()) {
             throw new GameAlreadyStartedException(id);
         }
@@ -328,11 +387,12 @@ public class SessionService implements GameDirectory {
         repository.save(game, lobby);
         int bots = lobby.botSeats().size();
         statistics.gameStarted(lobby.gameType(), claimed - bots, bots);
+        changed(lobby.gameType());
         return game;
     }
 
     /** Starts the room's game and returns it as the game type the caller has checked the room for. */
-    public synchronized <T extends Game> T startGame(GameId id, String hostToken, Class<T> type) {
+    public <T extends Game> T startGame(GameId id, String hostToken, Class<T> type) {
         return type.cast(startGame(id, hostToken));
     }
 
@@ -423,21 +483,75 @@ public class SessionService implements GameDirectory {
                 .toList();
     }
 
-    /** The public game list of a game type; empty for now. */
+    /**
+     * The public game list of a game type, as it is now. Its version grows with every change of a list of that
+     * type, so a client can drop a list older than the one it holds. An unknown game type is refused.
+     */
     public synchronized PublicLobbyList publicLobbies(String gameType) {
-        return new PublicLobbyList(gameType, List.of(), 0, false, 0L);
+        gameFactories.maxPlayers(gameType);
+        List<PublicLobbies.Entry> entries = repository.sessionsOfType(gameType).stream()
+                .map(session -> new PublicLobbies.Entry(session, repository.findGame(session.id()).isPresent(),
+                        repository.openedAt(session.id())))
+                .toList();
+        return PublicLobbies.list(gameType, entries, PublicLobbies.MAX_LISTED, listVersions.getOrDefault(gameType, 0L));
     }
 
-    /** Host-only: hides the lobby from the public game list, or lists it again. Not implemented yet. */
-    public synchronized List<AddressedLobbyView> setPrivate(GameId id, String hostToken, boolean privateGame) {
-        throw new UnsupportedOperationException("setPrivate is not implemented yet");
+    /** Host-only: hides the lobby from the public game list, or lists it again. */
+    public List<AddressedLobbyView> setPrivate(GameId id, String hostToken, boolean privateGame) {
+        return notifying(() -> {
+            SessionGame lobby = openLobbyOwnedBy(id, hostToken);
+            lobby.setVisibility(privateGame ? LobbyVisibility.PRIVATE : LobbyVisibility.PUBLIC);
+            lobby.bumpVersion();
+            changed(lobby.gameType());
+            return lobbyViews(id);
+        });
     }
 
     /**
      * Called with the game type after every change of what its public list shows, once the monitor is released.
-     * Stored only for now: nothing calls it yet.
+     * It is not called for options, seat options or an unchanged connection mark.
      */
     public void setPublicLobbiesListener(Consumer<String> listener) {
         this.publicLobbiesListener = listener;
+    }
+
+    /** Tells the listener that every public list changed (a room was evicted: its game type is no longer known). */
+    public void publicListsChanged() {
+        notifying(() -> {
+            gameFactories.gameTypes().forEach(this::changed);
+            return null;
+        });
+    }
+
+    /** Records, under the lock, that a public list changed; the listener hears of it when the use case ends. */
+    private void changed(String gameType) {
+        listVersions.merge(gameType, 1L, Long::sum);
+        changedTypes.add(gameType);
+    }
+
+    /**
+     * Runs a use case under the monitor, then tells the listener, once per game type whose list changed, after the
+     * monitor is released (the listener may take other locks or call back into this service).
+     */
+    private <T> T notifying(Supplier<T> useCase) {
+        List<String> types = new ArrayList<>();
+        try {
+            synchronized (this) {
+                try {
+                    return useCase.get();
+                } finally {
+                    types.addAll(changedTypes);
+                    changedTypes.clear();
+                }
+            }
+        } finally {
+            for (String type : types) {
+                try {
+                    publicLobbiesListener.accept(type);
+                } catch (RuntimeException e) {
+                    log.warn("Public lobbies listener failed for {}", type, e);
+                }
+            }
+        }
     }
 }

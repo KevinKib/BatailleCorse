@@ -14,6 +14,11 @@ public class GameFactories {
         this.factories = factories;
     }
 
+    /** The type of every game this deployment knows. */
+    public List<String> gameTypes() {
+        return factories.stream().map(GameFactory::gameType).toList();
+    }
+
     public GameFactory factoryFor(String gameType) {
         return factories.stream()
                 .filter(f -> f.gameType().equals(gameType))

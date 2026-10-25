@@ -22,6 +22,7 @@ public class InMemorySessionRepository implements SessionRepository {
     private final Map<GameId, Game> games = new ConcurrentHashMap<>();
     private final Map<GameId, SessionGame> sessionGames = new ConcurrentHashMap<>();
     private final Map<GameId, Instant> lastActivityAt = new ConcurrentHashMap<>();
+    private final Map<GameId, Instant> openedAt = new ConcurrentHashMap<>();
 
     public InMemorySessionRepository(Clock clock) {
         this.clock = clock;
@@ -33,6 +34,7 @@ public class InMemorySessionRepository implements SessionRepository {
         games.put(id, game);
         sessionGames.put(id, sessionGame);
         lastActivityAt.put(id, clock.instant());
+        openedAt.putIfAbsent(id, clock.instant());
     }
 
     @Override
@@ -65,6 +67,26 @@ public class InMemorySessionRepository implements SessionRepository {
         GameId id = sessionGame.id();
         sessionGames.put(id, sessionGame);
         lastActivityAt.put(id, clock.instant());
+        openedAt.putIfAbsent(id, clock.instant());
+    }
+
+    @Override
+    public void reopen(SessionGame lobby) {
+        GameId id = lobby.id();
+        games.remove(id);
+        sessionGames.put(id, lobby);
+        lastActivityAt.put(id, clock.instant());
+        openedAt.putIfAbsent(id, clock.instant());
+    }
+
+    @Override
+    public List<SessionGame> sessionsOfType(String gameType) {
+        return sessionGames.values().stream().filter(session -> session.gameType().equals(gameType)).toList();
+    }
+
+    @Override
+    public Instant openedAt(GameId id) {
+        return openedAt.getOrDefault(id, Instant.EPOCH);
     }
 
     @Override
@@ -94,6 +116,7 @@ public class InMemorySessionRepository implements SessionRepository {
         games.remove(id);
         sessionGames.remove(id);
         lastActivityAt.remove(id);
+        openedAt.remove(id);
     }
 
     @Override
