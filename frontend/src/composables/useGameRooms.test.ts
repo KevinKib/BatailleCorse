@@ -89,4 +89,18 @@ describe('useGameRooms', () => {
     const unwired = { ...findGame('bullshit')!, key: 'chess' } as unknown as GameDefinition;
     expect(() => useGameRooms()(unwired)).toThrow(/chess/);
   });
+
+  it('givenEveryGame_thenCreateForwardsThePrivateFlagToItsStoreAndOnlyWhenGiven', async () => {
+    const stores = {
+      bataillecorse: useBatailleCorseStore(), bullshit: useBullshitStore(), kobo: useKoboStore(),
+      'three-men-morris': useThreeMenMorrisStore(), president: usePresidentStore(), mangola: useMangolaStore(),
+    };
+    for (const g of GAMES) {
+      const create = vi.spyOn(stores[g.key], 'create').mockResolvedValue('g');
+      const room = useGameRooms()(g);
+      await room.create('Ann', true);
+      await room.create('Ann');
+      expect(create.mock.calls, g.key).toEqual([['Ann', true], ['Ann']]);
+    }
+  });
 });

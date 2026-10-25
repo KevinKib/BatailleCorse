@@ -343,6 +343,37 @@ describe('game home and join messages', () => {
   });
 });
 
+describe('public game list messages', () => {
+  it('givenJoinMessages_thenThePublicGamesListHasEveryText', () => {
+    const list = messagesEn.join.publicGames;
+    for (const key of ['title', 'openCount', 'totalCount', 'openOnly', 'join', 'joinAria', 'open', 'full', 'inPlay',
+      'players', 'loading', 'empty', 'emptyHint', 'newGame', 'offline', 'truncated'] as const) {
+      expect(list[key], key).toBeTruthy();
+    }
+    expect(messagesEn.join.or).toBeTruthy();
+    expect(list.joinAria).toContain('{host}');
+    expect(list.players).toContain('{joined}');
+    expect(list.bots.one).toContain('{n}');
+    expect(list.bots.other).toContain('{n}');
+    expect(list.announce.newGames.one).toContain('{n}');
+    expect(list.announce.newGames.other).toContain('{n}');
+    expect(list.announce.openNow).toContain('{open}');
+    expect(list.announce.noneOpen).toBeTruthy();
+  });
+
+  it('givenHomeMessages_thenThePrivateGameCheckboxIsWorded', () => {
+    expect(messagesEn.home.privateGame).toBeTruthy();
+    expect(messagesEn.home.privateGameHint).toBeTruthy();
+  });
+
+  it('givenLobbyMessages_thenThePrivateGameOptionIsWorded', () => {
+    const lobby = messagesEn.lobby;
+    for (const key of ['privateGame', 'privateHint', 'privateChip', 'inviteHintPrivate', 'inviteHintPublic'] as const) {
+      expect(lobby[key], key).toBeTruthy();
+    }
+  });
+});
+
 describe('shared screen messages', () => {
   it('givenEveryRegisteredGame_thenThePickerHasItsChoiceTexts', () => {
     for (const g of GAMES) {

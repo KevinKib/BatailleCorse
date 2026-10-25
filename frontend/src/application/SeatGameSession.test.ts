@@ -65,6 +65,15 @@ describe('SeatGameSession built from a configuration', () => {
     expect(localStorage.getItem('bullshit:tokens:g1')).toBeNull();
   });
 
+  it('create sends privateGame only when the lobby is private', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValue(respond({ gameId: 'g1', token: 't0' }));
+    vi.stubGlobal('fetch', fetchMock);
+    const { session } = make();
+    await session.create('Ann', true);
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({ gameType: 'fake', name: 'Ann', privateGame: true });
+  });
+
   it('join and play again use the configured REST base', async () => {
     const fetchMock = vi.fn()
       .mockResolvedValueOnce(respond({ playerId: 1, token: 't1' }))

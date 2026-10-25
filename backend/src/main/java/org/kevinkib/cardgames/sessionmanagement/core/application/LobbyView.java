@@ -20,6 +20,8 @@ import java.util.Map;
  * player carries its {@code seatOptions} (defaults filled), a human none. {@code lobbyVersion} increases with
  * every mutation of the lobby: a client ignores a view older than the one it holds. A player carries
  * {@code disconnected} while its connection is known to be down, so the host can see whom to remove.
+ * {@code privateGame} is true when the host hid the game from the public list (always false until the
+ * session core stores it).
  */
 public record LobbyView(
         boolean started,
@@ -35,7 +37,8 @@ public record LobbyView(
         List<OptionDescriptor> seatOptionDescriptors,
         boolean canEditOptions,
         List<Integer> removableBotSeats,
-        long lobbyVersion) {
+        long lobbyVersion,
+        boolean privateGame) {
 
     public record LobbyPlayer(int seat, String name, boolean joined, boolean bot, Map<String, String> seatOptions,
                        boolean disconnected) {
@@ -78,7 +81,8 @@ public record LobbyView(
                 seatOptionDescriptors,
                 host && !optionDescriptors.isEmpty(),
                 removableBotSeats,
-                lobby.lobbyVersion());
+                lobby.lobbyVersion(),
+                false);
     }
 
     /** A bot's options with the game's defaults filled in; a human or free seat carries none. */

@@ -35,6 +35,7 @@ public class SessionService implements GameDirectory {
     /** Started games whose end was already reported; pruned to the games still held. Guarded by this service's lock. */
     private final Set<GameId> reportedFinished = new HashSet<>();
     private volatile Consumer<GameId> lobbyRemovalListener = removed -> { };
+    private volatile Consumer<String> publicLobbiesListener = gameType -> { };
 
     public SessionService(SessionRepository repository, GameFactories gameFactories) {
         this(repository, gameFactories, UsageStatistics.NONE);
@@ -114,7 +115,16 @@ public class SessionService implements GameDirectory {
         return createRoom(gameType, hostName, GameOptions.none());
     }
 
-    public synchronized RoomCreated createRoom(String gameType, String hostName, GameOptions options) {
+    public RoomCreated createRoom(String gameType, String hostName, GameOptions options) {
+        return createRoom(gameType, hostName, options, false);
+    }
+
+    /**
+     * Creates a room, hidden from the public game list from the start when {@code privateGame}. The flag is
+     * accepted but not stored yet.
+     */
+    public synchronized RoomCreated createRoom(String gameType, String hostName, GameOptions options,
+                                               boolean privateGame) {
         GameId id = GameId.generate();
         SessionGame lobby = SessionGame.create(id, gameFactories.maxPlayers(gameType), gameType, options);
         lobby.claimHost(hostName);
@@ -411,5 +421,23 @@ public class SessionService implements GameDirectory {
                 .map(seat -> new AddressedLobbyView(seat.token().uuid().toString(),
                         LobbyView.forViewer(lobby, min, max, descriptors, seatDescriptors, seat.id())))
                 .toList();
+    }
+
+    /** The public game list of a game type; empty for now. */
+    public synchronized PublicLobbyList publicLobbies(String gameType) {
+        return new PublicLobbyList(gameType, List.of(), 0, false, 0L);
+    }
+
+    /** Host-only: hides the lobby from the public game list, or lists it again. Not implemented yet. */
+    public synchronized List<AddressedLobbyView> setPrivate(GameId id, String hostToken, boolean privateGame) {
+        throw new UnsupportedOperationException("setPrivate is not implemented yet");
+    }
+
+    /**
+     * Called with the game type after every change of what its public list shows, once the monitor is released.
+     * Stored only for now: nothing calls it yet.
+     */
+    public void setPublicLobbiesListener(Consumer<String> listener) {
+        this.publicLobbiesListener = listener;
     }
 }

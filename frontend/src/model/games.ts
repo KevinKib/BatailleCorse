@@ -27,6 +27,8 @@ export interface GameHotkeys {
  */
 export interface GameDefinition {
   key: GameKey;
+  /** The game type the server knows (`POST /api/lobby`, `/api/lobbies/{type}`): the key, except `bataille-corse`. */
+  serverType: string;
   /** The game's route prefix, also where the Game home lives. */
   gameHomeRoute: string;
   joinRoute: (id?: string) => string;
@@ -44,6 +46,7 @@ function define(key: GameKey, traits: GameTraits): GameDefinition {
   const base = `/${key}`;
   return {
     key,
+    serverType: key === 'bataillecorse' ? 'bataille-corse' : key,
     gameHomeRoute: base,
     joinRoute: (id) => (id ? `${base}/join/${id}` : `${base}/join`),
     roomRoute: (id) => `${base}/room/${id}`,
