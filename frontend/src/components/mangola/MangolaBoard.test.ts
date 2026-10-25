@@ -8,10 +8,14 @@ import { messagesEn } from '../../locales/en';
 
 const ui = messagesEn.mangolaUi;
 
+// The existing cases below were written for the clockwise drawing (a on the left for side A): they pin it.
+// The anticlockwise default has its own cases at the end of the file.
+const clockwiseState = () => mangolaState({ direction: 'clockwise' });
+
 function board(props: Record<string, unknown> = {}, seat = 0) {
   return mount(MangolaBoard, {
     attachTo: document.body,
-    props: { rows: viewerRows(mangolaState(), seat), interactive: true, ...props },
+    props: { rows: viewerRows(clockwiseState(), seat), interactive: true, ...props },
   });
 }
 const pit = (w: ReturnType<typeof board>, name: string) => w.get(`[data-test="pit-${name}"]`);
@@ -37,7 +41,7 @@ describe('MangolaBoard', () => {
     const a = board({}, 0);
     const namesA = a.findAll('[data-test="board-row"]').map(r => r.findAll('button')[0].attributes('data-test'));
     expect(namesA).toEqual(['pit-a4', 'pit-a3', 'pit-a2', 'pit-a1']);
-    const b = board({ rows: viewerRows(mangolaState(), 1) }, 1);
+    const b = board({ rows: viewerRows(clockwiseState(), 1) }, 1);
     const namesB = b.findAll('[data-test="board-row"]').map(r => r.findAll('button')[0].attributes('data-test'));
     expect(namesB).toEqual(['pit-h1', 'pit-h2', 'pit-h3', 'pit-h4']);
   });
@@ -167,7 +171,7 @@ describe('MangolaBoard during a sowing animation', () => {
     const style = w.get('[data-test="sowing-hand"]').attributes('style');
     expect(style).toContain('left: 12.5%');
     expect(style).toContain('top: 0%');
-    const b = board({ rows: viewerRows(mangolaState(), 1), ...sowing, hand: { pit: 25, seeds: 1 } }, 1);
+    const b = board({ rows: viewerRows(clockwiseState(), 1), ...sowing, hand: { pit: 25, seeds: 1 } }, 1);
     // Seen from side B, b4 is in screen row 3 and column 6.
     expect(b.get('[data-test="sowing-hand"]').attributes('style')).toContain('left: 75%');
     expect(b.get('[data-test="sowing-hand"]').attributes('style')).toContain('top: 75%');
@@ -291,5 +295,59 @@ describe('MangolaBoard during a sowing animation', () => {
     expect(pit(w, 'a2').attributes('data-chosen')).toBe('true');
     expect(w.findAll('[data-chosen="true"]')).toHaveLength(1);
     expect(board().findAll('[data-chosen="true"]')).toHaveLength(0);
+  });
+});
+
+describe('MangolaBoard, anticlockwise (the default direction)', () => {
+  const anticlockwise = (seat = 0) => ({ rows: viewerRows(mangolaState({ direction: 'anticlockwise' }), seat) });
+  const sowing = { animating: true, hand: { pit: 10, seeds: 3 }, activePit: 10 };
+  const focused = () => document.activeElement?.getAttribute('data-test');
+
+  it('draws h to a from left to right for side A and a to h for side B, the own half at the bottom', () => {
+    const first = (seat: number) =>
+      board(anticlockwise(seat), seat).findAll('[data-test="board-row"]').map(r => r.findAll('button')[0].attributes('data-test'));
+    expect(first(0)).toEqual(['pit-h4', 'pit-h3', 'pit-h2', 'pit-h1']);
+    expect(first(1)).toEqual(['pit-a1', 'pit-a2', 'pit-a3', 'pit-a4']);
+  });
+
+  it('has its single tab stop on the first legal pit in reading order, now g2', () => {
+    const w = board(anticlockwise());
+    const stops = w.findAll('button').filter(b => b.attributes('tabindex') === '0');
+    expect(stops).toHaveLength(1);
+    expect(stops[0].attributes('data-test')).toBe('pit-g2');
+  });
+
+  it('the left arrow from a2 reaches b2 and the right arrow reaches nothing at the edge', async () => {
+    const w = board(anticlockwise());
+    const start = pit(w, 'a2');
+    (start.element as HTMLElement).focus();
+    await start.trigger('keydown', { key: 'ArrowRight' });
+    expect(focused()).toBe('pit-a2');
+    await start.trigger('keydown', { key: 'ArrowLeft' });
+    expect(focused()).toBe('pit-b2');
+    await pit(w, 'b2').trigger('keydown', { key: 'ArrowRight' });
+    expect(focused()).toBe('pit-a2');
+    w.unmount();
+  });
+
+  it('puts the hand on the mirrored cell: c2 sits at column 5, b2 left of a2', async () => {
+    const w = board({ ...anticlockwise(), ...sowing });
+    // c2 (pit 10) is in screen row 2 and column 7 - 2 = 5 for the viewer on side A: left 62.5 %, top 50 %.
+    expect(w.get('[data-test="sowing-hand"]').attributes('style')).toContain('left: 62.5%');
+    expect(w.get('[data-test="sowing-hand"]').attributes('style')).toContain('top: 50%');
+    await w.setProps({ hand: { pit: 9, seeds: 1 } }); // b2 sits at the mirrored left of a2
+    expect(w.get('[data-test="sowing-hand"]').attributes('style')).toContain('left: 75%');
+    const b = board({ ...anticlockwise(1), ...sowing, hand: { pit: 25, seeds: 1 } }, 1);
+    // Seen from side B anticlockwise, b4 is in screen row 3 and column 1.
+    expect(b.get('[data-test="sowing-hand"]').attributes('style')).toContain('left: 12.5%');
+    expect(b.get('[data-test="sowing-hand"]').attributes('style')).toContain('top: 75%');
+  });
+
+  it('keeps the data attached to the pit, not to its place: the active pit and the sow event', async () => {
+    const w = board({ ...anticlockwise(), ...sowing });
+    expect(pit(w, 'c2').attributes('data-active')).toBe('true');
+    await w.setProps({ animating: false });
+    await pit(w, 'c2').trigger('click');
+    expect(w.emitted('sow')).toEqual([[10]]);
   });
 });
