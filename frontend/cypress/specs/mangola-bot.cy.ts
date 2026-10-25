@@ -81,6 +81,10 @@ describe('Mangola against a bot', () => {
     cy.get('[data-test="mangola-board"]', { timeout: 10000 }).should('be.visible');
     cy.get('[data-test="placement-editor"]').should('not.exist');
     cy.get('[data-test="tag-name"]').first().should('have.text', 'Bot 1 (Expert)');
+    // The game view carries the level itself: after a reload (no lobby seen) the name is still right.
+    cy.reload();
+    cy.get('[data-test="mangola-board"]', { timeout: 10000 }).should('be.visible');
+    cy.get('[data-test="tag-name"]').first().should('have.text', 'Bot 1 (Expert)');
   });
 
   it('Expert from a placed checkerboard: the bot answers each move, to an end screen, and Play again keeps it and its level', () => {

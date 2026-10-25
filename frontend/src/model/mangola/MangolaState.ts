@@ -22,6 +22,10 @@ export interface MangolaPlayer {
   seeds: number | null;
   /** The player confirmed their layout (placement phase). */
   ready: boolean;
+  /** True for a computer seat; left out by the server for a human. */
+  bot?: boolean;
+  /** The level key of a computer seat (random, greedy, expert); left out for a human. */
+  level?: string | null;
 }
 
 export type MangolaStepType = 'PICK' | 'DROP' | 'SKIP_EMPTY' | 'CAPTURE' | 'RELAY' | 'RESUME_AFTER';

@@ -14,6 +14,7 @@ import org.kevinkib.cardgames.threemenmorris.domain.ThreeMenMorrisFactory;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * One player's view of a Three Men's Morris game, the only projection of the aggregate. Everything
@@ -51,11 +52,15 @@ public record ThreeMenMorrisDto(
 
     /**
      * {@code colour} (WHITE or BLACK) is left out while seat 0 plays White, like {@code whiteSeat}; {@code lost}
-     * (pieces removed so far) is written only for the mill variants.
+     * (pieces removed so far) is written only for the mill variants. {@code bot} (a computer seat) and {@code level}
+     * (its level key) are left out for a human seat: an absent {@code bot} reads as false, an absent {@code level}
+     * as unknown.
      */
     public record PlayerDto(int seat, String name, boolean current, int piecesToPlace,
                             @JsonInclude(JsonInclude.Include.NON_NULL) String colour,
-                            @JsonInclude(JsonInclude.Include.NON_NULL) Integer lost) {
+                            @JsonInclude(JsonInclude.Include.NON_NULL) Integer lost,
+                            @JsonInclude(JsonInclude.Include.NON_DEFAULT) boolean bot,
+                            @JsonInclude(JsonInclude.Include.NON_NULL) String level) {
     }
 
     /** A pending removal: {@code seat} closed the mill {@code mill} (three points) and must take a piece. */
@@ -99,6 +104,12 @@ public record ThreeMenMorrisDto(
     }
 
     public static ThreeMenMorrisDto forViewer(ThreeMenMorris game, PlayerId viewer, Map<PlayerId, String> names) {
+        return forViewer(game, viewer, names, Set.of(), Map.of());
+    }
+
+    /** {@code bots} are the computer seats and {@code levels} the level key of those that have one. */
+    public static ThreeMenMorrisDto forViewer(ThreeMenMorris game, PlayerId viewer, Map<PlayerId, String> names,
+                                              Set<PlayerId> bots, Map<PlayerId, String> levels) {
         synchronized (game) {
             List<Integer> board = game.board().stream().map(owner -> owner == null ? null : owner.id()).toList();
             boolean seatZeroWhite = game.whiteSeat().id() == 0;
@@ -106,7 +117,7 @@ public record ThreeMenMorrisDto(
             List<PlayerDto> players = game.getPlayerIds().stream()
                     .map(p -> new PlayerDto(p.id(), names.get(p), p.equals(game.currentSeat()),
                             game.piecesToPlace(p), seatZeroWhite ? null : game.colourOf(p).name(),
-                            mills ? game.lost(p) : null))
+                            mills ? game.lost(p) : null, bots.contains(p), bots.contains(p) ? levels.get(p) : null))
                     .toList();
             MorrisResult result = game.result();
             Outcome outcome = result.isFinished()

@@ -14,7 +14,7 @@ import {
 import { lastMoveMarks, type LastMoveMarks } from '../model/mangola/trace';
 import { useSeatPresence, FORFEIT_NOTICE_HOLD_MS } from '../composables/useSeatPresence';
 import { useSeatRoom } from '../composables/useSeatRoom';
-import { botLevelsOf } from '../model/lobby/botLevel';
+import { botLevelsOf, botSeatsOf } from '../model/lobby/botLevel';
 import type { ForfeitEventData } from '../model/SeatLifecycleEvents';
 
 export { FORFEIT_NOTICE_HOLD_MS };
@@ -32,10 +32,10 @@ export const STUCK_START_KEY = 'mangola.errors.stuckStart';
 export const useMangolaStore = defineStore('mangola-store', () => {
   const state = ref<MangolaView | null>(null);
   const gameId = ref<string | null>(null);
-  // The computer seats, read from the lobby: the game view does not say which seat is one, so a player who
-  // reloads in the middle of a game has none (the screen then just says it is waiting).
+  // The computer seats: the game view says which seat is one (`bot`), and the lobby's answer is the fallback for a
+  // server that does not, so a player who reloads in the middle of a game still knows them.
   const botSeats = ref<number[]>([]);
-  // Their levels (easy / medium / expert), remembered from the lobby for the same reason.
+  // Their levels (random / greedy / expert): the game view's `level`, else the one remembered from the lobby.
   const botLevels = ref<Record<number, string>>({});
   const mySeat = ref<number>(0);
 
@@ -84,8 +84,16 @@ export const useMangolaStore = defineStore('mangola-store', () => {
       case 'state-update':
         state.value = event.state;
         if (!event.state.started) {
-          botSeats.value = event.state.players.filter(p => p.bot === true).map(p => p.seat);
+          botSeats.value = botSeatsOf(event.state.players);
           botLevels.value = botLevelsOf(event.state.players);
+        } else {
+          // The game view names its computer seats and their level itself (a reload mid-game has no lobby): what
+          // it says stands over what the lobby recorded, which stays the fallback for a server that says nothing.
+          const fromGame = botSeatsOf(event.state.players);
+          if (fromGame.length > 0) {
+            botSeats.value = [...new Set([...botSeats.value, ...fromGame])];
+            botLevels.value = { ...botLevels.value, ...botLevelsOf(event.state.players) };
+          }
         }
         room.onStateUpdate(event.state.started);
         if (event.state.started && event.state.phase === 'PLACEMENT') {

@@ -518,6 +518,36 @@ describe('Mangola store', () => {
       expect(store.botLevels).toEqual({});
     });
 
+    it('reads the computer seats and their levels from the game view, so a reload mid-game knows them', () => {
+      const store = seated(0);
+      store.applyEvent({ type: 'state-update', state: mangolaState({
+        players: [
+          { seat: 0, name: 'Alice', current: true, side: 'A', seeds: 32, ready: true },
+          { seat: 1, name: 'Bot 1', current: false, side: 'B', seeds: 32, ready: true, bot: true, level: 'expert' },
+        ],
+      }) });
+      expect(store.botSeats).toEqual([1]);
+      expect(store.botLevels).toEqual({ 1: 'expert' });
+    });
+
+    it('prefers the level of the game view and falls back to the one recorded from the lobby', () => {
+      const store = seated(0);
+      store.applyEvent({ type: 'state-update', state: lobbyView({
+        players: [{ seat: 0, name: 'Alice', joined: true },
+          { seat: 1, name: 'Bot 1', joined: true, bot: true, seatOptions: { level: 'greedy' } }],
+      }) });
+      const withLevel = (level?: string) => mangolaState({
+        players: [
+          { seat: 0, name: 'Alice', current: true, side: 'A', seeds: 32, ready: true },
+          { seat: 1, name: 'Bot 1', current: false, side: 'B', seeds: 32, ready: true, bot: true, level },
+        ],
+      });
+      store.applyEvent({ type: 'state-update', state: withLevel() });
+      expect(store.botLevels).toEqual({ 1: 'greedy' });
+      store.applyEvent({ type: 'state-update', state: withLevel('expert') });
+      expect(store.botLevels).toEqual({ 1: 'expert' });
+    });
+
     it('knows none when the game was joined after the lobby (a reload), or against a human', () => {
       const store = seated(0);
       store.applyEvent({ type: 'state-update', state: mangolaState() });
