@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
 import PresidentLobbyOptions from './PresidentLobbyOptions.vue';
 import { CLASSIC_PRESIDENT_OPTIONS } from '../../model/fixtures/president';
@@ -89,5 +89,19 @@ describe('PresidentLobbyOptions', () => {
     await wrapper.get('[data-test="customise"]').trigger('click');
     expect(wrapper.findAll('input[type="radio"]')).toHaveLength(0);
     expect(wrapper.get('[data-test="option-afterPass"]').text()).toContain('Out of the trick');
+  });
+
+  it('puts the Private game switch at the top of the Customise panel when given a privacy', async () => {
+    const set = vi.fn();
+    const wrapper = mount(PresidentLobbyOptions, {
+      props: { descriptors, options: { ...CLASSIC_PRESIDENT_OPTIONS }, editable: true, privacy: { value: true, editable: true, set } },
+    });
+    expect(wrapper.find('[data-test="private-switch"]').exists()).toBe(false);
+    await wrapper.get('[data-test="customise"]').trigger('click');
+    const panel = wrapper.get('#president-all-options');
+    expect(panel.element.firstElementChild?.querySelector('[data-test="private-switch"]')).not.toBeNull();
+    expect(panel.get('[data-test="private-switch"]').attributes('aria-checked')).toBe('true');
+    await panel.get('[data-test="private-switch"]').trigger('click');
+    expect(set).toHaveBeenCalledWith(false);
   });
 });

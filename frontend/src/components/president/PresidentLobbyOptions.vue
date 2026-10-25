@@ -3,8 +3,10 @@ import { computed } from 'vue';
 import { Button } from 'primevue';
 import LobbyGameOptions from '../lobby/LobbyGameOptions.vue';
 import LobbyCustomise from '../lobby/LobbyCustomise.vue';
+import LobbyPrivateOption from '../lobby/LobbyPrivateOption.vue';
 import { useI18n } from '../../composables/useI18n';
 import type { OptionDescriptor } from '../../model/lobby/LobbyView';
+import type { LobbyPrivacy } from '../../model/lobby/LobbyPrivacy';
 
 // The options of a President lobby, through the shared lobby's options slot: one card that says whether the rules are
 // Classic (the defaults) or Custom, and a "Customise" disclosure with every option the server declares, drawn by
@@ -15,6 +17,8 @@ const props = defineProps<{
   descriptors: OptionDescriptor[];
   options: Record<string, string>;
   editable: boolean;
+  /** The Private game switch, which sits at the top of the Customise panel. */
+  privacy?: LobbyPrivacy;
 }>();
 const emit = defineEmits<{ 'set-option': [key: string, value: string] }>();
 
@@ -40,6 +44,7 @@ function backToClassic() {
     </div>
 
     <LobbyCustomise panel-id="president-all-options">
+      <LobbyPrivateOption v-if="privacy" :model-value="privacy.value" :editable="privacy.editable" @change="privacy.set" />
       <LobbyGameOptions
         :descriptors="descriptors"
         :options="options"

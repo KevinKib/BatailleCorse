@@ -323,7 +323,8 @@ watch(() => [store.game?.round, store.game?.phase, store.game?.currentSeat, live
       @remove-bot="seat => store.removeBot(seat)"
       @remove-seat="seat => store.removeSeat(seat)"
       @set-seat-option="(seat, key, value) => store.setSeatOption(seat, key, value)"
-      @rename="name => store.rename(name)" />
+      @rename="name => store.rename(name)"
+      @set-private="value => store.setPrivate(value)" />
 
     <EndGameOverlay
       v-else-if="store.screen === 'finished' && endScreen.showEndOverlay.value && summary"
