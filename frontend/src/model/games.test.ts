@@ -75,7 +75,7 @@ describe('game registry', () => {
 
   it('givenAGameWithoutShortcuts_thenItsDefinitionNeedsNoHotkeys', () => {
     const quiet: GameDefinition = {
-      key: 'kobo', gameHomeRoute: '/kobo', joinRoute: () => '/', roomRoute: () => '/',
+      key: 'kobo', serverType: 'kobo', gameHomeRoute: '/kobo', joinRoute: () => '/', roomRoute: () => '/',
       supportsBots: false, picker: { icon: 'pi pi-star', severity: 'info' },
     };
     expect(quiet.hotkeys).toBeUndefined();
@@ -84,5 +84,12 @@ describe('game registry', () => {
   it('givenUnknownKey_thenFindGameReturnsUndefined', () => {
     expect(findGame('nope')).toBeUndefined();
     expect(findGame(undefined)).toBeUndefined();
+  });
+
+  it('givenEveryGame_thenItsServerTypeIsItsKeyExceptForBatailleCorse', () => {
+    expect(findGame('bataillecorse')?.serverType).toBe('bataille-corse');
+    for (const g of GAMES.filter(g => g.key !== 'bataillecorse')) {
+      expect(g.serverType, g.key).toBe(g.key);
+    }
   });
 });

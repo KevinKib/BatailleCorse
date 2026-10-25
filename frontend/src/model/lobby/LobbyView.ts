@@ -42,4 +42,6 @@ export interface LobbyView {
   removableBotSeats?: number[];
   /** Increases with every mutation of the lobby: a view older than the one held is dropped. */
   lobbyVersion?: number;
+  /** The host hid the game from the public list (absent on an older server: treat as public). */
+  privateGame?: boolean;
 }

@@ -195,6 +195,37 @@ export interface JoinGameMessages {
   started: string;         // the game has already started (409)
   notFound: string;        // the invite link points to a game that no longer exists (404)
   back: string;            // towards the Game home
+  or: string;              // separator between the form and the public games list
+  publicGames: PublicGamesMessages;
+}
+
+// The public games list of the join page (`PublicGameList`).
+export interface PublicGamesMessages {
+  title: string;
+  openCount: string;       // '{open}': next to the heading
+  totalCount: string;      // '{open}', '{total}': next to the heading when "Open games only" is off
+  openOnly: string;        // the toggle
+  join: string;            // button of an open row
+  joinAria: string;        // '{host}', '{joined}', '{max}': accessible name of the button
+  open: string;            // state badges, in words
+  full: string;
+  inPlay: string;
+  players: string;         // '{joined}', '{max}'
+  bots: PluralForms;       // '{n}': appended to the players text when the row has bots
+  loading: string;
+  empty: string;           // '{game}' = the game's name
+  emptyHint: string;
+  newGame: string;         // link to the Game home from the empty state
+  offline: string;         // connection lost, role=status
+  truncated: string;       // '{shown}', '{total}'
+  announce: PublicGamesAnnouncements;
+}
+
+// Batched live-region announcements (at most one every 2 s).
+export interface PublicGamesAnnouncements {
+  newGames: PluralForms;   // '{n}' = games that appeared
+  openNow: string;         // '{open}' = open games now
+  noneOpen: string;
 }
 
 // Shared lobby (`GameLobby`), the same for every game.
@@ -226,6 +257,11 @@ export interface LobbyMessages {
   waitingForHost: string;
   nowHost: string;                   // announced when the host seat passes to me
   customise: string;                 // disclosure that opens the options a game keeps out of sight by default
+  privateGame: string;               // label of the host's switch (and its accessible name)
+  privateHint: string;               // description of the switch (aria-describedby)
+  privateChip: string;               // read-only chip next to the invite link, for the other players
+  inviteHintPrivate: string;         // under the invite link when the game is private
+  inviteHintPublic: string;          // under the invite link when the game is listed
 }
 
 // Texts of the game options a lobby renders from the backend descriptors. A descriptor's `labelKey`
