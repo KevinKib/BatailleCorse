@@ -1051,6 +1051,15 @@ export const messagesEn: Messages = {
         ],
       },
       {
+        id: 'public',
+        heading: 'The public games list',
+        paragraphs: [
+          'The Join page of each game lists the public games of that game, to anyone who opens it. A listed game shows the display name of its host, how many seats are taken out of the maximum, how many of them are bots, and whether it is open, full or in play. The identifier of a public game is part of the list, since it is what lets people join. Nothing else is shown: no other player name and no token.',
+          'A game is public by default. The host can tick "Private game" when creating it, or switch it on in the lobby: a private game is never listed, and people join it only through its invite link.',
+          'The list is live: it follows the games as they change, and a game leaves it when it is removed. It stores nothing beyond the games already kept in the memory of the server.',
+        ],
+      },
+      {
         id: 'other',
         heading: 'What the site does not do',
         paragraphs: [
@@ -1058,7 +1067,6 @@ export const messagesEn: Messages = {
         ],
       },
     ],
-    notCovered: 'The public games list is planned and not built yet, so it is not described on this page yet.',
     back: 'Back to the games',
   },
   gamePicker: {
