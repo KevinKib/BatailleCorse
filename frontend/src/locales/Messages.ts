@@ -139,6 +139,22 @@ export interface GamePickerMessages {
   back: string;            // back link of a game menu, towards the picker
   /** One entry per game, by registry key; a registered game must have its entry (see `gameChoice`). */
   games: { [K in GameKey]?: GameChoiceMessages };
+  privacy: string;         // discreet footer link towards the privacy page
+}
+
+// The privacy page: plain factual sections. Every statement is checked against the code and the gateway
+// configuration (see the pull request that introduced the page).
+export interface PrivacySection {
+  id: string;
+  heading: string;
+  paragraphs: string[];
+}
+export interface PrivacyMessages {
+  title: string;
+  intro: string;
+  sections: PrivacySection[];
+  notCovered: string;      // what the page does not describe yet
+  back: string;            // link back to the game picker
 }
 
 // End screen shared by the tables (`EndGameOverlay`).
@@ -774,6 +790,7 @@ export interface Messages {
   koboUi: KoboUiMessages;   // Kobo screens
   batailleCorseUi: BatailleCorseUiMessages; // Bataille Corse table
   gamePicker: GamePickerMessages; // Game choice page
+  privacy: PrivacyMessages;       // Privacy page
   endScreen: EndScreenMessages;   // End overlay shared by the tables
   endGame: EndGameMessages;       // End-screen subtitle of a duel
   disconnect: DisconnectMessages; // Opponent disconnected overlay

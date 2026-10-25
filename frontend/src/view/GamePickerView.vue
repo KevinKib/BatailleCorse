@@ -50,6 +50,7 @@ onMounted(() => preloadAllCards());
         />
       </section>
     </main>
+    <RouterLink :to="{ name: 'privacy' }" class="privacy-link" data-test="privacy-link">{{ gamePicker.privacy }}</RouterLink>
   </div>
 </template>
 
@@ -143,6 +144,23 @@ onMounted(() => preloadAllCards());
   grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
   gap: 16px;
 }
+
+/* Discreet: small, low in the corner of the screen, never part of the games' layout. */
+.privacy-link {
+  position: absolute;
+  z-index: 1;
+  bottom: 2px;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  width: fit-content;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.55);
+  text-decoration: underline;
+}
+.privacy-link:hover { color: rgba(255, 255, 255, 0.85); }
+.privacy-link:focus-visible { outline: 2px solid var(--gold-soft); outline-offset: 2px; border-radius: 4px; }
 
 @media (max-width: 640px) {
   .titlescreen { padding: 88px 12px 16px; }

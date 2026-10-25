@@ -1013,10 +1013,59 @@ export const messagesEn: Messages = {
       totals: { title: 'Final totals', player: 'Player', rank: 'Rank', total: 'Total', over: 'over 100' },
     },
   },
+  privacy: {
+    title: 'Privacy',
+    intro: 'What this site does with your data, in plain words. It describes only what the site really does today.',
+    sections: [
+      {
+        id: 'visits',
+        heading: 'Visit statistics',
+        paragraphs: [
+          'To know how many people visit the site, the server that delivers it keeps a log with one line per page request. A line holds the time, your IP address shortened (the last number of an IPv4 address is replaced by 0, an IPv6 address is cut after its first three groups), the page requested, the status and size of the answer, and the name of your browser. The page requested can include the identifier of a game room.',
+          'No cookie is set or read. The address of the page you came from and the part of the address after a question mark are not logged, and neither are the calls the app makes to the game server. Log files are deleted within 14 days. They are used only to count visits.',
+        ],
+      },
+      {
+        id: 'usage',
+        heading: 'Game usage counters',
+        paragraphs: [
+          'The game server counts how many games are created, started and finished for each game, plus rematches, seats taken and bots added. A count holds only the type of game and numbers: no name, no IP address, no token and no game identifier. The counts are kept in the memory of the server and written as lines in its log.',
+        ],
+      },
+      {
+        id: 'browser',
+        heading: 'What your browser stores',
+        paragraphs: [
+          'The site uses the local storage of your browser, not cookies. Only the site itself reads it, to resume a game and to remember your choices. You can erase it in your browser settings.',
+          'Seat token, which lets you come back to the game you were playing: tokens:<game id> (Bataille Corse), bullshit:tokens:<game id>, kobo:tokens:<game id>, three-men-morris:tokens:<game id>, president:tokens:<game id> and mangola:tokens:<game id>. It is removed when you leave the game.',
+          'Display name: bc_playerName. Keyboard shortcuts: bc_sendKey, bc_slapKey and bullshit.hotkeys. Sound: bullshit.sound and kobo.sound. Animation speed: animationSpeed. Kobo hint already seen: kobo.matchCoach.',
+          'The font of the site is loaded from Google Fonts, so your browser contacts Google servers to fetch it, and Google receives what any web request carries, such as your IP address. The site sends nothing else to a third party.',
+        ],
+      },
+      {
+        id: 'memory',
+        heading: 'Games and names',
+        paragraphs: [
+          'A game exists only in the memory of the server. There is no database. A game is lost when the server restarts, about 30 minutes after its last activity, and about 2 minutes after it ends.',
+          'The name you type is sent to the server and shown to the other players of your room.',
+        ],
+      },
+      {
+        id: 'other',
+        heading: 'What the site does not do',
+        paragraphs: [
+          'No accounts. No advertising. No third-party analytics. No tracking cookies.',
+        ],
+      },
+    ],
+    notCovered: 'The public games list is planned and not built yet, so it is not described on this page yet.',
+    back: 'Back to the games',
+  },
   gamePicker: {
     title: 'Card Games',
     choose: 'Choose a game',
     back: 'Back',
+    privacy: 'Privacy',
     games: {
       bataillecorse: {
         name: 'Bataille Corse',
