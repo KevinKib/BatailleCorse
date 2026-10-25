@@ -9,7 +9,10 @@ import { findGame } from '../model/games';
 import { messagesEn } from '../locales/en';
 import { HttpError } from '../model/HttpError';
 
-async function mountForm(key: 'bataillecorse' | 'bullshit', join: (id: string, name?: string) => Promise<void>, path = `/${key}/join`) {
+const OPEN_ROW = { gameId: 'row1', gameType: 'bullshit', hostName: 'Zoe', joined: 1, bots: 0, maxPlayers: 4, state: 'OPEN' as const };
+const publicGames = { lobbies: [OPEN_ROW], total: 1, truncated: false, loading: false, online: true, announcement: '' };
+
+async function mountForm(key: 'bataillecorse' | 'bullshit', join: (id: string, name?: string) => Promise<void>, path = `/${key}/join`, withList = false) {
   setActivePinia(createPinia());
   localStorage.clear();
   const router = createAppRouter(createMemoryHistory());
@@ -17,7 +20,7 @@ async function mountForm(key: 'bataillecorse' | 'bullshit', join: (id: string, n
   await router.isReady();
   const id = (router.currentRoute.value.params.id as string | undefined) ?? '';
   const wrapper = mount(JoinGameForm, {
-    props: { game: findGame(key)!, join, initialId: id },
+    props: { game: findGame(key)!, join, initialId: id, ...(withList ? { publicGames } : {}) },
     global: { plugins: [router, PrimeVue] },
   });
   return { wrapper, router };
@@ -108,5 +111,52 @@ describe('JoinGameForm', () => {
     await wrapper.get('[data-test="back"]').trigger('click');
     await flushPromises();
     expect(router.currentRoute.value.path).toBe('/bullshit');
+  });
+
+  it('putsYourNameBeforeTheGameId', async () => {
+    const { wrapper } = await mountForm('bullshit', vi.fn());
+    const fields = wrapper.findAll('input[data-test="name"], input[data-test="game-id"]');
+    expect(fields.map(f => f.attributes('data-test'))).toEqual(['name', 'game-id']);
+  });
+
+  it('givenNoPublicGamesData_thenShowsNoListSection', async () => {
+    const { wrapper } = await mountForm('bullshit', vi.fn());
+    expect(wrapper.find('[data-test="public-games"]').exists()).toBe(false);
+  });
+
+  it('givenPublicGames_thenShowsTheSeparatorAndTheListBetweenJoinAndBack', async () => {
+    const { wrapper } = await mountForm('bullshit', vi.fn(), '/bullshit/join', true);
+    expect(wrapper.get('[data-test="join-or"]').text()).toBe(messagesEn.join.or);
+    const order = wrapper.findAll('[data-test="submit"], [data-test="join-or"], [data-test="public-games"], [data-test="back"]')
+      .map(e => e.attributes('data-test'));
+    expect(order).toEqual(['submit', 'join-or', 'public-games', 'back']);
+  });
+
+  it('keepsTheTitleSubtitleAndEveryControlWithTheList', async () => {
+    const { wrapper } = await mountForm('bullshit', vi.fn(), '/bullshit/join', true);
+    expect(wrapper.text()).toContain(messagesEn.join.title);
+    for (const t of ['game-id', 'name', 'submit', 'back']) expect(wrapper.find(`[data-test="${t}"]`).exists()).toBe(true);
+    expect(wrapper.text()).toContain(messagesEn.join.gameId);
+    expect(wrapper.text()).toContain(messagesEn.join.yourName);
+  });
+
+  it('whenJoiningFromARow_thenJoinsWithTheNameAndEntersTheRoom', async () => {
+    const join = vi.fn().mockResolvedValue(undefined);
+    const { wrapper, router } = await mountForm('bullshit', join, '/bullshit/join', true);
+    await wrapper.get('[data-test="name"]').setValue('Ana');
+    await wrapper.get('[data-test="pg-join"]').trigger('click');
+    await flushPromises();
+    expect(join).toHaveBeenCalledWith('row1', 'Ana');
+    expect(router.currentRoute.value.path).toBe('/bullshit/room/row1');
+  });
+
+  it('whenARowJoinIsRefusedAsFull_thenTheMessageIsInThatRowAndNotInTheForm', async () => {
+    const join = vi.fn().mockRejectedValue(new HttpError('Join failed: 409', 409, 'full'));
+    const { wrapper, router } = await mountForm('bullshit', join, '/bullshit/join', true);
+    await wrapper.get('[data-test="pg-join"]').trigger('click');
+    await flushPromises();
+    expect(wrapper.get('[data-test="pg-row-error"]').text()).toBe(messagesEn.join.full);
+    expect(wrapper.find('[data-test="join-error"]').exists()).toBe(false);
+    expect(router.currentRoute.value.path).toBe('/bullshit/join');
   });
 });

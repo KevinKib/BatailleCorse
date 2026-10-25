@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { flushPromises, mount } from '@vue/test-utils';
 import { createMemoryHistory } from 'vue-router';
 import { createPinia, setActivePinia } from 'pinia';
@@ -21,7 +21,12 @@ async function mountJoin(path: string) {
 }
 
 describe('GameJoinView', () => {
-  beforeEach(() => { setActivePinia(createPinia()); localStorage.clear(); vi.restoreAllMocks(); });
+  beforeEach(() => {
+    setActivePinia(createPinia()); localStorage.clear(); vi.restoreAllMocks();
+    // The public list fetches its snapshot on mount: keep the other tests off the network.
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 500, json: async () => ({}) }));
+  });
+  afterEach(() => { vi.unstubAllGlobals(); });
 
   it('givenABullshitInviteLink_thenJoinsThroughTheBullshitStore', async () => {
     const bullshit = vi.spyOn(useBullshitStore(), 'join').mockResolvedValue();
@@ -61,5 +66,22 @@ describe('GameJoinView', () => {
     await flushPromises();
     expect(spy).toHaveBeenCalled();
     expect(join).toHaveBeenCalledWith('abc', undefined);
+  });
+
+  it('showsThePublicGamesOfTheGameAndJoinsFromARow', async () => {
+    const snapshot = {
+      gameType: 'kobo', total: 1, truncated: false, version: 1,
+      lobbies: [{ gameId: 'k9', gameType: 'kobo', hostName: 'Zoe', joined: 1, bots: 0, maxPlayers: 4, state: 'OPEN' }],
+    };
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => snapshot });
+    vi.stubGlobal('fetch', fetchMock);
+    const kobo = vi.spyOn(useKoboStore(), 'join').mockResolvedValue();
+    const { wrapper } = await mountJoin('/kobo/join');
+    await flushPromises();
+    expect(fetchMock).toHaveBeenCalledWith('/api/lobbies/kobo');
+    await wrapper.get('[data-test="pg-join"]').trigger('click');
+    await flushPromises();
+    expect(kobo).toHaveBeenCalledWith('k9', undefined);
+    vi.unstubAllGlobals();
   });
 });

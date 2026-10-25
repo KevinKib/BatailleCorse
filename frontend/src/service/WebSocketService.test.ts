@@ -80,3 +80,38 @@ describe('WebSocketService seat subscription', () => {
     expect(onConnected).not.toHaveBeenCalled();
   });
 });
+
+describe('WebSocketService public lobbies subscription', () => {
+  beforeEach(() => { service.init(); fake.subscribed.length = 0; });
+
+  it('subscribes to the topic of the game type after every connection and tells its owner', () => {
+    const onConnected = vi.fn(() => { expect(fake.subscribed).toContain('/topic/lobbies/kobo'); });
+    const leave = service.subscribeToPublicLobbies('kobo', () => {}, onConnected);
+    expect(fake.subscribed).toEqual([]);
+
+    connect();
+    expect(onConnected).toHaveBeenCalledTimes(1);
+
+    connect();
+    expect(onConnected).toHaveBeenCalledTimes(2);
+    leave();
+  });
+
+  it('subscribes at once when the connection is already live', () => {
+    connect();
+    const onConnected = vi.fn();
+    const leave = service.subscribeToPublicLobbies('kobo', () => {}, onConnected);
+    expect(fake.subscribed).toEqual(['/topic/lobbies/kobo']);
+    expect(onConnected).toHaveBeenCalledTimes(1);
+    leave();
+  });
+
+  it('stops resubscribing once the owner leaves', () => {
+    const onConnected = vi.fn();
+    const leave = service.subscribeToPublicLobbies('kobo', () => {}, onConnected);
+    leave();
+    connect();
+    expect(fake.subscribed).toEqual([]);
+    expect(onConnected).not.toHaveBeenCalled();
+  });
+});
