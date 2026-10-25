@@ -145,6 +145,11 @@ const onLeave = fadeOut;
   touch-action: manipulation !important;
 }
 
+/* The app is drawn on a dark felt only: whatever the computer's own theme, native controls and scrollbars are dark
+   and inherited text is white. Without this, text that sets no colour of its own followed the OS theme (black on
+   the felt on a laptop set to a light theme). */
+:root { color-scheme: dark; }
+
 html, body, #app {
   width: 100%;
   height: 100%;
@@ -172,6 +177,7 @@ h5, h6          { font-weight: 700 }
   width: 100%;
   height: 100%;
   background: #07160d;
+  color: #fff;
   /* Own stacking context so the background layer (z-index:-1) sits behind the
      routed views without escaping app-root. */
   isolation: isolate;
