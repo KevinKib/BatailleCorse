@@ -34,7 +34,7 @@ const call = (pickerSeat: number) => ({
   type: 'event' as const, eventType: 'CALL_BULLSHIT', message: '',
   eventData: { callerSeat: 1, claimantSeat: 0, truthful: pickerSeat === 1, pickerSeat, revealedCards: four },
 });
-const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '/games', name: 'games', component: { template: '<div/>' } }] });
+const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '/', name: 'games', component: { template: '<div/>' } }] });
 
 const rect = (left: number, top: number, width: number, height: number) =>
   ({ left, top, width, height, right: left + width, bottom: top + height, x: left, y: top }) as DOMRect;

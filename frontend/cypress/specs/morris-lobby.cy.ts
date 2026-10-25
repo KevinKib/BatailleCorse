@@ -5,12 +5,12 @@ import { joinAsScriptedPlayer } from '../support/stompPlayer';
 const SIZES: Array<[number, number]> = [[375, 667], [1280, 800]];
 
 function hostLobby(name = 'Alice') {
-  cy.visit('/games');
+  cy.visit('/');
   cy.get('[data-test="play-three-men-morris"]').click();
-  cy.location('pathname').should('eq', '/games/three-men-morris');
+  cy.location('pathname').should('eq', '/three-men-morris');
   cy.get('[data-test="name"]').type(name);
   cy.get('[data-test="new-game"]').click();
-  cy.url({ timeout: 10000 }).should('match', /\/games\/three-men-morris\/room\/.+/);
+  cy.url({ timeout: 10000 }).should('match', /\/three-men-morris\/room\/.+/);
   cy.get('[data-test="lobby"]', { timeout: 10000 }).should('be.visible');
   return cy.location('pathname').then((path) => path.split('/room/')[1]);
 }
@@ -69,10 +69,10 @@ describe("Three Men's Morris lobby", () => {
     hostLobby('Alice').then((id) => {
       cy.get('[data-test="player-count"]').should('contain.text', '1 / 2');
       cy.window().then((win) => win.localStorage.removeItem(`three-men-morris:tokens:${id}`));
-      cy.visit(`/games/three-men-morris/join/${id}`);
+      cy.visit(`/three-men-morris/join/${id}`);
       cy.get('[data-test="name"]').type('Bob');
       cy.get('[data-test="submit"]').click();
-      cy.url({ timeout: 10000 }).should('match', new RegExp(`/games/three-men-morris/room/${id}`));
+      cy.url({ timeout: 10000 }).should('match', new RegExp(`/three-men-morris/room/${id}`));
       cy.get('[data-test="lobby"]', { timeout: 10000 }).should('be.visible');
       cy.get('.players li').should('have.length', 2);
     });

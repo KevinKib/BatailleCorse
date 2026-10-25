@@ -54,7 +54,7 @@ async function mountScreen(view: MorrisState | LobbyView | null, mySeat = 0) {
   if (view) store.applyEvent({ type: 'state-update', state: view });
   localStorage.setItem('three-men-morris:tokens:g1', JSON.stringify({ [mySeat]: 'tok' }));
   const router = createAppRouter(createMemoryHistory());
-  await router.push('/games/three-men-morris/room/g1');
+  await router.push('/three-men-morris/room/g1');
   await router.isReady();
   // Rendered through RouterView so the route-leave guard is registered like in the app.
   const Root = defineComponent({ render: () => h(RouterView) });
@@ -389,7 +389,7 @@ describe('ThreeMenMorrisGameScreen', () => {
       await wrapper.get('[data-test="leave"]').trigger('click');
       await flushPromises();
       expect(forfeit).toHaveBeenCalled();
-      expect(router.currentRoute.value.fullPath).toBe('/games');
+      expect(router.currentRoute.value.fullPath).toBe('/');
     });
 
     it('Back declined stays on the table', async () => {
@@ -399,7 +399,7 @@ describe('ThreeMenMorrisGameScreen', () => {
       await wrapper.get('[data-test="leave"]').trigger('click');
       await flushPromises();
       expect(forfeit).not.toHaveBeenCalled();
-      expect(router.currentRoute.value.fullPath).toBe('/games/three-men-morris/room/g1');
+      expect(router.currentRoute.value.fullPath).toBe('/three-men-morris/room/g1');
     });
 
     it('Back once the game is over does not ask, even before the end screen shows', async () => {
@@ -412,7 +412,7 @@ describe('ThreeMenMorrisGameScreen', () => {
       await wrapper.get('[data-test="leave"]').trigger('click');
       await flushPromises();
       expect(confirm).not.toHaveBeenCalled();
-      expect(router.currentRoute.value.fullPath).toBe('/games');
+      expect(router.currentRoute.value.fullPath).toBe('/');
     });
 
     it('leaving the lobby frees the seat and goes to the Game selection', async () => {

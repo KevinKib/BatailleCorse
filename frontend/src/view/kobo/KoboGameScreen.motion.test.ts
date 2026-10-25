@@ -130,7 +130,7 @@ describe('KoboGameScreen motion (characterisation)', () => {
     });
     vi.spyOn(useKoboSound(), 'play').mockImplementation(kind => { trace.entries.push({ sound: kind }); });
     const router = createAppRouter(createMemoryHistory());
-    await router.push('/games/kobo/room/k1');
+    await router.push('/kobo/room/k1');
     await router.isReady();
     const wrapper = mount(defineComponent({ render: () => h(RouterView) }), { global: { plugins: [router, PrimeVue] } });
     await flushPromises();

@@ -5,12 +5,12 @@ import { joinAsScriptedPlayer } from '../support/stompPlayer';
 const SIZES: Array<[number, number]> = [[375, 667], [1280, 800]];
 
 function hostLobby(name = 'Alice') {
-  cy.visit('/games');
+  cy.visit('/');
   cy.get('[data-test="play-mangola"]').click();
-  cy.location('pathname').should('eq', '/games/mangola');
+  cy.location('pathname').should('eq', '/mangola');
   cy.get('[data-test="name"]').type(name);
   cy.get('[data-test="new-game"]').click();
-  cy.url({ timeout: 10000 }).should('match', /\/games\/mangola\/room\/.+/);
+  cy.url({ timeout: 10000 }).should('match', /\/mangola\/room\/.+/);
   cy.get('[data-test="lobby"]', { timeout: 10000 }).should('be.visible');
   return cy.location('pathname').then((path) => path.split('/room/')[1]);
 }
@@ -52,10 +52,10 @@ describe('Mangola lobby', () => {
       cy.get('[data-test="option-firstPlayer-guest"]').check({ force: true });
       cy.get('[data-test="option-firstPlayer"] .choice--on').should('contain.text', 'Guest');
       cy.window().then((win) => win.localStorage.removeItem(`mangola:tokens:${id}`));
-      cy.visit(`/games/mangola/join/${id}`);
+      cy.visit(`/mangola/join/${id}`);
       cy.get('[data-test="name"]').type('Bob');
       cy.get('[data-test="submit"]').click();
-      cy.url({ timeout: 10000 }).should('match', new RegExp(`/games/mangola/room/${id}`));
+      cy.url({ timeout: 10000 }).should('match', new RegExp(`/mangola/room/${id}`));
       cy.get('[data-test="lobby"]', { timeout: 10000 }).should('be.visible');
       cy.get('.players li').should('have.length', 2);
       cy.get('[data-test="option-firstPlayer"]').should('contain.text', 'Guest');
@@ -103,7 +103,7 @@ describe('Mangola lobby', () => {
   it('Leave lobby goes back to the Game selection', () => {
     hostLobby().then(() => {
       cy.get('[data-test="leave-lobby"]').click();
-      cy.location('pathname', { timeout: 10000 }).should('eq', '/games');
+      cy.location('pathname', { timeout: 10000 }).should('eq', '/');
     });
   });
 

@@ -15,7 +15,7 @@ import { createAppRouter } from '../router';
 describe('GamePickerView and the registry', () => {
   it('givenARegistryWithOneGame_thenThePickerOffersOnlyThatGame', async () => {
     const router = createAppRouter(createMemoryHistory());
-    await router.push('/games');
+    await router.push('/');
     await router.isReady();
     const wrapper = mount(GamePickerView, { global: { plugins: [router, PrimeVue] } });
     expect(wrapper.findAll('article')).toHaveLength(1);

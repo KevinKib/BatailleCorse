@@ -47,7 +47,7 @@ const truthfulCall = {
   type: 'event' as const, eventType: 'CALL_BULLSHIT', message: '',
   eventData: { callerSeat: 0, claimantSeat: 1, truthful: true, pickerSeat: 0, revealedCards: hand },
 };
-const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '/games', name: 'games', component: { template: '<div/>' } }] });
+const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '/', name: 'games', component: { template: '<div/>' } }] });
 
 let measured = true;
 function setup(initial: BullshitState) {

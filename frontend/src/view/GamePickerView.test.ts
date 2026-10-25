@@ -8,7 +8,7 @@ import { messagesEn } from '../locales/en';
 
 async function mountPicker() {
   const router = createAppRouter(createMemoryHistory());
-  await router.push('/games');
+  await router.push('/');
   await router.isReady();
   const wrapper = mount(GamePickerView, { global: { plugins: [router, PrimeVue] } });
   return { router, wrapper };
@@ -17,7 +17,7 @@ async function mountPicker() {
 describe('GamePickerView', () => {
   it('givenRemovedByTheHost_thenShowsTheNoticeOnlyThen', async () => {
     const router = createAppRouter(createMemoryHistory());
-    await router.push('/games?removed=1');
+    await router.push('/?removed=1');
     await router.isReady();
     const removed = mount(GamePickerView, { global: { plugins: [router, PrimeVue] } });
     expect(removed.get('[data-test="removed-notice"]').text()).toBe(messagesEn.lobby.removedByHost);
@@ -56,41 +56,41 @@ describe('GamePickerView', () => {
     const { wrapper, router } = await mountPicker();
     await wrapper.get('[data-test="play-president"]').trigger('click');
     await flushPromises();
-    expect(router.currentRoute.value.fullPath).toBe('/games/president');
+    expect(router.currentRoute.value.fullPath).toBe('/president');
   });
 
   it('givenPlayOnMangola_thenGoesToItsGameHome', async () => {
     const { wrapper, router } = await mountPicker();
     await wrapper.get('[data-test="play-mangola"]').trigger('click');
     await flushPromises();
-    expect(router.currentRoute.value.fullPath).toBe('/games/mangola');
+    expect(router.currentRoute.value.fullPath).toBe('/mangola');
   });
 
   it('givenPlayOnBatailleCorse_thenGoesToItsGameHome', async () => {
     const { wrapper, router } = await mountPicker();
     await wrapper.get('[data-test="play-bataillecorse"]').trigger('click');
     await flushPromises();
-    expect(router.currentRoute.value.fullPath).toBe('/games/bataillecorse');
+    expect(router.currentRoute.value.fullPath).toBe('/bataillecorse');
   });
 
   it('givenPlayOnThreeMenMorris_thenGoesToItsGameHome', async () => {
     const { wrapper, router } = await mountPicker();
     await wrapper.get('[data-test="play-three-men-morris"]').trigger('click');
     await flushPromises();
-    expect(router.currentRoute.value.fullPath).toBe('/games/three-men-morris');
+    expect(router.currentRoute.value.fullPath).toBe('/three-men-morris');
   });
 
   it('givenPlayOnBullshit_thenGoesToItsGameHome', async () => {
     const { wrapper, router } = await mountPicker();
     await wrapper.get('[data-test="play-bullshit"]').trigger('click');
     await flushPromises();
-    expect(router.currentRoute.value.fullPath).toBe('/games/bullshit');
+    expect(router.currentRoute.value.fullPath).toBe('/bullshit');
   });
 
   it('givenPlayOnKobo_thenGoesToItsGameHome', async () => {
     const { wrapper, router } = await mountPicker();
     await wrapper.get('[data-test="play-kobo"]').trigger('click');
     await flushPromises();
-    expect(router.currentRoute.value.fullPath).toBe('/games/kobo');
+    expect(router.currentRoute.value.fullPath).toBe('/kobo');
   });
 });

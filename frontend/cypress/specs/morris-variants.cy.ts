@@ -13,10 +13,10 @@ const SIZES: Array<[number, number]> = [[375, 667], [1280, 800]];
 
 /** The browser as the host, through the UI, in a lobby with a scripted guest (seat 1) who has joined. */
 function hostLobbyWithGuest(): Cypress.Chainable<{ id: string; guest: Scripted }> {
-  cy.visit('/games/three-men-morris');
+  cy.visit('/three-men-morris');
   cy.get('[data-test="name"]').type('Alice');
   cy.get('[data-test="new-game"]').click();
-  cy.url({ timeout: 10000 }).should('match', /\/games\/three-men-morris\/room\/.+/);
+  cy.url({ timeout: 10000 }).should('match', /\/three-men-morris\/room\/.+/);
   cy.get('[data-test="lobby"]', { timeout: 10000 }).should('be.visible');
   return cy.location('pathname').then((path) => {
     const id = path.split('/room/')[1];
@@ -30,7 +30,7 @@ function guestLobbyWithHost(): Cypress.Chainable<{ id: string; host: Scripted }>
     const { gameId, token } = created.body as { gameId: string; token: string };
     return cy.request('POST', `/api/three-men-morris/game/${gameId}/join`, { name: 'Bob' }).then((joined) => {
       const guest = joined.body as { playerId: number; token: string };
-      cy.visit(`/games/three-men-morris/room/${gameId}`, {
+      cy.visit(`/three-men-morris/room/${gameId}`, {
         onBeforeLoad: (win) => win.localStorage.setItem(`three-men-morris:tokens:${gameId}`, JSON.stringify({ [guest.playerId]: guest.token })),
       });
       cy.get('[data-test="lobby"]', { timeout: 10000 }).should('be.visible');

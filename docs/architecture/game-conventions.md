@@ -26,7 +26,7 @@ because it is in URLs, stored tokens and the server wire. Every other name is de
 | `<Pascal>` | PascalCase of the words | `ThreeMenMorris` | `Kobo` | class, type and file prefixes |
 | `<camel>` | camelCase of the words | `threeMenMorris` | `kobo` | locale namespaces, option label keys, Spring bean names |
 
-Pick an id that reads well in a URL (`/games/<id>`), and is not the prefix of another game's id.
+Pick an id that reads well in a URL (`/<id>`), and is not the prefix of another game's id.
 
 ## 2. Where `<id>` appears (wire and runtime)
 
@@ -40,7 +40,7 @@ Pick an id that reads well in a URL (`/games/<id>`), and is not the prefix of an
 | Test-only REST seam | `/api/test/<id>/...` under `@Profile("test")` | `KoboTestDealController` (`/api/test/kobo/{gameId}/deal`) [V] |
 | Seat token (localStorage) | `<id>:tokens:<gameId>` (`SeatGameSessionConfig.tokenKeyPrefix`) | `three-men-morris:tokens:`, `kobo:tokens:`, `bullshit:tokens:` [V] |
 | Frontend registry | `GameKey` member and `define('<id>', …)` in `frontend/src/model/games.ts` | [V] |
-| Routes | `/games/<id>`, `/games/<id>/join/:id?`, `/games/<id>/room/:id` (built by `define`) | [V] |
+| Routes | `/<id>`, `/<id>/join/:id?`, `/<id>/room/:id` (built by `define`) | [V] |
 | Room route name | `<id>-room` in `frontend/src/router.ts` | `three-men-morris-room`, `kobo-room`, `bullshit-room` [V] |
 | Pinia store id | `defineStore('<id>-store', …)` | `three-men-morris-store`, `kobo-store`, `bullshit-store` [V] |
 | Picker texts | `gamePicker.games['<id>']` in `locales/Messages.ts` / `en.ts` | [V] |
@@ -134,7 +134,7 @@ Bataille Corse predates the convention. Its **server id is `bataille-corse`, its
 
 | Uses `bataille-corse` | Uses `bataillecorse` | Unprefixed (no game segment) |
 |-----------------------|----------------------|------------------------------|
-| `BatailleCorseFactory.GAME_TYPE`; `GameSession.ts` (`GAME_TYPE`); Pinia id `bataille-corse-store`; `ScriptedGameType` in `stompPlayer.ts` | Java package `bataillecorse` (normal `<pkg>`); STOMP `/app/bataillecorse/start`; properties `bataillecorse.bots.*`; label key `options.bataillecorse.tier`; `GameKey`, routes `/games/bataillecorse/...`, `gamePicker.games.bataillecorse`, `options.bataillecorse`; Cypress `bataillecorse-*.cy.ts` | REST `/api/game/{id}`, `/join`, `/play-again`; STOMP `/app/send`, `/app/slap`, `/app/grab`; token key `tokens:<gameId>`; room route name `room`; screen `view/alpha/GameScreen.vue`; session `application/GameSession.ts`; bootstrap `useGameBootstrap`; rules texts at `rules` |
+| `BatailleCorseFactory.GAME_TYPE`; `GameSession.ts` (`GAME_TYPE`); Pinia id `bataille-corse-store`; `ScriptedGameType` in `stompPlayer.ts` | Java package `bataillecorse` (normal `<pkg>`); STOMP `/app/bataillecorse/start`; properties `bataillecorse.bots.*`; label key `options.bataillecorse.tier`; `GameKey`, routes `/bataillecorse/...`, `gamePicker.games.bataillecorse`, `options.bataillecorse`; Cypress `bataillecorse-*.cy.ts` | REST `/api/game/{id}`, `/join`, `/play-again`; STOMP `/app/send`, `/app/slap`, `/app/grab`; token key `tokens:<gameId>`; room route name `room`; screen `view/alpha/GameScreen.vue`; session `application/GameSession.ts`; bootstrap `useGameBootstrap`; rules texts at `rules` |
 
 `stompPlayer.ts` maps the REST difference explicitly (`joinPath`). Bataille Corse also keeps its own
 `BatailleCorseStateBroadcaster` and `BatailleCorseLifecycleBroadcaster` instead of the seat helpers.

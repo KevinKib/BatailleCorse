@@ -8,7 +8,7 @@ import { resolveMangolaSession, useMangolaBootstrap } from './useMangolaBootstra
 import { useMangolaStore } from '../state/Mangola.store';
 
 // The game is not in the registry yet (the entry PR adds it): the bootstrap takes its definition.
-const base = '/games/mangola';
+const base = '/mangola';
 const game: GameDefinition = {
   key: 'mangola',
   gameHomeRoute: base,

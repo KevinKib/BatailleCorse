@@ -11,9 +11,9 @@ import { findGame, type GameDefinition } from '../model/games';
 const president = {
   ...findGame('bullshit')!,
   key: 'president',
-  gameHomeRoute: '/games/president',
-  joinRoute: (id?: string) => (id ? `/games/president/join/${id}` : '/games/president/join'),
-  roomRoute: (id: string) => `/games/president/room/${id}`,
+  gameHomeRoute: '/president',
+  joinRoute: (id?: string) => (id ? `/president/join/${id}` : '/president/join'),
+  roomRoute: (id: string) => `/president/room/${id}`,
 } as GameDefinition;
 
 describe('resolvePresidentSession', () => {
@@ -38,7 +38,7 @@ describe('usePresidentBootstrap', () => {
       history: createMemoryHistory(),
       routes: [{ path: '/:pathMatch(.*)*', component: { render: () => h('div') } }],
     });
-    await router.push(`/games/president/room/${id}`);
+    await router.push(`/president/room/${id}`);
     await router.isReady();
     const Probe = defineComponent({
       setup() { usePresidentBootstrap(id, president); return () => h('div'); },
@@ -50,7 +50,7 @@ describe('usePresidentBootstrap', () => {
 
   it('without a stored token leads to the President join form', async () => {
     const router = await mountAtRoom('g1');
-    expect(router.currentRoute.value.path).toBe('/games/president/join/g1');
+    expect(router.currentRoute.value.path).toBe('/president/join/g1');
   });
 
   it('restores the stored seat into the President store and hydrates', async () => {
@@ -61,7 +61,7 @@ describe('usePresidentBootstrap', () => {
     const router = await mountAtRoom('g1');
     expect(restore).toHaveBeenCalledWith('g1', 1, 'tok');
     expect(hydrate).toHaveBeenCalled();
-    expect(router.currentRoute.value.path).toBe('/games/president/room/g1');
+    expect(router.currentRoute.value.path).toBe('/president/room/g1');
   });
 
   it('a game that is gone leads to the President home and forgets the token', async () => {
@@ -70,7 +70,7 @@ describe('usePresidentBootstrap', () => {
     vi.spyOn(store, 'restore').mockImplementation(() => {});
     vi.spyOn(store, 'hydrate').mockResolvedValue('gone');
     const router = await mountAtRoom('g1');
-    expect(router.currentRoute.value.path).toBe('/games/president');
+    expect(router.currentRoute.value.path).toBe('/president');
     expect(router.currentRoute.value.query.gone).toBe('1');
     expect(localStorage.getItem('president:tokens:g1')).toBeNull();
   });

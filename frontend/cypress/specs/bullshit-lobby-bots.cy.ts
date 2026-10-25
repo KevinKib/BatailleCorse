@@ -1,9 +1,9 @@
 // Non-regression for the Bullshit lobby bot controls and for the lobby / create screen spacing.
 function createBullshitGame(name: string) {
-  cy.visit('/games/bullshit');
+  cy.visit('/bullshit');
   cy.get('[data-test="name"]').type(name);
   cy.get('[data-test="new-game"]').click();
-  cy.url({ timeout: 10000 }).should('match', /\/games\/bullshit\/room\/.+/);
+  cy.url({ timeout: 10000 }).should('match', /\/bullshit\/room\/.+/);
   cy.get('[data-test="lobby"]').should('be.visible');
 }
 
@@ -49,7 +49,7 @@ describe('Bullshit lobby bots', () => {
         cy.window().then((win) => {
           win.localStorage.setItem(`bullshit:tokens:${id}`, JSON.stringify({ [res.body.playerId]: res.body.token }));
         });
-        cy.visit(`/games/bullshit/room/${id}`);
+        cy.visit(`/bullshit/room/${id}`);
         // The lobby scrolls inside its screen: bring the hint into view before asserting.
         cy.get('[data-test="waiting-host"]').scrollIntoView().should('be.visible');
         cy.get('[data-test="badge-bot"]').should('have.length', 1);

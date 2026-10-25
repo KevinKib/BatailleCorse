@@ -13,7 +13,7 @@ function createRoom(kind: Kind) {
 
 /** Opens the room page as the holder of `token` at `seat`. */
 function visitRoomAs(kind: Kind, id: string, seat: number, token: string) {
-  cy.visit(`/games/${kind}/room/${id}`, {
+  cy.visit(`/${kind}/room/${id}`, {
     onBeforeLoad: (win) => win.localStorage.setItem(tokenKey(kind, id), JSON.stringify({ [seat]: token })),
   });
   cy.get('[data-test="lobby"]', { timeout: 10000 }).should('be.visible');
@@ -84,7 +84,7 @@ describe('Host removes a seat', () => {
             visitRoomAs('bullshit', gameId, res.body.playerId, res.body.token);
             cy.get('.players li').should('have.length', 2);
             cy.then(() => host.publish('/app/lobby/removeSeat', { seat: 1 }));
-            cy.location('pathname', { timeout: 10000 }).should('eq', '/games');
+            cy.location('pathname', { timeout: 10000 }).should('eq', '/');
             cy.get('[data-test="removed-notice"]').should('have.text', 'You were removed from the lobby by the host.');
             cy.window().then((win) => expect(win.localStorage.getItem(tokenKey('bullshit', gameId))).to.eq(null));
             noHorizontalScroll();
@@ -113,7 +113,7 @@ describe('Host removes a seat', () => {
 
 describe('Joining a lobby that cannot take you', () => {
   function tryJoin(kind: Kind, id: string) {
-    cy.visit(`/games/${kind}/join/${id}`);
+    cy.visit(`/${kind}/join/${id}`);
     cy.get('[data-test="submit"]').click();
   }
 
@@ -122,7 +122,7 @@ describe('Joining a lobby that cannot take you', () => {
       for (let i = 1; i < 6; i++) cy.request('POST', joinPath('bullshit', gameId), { name: `P${i}` });
       tryJoin('bullshit', gameId);
       cy.get('[data-test="join-error"]').should('have.text', 'This lobby is full.');
-      cy.location('pathname').should('eq', `/games/bullshit/join/${gameId}`);
+      cy.location('pathname').should('eq', `/bullshit/join/${gameId}`);
     });
   });
 

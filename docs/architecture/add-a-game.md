@@ -124,7 +124,7 @@ The request is architectural: write the spec (`docs/specs/YYYY-MM-DD-<id>-*-desi
 |------|--------|--------------|
 | `src/model/games.ts` | add `'<id>'` to `GameKey` and a `define('<id>', { supportsBots, picker, hotkeys? })` entry; `supportsBots` must equal the factory's | the game stays invisible (this is the gate) |
 | `src/model/games.test.ts` | update the key list of the first test; add a case for the game's traits | **FAILS** (the key list is pinned) |
-| `src/router.ts` | import the screen, add `{ path: '/games/<id>/room/:id', name: '<id>-room', component, props }` | **SILENT**: the room URL falls into the catch-all and lands on `/games` |
+| `src/router.ts` | import the screen, add `{ path: '/<id>/room/:id', name: '<id>-room', component, props }` | **SILENT**: the room URL falls into the catch-all and lands on `/` |
 | `src/router.test.ts` | add `'<id>'` to the two hard-coded key loops | SILENT |
 | `src/composables/useGameRooms.ts` | add `'<id>': { create, join }` from the store | **FAILS** (`givenEveryRegisteredGame_thenItHasARoomClient`) |
 | `src/composables/useGameRooms.test.ts` | a `given<Pascal>_thenCreateAndJoinGoThroughItsStore` case | SILENT |

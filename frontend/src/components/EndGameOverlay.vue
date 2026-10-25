@@ -19,7 +19,7 @@
           data-cy="play-again"
           @click="emit('playAgain')"
         />
-        <RouterLink to="/games" class="end-home-button">
+        <RouterLink to="/" class="end-home-button">
           <Button :label="ui.backToHome" icon="pi pi-home" rounded />
         </RouterLink>
       </div>

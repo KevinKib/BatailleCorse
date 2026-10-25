@@ -125,7 +125,7 @@ export interface BullshitUiMessages {
   };
 }
 
-// Game picker page (`/games`) and the back link of the game menus.
+// Game picker page (`/`) and the back link of the game menus.
 export interface GameChoiceMessages {
   name: string;
   description: string;
@@ -168,7 +168,7 @@ export interface LeaveGuardMessages {
   confirm: string;         // native confirmation before leaving a game in progress
 }
 
-// Game home (`/games/<game>`): the front door of every game.
+// Game home (`/<game>`): the front door of every game.
 export interface GameHomeMessages {
   newGame: string;
   joinGame: string;
@@ -181,7 +181,7 @@ export interface GameHomeMessages {
   createFailed: string;    // the lobby could not be created; the player stays on the Game home
 }
 
-// Join form (`/games/<game>/join/<id?>`).
+// Join form (`/<game>/join/<id?>`).
 export interface JoinGameMessages {
   title: string;
   gameId: string;

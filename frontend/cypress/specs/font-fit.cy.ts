@@ -5,11 +5,11 @@ const VIEWPORTS: Array<[number, number]> = [[375, 667], [390, 844], [1280, 720]]
 const LONG_NAME = 'Maximilienne-Alexandrine'; // 24 characters
 
 function createBullshitGame(name: string) {
-  cy.visit('/games');
+  cy.visit('/');
   cy.get('[data-test="play-bullshit"]').click();
   cy.get('[data-test="name"]').type(name);
   cy.get('[data-test="new-game"]').click();
-  cy.url({ timeout: 10000 }).should('match', /\/games\/bullshit\/room\/.+/);
+  cy.url({ timeout: 10000 }).should('match', /\/bullshit\/room\/.+/);
   // The Game home fades out while the room fades in (800 ms): continue once the room is alone on the page.
   cy.get('[data-test="start-panel"]').should('not.exist');
 }
@@ -53,7 +53,7 @@ describe('Atkinson Hyperlegible fit', () => {
       beforeEach(() => cy.viewport(width, height));
 
       it('keeps the Game home and a lobby with long names inside the screen', () => {
-        cy.visit('/games/bullshit');
+        cy.visit('/bullshit');
         cy.get('[data-test="name"]').type(LONG_NAME);
         expectNoOverflow('#app', width);
         createBullshitGame(LONG_NAME);
@@ -84,7 +84,7 @@ describe('Atkinson Hyperlegible fit', () => {
 
   it('keeps the Bataille Corse menus and game screen inside a phone screen', () => {
     cy.viewport(375, 667);
-    cy.visit('/games/bataillecorse');
+    cy.visit('/bataillecorse');
     expectNoOverflow('#app', 375, 3); // the menu panel keeps its pre-existing 380px min-width
     cy.createGame();
     cy.get('.game-timer').should('be.visible');

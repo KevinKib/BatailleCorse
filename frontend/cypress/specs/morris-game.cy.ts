@@ -14,10 +14,10 @@ const click = (n: number) => cy.get(`[data-test="point-${n}"]`).click();
 
 /** The browser as White (host, through the UI) against a scripted Black; the game is started. */
 function asWhite(): Cypress.Chainable<{ id: string; black: Scripted }> {
-  cy.visit('/games/three-men-morris');
+  cy.visit('/three-men-morris');
   cy.get('[data-test="name"]').type('Alice');
   cy.get('[data-test="new-game"]').click();
-  cy.url({ timeout: 10000 }).should('match', /\/games\/three-men-morris\/room\/.+/);
+  cy.url({ timeout: 10000 }).should('match', /\/three-men-morris\/room\/.+/);
   cy.get('[data-test="lobby"]', { timeout: 10000 }).should('be.visible');
   // The host colour defaults to random: this spec needs the host to be White.
   cy.get('[data-test="colour-white"]').click();
@@ -40,7 +40,7 @@ function asBlack(): Cypress.Chainable<{ id: string; white: Scripted }> {
     const { gameId, token } = created.body as { gameId: string; token: string };
     return cy.request('POST', `/api/three-men-morris/game/${gameId}/join`, { name: 'Bob' }).then((joined) => {
       const guest = joined.body as { playerId: number; token: string };
-      cy.visit(`/games/three-men-morris/room/${gameId}`, {
+      cy.visit(`/three-men-morris/room/${gameId}`, {
         onBeforeLoad: (win) => win.localStorage.setItem(`three-men-morris:tokens:${gameId}`, JSON.stringify({ [guest.playerId]: guest.token })),
       });
       cy.get('[data-test="lobby"]', { timeout: 10000 }).should('be.visible');
@@ -166,7 +166,7 @@ describe("Three Men's Morris game", () => {
         click(0); owner(0, 'white');
         cy.on('window:confirm', (text) => { expect(text).to.contain('forfeit'); return true; });
         cy.get('[data-test="leave"]').click();
-        cy.location('pathname').should('eq', '/games');
+        cy.location('pathname').should('eq', '/');
         cy.wrap(null).should(() => {
           const frame = black.frames.find((f) => f.eventType === 'FORFEIT');
           expect(frame, 'Black got the forfeit').to.exist;

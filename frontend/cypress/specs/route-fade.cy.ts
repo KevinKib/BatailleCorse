@@ -46,14 +46,14 @@ VIEWPORTS.forEach(([width, height]) => {
   describe(`Route fade at ${width}px`, () => {
     beforeEach(() => {
       cy.viewport(width, height);
-      cy.visit('/games');
+      cy.visit('/');
       cy.get('[data-test="picker-title"]').should('be.visible');
     });
 
     it('selecting Bullshit then Back at once ends on the picker alone', () => {
       startSampler();
       quickRoundTrips(1, 10);
-      cy.location('pathname').should('eq', '/games');
+      cy.location('pathname').should('eq', '/');
       cy.get('[data-test="picker-title"]').should('be.visible');
       cy.get('[data-test="back"]').should('not.exist');
       cy.get('.app-root').children().not('.app-background').should('have.length', 1);
@@ -64,7 +64,7 @@ VIEWPORTS.forEach(([width, height]) => {
     it('survives several quick round trips', () => {
       startSampler();
       quickRoundTrips(4, 15);
-      cy.location('pathname').should('eq', '/games');
+      cy.location('pathname').should('eq', '/');
       cy.get('[data-test="picker-title"]').should('be.visible');
       cy.get('[data-test="back"]').should('not.exist');
       cy.get('.app-root').children().not('.app-background').should('have.length', 1);

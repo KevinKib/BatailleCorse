@@ -11,7 +11,7 @@ const level = () => cy.get('[data-test="seat-option-1-level"]');
 
 /** The host's lobby with a bot on seat 1, the host to move first (the set-up is always free placement). */
 function lobbyWithBot() {
-  cy.visit('/games/mangola');
+  cy.visit('/mangola');
   cy.get('[data-test="name"]').type('Alice');
   cy.get('[data-test="new-game"]').click();
   cy.get('[data-test="lobby"]', { timeout: 10000 }).should('be.visible');

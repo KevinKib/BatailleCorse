@@ -9,7 +9,7 @@ describe('useRemovedRedirect', () => {
     const router = createRouter({
       history: createMemoryHistory(),
       routes: [
-        { path: '/games', name: 'games', component: { render: () => h('div') } },
+        { path: '/', name: 'games', component: { render: () => h('div') } },
         { path: '/room', component: { render: () => h('div') } },
       ],
     });
@@ -28,7 +28,7 @@ describe('useRemovedRedirect', () => {
     await nextTick();
     await flushPromises();
 
-    expect(router.currentRoute.value.path).toBe('/games');
+    expect(router.currentRoute.value.path).toBe('/');
     expect(router.currentRoute.value.query.removed).toBe('1');
     expect(removed.value).toBe(false);
   });

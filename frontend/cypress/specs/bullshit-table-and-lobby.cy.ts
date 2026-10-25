@@ -2,11 +2,11 @@
 // start screens (same menu look as BatailleCorse, errors visible, nothing lost).
 function createBullshitGame(name: string, claimLabel?: string, deckLabel = '52 cards') {
   // Enter through the menu, as a player does, so the WebSocket is connected before we create.
-  cy.visit('/games');
+  cy.visit('/');
   cy.get('[data-test="play-bullshit"]').click();
   cy.get('[data-test="name"]').type(name);
   cy.get('[data-test="new-game"]').click();
-  cy.url({ timeout: 10000 }).should('match', /\/games\/bullshit\/room\/.+/);
+  cy.url({ timeout: 10000 }).should('match', /\/bullshit\/room\/.+/);
   // The Game home fades out while the room fades in: continue once the room is alone.
   cy.get('[data-test="start-panel"]').should('not.exist');
   cy.get('[data-test="lobby"]').should('be.visible');
@@ -25,26 +25,26 @@ function gameIdFromUrl(): Cypress.Chainable<string> {
 
 describe('Bullshit Game home and join form', () => {
   it('creates the lobby straight from the Game home, with every field of the home still there', () => {
-    cy.visit('/games/bullshit');
+    cy.visit('/bullshit');
     cy.get('h1').should('contain.text', 'Bullshit');
     cy.get('label[for="home-name"]').should('be.visible').and('contain.text', 'Your name');
     cy.get('[data-test="join-game"]').should('be.visible');
     cy.get('[data-test="back"]').should('be.visible');
     cy.get('[data-test="new-game"]').should('be.visible').click();
-    cy.url({ timeout: 10000 }).should('match', /\/games\/bullshit\/room\/.+/);
+    cy.url({ timeout: 10000 }).should('match', /\/bullshit\/room\/.+/);
     // The Game home fades out while the room fades in: continue once the room is alone.
     cy.get('[data-test="start-panel"]').should('not.exist');
     cy.get('[data-test="lobby"]').should('be.visible');
   });
 
   it('shows a visible error, and stays put, when joining an unknown game', () => {
-    cy.visit('/games/bullshit/join/does-not-exist');
+    cy.visit('/bullshit/join/does-not-exist');
     cy.get('[data-test="name"]').type('Zoe');
     cy.get('[data-test="submit"]').should('contain.text', 'Join game').click();
     cy.get('[data-test="join-error"]', { timeout: 10000 })
       .should('be.visible')
       .and('contain.text', 'No game found');
-    cy.location('pathname').should('include', '/games/bullshit/join/');
+    cy.location('pathname').should('include', '/bullshit/join/');
   });
 });
 
@@ -59,7 +59,7 @@ describe('Bullshit lobby', () => {
     cy.get('[data-test="badge-you"]').should('be.visible');
     cy.get('[data-test="option-claimMode"] .choice--on').should('contain.text', 'By suit');
     cy.get('[data-test="option-deckSize"] .choice--on').should('contain.text', '32 cards');
-    cy.get('[data-test="invite-link"]').invoke('val').should('match', /\/games\/bullshit\/join\/.+/);
+    cy.get('[data-test="invite-link"]').invoke('val').should('match', /\/bullshit\/join\/.+/);
     cy.get('[data-test="copy-link"]').should('be.visible').and('contain.text', 'Copy');
     cy.get('[data-test="start"]').should('be.visible').and('be.disabled');
     cy.get('[data-test="start-hint"]').should('contain.text', 'Waiting for 1 more player');
@@ -74,7 +74,7 @@ describe('Bullshit lobby', () => {
   });
 
   it('preselects 32 cards in a new lobby and shows its rank range', () => {
-    cy.visit('/games/bullshit');
+    cy.visit('/bullshit');
     cy.get('[data-test="name"]').type('Alice');
     cy.get('[data-test="new-game"]').click();
     cy.get('[data-test="option-deckSize"] .choice--on', { timeout: 10000 }).should('contain.text', '32 cards');
@@ -176,7 +176,7 @@ describe('Bullshit arrival by invite link (no flash of the table)', () => {
       cy.clearLocalStorage();
       // Slow every read so the "connecting" phase lasts long enough to be seen.
       cy.intercept('GET', '/api/**', (req) => req.continue((res) => { res.delay = 1500; }));
-      cy.visit(`/games/bullshit/join/${id}`, {
+      cy.visit(`/bullshit/join/${id}`, {
         onBeforeLoad(win) {
           // Records any moment the table or the in-game actions exist in the DOM.
           (win as any).__sawTable = false;

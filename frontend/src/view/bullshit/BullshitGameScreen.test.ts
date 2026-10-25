@@ -51,9 +51,9 @@ function lobbyView(overrides: Partial<LobbyView> = {}): LobbyView {
 const router = createRouter({
   history: createMemoryHistory(),
   routes: [
-    { path: '/games', name: 'games', component: { template: '<div/>' } },
-    { path: '/games/bullshit/create', component: { template: '<div/>' } },
-    { path: '/games/bullshit/room/:id', component: { template: '<div/>' } },
+    { path: '/', name: 'games', component: { template: '<div/>' } },
+    { path: '/bullshit/create', component: { template: '<div/>' } },
+    { path: '/bullshit/room/:id', component: { template: '<div/>' } },
   ],
 });
 

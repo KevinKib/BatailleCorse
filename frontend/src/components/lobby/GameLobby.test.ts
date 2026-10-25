@@ -143,7 +143,7 @@ describe('GameLobby', () => {
     Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
     const wrapper = mountLobby();
     const link = (wrapper.get('[data-test="invite-link"]').element as HTMLInputElement).value;
-    expect(link).toBe(`${location.origin}/games/bullshit/join/g1`);
+    expect(link).toBe(`${location.origin}/bullshit/join/g1`);
     expect(wrapper.get('[data-test="copied"]').text()).toBe('');
     expect(wrapper.get('[data-test="copied"]').attributes('aria-live')).toBe('polite');
 

@@ -21,10 +21,10 @@ beforeEach(resetMoves);
 
 /** The browser as White (host, through the UI) against a scripted Black, Six Men's Morris, the game started. */
 function asWhiteInSix(): Cypress.Chainable<Scripted> {
-  cy.visit('/games/three-men-morris');
+  cy.visit('/three-men-morris');
   cy.get('[data-test="name"]').type('Alice');
   cy.get('[data-test="new-game"]').click();
-  cy.url({ timeout: 10000 }).should('match', /\/games\/three-men-morris\/room\/.+/);
+  cy.url({ timeout: 10000 }).should('match', /\/three-men-morris\/room\/.+/);
   cy.get('[data-test="lobby"]', { timeout: 10000 }).should('be.visible');
   cy.get('[data-test="variant-card-six"]').click();
   cy.get('[data-test="option-variant-six"]').should('be.checked');

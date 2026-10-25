@@ -52,10 +52,10 @@ function expectGuestTable(direction: Direction) {
 
 /** The browser as the host in a fresh lobby, with the scripted guest seated. */
 function hostLobbyWithGuest() {
-  cy.visit('/games/mangola');
+  cy.visit('/mangola');
   cy.get('[data-test="name"]').type('Alice');
   cy.get('[data-test="new-game"]').click();
-  cy.url({ timeout: 10000 }).should('match', /\/games\/mangola\/room\/.+/);
+  cy.url({ timeout: 10000 }).should('match', /\/mangola\/room\/.+/);
   cy.get('[data-test="lobby"]', { timeout: 10000 }).should('be.visible');
   return cy.location('pathname').then((path) => {
     const id = path.split('/room/')[1];

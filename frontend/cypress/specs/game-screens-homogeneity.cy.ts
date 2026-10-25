@@ -38,10 +38,10 @@ function expectNoOverlap(boxes: Box[], vw: number, vh: number, ignorePair: (a: s
 }
 
 function startBullshit() {
-  cy.visit('/games/bullshit');
+  cy.visit('/bullshit');
   cy.get('[data-test="name"]').type('Alice');
   cy.get('[data-test="new-game"]').click();
-  cy.url({ timeout: 10000 }).should('match', /\/games\/bullshit\/room\/.+/);
+  cy.url({ timeout: 10000 }).should('match', /\/bullshit\/room\/.+/);
   cy.url().then((url) => cy.request('POST', `/api/bullshit/game/${url.split('/room/')[1]}/join`, { name: 'Bob' }));
   cy.get('[data-test="start"]', { timeout: 10000 }).should('not.be.disabled').click();
   cy.get('[data-test="hand-card-0"]', { timeout: 10000 }).should('exist');
@@ -171,10 +171,10 @@ describe("Three Men's Morris table chrome", () => {
     it(`${vw}x${vh}: Back bottom left, timer top left, rules top right, no gear, nothing overlaps or scrolls`, () => {
       cy.viewport(vw, vh);
       cy.clearLocalStorage();
-      cy.visit('/games/three-men-morris');
+      cy.visit('/three-men-morris');
       cy.get('[data-test="name"]').type('Alice');
       cy.get('[data-test="new-game"]').click();
-      cy.url({ timeout: 10000 }).should('match', /\/games\/three-men-morris\/room\/.+/);
+      cy.url({ timeout: 10000 }).should('match', /\/three-men-morris\/room\/.+/);
       cy.get('[data-test="lobby"]', { timeout: 10000 }).should('be.visible');
       // No gear on the lobby either: the game has no remappable shortcut.
       cy.get('[data-test="hotkeys-button"]').should('not.exist');
@@ -213,7 +213,7 @@ describe('Local preferences gear on the Game home and in the lobby', () => {
       it(`${vw}x${vh} ${key} Game home: the gear sits in the top right corner of the panel, clear of the title, keyboard-operable`, () => {
         cy.viewport(vw, vh);
         cy.clearLocalStorage();
-        cy.visit(`/games/${key}`);
+        cy.visit(`/${key}`);
         cy.get('[data-test="hotkeys-button"]').should('be.visible').then(($g) => {
           cy.get('[data-test="start-panel"]').then(($p) => {
             const g = $g[0].getBoundingClientRect();
@@ -247,7 +247,7 @@ describe('Local preferences gear on the Game home and in the lobby', () => {
     it(`${vw}x${vh} Bullshit lobby: same gear, same corner, no overlap with the title, no scroll`, () => {
       cy.viewport(vw, vh);
       cy.clearLocalStorage();
-      cy.visit('/games/bullshit');
+      cy.visit('/bullshit');
       cy.get('[data-test="new-game"]').click();
       cy.get('[data-test="lobby"]', { timeout: 10000 }).should('be.visible');
       // The Game home fades out while the lobby fades in: measure once the lobby is alone.
@@ -274,7 +274,7 @@ describe('Local preferences gear on the Game home and in the lobby', () => {
   it('a key set on the Game home applies on the table', () => {
     cy.viewport(1280, 800);
     cy.clearLocalStorage();
-    cy.visit('/games/bullshit');
+    cy.visit('/bullshit');
     cy.get('[data-test="name"]').type('Alice');
     cy.get('[data-test="hotkeys-button"]').click();
     cy.get('[data-test="hotkey-discard-change"]').click();
@@ -282,7 +282,7 @@ describe('Local preferences gear on the Game home and in the lobby', () => {
     cy.get('[data-test="hotkey-discard-key"]').should('have.text', 'X');
     cy.get('[data-test="hotkeys-button"]').click();
     cy.get('[data-test="new-game"]').click();
-    cy.url({ timeout: 10000 }).should('match', /\/games\/bullshit\/room\/.+/);
+    cy.url({ timeout: 10000 }).should('match', /\/bullshit\/room\/.+/);
     cy.url().then((url) => cy.request('POST', `/api/bullshit/game/${url.split('/room/')[1]}/join`, { name: 'Bob' }));
     cy.get('[data-test="start"]', { timeout: 10000 }).should('not.be.disabled').click();
     cy.get('[data-test="discard"]', { timeout: 10000 }).should('have.attr', 'aria-keyshortcuts', 'x');

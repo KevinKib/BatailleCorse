@@ -46,7 +46,7 @@ describe('useSeatGameBootstrap', () => {
 
   async function mountAtRoom(id: string, store: SeatGameBootstrapStore) {
     const router = createAppRouter(createMemoryHistory());
-    await router.push(`/games/bullshit/room/${id}`);
+    await router.push(`/bullshit/room/${id}`);
     await router.isReady();
     const Probe = defineComponent({
       setup() { useSeatGameBootstrap(game, id, PREFIX, store); return () => h('div'); },
@@ -59,7 +59,7 @@ describe('useSeatGameBootstrap', () => {
   it('without a stored seat leads to the join form of the game and restores nothing', async () => {
     const store = fakeStore(async () => 'ok');
     const router = await mountAtRoom('g1', store);
-    expect(router.currentRoute.value.fullPath).toBe('/games/bullshit/join/g1');
+    expect(router.currentRoute.value.fullPath).toBe('/bullshit/join/g1');
     expect(store.restore).not.toHaveBeenCalled();
   });
 
@@ -68,14 +68,14 @@ describe('useSeatGameBootstrap', () => {
     const store = fakeStore(async () => 'ok');
     const router = await mountAtRoom('g1', store);
     expect(store.restore).toHaveBeenCalledWith('g1', 2, 'tok');
-    expect(router.currentRoute.value.path).toBe('/games/bullshit/room/g1');
+    expect(router.currentRoute.value.path).toBe('/bullshit/room/g1');
   });
 
   it.each([['gone', 'gone'], ['lost', 'lost']] as const)(
     'on %s forgets the token under the prefix and leads to the game home with the %s notice', async (result, query) => {
       localStorage.setItem('fake:tokens:g1', JSON.stringify({ 0: 'tok' }));
       const router = await mountAtRoom('g1', fakeStore(async () => result));
-      expect(router.currentRoute.value.path).toBe('/games/bullshit');
+      expect(router.currentRoute.value.path).toBe('/bullshit');
       expect(router.currentRoute.value.query[query]).toBe('1');
       expect(localStorage.getItem('fake:tokens:g1')).toBeNull();
     });
@@ -92,7 +92,7 @@ describe('useSeatGameBootstrap', () => {
       expect(store.hydrate).toHaveBeenCalledTimes(1);
       await vi.advanceTimersByTimeAsync(3000);
       expect(store.hydrate).toHaveBeenCalledTimes(3);
-      expect(router.currentRoute.value.path).toBe('/games/bullshit/room/g1');
+      expect(router.currentRoute.value.path).toBe('/bullshit/room/g1');
     });
 
     it('gives up after four attempts, keeping the token and the room page', async () => {
@@ -101,7 +101,7 @@ describe('useSeatGameBootstrap', () => {
       const router = await mountAtRoom('g1', store);
       await vi.advanceTimersByTimeAsync(60_000);
       expect(store.hydrate).toHaveBeenCalledTimes(4);
-      expect(router.currentRoute.value.path).toBe('/games/bullshit/room/g1');
+      expect(router.currentRoute.value.path).toBe('/bullshit/room/g1');
       expect(localStorage.getItem('fake:tokens:g1')).not.toBeNull();
     });
 

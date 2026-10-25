@@ -112,7 +112,7 @@ Under the e2e (`test`) Spring profile the forfeit grace of a dropped player is 5
 
 ## Production
 
-Runs at https://kevinkib.com behind the shared gateway
+Runs at https://cardgames.kevinkib.com behind the shared gateway
 ([KevinKib/gateway](https://github.com/KevinKib/gateway)), which owns ports 80/443 and the HTTPS
 certificates. The frontend and backend join its `web` network as `bataillecorse-frontend` and
 `bataillecorse-backend`; nothing publishes a port. Start the gateway first, then:

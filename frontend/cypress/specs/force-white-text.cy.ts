@@ -38,7 +38,7 @@ function pageIsWhiteOnDark() {
 
     it('the lobby shows white text and a dark colour scheme', () => {
       cy.viewport(375, 667);
-      cy.visit('/games/mangola');
+      cy.visit('/mangola');
       cy.get('[data-test="name"]').type('Alice');
       cy.get('[data-test="new-game"]').click();
       cy.get('[data-test="lobby"]', { timeout: 10000 }).should('be.visible');
@@ -96,7 +96,7 @@ const shot = Cypress.env('SHOT') as string | undefined;
 
     it('title screen and lobby (PrimeVue Button and InputText)', () => {
       cy.viewport(width, height);
-      cy.visit('/games/mangola');
+      cy.visit('/mangola');
       cy.get('[data-test="name"]').type('Alice');
       cy.wait(800); // the route fade must be over, or the shot catches the empty felt
       cy.screenshot(`${shot}-title-${width}`, { capture: 'viewport' });

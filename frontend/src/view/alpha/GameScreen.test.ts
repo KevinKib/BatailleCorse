@@ -85,7 +85,7 @@ describe('GameScreen', () => {
     const wrapper = await mountGameScreen();
     playing();
     await nextTick();
-    expect(wrapper.get('.back_button').attributes('to')).toBe('/games');
+    expect(wrapper.get('.back_button').attributes('to')).toBe('/');
   });
 
   it('shows a neutral connecting screen until the lobby or the game is known, never the table', async () => {

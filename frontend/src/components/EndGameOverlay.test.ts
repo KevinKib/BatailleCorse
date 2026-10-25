@@ -8,7 +8,7 @@ import { messagesEn } from '../locales/en';
 
 async function mountOverlay(props: Record<string, unknown> = {}, slots: Record<string, string> = {}) {
   const router = createAppRouter(createMemoryHistory());
-  await router.push('/games/bataillecorse/room/g1');
+  await router.push('/bataillecorse/room/g1');
   await router.isReady();
   const wrapper = mount(EndGameOverlay, {
     props: { didIWin: true, subtitle: 'sub', rematchButton: { label: 'Play again', disabled: false }, ...props },
@@ -21,17 +21,17 @@ async function mountOverlay(props: Record<string, unknown> = {}, slots: Record<s
 describe('EndGameOverlay', () => {
   it('givenHomeButton_thenAlwaysLeadsToTheGameSelection', async () => {
     const { wrapper, router } = await mountOverlay();
-    expect(wrapper.get('a.end-home-button').attributes('href')).toBe('/games');
+    expect(wrapper.get('a.end-home-button').attributes('href')).toBe('/');
     await wrapper.get('a.end-home-button').trigger('click');
     await flushPromises();
-    expect(router.currentRoute.value.path).toBe('/games');
+    expect(router.currentRoute.value.path).toBe('/');
   });
 
   it('givenPlayAgain_thenEmitsWithoutNavigatingAway', async () => {
     const { wrapper, router } = await mountOverlay();
     await wrapper.get('[data-cy="play-again"]').trigger('click');
     expect(wrapper.emitted('playAgain')).toHaveLength(1);
-    expect(router.currentRoute.value.path).toBe('/games/bataillecorse/room/g1');
+    expect(router.currentRoute.value.path).toBe('/bataillecorse/room/g1');
   });
 
   it('givenAWin_thenTheTitleAndTheHomeLabelComeFromTheLocales', async () => {

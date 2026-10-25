@@ -37,7 +37,7 @@ describe('useBullshitBootstrap restore failures', () => {
 
   async function mountAtRoom(id: string) {
     const router = createAppRouter(createMemoryHistory());
-    await router.push(`/games/bullshit/room/${id}`);
+    await router.push(`/bullshit/room/${id}`);
     await router.isReady();
     const Probe = defineComponent({
       setup() { useBullshitBootstrap(id); return () => h('div'); },
@@ -49,13 +49,13 @@ describe('useBullshitBootstrap restore failures', () => {
 
   it('givenNoStoredToken_thenGoesToTheJoinFormWithTheIdPrefilled', async () => {
     const router = await mountAtRoom('g1');
-    expect(router.currentRoute.value.fullPath).toBe('/games/bullshit/join/g1');
+    expect(router.currentRoute.value.fullPath).toBe('/bullshit/join/g1');
   });
 
   it.each(['{not json', '42'])('givenCorruptedStoredToken_%s_thenGoesToTheJoinFormAndForgetsIt', async (raw) => {
     localStorage.setItem('bullshit:tokens:g1', raw);
     const router = await mountAtRoom('g1');
-    expect(router.currentRoute.value.fullPath).toBe('/games/bullshit/join/g1');
+    expect(router.currentRoute.value.fullPath).toBe('/bullshit/join/g1');
     expect(localStorage.getItem('bullshit:tokens:g1')).toBeNull();
   });
 
@@ -65,7 +65,7 @@ describe('useBullshitBootstrap restore failures', () => {
     vi.spyOn(store, 'restore').mockImplementation(() => {});
     vi.spyOn(store, 'hydrate').mockResolvedValue('gone');
     const router = await mountAtRoom('g1');
-    expect(router.currentRoute.value.path).toBe('/games/bullshit');
+    expect(router.currentRoute.value.path).toBe('/bullshit');
     expect(router.currentRoute.value.query.gone).toBe('1');
     expect(localStorage.getItem('bullshit:tokens:g1')).toBeNull();
   });
@@ -76,7 +76,7 @@ describe('useBullshitBootstrap restore failures', () => {
     vi.spyOn(store, 'restore').mockImplementation(() => {});
     vi.spyOn(store, 'hydrate').mockResolvedValue('lost');
     const router = await mountAtRoom('g1');
-    expect(router.currentRoute.value.path).toBe('/games/bullshit');
+    expect(router.currentRoute.value.path).toBe('/bullshit');
     expect(router.currentRoute.value.query.lost).toBe('1');
     expect(router.currentRoute.value.query.gone).toBeUndefined();
     expect(localStorage.getItem('bullshit:tokens:g1')).toBeNull();
@@ -88,7 +88,7 @@ describe('useBullshitBootstrap restore failures', () => {
     vi.spyOn(store, 'restore').mockImplementation(() => {});
     vi.spyOn(store, 'hydrate').mockResolvedValue('unavailable');
     const router = await mountAtRoom('g1');
-    expect(router.currentRoute.value.path).toBe('/games/bullshit/room/g1');
+    expect(router.currentRoute.value.path).toBe('/bullshit/room/g1');
     expect(localStorage.getItem('bullshit:tokens:g1')).not.toBeNull();
   });
 
@@ -98,6 +98,6 @@ describe('useBullshitBootstrap restore failures', () => {
     vi.spyOn(store, 'restore').mockImplementation(() => {});
     vi.spyOn(store, 'hydrate').mockResolvedValue('ok');
     const router = await mountAtRoom('g1');
-    expect(router.currentRoute.value.path).toBe('/games/bullshit/room/g1');
+    expect(router.currentRoute.value.path).toBe('/bullshit/room/g1');
   });
 });
