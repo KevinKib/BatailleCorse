@@ -82,7 +82,7 @@ describe('viewerRows', () => {
   });
 
   it('marks my pits and the inner rows, and carries the seed count of each', () => {
-    const rows = viewerRows(mangolaState(), 0);
+    const rows = viewerRows(mangolaState({ direction: 'clockwise' }), 0);
     expect(rows.map(r => r[0].mine)).toEqual([false, false, true, true]);
     expect(rows.map(r => r[0].inner)).toEqual([false, true, true, false]);
     expect(rows[3][1].count).toBe(4);

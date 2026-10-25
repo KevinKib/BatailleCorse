@@ -1,4 +1,4 @@
-import type { MangolaDirection } from './direction';
+import { directionOf, DEFAULT_MANGOLA_DIRECTION, type MangolaDirection } from './direction';
 import type { MangolaSide, MangolaState } from './MangolaState';
 import { COLUMNS, ROWS, nextPit, pitName, sideOfPit } from './geometry';
 
@@ -33,22 +33,26 @@ const columnOf = (pit: number) => pit % COLUMNS;
 
 /**
  * Where a pit is on the viewer's screen, as [displayRow, displayColumn] with the viewer's side at the bottom.
- * Side A is seen as it is written (row 4 on top, row 1 at the bottom, columns a to h); side B is seen turned by
- * half a turn (row 1 on top, columns h to a).
+ * Clockwise: side A is seen as it is written (row 4 on top, row 1 at the bottom, columns a to h); side B is seen
+ * turned by half a turn (row 1 on top, columns h to a). Anticlockwise is the same board mirrored left to right
+ * (the columns swap, the rows stay), which is exactly the loops run the other way round.
  */
-function screenPosition(pit: number, viewer: MangolaSide): [number, number] {
+function screenPosition(pit: number, viewer: MangolaSide, direction: MangolaDirection): [number, number] {
+  const row = rowOf(pit);
+  const column = columnOf(pit);
+  const mirrored = direction === 'anticlockwise';
   return viewer === 'A'
-    ? [ROWS - 1 - rowOf(pit), columnOf(pit)]
-    : [rowOf(pit), COLUMNS - 1 - columnOf(pit)];
+    ? [ROWS - 1 - row, mirrored ? COLUMNS - 1 - column : column]
+    : [row, mirrored ? column : COLUMNS - 1 - column];
 }
 
 /**
- * The direction a seed travels on screen when it leaves `pit`, for a viewer sitting on side `viewer`. The game's
- * `direction` is accepted but not used yet: the screen mapping still draws clockwise.
+ * The direction a seed travels on screen when it leaves `pit`, for a viewer sitting on side `viewer` and a game
+ * sown in `direction` (anticlockwise unless told otherwise).
  */
-export function arrowOf(pit: number, viewer: MangolaSide, _direction: MangolaDirection = 'clockwise'): Arrow {
-  const [r0, c0] = screenPosition(pit, viewer);
-  const [r1, c1] = screenPosition(nextPit(pit), viewer);
+export function arrowOf(pit: number, viewer: MangolaSide, direction: MangolaDirection = DEFAULT_MANGOLA_DIRECTION): Arrow {
+  const [r0, c0] = screenPosition(pit, viewer, direction);
+  const [r1, c1] = screenPosition(nextPit(pit), viewer, direction);
   if (r1 > r0) return 'down';
   if (r1 < r0) return 'up';
   return c1 > c0 ? 'right' : 'left';
@@ -57,10 +61,11 @@ export function arrowOf(pit: number, viewer: MangolaSide, _direction: MangolaDir
 /** The 4 x 8 grid as the viewer sees it, top to bottom, with the viewer's half at the bottom. */
 export function viewerRows(state: MangolaState, seat: number): MangolaCell[][] {
   const viewer = sideOfSeat(state, seat);
+  const direction = directionOf(state);
   const legal = new Set(state.legalPits);
   const rows: MangolaCell[][] = Array.from({ length: ROWS }, () => Array<MangolaCell>(COLUMNS));
   for (let pit = 0; pit < state.board.length; pit++) {
-    const [r, c] = screenPosition(pit, viewer);
+    const [r, c] = screenPosition(pit, viewer, direction);
     const boardRow = rowOf(pit);
     rows[r][c] = {
       pit,
@@ -69,7 +74,7 @@ export function viewerRows(state: MangolaState, seat: number): MangolaCell[][] {
       mine: sideOfPit(pit) === viewer,
       inner: boardRow === 1 || boardRow === 2,
       legal: legal.has(pit),
-      arrow: arrowOf(pit, viewer),
+      arrow: arrowOf(pit, viewer, direction),
     };
   }
   return rows;
