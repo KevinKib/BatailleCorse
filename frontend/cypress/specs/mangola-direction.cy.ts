@@ -93,6 +93,9 @@ function startToBoard(bob: Scripted) {
 describe('Mangola sowing direction', () => {
   it('is anticlockwise by default: both players see the same direction, each with their own half at the bottom', () => {
     hostLobbyWithGuest().then(({ bob, hostTokens, key }) => {
+      // Hidden behind the closed Customise until the host looks for it.
+      cy.get('[data-test="option-direction"]').should('not.exist');
+      cy.get('[data-test="customise"]').should('have.attr', 'aria-expanded', 'false').click();
       cy.get('[data-test="option-direction"] .choice--on').should('contain.text', 'Anticlockwise');
       startToBoard(bob);
       expectHostTable('anticlockwise');
@@ -106,10 +109,11 @@ describe('Mangola sowing direction', () => {
 
   it('is picked in the lobby by the host, read as plain text by the guest, and drawn clockwise on both tables', () => {
     hostLobbyWithGuest().then(({ bob, hostTokens, key }) => {
+      cy.get('[data-test="customise"]').click();
       cy.get('[data-test="option-direction-clockwise"]').check({ force: true });
       cy.get('[data-test="option-direction"] .choice--on').should('contain.text', 'Clockwise');
 
-      // The guest's lobby: the choice as text, nothing to change, no Start.
+      // The guest's lobby: Customise opens by itself on a non-default value, the choice as text, nothing to change, no Start.
       reloadAs(key, guestTokens(bob));
       cy.get('[data-test="lobby"]', { timeout: 10000 }).should('be.visible');
       cy.get('[data-test="option-direction"]').should('contain.text', 'Sowing direction').and('contain.text', 'Clockwise');

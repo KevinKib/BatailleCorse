@@ -238,7 +238,6 @@ export const messagesEn: Messages = {
       classicSummary: 'King of hearts leads, you may re-enter after a pass, 5 rounds.',
       customTitle: 'Custom',
       customSummary: 'Some rules differ from Classic.',
-      customise: 'Customise',
       reset: 'Back to Classic',
     },
     table: {
@@ -1130,6 +1129,7 @@ export const messagesEn: Messages = {
     },
     waitingForHost: 'Waiting for the host to start\u2026',
     nowHost: 'You are now the host.',
+    customise: 'Customise',
   },
   options: {
     bataillecorse: {
