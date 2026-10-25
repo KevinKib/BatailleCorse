@@ -46,6 +46,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-websocket</artifactId>
         </dependency>
+        <!-- Micrometer counters and gauges (usage statistics), read through /actuator/metrics on a private port. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -78,6 +83,10 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
+                    <environmentVariables>
+                        <!-- Actuator management port: random, so Spring contexts of different tests never clash on 8081. -->
+                        <MANAGEMENT_PORT>0</MANAGEMENT_PORT>
+                    </environmentVariables>
                     <includes>
                         <include>**/Test*.java</include>
                         <include>**/*Test.java</include>

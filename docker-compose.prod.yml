@@ -27,6 +27,8 @@ services:
       timeout: 3s
       retries: 20
       start_period: 30s
+    # The Actuator metrics listen on 8081 (management.server.port): never published here nor proxied by the
+    # gateway. Read them with `docker compose exec backend wget -qO- localhost:8081/actuator/metrics` (README).
     networks:
       default:
       web:

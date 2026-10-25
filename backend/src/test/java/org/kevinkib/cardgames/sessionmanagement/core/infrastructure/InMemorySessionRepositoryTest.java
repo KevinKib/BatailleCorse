@@ -45,6 +45,18 @@ class InMemorySessionRepositoryTest {
     }
 
     @Test
+    void givenALobbyAndAStartedGame_whenCounting_thenRoomCountCoversBothAndGamesListsOnlyTheStartedOne() {
+        var repo = new InMemorySessionRepository(Clock.systemUTC());
+        repo.saveLobby(SessionGame.create(GameId.generate(), 2, "bataille-corse"));
+        var id = GameId.generate();
+        var game = newGame(id);
+        repo.save(game, SessionGame.create(id, game.getPlayerIds(), "bataille-corse"));
+
+        assertThat(repo.roomCount(), is(2));
+        assertThat(repo.games(), contains(game));
+    }
+
+    @Test
     void givenUnknownId_whenLoad_thenThrows() {
         var repo = new InMemorySessionRepository(Clock.systemUTC());
         assertThrows(IllegalArgumentException.class, () -> repo.load(GameId.generate()));

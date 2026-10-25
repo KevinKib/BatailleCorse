@@ -37,4 +37,14 @@ public interface SessionRepository {
 
     /** The started game for this id, or empty if it is still a lobby / unknown. */
     Optional<Game> findGame(GameId id);
+
+    /** Every started game currently held (lobbies excluded); a snapshot. */
+    default List<Game> games() {
+        return List.of();
+    }
+
+    /** How many rooms are held, lobbies and started games together. */
+    default int roomCount() {
+        return 0;
+    }
 }

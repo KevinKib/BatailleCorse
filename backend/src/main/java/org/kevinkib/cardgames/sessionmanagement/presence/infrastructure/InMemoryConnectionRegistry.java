@@ -28,6 +28,11 @@ public class InMemoryConnectionRegistry implements ConnectionRegistry {
     }
 
     @Override
+    public int size() {
+        return claimByConnection.size();
+    }
+
+    @Override
     public void removeGame(GameId gameId) {
         claimByConnection.values().removeIf(claim -> claim.gameId().equals(gameId));
     }

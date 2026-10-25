@@ -32,6 +32,16 @@ class InMemoryConnectionRegistryTest {
     }
 
     @Test
+    void whenCounting_thenSizeIsTheNumberOfBoundConnections() {
+        ConnectionRegistry registry = new InMemoryConnectionRegistry();
+        registry.bind("a", new SeatClaim(gameId, "t0"));
+        registry.bind("b", new SeatClaim(gameId, "t1"));
+        registry.unbind("a");
+
+        assertThat(registry.size(), is(1));
+    }
+
+    @Test
     void whenUnbindUnknownSession_thenEmpty() {
         ConnectionRegistry registry = new InMemoryConnectionRegistry();
         assertThat(registry.unbind("nope").isEmpty(), is(true));
