@@ -124,6 +124,16 @@ describe('Game picker', () => {
     cy.location('pathname').should('eq', '/');
   });
 
+  it('opens the privacy page from the footer link and goes back to the games', () => {
+    cy.visit('/');
+    cy.get('[data-test="privacy-link"]').click();
+    cy.location('pathname').should('eq', '/privacy');
+    cy.contains('h1', 'Privacy').should('be.visible');
+    cy.get('[data-test="privacy-back"]').click();
+    cy.location('pathname').should('eq', '/');
+    cy.get('[data-test="picker-title"]').should('be.visible');
+  });
+
   it('is operable with the keyboard (focus is visible on the Play buttons)', () => {
     cy.visit('/');
     cy.get('[data-test="play-bataillecorse"]').focus().should('have.focus');
