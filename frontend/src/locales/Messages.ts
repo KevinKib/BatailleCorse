@@ -292,7 +292,6 @@ export interface PresidentUiMessages {
     cards: PluralForms;                // '{n}' = cards a seat still holds
     current: string;                   // the seat to play
     passed: string;
-    out: string;                       // '{n}' = place taken
     outForbidden: string;              // went out on a forbidden finish, no place until the round ends
     outForbiddenPlace: string;         // the same once the round is over, with the place '{n}'
     medal: { out: string; label: string }; // the medal of a seat that went out: its word, and its accessible text ('{place}' = "1st")

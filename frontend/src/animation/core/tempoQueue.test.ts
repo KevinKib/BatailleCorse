@@ -18,6 +18,13 @@ describe('createTempoQueue (shared)', () => {
     expect(queue.admit(300)).toEqual({ startInMs: 500, motion: true });
   });
 
+  it('givenALongerLagBoundForOneEvent_thenThatEventQueuesWhereTheDefaultWouldNot', () => {
+    const queue = createTempoQueue(at({ now: 0 }), bounds);
+    queue.admit(1500);
+    expect(queue.admit(300)).toEqual({ startInMs: 0, motion: false });
+    expect(queue.admit(300, 2000)).toEqual({ startInMs: 1500, motion: true });
+  });
+
   it('givenTheBoundsItIsGiven_thenTheBacklogIsCappedByThem', () => {
     const t = { now: 0 };
     const queue = createTempoQueue(at(t), bounds);

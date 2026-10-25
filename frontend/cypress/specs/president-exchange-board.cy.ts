@@ -152,6 +152,17 @@ function playRoundOne(bob: Guest, carol: Guest, dan: Guest, erin: Guest) {
         // The reading bar is drawn and the Seen button waits for me (the table is held back by the guests).
         cy.get('[data-test="board-bar-fill"]').should('exist');
         cy.get('[data-test="board-seen"]').should('not.have.class', 'seen--off').and('be.visible');
+        // The target is 44 x 44 px (spec 5.2) and none of it is clipped by the board: its four corners still hit the button.
+        cy.get('[data-test="board-seen"]').then(($seen) => {
+          const doc = $seen[0].ownerDocument;
+          const box = $seen[0].getBoundingClientRect();
+          // it reaches 4 px above and 6 px right of the 24 px button, and 14 px left and 16 px below (1 px inside)
+          for (const x of [box.left - 13, box.right + 5]) {
+            for (const y of [box.top - 3, box.bottom + 15]) {
+              expect(doc.elementFromPoint(x, y)?.closest('[data-test="board-seen"]'), `hit at ${x},${y}`).to.not.eq(null);
+            }
+          }
+        });
         cy.get('[data-test="president-table"]').should(($felt) => {
           expect($felt[0].scrollHeight, 'felt content height').to.be.at.most($felt[0].clientHeight + 1);
         });
@@ -199,7 +210,7 @@ function playRoundOne(bob: Guest, carol: Guest, dan: Guest, erin: Guest) {
         cy.screenshot(`exchange-sequenced-3-8-players-${mode}-flying-${width}x${height}`, { capture: 'viewport' });
         // The browser has read the exchange and waits for Bob: a row per pair, all done, inside the pile's slot.
         cy.get('[data-test="phase-text"]', { timeout: 40000 }).should('have.text', 'Waiting for Bob to see the exchange');
-        cy.get('[data-test="exchange-board"]').should(($board) => {
+        cy.get('[data-test="exchange-board"]', { timeout: 10000 }).should(($board) => {
           const doc = $board[0].ownerDocument;
           const felt = doc.querySelector('[data-test="president-table"]') as HTMLElement;
           const list = doc.querySelector('[data-test="board-rows"]') as HTMLElement;

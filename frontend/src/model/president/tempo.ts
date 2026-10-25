@@ -58,6 +58,11 @@ export const PRESIDENT_TEMPO = {
     /** The sheet rises from the bottom this long. */
     slideMs: 320,
   },
+  /**
+   * How far behind the others the exchange's flights may queue: a give-back during the sequenced deal (up to
+   * `exchange.maxSpanMs`) still flies behind it. Only the exchange: every other animation keeps `queue.maxLagMs`.
+   */
+  exchangeQueueLagMaxMs: 6500,
   /** The burst bounds, as Kobo's. */
   queue: { maxQueued: 4, maxLagMs: 3500 },
 } as const;
