@@ -47,8 +47,8 @@ final class ArchitectureRules {
         return noClasses().that().resideInAPackage(root + "." + game + ".domain..")
                 .should().dependOnClassesThat().resideInAnyPackage(
                         root + ".sessionmanagement..", root + ".presentation..", root + ".config..",
-                        root + "." + game + ".presentation..", "org.springframework..")
-                .as(game + ".domain depends on no Spring, sessionmanagement, presentation or config");
+                        root + "." + game + ".presentation..", "org.springframework..", "io.micrometer..")
+                .as(game + ".domain depends on no Spring, metrics, sessionmanagement, presentation or config");
     }
 
     /** No game (domain or presentation) depends on another game. */

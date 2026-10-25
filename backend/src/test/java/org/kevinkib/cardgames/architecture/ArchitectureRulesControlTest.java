@@ -47,6 +47,11 @@ class ArchitectureRulesControlTest {
     }
 
     @Test
+    void domainDependingOnMetricsIsDetected() {
+        assertViolation(RULES.gameDomainIsPure("bullshit"), "DomainUsesMicrometer");
+    }
+
+    @Test
     void domainDependingOnSessionmanagementIsDetected() {
         assertViolation(RULES.gameDomainIsPure("bullshit"), "DomainUsesSession");
     }

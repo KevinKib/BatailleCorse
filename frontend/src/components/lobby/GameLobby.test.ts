@@ -470,6 +470,15 @@ describe('GameLobby', () => {
   });
 });
 
+describe('GameLobby decorative card fan', () => {
+  it('raises the fan by one shared offset and makes room for it above the panel', () => {
+    const wrapper = mountLobby();
+    // One custom property on the shared screen, read by TitleCardFan and by the top padding: no per-game copy.
+    expect(wrapper.find('.titlescreen').attributes('style')).toMatch(/--fan-lift:\s*48px/);
+    expect(lobbySource).toMatch(/padding:\s*calc\(100px \+ var\(--fan-lift\)\)/);
+  });
+});
+
 describe('GameLobby local preferences', () => {
   it('offers the shortcut gear inside the panel, with the game\'s own actions, to the host and to a guest', async () => {
     for (const mySeat of [0, 1]) {

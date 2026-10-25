@@ -6,12 +6,14 @@ import org.kevinkib.cardgames.game.GameOptions;
 import org.kevinkib.cardgames.game.OptionDescriptor;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.sessionmanagement.core.application.port.SessionRepository;
+import org.kevinkib.cardgames.sessionmanagement.core.application.port.UsageStatistics;
 import org.kevinkib.cardgames.sessionmanagement.core.domain.NoFreeSeatException;
 import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionGame;
 import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionPlayer;
 import org.kevinkib.cardgames.sessionmanagement.core.domain.SessionToken;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -29,15 +31,44 @@ public class SessionService implements GameDirectory {
 
     private final SessionRepository repository;
     private final GameFactories gameFactories;
+    private final UsageStatistics statistics;
+    /** Started games whose end was already reported; pruned to the games still held. Guarded by this service's lock. */
+    private final Set<GameId> reportedFinished = new HashSet<>();
     private volatile Consumer<GameId> lobbyRemovalListener = removed -> { };
 
     public SessionService(SessionRepository repository, GameFactories gameFactories) {
+        this(repository, gameFactories, UsageStatistics.NONE);
+    }
+
+    public SessionService(SessionRepository repository, GameFactories gameFactories, UsageStatistics statistics) {
         this.repository = repository;
         this.gameFactories = gameFactories;
+        this.statistics = statistics;
     }
 
     public synchronized JoinResult joinRoom(GameId id, String name) {
-        return join(id, lobby -> lobby.claimNextFreeSeat(name));
+        JoinResult joined = join(id, lobby -> lobby.claimNextFreeSeat(name));
+        statistics.seatJoined(repository.loadSessionGame(id).gameType());
+        return joined;
+    }
+
+    /**
+     * Reports, once each, the started games that have ended since the last call (a win or a forfeit has no single
+     * hook, so the cleanup sweep polls). A game is also reported when it is reopened for a rematch.
+     */
+    public synchronized void recordFinishedGames() {
+        Set<GameId> held = new HashSet<>();
+        for (Game game : repository.games()) {
+            held.add(game.getId());
+            reportFinished(game);
+        }
+        reportedFinished.retainAll(held);
+    }
+
+    private void reportFinished(Game game) {
+        if (game.isFinished() && reportedFinished.add(game.getId())) {
+            statistics.gameFinished(repository.loadSessionGame(game.getId()).gameType());
+        }
     }
 
     private JoinResult join(GameId id, Function<SessionGame, SessionPlayer> claim) {
@@ -65,7 +96,11 @@ public class SessionService implements GameDirectory {
         SessionGame existing = repository.loadSessionGame(id);
         String type = existing.gameType();
         GameOptions options = existing.options();
-        if (repository.findGame(id).isPresent()) {
+        Optional<Game> running = repository.findGame(id);
+        if (running.isPresent()) {
+            reportFinished(running.get());
+            reportedFinished.remove(id);
+            statistics.rematch(type);
             repository.remove(id);
             SessionGame fresh = SessionGame.create(id, gameFactories.maxPlayers(type), type, options);
             fresh.claimBotsOf(existing);
@@ -84,6 +119,7 @@ public class SessionService implements GameDirectory {
         SessionGame lobby = SessionGame.create(id, gameFactories.maxPlayers(gameType), gameType, options);
         lobby.claimHost(hostName);
         repository.saveLobby(lobby);
+        statistics.gameCreated(gameType);
         SessionToken hostToken = lobby.findTokenByPlayer(new PlayerId(0))
                 .orElseThrow(() -> new IllegalStateException("Host seat has no token"));
         return new RoomCreated(id.uuid().toString(), hostToken.uuid().toString());
@@ -98,6 +134,7 @@ public class SessionService implements GameDirectory {
         try {
             PlayerId bot = lobby.claimBot(null).id();
             lobby.bumpVersion();
+            statistics.botAdded(lobby.gameType());
             return bot;
         } catch (NoFreeSeatException e) {
             throw new RoomFullException(id);
@@ -279,6 +316,8 @@ public class SessionService implements GameDirectory {
         }
         Game game = gameFactories.factoryFor(lobby.gameType()).create(id, claimed, lobby.options());
         repository.save(game, lobby);
+        int bots = lobby.botSeats().size();
+        statistics.gameStarted(lobby.gameType(), claimed - bots, bots);
         return game;
     }
 

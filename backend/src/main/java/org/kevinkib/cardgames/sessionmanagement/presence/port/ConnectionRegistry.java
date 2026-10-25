@@ -11,4 +11,6 @@ public interface ConnectionRegistry {
     Optional<SeatClaim> claimOf(String connectionId);
     Optional<SeatClaim> unbind(String connectionId);
     void removeGame(GameId gameId);
+    /** How many connections currently hold a seat. */
+    int size();
 }
