@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { createMemoryHistory } from 'vue-router';
 import { createAppRouter } from './router';
+import { GAMES } from './model/games';
 
 async function resolveAt(path: string) {
   const router = createAppRouter(createMemoryHistory());
@@ -76,5 +77,19 @@ describe('app router', () => {
 
   it('givenLegacyPrefixWithAnUnknownGame_thenEndsOnTheGamePicker', async () => {
     expect((await resolveAt('/games/chess')).fullPath).toBe('/');
+  });
+
+  it('givenPrivacyPath_thenShowsThePrivacyPageWithoutRedirecting', async () => {
+    const route = await resolveAt('/privacy');
+    expect(route.fullPath).toBe('/privacy');
+    expect(route.name).toBe('privacy');
+  });
+
+  it('givenPrivacy_thenItIsNotAGameKeyAndGameRoutesAreUnaffected', async () => {
+    expect(GAMES.map(game => game.key as string)).not.toContain('privacy');
+    expect((await resolveAt('/privacy/join/abc')).fullPath).toBe('/');
+    expect((await resolveAt('/games/privacy')).fullPath).toBe('/privacy');
+    expect((await resolveAt('/bullshit')).name).toBe('game-home');
+    expect((await resolveAt('/chess')).fullPath).toBe('/');
   });
 });
