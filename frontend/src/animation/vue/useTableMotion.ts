@@ -54,8 +54,11 @@ export interface TableMotionOptions<E, A> {
 }
 
 export interface TableMotion<A> {
-  /** Plays a plan that does not come from the log (President's exchange from two states), in the same queue. */
-  play(plan: MotionPlan<A>): Promise<Played<A>>;
+  /**
+   * Plays a plan that does not come from the log (President's exchange from two states), in the same queue.
+   * `maxLagMs` replaces the queue's own bound for this plan (President's exchange queues its returns behind a long deal).
+   */
+  play(plan: MotionPlan<A>, options?: { maxLagMs?: number }): Promise<Played<A>>;
   /** How long until everything admitted is over (0 when idle). */
   backlogMs(): number;
   /** `speedFactor(speed)`, never 0 (a table at Instant plans at Normal length: nothing plays anyway). */
@@ -85,11 +88,11 @@ export function useTableMotion<E, A>(options: TableMotionOptions<E, A>): TableMo
    * Admits one plan through the queue, hands it to the layer, and reports. Never throws, except from `beforePlay`
    * (the caller then skips the entry).
    */
-  async function admit(plan: MotionPlan<A>, entry: E | null, isStill: boolean): Promise<Played<A>> {
+  async function admit(plan: MotionPlan<A>, entry: E | null, isStill: boolean, maxLagMs?: number): Promise<Played<A>> {
     const nothing = plan.movements.length === 0 && !(plan.followUps?.length);
     const { motion, startInMs: admittedStartInMs } = isStill || nothing
       ? { startInMs: 0, motion: false }
-      : queue.admit(plan.spanMs ?? eventSpanMs(plan.movements));
+      : queue.admit(plan.spanMs ?? eventSpanMs(plan.movements), maxLagMs);
     const report = (startInMs: number): Played<A> => ({
       plan, motion, still: isStill, startInMs,
       endsAt: now() + (motion ? startInMs + eventSpanMs(plan.movements) : 0),
@@ -142,7 +145,7 @@ export function useTableMotion<E, A>(options: TableMotionOptions<E, A>): TableMo
   }
 
   return {
-    play: plan => admit(plan, null, stillNow()),
+    play: (plan, playOptions) => admit(plan, null, stillNow(), playOptions?.maxLagMs),
     backlogMs: () => queue.backlogMs(),
     factor,
     still,

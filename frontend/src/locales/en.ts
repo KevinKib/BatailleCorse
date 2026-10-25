@@ -247,7 +247,6 @@ export const messagesEn: Messages = {
       cards: { one: '{n} card', other: '{n} cards' },
       current: 'Playing',
       passed: 'Passed',
-      out: 'Out, place {n}',
       outForbidden: 'Out on a 2',
       outForbiddenPlace: 'Out on a 2, place {n}',
       medal: { out: 'Out', label: 'Out, {place} place' },

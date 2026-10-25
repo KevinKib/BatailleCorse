@@ -16,11 +16,12 @@ export function createTempoQueue(now: () => number, bounds: QueueBounds) {
   let busyUntil = 0;
   let starts: number[] = [];
   return {
-    admit(spanMs: number): Admission {
+    /** `maxLagMs` replaces the bounds' own for this one event (a plan that is allowed to wait longer behind the others). */
+    admit(spanMs: number, maxLagMs: number = bounds.maxLagMs): Admission {
       const t = now();
       starts = starts.filter(start => start > t);
       const startInMs = Math.max(0, busyUntil - t);
-      if (starts.length >= bounds.maxQueued || startInMs > bounds.maxLagMs) {
+      if (starts.length >= bounds.maxQueued || startInMs > maxLagMs) {
         return { startInMs: 0, motion: false };
       }
       busyUntil = t + startInMs + spanMs;

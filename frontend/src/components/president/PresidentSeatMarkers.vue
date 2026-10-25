@@ -27,7 +27,6 @@ const medal = computed(() => {
 });
 const outText = computed(() => {
   const place = props.player.place;
-  if (!props.player.forbiddenFinish) return format(ui.table.out, { n: place ?? '' });
   return place === null ? ui.table.outForbidden : format(ui.table.outForbiddenPlace, { n: place });
 });
 </script>
@@ -41,7 +40,7 @@ const outText = computed(() => {
       <span class="medal-word" data-test="seat-medal-word" aria-hidden="true">{{ ui.table.medal.out }}</span>
       <span class="sr-only">{{ medal.label }}</span>
     </span>
-    <span v-else-if="player.out" class="marker marker--out" :class="{ 'marker--forbidden': player.forbiddenFinish }"
+    <span v-else-if="player.out && player.forbiddenFinish" class="marker marker--out marker--forbidden"
           data-test="seat-out">{{ outText }}</span>
     <span v-else-if="player.passed" class="marker" data-test="seat-passed">{{ ui.table.passed }}</span>
     <span v-if="showReady && player.ready" class="marker marker--ready" data-test="seat-ready"><i class="pi pi-check" aria-hidden="true"></i><span class="ready-text" :class="{ 'sr-only': compact }">{{ ui.table.ready }}</span></span>

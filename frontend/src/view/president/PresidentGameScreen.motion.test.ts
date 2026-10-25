@@ -448,6 +448,76 @@ describe('PresidentGameScreen pictures (characterisation)', () => {
     });
   });
 
+  describe('a scaled exchange of eight players (the returns queue behind the deal)', () => {
+    const pairs = (doneSeats: number[]) => [[0, 7], [1, 6], [2, 5], [3, 4]].map(([high, low]) =>
+      ({ high, low, count: 2, done: doneSeats.includes(high) }));
+    const roster = () => seatsOf(8, { 0: { title: 'PRESIDENT' }, 7: { title: 'SCUM' } });
+    const over = () => playing({ round: 1, phase: 'ROUND_OVER', legalPlays: [], availableActions: ['READY'], players: roster() });
+    const dealt = (done: number[], over2: Partial<PresidentState> = {}) => playing({
+      round: 2, version: 2, phase: 'EXCHANGE', legalPlays: [], availableActions: ['GIVE_BACK'], toGiveBack: 2, players: roster(),
+      exchange: pairs(done), hand: buildPresidentHand(['3', 'CLUB'], ['9', 'HEART'], ['KING', 'HEART'], ['ACE', 'CLUB']),
+      received: buildPresidentHand(['KING', 'HEART'], ['ACE', 'CLUB']), ...over2,
+    });
+    const rowState = (wrapper: Wrapper, index: number) => wrapper.findAll('[data-test="board-row"]')[index]?.attributes('data-state');
+    const heard = (wrapper: Wrapper) => wrapper.findAll('[data-test="president-announcements"] li').map(li => li.text());
+
+    it('aGiveBackDuringTheDeal_isQueuedFlownAndAnnounced_notPlayedAsRingsOnly', async () => {
+      const { store, wrapper } = await mountTable(over());
+      store.applyEvent({ type: 'state-update', state: dealt([]) });
+      await flushPromises();
+      await vi.advanceTimersByTimeAsync(950);
+      // I give back while the deal is still flying (it lasts about 4.5 s with four pairs of two cards)
+      store.applyEvent({ type: 'state-update', state: dealt([0], {
+        version: 3, hand: buildPresidentHand(['KING', 'HEART'], ['ACE', 'CLUB']), given: buildPresidentHand(['3', 'CLUB'], ['9', 'HEART']),
+      }) });
+      await flushPromises();
+      const plays = recording.lines.filter((line): line is { play: { marksOnly?: boolean; startInMs?: number } } =>
+        typeof line === 'object' && line !== null && 'play' in line);
+      expect(plays).toHaveLength(2);
+      expect(plays[1].play.marksOnly).toBe(false);
+      expect(plays[1].play.startInMs).toBeGreaterThan(3500);
+      // the leg is in flight: its row says so, and nothing is announced yet
+      expect(rowState(wrapper, 0)).toBe('returning');
+      expect(heard(wrapper).some(text => text.includes('back'))).toBe(false);
+      await vi.advanceTimersByTimeAsync(7000);
+      await flushPromises();
+      expect(rowState(wrapper, 0)).toBe('done');
+      expect(heard(wrapper).some(text => text.includes('You gave') && text.includes('back'))).toBe(true);
+    });
+
+    it('switchingToInstantMidDeal_endsTheLegsInFlightAtOnce', async () => {
+      const { store, wrapper } = await mountTable(over());
+      store.applyEvent({ type: 'state-update', state: dealt([]) });
+      await flushPromises();
+      await vi.advanceTimersByTimeAsync(300);
+      expect(rowState(wrapper, 0)).toBe('giving');
+      for (let i = 0; i < 3 && localStorage.getItem('animationSpeed') !== 'instant'; i++) {
+        await wrapper.get('[data-test="speed-button"]').trigger('click');
+      }
+      await flushPromises();
+      expect(localStorage.getItem('animationSpeed')).toBe('instant');
+      expect(wrapper.findAll('[data-test="board-row"]').map(r => r.attributes('data-state'))).toEqual(['choosing', 'choosing', 'choosing', 'choosing']);
+    });
+
+    it('aReturnPlayedAsRingsOnlyBecauseTheQueueIsFull_isStillAnnouncedAtOnce', async () => {
+      const { store, wrapper } = await mountTable(over());
+      store.applyEvent({ type: 'state-update', state: dealt([]) });
+      await flushPromises();
+      await vi.advanceTimersByTimeAsync(300);
+      // the four returns come one after the other: the last one starts too late behind the deal and the returns before it
+      for (const done of [[0], [0, 1], [0, 1, 2], [0, 1, 2, 3]]) {
+        store.applyEvent({ type: 'state-update', state: dealt(done, { version: 3 + done.length, toGiveBack: 0 }) });
+        await flushPromises();
+      }
+      const plays = recording.lines.filter((line): line is { play: { marksOnly?: boolean } } =>
+        typeof line === 'object' && line !== null && 'play' in line);
+      expect(plays.map(p => p.play.marksOnly)).toEqual([false, false, false, false, true]);
+      // the pair whose return was not flown is not left "returning": its leg is told at once
+      expect(rowState(wrapper, 3)).not.toBe('returning');
+      expect(heard(wrapper).filter(text => text.includes('gave') && text.includes('back'))).toHaveLength(1);
+    });
+  });
+
   describe('the end of a round and of the match', () => {
     const places = { 0: { place: 3, title: 'PRESIDENT' as const }, 1: { place: 1, title: 'SCUM' as const }, 2: { place: 2, title: 'NEUTRAL' as const }, 3: { place: 4, title: 'NEUTRAL' as const } };
     const scored = (round: number) => ({

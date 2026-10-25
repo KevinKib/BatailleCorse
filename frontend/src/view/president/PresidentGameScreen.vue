@@ -411,13 +411,18 @@ watch(() => store.game, (game, previous) => {
   display.show(game);
 }, { immediate: true });
 // Instant (or reduced motion) tells everything that waits at once.
-watch(still, isStill => { if (isStill) display.flush(); });
+watch(still, isStill => {
+  if (!isStill) return;
+  display.flush();
+  // Nothing flies any more: the legs of the exchange still in flight are over (and not told: the player chose not to wait).
+  for (const key of [...flyingLegs.value]) endLeg(key, null);
+});
 
 // The exchange (spec §11 decision 7): the cards the exchange moved fly between the hands, from the two successive
 // states (the events carry counts, never cards). The state already has them in their new hand: the seats' counts and
 // my own hand wait for the landing. Same queue, speed and rings as the plays.
 async function playExchange(change: { before: PresidentState; after: PresidentState }) {
-  // The speed as it is (0 at Instant): the summary is read for its three seconds times this.
+  // The speed as it is (0 at Instant): the board is read for its three seconds times this.
   const speedNow = speedFactor(speed.value);
   const moves = planExchangeFlights(change.before, change.after, store.mySeat, factor.value);
   // Before the new state is rendered (this watcher runs pre-flush): its legs are in flight, so no row says "done" early.
@@ -432,10 +437,11 @@ async function playExchange(change: { before: PresidentState; after: PresidentSt
   }
   // The DOM follows the new state before the flights are measured on it, then the same queue, speed and rings as the plays.
   await nextTick();
-  const admission = await motion.play({ movements: moves });
+  const admission = await motion.play({ movements: moves }, { maxLagMs: PRESIDENT_TEMPO.exchangeQueueLagMaxMs });
   // Each leg lands with its last card (never later than the counts wait); with no motion nothing was in flight.
   for (const key of legs) {
-    if (!admission.motion) { endLeg(key, null); continue; }
+    // Rings only because the queue is full: the leg is shown all the same, so it is told at once (not under Instant).
+    if (!admission.motion) { endLeg(key, admission.still ? null : change.after); continue; }
     scheduleLegEnd(key, Math.min(admission.startInMs + landings[key], PRESIDENT_TEMPO.countLagMaxMs), change.after);
   }
   const endMs = admission.still ? PRESIDENT_TEMPO.markReducedMs
@@ -465,7 +471,7 @@ async function playExchange(change: { before: PresidentState; after: PresidentSt
 watch(() => store.stateChange, change => { if (change) void playExchange(change); });
 
 // The acknowledgement of the exchange (the table waits for every human to have seen it): one timer per round, armed by
-// the change that opens the view or, after a reload, by the summary showing. The store sends once per round and only
+// the change that opens the view or, after a reload, by the board showing. The store sends once per round and only
 // while the server asks for it, so a timer that fires late finds nothing to do.
 let ackTimer: ReturnType<typeof setTimeout> | null = null;
 let ackArmedRound: number | null = null;
@@ -492,6 +498,7 @@ function armAcknowledgement(flightsEndMs: number, speedNow: number) {
 watch(() => store.game?.phase === 'EXCHANGE_VIEW', inView => {
   if (inView) return;
   clearAcknowledgement();
+  reading.value = null;
   ackArmedRound = null;
 });
 onBeforeUnmount(clearAcknowledgement);

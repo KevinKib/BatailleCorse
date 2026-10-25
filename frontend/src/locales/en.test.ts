@@ -276,6 +276,7 @@ describe('President messages', () => {
     for (const chip of ['mustPlay.on', 'reducedCut.on']) expect(ui.chips[chip], chip).toBeTruthy();
     for (const reason of ['ALL_PASSED', 'FIRST_OUT', 'CUT', 'QUAD']) expect(ui.trickEnd[reason], reason).toContain('{player}');
     expect(ui.trickEnd.forbidden).toContain('{player}');
+    expect(ui.table).not.toHaveProperty('out');
     expect(ui.table.outForbidden).toBeTruthy();
     expect(ui.table.outForbiddenPlace).toContain('{n}');
     expect(ui.summary.forbidden).toBeTruthy();

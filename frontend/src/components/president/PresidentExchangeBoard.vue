@@ -116,8 +116,10 @@ const barShown = () => props.reading !== null && !props.still && props.reading.d
   height: 24px; margin-left: auto; padding: 0; border: 1px solid rgba(255, 255, 255, 0.35); border-radius: 50%;
   background: rgba(255, 255, 255, 0.08); color: #fff; font-size: 0.6rem; cursor: pointer;
 }
-/* A 44 px target around the 24 px button. */
-.seen::before { content: ''; position: absolute; inset: -10px; }
+/* A 44 x 44 px target around the 24 px button, kept inside the board (which clips what overflows its padding): it
+   stops short of the board's rounded top-right corner and extends left and down over the first row's end, above the rows. */
+.seen { z-index: 1; }
+.seen::before { content: ''; position: absolute; top: -1px; right: -3px; width: 44px; height: 44px; }
 .seen--off { visibility: hidden; }
 .rows {
   flex: 1 1 auto; min-height: 0; margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 2px;
