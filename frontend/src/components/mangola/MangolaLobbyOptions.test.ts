@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
 import MangolaLobbyOptions from './MangolaLobbyOptions.vue';
 import type { OptionDescriptor } from '../../model/lobby/LobbyView';
@@ -68,5 +68,17 @@ describe('MangolaLobbyOptions', () => {
   it('givenAHostWhoReloadsOnANonDefaultDirection_thenCustomiseIsOpenToo', () => {
     const wrapper = mountOptions({ firstPlayer: 'random', direction: 'clockwise' }, true);
     expect(wrapper.get('[data-test="option-direction-clockwise"]').exists()).toBe(true);
+  });
+
+  it('puts the Private game switch at the top of the Customise panel, even with no customised option', async () => {
+    const set = vi.fn();
+    const wrapper = mount(MangolaLobbyOptions, {
+      props: { descriptors: [descriptors[0]], options: { firstPlayer: 'random' }, editable: true, privacy: { value: false, editable: true, set } },
+    });
+    await wrapper.get('[data-test="customise"]').trigger('click');
+    const panel = wrapper.get('#mangola-all-options');
+    expect(panel.element.firstElementChild?.querySelector('[data-test="private-switch"]')).not.toBeNull();
+    await panel.get('[data-test="private-switch"]').trigger('click');
+    expect(set).toHaveBeenCalledWith(true);
   });
 });

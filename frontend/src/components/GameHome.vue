@@ -14,7 +14,7 @@ import { preloadAllCards } from '../composables/useCardAnimation';
 const props = defineProps<{
   game: GameDefinition;
   /** Creates the game's lobby and resolves with its id. */
-  createLobby: (name?: string) => Promise<string>;
+  createLobby: (name?: string, privateGame?: boolean) => Promise<string>;
 }>();
 
 const ui = useI18n().home;
@@ -27,6 +27,7 @@ const { playerName } = storeToRefs(useSettingsStore());
 const gone = computed(() => route.query.gone === '1');
 const lost = computed(() => route.query.lost === '1');
 
+const privateGame = ref(false);
 const creating = ref(false);
 const createError = ref(false);
 
@@ -35,7 +36,7 @@ async function newGame() {
   creating.value = true;
   createError.value = false;
   try {
-    const id = await props.createLobby(playerName.value || undefined);
+    const id = await props.createLobby(playerName.value || undefined, privateGame.value);
     router.push(props.game.roomRoute(id));
   } catch {
     createError.value = true;
@@ -63,6 +64,14 @@ onMounted(() => preloadAllCards());
         autocomplete="nickname"
         class="text-input"
         data-test="name" />
+    </div>
+    <div class="private-row">
+      <input id="home-private" v-model="privateGame" type="checkbox" class="private-box"
+             data-test="private-game" aria-describedby="home-private-hint" />
+      <div class="private-text">
+        <label for="home-private" class="private-label">{{ ui.privateGame }}</label>
+        <p id="home-private-hint" class="private-hint">{{ ui.privateGameHint }}</p>
+      </div>
     </div>
     <Button
       data-test="new-game"
@@ -95,3 +104,11 @@ onMounted(() => preloadAllCards());
       @click="router.push({ name: 'games' })" />
   </TitlePanel>
 </template>
+
+<style scoped>
+.private-row { width: 100%; display: flex; align-items: flex-start; gap: 12px; min-height: 44px; }
+.private-box { flex: none; width: 24px; height: 24px; margin: 10px 0 0; accent-color: var(--gold); cursor: pointer; }
+.private-text { display: flex; flex-direction: column; gap: 2px; padding-top: 10px; text-align: left; }
+.private-label { font-size: 0.875rem; line-height: 1.25rem; font-weight: 600; color: rgba(255, 255, 255, 0.9); cursor: pointer; }
+.private-hint { margin: 0; font-size: 0.8125rem; line-height: 1.2rem; color: rgba(255, 255, 255, 0.6); }
+</style>

@@ -1,16 +1,19 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, ref, useSlots, watch } from 'vue';
 import { Button } from 'primevue';
 import TitleCardFan from '../TitleCardFan.vue';
 import LobbySeats from './LobbySeats.vue';
 import LobbyGameOptions from './LobbyGameOptions.vue';
 import LobbyInvite from './LobbyInvite.vue';
+import LobbyCustomise from './LobbyCustomise.vue';
+import LobbyPrivateOption from './LobbyPrivateOption.vue';
 import LocalPreferences from '../LocalPreferences.vue';
 import { useI18n } from '../../composables/useI18n';
 import { gameChoice } from '../../locales/gameChoice';
 import { plural } from '../../locales/format';
 import type { GameDefinition } from '../../model/games';
 import type { LobbyView } from '../../model/lobby/LobbyView';
+import type { LobbyPrivacy } from '../../model/lobby/LobbyPrivacy';
 
 // Waiting room shared by every game: who is here, the game options (editable by the host), how to invite,
 // and the Start button. It owns no state and imports no store: it shows the lobby it is given and emits what
@@ -22,6 +25,11 @@ const props = defineProps<{
   error?: string | null;
   /** A Start is on its way: Start shows a spinner and cannot be pressed again. */
   starting?: boolean;
+  /**
+   * The game's own options panel (the `options` slot) holds the Private game switch, from the `privacy` slot prop,
+   * as President and Mangola do inside their Customise. Otherwise the lobby adds a Customise with that switch alone.
+   */
+  privacyInOptions?: boolean;
 }>();
 const emit = defineEmits<{
   start: [];
@@ -31,15 +39,27 @@ const emit = defineEmits<{
   'remove-seat': [seat: number];
   'set-seat-option': [seat: number, key: string, value: string];
   'set-option': [key: string, value: string];
+  'set-private': [value: boolean];
   rename: [name: string];
 }>();
 
+const slots = useSlots();
 const messages = useI18n();
 const ui = messages.lobby;
 const gameName = computed(() => gameChoice(messages, props.game.key).name);
 const isHost = computed(() => props.lobby.mySeat === props.lobby.hostSeat);
 const joinLink = computed(() => `${location.origin}${props.game.joinRoute(props.lobby.gameId)}`);
 const descriptors = computed(() => props.lobby.optionDescriptors ?? []);
+const privateGame = computed(() => props.lobby.privateGame ?? false);
+const privacy = computed<LobbyPrivacy>(() => ({
+  value: privateGame.value,
+  editable: isHost.value,
+  set: (value: boolean) => emit('set-private', value),
+}));
+const slotOptions = computed(() => !!slots.options && descriptors.value.length > 0);
+// The switch sits in the game's own panel when that panel takes it; else in a Customise of its own (host only:
+// a guest reads the chip next to the invite link).
+const ownCustomise = computed(() => isHost.value && !(props.privacyInOptions && slotOptions.value));
 const joinedCount = computed(() => props.lobby.players.filter(p => p.joined).length);
 const playersNeeded = computed(() => Math.max(0, props.lobby.minPlayers - joinedCount.value));
 
@@ -83,7 +103,8 @@ onBeforeUnmount(() => { if (noticeTimer) clearTimeout(noticeTimer); });
           :descriptors="descriptors"
           :options="lobby.options ?? {}"
           :editable="isHost && (lobby.canEditOptions ?? false)"
-          :set-option="(key: string, value: string) => emit('set-option', key, value)" />
+          :set-option="(key: string, value: string) => emit('set-option', key, value)"
+          :privacy="privacy" />
       </div>
 
       <LobbySeats
@@ -105,7 +126,11 @@ onBeforeUnmount(() => { if (noticeTimer) clearTimeout(noticeTimer); });
           @set-option="(key, value) => emit('set-option', key, value)" />
       </div>
 
-      <LobbyInvite :join-link="joinLink" />
+      <LobbyCustomise v-if="ownCustomise" panel-id="lobby-private-options">
+        <LobbyPrivateOption :model-value="privateGame" :editable="isHost" @change="value => emit('set-private', value)" />
+      </LobbyCustomise>
+
+      <LobbyInvite :join-link="joinLink" :private-game="privateGame" :show-chip="!isHost" />
 
       <div class="actions">
         <template v-if="isHost">
