@@ -1,7 +1,15 @@
 import SockJS from 'sockjs-client/dist/sockjs';
 import { Client } from '@stomp/stompjs';
 import { useBatailleCorseStore } from '../state/BatailleCorse.store';
+import type { PublicLobbyList } from '../model/lobby/PublicLobby';
 import { setConnectionOnline } from '../composables/useConnectionStatus';
+
+interface PublicLobbySubscription {
+  gameType: string;
+  onMessage: (list: PublicLobbyList) => void;
+  onConnected?: () => void;
+  current: { unsubscribe: () => void } | null;
+}
 
 class WebSocketService {
 
@@ -14,6 +22,8 @@ class WebSocketService {
   private currentPresence: string | null = null;
   private seatSubscription: { gameId: string; seat: number; token: string; onMessage: (r: any) => void; onConnected?: () => void } | null = null;
   private currentSeatSub: { unsubscribe: () => void } | null = null;
+  // Public game list subscriptions of the join page: open channels, no token. They survive reconnects.
+  private publicLobbySubs = new Set<PublicLobbySubscription>();
   // Commands sent before the first connection came up. A lobby is shown from REST data, so a player can act
   // while SockJS is still connecting: those commands wait for the connection instead of failing.
   private everConnected = false;
@@ -59,6 +69,9 @@ class WebSocketService {
         // Whatever was broadcast before this subscription existed (the first connection, or an offline spell)
         // is lost: let the owner of the seat reload its state now that the channel is live.
         this.seatSubscription?.onConnected?.();
+
+        // The public lists missed whatever was pushed while offline: each owner refetches its snapshot.
+        this.publicLobbySubs.forEach(s => this.doSubscribeToPublicLobbies(s));
       },
       onWebSocketClose: () => {
         // Fires on every close, including a failed reconnect attempt: we are offline until onConnect.
@@ -96,6 +109,26 @@ class WebSocketService {
     this.currentSeatSub?.unsubscribe();
     this.currentSeatSub = null;
     this.seatSubscription = null;
+  }
+
+  /**
+   * Follows the public game list of a game type (`/topic/lobbies/{gameType}`, the whole list at each push).
+   * `onConnected` is called after every (re)subscription, including this one when the connection is already
+   * live: the caller refetches its snapshot there. Returns the unsubscribe function.
+   */
+  public subscribeToPublicLobbies(
+    gameType: string, onMessage: (list: PublicLobbyList) => void, onConnected?: () => void,
+  ): () => void {
+    const entry: PublicLobbySubscription = { gameType, onMessage, onConnected, current: null };
+    this.publicLobbySubs.add(entry);
+    if (this.client?.connected) {
+      this.doSubscribeToPublicLobbies(entry);
+    }
+    return () => {
+      entry.current?.unsubscribe();
+      entry.current = null;
+      this.publicLobbySubs.delete(entry);
+    };
   }
 
   public subscribeToGame(gameId: string) {
@@ -143,6 +176,15 @@ class WebSocketService {
       message => onMessage(JSON.parse(message.body)),
       { token },
     );
+  }
+
+  private doSubscribeToPublicLobbies(entry: PublicLobbySubscription) {
+    entry.current?.unsubscribe();
+    entry.current = this.client.subscribe(
+      `/topic/lobbies/${entry.gameType}`,
+      message => entry.onMessage(JSON.parse(message.body)),
+    );
+    entry.onConnected?.();
   }
 
   private doSubscribeToGame(gameId: string) {
