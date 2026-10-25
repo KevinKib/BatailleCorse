@@ -3,6 +3,7 @@ package org.kevinkib.cardgames.config;
 import org.kevinkib.cardgames.mangola.domain.Mangola;
 import org.kevinkib.cardgames.mangola.domain.MangolaFactory;
 import org.kevinkib.cardgames.mangola.domain.bot.ExpertMangolaBot;
+import org.kevinkib.cardgames.mangola.presentation.bot.MangolaBotLevels;
 import org.kevinkib.cardgames.mangola.presentation.MangolaGameActions;
 import org.kevinkib.cardgames.mangola.presentation.bot.MangolaBotCoordinator;
 import org.kevinkib.cardgames.mangola.presentation.dto.MangolaDto;
@@ -70,9 +71,11 @@ public class MangolaConfig {
 
     @Bean
     public SeatStateBroadcaster<Mangola, MangolaDto> mangolaStateBroadcaster(
-            GameMessagingService gameMessagingService, SessionService sessionService) {
+            GameMessagingService gameMessagingService, SessionService sessionService,
+            BotSeatOptions botSeatOptions) {
         return new SeatStateBroadcaster<>(gameMessagingService, sessionService::botSeats, sessionService::seatNames,
-                (game, viewer, names, bots) -> MangolaDto.forViewer(game, viewer, names));
+                (game, viewer, names, bots) -> MangolaDto.forViewer(game, viewer, names, bots,
+                        MangolaBotLevels.of(game.getId(), bots, botSeatOptions)));
     }
 
     @Bean
