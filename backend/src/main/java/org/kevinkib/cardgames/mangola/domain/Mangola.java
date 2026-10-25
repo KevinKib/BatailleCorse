@@ -37,6 +37,8 @@ public class Mangola implements Game {
     private final GameId id;
     private final MangolaRules rules;
     private final PlayerId seatA;
+    /** The board's orientation, kept for the clients to draw; nothing in the engine reads it. */
+    private final SowingDirection direction;
     private MangolaBoard board;
     private PlayerId current;
     private Phase phase;
@@ -54,6 +56,7 @@ public class Mangola implements Game {
         this.id = id;
         this.rules = rules;
         this.seatA = seatA;
+        this.direction = SowingDirection.DEFAULT;
         this.board = MangolaBoard.empty();
         this.current = seatA;
         this.phase = Phase.PLACEMENT;
@@ -65,6 +68,7 @@ public class Mangola implements Game {
         this.id = id;
         this.rules = rules;
         this.seatA = seatA;
+        this.direction = SowingDirection.DEFAULT;
         this.board = board;
         this.current = current;
         this.phase = Phase.PLAY;
@@ -83,6 +87,10 @@ public class Mangola implements Game {
 
     private static List<Integer> layoutOnBoard(MangolaBoard board, Side side) {
         return MangolaGeometry.loop(side).stream().map(board::seeds).toList();
+    }
+
+    public SowingDirection direction() {
+        return direction;
     }
 
     /** A game in the PLAY phase on a given board, side A (the starting seat) to move. */

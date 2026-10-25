@@ -499,6 +499,16 @@ describe('Mangola messages', () => {
     expect(['host', 'guest', 'random'].map(v => firstPlayer[v])).toEqual(['Host', 'Guest', 'Random']);
   });
 
+  it('givenTheSowingDirectionOption_thenItAndTheRulesSentenceAreNamed', () => {
+    const { direction } = messagesEn.options.mangola;
+    expect(direction.label).toBe('Sowing direction');
+    expect(['anticlockwise', 'clockwise'].map(v => direction[v])).toEqual(['Anticlockwise', 'Clockwise']);
+    const board = messagesEn.mangola.sections.find(s => s.title.toLowerCase().includes('board'));
+    expect(board?.kind).toBe('text');
+    expect(board?.kind === 'text' && board.body.join(' ')).toContain(
+      'The small arrows show the direction: anticlockwise unless the host chose clockwise in the lobby.');
+  });
+
   it('givenABotSeat_thenItsLevelsAreNamedAndTheRulesSayTheExpertIsNotPerfect', () => {
     const { level } = messagesEn.options.mangola;
     expect(level.label).toBe('Level');
