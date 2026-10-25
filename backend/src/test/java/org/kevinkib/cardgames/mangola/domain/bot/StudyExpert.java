@@ -46,11 +46,25 @@ final class StudyExpert implements MangolaBot {
     }
 
     StudyExpert(RandomGenerator random, long nodeCap, Weights weights, long layoutNodeCap) {
+        this(random, nodeCap, weights, layoutNodeCap, List.of(), List.of());
+    }
+
+    /**
+     * A hybrid for the study: {@code extraCandidates} are scored before the usual candidates and {@code
+     * extraOpponents} join the typical opponents (empty lists give the production expert).
+     */
+    StudyExpert(RandomGenerator random, long nodeCap, Weights weights, long layoutNodeCap,
+                List<int[]> extraCandidates, List<int[]> extraOpponents) {
         this.random = random;
         this.nodeCap = nodeCap;
         this.weights = weights;
         this.layoutNodeCap = layoutNodeCap;
+        this.extraCandidates = extraCandidates;
+        this.extraOpponents = extraOpponents;
     }
+
+    private final List<int[]> extraCandidates;
+    private final List<int[]> extraOpponents;
 
     // ------------------------------------------------------------------ the port
 
@@ -102,10 +116,20 @@ final class StudyExpert implements MangolaBot {
     }
 
     private int[] oneProposal(MangolaRules rules, Side side) {
-        List<int[]> opponents = typicalOpponents();
+        List<int[]> opponents = new ArrayList<>(typicalOpponents());
+        opponents.addAll(extraOpponents);
         List<int[]> catalogue = MangolaLayouts.catalogue();
         int[] best = null;
         double bestScore = -Double.MAX_VALUE;
+        for (int[] extra : extraCandidates) {
+            if (acceptable(rules, side, extra)) {
+                double score = layoutScore(rules, side, extra, opponents);
+                if (best == null || score > bestScore) {
+                    best = extra.clone();
+                    bestScore = score;
+                }
+            }
+        }
         int start = random.nextInt(catalogue.size());
         for (int i = 0; i < LAYOUT_CANDIDATES; i++) {
             int[] candidate = i < LAYOUT_CANDIDATES - 4

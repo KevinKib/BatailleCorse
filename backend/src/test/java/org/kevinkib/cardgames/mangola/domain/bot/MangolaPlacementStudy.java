@@ -122,6 +122,11 @@ class MangolaPlacementStudy {
         if (stage("duel")) {
             duels(extended, extendedResults);
         }
+        if (stage("hybrid")) {
+            List<PlacementTournament.Placement> finalPool = stage("oracle") ? extended : readLayouts("final");
+            PlacementTournament.Results finalResults = stage("oracle") ? extendedResults : readPairs("final", finalPool);
+            hybridDuels(finalPool, finalResults);
+        }
         line("Total wall time %.1f s, %d threads", (System.nanoTime() - started) / 1e9, threads);
         Files.writeString(OUT.resolve("report.txt"), report.toString(), StandardCharsets.UTF_8);
     }
@@ -597,6 +602,61 @@ class MangolaPlacementStudy {
         duel("current medium vs easy", currentMedium, easy);
         duel("proposed vs current expert (" + PRODUCTION_LIKE_CAP + " nodes, 100 games)", proposed, currentExpert,
                 expert(PRODUCTION_LIKE_CAP, StudyExpert.Weights.PRODUCTION), 100);
+    }
+
+    /**
+     * The hybrid: the current expert's layout search, with the equilibrium list of its side scored first and the
+     * other side's list added to its typical opponents. Measured against the same references as the proposal.
+     */
+    private void hybridDuels(List<PlacementTournament.Placement> pool, PlacementTournament.Results results) {
+        ZeroSumGame.Solution aware = ZeroSumGame.solve(results.starter(), FICTITIOUS_PLAY_ITERATIONS);
+        double[] starterMix = pruned(aware.rowMix());
+        double[] secondMix = pruned(aware.columnMix());
+        List<int[]> starterList = support(pool, starterMix);
+        List<int[]> secondList = support(pool, secondMix);
+        PlacementTournament.LayoutPolicy hybrid = (side, random) -> new StudyExpert(random, 1,
+                StudyExpert.Weights.PRODUCTION, 300, side == Side.A ? starterList : secondList,
+                side == Side.A ? secondList : starterList).proposeLayout(OWNER, side);
+        PlacementTournament.LayoutPolicy proposed = (side, random) ->
+                draw(pool, side == Side.A ? starterMix : secondMix, random);
+        PlacementTournament.LayoutPolicy currentExpert = (side, random) ->
+                new ExpertMangolaBot(random, new ExpertMangolaBot.Budget(StudyExpert.UNLIMITED_MILLIS, 1,
+                        StudyExpert.UNLIMITED_MILLIS)).decideLayout(OWNER, side, Set.of());
+        PlacementTournament.LayoutPolicy currentMedium = (side, random) ->
+                new GreedyMangolaBot(random).decideLayout(OWNER, side, Set.of());
+        PlacementTournament.LayoutPolicy easy = (side, random) ->
+                new RandomMangolaBot(random).decideLayout(OWNER, side, Set.of());
+        line("");
+        line("=== HYBRID DUELS (seed %d, %d games each, expert moves at %d nodes): the current search, its side's list scored first, the other side's list among its opponents",
+                DUEL_SEED, DUEL_GAMES, CAP);
+        duel("hybrid vs current expert", hybrid, currentExpert);
+        duel("hybrid vs proposed", hybrid, proposed);
+        duel("hybrid vs current medium", hybrid, currentMedium);
+        duel("proposed vs easy", proposed, easy);
+        duel("current expert vs easy", currentExpert, easy);
+        duel("hybrid vs easy", hybrid, easy);
+    }
+
+    private static List<int[]> support(List<PlacementTournament.Placement> pool, double[] mix) {
+        List<int[]> layouts = new ArrayList<>();
+        for (int i = 0; i < mix.length; i++) {
+            if (mix[i] > 0) {
+                layouts.add(pool.get(i).layout());
+            }
+        }
+        return layouts;
+    }
+
+    private static List<PlacementTournament.Placement> readLayouts(String tag) throws IOException {
+        List<PlacementTournament.Placement> pool = new ArrayList<>();
+        List<String> lines = Files.readAllLines(OUT.resolve("layouts-" + tag + ".csv"), StandardCharsets.UTF_8);
+        for (String text : lines.subList(1, lines.size())) {
+            String name = text.substring(0, text.indexOf(','));
+            String counts = text.substring(text.indexOf('[') + 1, text.indexOf(']'));
+            pool.add(new PlacementTournament.Placement(name,
+                    Arrays.stream(counts.split(",\\s*")).mapToInt(Integer::parseInt).toArray()));
+        }
+        return pool;
     }
 
     private void duel(String title, PlacementTournament.LayoutPolicy first, PlacementTournament.LayoutPolicy second) {
