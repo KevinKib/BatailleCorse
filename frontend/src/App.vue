@@ -71,7 +71,7 @@ const onLeave = fadeOut;
   --space-8: 64px;
 
   /* Typefaces (visual direction "C bis"), the single place they are named.
-     Loaded from Google Fonts in index.html. Atkinson Hyperlegible ships only
+     Self-hosted: @font-face rules in fonts.css. Atkinson Hyperlegible ships only
      the 400 and 700 weights (plus italics): use those two everywhere. Title
      and UI share the family but keep two tokens. */
   --font-title: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
