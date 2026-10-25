@@ -137,6 +137,20 @@ describe('ThreeMenMorrisGameScreen', () => {
       expect(wrapper.find('[data-test="leave"]').exists()).toBe(true);
     });
 
+    it('shows the level of a computer opponent in its name', async () => {
+      const { wrapper, store } = await mountScreen(lobbyView({
+        players: [{ seat: 0, name: 'Alice', joined: true },
+          { seat: 1, name: 'Bot 1', joined: true, bot: true, seatOptions: { level: 'perfect' } }],
+      }));
+      const game = morrisState();
+      store.applyEvent({ type: 'state-update', state: {
+        ...game, players: game.players.map(p => (p.seat === 1 ? { ...p, name: 'Bot 1' } : p)),
+      } });
+      await flushPromises();
+      const tags = wrapper.findAll('[data-test="player-tag"]');
+      expect(tags.map(t => t.get('[data-test="tag-name"]').text())).toEqual(['Bot 1 (Expert)', 'Alice']);
+    });
+
     it('has neither a shortcut gear nor a sound toggle nor a bot', async () => {
       const { wrapper } = await mountScreen(morrisState());
       expect(wrapper.find('[data-test="hotkeys-button"]').exists()).toBe(false);

@@ -660,6 +660,7 @@ export interface MangolaUiMessages {
   };
   // The screen (`MangolaGameScreen`).
   playerLabel: string;                 // '{n}' = 1-based seat number, for a player without a name
+  botWithLevel: string;                // '{name}', '{level}': a bot's name followed by its level
   back: string;
   connecting: string;                  // shown while the first server state is on its way
   table: {
@@ -693,6 +694,7 @@ export interface ThreeMenMorrisUiMessages {
   black: string;                       // colour of seat 1
   you: string;
   playerLabel: string;                 // '{n}' = 1-based seat number, for a player without a name
+  botWithLevel: string;                // '{name}', '{level}': a bot's name followed by its level
   back: string;
   connecting: string;                  // shown while the first server state is on its way
   table: {

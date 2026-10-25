@@ -12,6 +12,7 @@ import { colourOf as colourOfSeat, onPoint, selectable, targets } from '../model
 import { geometryOf, variantKeyOf, type MorrisGeometry } from '../model/threemenmorris/geometries';
 import { useSeatPresence, FORFEIT_NOTICE_HOLD_MS } from '../composables/useSeatPresence';
 import { useSeatRoom } from '../composables/useSeatRoom';
+import { botLevelsOf } from '../model/lobby/botLevel';
 import type { ForfeitEventData } from '../model/SeatLifecycleEvents';
 
 export { FORFEIT_NOTICE_HOLD_MS };
@@ -42,6 +43,8 @@ export const useThreeMenMorrisStore = defineStore('three-men-morris-store', () =
   const state = ref<MorrisView | null>(null);
   const gameId = ref<string | null>(null);
   const mySeat = ref<number>(0);
+  // The level of each computer seat, read from the lobby: the game view does not carry it (a reload mid-game loses it).
+  const botLevels = ref<Record<number, string>>({});
   // The piece I picked before choosing where it goes: a pure UI state, the server judges the move.
   const selected = ref<number | null>(null);
   // What the last PLACE / MOVE (or the GAME_OVER it caused) did, for the live region and the board.
@@ -78,6 +81,7 @@ export const useThreeMenMorrisStore = defineStore('three-men-morris-store', () =
         selected.value = null;
         state.value = event.state;
         room.onStateUpdate(event.state.started);
+        if (!event.state.started) botLevels.value = botLevelsOf(event.state.players);
         if (!event.state.started) { lastMove.value = null; lastRemoval.value = null; drawNotice.value = null; }
         break;
       case 'game-id-change': gameId.value = event.gameId; break;
@@ -86,6 +90,7 @@ export const useThreeMenMorrisStore = defineStore('three-men-morris-store', () =
         break;
       case 'removed':
         state.value = null;
+        botLevels.value = {};
         selected.value = null;
         lastMove.value = null;
         lastRemoval.value = null;
@@ -174,6 +179,7 @@ export const useThreeMenMorrisStore = defineStore('three-men-morris-store', () =
 
   const leave = () => room.leave(() => {
     state.value = null;
+    botLevels.value = {};
     selected.value = null;
     lastMove.value = null;
     lastRemoval.value = null;
@@ -215,7 +221,7 @@ export const useThreeMenMorrisStore = defineStore('three-men-morris-store', () =
   }
 
   return {
-    state, game, lobby, lobbyError, removedByHost, starting, gameId, mySeat, rematch, lastForfeit,
+    state, game, lobby, botLevels, lobbyError, removedByHost, starting, gameId, mySeat, rematch, lastForfeit,
     selected, lastMove, lastRemoval, capturedPoint, removalPending, iMustRemove, drawNotice, gamePhase,
     disconnections: presence.disconnections,
     liveDisconnections: presence.liveDisconnections,

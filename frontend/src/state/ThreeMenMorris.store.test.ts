@@ -535,4 +535,18 @@ describe('ThreeMenMorris store', () => {
     expect(store.state).toBeNull();
     expect(store.gameId).toBeNull();
   });
+
+  describe('computer levels', () => {
+    it('remembers the level of each computer seat from the lobby, and forgets it on leaving', () => {
+      const store = seated(0);
+      store.applyEvent({ type: 'state-update', state: lobbyView({
+        players: [{ seat: 0, name: 'Alice', joined: true },
+          { seat: 1, name: 'Bot 1', joined: true, bot: true, seatOptions: { level: 'perfect' } }],
+      }) });
+      store.applyEvent({ type: 'state-update', state: morrisState() });
+      expect(store.botLevels).toEqual({ 1: 'perfect' });
+      expect(store.leave()).toBe(true);
+      expect(store.botLevels).toEqual({});
+    });
+  });
 });

@@ -594,6 +594,21 @@ describe('MangolaGameScreen', () => {
         .toBe(thinking(wrapper).element.parentElement);
     });
 
+    it('shows the level of the computer in its name: tag and thinking line', async () => {
+      const lobby = lobbyView({
+        players: [{ seat: 0, name: 'Alice', joined: true },
+          { seat: 1, name: 'Bot 1', joined: true, bot: true, seatOptions: { level: 'expert' } }],
+      });
+      const { wrapper, store } = await mountScreen(lobby);
+      const before = beforeOpponentMove();
+      store.applyEvent({ type: 'state-update', state: {
+        ...before, players: before.players.map(p => (p.seat === 1 ? { ...p, name: 'Bot 1' } : p)),
+      } });
+      await flushPromises();
+      expect(wrapper.findAll('[data-test="tag-name"]').map(t => t.text())).toEqual(['Bot 1 (Expert)', 'Alice']);
+      expect(thinking(wrapper).text()).toBe('Bot 1 (Expert) is thinking…');
+    });
+
     it('keeps its place when empty, so the board does not move', async () => {
       const { wrapper, store } = await mountScreen(botLobby());
       store.applyEvent({ type: 'state-update', state: mangolaState() }); // my turn

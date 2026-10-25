@@ -80,7 +80,7 @@ describe('Mangola against a bot', () => {
     cy.get('[data-test="confirm"]').should('not.be.disabled').click();
     cy.get('[data-test="mangola-board"]', { timeout: 10000 }).should('be.visible');
     cy.get('[data-test="placement-editor"]').should('not.exist');
-    cy.get('[data-test="tag-name"]').first().should('have.text', 'Bot 1');
+    cy.get('[data-test="tag-name"]').first().should('have.text', 'Bot 1 (Expert)');
   });
 
   it('Expert from a placed checkerboard: the bot answers each move, to an end screen, and Play again keeps it and its level', () => {
@@ -95,11 +95,11 @@ describe('Mangola against a bot', () => {
     cy.get('[data-test="confirm"]').should('not.be.disabled').click();
     cy.get('[data-test="mangola-board"]', { timeout: 10000 }).should('be.visible');
     cy.get('[data-test="placement-editor"]').should('not.exist');
-    cy.get('[data-test="tag-name"]').first().should('have.text', 'Bot 1');
+    cy.get('[data-test="tag-name"]').first().should('have.text', 'Bot 1 (Expert)');
     cy.get('[data-test="turn-hint"]').should('contain.text', 'Your turn');
     // First exchange: the bot's move is read out and leaves its mark on the board.
     cy.get('[data-test^="pit-"][data-selectable="true"]').first().click();
-    cy.get('[data-test="board-live"]:contains("Bot 1 sowed")', { timeout: 30000 }).should('exist');
+    cy.get('[data-test="board-live"]:contains("Bot 1 (Expert) sowed")', { timeout: 30000 }).should('exist');
     // Once the bot's hand has landed it is my turn again, and its starting pit stays marked.
     cy.get('[data-test="turn-hint"]', { timeout: 30000 }).should('contain.text', 'Your turn');
     cy.get('[data-test^="pit-"][data-last-start="true"]', { timeout: 30000 }).should('exist');

@@ -444,6 +444,7 @@ export const messagesEn: Messages = {
     black: 'Black',
     you: 'You',
     playerLabel: 'Player {n}',
+    botWithLevel: '{name} ({level})',
     back: 'Back',
     connecting: 'Joining the table…',
     table: {
@@ -750,6 +751,7 @@ export const messagesEn: Messages = {
       stuckStart: 'With these two layouts the player who starts would have no move. Change your layout and confirm again.',
     },
     playerLabel: 'Player {n}',
+    botWithLevel: '{name} ({level})',
     back: 'Back',
     connecting: 'Joining the table…',
     table: {
