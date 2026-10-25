@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory, type RouteLocationNormalized, type Router, type RouterHistory } from 'vue-router';
 import GamePickerView from './view/GamePickerView.vue';
 import GameHomeView from './view/GameHomeView.vue';
+import PrivacyView from './view/PrivacyView.vue';
 import GameJoinView from './view/GameJoinView.vue';
 import GameScreen from './view/alpha/GameScreen.vue';
 import BullshitGameScreen from './view/bullshit/BullshitGameScreen.vue';
@@ -21,6 +22,8 @@ const knownGame = (to: RouteLocationNormalized) => (findGame(to.params.game) ? t
 export const routes = [
   { path: '/', name: 'games', component: GamePickerView },
   { path: '/games/:rest(.*)*', redirect: (to: RouteLocationNormalized) => ({ path: `/${[to.params.rest].flat().filter(Boolean).join('/')}`, query: to.query, hash: to.hash }) },
+  // Before `/:game`, so that `privacy` is never taken for a game key.
+  { path: '/privacy', name: 'privacy', component: PrivacyView },
   { path: '/:game', name: 'game-home', component: GameHomeView, beforeEnter: knownGame },
   { path: '/:game/join/:id?', name: 'game-join', component: GameJoinView, beforeEnter: knownGame },
   // Both games create their lobby straight from the Game home: the former /create and /new paths lead there.
