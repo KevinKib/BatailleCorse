@@ -81,6 +81,15 @@ describe('GameHome', () => {
     expect(router.currentRoute.value.path).toBe('/bullshit/room/g42');
   });
 
+  it('givenThePrivateCheckbox_thenItBelongsToTheNewGameBlockNotToJoinGame', async () => {
+    const { wrapper } = await mountHome('bullshit');
+    const block = wrapper.get('[data-test="new-game-block"]');
+    expect(block.find('[data-test="private-game"]').exists()).toBe(true);
+    expect(block.find('[data-test="new-game"]').exists()).toBe(true);
+    expect(block.find('[data-test="join-game"]').exists()).toBe(false);
+    expect(wrapper.get('[data-test="join-game"]').element.closest('[data-test="new-game-block"]')).toBeNull();
+  });
+
   it('givenThePrivateCheckbox_thenItIsOffByDefaultAndDescribedByItsHint', async () => {
     const { wrapper } = await mountHome('bullshit');
     const box = wrapper.get('[data-test="private-game"]');

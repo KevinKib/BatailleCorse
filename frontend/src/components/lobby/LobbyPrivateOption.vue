@@ -33,7 +33,12 @@ const hintId = 'lobby-private-hint';
 </template>
 
 <style scoped>
-.private-option { width: 100%; display: flex; flex-direction: column; gap: 4px; }
+.private-option { width: 100%; display: flex; flex-direction: column; gap: var(--space-1); }
+/* When another option follows, a divider closes this setting (hint included) so the two never read as one text. */
+.private-option:not(:last-child) {
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
 .private-switch {
   display: flex;
   align-items: center;

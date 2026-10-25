@@ -79,7 +79,7 @@ onMounted(() => preloadAllCards());
   background: var(--panel-bg);
   border: 1px solid var(--panel-border);
   border-radius: 20px;
-  padding: 40px 40px 32px;
+  padding: 40px 40px var(--space-4);
   box-shadow: var(--panel-shadow);
   width: 100%;
   max-width: 720px;
@@ -94,7 +94,7 @@ onMounted(() => preloadAllCards());
 /* A short wide window (1280x720): two rows of cards must still fit, so the panel's own spacing tightens. */
 @media (min-width: 900px) and (max-height: 800px) {
   .titlescreen { padding-top: 88px; padding-bottom: 12px; }
-  .title-panel { gap: 12px; padding: 28px 40px 24px; }
+  .title-panel { gap: 12px; padding: 28px 40px var(--space-3); }
 }
 
 .title-block {
@@ -146,15 +146,9 @@ onMounted(() => preloadAllCards());
   gap: 16px;
 }
 
-/* Discreet: small, centred in the bottom padding of the panel (out of the flow, so the games keep their room). */
+/* Discreet: small, centred, last in the panel's flow: the panel gap keeps it off the games and the bottom padding off the card edge. */
 .privacy-link {
-  position: absolute;
-  bottom: 1px;
-  left: 0;
-  right: 0;
-  margin: 0 auto;
-  width: fit-content;
-  padding: 0 8px;
+  padding: 0 var(--space-2);
   line-height: 1.1;
   font-size: 0.7rem;
   color: rgba(255, 255, 255, 0.55);
@@ -165,7 +159,7 @@ onMounted(() => preloadAllCards());
 
 @media (max-width: 640px) {
   .titlescreen { padding: 88px 12px 16px; }
-  .title-panel { padding: 44px 16px 16px; gap: 12px; }
+  .title-panel { padding: 44px 16px var(--space-3); gap: 12px; }
   .game-title { font-size: 2rem; }
   /* Two columns: four games fit a 375x667 phone with no scrolling, nothing hidden. */
   .choices { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
@@ -173,13 +167,14 @@ onMounted(() => preloadAllCards());
 /* Short phones (375x667): the fan above the panel takes less room. */
 @media (max-width: 640px) and (max-height: 700px) {
   .titlescreen { padding-top: 12px; padding-bottom: 6px; }
-  .title-panel { gap: 8px; padding-top: 16px; padding-bottom: 18px; }
+  .title-panel { gap: 8px; padding-top: 16px; padding-bottom: var(--space-3); }
 }
 /* The shortest phones (360x640): six games in three rows need the header to give back some height. */
 @media (max-width: 640px) and (max-height: 660px) {
   .titlescreen { padding-top: 8px; padding-bottom: 2px; }
-  .title-panel { padding-top: 10px; padding-bottom: 14px; gap: 6px; }
+  .title-panel { padding-top: var(--space-2); padding-bottom: var(--space-2); gap: 6px; }
+  .privacy-link { margin-top: 2px; } /* with the 6px panel gap: 8px clear of the games */
   .game-title { font-size: 1.6rem; }
-  .choices { gap: 6px; }
+  .choices { gap: var(--space-1); }
 }
 </style>
