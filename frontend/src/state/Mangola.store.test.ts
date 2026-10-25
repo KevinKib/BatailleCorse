@@ -85,9 +85,9 @@ describe('Mangola store', () => {
   });
 
   describe('board', () => {
-    it('shows my side at the bottom whichever seat I hold', () => {
+    it('shows my side at the bottom whichever seat I hold (clockwise)', () => {
       const store = seated(0);
-      store.applyEvent({ type: 'state-update', state: mangolaState() });
+      store.applyEvent({ type: 'state-update', state: mangolaState({ direction: 'clockwise' }) });
       expect(store.rows[3].map(c => c.pit)).toEqual([0, 1, 2, 3, 4, 5, 6, 7]);
       expect(store.mySide).toBe('A');
       store.applyEvent({ type: 'seat-change', seat: 1 });
@@ -95,12 +95,33 @@ describe('Mangola store', () => {
       expect(store.rows[3].map(c => c.pit)).toEqual([31, 30, 29, 28, 27, 26, 25, 24]);
     });
 
-    it('arrows follow the side of the viewer', () => {
+    it('arrows follow the side of the viewer (clockwise)', () => {
       const store = seated(0);
-      store.applyEvent({ type: 'state-update', state: mangolaState() });
+      store.applyEvent({ type: 'state-update', state: mangolaState({ direction: 'clockwise' }) });
       expect(store.arrowOf(8)).toBe('right');
       store.applyEvent({ type: 'seat-change', seat: 1 });
       expect(store.arrowOf(24)).toBe('left');
+    });
+
+    it('draws anticlockwise by default: columns and arrows mirrored, my side still at the bottom', () => {
+      const store = seated(0);
+      store.applyEvent({ type: 'state-update', state: mangolaState() });
+      expect(store.rows[3].map(c => c.pit)).toEqual([7, 6, 5, 4, 3, 2, 1, 0]);
+      expect(store.arrowOf(8)).toBe('left');
+      store.applyEvent({ type: 'seat-change', seat: 1 });
+      expect(store.rows[3].map(c => c.pit)).toEqual([24, 25, 26, 27, 28, 29, 30, 31]);
+      expect(store.arrowOf(24)).toBe('right');
+    });
+
+    it('rows and arrows follow game.direction, and a new state with the other direction redraws', () => {
+      const store = seated(0);
+      store.applyEvent({ type: 'state-update', state: mangolaState({ direction: 'anticlockwise' }) });
+      expect(store.rows[3].map(c => c.pit)).toEqual([7, 6, 5, 4, 3, 2, 1, 0]);
+      expect(store.arrowOf(15)).toBe('down');
+      store.applyEvent({ type: 'state-update', state: mangolaState({ direction: 'clockwise', version: 1 }) });
+      expect(store.rows[3].map(c => c.pit)).toEqual([0, 1, 2, 3, 4, 5, 6, 7]);
+      expect(store.arrowOf(15)).toBe('down');
+      expect(store.arrowOf(8)).toBe('right');
     });
 
     it('only the legal pits can be sown', () => {
