@@ -11,7 +11,7 @@ import { useSettingsStore } from '../state/Settings.store';
 import { messagesEn } from '../locales/en';
 
 async function mountHome(key: 'bataillecorse' | 'bullshit', query = '',
-  createLobby: (name?: string) => Promise<string> = vi.fn().mockResolvedValue('g1')) {
+  createLobby: (name?: string, privateGame?: boolean) => Promise<string> = vi.fn().mockResolvedValue('g1')) {
   const router = createAppRouter(createMemoryHistory());
   await router.push(`/${key}${query}`);
   await router.isReady();
@@ -77,8 +77,26 @@ describe('GameHome', () => {
     const { wrapper, router } = await mountHome('bullshit', '', createLobby);
     await wrapper.get('[data-test="new-game"]').trigger('click');
     await flushPromises();
-    expect(createLobby).toHaveBeenCalledWith('Alice');
+    expect(createLobby).toHaveBeenCalledWith('Alice', false);
     expect(router.currentRoute.value.path).toBe('/bullshit/room/g42');
+  });
+
+  it('givenThePrivateCheckbox_thenItIsOffByDefaultAndDescribedByItsHint', async () => {
+    const { wrapper } = await mountHome('bullshit');
+    const box = wrapper.get('[data-test="private-game"]');
+    expect((box.element as HTMLInputElement).checked).toBe(false);
+    expect(wrapper.get('label[for="home-private"]').text()).toBe(messagesEn.home.privateGame);
+    expect(wrapper.get(`#${box.attributes('aria-describedby')}`).text()).toBe(messagesEn.home.privateGameHint);
+  });
+
+  it('givenThePrivateCheckboxTicked_whenNewGame_thenCreatesAnUnlistedLobby', async () => {
+    const createLobby = vi.fn().mockResolvedValue('g9');
+    const { wrapper, router } = await mountHome('bullshit', '', createLobby);
+    await wrapper.get('[data-test="private-game"]').setValue(true);
+    await wrapper.get('[data-test="new-game"]').trigger('click');
+    await flushPromises();
+    expect(createLobby).toHaveBeenCalledWith(undefined, true);
+    expect(router.currentRoute.value.path).toBe('/bullshit/room/g9');
   });
 
   it('givenBlankName_whenNewGame_thenCreatesTheLobbyWithoutName', async () => {
@@ -86,7 +104,7 @@ describe('GameHome', () => {
     const { wrapper } = await mountHome('bullshit', '', createLobby);
     await wrapper.get('[data-test="new-game"]').trigger('click');
     await flushPromises();
-    expect(createLobby).toHaveBeenCalledWith(undefined);
+    expect(createLobby).toHaveBeenCalledWith(undefined, false);
   });
 
   it('givenSlowCreation_thenNewGameIsDisabledUntilItAnswers', async () => {

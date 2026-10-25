@@ -314,6 +314,7 @@ export const usePresidentStore = defineStore('president-store', () => {
     setSeatOption: (seat: number, key: string, value: string) => requestLobbyChange(() => session.setSeatOption(seat, key, value)),
     removeSeat: (seat: number) => requestLobbyChange(() => session.removeSeat(seat)),
     rename: (name: string) => requestLobbyChange(() => session.rename(name)),
+    setPrivate: (privateGame: boolean) => requestLobbyChange(() => session.setPrivate(privateGame)),
     leave,
     forfeit: () => session.forfeit(),
     playAgain,

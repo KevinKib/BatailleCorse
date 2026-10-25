@@ -490,3 +490,60 @@ describe('GameLobby local preferences', () => {
     }
   });
 });
+
+describe('GameLobby private game', () => {
+  const guest = () => lobby({ mySeat: 2, canEditOptions: false, players: [
+    { seat: 0, name: 'Alice', joined: true, bot: false },
+    { seat: 2, name: 'Carol', joined: true, bot: false },
+  ] });
+
+  it('gives a game without an options slot a Customise that holds only the switch', async () => {
+    const wrapper = mountLobby({ game: findGame('kobo')!, lobby: lobby({ optionDescriptors: [], options: {} }) });
+    const toggle = wrapper.get('[data-test="customise"]');
+    expect(toggle.attributes('aria-expanded')).toBe('false');
+    expect(wrapper.find('[data-test="private-switch"]').exists()).toBe(false);
+    await toggle.trigger('click');
+    const panel = wrapper.get(`#${toggle.attributes('aria-controls')}`);
+    expect(panel.findAll('[role="switch"]')).toHaveLength(1);
+    expect(panel.get('[data-test="private-switch"]').attributes('aria-checked')).toBe('false');
+  });
+
+  it('emits set-private when the host flips the switch, and shows the lobby value', async () => {
+    const wrapper = mountLobby({ lobby: lobby({ privateGame: true }) });
+    await wrapper.get('[data-test="customise"]').trigger('click');
+    expect(wrapper.get('[data-test="private-switch"]').attributes('aria-checked')).toBe('true');
+    await wrapper.get('[data-test="private-switch"]').trigger('click');
+    expect(wrapper.emitted('set-private')).toEqual([[false]]);
+  });
+
+  it('keeps a single Customise when the game options come through the slot', () => {
+    const wrapper = mount(GameLobby, {
+      props: { game: findGame('bullshit')!, lobby: lobby({ privateGame: true }), privacyInOptions: true },
+      slots: { options: `<template #options="{ privacy }"><p data-test="slot-privacy">{{ privacy.value }}/{{ privacy.editable }}</p></template>` },
+      global: { plugins: [PrimeVue] },
+    });
+    expect(wrapper.get('[data-test="slot-privacy"]').text()).toBe('true/true');
+    expect(wrapper.find('[data-test="customise"]').exists()).toBe(false);
+    expect(wrapper.find('[data-test="private-switch"]').exists()).toBe(false);
+  });
+
+  it('shows a guest a read-only chip instead of the switch, and the hint follows the flag', () => {
+    const priv = mountLobby({ lobby: { ...guest(), privateGame: true } });
+    expect(priv.get('[data-test="private-chip"]').text()).toBe(ui.privateChip);
+    expect(priv.find('[data-test="private-switch"]').exists()).toBe(false);
+    expect(priv.find('[data-test="customise"]').exists()).toBe(false);
+    expect(priv.get('[data-test="invite-hint"]').text()).toBe(ui.inviteHintPrivate);
+
+    const pub = mountLobby({ lobby: guest() });
+    expect(pub.find('[data-test="private-chip"]').exists()).toBe(false);
+    expect(pub.get('[data-test="invite-hint"]').text()).toBe(ui.inviteHintPublic);
+  });
+
+  it('keeps the invite hint in step for the host too', async () => {
+    const wrapper = mountLobby({ lobby: lobby({ privateGame: false }) });
+    expect(wrapper.get('[data-test="invite-hint"]').text()).toBe(ui.inviteHintPublic);
+    await wrapper.setProps({ lobby: lobby({ privateGame: true, lobbyVersion: 2 }) });
+    expect(wrapper.get('[data-test="invite-hint"]').text()).toBe(ui.inviteHintPrivate);
+    expect(wrapper.find('[data-test="private-chip"]').exists()).toBe(false);
+  });
+});

@@ -93,4 +93,17 @@ describe('GamePickerView', () => {
     await flushPromises();
     expect(router.currentRoute.value.fullPath).toBe('/kobo');
   });
+
+  it('givenPicker_thenShowsADiscretePrivacyLinkThatOpensThePrivacyPage', async () => {
+    const { wrapper, router } = await mountPicker();
+    const link = wrapper.get('[data-test="privacy-link"]');
+    expect(link.element.tagName).toBe('A');
+    expect(link.text()).toBe(messagesEn.gamePicker.privacy);
+    expect(link.attributes('href')).toBe('/privacy');
+    // It sits after the games, not among them: the Play buttons stay the only buttons.
+    expect(wrapper.findAll('button')).toHaveLength(6);
+    await link.trigger('click');
+    await flushPromises();
+    expect(router.currentRoute.value.fullPath).toBe('/privacy');
+  });
 });

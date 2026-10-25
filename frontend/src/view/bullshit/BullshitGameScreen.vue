@@ -259,7 +259,8 @@ function leaveLobby() {
       @remove-seat="seat => store.removeSeat(seat)"
       @set-option="(key, value) => store.setOption(key, value)"
       @set-seat-option="(seat, key, value) => store.setSeatOption(seat, key, value)"
-      @rename="name => store.rename(name)" />
+      @rename="name => store.rename(name)"
+      @set-private="value => store.setPrivate(value)" />
 
     <EndGameOverlay
       v-else-if="store.phase === 'finished' && endScreen.showEndOverlay.value"

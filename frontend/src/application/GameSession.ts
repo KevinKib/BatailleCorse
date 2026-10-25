@@ -313,6 +313,7 @@ export default class GameSession {
 
   /** Host only: change one game option (Bataille Corse declares none). */
   setOption(key: string, value: string): void { this.lobby.setOption(key, value); }
+  setPrivate(privateGame: boolean): void { this.lobby.setPrivate(privateGame); }
 
   /** Host only: change one option of a computer seat (its tier). */
   setSeatOption(seat: number, key: string, value: string): void { this.lobby.setSeatOption(seat, key, value); }

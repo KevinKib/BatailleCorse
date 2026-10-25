@@ -49,6 +49,8 @@ onMounted(() => preloadAllCards());
           @play="router.push(game.gameHomeRoute)"
         />
       </section>
+
+      <RouterLink :to="{ name: 'privacy' }" class="privacy-link" data-test="privacy-link">{{ gamePicker.privacy }}</RouterLink>
     </main>
   </div>
 </template>
@@ -144,6 +146,23 @@ onMounted(() => preloadAllCards());
   gap: 16px;
 }
 
+/* Discreet: small, centred in the bottom padding of the panel (out of the flow, so the games keep their room). */
+.privacy-link {
+  position: absolute;
+  bottom: 1px;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  width: fit-content;
+  padding: 0 8px;
+  line-height: 1.1;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.55);
+  text-decoration: underline;
+}
+.privacy-link:hover { color: rgba(255, 255, 255, 0.85); }
+.privacy-link:focus-visible { outline: 2px solid var(--gold-soft); outline-offset: 2px; border-radius: 4px; }
+
 @media (max-width: 640px) {
   .titlescreen { padding: 88px 12px 16px; }
   .title-panel { padding: 44px 16px 16px; gap: 12px; }
@@ -153,13 +172,13 @@ onMounted(() => preloadAllCards());
 }
 /* Short phones (375x667): the fan above the panel takes less room. */
 @media (max-width: 640px) and (max-height: 700px) {
-  .titlescreen { padding-top: 12px; padding-bottom: 12px; }
-  .title-panel { gap: 8px; padding-top: 16px; padding-bottom: 12px; }
+  .titlescreen { padding-top: 12px; padding-bottom: 6px; }
+  .title-panel { gap: 8px; padding-top: 16px; padding-bottom: 18px; }
 }
 /* The shortest phones (360x640): six games in three rows need the header to give back some height. */
 @media (max-width: 640px) and (max-height: 660px) {
-  .titlescreen { padding-top: 8px; padding-bottom: 8px; }
-  .title-panel { padding-top: 10px; padding-bottom: 8px; gap: 6px; }
+  .titlescreen { padding-top: 8px; padding-bottom: 2px; }
+  .title-panel { padding-top: 10px; padding-bottom: 14px; gap: 6px; }
   .game-title { font-size: 1.6rem; }
   .choices { gap: 6px; }
 }
