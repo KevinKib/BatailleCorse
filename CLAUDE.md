@@ -22,6 +22,10 @@ Jeux de société temps réel (Bataille Corse, Bullshit, Kobo, President , la ma
 - Roadmap : issue #1 ; sessions : #5 (fermée) ; e2e : #28 ; démarrage de dev : #54. Cocher ou commenter l'issue quand une PR est mergée ; aucune PR de statut.
 - Specs dans `docs/specs/`, plans dans `docs/plans/`, évolutions du harness dans `docs/harnesses.md`.
 
+## Espacement de l'UI
+
+- Tout changement de mise en page, d'espacement (marge, padding, gap) ou tout nouveau composant, contrôle, texte d'aide du frontend suit le skill `frontend-spacing` (`.claude/skills/frontend-spacing/SKILL.md`) : échelle `--space-1`…`--space-8` d'`App.vue`, règles de proximité, check-list avant PR à 375x667 et 1280x720, et `expectGap` / `expectNoOverlap` (`frontend/cypress/support/spacing.ts`) dans la spec de la fonctionnalité. Pourquoi : ces défauts passaient tous les tests et n'étaient vus qu'en jouant.
+
 ## Tests (toutes les suites avant une PR)
 
 - Backend : `cd backend && mvn -s ../deploy/docker/settings.xml test` (si Maven est installé en local ; sinon via le conteneur de dev, voir le README). Surefire est configuré dans `backend/pom.xml` pour ramasser aussi `**/*IT.java` (par défaut il les ignore) : `mvn test` joue donc les tests unitaires et les `*IT` / `ApplicationContextTest`, qui démarrent le contexte Spring sans Docker (pas de failsafe : aucune phase `verify` nécessaire). Un nouveau test d'intégration doit se nommer `*IT` ou `*Test`, sinon il ne tourne pas.

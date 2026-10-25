@@ -93,6 +93,24 @@ on the former stack (1:19, 0:34, 0:24, 1:49, 9:50, 1:12) against 8 min 57 s on t
 The developer stack (`docker-compose.dev.yml`, `dev` targets) is unchanged. A source change reaches the e2e stack only
 through `up --build`; `VITE_HMR_CLIENT_PORT` has no effect there (still written by `scripts/free-ports.sh`, harmless).
 
+## 2026-10-25: frontend spacing skill and geometry helper
+
+Owner request: spacing is a recurring problem. Every defect was missed by the tests and only seen in manual play: the
+Privacy link too close to the bottom of the picker card, the "Private game" hint glued to the next option so both read
+as one text, the Mangola speed selector touching "Your side", and earlier crowding fixes on Kobo, President, the picker
+and the lobbies.
+
+| Friction | Fix | Where |
+|---|---|---|
+| No written spacing rules: the `--space-n` scale in `App.vue` was used by game screens only, lobby and picker wrote raw px, and nothing said how far a hint sits from its control versus from the next setting | Project skill: the existing scale and its adoption, rules (parent-owned `gap`, proximity grouping, minimum separation, `aria-describedby` and fieldset grouping, 44 px targets, long text, safe areas, 375x667 / 390x844 / 1280x720 and fit-without-scrolling), a pre-PR checklist and the pitfalls above | `.claude/skills/frontend-spacing/SKILL.md`, pointer section in `CLAUDE.md` |
+| Specs checked presence, never distance, so collisions passed | Reusable Cypress helper `expectGap(a, b, minPx)`, `expectNoOverlap(a, b)`, `atSpacingViewports(check)`; pure geometry (`gapBetween`, `overlaps`) unit-tested in Vitest. Used inside the spec of the feature being written, nominal cases only, no spacing-only spec | `frontend/cypress/support/spacing.ts`, `frontend/cypress/support/spacing.test.ts` |
+
+How to use: any frontend change that adds a component, control, hint or text block, or touches layout or spacing,
+loads the skill, runs its checklist and adds the gap assertions for the new neighbours to its feature spec. Public
+skills considered and not adopted: generic UI/design guideline skills (Vercel Labs web design guidelines, Anthropic
+frontend-design, community "web interface design" / "Refactoring UI" skills) give rules but no project scale and no
+measurement; nothing was installed.
+
 ## Inventory (versioned in this project)
 
 | Item | Role |
@@ -101,6 +119,7 @@ through `up --build`; `VITE_HMR_CLIENT_PORT` has no effect there (still written 
 | `frontend/vite.config.mjs` | `VITE_HMR_CLIENT_PORT`: hot reload follows the published port; `preview` serves the e2e build with the dev proxy |
 | `docker-compose.e2e.yml`, `backend/Dockerfile` (target `run`), `frontend/Dockerfile` (target `e2e`) | E2E stack from prebuilt images: jar and production bundle |
 | `docs/harnesses.md` | This document |
+| `.claude/skills/frontend-spacing/SKILL.md`, `frontend/cypress/support/spacing.ts` | Spacing rules, pre-PR checklist and gap / overlap assertions for frontend layout changes |
 | `docs/architecture/add-a-game.md`, `docs/architecture/game-conventions.md` | Checklist and naming rules an agent follows to add a game |
 | `.github/workflows/ci.yml` | GitHub Actions: backend tests and frontend tests + build on push to `main` and on pull requests (no e2e yet) |
 
