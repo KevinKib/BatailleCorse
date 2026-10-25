@@ -5,6 +5,7 @@ import webSocketService from '../service/WebSocketService';
 import MangolaSession, { type MangolaSessionEvent } from '../application/mangola/MangolaSession';
 import type { MangolaPhase, MangolaSide, MangolaState, MangolaView } from '../model/mangola/MangolaState';
 import type { LobbyView } from '../model/lobby/LobbyView';
+import { DEFAULT_MANGOLA_DIRECTION, directionOf } from '../model/mangola/direction';
 import { arrowOf as arrowOfPit, sideOfSeat, viewerRows, type Arrow, type MangolaCell } from '../model/mangola/board';
 import {
   addSeed, checkerboardLayout, clearLayout, draftOf, randomLayout, removeSeed, seedsLeft as seedsLeftOf, twoPerPit,
@@ -134,7 +135,7 @@ export const useMangolaStore = defineStore('mangola-store', () => {
 
   // The board as I see it: my side at the bottom, columns reversed for the second side.
   const rows = computed<MangolaCell[][]>(() => (game.value ? viewerRows(game.value, mySeat.value) : []));
-  const arrowOf = (pit: number): Arrow => arrowOfPit(pit, mySide.value);
+  const arrowOf = (pit: number): Arrow => arrowOfPit(pit, mySide.value, game.value ? directionOf(game.value) : DEFAULT_MANGOLA_DIRECTION);
   const canSow = (pit: number) => isMyTurn.value && game.value!.legalPits.includes(pit);
   // The opponent's last move, by pit marks only: the pit played and the pits captured, until my move replaces it.
   const opponentLastMarks = computed<LastMoveMarks>(() => {

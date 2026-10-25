@@ -151,9 +151,10 @@ describe('Mangola game', () => {
     playFromTwoPerPit().then(() => {
       cy.get('[data-test="mangola-board"] button[tabindex="0"]').should('have.length', 1);
       pitEl(A2).focus();
-      cy.focused().type('{rightarrow}');
-      pitEl(B2).should('have.focus');
+      // The default direction is anticlockwise: b2 is to the left of a2 on the host's screen.
       cy.focused().type('{leftarrow}');
+      pitEl(B2).should('have.focus');
+      cy.focused().type('{rightarrow}');
       pitEl(A2).should('have.focus').type('{enter}');
       cy.get('[data-test="skip-sowing"]', { timeout: 10000 }).should('exist');
     });

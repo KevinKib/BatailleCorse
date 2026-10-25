@@ -52,11 +52,16 @@ public class Mangola implements Game {
 
     /** A game in the PLACEMENT phase, side A (the starting seat) to move once the layouts are revealed. */
     public Mangola(GameId id, MangolaRules rules, PlayerId seatA) {
+        this(id, rules, seatA, SowingDirection.DEFAULT);
+    }
+
+    /** Like {@link #Mangola(GameId, MangolaRules, PlayerId)} with the host's choice of sowing direction. */
+    public Mangola(GameId id, MangolaRules rules, PlayerId seatA, SowingDirection direction) {
         requireSeat(seatA);
         this.id = id;
         this.rules = rules;
         this.seatA = seatA;
-        this.direction = SowingDirection.DEFAULT;
+        this.direction = direction;
         this.board = MangolaBoard.empty();
         this.current = seatA;
         this.phase = Phase.PLACEMENT;

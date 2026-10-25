@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.random.RandomGenerator;
 
 /**
- * Builds Mangola games from the host's {@code firstPlayer} option. The set-up is always free placement (owner
+ * Builds Mangola games from the host's {@code firstPlayer} and {@code direction} options. The set-up is always free placement (owner
  * decision 2026-10-15), so there is no set-up option. The random choice comes from the injected generator,
  * drawn once at creation, so the aggregate itself stays deterministic.
  */
@@ -22,7 +22,7 @@ public class MangolaFactory implements GameFactory {
 
     public static final String GAME_TYPE = "mangola";
     public static final String FIRST_PLAYER_KEY = "firstPlayer";
-    /** The host option for the sowing direction (the descriptor itself comes with the host option chunk). */
+    /** The host option for the sowing direction, carried by the game for the clients to draw. */
     public static final String DIRECTION_KEY = "direction";
     /** The seat option that carries the level of a computer seat. */
     public static final String LEVEL_KEY = "level";
@@ -80,7 +80,9 @@ public class MangolaFactory implements GameFactory {
                     + " players, not " + nbPlayers);
         }
         FirstPlayer firstPlayer = options.get(FIRST_PLAYER_KEY).map(FirstPlayer::fromKey).orElse(FirstPlayer.DEFAULT);
-        return new Mangola(id, MangolaRules.OWNER, seatA(firstPlayer));
+        SowingDirection direction = options.get(DIRECTION_KEY).map(SowingDirection::fromKey)
+                .orElse(SowingDirection.DEFAULT);
+        return new Mangola(id, MangolaRules.OWNER, seatA(firstPlayer), direction);
     }
 
     private PlayerId seatA(FirstPlayer firstPlayer) {
@@ -96,6 +98,9 @@ public class MangolaFactory implements GameFactory {
         return List.of(
                 new OptionDescriptor(FIRST_PLAYER_KEY, OptionType.CHOICE,
                         Arrays.stream(FirstPlayer.values()).map(FirstPlayer::key).toList(),
-                        FirstPlayer.DEFAULT.key(), "options.mangola.firstPlayer"));
+                        FirstPlayer.DEFAULT.key(), "options.mangola.firstPlayer"),
+                new OptionDescriptor(DIRECTION_KEY, OptionType.CHOICE,
+                        Arrays.stream(SowingDirection.values()).map(SowingDirection::key).toList(),
+                        SowingDirection.DEFAULT.key(), "options.mangola.direction"));
     }
 }

@@ -7,6 +7,7 @@ import org.kevinkib.cardgames.mangola.domain.Mangola;
 import org.kevinkib.cardgames.mangola.domain.MangolaGeometry;
 import org.kevinkib.cardgames.mangola.domain.MangolaRules;
 import org.kevinkib.cardgames.mangola.domain.MangolaLayouts;
+import org.kevinkib.cardgames.mangola.domain.SowingDirection;
 import org.kevinkib.cardgames.mangola.domain.SowingStep;
 import org.kevinkib.cardgames.mangola.presentation.dto.MangolaDto;
 import tools.jackson.databind.JsonNode;
@@ -78,6 +79,25 @@ class MangolaDtoTest {
         JsonNode json = mapper.valueToTree(view(placement(), SEAT_0));
 
         assertThat(json.get("direction").asString(), is("anticlockwise"));
+    }
+
+    @Test
+    void aClockwiseGameSaysClockwiseToBothViewersInPlacementAndInPlay() throws Exception {
+        Mangola game = new Mangola(GameId.generate(), MangolaRules.OWNER, SEAT_0, SowingDirection.CLOCKWISE);
+        for (PlayerId viewer : List.of(SEAT_0, SEAT_1)) {
+            assertThat(view(game, viewer).direction(), is("clockwise"));
+        }
+
+        game.arrange(SEAT_0, MangolaTable.twoPerPit());
+        game.arrange(SEAT_1, MangolaTable.twoPerPit());
+        game.confirmLayout(SEAT_0);
+        game.confirmLayout(SEAT_1);
+
+        for (PlayerId viewer : List.of(SEAT_0, SEAT_1)) {
+            assertThat(view(game, viewer).phase(), is("PLAY"));
+            assertThat(view(game, viewer).direction(), is("clockwise"));
+        }
+        assertThat(mapper.valueToTree(view(game, SEAT_1)).get("direction").asString(), is("clockwise"));
     }
 
     // ------------------------------------------------------------ placement

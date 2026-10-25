@@ -8,7 +8,8 @@ import { messagesEn } from '../../locales/en';
 
 const ui = messagesEn.mangolaUi;
 
-// Side A loop: inner row (pits 8..15) left to right, then the outer row (7..0) right to left.
+// Side A loop: inner row (pits 8..15), then the outer row (7..0). The fixture draws the default direction
+// (anticlockwise): a2 is the right-most cell of its row; the clockwise cases below say so.
 function editor(props: Record<string, unknown> = {}) {
   const draft = (props.draft as number[] | undefined) ?? clearLayout();
   return mount(MangolaPlacementEditor, {
@@ -60,7 +61,7 @@ describe('MangolaPlacementEditor', () => {
 
   it('shows the count of every pit from the draft, not from the server board', () => {
     const draft = clearLayout();
-    draft[0] = 3; // first of the loop = inner row, left: a2
+    draft[0] = 3; // first of the loop: a2
     const w = editor({ draft });
     expect(pit(w, 'a2').attributes('aria-label')).toContain('3 seeds');
     expect(pit(w, 'b2').attributes('aria-label')).toContain('0 seeds');
@@ -69,7 +70,7 @@ describe('MangolaPlacementEditor', () => {
   it('a tap on a pit asks to add a seed at its place in the loop', async () => {
     const w = editor();
     await pit(w, 'a2').trigger('click'); // loop index 0
-    await pit(w, 'a1').trigger('click'); // outer row, right to left: a1 is the last, index 15
+    await pit(w, 'a1').trigger('click'); // outer row: a1 is the last, index 15
     await pit(w, 'h2').trigger('click'); // index 7
     expect(w.emitted('add')).toEqual([[0], [15], [7]]);
   });
@@ -175,5 +176,28 @@ describe('MangolaPlacementEditor', () => {
 
   it('draws the direction chevrons on my pits', () => {
     expect(editor().findAll('[data-test="chevron"]').length).toBeGreaterThanOrEqual(16);
+  });
+});
+
+describe('MangolaPlacementEditor, drawn in the game direction', () => {
+  const draw = (direction: 'anticlockwise' | 'clockwise') => {
+    const draft = clearLayout();
+    return editor({ rows: viewerRows(placementState(draft, { direction }), 0), draft });
+  };
+  // My pits in reading order: the inner row (row 2) first, then the outer row (row 1).
+  const mine = (w: ReturnType<typeof editor>) => w.findAll('button[data-test^="pit-"]').map(b => b.attributes('data-test'));
+
+  it('anticlockwise: clicking a2 adds to loop index 0, and a2 is the last cell of its row', async () => {
+    const w = draw('anticlockwise');
+    await pit(w, 'a2').trigger('click');
+    expect(w.emitted('add')).toEqual([[0]]);
+    expect(mine(w).slice(0, 8)).toEqual(['h2', 'g2', 'f2', 'e2', 'd2', 'c2', 'b2', 'a2'].map(n => `pit-${n}`));
+  });
+
+  it('clockwise: a2 is the first cell of its row and still adds to loop index 0', async () => {
+    const w = draw('clockwise');
+    await pit(w, 'a2').trigger('click');
+    expect(w.emitted('add')).toEqual([[0]]);
+    expect(mine(w).slice(0, 8)).toEqual(['a2', 'b2', 'c2', 'd2', 'e2', 'f2', 'g2', 'h2'].map(n => `pit-${n}`));
   });
 });
