@@ -12,6 +12,7 @@
     "lock:sync": "bash sync-lock.sh"
   },
   "dependencies": {
+    "@fontsource/atkinson-hyperlegible": "5.3.0",
     "@primeuix/themes": "^2.0.3",
     "@stomp/stompjs": "^7.1.1",
     "@tailwindcss/vite": "^4.1.7",
