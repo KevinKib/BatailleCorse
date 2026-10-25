@@ -33,8 +33,8 @@ describe('PrivacyView', () => {
     }
   });
 
-  it('givenTheSections_thenTheFiveTopicsAreCovered', async () => {
-    expect(messagesEn.privacy.sections.map(s => s.id)).toEqual(['visits', 'usage', 'browser', 'memory', 'other']);
+  it('givenTheSections_thenTheSixTopicsAreCovered', async () => {
+    expect(messagesEn.privacy.sections.map(s => s.id)).toEqual(['visits', 'usage', 'browser', 'memory', 'public', 'other']);
   });
 
   it('givenTheKeyFacts_thenTheyAreStatedPlainly', async () => {
@@ -52,9 +52,17 @@ describe('PrivacyView', () => {
     expect(text).toContain('Google Fonts');
   });
 
-  it('givenThePublicGamesListIsNotBuilt_thenThePageSaysItIsNotCoveredYet', async () => {
+  it('givenThePublicGamesList_thenThePageDescribesWhatItShowsAndHowToStayUnlisted', async () => {
     const { wrapper } = await mountPrivacy();
-    expect(wrapper.get('[data-test="privacy-not-covered"]').text()).toBe(messagesEn.privacy.notCovered);
+    const section = wrapper.get('[data-test="privacy-public"]').text();
+    expect(section).toContain('display name');
+    expect(section).toContain('seats are taken');
+    expect(section).toContain('Private game');
+    expect(section).toContain('is live');
+    expect(section).toContain('stores nothing beyond');
+    // The "not covered yet" note is gone.
+    expect(wrapper.find('[data-test="privacy-not-covered"]').exists()).toBe(false);
+    expect(wrapper.text()).not.toContain('not built yet');
   });
 
   it('givenNoContactAddressYet_thenNoEmailIsShown', async () => {

@@ -36,7 +36,7 @@ Pick an id that reads well in a URL (`/<id>`), and is not the prefix of another 
 | Lobby creation | `POST /api/lobby` with `{"gameType": "<id>"}` | `SeatGameSession.create` sends `config.gameType` [V] |
 | REST | `/api/<id>/game/{id}` (state), `/join`, `/play-again` | `@RequestMapping("/api/three-men-morris")`, `/api/kobo`, `/api/bullshit` [V] |
 | STOMP commands | `/app/<id>/<command>`, command in camelCase (`/start` first) | `/three-men-morris/place`, `/kobo/swapDrawn` [V]; Bullshit's are unprefixed (legacy) |
-| STOMP topics | shared, not per game: `/topic/game/{gameId}` and `/topic/game/{gameId}/seat/{token}` | `GameMessagingService` [V] |
+| STOMP topics | shared, not per game: `/topic/game/{gameId}` and `/topic/game/{gameId}/seat/{token}`; the public game list adds `/topic/lobbies/{gameType}` (open on purpose, whole list, see `context-map.md`) | `GameMessagingService`, `PublicLobbyTopics` [V] |
 | Test-only REST seam | `/api/test/<id>/...` under `@Profile("test")` | `KoboTestDealController` (`/api/test/kobo/{gameId}/deal`) [V] |
 | Seat token (localStorage) | `<id>:tokens:<gameId>` (`SeatGameSessionConfig.tokenKeyPrefix`) | `three-men-morris:tokens:`, `kobo:tokens:`, `bullshit:tokens:` [V] |
 | Frontend registry | `GameKey` member and `define('<id>', …)` in `frontend/src/model/games.ts` | [V] |

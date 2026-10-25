@@ -153,7 +153,6 @@ export interface PrivacyMessages {
   title: string;
   intro: string;
   sections: PrivacySection[];
-  notCovered: string;      // what the page does not describe yet
   back: string;            // link back to the game picker
 }
 

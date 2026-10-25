@@ -14,7 +14,6 @@ const privacy = useI18n().privacy;
         <h2 :id="`privacy-${section.id}`">{{ section.heading }}</h2>
         <p v-for="paragraph in section.paragraphs" :key="paragraph">{{ paragraph }}</p>
       </section>
-      <p class="not-covered" data-test="privacy-not-covered">{{ privacy.notCovered }}</p>
       <RouterLink :to="{ name: 'games' }" class="back-link" data-test="privacy-back">{{ privacy.back }}</RouterLink>
     </div>
   </TitlePanel>
@@ -44,14 +43,6 @@ const privacy = useI18n().privacy;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--gold-soft);
-}
-.not-covered {
-  padding: 8px 12px;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.7);
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.15);
 }
 .back-link {
   align-self: center;
