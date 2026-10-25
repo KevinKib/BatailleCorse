@@ -25,7 +25,8 @@ describe('MangolaBoard', () => {
     const w = board();
     expect(w.get('[data-test="mangola-board"]').attributes('aria-label')).toBe(ui.board.label);
     expect(w.findAll('button.mg-pit')).toHaveLength(32);
-    expect(w.findAll('button')).toHaveLength(33); // and the speed button under the board
+    expect(w.findAll('button')).toHaveLength(32); // the speed button sits under the player plate, outside the board
+    expect(w.find('[data-test="speed-button"]').exists()).toBe(false);
     expect(w.findAll('[data-test="board-row"]')).toHaveLength(4);
     for (const row of w.findAll('[data-test="board-row"]')) expect(row.findAll('button')).toHaveLength(8);
   });
@@ -225,52 +226,7 @@ describe('MangolaBoard during a sowing animation', () => {
     expect(pit(w, 'b2').attributes('aria-label')).toContain('5 seeds');
   });
 
-  describe('the speed button', () => {
-    const speedButton = (w: ReturnType<typeof board>) => w.get('[data-test="speed-button"]');
-
-    it('is a real button, always there, named after the speed in words', () => {
-      const w = board();
-      const button = speedButton(w);
-      expect(button.element.tagName).toBe('BUTTON');
-      expect(button.attributes('type')).toBe('button');
-      expect(button.attributes('aria-label')).toBe('Animation speed: Normal');
-      expect(button.text()).toContain('Normal');
-    });
-
-    it('says the speed it is given: Fast, Instant', async () => {
-      const w = board({ speed: 'fast' });
-      expect(speedButton(w).attributes('aria-label')).toBe('Animation speed: Fast');
-      await w.setProps({ speed: 'instant' });
-      expect(speedButton(w).attributes('aria-label')).toBe('Animation speed: Instant');
-      expect(speedButton(w).text()).toContain('Instant');
-    });
-
-    it('emits cycle-speed on a tap, also while a sowing plays (and does not skip it)', async () => {
-      const w = board({ animating: true, hand: { pit: 8, seeds: 2 }, activePit: 8 });
-      await speedButton(w).trigger('click');
-      expect(w.emitted('cycle-speed')).toHaveLength(1);
-      expect(w.emitted('skip')).toBeUndefined();
-    });
-
-    it('is on the left of the line under the board, Skip on its right, the legend between', async () => {
-      const w = board({ animating: true });
-      const footer = w.get('.mg-board__footer');
-      const order = [...footer.element.children].map(c => (c as HTMLElement).dataset.test ?? c.className);
-      expect(order.indexOf('speed-button')).toBeGreaterThanOrEqual(0);
-      expect(order.indexOf('speed-button')).toBeLessThan(order.indexOf('mg-board__legend mg-board__legend--bottom'));
-      expect(order.indexOf('mg-board__legend mg-board__legend--bottom')).toBeLessThan(order.indexOf('skip-sowing'));
-    });
-
-    it('announces the new speed once it changes, not at first', async () => {
-      const w = board({ speed: 'normal' });
-      expect(w.get('[data-test="speed-live"]').text()).toBe('');
-      expect(w.get('[data-test="speed-live"]').attributes('role')).toBe('status');
-      await w.setProps({ speed: 'fast' });
-      expect(w.get('[data-test="speed-live"]').text()).toBe('Animation speed: Fast');
-      await w.setProps({ speed: 'instant' });
-      expect(w.get('[data-test="speed-live"]').text()).toBe('Animation speed: Instant');
-    });
-
+  describe('the speed', () => {
     it('slides the hand in the time of the speed', async () => {
       const props = { hand: { pit: 8, seeds: 2 }, activePit: 8, animating: true };
       const w = board({ ...props, speed: 'normal' });

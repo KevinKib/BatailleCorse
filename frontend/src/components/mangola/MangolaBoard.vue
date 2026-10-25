@@ -7,7 +7,6 @@ import type { HandPosition } from '../../model/mangola/replay';
 import { SPEED_PROFILES } from '../../model/mangola/trace';
 import type { AnimationSpeed } from '../../animation';
 import MangolaPit from './MangolaPit.vue';
-import { AnimationSpeedButton } from '../../animation';
 
 // The Mangola board, presentational only: the 4 x 8 grid exactly as the viewer sees it (`rows` comes from the
 // store, own half at the bottom), the chevrons, the divider between the inner rows and the marks of the
@@ -27,7 +26,7 @@ const props = withDefaults(defineProps<{
   activePit?: number | null;        // the pit the hand is over
   capturing?: readonly number[];    // pits whose seeds the hand is taking now
   chosenPit?: number | null;        // the pit the opponent chose, shown before the seeds leave it
-  speed?: AnimationSpeed;           // the animation speed, named on the button under the board
+  speed?: AnimationSpeed;           // the animation speed (the button is the table's, under the player plate)
 }>(), {
   interactive: true,
   disabled: false,
@@ -41,11 +40,9 @@ const props = withDefaults(defineProps<{
   speed: 'normal',
 });
 
-const emit = defineEmits<{ sow: [pit: number]; skip: []; 'cycle-speed': [] }>();
+const emit = defineEmits<{ sow: [pit: number]; skip: [] }>();
 
 const ui = useI18n().mangolaUi;
-
-// The speed button is the shared one (`AnimationSpeedButton`); it reads out a change of speed itself.
 
 const inert = computed(() => props.disabled || !props.interactive || props.animating);
 const canSow = (cell: MangolaCell): boolean => !inert.value && cell.legal;
@@ -163,8 +160,6 @@ const handStyle = computed(() => {
       </span>
     </div>
     <div class="mg-board__footer">
-      <AnimationSpeedButton class="mg-board__speed" :speed="speed" :names="ui.board.speeds" :label="ui.board.speed"
-                            @cycle="emit('cycle-speed')" />
       <p class="mg-board__legend mg-board__legend--bottom">{{ ui.board.yourSide }}</p>
       <button v-if="animating" type="button" class="mg-board__skip" data-test="skip-sowing" @click="emit('skip')">{{ ui.board.skip }}</button>
     </div>
@@ -193,14 +188,6 @@ const handStyle = computed(() => {
   cursor: pointer;
 }
 .mg-board__skip:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
-
-/* The speed button (shared) faces Skip: at the left of the same line. */
-.mg-board__speed {
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-}
 
 /* The hand covers exactly one cell and slides to the next one: it never takes a tap. */
 .mg-board__hand {

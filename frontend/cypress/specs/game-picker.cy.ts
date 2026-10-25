@@ -1,6 +1,7 @@
 // The entry point (/ and the old /games) is a page that offers every game; no game's menu
 // advertises another one, and Back always leads to the picker.
 import { GAMES } from '../../src/model/games';
+import { expectGap } from '../support/spacing';
 
 // Phones first: every game must fit without any scrolling, however many GAMES the app registers.
 const VIEWPORTS: Array<[number, number]> = [[375, 667], [360, 640], [390, 844], [768, 1024], [1280, 720]];
@@ -167,6 +168,12 @@ describe('Game picker', () => {
             expect(box.right, `${key} ${el.tagName} right`).to.be.at.most(outer.right + 0.5);
           });
         });
+      });
+      // The Privacy link breathes: clear of the games, and 8 px or more above the card's bottom edge.
+      expectGap('.choices', '[data-test="privacy-link"]', 8);
+      cy.get('[data-test="privacy-link"]').then(($link) => {
+        const edge = ($link[0].closest('.title-panel') as HTMLElement).getBoundingClientRect().bottom;
+        expect(edge - $link[0].getBoundingClientRect().bottom + 0.5, 'Privacy link to the card bottom').to.be.at.least(8);
       });
       cy.window().then((win) => {
         const doc = win.document.documentElement;

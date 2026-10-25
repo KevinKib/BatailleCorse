@@ -503,6 +503,17 @@ describe('MangolaGameScreen', () => {
       expect(speedButton(wrapper).attributes('aria-label')).toBe('Animation speed: Normal');
     });
 
+    it('sits below the board and below the player plate (name and seeds), outside the board', async () => {
+      const { wrapper } = await mountScreen(mangolaState());
+      const html = wrapper.html();
+      const speed = html.indexOf('data-test="speed-button"');
+      const lastTag = html.lastIndexOf('data-test="player-tag"');
+      const board = wrapper.get('[data-test="mangola-board"]');
+      expect(board.find('[data-test="speed-button"]').exists()).toBe(false);
+      expect(speed).toBeGreaterThan(lastTag);
+      expect(speed).toBeGreaterThan(html.indexOf('data-test="tag-seeds"', lastTag));
+    });
+
     it('each tap goes Normal, Fast, Instant, Normal, and the choice is kept in the browser', async () => {
       const { wrapper } = await mountScreen(mangolaState());
       await speedButton(wrapper).trigger('click');

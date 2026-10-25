@@ -100,6 +100,8 @@ describe('GamePickerView', () => {
     expect(link.element.tagName).toBe('A');
     expect(link.text()).toBe(messagesEn.gamePicker.privacy);
     expect(link.attributes('href')).toBe('/privacy');
+    // It is the last thing in the panel's flow, after the games (the panel gap spaces it, no absolute position).
+    expect(link.element.parentElement!.lastElementChild).toBe(link.element);
     // It sits after the games, not among them: the Play buttons stay the only buttons.
     expect(wrapper.findAll('button')).toHaveLength(6);
     await link.trigger('click');

@@ -1,9 +1,10 @@
-// Mangola animation speed, end to end: the speed button under the board (cycle, kept across a reload, operable by
-// keyboard, 44 px and clear of the legend and of Skip) and the opponent's move shown before the seeds leave. The
+// Mangola animation speed, end to end: the speed button under the player plate (cycle, kept across a reload, operable by
+// keyboard, 44 px and clear of the plate and of "Your side") and the opponent's move shown before the seeds leave. The
 // browser is the host (seat 0) against a scripted guest. Pits: a2 = 8 ... a4 = 24, see support/mangolaPlayer.ts.
 import {
   ANIMATION_SPEED_KEY, canSow, pitEl, playFromTwoPerPit, sow, startWithAnimationSpeed,
 } from '../support/mangolaPlayer';
+import { atSpacingViewports, expectGap, expectNoOverlap } from '../support/spacing';
 
 const A2 = 8; const A4 = 24; const F1 = 5;
 
@@ -98,35 +99,27 @@ describe('Mangola animation speed', () => {
     speedIs('Instant');
   });
 
-  [[375, 667], [1280, 800]].forEach(([width, height]) => {
-    it(`lays the line under the board out at ${width}x${height}: the speed button is 44 px, on the left, clear of the legend and of Skip`, () => {
-      cy.viewport(width, height);
-      playFromTwoPerPit();
-      pitEl(A2).click();
-      cy.get('[data-test="skip-sowing"]', { timeout: 10000 }).should('be.visible');
+  it('puts the speed button under the player plate, 44 px and clear of "Your side" and of the plate', () => {
+    playFromTwoPerPit();
+    atSpacingViewports((width, height) => {
+      pitEl(A2).should('be.visible');
       speedButton().should('be.visible').then(($speed) => {
-        cy.get('[data-test="skip-sowing"]').then(($skip) => {
-          cy.document().then((doc) => {
-            const el = doc.scrollingElement as Element;
-            expect(el.scrollWidth, 'no horizontal scroll').to.be.at.most(el.clientWidth + 1);
-            const speed = $speed[0].getBoundingClientRect();
-            const skip = $skip[0].getBoundingClientRect();
-            expect(speed.height, 'speed button height').to.be.at.least(44);
-            expect(speed.width, 'speed button width').to.be.at.least(44);
-            expect(speed.left, 'speed button left').to.be.at.least(0);
-            expect(speed.bottom, 'speed button bottom').to.be.at.most(height + 1);
-            const range = doc.createRange();
-            range.selectNodeContents(doc.querySelector('.mg-board__legend--bottom')!);
-            const legend = range.getBoundingClientRect();
-            expect(speed.right, 'speed button clear of the legend').to.be.at.most(legend.left);
-            expect(skip.left, 'Skip clear of the legend').to.be.at.least(legend.right);
-            expect(speed.right, 'speed button clear of Skip').to.be.at.most(skip.left);
-            const grid = doc.querySelector('.mg-board__grid')!.getBoundingClientRect();
-            expect(speed.top, 'speed button under the grid, not over its last row').to.be.at.least(grid.bottom - 1);
-          });
+        cy.document().then((doc) => {
+          const el = doc.scrollingElement as Element;
+          expect(el.scrollWidth, 'no horizontal scroll').to.be.at.most(el.clientWidth + 1);
+          const speed = $speed[0].getBoundingClientRect();
+          expect(speed.height, 'speed button height').to.be.at.least(44);
+          expect(speed.width, 'speed button width').to.be.at.least(44);
+          const tags = doc.querySelectorAll('[data-test="player-tag"]');
+          const mine = tags[tags.length - 1].getBoundingClientRect();
+          expect(speed.top - mine.bottom + 0.5, 'speed button below my plate').to.be.at.least(8);
+          const grid = doc.querySelector('.mg-board__grid')!.getBoundingClientRect();
+          expect(speed.top, 'speed button under the grid').to.be.at.least(grid.bottom);
         });
       });
-      cy.screenshot(`mangola-speed-line-${width}`, { capture: 'viewport' });
+      expectGap('.mg-board__legend--bottom', '[data-test="speed-button"]', 8);
+      expectNoOverlap('.mg-board__legend--bottom', '[data-test="speed-button"]');
+      cy.screenshot(`mangola-speed-${width}x${height}`, { capture: 'viewport' });
     });
   });
 });

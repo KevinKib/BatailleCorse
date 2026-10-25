@@ -22,12 +22,14 @@ watch(() => props.reveal, (now) => { if (now) open.value = true; });
     <i :class="open ? 'pi pi-chevron-up' : 'pi pi-chevron-down'" aria-hidden="true"></i>
     {{ ui.customise }}
   </button>
-  <div v-if="open" :id="panelId">
+  <div v-if="open" :id="panelId" class="customise-panel">
     <slot />
   </div>
 </template>
 
 <style scoped>
+/* Each option of the panel is its own setting: a gap keeps them apart (the Private game option adds a divider). */
+.customise-panel { display: flex; flex-direction: column; gap: var(--space-4); }
 .customise {
   display: flex;
   align-items: center;

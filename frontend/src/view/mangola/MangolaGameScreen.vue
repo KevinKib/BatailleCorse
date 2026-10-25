@@ -5,7 +5,7 @@ import { useRouter } from 'vue-router';
 import { useMangolaStore, STUCK_START_KEY } from '../../state/Mangola.store';
 import { useMangolaBootstrap } from '../../composables/useMangolaBootstrap';
 import { useSowingAnimation } from '../../composables/useSowingAnimation';
-import { useAnimationSpeed } from '../../animation';
+import { AnimationSpeedButton, useAnimationSpeed } from '../../animation';
 import { useEndScreen } from '../../composables/useEndScreen';
 import { useSeatDisconnectCountdown } from '../../composables/useSeatDisconnectCountdown';
 import { useLeaveGuard } from '../../composables/useLeaveGuard';
@@ -262,12 +262,16 @@ function leaveLobby() {
             :chosen-pit="animation.chosenPit.value"
             :speed="speed"
             @sow="pit => store.sow(pit)"
-            @skip="animation.skip()"
-            @cycle-speed="cycleSpeed()" />
+            @skip="animation.skip()" />
 
           <div v-if="store.me" class="tag" data-test="player-tag" :data-active="store.isMyTurn">
             <span class="tag__name" data-test="tag-name">{{ displayName(store.me.seat) }}</span>
             <span class="tag__seeds" data-test="tag-seeds">{{ seedsText(mySeeds) }}</span>
+          </div>
+
+          <!-- Under the plate, not in the board's legend line: it never touches "Your side". -->
+          <div class="speed-row">
+            <AnimationSpeedButton :speed="speed" :names="ui.board.speeds" :label="ui.board.speed" @cycle="cycleSpeed()" />
           </div>
 
           <!-- One reserved place for both cues, so that neither moves the board: "Your turn", or "Bob is thinking…". -->
@@ -384,6 +388,7 @@ function leaveLobby() {
 .tag__name { font-weight: 700; overflow-wrap: anywhere; }
 .tag__seeds { font-size: 0.8rem; opacity: 0.8; }
 
+.speed-row { flex: none; display: flex; justify-content: center; margin-top: var(--space-2); }
 .turn-slot { flex: none; display: grid; min-height: 1.2em; }
 .turn-slot > * { grid-area: 1 / 1; }
 .thinking {
