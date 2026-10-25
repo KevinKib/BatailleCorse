@@ -145,6 +145,40 @@ describe('MangolaGameScreen', () => {
       await wrapper.get('[data-test="start"]').trigger('click');
       expect(start).toHaveBeenCalled();
     });
+
+    const directionDescriptors = [
+      { key: 'firstPlayer', type: 'CHOICE', values: ['host', 'guest', 'random'], defaultValue: 'random', labelKey: 'options.mangola.firstPlayer' },
+      { key: 'direction', type: 'CHOICE', values: ['anticlockwise', 'clockwise'], defaultValue: 'anticlockwise', labelKey: 'options.mangola.direction' },
+    ];
+
+    it('shows the host the Sowing direction row, Anticlockwise selected, and sends the host\'s pick', async () => {
+      const publish = vi.spyOn(webSocketService, 'publish').mockImplementation(() => {});
+      const { wrapper, store } = await mountScreen(lobbyView({
+        optionDescriptors: directionDescriptors,
+        options: { firstPlayer: 'random', direction: 'anticlockwise' },
+        canEditOptions: true,
+      }));
+      store.restore('g1', 0, 'tok');
+      const row = wrapper.get('[data-test="option-direction"]');
+      expect(row.text()).toContain('Sowing direction');
+      expect(row.findAll('input').length).toBe(2);
+      expect(row.get('.choice--on').text()).toBe('Anticlockwise');
+      await wrapper.get('[data-test="option-direction-clockwise"]').setValue(true);
+      expect(publish).toHaveBeenCalledWith('/app/lobby/setOptions', expect.stringContaining('"clockwise"'));
+    });
+
+    it('shows the guest the chosen direction as plain text, with nothing to change', async () => {
+      const { wrapper } = await mountScreen(lobbyView({
+        mySeat: 1,
+        optionDescriptors: directionDescriptors,
+        options: { firstPlayer: 'random', direction: 'clockwise' },
+        canEditOptions: false,
+      }), 1);
+      const row = wrapper.get('[data-test="option-direction"]');
+      expect(row.text()).toContain('Sowing direction');
+      expect(row.text()).toContain('Clockwise');
+      expect(row.find('input').exists()).toBe(false);
+    });
   });
 
   describe('placement', () => {

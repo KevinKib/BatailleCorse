@@ -160,6 +160,9 @@ therefore a legitimate name of this family, and the one the owner chose (they fi
   seat A `a2 b2 c2 d2 e2 f2 g2 h2 h1 g1 f1 e1 d1 c1 b1 a1` then `a2` again; seat B
   `a4 b4 … h4 h3 g3 … a3` then `a4`. Seen from above, both loops run anticlockwise; seen by each player
   from their own side, their inner row runs from their right to their left [V, plateau.js].
+  The app draws the board this way by default (anticlockwise); clockwise is the same board mirrored left to
+  right, a host option chosen in the lobby (`direction`), see `2026-10-24-mangola-direction-design.md`. The engine
+  does not change with it: the direction is only how the board is laid out on screen.
 - The pit **facing** an inner pit is the opponent's inner pit of the same column; behind it is the
   opponent's outer pit of the same column (`c2` faces `c3`, behind it `c4`; `c3` faces `c2`, behind it `c1`).
 - 64 seeds: 32 per player. Seeds never leave the board: the total stays 64 (an invariant the tests assert).
