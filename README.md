@@ -142,6 +142,38 @@ To stop:
 docker compose -f docker-compose.prod.yml down
 ```
 
+## Usage statistics
+
+"Is the site really played?" is answered by the backend itself, with no database and no third-party tracker.
+The design is in `docs/architecture/usage-statistics.md`.
+
+**Counters (Micrometer, tag `game`, reset at every redeploy)**: `cardgames.games.created`, `cardgames.games.started`
+(+ `.humans` / `.bots`: seats at start), `cardgames.games.finished`, `cardgames.games.rematches`,
+`cardgames.seats.joined` (humans who joined a room, host excluded), `cardgames.bots.added`.
+**Gauges**: `cardgames.rooms.open` (rooms in memory) and `cardgames.players.connected` (seats with a live connection).
+
+**Reading them in production.** Actuator listens on its own port (`management.server.port`, 8081), which the
+gateway never proxies and `docker-compose.prod.yml` never publishes, so it is unreachable from the internet. From
+the server:
+
+```sh
+docker compose -f docker-compose.prod.yml exec backend wget -qO- localhost:8081/actuator/metrics                           # all meters
+docker compose -f docker-compose.prod.yml exec backend wget -qO- localhost:8081/actuator/metrics/cardgames.games.started   # one meter
+docker compose -f docker-compose.prod.yml exec backend wget -qO- 'localhost:8081/actuator/metrics/cardgames.games.started?tag=game:mangola'
+```
+
+**Counting per day (survives redeploys).** Every event also writes one INFO line (`stats event=game_created game=mangola`;
+event name, game and counts only: no name, address, token or game id). Number of events per day and per game:
+
+```sh
+docker compose -f docker-compose.prod.yml logs --no-log-prefix backend \
+  | grep -o '^[0-9-]\{10\}.*stats event=[a-z_]* game=[a-z-]*' \
+  | sed -E 's/^([0-9-]{10}).*stats /\1 /' | sort | uniq -c
+```
+
+Add `| grep game_started` for games actually started. Docker keeps the logs until the container is recreated
+(`docker compose up --build` recreates it), so export them before a redeploy if you need a longer history.
+
 ## Troubleshooting
 
 ### `npm ci` fails with "package.json and package-lock.json are in sync" / "Missing: &lt;pkg&gt; from lock file"

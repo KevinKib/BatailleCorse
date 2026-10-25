@@ -24,6 +24,13 @@ public class GameCleanupService {
         this.listeners = listeners;
     }
 
+    private volatile Runnable beforeSweep = () -> { };
+
+    /** Runs at the start of each sweep, before anything is evicted (the usage statistics report ended games here). */
+    public void setBeforeSweep(Runnable beforeSweep) {
+        this.beforeSweep = beforeSweep;
+    }
+
     /** Tells every listener that a game was removed outside the sweep. */
     public void evicted(GameId id) {
         listeners.forEach(listener -> listener.onEvicted(id));
@@ -31,6 +38,7 @@ public class GameCleanupService {
 
     @Scheduled(fixedDelayString = "PT1M")
     public void sweep() {
+        beforeSweep.run();
         List<GameId> evicted = repository.evictStale(FINISHED_GRACE, IDLE_TTL);
         if (!evicted.isEmpty()) {
             log.info("Evicted {} stale game(s): {}", evicted.size(), evicted);

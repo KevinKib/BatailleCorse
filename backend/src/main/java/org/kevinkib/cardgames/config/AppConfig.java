@@ -1,5 +1,8 @@
 package org.kevinkib.cardgames.config;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import org.kevinkib.cardgames.sessionmanagement.core.application.port.UsageStatistics;
+import org.kevinkib.cardgames.sessionmanagement.core.infrastructure.MicrometerUsageStatistics;
 import org.springframework.beans.factory.annotation.Value;
 import java.time.Duration;
 import org.kevinkib.cardgames.game.GameFactory;
@@ -64,8 +67,15 @@ public class AppConfig {
     }
 
     @Bean
-    public SessionService sessionService(GameFactories gameFactories) {
-        return new SessionService(sessionRepository(), gameFactories);
+    public UsageStatistics usageStatistics(MeterRegistry meterRegistry) {
+        MicrometerUsageStatistics statistics = new MicrometerUsageStatistics(meterRegistry);
+        statistics.registerGauges(() -> sessionRepository().roomCount(), () -> connectionRegistry().size());
+        return statistics;
+    }
+
+    @Bean
+    public SessionService sessionService(GameFactories gameFactories, UsageStatistics usageStatistics) {
+        return new SessionService(sessionRepository(), gameFactories, usageStatistics);
     }
 
     @Bean
@@ -170,6 +180,8 @@ public class AppConfig {
         GameCleanupService cleanup = new GameCleanupService(sessionRepository(), evictionListeners);
         // A lobby whose last human left goes through the same path as an evicted one.
         sessionService.setLobbyRemovalListener(cleanup::evicted);
+        // Games that ended are counted before the sweep can evict them.
+        cleanup.setBeforeSweep(sessionService::recordFinishedGames);
         return cleanup;
     }
 }

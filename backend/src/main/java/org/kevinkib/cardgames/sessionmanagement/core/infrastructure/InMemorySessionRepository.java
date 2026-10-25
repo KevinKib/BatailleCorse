@@ -73,6 +73,16 @@ public class InMemorySessionRepository implements SessionRepository {
     }
 
     @Override
+    public List<Game> games() {
+        return List.copyOf(games.values());
+    }
+
+    @Override
+    public int roomCount() {
+        return sessionGames.size();
+    }
+
+    @Override
     public void touch(GameId id) {
         if (games.containsKey(id) || sessionGames.containsKey(id)) {
             lastActivityAt.put(id, clock.instant());

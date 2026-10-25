@@ -70,6 +70,19 @@ class GameCleanupServiceTest {
     }
 
     @Test
+    void whenSweep_thenTheBeforeSweepHookRunsBeforeEviction() {
+        var repo = new StubRepository();
+        var calls = new ArrayList<String>();
+        repo.toEvict.add(GameId.generate());
+        var service = new GameCleanupService(repo, List.of(id -> calls.add("evicted")));
+        service.setBeforeSweep(() -> calls.add("before"));
+
+        service.sweep();
+
+        assertThat(calls, contains("before", "evicted"));
+    }
+
+    @Test
     void givenALobbyRemovedOutsideTheSweep_whenEvicted_thenEveryListenerIsNotified() {
         var id = GameId.generate();
         var seen = new ArrayList<GameId>();
