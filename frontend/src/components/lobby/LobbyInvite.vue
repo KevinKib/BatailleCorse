@@ -5,7 +5,13 @@ import { useI18n } from '../../composables/useI18n';
 
 // The invite link and its Copy button. "Copied!" is announced through a polite live region; when the
 // clipboard is unavailable (insecure origin) the link is left selected so Ctrl+C works.
-const props = defineProps<{ joinLink: string }>();
+const props = defineProps<{
+  joinLink: string;
+  /** The game is hidden from the public list. */
+  privateGame?: boolean;
+  /** Show the read-only "Private game" chip (the guests; the host has the switch). */
+  showChip?: boolean;
+}>();
 
 const ui = useI18n().lobby;
 const copied = ref(false);
@@ -34,6 +40,9 @@ function selectAll(event: FocusEvent) {
   <div class="field-group">
     <div class="invite-head">
       <label class="field-label" for="invite-link">{{ ui.inviteLabel }}</label>
+      <span v-if="privateGame && showChip" class="private-chip" data-test="private-chip">
+        <i class="pi pi-lock" aria-hidden="true"></i>{{ ui.privateChip }}
+      </span>
       <p class="copied" data-test="copied" role="status" aria-live="polite">
         <template v-if="copied">{{ ui.copied }}</template>
       </p>
@@ -54,6 +63,7 @@ function selectAll(event: FocusEvent) {
         rounded
         @click="copyLink" />
     </div>
+    <p class="invite-hint" data-test="invite-hint">{{ privateGame ? ui.inviteHintPrivate : ui.inviteHintPublic }}</p>
   </div>
 </template>
 
@@ -84,6 +94,18 @@ function selectAll(event: FocusEvent) {
   outline-offset: 1px;
 }
 .share-row :deep(.p-button) { flex: none; min-height: 44px; }
+.private-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 999px;
+}
+.invite-hint { margin: 0; font-size: 0.8125rem; line-height: 1.2rem; color: rgba(255, 255, 255, 0.6); }
 .invite-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 /* "Copied!" shares the label's row so the status line never adds height to the panel. */
 .copied { min-height: 16px; margin: 0; font-size: 0.75rem; line-height: 16px; color: #4ade80; }

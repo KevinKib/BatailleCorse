@@ -23,6 +23,12 @@ describe('useLobbyActions', () => {
     expect(published).toEqual([{ dest: '/app/lobby/setSeatOption', body: JSON.stringify({ gameId: 'g1', token: 'tok', seat: 2, key: 'tier', value: '4' }) }]);
   });
 
+  it('setPrivate sends the flag to /app/lobby/setPrivate', () => {
+    const { actions, published } = setup();
+    actions.setPrivate(true);
+    expect(published).toEqual([{ dest: '/app/lobby/setPrivate', body: JSON.stringify({ gameId: 'g1', token: 'tok', privateGame: true }) }]);
+  });
+
   it('rename sends the new name to /app/lobby/rename', () => {
     const { actions, published } = setup();
     actions.rename('Alice');

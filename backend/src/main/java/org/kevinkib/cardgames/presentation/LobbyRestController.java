@@ -1,5 +1,6 @@
 package org.kevinkib.cardgames.presentation;
 
+import org.kevinkib.cardgames.game.GameOptions;
 import org.kevinkib.cardgames.presentation.api.CreateLobbyPayload;
 import org.kevinkib.cardgames.presentation.dto.LobbyCreatedDto;
 import org.kevinkib.cardgames.sessionmanagement.core.application.RoomCreated;
@@ -30,7 +31,8 @@ public class LobbyRestController {
             return ResponseEntity.notFound().build();
         }
         try {
-            RoomCreated room = sessionService.createRoom(payload.gameType(), payload.name());
+            RoomCreated room = sessionService.createRoom(payload.gameType(), payload.name(), GameOptions.none(),
+                    Boolean.TRUE.equals(payload.privateGame()));
             return ResponseEntity.ok(new LobbyCreatedDto(room.gameId(), room.hostToken()));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();

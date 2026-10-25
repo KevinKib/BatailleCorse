@@ -151,6 +151,7 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
     setOption: (key: string, value: string) => requestLobbyChange(() => session.setOption(key, value)),
     setSeatOption: (seat: number, key: string, value: string) => requestLobbyChange(() => session.setSeatOption(seat, key, value)),
     rename: (name: string) => requestLobbyChange(() => session.rename(name)),
+    setPrivate: (privateGame: boolean) => requestLobbyChange(() => session.setPrivate(privateGame)),
     leave,
     discard: () => { session.discard(selectedCards.value); clearSelection(); },
     callBullshit: () => session.callBullshit(),

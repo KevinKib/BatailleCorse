@@ -15,6 +15,8 @@ import org.kevinkib.cardgames.presentation.SeatSubscriptionInterceptor;
 import org.kevinkib.cardgames.presentation.WebSocketDisconnectListener;
 import org.kevinkib.cardgames.presentation.bot.BotScheduler;
 import org.kevinkib.cardgames.presentation.bot.BotSeatOptions;
+import org.kevinkib.cardgames.presentation.PublicLobbyBroadcaster;
+import org.kevinkib.cardgames.presentation.PublicLobbyTopics;
 import org.kevinkib.cardgames.presentation.bot.TaskSchedulerBotScheduler;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameCleanupService;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameDirectory;
@@ -133,6 +135,17 @@ public class AppConfig {
     @Bean
     public LobbyBroadcaster lobbyBroadcaster(GameMessagingService gameMessagingService) {
         return new LobbyBroadcaster(gameMessagingService);
+    }
+
+    /** Pushes the public game list of a type to {@code /topic/lobbies/{type}} after the session core says it changed. */
+    @Bean
+    public PublicLobbyBroadcaster publicLobbyBroadcaster(SimpMessagingTemplate messagingTemplate,
+                                                         SessionService sessionService) {
+        PublicLobbyBroadcaster broadcaster = new PublicLobbyBroadcaster(sessionService::publicLobbies,
+                (gameType, payload) -> messagingTemplate.convertAndSend(PublicLobbyTopics.destination(gameType), payload),
+                taskScheduler(), clock());
+        sessionService.setPublicLobbiesListener(broadcaster::changed);
+        return broadcaster;
     }
 
     @Bean
