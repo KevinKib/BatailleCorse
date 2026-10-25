@@ -9,7 +9,9 @@ join it, if there is room in it."
 ## Key decisions
 
 1. **Every lobby is public by default and the host can make it private.** The host option "Private game" is
-   off by default and lives in the lobby's Customise disclosure. A private game never appears in the list;
+   off by default and lives in the lobby's Customise disclosure. It can also be set **at creation** (a
+   `privateGame` boolean on `POST /api/lobby`, default `false`, so existing callers are unaffected), which
+   closes the moment where a new lobby would be public. A private game never appears in the list;
    people still join it through the invite link. Privacy belongs to `sessionmanagement` core (a session
    concern), not to the games' `GameOptions`.
 2. **The list shows every public game of the game type, joinable or not.** A row shows the host's display
@@ -18,7 +20,8 @@ join it, if there is room in it."
    them back.
 3. **A started game cannot be joined, even with a free seat.** It is listed as "In play" with no Join
    button. This is the current session rule (`SessionService.join` refuses any game whose `Game` exists).
-   **Open question for the owner**: joining mid-game would need every game's domain to accept a newcomer.
+   **Decided by the owner (2026-10-26)**: started games stay non-joinable (joining mid-game would need every
+   game's domain to accept a newcomer).
 4. **The list updates live over STOMP.** A REST snapshot `GET /api/lobbies/{gameType}` is fetched first.
    The client then subscribes to `/topic/lobbies/{gameType}`, which carries the **whole list** (never
    deltas), at most once every 500 ms per game type. The client fetches the snapshot again after every
@@ -97,9 +100,12 @@ Private games' ids are never published.
 - The other players see a read-only "Private game" chip next to the invite link. The invite hint changes:
   "Only people with this link can join." when private, otherwise "Listed in Public games. Anyone can join
   while a seat is free."
-- Known gap, accepted: a new lobby is public for the moment between its creation and the host turning the
-  option on. Someone could join in that moment. A `private` field on `POST /api/lobby` would close the gap
-  if the owner asks; it is out of scope here.
+- **At creation**: `POST /api/lobby` accepts `privateGame` (optional boolean, absent means `false`).
+  `SessionService.createRoom(gameType, hostName, options, privateGame)` is added next to the existing
+  overloads, which keep public as the default. The lobby is then never public, not even for a moment. On the
+  frontend, `GameRoomClient.create(name, privateGame?)` and each store's `create` gain the optional argument.
+  The Game home shows a "Private game" checkbox next to New game (off by default, with the same hint), and
+  the lobby switch starts from that value.
 
 ## UI (option A, Stacked)
 
@@ -206,17 +212,22 @@ join." It is editable by the host and disabled for the others.
 - `application.properties` sets `org.springframework.messaging` and `org.springframework.web.socket` to
   `DEBUG`. With this level, STOMP frames, and so the list payloads (host names), may land in the server logs.
   Lobby frames already carry every player's name today, so the list adds no new kind of data, but it does send
-  names to anyone who subscribes. Recommendation for the owner (not done here): lower these two loggers to
-  `INFO` outside the `test` and dev profiles.
+  names to anyone who subscribes. **Decided (owner, 2026-10-26)**: these two loggers drop to `INFO` in
+  `application.properties` (production). `DEBUG` stays in `application-test.properties` (e2e stack) and in the
+  dev stack through environment variables in `docker-compose.dev.yml`
+  (`LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_MESSAGING=DEBUG`, `LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB_SOCKET=DEBUG`).
+  There is no `dev` Spring profile today, and none is added. This is done in B2.
 - New log lines carry only the game type and counts (for example `Public lobbies of kobo: 3 listed`, at DEBUG),
   **never** a host name or a game id.
 
 ### Privacy and legal
 
-The frontend has **no privacy or legal page**. With this feature, the host's display name is shown to anyone
-who opens the join page of that game. The data is minimal (display name, counts, state, game key and id),
-lives only in memory and disappears with the lobby. Recommendation for the owner: a short privacy note
-(what is shown publicly, how to stay unlisted with Private game, no storage), as a follow-up outside this plan.
+With this feature, the host's display name is shown to anyone who opens the join page of that game. The data
+is minimal (display name, counts, state, game key and id), lives only in memory and disappears with the lobby.
+A privacy page is being added separately (PR `feat/privacy-page`, not merged when this was written). The
+integration chunk I updates that page to cover the public list: what is shown publicly, that Private game
+(at creation or in the lobby) keeps a game unlisted, and that nothing is stored. If that PR is still open when I
+runs, I adds the paragraph on top of its branch, or opens a follow-up once it is merged.
 
 ## Frontend design
 
@@ -261,5 +272,12 @@ lives only in memory and disappears with the lobby. Recommendation for the owner
 
 ## Out of scope
 
-Joining a started game; listing across game types; search and paging; a create-time `private` flag; a
-per-IP rate limit; the privacy page; lowering the STOMP log levels.
+Joining a started game (decided: not allowed); listing across game types; search and paging; a per-IP rate
+limit; the privacy page itself (its own PR; I only adds the public-list paragraph).
+
+## Amendments (owner, 2026-10-26)
+
+1. `privateGame` at creation (additive, default false), in P0's signatures.
+2. STOMP loggers drop to INFO outside test and dev (B2).
+3. The privacy page (`feat/privacy-page`) is updated in I to mention the public list.
+4. Started games stay non-joinable: decided.

@@ -3,15 +3,25 @@
 Produced by Opus 5.5 (Claude Opus 5.5), 2026-10-26. Spec: `docs/specs/2026-10-26-public-game-list-design.md`.
 Design canvas (option A chosen by the owner): https://claude.ai/artifact/FVEbikx3WGMDbqrNWFhV4X
 
-**This plan is the owner's validation point: nothing is implemented before the owner agrees to it.**
+**Approved by the owner on 2026-10-26, with the amendments below.**
 
 ## Key decisions (from the spec)
 
 1. Every lobby is public by default; "Private game" (host, in Customise) hides it from the list. It is a
-   session concern in `sessionmanagement/core`, not a game option.
+   session concern in `sessionmanagement/core`, not a game option. It can also be set **at creation**
+   (`privateGame` on `POST /api/lobby`, default false, backward compatible), so a lobby is never public by
+   accident.
 2. The list shows every public game of the type: Open (Join), Full, In play (greyed). "Open games only" is on by
    default. Order: open newest first, then the others. **At most 50 entries**, with `total` and `truncated`.
-3. **A started game cannot be joined, even with a free seat** (current rule; open question for the owner).
+3. **A started game cannot be joined, even with a free seat**: the current rule, decided by the owner on
+   2026-10-26.
+
+**Amendments approved by the owner (2026-10-26):**
+- `privateGame` at creation: the signatures are added in P0, the behaviour in B1 and B2, the Game home checkbox
+  in F2.
+- STOMP loggers go to INFO outside test and dev (B2).
+- The privacy page (`feat/privacy-page`) is updated in I.
+- Started games stay non-joinable.
 4. Live updates: a REST snapshot plus a whole-list push on `/topic/lobbies/{gameType}`, coalesced to one push per
    500 ms per type, and a refetch on reconnect.
 5. Sized for 0 to 5 real games: no paging, search or rate limiter. Lobbies with no human online are hidden, and
@@ -45,7 +55,10 @@ P0 (interfaces, < 30 min) ──┬──> B1 (session core) ──────�
 | `frontend/src/service/WebSocketService.ts` | F1 only | F2 publishes through the existing `publish` |
 | `frontend/src/components/lobby/GameLobby.vue`, `LobbyInvite.vue` | F2 only | |
 | `frontend/src/components/JoinGameForm.vue`, `view/GameJoinView.vue` | F1 only | |
-| 6 game stores and 6 game screens | F2 only | one line each (`setPrivate`, `@set-private`) |
+| 6 game stores and 6 game screens | P0 (`create` signature), then F2 | one line each (`setPrivate`, `@set-private`); P0 is merged before F2 starts |
+| `presentation/LobbyRestController.java`, `application*.properties`, `docker-compose.dev.yml` | B2 only | |
+| `components/GameHome.vue`, `composables/useLobbyCreator.ts` | F2 only | |
+| privacy page files (`feat/privacy-page`) | I only | |
 | `docs/architecture/context-map.md` | I only | |
 
 **Tests (every PR):** backend `cd backend && mvn -s ../deploy/docker/settings.xml test`; frontend `cd frontend &&
@@ -78,14 +91,22 @@ Branch `feat/public-lobbies-interfaces`. Adds, removes nothing, changes no behav
     `from(PublicLobbyList)`.
   - `presentation/api/LobbyPrivatePayload.java` `(gameId, token, boolean privateGame)`.
   - Constant `PublicLobbyTopics.destination(gameType)` = `/topic/lobbies/{gameType}`.
+  - Creation, additive:
+    - `CreateLobbyPayload` gains `Boolean privateGame` (null means false).
+    - `SessionService.createRoom(gameType, hostName, options, boolean privateGame)` is a new overload. The
+      existing overloads delegate with `false`. In P0 the flag is accepted but not stored yet (B1 stores it).
 - Frontend:
+  - Creation, additive:
+    - `GameRoomClient.create(name?, privateGame?)` and each store's `create(name?, privateGame = false)`.
+    - The store sends `privateGame` in the `POST /api/lobby` body.
+    - The existing callers are unchanged.
   - `model/lobby/PublicLobby.ts` (types).
   - `LobbyView.privateGame?: boolean`.
   - `GameDefinition.serverType` (with a test that `bataillecorse` maps to `bataille-corse`).
   - Every new text in `Messages.ts` and `en.ts` (`join.publicGames.{title, openCount, totalCount, openOnly,
     join, joinAria, open, full, inPlay, players, bots, loading, empty, emptyHint, newGame, offline,
     truncated, announce}`, `join.or`, `lobby.{privateGame, privateHint, privateChip, inviteHintPrivate,
-    inviteHintPublic}`), with the existing locale tests extended.
+    inviteHintPublic}`, plus the Game home checkbox label and hint), with the existing locale tests extended.
 - Tests: the existing suites stay green, plus the two small tests above.
 
 ## B1: session core (parallel)
@@ -102,6 +123,8 @@ listener), `InMemorySessionRepository`.
   - `SessionServiceTest`:
     - `setPrivate` is host only, lobby only, bumps the version, and is kept through `playAgain` and
       `updateOptions`.
+    - `createRoom(..., true)` creates a private lobby, never listed (not even before its first view);
+      the old overloads stay public.
     - `LobbyView.privateGame`.
     - `publicLobbies` refuses an unknown type.
     - The listener fires once, with the type, after each mutation in the spec's list, after the monitor is
@@ -132,8 +155,19 @@ wiring (where `SessionService` beans are declared).
 
     This IT depends on B1's bodies: B2 writes it and **marks it `@Disabled("needs B1")`** if B1 is not merged
     when B2 finishes. I removes the annotation.
+- `LobbyRestController.create` passes `payload.privateGame()` (null means false) to `createRoom`. Tests first:
+  a body with `privateGame: true` gives a lobby that is absent from the snapshot; a body without the field
+  gives a listed one.
 - No change to `SeatSubscriptionInterceptor`: `/topic/lobbies/*` is open.
-- Logs: one DEBUG line per push, with the type and count only.
+- Logs:
+  - One DEBUG line per push, with the type and count only.
+  - STOMP loggers: in `backend/src/main/resources/application.properties`, `org.springframework.messaging`
+    and `org.springframework.web.socket` go from DEBUG to INFO.
+  - `application-test.properties` sets them to DEBUG (e2e stack).
+  - `docker-compose.dev.yml` sets `LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_MESSAGING=DEBUG` and
+    `LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB_SOCKET=DEBUG` on the backend.
+  - No new Spring profile.
+  - Check: the existing ITs stay green.
 
 ## F1: join page list (parallel)
 
@@ -176,8 +210,10 @@ Branch `feat/private-game-option`. Files:
 - `components/president/PresidentLobbyOptions.vue`, `components/mangola/MangolaLobbyOptions.vue`.
 - `composables/useLobbyActions.ts`.
 - The 6 stores (`setPrivate`) and the 6 game screens (`@set-private`).
+- `components/GameHome.vue` and `composables/useLobbyCreator.ts`: a "Private game" checkbox next to New game,
+  off by default, passed to `create(name, privateGame)` (signature from P0). Tests first in `GameHome.test.ts`.
 
-Before changing `GameLobby` and `LobbyInvite`, list what they show and check it afterwards.
+Before changing `GameLobby`, `LobbyInvite` and `GameHome`, list what they show and check it afterwards.
 
 - Tests first:
   - `useLobbyActions.test.ts`: `setPrivate(true)` publishes `/app/lobby/setPrivate` with
@@ -209,7 +245,10 @@ Branch `feat/public-game-list`.
   - `docs/architecture/context-map.md`: the public lobby read model, topic, privacy and the known limits (no
     per-IP limit, 50 cap).
   - `README.md` if the API list is documented there.
+  - **Privacy page** (from PR `feat/privacy-page`): add a paragraph on the public list. It covers what is shown
+    (host display name, counts, state, game and id), that Private game (at creation or in the lobby) keeps a
+    game unlisted, and that nothing is stored. Once that PR is merged, I edits the page on `main`; while it is
+    open, I asks the orchestrator whether to wait or to open a follow-up.
+- Cypress: a lobby created with Private game checked on the Game home never shows in the list.
 - Manual check on a dev stack: two browsers, phone width 375 px and 1280 px. Check each item listed before the
   change, then close the stack after the merge.
-- Report to the owner the open question (joining a started game) and the two recommendations (privacy page,
-  STOMP DEBUG logs).
