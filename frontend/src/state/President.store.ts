@@ -303,7 +303,7 @@ export const usePresidentStore = defineStore('president-store', () => {
     selectedCards, selectedPattern, canPlay, playHint, completions, canGiveBack, canComplete,
     applyEvent, toggleCard, clearSelection, play, complete, pass, giveBack, ready, seeExchange,
     suggestGiveBack,
-    create: (name?: string) => session.create(name),
+    create: (name?: string, privateGame = false) => session.create(name, privateGame),
     join: (id: string, name?: string) => session.join(id, name),
     restore: (id: string, seat: number, token: string) => session.restore(id, seat, token),
     hydrate: () => session.hydrate(),

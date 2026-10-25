@@ -1085,6 +1085,8 @@ export const messagesEn: Messages = {
     gameGone: 'This game no longer exists.',
     seatLost: 'Your seat in that game was lost. Join again with its invite link.',
     creating: 'Creating\u2026',
+    privateGame: 'Private game',
+    privateGameHint: 'Hidden from the public list. Only people with the invite link can join.',
     createFailed: 'Could not create the game. Check your connection and try again.',
   },
   join: {

@@ -179,7 +179,7 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
     lastErroneousSlap,
     liveDisconnections: presence.liveDisconnections,
     applyEvent,
-    create:          (name?: string) => { reset(); return session.create(name); },
+    create:          (name?: string, privateGame = false) => { reset(); return session.create(name, privateGame); },
     join:            (id: string, name?: string) => { reset(); return session.join(id, name); },
     restore:         (id: string, seat: number, token: string) => { reset(); session.restore(id, seat, token); },
     hydrate:         () => session.hydrate(),

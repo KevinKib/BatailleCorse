@@ -178,6 +178,8 @@ export interface GameHomeMessages {
   gameGone: string;        // notice after a room link that could not be restored
   seatLost: string;        // notice when the stored seat no longer resolves (the game is still there)
   creating: string;        // New game while the lobby is being created
+  privateGame: string;     // label of the checkbox next to New game (the lobby is created unlisted)
+  privateGameHint: string; // its description (aria-describedby)
   createFailed: string;    // the lobby could not be created; the player stays on the Game home
 }
 

@@ -268,7 +268,7 @@ export const useKoboStore = defineStore('kobo-store', () => {
     pending, busy, events, notice,
     me, isMyTurn, can, interaction, screen, faces, canHidePeek,
     applyEvent, holdDisplayed, armMatch, cancelPending, pickSlot, pickPile, hidePeek,
-    create: (name?: string) => session.create(name),
+    create: (name?: string, privateGame = false) => session.create(name, privateGame),
     join: (id: string, name?: string) => session.join(id, name),
     restore: (id: string, seat: number, token: string) => session.restore(id, seat, token),
     hydrate: () => session.hydrate(),

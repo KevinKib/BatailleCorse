@@ -106,6 +106,19 @@ describe('GameSession', () => {
   // --- Lobby: create, join, restore ----------------------------------------
 
   describe('create', () => {
+    it('sends privateGame in the body only when the lobby is private', async () => {
+      const fetchMock = vi.fn()
+        .mockResolvedValueOnce(respond({ gameId: 'game-1', token: 'tok-0' }))
+        .mockResolvedValueOnce(respond(lobbyView()));
+      vi.stubGlobal('fetch', fetchMock);
+      const { session } = makeSession();
+
+      await session.create('Alice', true);
+
+      expect(JSON.parse(fetchMock.mock.calls[0][1].body))
+        .toEqual({ gameType: 'bataille-corse', name: 'Alice', privateGame: true });
+    });
+
     it('posts the name to /api/lobby, sits at seat 0 with the one returned token and shows the lobby', async () => {
       const fetchMock = vi.fn()
         .mockResolvedValueOnce(respond({ gameId: 'game-1', token: 'tok-0' }))

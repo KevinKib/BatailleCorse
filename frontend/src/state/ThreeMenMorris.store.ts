@@ -234,7 +234,7 @@ export const useThreeMenMorrisStore = defineStore('three-men-morris-store', () =
     offerDraw, acceptDraw, declineDraw,
     isMyTurn, iWon, myColour, colourOf, variant, geometry, opponentLastMove, phase, selectablePoints, targetPoints,
     applyEvent, pointClicked, clearSelection,
-    create: (name?: string) => session.create(name),
+    create: (name?: string, privateGame = false) => session.create(name, privateGame),
     join: (id: string, name?: string) => session.join(id, name),
     restore: (id: string, seat: number, token: string) => session.restore(id, seat, token),
     hydrate: () => session.hydrate(),

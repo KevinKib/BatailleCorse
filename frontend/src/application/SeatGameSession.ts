@@ -98,12 +98,12 @@ export default class SeatGameSession<
   }
 
   /** Creates a lobby over REST (the host token goes back to this caller only) and sits at seat 0. */
-  async create(name?: string): Promise<string> {
+  async create(name?: string, privateGame = false): Promise<string> {
     this.myName = name ?? null;
     const res = await fetch('/api/lobby', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ gameType: this.config.gameType, name: name ?? null }),
+      body: JSON.stringify({ gameType: this.config.gameType, name: name ?? null, ...(privateGame ? { privateGame } : {}) }),
     });
     if (!res.ok) throw new HttpError(`Create failed: ${res.status}`, res.status);
     const body = await res.json() as { gameId: string; token: string };

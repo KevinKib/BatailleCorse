@@ -361,6 +361,11 @@ describe('public game list messages', () => {
     expect(list.announce.noneOpen).toBeTruthy();
   });
 
+  it('givenHomeMessages_thenThePrivateGameCheckboxIsWorded', () => {
+    expect(messagesEn.home.privateGame).toBeTruthy();
+    expect(messagesEn.home.privateGameHint).toBeTruthy();
+  });
+
   it('givenLobbyMessages_thenThePrivateGameOptionIsWorded', () => {
     const lobby = messagesEn.lobby;
     for (const key of ['privateGame', 'privateHint', 'privateChip', 'inviteHintPrivate', 'inviteHintPublic'] as const) {

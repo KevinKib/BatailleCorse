@@ -140,7 +140,7 @@ export const useBullshitStore = defineStore('bullshit-store', () => {
     forfeitNotice: presence.forfeitNotice,
     isMyTurn, canDiscard, canCallBullshit, iWon, phase,
     applyEvent, toggleCard, clearSelection,
-    create: (name?: string) => session.create(name),
+    create: (name?: string, privateGame = false) => session.create(name, privateGame),
     join: (id: string, name?: string) => session.join(id, name),
     restore: (id: string, seat: number, token: string) => session.restore(id, seat, token),
     hydrate: () => session.hydrate(),
