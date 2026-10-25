@@ -20,6 +20,7 @@ import RulesPanel from '../../components/RulesPanel.vue';
 import GameTimer from '../../components/GameTimer.vue';
 import YourTurnIndicator from '../../components/YourTurnIndicator.vue';
 import GameLobby from '../../components/lobby/GameLobby.vue';
+import MangolaLobbyOptions from '../../components/mangola/MangolaLobbyOptions.vue';
 import MangolaBoard from '../../components/mangola/MangolaBoard.vue';
 import MangolaPlacementEditor from '../../components/mangola/MangolaPlacementEditor.vue';
 import { findGame } from '../../model/games';
@@ -166,7 +167,15 @@ function leaveLobby() {
       @remove-seat="seat => store.removeSeat(seat)"
       @set-seat-option="(seat, key, value) => store.setSeatOption(seat, key, value)"
       @rename="name => store.rename(name)"
-      @set-option="(key, value) => store.setOption(key, value)" />
+      @set-option="(key, value) => store.setOption(key, value)">
+      <template #options="{ descriptors, options, editable, setOption }">
+        <MangolaLobbyOptions
+          :descriptors="descriptors"
+          :options="options"
+          :editable="editable"
+          @set-option="setOption" />
+      </template>
+    </GameLobby>
 
     <EndGameOverlay
       v-else-if="store.phase === 'finished' && endScreen.showEndOverlay.value"

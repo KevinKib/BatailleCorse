@@ -151,7 +151,18 @@ describe('MangolaGameScreen', () => {
       { key: 'direction', type: 'CHOICE', values: ['anticlockwise', 'clockwise'], defaultValue: 'anticlockwise', labelKey: 'options.mangola.direction' },
     ];
 
-    it('shows the host the Sowing direction row, Anticlockwise selected, and sends the host\'s pick', async () => {
+    it('hides the Sowing direction behind a closed Customise, First player staying visible', async () => {
+      const { wrapper } = await mountScreen(lobbyView({
+        optionDescriptors: directionDescriptors,
+        options: { firstPlayer: 'random', direction: 'anticlockwise' },
+        canEditOptions: true,
+      }));
+      expect(wrapper.find('[data-test="option-firstPlayer"]').exists()).toBe(true);
+      expect(wrapper.find('[data-test="option-direction"]').exists()).toBe(false);
+      expect(wrapper.get('[data-test="customise"]').attributes('aria-expanded')).toBe('false');
+    });
+
+    it('shows the host the Sowing direction row once Customise is opened, Anticlockwise selected, and sends the host\'s pick', async () => {
       const publish = vi.spyOn(webSocketService, 'publish').mockImplementation(() => {});
       const { wrapper, store } = await mountScreen(lobbyView({
         optionDescriptors: directionDescriptors,
@@ -159,6 +170,7 @@ describe('MangolaGameScreen', () => {
         canEditOptions: true,
       }));
       store.restore('g1', 0, 'tok');
+      await wrapper.get('[data-test="customise"]').trigger('click');
       const row = wrapper.get('[data-test="option-direction"]');
       expect(row.text()).toContain('Sowing direction');
       expect(row.findAll('input').length).toBe(2);
