@@ -1,0 +1,242 @@
+[
+ {
+  "game": "bataillecorse",
+  "w": 375,
+  "h": 667,
+  "shown": false,
+  "fanTop": null,
+  "fanBottom": null,
+  "panelTop": 116,
+  "text": "BATAILLE CORSE LOBBY PLAYERS 1 / 2 players 1 YOU HOST Add bot INVITE PLAYERS WITH THIS LINK Copy Start game Waiting for 1 more player to start… Leave lobby"
+ },
+ {
+  "game": "bataillecorse",
+  "w": 375,
+  "h": 812,
+  "shown": true,
+  "fanTop": 125,
+  "fanBottom": 274,
+  "panelTop": 225,
+  "text": "BATAILLE CORSE LOBBY PLAYERS 1 / 2 players 1 YOU HOST Add bot INVITE PLAYERS WITH THIS LINK Copy Start game Waiting for 1 more player to start… Leave lobby"
+ },
+ {
+  "game": "bataillecorse",
+  "w": 1280,
+  "h": 720,
+  "shown": false,
+  "fanTop": null,
+  "fanBottom": null,
+  "panelTop": 134,
+  "text": "BATAILLE CORSE LOBBY PLAYERS 1 / 2 players 1 YOU HOST Add bot INVITE PLAYERS WITH THIS LINK Copy Start game Waiting for 1 more player to start… Leave lobby"
+ },
+ {
+  "game": "bataillecorse",
+  "w": 1280,
+  "h": 900,
+  "shown": true,
+  "fanTop": 93,
+  "fanBottom": 242,
+  "panelTop": 193,
+  "text": "♠ ♥ ♦ ♣ BATAILLE CORSE LOBBY PLAYERS 1 / 2 players 1 YOU HOST Add bot INVITE PLAYERS WITH THIS LINK Copy Start game Waiting for 1 more player to start… Leave lobby"
+ },
+ {
+  "game": "bullshit",
+  "w": 375,
+  "h": 667,
+  "shown": false,
+  "fanTop": null,
+  "fanBottom": null,
+  "panelTop": 40,
+  "text": "BULLSHIT LOBBY PLAYERS 1 / 6 players 1 YOU HOST Add bot CLAIM MODE By rank (7→A) By suit DECK 52 cards 32 cards (7 to Ace) INVITE PLAYERS WITH THIS LINK Copy Start game Waiting for 1 more player to start… Leave lobby"
+ },
+ {
+  "game": "bullshit",
+  "w": 375,
+  "h": 812,
+  "shown": true,
+  "fanTop": 49,
+  "fanBottom": 198,
+  "panelTop": 149,
+  "text": "BULLSHIT LOBBY PLAYERS 1 / 6 players 1 YOU HOST Add bot CLAIM MODE By rank (7→A) By suit DECK 52 cards 32 cards (7 to Ace) INVITE PLAYERS WITH THIS LINK Copy Start game Waiting for 1 more player to start… Leave lobby"
+ },
+ {
+  "game": "bullshit",
+  "w": 1280,
+  "h": 720,
+  "shown": false,
+  "fanTop": null,
+  "fanBottom": null,
+  "panelTop": 58,
+  "text": "BULLSHIT LOBBY PLAYERS 1 / 6 players 1 YOU HOST Add bot CLAIM MODE By rank (7→A) By suit DECK 52 cards 32 cards (7 to Ace) INVITE PLAYERS WITH THIS LINK Copy Start game Waiting for 1 more player to start… Leave lobby"
+ },
+ {
+  "game": "bullshit",
+  "w": 1280,
+  "h": 900,
+  "shown": true,
+  "fanTop": 9,
+  "fanBottom": 158,
+  "panelTop": 109,
+  "text": "♠ ♥ ♦ ♣ BULLSHIT LOBBY PLAYERS 1 / 6 players 1 YOU HOST Add bot CLAIM MODE By rank (7→A) By suit DECK 52 cards 32 cards (7 to Ace) INVITE PLAYERS WITH THIS LINK Copy Start game Waiting for 1 more player to start… Leave lobby"
+ },
+ {
+  "game": "kobo",
+  "w": 375,
+  "h": 667,
+  "shown": false,
+  "fanTop": null,
+  "fanBottom": null,
+  "panelTop": 116,
+  "text": "KOBO LOBBY PLAYERS 1 / 6 players 1 YOU HOST Add bot INVITE PLAYERS WITH THIS LINK Copy Start game Waiting for 1 more player to start… Leave lobby"
+ },
+ {
+  "game": "kobo",
+  "w": 375,
+  "h": 812,
+  "shown": true,
+  "fanTop": 125,
+  "fanBottom": 274,
+  "panelTop": 225,
+  "text": "KOBO LOBBY PLAYERS 1 / 6 players 1 YOU HOST Add bot INVITE PLAYERS WITH THIS LINK Copy Start game Waiting for 1 more player to start… Leave lobby"
+ },
+ {
+  "game": "kobo",
+  "w": 1280,
+  "h": 720,
+  "shown": false,
+  "fanTop": null,
+  "fanBottom": null,
+  "panelTop": 134,
+  "text": "KOBO LOBBY PLAYERS 1 / 6 players 1 YOU HOST Add bot INVITE PLAYERS WITH THIS LINK Copy Start game Waiting for 1 more player to start… Leave lobby"
+ },
+ {
+  "game": "kobo",
+  "w": 1280,
+  "h": 900,
+  "shown": true,
+  "fanTop": 93,
+  "fanBottom": 242,
+  "panelTop": 193,
+  "text": "♠ ♥ ♦ ♣ KOBO LOBBY PLAYERS 1 / 6 players 1 YOU HOST Add bot INVITE PLAYERS WITH THIS LINK Copy Start game Waiting for 1 more player to start… Leave lobby"
+ },
+ {
+  "game": "three-men-morris",
+  "w": 375,
+  "h": 667,
+  "shown": false,
+  "fanTop": null,
+  "fanBottom": null,
+  "panelTop": 8,
+  "text": "MORRIS LOBBY VARIANT Tapatan 3 pieces each, diameters Achi 4 pieces each, one free point Six Men's Morris 6 pieces each, mills Tapatan: 3 pieces each. Slide along the rows, the columns and the two diagonals through the centre. YOUR COLOUR White Black Random PLAYERS 1 / 2 players 1 YOU HOST Add bot INVITE PLAYERS WITH THIS LINK Copy Start game Waiting for 1 more player to start… Leave lobby"
+ },
+ {
+  "game": "three-men-morris",
+  "w": 375,
+  "h": 812,
+  "shown": true,
+  "fanTop": -12,
+  "fanBottom": 137,
+  "panelTop": 88,
+  "text": "MORRIS LOBBY VARIANT Tapatan 3 pieces each, diameters Achi 4 pieces each, one free point Six Men's Morris 6 pieces each, mills Tapatan: 3 pieces each. Slide along the rows, the columns and the two diagonals through the centre. YOUR COLOUR White Black Random PLAYERS 1 / 2 players 1 YOU HOST Add bot INVITE PLAYERS WITH THIS LINK Copy Start game Waiting for 1 more player to start… Leave lobby"
+ },
+ {
+  "game": "three-men-morris",
+  "w": 1280,
+  "h": 720,
+  "shown": false,
+  "fanTop": null,
+  "fanBottom": null,
+  "panelTop": 12,
+  "text": "MORRIS LOBBY VARIANT Tapatan 3 pieces each, diameters Achi 4 pieces each, one free point Six Men's Morris 6 pieces each, mills Tapatan: 3 pieces each. Slide along the rows, the columns and the two diagonals through the centre. YOUR COLOUR White Black Random PLAYERS 1 / 2 players 1 YOU HOST Add bot INVITE PLAYERS WITH THIS LINK Copy Start game Waiting for 1 more player to start… Leave lobby"
+ },
+ {
+  "game": "three-men-morris",
+  "w": 1280,
+  "h": 900,
+  "shown": true,
+  "fanTop": 0,
+  "fanBottom": 149,
+  "panelTop": 100,
+  "text": "♠ ♥ ♦ ♣ MORRIS LOBBY VARIANT Tapatan 3 pieces each, diameters Achi 4 pieces each, one free point Six Men's Morris 6 pieces each, mills Tapatan: 3 pieces each. Slide along the rows, the columns and the two diagonals through the centre. YOUR COLOUR White Black Random PLAYERS 1 / 2 players 1 YOU HOST Add bot INVITE PLAYERS WITH THIS LINK Copy Start game Waiting for 1 more player to start… Leave lobby"
+ },
+ {
+  "game": "president",
+  "w": 375,
+  "h": 667,
+  "shown": false,
+  "fanTop": null,
+  "fanBottom": null,
+  "panelTop": 47,
+  "text": "PRESIDENT LOBBY Classic King of hearts leads, you may re-enter after a pass, 5 rounds. Customise PLAYERS 1 / 8 players 1 YOU HOST Add bot INVITE PLAYERS WITH THIS LINK Copy Start game Waiting for 2 more players to start… Leave lobby"
+ },
+ {
+  "game": "president",
+  "w": 375,
+  "h": 812,
+  "shown": true,
+  "fanTop": 55,
+  "fanBottom": 204,
+  "panelTop": 155,
+  "text": "PRESIDENT LOBBY Classic King of hearts leads, you may re-enter after a pass, 5 rounds. Customise PLAYERS 1 / 8 players 1 YOU HOST Add bot INVITE PLAYERS WITH THIS LINK Copy Start game Waiting for 2 more players to start… Leave lobby"
+ },
+ {
+  "game": "president",
+  "w": 1280,
+  "h": 720,
+  "shown": false,
+  "fanTop": null,
+  "fanBottom": null,
+  "panelTop": 75,
+  "text": "PRESIDENT LOBBY Classic King of hearts leads, you may re-enter after a pass, 5 rounds. Customise PLAYERS 1 / 8 players 1 YOU HOST Add bot INVITE PLAYERS WITH THIS LINK Copy Start game Waiting for 2 more players to start… Leave lobby"
+ },
+ {
+  "game": "president",
+  "w": 1280,
+  "h": 900,
+  "shown": true,
+  "fanTop": 25,
+  "fanBottom": 174,
+  "panelTop": 125,
+  "text": "♠ ♥ ♦ ♣ PRESIDENT LOBBY Classic King of hearts leads, you may re-enter after a pass, 5 rounds. Customise PLAYERS 1 / 8 players 1 YOU HOST Add bot INVITE PLAYERS WITH THIS LINK Copy Start game Waiting for 2 more players to start… Leave lobby"
+ },
+ {
+  "game": "mangola",
+  "w": 375,
+  "h": 667,
+  "shown": false,
+  "fanTop": null,
+  "fanBottom": null,
+  "panelTop": 52,
+  "text": "MANGOLA LOBBY FIRST PLAYER Host Guest Random Customise PLAYERS 1 / 2 players 1 YOU HOST Add bot INVITE PLAYERS WITH THIS LINK Copy Start game Waiting for 1 more player to start… Leave lobby"
+ },
+ {
+  "game": "mangola",
+  "w": 375,
+  "h": 812,
+  "shown": true,
+  "fanTop": 61,
+  "fanBottom": 210,
+  "panelTop": 161,
+  "text": "MANGOLA LOBBY FIRST PLAYER Host Guest Random Customise PLAYERS 1 / 2 players 1 YOU HOST Add bot INVITE PLAYERS WITH THIS LINK Copy Start game Waiting for 1 more player to start… Leave lobby"
+ },
+ {
+  "game": "mangola",
+  "w": 1280,
+  "h": 720,
+  "shown": false,
+  "fanTop": null,
+  "fanBottom": null,
+  "panelTop": 70,
+  "text": "MANGOLA LOBBY FIRST PLAYER Host Guest Random Customise PLAYERS 1 / 2 players 1 YOU HOST Add bot INVITE PLAYERS WITH THIS LINK Copy Start game Waiting for 1 more player to start… Leave lobby"
+ },
+ {
+  "game": "mangola",
+  "w": 1280,
+  "h": 900,
+  "shown": true,
+  "fanTop": 21,
+  "fanBottom": 170,
+  "panelTop": 121,
+  "text": "♠ ♥ ♦ ♣ MANGOLA LOBBY FIRST PLAYER Host Guest Random Customise PLAYERS 1 / 2 players 1 YOU HOST Add bot INVITE PLAYERS WITH THIS LINK Copy Start game Waiting for 1 more player to start… Leave lobby"
+ }
+]
