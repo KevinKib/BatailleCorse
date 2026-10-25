@@ -30,7 +30,7 @@ describe('useSowingAnimation: speed, and the opponent move shown before the seed
     vi.useRealTimers();
   });
 
-  it('Normal: the chosen pit is shown and the hand rests on it for 500 ms before any seed leaves', () => {
+  it('Normal: the chosen pit is shown and the hand rests on it for 700 ms before any seed leaves', () => {
     const anim = make();
     anim.push(start(BEFORE));
     const next = played(BEFORE, 'a2', 2, 0);
@@ -45,7 +45,7 @@ describe('useSowingAnimation: speed, and the opponent move shown before the seed
     expect(anim.activePit.value).toBeNull();
     expect(anim.announced.value?.version).toBe(2);
 
-    vi.advanceTimersByTime(499);
+    vi.advanceTimersByTime(699);
     expect(anim.chosenPit.value).toBe(a2);
     expect(anim.displayBoard.value).toEqual(boardOf(BEFORE));
 
@@ -70,14 +70,14 @@ describe('useSowingAnimation: speed, and the opponent move shown before the seed
     expect(anim.marks.value.start).toBe(pitFromName('a2'));
   });
 
-  it('Fast: the pause is 250 ms and the sowing runs at the old rhythm', () => {
+  it('Fast: the pause is 350 ms and the sowing runs at the old rhythm', () => {
     speed.value = 'fast';
     const anim = make();
     anim.push(start(BEFORE));
     const next = played(BEFORE, 'a2', 2, 0);
     anim.push(next);
     expect(anim.chosenPit.value).toBe(pitFromName('a2'));
-    vi.advanceTimersByTime(250);
+    vi.advanceTimersByTime(350);
     expect(anim.chosenPit.value).toBeNull();
     vi.advanceTimersByTime(planSowing(next.lastMove!.trace).totalMs);
     expect(anim.animating.value).toBe(false);
@@ -188,7 +188,7 @@ describe('useSowingAnimation: speed, and the opponent move shown before the seed
       anim.push(start(BEFORE));
       const next = played(BEFORE, 'a2', 2, 0);
       anim.push(next);
-      vi.advanceTimersByTime(500 + 300); // inside the sowing
+      vi.advanceTimersByTime(700 + 300); // inside the sowing
       speed.value = 'fast';
       // Whatever is left cannot take longer than the Fast plan's whole duration.
       vi.advanceTimersByTime(planSowing(next.lastMove!.trace, 'fast').totalMs + 1);
@@ -196,24 +196,24 @@ describe('useSowingAnimation: speed, and the opponent move shown before the seed
       expect(anim.displayBoard.value).toEqual(next.board);
     });
 
-    it('from Fast to Normal during the pause, the pause becomes 500 ms again', () => {
+    it('from Fast to Normal during the pause, the pause becomes 700 ms again', () => {
       speed.value = 'fast';
       const anim = make();
       anim.push(start(BEFORE));
       anim.push(played(BEFORE, 'a2', 2, 0));
       speed.value = 'normal';
-      vi.advanceTimersByTime(499);
+      vi.advanceTimersByTime(699);
       expect(anim.chosenPit.value).toBe(pitFromName('a2'));
       vi.advanceTimersByTime(1);
       expect(anim.chosenPit.value).toBeNull();
     });
 
-    it('from Normal to Fast during the pause, the pause is cut to 250 ms', () => {
+    it('from Normal to Fast during the pause, the pause is cut to 350 ms', () => {
       const anim = make();
       anim.push(start(BEFORE));
       anim.push(played(BEFORE, 'a2', 2, 0));
       speed.value = 'fast';
-      vi.advanceTimersByTime(250);
+      vi.advanceTimersByTime(350);
       expect(anim.chosenPit.value).toBeNull();
     });
 

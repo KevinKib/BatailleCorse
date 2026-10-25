@@ -1,17 +1,10 @@
 import type { MangolaLastMove, MangolaStep } from './MangolaState';
 
-/** How a speed times a sowing. Normal is exactly twice as slow as Fast (bounds, pauses, budget), capped at 7 s. */
+/** How a speed times a sowing: one constant tick per seed, whatever the length of the move. */
 export interface SpeedProfile {
-  /** Time shared among the seeds of a sowing. */
-  tickBudgetMs: number;
-  /** Bounds of one seed's tick. */
-  tickMinMs: number;
-  tickMaxMs: number;
-  /** A step that is not a drop pauses for 1.5 ticks, never under this. */
-  minPauseMs: number;
-  /** The whole animation never lasts longer than this: every step is scaled down to fit. */
-  maxTotalMs: number;
-  /** The hand slides from a pit to the next in this time. */
+  /** The time of one dropped seed, from the first seed of a move to the last. */
+  tickMs: number;
+  /** The hand slides from a pit to the next in this time: half a tick, so it always rests on a pit. */
   handSlideMs: number;
   /** An opponent's move shows its chosen pit, the hand resting on it, this long before the seeds leave. */
   leadInMs: number;
@@ -19,19 +12,22 @@ export interface SpeedProfile {
 
 export type TraceSpeed = 'normal' | 'fast' | 'instant';
 
+/** Owner decision: a constant time per seed. */
+export const NORMAL_TICK_MS = 250;
+export const FAST_TICK_MS = 125;
+
+/** Owner decision (findings spec): the pause on an opponent's chosen pit, before the seeds leave. */
+export const NORMAL_LEAD_IN_MS = 700;
+export const FAST_LEAD_IN_MS = 350;
+
 export const SPEED_PROFILES: Record<TraceSpeed, SpeedProfile> = {
-  normal: { tickBudgetMs: 4800, tickMinMs: 120, tickMaxMs: 560, minPauseMs: 400, maxTotalMs: 7000, handSlideMs: 180, leadInMs: 500 },
-  fast: { tickBudgetMs: 2400, tickMinMs: 60, tickMaxMs: 280, minPauseMs: 200, maxTotalMs: 4500, handSlideMs: 90, leadInMs: 250 },
-  instant: { tickBudgetMs: 0, tickMinMs: 0, tickMaxMs: 0, minPauseMs: 0, maxTotalMs: 0, handSlideMs: 0, leadInMs: 0 },
+  normal: { tickMs: NORMAL_TICK_MS, handSlideMs: NORMAL_TICK_MS / 2, leadInMs: NORMAL_LEAD_IN_MS },
+  fast: { tickMs: FAST_TICK_MS, handSlideMs: FAST_TICK_MS / 2, leadInMs: FAST_LEAD_IN_MS },
+  instant: { tickMs: 0, handSlideMs: 0, leadInMs: 0 },
 };
 
-/** The rhythm of Fast, which was the only one before the speed could be chosen. */
-export const TOTAL_TICK_BUDGET_MS = SPEED_PROFILES.fast.tickBudgetMs;
-export const TICK_MIN_MS = SPEED_PROFILES.fast.tickMinMs;
-export const TICK_MAX_MS = SPEED_PROFILES.fast.tickMaxMs;
+/** A step that is not a drop pauses for this many ticks. */
 export const PAUSE_TICKS = 1.5;
-export const MIN_PAUSE_MS = SPEED_PROFILES.fast.minPauseMs;
-export const MAX_TOTAL_MS = SPEED_PROFILES.fast.maxTotalMs;
 
 export const dropCount = (trace: readonly MangolaStep[]): number => trace.filter(s => s.type === 'DROP').length;
 
@@ -40,11 +36,9 @@ export function capturedCount(trace: readonly MangolaStep[]): number {
   return trace.reduce((sum, s) => (s.type === 'CAPTURE' ? sum + (s.count ?? 0) : sum), 0);
 }
 
-/** The time of one dropped seed at the start of a sowing of `drops` seeds. */
-export function tickMs(drops: number, speed: TraceSpeed = 'fast'): number {
-  const { tickBudgetMs, tickMinMs, tickMaxMs } = SPEED_PROFILES[speed];
-  if (drops <= 0) return tickMaxMs;
-  return Math.min(tickMaxMs, Math.max(tickMinMs, tickBudgetMs / drops));
+/** The time of one dropped seed: a constant of the speed. */
+export function tickMs(speed: TraceSpeed = 'fast'): number {
+  return SPEED_PROFILES[speed].tickMs;
 }
 
 export interface PlannedStep {
@@ -60,27 +54,14 @@ export interface SowingPlan {
 }
 
 /**
- * Times a trace for the travelling hand: a drop lasts one tick, the tick halving linearly from the first to the
- * last drop; every other step is a pause of 1.5 ticks (at least `minPauseMs`). A plan longer than the speed's cap
- * (4.5 s in Fast, 7 s in Normal) is scaled down; in Instant every step takes no time.
+ * Times a trace for the travelling hand: a drop lasts one tick, the same from the first seed to the last, and every
+ * other step is a pause of 1.5 ticks. The move has no cap; in Instant every step takes no time.
  */
 export function planSowing(trace: readonly MangolaStep[], speed: TraceSpeed = 'fast'): SowingPlan {
-  const { minPauseMs, maxTotalMs } = SPEED_PROFILES[speed];
-  const drops = dropCount(trace);
-  const base = tickMs(drops, speed);
-  const tickAt = (k: number) => (drops > 1 ? base * (1 - 0.5 * Math.min(k, drops - 1) / (drops - 1)) : base);
-
-  let seen = 0;
-  const durations = trace.map((step) => {
-    if (step.type === 'DROP') return tickAt(seen++);
-    return Math.max(minPauseMs, PAUSE_TICKS * tickAt(seen));
-  });
-  const raw = durations.reduce((a, b) => a + b, 0);
-  const scale = raw > maxTotalMs ? maxTotalMs / raw : 1;
-
+  const tick = tickMs(speed);
   let at = 0;
-  const steps = trace.map((step, i): PlannedStep => {
-    const durationMs = durations[i] * scale;
+  const steps = trace.map((step): PlannedStep => {
+    const durationMs = step.type === 'DROP' ? tick : PAUSE_TICKS * tick;
     const planned = { step, atMs: at, durationMs };
     at += durationMs;
     return planned;

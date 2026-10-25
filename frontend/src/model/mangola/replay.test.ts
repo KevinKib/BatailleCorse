@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { replayTrace, sowingFrames } from './replay';
 import { boardOf, sow, boardText } from './sowingFixtures';
-import { MAX_TOTAL_MS, planSowing } from './trace';
+import { planSowing } from './trace';
 import type { MangolaStep, MangolaStepType } from './MangolaState';
 
 // The hand-checked examples of the spec ("A move", E1..E10): the boards before and after, pit by pit.
@@ -131,11 +131,11 @@ describe('sowingFrames', () => {
     });
   });
 
-  it('a long sowing stays within the cap', () => {
+  it('a long sowing lasts what its steps last, with no cap', () => {
     const before = boardOf('a2:40 b2:40');
     const { trace } = sow(before, 'a2');
     expect(trace.filter(s => s.type === 'DROP').length).toBeGreaterThan(100);
-    expect(sowingFrames(before, trace).totalMs).toBeLessThanOrEqual(MAX_TOTAL_MS + 1e-6);
+    expect(sowingFrames(before, trace).totalMs).toBeCloseTo(planSowing(trace).totalMs, 6);
   });
 
   it('returns nothing when the trace cannot be replayed on the board', () => {

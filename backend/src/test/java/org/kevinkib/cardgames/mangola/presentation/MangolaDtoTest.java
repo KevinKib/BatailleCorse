@@ -59,6 +59,27 @@ class MangolaDtoTest {
         return pits.stream().map(board::get).toList();
     }
 
+    // ------------------------------------------------------------ direction
+
+    @Test
+    void aDefaultGameSaysAnticlockwiseToBothViewersInPlacementAndInPlay() {
+        Mangola placement = placement();
+        Mangola play = Mangola.fromLayout(GameId.generate(), MangolaRules.OWNER, SEAT_0,
+                MangolaTable.board("a2:3 h4:5"));
+
+        for (PlayerId viewer : List.of(SEAT_0, SEAT_1)) {
+            assertThat(view(placement, viewer).direction(), is("anticlockwise"));
+            assertThat(view(play, viewer).direction(), is("anticlockwise"));
+        }
+    }
+
+    @Test
+    void theDirectionIsWrittenInTheJson() {
+        JsonNode json = mapper.valueToTree(view(placement(), SEAT_0));
+
+        assertThat(json.get("direction").asString(), is("anticlockwise"));
+    }
+
     // ------------------------------------------------------------ placement
 
     @Test

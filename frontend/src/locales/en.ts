@@ -379,6 +379,7 @@ export const messagesEn: Messages = {
     announce: {
       out: '{player} is out, {place}',
       outYou: 'You are out, {place}',
+      card: 'the {card}',
       best: { one: '{low} gave their best card to {high}', other: '{low} gave their {n} best cards to {high}' },
       bestMine: { one: 'You gave {cards} to {high}', other: 'You gave {cards} to {high}' },
       bestToMe: { one: '{low} gave you {cards}', other: '{low} gave you {cards}' },
@@ -654,7 +655,7 @@ export const messagesEn: Messages = {
         title: 'The board',
         body: [
           'Four rows of eight pits, 64 seeds in all. You own the two rows nearest you: 32 seeds, never more, never less. The two middle rows face each other.',
-          'Each player sows along a loop of their own 16 pits, never into the opponent\'s half. The small arrows show the direction.',
+          'Each player sows along a loop of their own 16 pits, never into the opponent\'s half. The small arrows show the direction: anticlockwise unless the host chose clockwise in the lobby.',
         ],
       },
       {
@@ -1169,6 +1170,7 @@ export const messagesEn: Messages = {
     },
     mangola: {
       firstPlayer: { label: 'First player', host: 'Host', guest: 'Guest', random: 'Random' },
+      direction: { label: 'Sowing direction', anticlockwise: 'Anticlockwise', clockwise: 'Clockwise' },
       level: { label: 'Level', random: 'Easy', greedy: 'Medium', expert: 'Expert' },
     },
   },

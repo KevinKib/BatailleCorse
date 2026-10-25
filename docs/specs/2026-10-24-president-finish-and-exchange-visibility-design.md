@@ -4,6 +4,10 @@ Written by Claude Opus 5.5 on `origin/main` at `1edfe1d` (2026-10-24). Plan:
 `docs/plans/2026-10-24-president-finish-and-exchange-visibility-plan.md`. Frontend only: no backend change is needed
 (section 9).
 
+**Status (2026-10-24): implemented.** Chunk 0 (#307), E2 (#308), F (#309), E1 (#310) and the integration chunk I (#317:
+legs in flight, announcements per leg, `president-exchange-board.cy.ts`). Screenshots of the sequenced exchange:
+`docs/screenshots/president-exchange-sequenced/`.
+
 ## 1. Owner feedback and decisions
 
 Two items of owner feedback, explored on the Claude Design canvas "Président : sorties et échange"

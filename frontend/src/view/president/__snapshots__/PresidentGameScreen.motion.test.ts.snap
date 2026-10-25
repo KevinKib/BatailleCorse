@@ -3727,11 +3727,11 @@ exports[`PresidentGameScreen pictures (characterisation) > an exchange round > a
   },
   {
     "at": 0,
-    "look": "phase=- | by=- | binding=- | closed=- | note=- | count=- | pile=- | cards=0/0 | seats=1:8 cards/8 2:8 cards/8 3:13 cards/13 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING~,CLUB_ACE~ | chips=After a pass: play again | board=choosing | bar=false | sheet=false | end=false | round=Round 2 of 5",
+    "look": "phase=- | by=- | binding=- | closed=- | note=- | count=- | pile=- | cards=0/0 | seats=1:8 cards/8 2:8 cards/8 3:13 cards/13 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING~,CLUB_ACE~ | chips=After a pass: play again | board=giving | bar=false | sheet=false | end=false | round=Round 2 of 5",
   },
   {
     "at": 450,
-    "look": "phase=- | by=- | binding=- | closed=- | note=- | count=- | pile=- | cards=0/0 | seats=1:8 cards/8 2:8 cards/8 3:12 cards/12 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING,CLUB_ACE~ | chips=After a pass: play again | board=choosing | bar=false | sheet=false | end=false | round=Round 2 of 5",
+    "look": "phase=- | by=- | binding=- | closed=- | note=- | count=- | pile=- | cards=0/0 | seats=1:8 cards/8 2:8 cards/8 3:12 cards/12 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING,CLUB_ACE~ | chips=After a pass: play again | board=giving | bar=false | sheet=false | end=false | round=Round 2 of 5",
   },
   {
     "at": 500,
@@ -3786,8 +3786,8 @@ exports[`PresidentGameScreen pictures (characterisation) > an exchange round > a
             "cards": 0,
             "rect": {
               "height": 58.00000000000001,
-              "left": 131.0126471646702,
-              "top": 262,
+              "left": 132.0126471646702,
+              "top": 264,
               "width": 39.97470567065961,
             },
           },
@@ -3800,8 +3800,8 @@ exports[`PresidentGameScreen pictures (characterisation) > an exchange round > a
           "cards": 0,
           "rect": {
             "height": 58.00000000000001,
-            "left": 131.0126471646702,
-            "top": 262,
+            "left": 132.0126471646702,
+            "top": 264,
             "width": 39.97470567065961,
           },
         },
@@ -3853,8 +3853,8 @@ exports[`PresidentGameScreen pictures (characterisation) > an exchange round > a
             "cards": 0,
             "rect": {
               "height": 58.00000000000001,
-              "left": 131.0126471646702,
-              "top": 262,
+              "left": 132.0126471646702,
+              "top": 264,
               "width": 39.97470567065961,
             },
           },
@@ -3867,8 +3867,8 @@ exports[`PresidentGameScreen pictures (characterisation) > an exchange round > a
           "cards": 0,
           "rect": {
             "height": 58.00000000000001,
-            "left": 131.0126471646702,
-            "top": 262,
+            "left": 132.0126471646702,
+            "top": 264,
             "width": 39.97470567065961,
           },
         },
@@ -3883,11 +3883,11 @@ exports[`PresidentGameScreen pictures (characterisation) > an exchange round > a
   },
   {
     "at": 2500,
-    "look": "phase=The exchange | by=- | binding=- | closed=- | note=- | count=- | pile=- | cards=0/0 | seats=1:8 cards/8 2:8 cards/8 3:11 cards/11 | me=- | hand=SPADE_9,HEART_KING,CLUB_ACE | chips=After a pass: play again | board=done | bar=true | sheet=false | end=false | round=Round 2 of 5",
+    "look": "phase=The exchange | by=- | binding=- | closed=- | note=- | count=- | pile=- | cards=0/0 | seats=1:8 cards/8 2:8 cards/8 3:11 cards/11 | me=- | hand=SPADE_9,HEART_KING,CLUB_ACE | chips=After a pass: play again | board=returning | bar=true | sheet=false | end=false | round=Round 2 of 5",
   },
   {
     "at": 2800,
-    "look": "phase=The exchange | by=- | binding=- | closed=- | note=- | count=- | pile=- | cards=0/0 | seats=1:8 cards/8 2:8 cards/8 3:12 cards/12 | me=- | hand=SPADE_9,HEART_KING,CLUB_ACE | chips=After a pass: play again | board=done | bar=true | sheet=false | end=false | round=Round 2 of 5",
+    "look": "phase=The exchange | by=- | binding=- | closed=- | note=- | count=- | pile=- | cards=0/0 | seats=1:8 cards/8 2:8 cards/8 3:12 cards/12 | me=- | hand=SPADE_9,HEART_KING,CLUB_ACE | chips=After a pass: play again | board=returning | bar=true | sheet=false | end=false | round=Round 2 of 5",
   },
   {
     "at": 2850,
@@ -4369,11 +4369,11 @@ exports[`PresidentGameScreen pictures (characterisation) > an exchange round > t
   },
   {
     "at": 0,
-    "look": "phase=- | by=- | binding=- | closed=- | note=- | count=- | pile=- | cards=0/0 | seats=1:8 cards/8 2:8 cards/8 3:13 cards/13 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING~,CLUB_ACE~ | chips=After a pass: play again | board=choosing | bar=false | sheet=false | end=false | round=Round 2 of 5",
+    "look": "phase=- | by=- | binding=- | closed=- | note=- | count=- | pile=- | cards=0/0 | seats=1:8 cards/8 2:8 cards/8 3:13 cards/13 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING~,CLUB_ACE~ | chips=After a pass: play again | board=giving | bar=false | sheet=false | end=false | round=Round 2 of 5",
   },
   {
     "at": 900,
-    "look": "phase=- | by=- | binding=- | closed=- | note=- | count=- | pile=- | cards=0/0 | seats=1:8 cards/8 2:8 cards/8 3:12 cards/12 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING,CLUB_ACE~ | chips=After a pass: play again | board=choosing | bar=false | sheet=false | end=false | round=Round 2 of 5",
+    "look": "phase=- | by=- | binding=- | closed=- | note=- | count=- | pile=- | cards=0/0 | seats=1:8 cards/8 2:8 cards/8 3:12 cards/12 | me=- | hand=CLUB_3,HEART_9,SPADE_9,HEART_KING,CLUB_ACE~ | chips=After a pass: play again | board=giving | bar=false | sheet=false | end=false | round=Round 2 of 5",
   },
   {
     "at": 950,
@@ -4428,8 +4428,8 @@ exports[`PresidentGameScreen pictures (characterisation) > an exchange round > t
             "cards": 0,
             "rect": {
               "height": 58.00000000000001,
-              "left": 131.0126471646702,
-              "top": 262,
+              "left": 132.0126471646702,
+              "top": 264,
               "width": 39.97470567065961,
             },
           },
@@ -4442,8 +4442,8 @@ exports[`PresidentGameScreen pictures (characterisation) > an exchange round > t
           "cards": 0,
           "rect": {
             "height": 58.00000000000001,
-            "left": 131.0126471646702,
-            "top": 262,
+            "left": 132.0126471646702,
+            "top": 264,
             "width": 39.97470567065961,
           },
         },
@@ -4495,8 +4495,8 @@ exports[`PresidentGameScreen pictures (characterisation) > an exchange round > t
             "cards": 0,
             "rect": {
               "height": 58.00000000000001,
-              "left": 131.0126471646702,
-              "top": 262,
+              "left": 132.0126471646702,
+              "top": 264,
               "width": 39.97470567065961,
             },
           },
@@ -4509,8 +4509,8 @@ exports[`PresidentGameScreen pictures (characterisation) > an exchange round > t
           "cards": 0,
           "rect": {
             "height": 58.00000000000001,
-            "left": 131.0126471646702,
-            "top": 262,
+            "left": 132.0126471646702,
+            "top": 264,
             "width": 39.97470567065961,
           },
         },
@@ -4525,11 +4525,11 @@ exports[`PresidentGameScreen pictures (characterisation) > an exchange round > t
   },
   {
     "at": 2500,
-    "look": "phase=The exchange | by=- | binding=- | closed=- | note=- | count=- | pile=- | cards=0/0 | seats=1:8 cards/8 2:8 cards/8 3:11 cards/11 | me=- | hand=SPADE_9,HEART_KING,CLUB_ACE | chips=After a pass: play again | board=done | bar=true | sheet=false | end=false | round=Round 2 of 5",
+    "look": "phase=The exchange | by=- | binding=- | closed=- | note=- | count=- | pile=- | cards=0/0 | seats=1:8 cards/8 2:8 cards/8 3:11 cards/11 | me=- | hand=SPADE_9,HEART_KING,CLUB_ACE | chips=After a pass: play again | board=returning | bar=true | sheet=false | end=false | round=Round 2 of 5",
   },
   {
     "at": 3100,
-    "look": "phase=The exchange | by=- | binding=- | closed=- | note=- | count=- | pile=- | cards=0/0 | seats=1:8 cards/8 2:8 cards/8 3:12 cards/12 | me=- | hand=SPADE_9,HEART_KING,CLUB_ACE | chips=After a pass: play again | board=done | bar=true | sheet=false | end=false | round=Round 2 of 5",
+    "look": "phase=The exchange | by=- | binding=- | closed=- | note=- | count=- | pile=- | cards=0/0 | seats=1:8 cards/8 2:8 cards/8 3:12 cards/12 | me=- | hand=SPADE_9,HEART_KING,CLUB_ACE | chips=After a pass: play again | board=returning | bar=true | sheet=false | end=false | round=Round 2 of 5",
   },
   {
     "at": 3150,

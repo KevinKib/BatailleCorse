@@ -1,3 +1,4 @@
+import type { MangolaDirection } from './direction';
 import type { MangolaSide, MangolaState } from './MangolaState';
 import { COLUMNS, ROWS, nextPit, pitName, sideOfPit } from './geometry';
 
@@ -41,8 +42,11 @@ function screenPosition(pit: number, viewer: MangolaSide): [number, number] {
     : [rowOf(pit), COLUMNS - 1 - columnOf(pit)];
 }
 
-/** The direction a seed travels on screen when it leaves `pit`, for a viewer sitting on side `viewer`. */
-export function arrowOf(pit: number, viewer: MangolaSide): Arrow {
+/**
+ * The direction a seed travels on screen when it leaves `pit`, for a viewer sitting on side `viewer`. The game's
+ * `direction` is accepted but not used yet: the screen mapping still draws clockwise.
+ */
+export function arrowOf(pit: number, viewer: MangolaSide, _direction: MangolaDirection = 'clockwise'): Arrow {
   const [r0, c0] = screenPosition(pit, viewer);
   const [r1, c1] = screenPosition(nextPit(pit), viewer);
   if (r1 > r0) return 'down';
