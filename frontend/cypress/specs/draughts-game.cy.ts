@@ -83,7 +83,11 @@ describe('Draughts', () => {
       cy.get('[data-test="capture-hint"]').should('not.exist');
       cy.get('[data-test="square-32"]').click();
       cy.get('[data-test="square-28"]').should('have.attr', 'data-target', 'true').click();
-      cy.get('[data-test="moves-toggle"]').click();
+      // The move list is open by default on a wide screen: open it only when it is closed.
+      cy.get('[data-test="moves-toggle"]').then(($toggle) => {
+        if ($toggle.attr('aria-expanded') !== 'true') cy.wrap($toggle).click();
+      });
+      cy.get('[data-test="moves"]').should('be.visible');
       cy.get('[data-test="moves-row"]').should('have.length', 1);
       cy.get('[data-test="moves-cell-white"]').first().should('contain.text', '32-28');
       cy.get('[data-test="moves-cell-black"]', { timeout: 10000 }).first().invoke('text').should('match', /\d+[-x]\d+/);
