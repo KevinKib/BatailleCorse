@@ -6,6 +6,7 @@ import * as boards from './boards';
 import * as privacy from './privacy';
 import { ninetyNine, ninetyNineOptions, ninetyNineUi } from './ninetynine';
 import { draughts, draughtsOptions, draughtsUi } from './draughts';
+import { kiloDeMerde, kiloDeMerdeOptions, kiloDeMerdeUi } from './kilodemerde';
 
 // The French bundle, composed from one file per translation chunk. Loaded on demand (`import('./fr')`).
 export const messagesFr: Messages = {
@@ -16,8 +17,15 @@ export const messagesFr: Messages = {
   ...privacy,
   ninetyNine,
   ninetyNineUi,
+  kiloDeMerde,
+  kiloDeMerdeUi,
   draughts,
   draughtsUi,
-  // 99's and draughts' option texts join the shell's options (these areas have no file of their own for them).
-  options: { ...shell.options, ninetyNine: ninetyNineOptions, draughts: draughtsOptions },
+  // 99's, draughts' and Kilo de merde's option texts join the shell's options (these areas have no file of their own for them).
+  options: {
+    ...shell.options,
+    ninetyNine: ninetyNineOptions,
+    draughts: draughtsOptions,
+    kiloDeMerde: kiloDeMerdeOptions,
+  },
 };
