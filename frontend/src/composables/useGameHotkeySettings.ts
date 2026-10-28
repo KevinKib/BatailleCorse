@@ -1,12 +1,11 @@
 import type { GameDefinition, GameKey } from '../model/games';
 import { useHotkeySettings, type HotkeyPanelApi } from './useHotkeySettings';
-import { useBatailleCorseHotkeySettings } from './useBatailleCorseHotkeySettings';
 
 // Each game keeps its own storage (see `GameDefinition.hotkeys`); only the game asked for is read, so a
 // screen that does not use the settings store never touches it.
 const SETTINGS: { [K in GameKey]?: () => HotkeyPanelApi } = {
-  bataillecorse: useBatailleCorseHotkeySettings,
-  bullshit: useHotkeySettings,
+  bataillecorse: () => useHotkeySettings('bataillecorse'),
+  bullshit: () => useHotkeySettings('bullshit'),
 };
 
 /**

@@ -5,7 +5,7 @@ import { defineComponent, h } from 'vue';
 import { createMemoryHistory } from 'vue-router';
 import { createAppRouter } from '../router';
 import { findGame } from '../model/games';
-import { resolveSeatSession, useSeatGameBootstrap, type SeatGameBootstrapStore } from './useSeatGameBootstrap';
+import { resolveSeatSession, useSeatGameBootstrap, type SeatGameBootstrapStore, type SeatGameBootstrapOptions } from './useSeatGameBootstrap';
 
 // The prefix is a parameter: this one belongs to no real game.
 const PREFIX = 'fake:tokens:';
@@ -44,12 +44,12 @@ describe('useSeatGameBootstrap', () => {
     return { restore: vi.fn(), hydrate: vi.fn(hydrate) };
   }
 
-  async function mountAtRoom(id: string, store: SeatGameBootstrapStore) {
+  async function mountAtRoom(id: string, store: SeatGameBootstrapStore, options?: SeatGameBootstrapOptions) {
     const router = createAppRouter(createMemoryHistory());
     await router.push(`/bullshit/room/${id}`);
     await router.isReady();
     const Probe = defineComponent({
-      setup() { useSeatGameBootstrap(game, id, PREFIX, store); return () => h('div'); },
+      setup() { useSeatGameBootstrap(game, id, PREFIX, store, options); return () => h('div'); },
     });
     mount(Probe, { global: { plugins: [router] } });
     await flushPromises();
@@ -79,6 +79,55 @@ describe('useSeatGameBootstrap', () => {
       expect(router.currentRoute.value.query[query]).toBe('1');
       expect(localStorage.getItem('fake:tokens:g1')).toBeNull();
     });
+
+  describe('options', () => {
+    it('singleSeat forgets an entry holding several seats and leads to the join form', async () => {
+      localStorage.setItem('fake:tokens:g1', JSON.stringify({ 0: 'a', 1: 'b' }));
+      const store = fakeStore(async () => 'ok');
+      const router = await mountAtRoom('g1', store, { singleSeat: true });
+      expect(router.currentRoute.value.fullPath).toBe('/bullshit/join/g1');
+      expect(localStorage.getItem('fake:tokens:g1')).toBeNull();
+      expect(store.hydrate).not.toHaveBeenCalled();
+    });
+
+    it('singleSeat forgets an entry whose token is not a string', async () => {
+      localStorage.setItem('fake:tokens:g1', JSON.stringify({ 1: 5 }));
+      const router = await mountAtRoom('g1', fakeStore(async () => 'ok'), { singleSeat: true });
+      expect(router.currentRoute.value.fullPath).toBe('/bullshit/join/g1');
+      expect(localStorage.getItem('fake:tokens:g1')).toBeNull();
+    });
+
+    it('without singleSeat the first seat of several is taken (unchanged for the other games)', async () => {
+      localStorage.setItem('fake:tokens:g1', JSON.stringify({ 0: 'a', 1: 'b' }));
+      const store = fakeStore(async () => 'ok');
+      await mountAtRoom('g1', store);
+      expect(store.restore).toHaveBeenCalledWith('g1', 0, 'a');
+    });
+
+    it('onHydrated runs once the room is loaded, not when the game is gone', async () => {
+      localStorage.setItem('fake:tokens:g1', JSON.stringify({ 0: 'tok' }));
+      const onHydrated = vi.fn();
+      await mountAtRoom('g1', fakeStore(async () => 'ok'), { onHydrated });
+      expect(onHydrated).toHaveBeenCalledTimes(1);
+      const gone = vi.fn();
+      await mountAtRoom('g1', fakeStore(async () => 'gone'), { onHydrated: gone });
+      expect(gone).not.toHaveBeenCalled();
+    });
+
+    it('onUnmount runs when the screen goes away', async () => {
+      const onUnmount = vi.fn();
+      const router = createAppRouter(createMemoryHistory());
+      await router.push('/bullshit/room/g1');
+      await router.isReady();
+      const Probe = defineComponent({
+        setup() { useSeatGameBootstrap(game, 'g1', PREFIX, fakeStore(async () => 'ok'), { onUnmount }); return () => h('div'); },
+      });
+      const wrapper = mount(Probe, { global: { plugins: [router] } });
+      await flushPromises();
+      wrapper.unmount();
+      expect(onUnmount).toHaveBeenCalledTimes(1);
+    });
+  });
 
   describe('on unavailable', () => {
     beforeEach(() => { vi.useFakeTimers(); });
