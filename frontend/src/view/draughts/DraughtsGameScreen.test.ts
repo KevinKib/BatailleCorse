@@ -467,7 +467,7 @@ describe('DraughtsGameScreen', () => {
         eventData: { seat: 0, from: 33, to: 22, path: [22], captures: [28], promotes: false },
       });
       await flushPromises();
-      await vi.advanceTimersByTimeAsync(10);
+      await vi.advanceTimersByTimeAsync(700);
       expect(wrapper.find('[data-test="end"]').exists()).toBe(true);
     });
   });

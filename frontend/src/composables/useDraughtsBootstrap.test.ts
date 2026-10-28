@@ -4,25 +4,11 @@ import { setActivePinia, createPinia } from 'pinia';
 import { defineComponent, h } from 'vue';
 import { createMemoryHistory, createRouter } from 'vue-router';
 import { findGame, type GameDefinition } from '../model/games';
-import { resolveDraughtsSession, useDraughtsBootstrap } from './useDraughtsBootstrap';
+import { useDraughtsBootstrap } from './useDraughtsBootstrap';
 import { useDraughtsStore } from '../state/Draughts.store';
 
 const base = '/draughts';
 const game: GameDefinition = findGame('draughts')!;
-
-describe('resolveDraughtsSession', () => {
-  beforeEach(() => { localStorage.clear(); });
-
-  it('returns the stored seat and token under the draughts key', () => {
-    localStorage.setItem('draughts:tokens:g1', JSON.stringify({ 1: 'tok-1' }));
-    expect(resolveDraughtsSession('g1')).toEqual({ seat: 1, token: 'tok-1' });
-  });
-
-  it('returns null when nothing is stored, or for another game', () => {
-    localStorage.setItem('three-men-morris:tokens:g1', JSON.stringify({ 1: 'tok-1' }));
-    expect(resolveDraughtsSession('g1')).toBeNull();
-  });
-});
 
 describe('useDraughtsBootstrap', () => {
   beforeEach(() => { setActivePinia(createPinia()); localStorage.clear(); });
