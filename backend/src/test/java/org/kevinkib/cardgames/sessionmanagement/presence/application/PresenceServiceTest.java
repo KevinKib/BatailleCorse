@@ -126,6 +126,21 @@ class PresenceServiceTest {
     }
 
     @Test
+    void givenGraceOverrideForAGame_whenDisconnect_thenOnlyThatGameUsesTheShorterGrace() {
+        GameId otherId = StartedRooms.start(sessionService, "bataille-corse", 2).getId();
+        service.overrideForfeitGrace(gameId, java.time.Duration.ofSeconds(2));
+
+        service.onPresence("sess-a", gameId, tokenOf(0));
+        service.onDisconnect("sess-a");
+        assertThat(scheduler.lastTime, is(Instant.parse("2026-06-09T12:00:02Z")));
+
+        service.onPresence("sess-b", otherId, sessionService.tokenForSeat(otherId, new PlayerId(0)));
+        service.onDisconnect("sess-b");
+        assertThat(scheduler.lastTime, is(Instant.parse("2026-06-09T12:01:00Z")));
+        assertThat(service.forfeitGrace(), is(java.time.Duration.ofSeconds(60)));
+    }
+
+    @Test
     void givenSeatBound_whenDisconnect_thenSchedulesAndBroadcastsDisconnected() {
         service.onPresence("sess-0", gameId, tokenOf(0));
 

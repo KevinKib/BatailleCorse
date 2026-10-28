@@ -42,6 +42,7 @@ public class PresenceService {
     private final GameLifecycleBroadcasters broadcasters;
 
     private final Map<Seat, ScheduledForfeit> pendingForfeits = new ConcurrentHashMap<>();
+    private final Map<GameId, Duration> graceOverrides = new ConcurrentHashMap<>();
     private volatile BiConsumer<GameId, List<AddressedLobbyView>> lobbyPresenceListener = (id, views) -> { };
 
     /**
@@ -80,6 +81,16 @@ public class PresenceService {
 
     public Duration forfeitGrace() {
         return forfeitGrace;
+    }
+
+    /** The grace that applies to one game: its override if any (e2e profile only), the default otherwise. */
+    public Duration forfeitGraceFor(GameId gameId) {
+        return graceOverrides.getOrDefault(gameId, forfeitGrace);
+    }
+
+    /** Shortens (or lengthens) the grace of one game only; other games keep the default. */
+    public void overrideForfeitGrace(GameId gameId, Duration grace) {
+        graceOverrides.put(gameId, grace);
     }
 
     /**
@@ -129,7 +140,7 @@ public class PresenceService {
             return;
         }
 
-        Instant deadline = clock.instant().plus(forfeitGrace);
+        Instant deadline = clock.instant().plus(forfeitGraceFor(seat.gameId()));
         ScheduledForfeit task = scheduler.schedule(deadline,
                 () -> forfeit(seat.gameId(), seat.playerId(), ForfeitReason.DISCONNECTED));
         pendingForfeits.put(seat, task);

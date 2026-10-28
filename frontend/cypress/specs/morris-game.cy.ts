@@ -198,13 +198,14 @@ describe("Three Men's Morris game", () => {
       });
     });
 
-    it('an opponent who stays away forfeits after the grace period', { defaultCommandTimeout: 90000 }, () => {
-      asBlack().then(({ white }) => {
+    it('an opponent who stays away forfeits after the grace period', { defaultCommandTimeout: 30000 }, () => {
+      asBlack().then(({ id, white }) => {
+        cy.shortenForfeitGrace(id);
         cy.then(() => white.publish('/app/presence', {}));
         place(white, 0); owner(0, 'white'); myTurn();
         cy.then(() => white.disconnect());
         cy.get('[data-cy="disconnect-overlay"]', { timeout: 15000 }).should('be.visible');
-        cy.get('[data-test="end"]', { timeout: 90000 }).should('be.visible');
+        cy.get('[data-test="end"]', { timeout: 60000 }).should('be.visible');
         cy.get('.end-title').should('have.text', 'VICTORY');
         cy.get('.end-sub').invoke('text').should('match', /^Alice disconnected\.$/);
       });
