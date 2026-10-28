@@ -7,6 +7,7 @@ import org.kevinkib.cardgames.ninetynine.domain.RandomDeckSource;
 import org.kevinkib.cardgames.ninetynine.domain.ScriptedDeckSource;
 import org.kevinkib.cardgames.ninetynine.domain.bot.NinetyNineBots;
 import org.kevinkib.cardgames.ninetynine.presentation.NinetyNineGameActions;
+import org.kevinkib.cardgames.ninetynine.presentation.NinetyNineLifecycleBroadcaster;
 import org.kevinkib.cardgames.ninetynine.presentation.NinetyNineRoundPause;
 import org.kevinkib.cardgames.ninetynine.presentation.bot.NinetyNineBotCoordinator;
 import org.kevinkib.cardgames.ninetynine.presentation.dto.NinetyNineDto;
@@ -14,7 +15,6 @@ import org.kevinkib.cardgames.presentation.GameMessagingService;
 import org.kevinkib.cardgames.presentation.bot.BotScheduler;
 import org.kevinkib.cardgames.presentation.bot.BotSeatOptions;
 import org.kevinkib.cardgames.presentation.bot.UniformThinkingDelay;
-import org.kevinkib.cardgames.presentation.state.SeatLifecycleBroadcaster;
 import org.kevinkib.cardgames.presentation.state.SeatStateBroadcaster;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
 import org.kevinkib.cardgames.sessionmanagement.presence.port.GameLifecycleBroadcaster;
@@ -75,8 +75,9 @@ public class NinetyNineConfig {
 
     @Bean
     public GameLifecycleBroadcaster ninetyNineLifecycleBroadcaster(
-            SeatStateBroadcaster<NinetyNine, NinetyNineDto> ninetyNineStateBroadcaster) {
-        return new SeatLifecycleBroadcaster<>(NinetyNine.class, ninetyNineStateBroadcaster);
+            SeatStateBroadcaster<NinetyNine, NinetyNineDto> ninetyNineStateBroadcaster,
+            NinetyNineGameActions ninetyNineGameActions) {
+        return new NinetyNineLifecycleBroadcaster(ninetyNineStateBroadcaster, ninetyNineGameActions);
     }
 
     /** Deals the next round {@code ninetynine.round-pause-ms} after a round end (0 under the {@code test} profile). */

@@ -55,6 +55,16 @@ public class NinetyNineGameActions {
         }
     }
 
+    /**
+     * Announces what the last forfeit of the game caused (elimination, bust, end of the game), after the generic
+     * FORFEIT broadcast. The forfeit itself is announced by the lifecycle broadcaster.
+     */
+    public void announceForfeitAftermath(NinetyNine game, String message) {
+        synchronized (game) {
+            announce(game.getId(), game, game.lastForfeitEvents(), message);
+        }
+    }
+
     private void announce(GameId id, NinetyNine game, List<NinetyNineEvent> events, String message) {
         sessionService.touch(id);
         for (NinetyNineEvent event : events) {

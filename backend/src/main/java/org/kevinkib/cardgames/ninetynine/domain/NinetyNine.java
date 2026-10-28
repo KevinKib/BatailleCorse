@@ -57,6 +57,8 @@ public class NinetyNine implements Game {
     private LastPlay lastPlay;
     private NinetyNineResult result;
     private int version;
+    /** What the last {@link #forfeit(PlayerId)} changed, for the presentation layer to announce. */
+    private List<NinetyNineEvent> lastForfeitEvents = List.of();
 
     public NinetyNine(GameId id, int nbPlayers, DeckSource deckSource, NinetyNineOptions options) {
         if (nbPlayers < MIN_PLAYERS || nbPlayers > MAX_PLAYERS) {
@@ -158,7 +160,16 @@ public class NinetyNine implements Game {
 
     @Override
     public synchronized void forfeit(PlayerId loser) {
-        forfeitWithEvents(loser);
+        lastForfeitEvents = forfeitWithEvents(loser);
+    }
+
+    /**
+     * The events of the last {@link #forfeit(PlayerId)} (the elimination, a bust of the next seat, the end of the
+     * game), empty when it changed nothing. The {@code Game} contract returns nothing, so the lifecycle broadcaster
+     * reads them here to announce them.
+     */
+    public synchronized List<NinetyNineEvent> lastForfeitEvents() {
+        return lastForfeitEvents;
     }
 
     /**
@@ -198,19 +209,28 @@ public class NinetyNine implements Game {
         }
     }
 
-    /** Starts a round: a fresh deck, three cards to each live seat, total 0, seat order. */
+    /**
+     * Starts a round: a fresh deck, three cards to each live seat, total 0, seat order. Failure-atomic: the deck is
+     * drawn and the hands built aside, and the state changes only once nothing can fail any more.
+     */
     private void deal(PlayerId starter) {
-        round++;
-        List<Card> deck = new ArrayList<>(deckSource.shuffledDeck(id, round));
+        int newRound = round + 1;
+        List<Card> deck = new ArrayList<>(deckSource.shuffledDeck(id, newRound));
         List<PlayerId> live = liveSeats();
-        live.forEach(seat -> hands.get(seat).clear());
+        Map<PlayerId, List<Card>> dealt = new LinkedHashMap<>();
+        live.forEach(seat -> dealt.put(seat, new ArrayList<>()));
         int next = 0;
         for (int pass = 0; pass < HAND_SIZE; pass++) {
             for (PlayerId seat : live) {
-                hands.get(seat).add(deck.get(next++));
+                dealt.get(seat).add(deck.get(next++));
             }
         }
-        stock = new ArrayList<>(deck.subList(next, deck.size()));
+        List<Card> newStock = new ArrayList<>(deck.subList(next, deck.size()));
+
+        round = newRound;
+        hands.values().forEach(List::clear);
+        dealt.forEach((seat, hand) -> hands.get(seat).addAll(hand));
+        stock = newStock;
         pile = new ArrayList<>();
         total = 0;
         direction = Direction.CLOCKWISE;
