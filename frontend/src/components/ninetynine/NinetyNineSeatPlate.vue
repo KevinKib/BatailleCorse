@@ -4,8 +4,7 @@ import NinetyNineLives from './NinetyNineLives.vue';
 import SeatDisconnectBadge from '../SeatDisconnectBadge.vue';
 import type { NinetyNinePlayer } from '../../model/ninetynine/NinetyNineState';
 import { useI18n } from '../../composables/useI18n';
-import { ordinal, plural } from '../../locales/format';
-import { format } from '../../locales/format';
+import { format, ordinal, plural } from '../../locales/format';
 
 // The plate of a seat at the table: its name, its lives as hearts and the cards it holds; out, it shows its place.
 // Two shapes: the plate of the ring (full on a wide felt, compact on a phone: no card count, the accessible name keeps
