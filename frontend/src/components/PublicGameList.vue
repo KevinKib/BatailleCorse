@@ -23,8 +23,9 @@ const props = defineProps<{
   join: (gameId: string) => Promise<void>;
 }>();
 
-const ui = useI18n().join.publicGames;
-const gameName = computed(() => gameChoice(useI18n(), props.game.key).name);
+const i18n = useI18n();
+const ui = i18n.join.publicGames;
+const gameName = computed(() => gameChoice(i18n, props.game.key).name);
 
 const headingId = useId();
 const heading = ref<HTMLElement | null>(null);
@@ -69,8 +70,13 @@ function dots(l: PublicLobby): Array<'human' | 'bot' | 'free'> {
     i < l.joined - l.bots ? 'human' : i < l.joined ? 'bot' : 'free');
 }
 
+// A host who typed no name is called by the label of seat 1, in the player's language.
+function hostLabel(l: PublicLobby): string {
+  return l.hostName?.trim() || format(i18n.lobby.playerLabel, { n: 1 });
+}
+
 function joinLabel(l: PublicLobby): string {
-  return format(ui.joinAria, { host: l.hostName, joined: l.joined, max: l.maxPlayers });
+  return format(ui.joinAria, { host: hostLabel(l), joined: l.joined, max: l.maxPlayers });
 }
 
 // Row errors and in-flight joins, by game id.
@@ -147,7 +153,7 @@ watch(visible, next => {
           :data-game-id="l.gameId"
           data-test="pg-row">
           <div class="pg-main">
-            <span class="pg-host">{{ l.hostName }}</span>
+            <span class="pg-host">{{ hostLabel(l) }}</span>
             <span class="pg-badge" :class="`badge--${l.state.toLowerCase()}`" data-test="pg-badge">{{ stateLabel[l.state] }}</span>
           </div>
           <div class="pg-meta">
