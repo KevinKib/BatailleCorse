@@ -2,7 +2,7 @@
  * Every game the app knows by key. Keys are opened ahead of their game: a game only appears on the Game
  * selection once its own change registers it in `GAMES`.
  */
-export type GameKey = 'bataillecorse' | 'bullshit' | 'kobo' | 'three-men-morris' | 'president' | 'mangola';
+export type GameKey = 'bataillecorse' | 'bullshit' | 'kobo' | 'three-men-morris' | 'president' | 'mangola' | 'ninety-nine';
 
 /** How a game's card looks on the Game selection (PrimeVue button icon and severity). */
 export interface GamePickerStyle {
