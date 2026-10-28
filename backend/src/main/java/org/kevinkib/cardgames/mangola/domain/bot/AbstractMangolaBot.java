@@ -6,7 +6,9 @@ import org.kevinkib.cardgames.mangola.domain.MangolaRules;
 import org.kevinkib.cardgames.mangola.domain.Side;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.random.RandomGenerator;
 
@@ -52,6 +54,26 @@ abstract class AbstractMangolaBot implements MangolaBot {
     protected final boolean acceptable(MangolaRules rules, Side side, int[] layout, Set<List<Integer>> rejected) {
         List<Integer> boxed = MangolaLayouts.boxed(layout);
         return !rejected.contains(boxed) && !Mangola.onlyEndlessMoves(rules, side, boxed);
+    }
+
+    /**
+     * A draw from the placement book for this side (weighted, or uniform) that passes {@link #acceptable}, skipping
+     * the rejected layouts; a random or pattern layout when the book has nothing acceptable left.
+     */
+    protected final int[] fromBook(MangolaRules rules, Side side, Set<List<Integer>> rejected, boolean weighted) {
+        Set<List<Integer>> excluded = new HashSet<>(rejected);
+        while (true) {
+            Optional<int[]> drawn = weighted
+                    ? MangolaPlacementBook.draw(side, random, excluded)
+                    : MangolaPlacementBook.drawUniform(side, random, excluded);
+            if (drawn.isEmpty()) {
+                return randomOrPattern();
+            }
+            if (acceptable(rules, side, drawn.get(), rejected)) {
+                return drawn.get();
+            }
+            excluded.add(MangolaLayouts.boxed(drawn.get()));
+        }
     }
 
     /** A random or a pattern layout, half and half. */
