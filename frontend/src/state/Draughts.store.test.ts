@@ -416,12 +416,12 @@ describe('Draughts store', () => {
   it('setOption sends the lobby option to the server, nothing is changed locally', () => {
     const store = seated(0);
     store.restore('g1', 0, 'tok-0');
-    store.applyEvent({ type: 'state-update', state: lobbyView({ options: { drawOffers: 'on' } }) });
+    store.applyEvent({ type: 'state-update', state: lobbyView({ options: { hostColour: 'random' } }) });
     const publish = spyPublish();
-    store.setOption('drawOffers', 'off');
+    store.setOption('hostColour', 'black');
     expect(publish).toHaveBeenCalledWith('/app/lobby/setOptions',
-      JSON.stringify({ gameId: 'g1', token: 'tok-0', values: { drawOffers: 'off' } }));
-    expect(store.lobby!.options).toEqual({ drawOffers: 'on' });
+      JSON.stringify({ gameId: 'g1', token: 'tok-0', values: { hostColour: 'black' } }));
+    expect(store.lobby!.options).toEqual({ hostColour: 'random' });
   });
 
   it('forfeit sends the shared forfeit command', () => {

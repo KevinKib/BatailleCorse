@@ -607,16 +607,16 @@ describe('Draughts messages', () => {
     expect(messagesEn.draughts.sections.every(s => s.kind === 'text' && s.body.length > 0)).toBe(true);
   });
 
-  it('givenTheOptions_thenTheHostColourTheDrawOffersAndTheBotLevelsAreNamed', () => {
-    const { hostColour, drawOffers, level } = messagesEn.options.draughts;
+  it('givenTheOptions_thenTheHostColourAndTheBotLevelsAreNamed', () => {
+    const { hostColour, level } = messagesEn.options.draughts;
     expect(['white', 'black', 'random'].map(v => hostColour[v])).toEqual(['White', 'Black', 'Random']);
-    expect(['on', 'off'].map(v => drawOffers[v])).toEqual(['Allowed', 'Off']);
+    expect('drawOffers' in messagesEn.options.draughts).toBe(false);
     expect(['random', 'greedy', 'expert'].map(v => level[v])).toEqual(['Easy', 'Medium', 'Expert']);
   });
 
   it('givenTheBackendErrorCodes_thenEveryOneHasAText', () => {
     const errors = messagesEn.draughtsUi.errors as Record<string, string>;
-    const codes = ['illegalMove', 'ambiguousMove', 'notYourTurn', 'invalidSquare', 'gameFinished', 'drawOffersOff',
+    const codes = ['illegalMove', 'ambiguousMove', 'notYourTurn', 'invalidSquare', 'gameFinished',
       'drawAlreadyOffered', 'ownDrawOffer', 'drawOfferPending', 'noDrawOffer'];
     for (const code of codes) expect(errors[code], code).toBeTruthy();
   });

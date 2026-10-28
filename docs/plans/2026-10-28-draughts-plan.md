@@ -16,7 +16,7 @@ design, bots, contract, interaction model, numbers, product questions). Written 
 3. **Bots `random` / `greedy` / `expert`**, Expert an alpha-beta capped at 6 plies and 300 ms, thinking outside
    the game lock; modest on purpose (to confirm, Q2).
 4. **No clock in v1** (an optional Fischer clock is described with proposed numbers, Q3); lobby options
-   `hostColour` (default `random`) and `drawOffers` (`on|off`).
+   `hostColour` (default `random`); draw offers are always allowed (the `drawOffers` option was removed).
 5. **The look goes through a Claude Design canvas (D) first**: board, pieces and kings, plates, move list,
    lobby; the owner chooses before the components chunk.
 
@@ -182,7 +182,7 @@ the component tests use fixtures directly). Vitest only.
   `RulesPanel`, `GameTimer`, `EndGameOverlay`, `DisconnectOverlay`, `ForfeitBanner`, the shared resign
   confirm), the capture hint, the draw offer bar, the live region, end subtitles per reason.
 - Locales: `draughtsUi`, `draughts` (rules panel text of the spec), `options.draughts` (`hostColour`,
-  `drawOffers`, `level` with Easy, Medium, Expert), the error codes of the spec.
+  `level` with Easy, Medium, Expert), the error codes of the spec.
 - UI addendum in the spec (choice and link).
 - **Tests first:** `DraughtsBoard.test.ts` (50 dark squares in the right order for each orientation; only
   selectable pieces are enabled; destinations shown; the chooser on an ambiguous destination; the king mark is
@@ -195,7 +195,7 @@ the component tests use fixtures directly). Vitest only.
 Owns the aggregate, the factory, `presentation/` (except `bot/`) and `config/DraughtsConfig.java`.
 
 - Domain: `Draughts` (commands, queries, draw counters 6.1 to 6.4, draw offers, forfeit, `fromPosition`),
-  `DraughtsFactory` (options `hostColour`, `drawOffers`; seat option `level` declared with the keys of the
+  `DraughtsFactory` (option `hostColour`; seat option `level` declared with the keys of the
   spec, its values validated even before B3 plugs strategies), the exceptions and `DraughtsEvent`.
 - Presentation: `DraughtsRestController`, `DraughtsWebSocketController` (start with the type check, `move`,
   draw commands, over `SeatCommands`, error codes), `DraughtsGameActions`, payloads, `DraughtsDto.forViewer`,

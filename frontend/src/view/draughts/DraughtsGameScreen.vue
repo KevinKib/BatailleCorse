@@ -102,7 +102,7 @@ const noMoveYet = computed(() => (store.game?.history.length ?? 0) === 0);
 const choice = computed(() => store.choice ?? []);
 const chooserTarget = computed(() => choice.value[0]?.to ?? 0);
 
-const showDrawBar = computed(() => store.phase === 'playing' && (store.game?.drawOffersAllowed ?? false));
+const showDrawBar = computed(() => store.phase === 'playing');
 const drawOffererName = computed(() => (store.drawOfferedBy === null ? '' : nameOrYou(store.drawOfferedBy)));
 const answeringDraw = computed(() => store.phase === 'playing' && store.incomingDrawOffer && store.canAnswerDraw);
 

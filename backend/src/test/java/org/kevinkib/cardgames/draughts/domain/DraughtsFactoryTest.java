@@ -54,11 +54,10 @@ class DraughtsFactoryTest {
     }
 
     @Test
-    void theDefaultsAreARandomHostColourAndOffersOn() {
+    void theDefaultIsARandomHostColour() {
         Draughts game = (Draughts) factory.create(GameId.generate(), 2);
 
         assertThat(game.whiteSeat()).isEqualTo(WHITE);
-        assertThat(game.drawOffersAllowed()).isTrue();
         assertThat(game.position()).isEqualTo(DraughtsPosition.initial());
     }
 
@@ -78,24 +77,22 @@ class DraughtsFactoryTest {
     }
 
     @Test
-    void drawOffersCanBeSwitchedOff() {
-        assertThat(create(Map.of("drawOffers", "off")).drawOffersAllowed()).isFalse();
-        assertThat(create(Map.of("drawOffers", "on")).drawOffersAllowed()).isTrue();
+    void aLegacyDrawOffersOptionIsIgnoredAndOffersStayAllowed() throws Exception {
+        Draughts game = create(Map.of("drawOffers", "off", "hostColour", "white"));
+
+        assertThat(game.availableActions(WHITE)).contains(Action.OFFER_DRAW);
+        assertThat(game.offerDraw(WHITE)).isNotNull();
     }
 
     @Test
     void theOptionsAreDeclaredWithTheirKeysDefaultsAndLabels() {
         List<OptionDescriptor> options = factory.optionDescriptors();
 
-        assertThat(options).extracting(OptionDescriptor::key).containsExactly("hostColour", "drawOffers");
+        assertThat(options).extracting(OptionDescriptor::key).containsExactly("hostColour");
         OptionDescriptor colour = options.get(0);
         assertThat(colour.values()).containsExactly("white", "black", "random");
         assertThat(colour.defaultValue()).isEqualTo("random");
         assertThat(colour.labelKey()).isEqualTo("options.draughts.hostColour");
-        OptionDescriptor offers = options.get(1);
-        assertThat(offers.values()).containsExactly("on", "off");
-        assertThat(offers.defaultValue()).isEqualTo("on");
-        assertThat(offers.labelKey()).isEqualTo("options.draughts.drawOffers");
     }
 
     @Test
@@ -115,7 +112,9 @@ class DraughtsFactoryTest {
     @Test
     void validationIsStrict() {
         assertThat(factory.validate(GameOptions.none()).values())
-                .containsEntry("hostColour", "random").containsEntry("drawOffers", "on");
+                .containsOnlyKeys("hostColour").containsEntry("hostColour", "random");
+        assertThat(factory.validate(GameOptions.of(Map.of("drawOffers", "off", "hostColour", "black"))).values())
+                .containsOnlyKeys("hostColour").containsEntry("hostColour", "black");
         assertThatThrownBy(() -> factory.validate(GameOptions.of(Map.of("hostColour", "green"))))
                 .isInstanceOf(InvalidOptionException.class);
         assertThatThrownBy(() -> factory.validate(GameOptions.of(Map.of("clock", "blitz"))))

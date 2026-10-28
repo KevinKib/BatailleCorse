@@ -98,8 +98,8 @@ class DraughtsBotCoordinatorTest {
         broadcaster.addListener(coordinator);
     }
 
-    private Draughts register(String level, boolean offersAllowed) {
-        Draughts game = new Draughts(GameId.generate(), HUMAN, offersAllowed);
+    private Draughts register(String level) {
+        Draughts game = new Draughts(GameId.generate(), HUMAN);
         SessionGame session = SessionGame.create(game.getId(), game.getPlayerIds(), DraughtsFactory.GAME_TYPE);
         session.claimHost("Alice");
         session.claimBot(null);
@@ -112,7 +112,7 @@ class DraughtsBotCoordinatorTest {
     }
 
     private Draughts register() {
-        return register(null, true);
+        return register(null);
     }
 
     private void start(Draughts game) {
@@ -158,7 +158,7 @@ class DraughtsBotCoordinatorTest {
 
     @Test
     void theLevelComesFromTheSeatOptionAndDefaultsToTheDefaultLevel() throws Exception {
-        Draughts expert = register("expert", true);
+        Draughts expert = register("expert");
         start(expert);
         actions.move(expert.getId(), HUMAN, 32, 28, List.of());
         scheduler.runNext();
@@ -334,7 +334,7 @@ class DraughtsBotCoordinatorTest {
 
     @Test
     void aGameWithoutABotIsNotTracked() throws Exception {
-        Draughts game = new Draughts(GameId.generate(), HUMAN, true);
+        Draughts game = new Draughts(GameId.generate(), HUMAN);
         SessionGame session = SessionGame.create(game.getId(), game.getPlayerIds(), DraughtsFactory.GAME_TYPE);
         session.claimHost("Alice");
         session.claimNextFreeSeat("Bob");
