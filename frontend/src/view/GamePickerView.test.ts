@@ -27,6 +27,11 @@ describe('GamePickerView', () => {
     expect(wrapper.find('[data-test="removed-notice"]').exists()).toBe(false);
   });
 
+  it('givenOnlyEnglishIsOffered_thenThereIsNoLanguagePicker', async () => {
+    const { wrapper } = await mountPicker();
+    expect(wrapper.find('[data-test="language-button"]').exists()).toBe(false);
+  });
+
   it('givenPicker_thenShowsTitleAndEveryGameWithDescriptionAndPlayerCount', async () => {
     const { wrapper } = await mountPicker();
     const text = wrapper.text();
