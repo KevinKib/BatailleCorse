@@ -18,7 +18,7 @@ import static org.kevinkib.cardgames.ninetynine.domain.NinetyNineBuilder.game;
 class NinetyNineForfeitTest {
 
     @Test
-    void example10_forfeitOnTurnEliminatesTheSeatAndMovesTheTurnOn() {
+    void example10_forfeitOnTurnEliminatesTheSeatAndMovesTheTurnOn() throws NinetyNineException {
         NinetyNine game = game(3).total(40).hand(A, "2H 3H 4H").build();
         int version = game.version();
 
@@ -34,7 +34,7 @@ class NinetyNineForfeitTest {
     }
 
     @Test
-    void forfeitOffTurnKeepsTheTurnAndTheTotal() {
+    void forfeitOffTurnKeepsTheTurnAndTheTotal() throws NinetyNineException {
         NinetyNine game = game(3).total(40).build();
 
         game.forfeit(C);
