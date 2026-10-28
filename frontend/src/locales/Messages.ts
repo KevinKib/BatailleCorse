@@ -1046,7 +1046,8 @@ export interface Messages {
   turn: TurnMessages;      // turn cue shared by the tables
   president: RulesMessages;         // President
   presidentUi: PresidentUiMessages; // President screens
-  ninetyNineUi: NinetyNineUiMessages; // 99 screens (the rules texts come with the entry PR)
+  ninetyNine: RulesMessages;        // 99
+  ninetyNineUi: NinetyNineUiMessages; // 99 screens
   draughts: RulesMessages;          // Draughts
   draughtsUi: DraughtsUiMessages;   // Draughts screens
   threeMenMorris: RulesMessages;    // Three Men's Morris

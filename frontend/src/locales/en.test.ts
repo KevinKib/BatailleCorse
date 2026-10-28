@@ -624,3 +624,37 @@ describe('Draughts messages', () => {
     expect(ui.draw.byShortEnding).toBeTruthy();
   });
 });
+
+describe('99 messages', () => {
+  const emptyLeaves = (node: unknown, path: string): string[] => {
+    if (typeof node === 'string') return node.trim() === '' ? [path] : [];
+    if (Array.isArray(node)) return node.flatMap((v, i) => emptyLeaves(v, `${path}[${i}]`));
+    if (node && typeof node === 'object') return Object.entries(node).flatMap(([k, v]) => emptyLeaves(v, `${path}.${k}`));
+    return [];
+  };
+
+  it('givenThePicker_thenNinetyNineIsNamed99WithAShortPitchAndItsTwoToTwelvePlayers', () => {
+    expect(messagesEn.gamePicker.games['ninety-nine']).toEqual({
+      name: '99',
+      description: 'Keep the running total at 99 or less. Whoever cannot play loses a life.',
+      players: '2–12 players',
+      play: 'Play',
+    });
+  });
+
+  it('givenTheRules_thenTheyCoverGoalTurnCardsAceBustEndAndForfeit', () => {
+    const rules = messagesEn.ninetyNine;
+    expect(rules.toggleLabel).toBeTruthy();
+    expect(rules.panelTitle).toBe('99');
+    expect(rules.closeLabel).toBeTruthy();
+    for (const topic of ['goal', 'turn', 'card', 'ace', 'over 99', 'end', 'leav']) {
+      expect(rules.sections.some(s => s.title.toLowerCase().includes(topic)), topic).toBe(true);
+    }
+  });
+
+  it('givenTheMessages_thenEveryLeafStringIsNonEmpty', () => {
+    expect(emptyLeaves(messagesEn.ninetyNineUi, 'ninetyNineUi')).toEqual([]);
+    expect(emptyLeaves(messagesEn.ninetyNine, 'ninetyNine')).toEqual([]);
+    expect(emptyLeaves(messagesEn.options.ninetyNine, 'options.ninetyNine')).toEqual([]);
+  });
+});

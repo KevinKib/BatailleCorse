@@ -4,7 +4,7 @@ import * as cards from './cards';
 import * as kobo from './kobo';
 import * as boards from './boards';
 import * as privacy from './privacy';
-import { ninetyNineOptions, ninetyNineUi } from './ninetynine';
+import { ninetyNine, ninetyNineOptions, ninetyNineUi } from './ninetynine';
 import { draughts, draughtsOptions, draughtsUi } from './draughts';
 
 // The French bundle, composed from one file per translation chunk. Loaded on demand (`import('./fr')`).
@@ -14,6 +14,7 @@ export const messagesFr: Messages = {
   ...kobo,
   ...boards,
   ...privacy,
+  ninetyNine,
   ninetyNineUi,
   draughts,
   draughtsUi,

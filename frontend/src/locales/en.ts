@@ -402,6 +402,67 @@ export const messagesEn: Messages = {
       speeds: { normal: 'Normal', fast: 'Fast', instant: 'Instant' },
     },
   },
+  ninetyNine: {
+    toggleLabel: 'Rules',
+    panelTitle: '99',
+    closeLabel: 'Close rules',
+    sections: [
+      {
+        kind: 'text',
+        title: 'Goal',
+        body: ['Keep the running total at 99 or less. A player who cannot play without going over 99 loses a life; the last player with lives left wins.'],
+      },
+      {
+        kind: 'text',
+        title: 'A turn',
+        body: [
+          'Everyone holds three cards. On your turn, play one card face up on the pile: the total changes by that card\'s value, and a new card is drawn for you at once.',
+          'Play then goes to the next player in the current direction.',
+        ],
+      },
+      {
+        kind: 'text',
+        title: 'What the cards do',
+        body: [
+          '2, 3, 5, 6, 7 and 8 add their number.',
+          'Jack and Queen add 10. A 10 takes off 10, but the total never goes below 0.',
+          '4 adds nothing and reverses the direction of play. 9 adds nothing.',
+          'King makes the total 99, whatever it was. It can always be played.',
+        ],
+      },
+      {
+        kind: 'text',
+        title: 'The Ace',
+        body: ['An Ace adds 1 or 11, as you choose. You can only choose 11 when the total stays at 99 or less.'],
+      },
+      {
+        kind: 'text',
+        title: 'Going over 99',
+        body: [
+          'If you hold a card that keeps the total at 99 or less, you must play one. If none of your three cards can be played, you are stuck: you go over 99 and lose a life. Your cards are shown to the table, and a new round starts with a fresh deck and the total back at 0.',
+          'The next round is led by the player who lost, or by the next player if they were eliminated.',
+        ],
+      },
+      {
+        kind: 'text',
+        title: 'Lives and the end of the game',
+        body: [
+          'The host chooses 2, 3 or 4 lives. A player with no life left is out and watches the rest of the game. The last player with lives left wins.',
+          'In quick mode, the game stops as soon as a player loses their last life. The other players are ranked by lives left, and players with the same number of lives share their place.',
+        ],
+      },
+      {
+        kind: 'text',
+        title: 'Leaving the game',
+        body: ['Leaving the game, or staying disconnected too long, puts you out at once, below the players still in the game.'],
+      },
+      {
+        kind: 'text',
+        title: 'Playing a bot',
+        body: ['The host can add bots at three levels: Easy plays any card that fits, Medium pushes the total up while keeping its safe cards, Hard also reasons about the cards it cannot see.'],
+      },
+    ],
+  },
   ninetyNineUi: {
     connecting: 'Connecting…',
     back: 'Back',
@@ -1304,7 +1365,7 @@ export const messagesEn: Messages = {
         heading: 'What your browser stores',
         paragraphs: [
           'The site uses the local storage of your browser, not cookies. Only the site itself reads it, to resume a game and to remember your choices. You can erase it in your browser settings.',
-          'Seat token, which lets you come back to the game you were playing: tokens:<game id> (Bataille Corse), bullshit:tokens:<game id>, kobo:tokens:<game id>, three-men-morris:tokens:<game id>, president:tokens:<game id> and mangola:tokens:<game id>. It is removed when you leave the game.',
+          'Seat token, which lets you come back to the game you were playing: tokens:<game id> (Bataille Corse), bullshit:tokens:<game id>, kobo:tokens:<game id>, three-men-morris:tokens:<game id>, president:tokens:<game id>, mangola:tokens:<game id> and ninety-nine:tokens:<game id>. It is removed when you leave the game.',
           'Display name: bc_playerName. Keyboard shortcuts: bc_sendKey, bc_slapKey and bullshit.hotkeys. Sound: bullshit.sound and kobo.sound. Animation speed: animationSpeed. Kobo hint already seen: kobo.matchCoach. Language: bc_locale.',
           'The font of the site is served by the site itself, so your browser contacts no other server to display it, and nothing is sent to a third party.',
         ],
@@ -1382,6 +1443,12 @@ export const messagesEn: Messages = {
         name: 'Mangola',
         description: 'Lay out your seeds, then sow and capture. Take every seed of your opponent.',
         players: '2 players',
+        play: 'Play',
+      },
+      'ninety-nine': {
+        name: '99',
+        description: 'Keep the running total at 99 or less. Whoever cannot play loses a life.',
+        players: '2–12 players',
         play: 'Play',
       },
     },

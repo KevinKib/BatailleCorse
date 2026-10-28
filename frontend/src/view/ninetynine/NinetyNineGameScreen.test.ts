@@ -1,11 +1,10 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { mount, flushPromises } from '@vue/test-utils';
 import { setActivePinia, createPinia } from 'pinia';
 import { createMemoryHistory, createRouter } from 'vue-router';
 import PrimeVue from 'primevue/config';
 import NinetyNineGameScreen from './NinetyNineGameScreen.vue';
 import { useNinetyNineStore } from '../../state/NinetyNine.store';
-import { GAMES, type GameDefinition } from '../../model/games';
 import { messagesEn } from '../../locales/en';
 import {
   buildNinetyNineBust, buildNinetyNineCard, buildNinetyNineFourSeatRound, buildNinetyNineQuickEnd,
@@ -13,24 +12,6 @@ import {
 } from '../../model/fixtures/ninetynine';
 import type { LobbyView } from '../../model/lobby/LobbyView';
 import type { NinetyNineState } from '../../model/ninetynine/NinetyNineState';
-
-// 99 is not registered yet (the entry PR does it): the screen is tested with a definition added for the test only.
-const NINETY_NINE: GameDefinition = {
-  key: 'ninety-nine', serverType: 'ninety-nine', gameHomeRoute: '/ninety-nine',
-  joinRoute: id => (id ? `/ninety-nine/join/${id}` : '/ninety-nine/join'),
-  roomRoute: id => `/ninety-nine/room/${id}`,
-  supportsBots: true, picker: { icon: 'pi pi-hashtag', severity: 'success' },
-};
-const games = messagesEn.gamePicker.games as Record<string, unknown>;
-
-beforeAll(() => {
-  (GAMES as GameDefinition[]).push(NINETY_NINE);
-  games['ninety-nine'] = { name: '99', description: '', players: '2–12 players', play: 'Play' };
-});
-afterAll(() => {
-  (GAMES as GameDefinition[]).splice((GAMES as GameDefinition[]).indexOf(NINETY_NINE), 1);
-  delete games['ninety-nine'];
-});
 
 const DESCRIPTORS = [
   { key: 'lives', type: 'CHOICE' as const, values: ['3', '2', '4'], defaultValue: '3', labelKey: 'options.ninetyNine.lives' },
@@ -73,6 +54,13 @@ const names = (wrapper: Awaited<ReturnType<typeof mountRoom>>['wrapper']) => wra
 
 describe('NinetyNineGameScreen', () => {
   beforeEach(() => { vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {}))); setActivePinia(createPinia()); localStorage.clear(); });
+
+  it('givenARound_thenTheRulesPanelOpensWithTheRulesOf99', async () => {
+    const { wrapper } = await mountRoom(room(buildNinetyNineFourSeatRound()));
+    expect(wrapper.find('[data-cy="rules-toggle"]').exists()).toBe(true);
+    await wrapper.get('[data-cy="rules-toggle"]').trigger('click');
+    expect(wrapper.get('[data-cy="rules-panel"]').text()).toContain(messagesEn.ninetyNine.sections[0].title);
+  });
 
   it('givenNoStateYet_thenShowsTheConnectingScreen', async () => {
     const { wrapper } = await mountRoom(() => {});
