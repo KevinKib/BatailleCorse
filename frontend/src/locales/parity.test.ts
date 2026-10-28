@@ -5,12 +5,16 @@ import { messagesFr } from './fr';
 // Areas whose French is written: the completeness and typography checks run on them only.
 // Each translation chunk adds its own areas; the integration chunk turns this into "every area".
 const TRANSLATED_AREAS: readonly (keyof typeof messagesEn)[] = [
+  'bullshit', 'bullshitUi', 'president', 'presidentUi', // T2
   'threeMenMorris', 'threeMenMorrisUi', 'morrisLobby', 'morrisVariantRules', 'morrisBoard', 'mangola', 'mangolaUi',
 ];
 
 // French leaves that may equal the English leaf (proper nouns, symbols). Keys are dotted paths prefixes.
 const SAME_AS_ENGLISH_ALLOWED: readonly string[] = [
   'language.names.en', 'language.names.fr',
+  // T2: rank chips, bot name, symbols and words identical in French
+  'bullshit.sections[3].steps', 'bullshitUi.botLabel', 'bullshitUi.table.bluff', 'bullshitUi.table.verdictAnnouncement',
+  'presidentUi.botLabel', 'presidentUi.roundOver.place', 'presidentUi.summary.points', 'presidentUi.standings.points', 'presidentUi.end.standing',
   'morrisLobby.variants.tapatan.name', 'morrisLobby.variants.achi.name',
   'morrisVariantRules.achi.panelTitle', 'mangola.panelTitle', 'morrisBoard.pointNames[4]',
 ];
@@ -78,7 +82,7 @@ describe('translated areas', () => {
   it('givenATranslatedArea_thenNoLeafIsStillEnglish', () => {
     for (const [path, text] of fr) {
       if (typeof text !== 'string') continue;
-      if (path.endsWith('.kind')) continue; // structural discriminant, not text
+      if (/\.(kind|tone)$/.test(path)) continue; // discriminants, not text
       if (!/[A-Za-z]/.test(text.replace(/\{\w+\}/g, ''))) continue; // only placeholders and punctuation
       if (SAME_AS_ENGLISH_ALLOWED.some(allowed => path.startsWith(allowed))) continue;
       expect(text, path).not.toBe(en.get(path));

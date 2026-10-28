@@ -1,6 +1,6 @@
 // Mangola presence, end to end: an opponent who drops during the placement or during the play shows the shared
-// disconnect overlay with its countdown, coming back clears it, and staying away past the grace period (5 s under the
-// `test` profile) forfeits. The browser is the host (seat 0, side A, who starts), a scripted STOMP client the guest;
+// disconnect overlay with its countdown, coming back clears it, and staying away past the grace period (shortened for its own game
+// with cy.shortenForfeitGrace; 30 s by default under the `test` profile) forfeits. The browser is the host (seat 0, side A, who starts), a scripted STOMP client the guest;
 // every wait is on a DOM state, never on a delay.
 import { connectScriptedPlayer } from '../support/stompPlayer';
 import {
@@ -25,7 +25,8 @@ describe('Mangola presence (end to end)', () => {
   });
 
   it('during the placement: a guest who stays away forfeits after the grace period', { defaultCommandTimeout: 30000 }, () => {
-    asHostInPlacement().then(({ bob }) => {
+    asHostInPlacement().then(({ id, bob }) => {
+      cy.shortenForfeitGrace(id);
       cy.then(() => bob.publish('/app/presence', {}));
       cy.then(() => bob.disconnect());
       cy.get(overlay, { timeout: 15000 }).should('be.visible');
@@ -55,7 +56,8 @@ describe('Mangola presence (end to end)', () => {
   });
 
   it('during the play: a guest who stays away forfeits after the grace period', { defaultCommandTimeout: 30000 }, () => {
-    playFromTwoPerPit().then(({ bob }) => {
+    playFromTwoPerPit().then(({ id, bob }) => {
+      cy.shortenForfeitGrace(id);
       cy.then(() => bob.publish('/app/presence', {}));
       cy.then(() => bob.disconnect());
       cy.get(overlay, { timeout: 15000 }).should('be.visible');
