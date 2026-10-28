@@ -24,7 +24,11 @@ import java.util.random.RandomGenerator;
  * {@code +-}{@link #WIN} minus the plies it took, so the quickest win and the slowest loss are preferred; a
  * sowing that never ends, when the rules make it a draw, is worth 0.
  *
- * <p>The layout is not searched: it is drawn from the placement book ({@link MangolaPlacementBook}), a fixed list per\n * side with a probability for each layout, frozen from the Mangola placement study\n * (docs/specs/2026-10-25-mangola-placement-study.md). Placement is hidden, so a good layout is a mixed strategy;\n * the study found that this mix beats the earlier layout search (0.605 against it) at no cost against weaker\n * placements, and it needs no time budget.
+ * <p>The layout is not searched: it is drawn from the placement book ({@link MangolaPlacementBook}), a fixed list per
+ * side with a probability for each layout, frozen from the Mangola placement study
+ * (docs/specs/2026-10-25-mangola-placement-study.md). Placement is hidden, so a good layout is a mixed strategy;
+ * the study found that this mix beats the earlier layout search (0.605 against it) at no cost against weaker
+ * placements, and it needs no time budget.
  */
 public final class ExpertMangolaBot extends AbstractMangolaBot {
 
@@ -41,14 +45,10 @@ public final class ExpertMangolaBot extends AbstractMangolaBot {
     private static final int EXPOSURE_WEIGHT = 3;
 
     /**
-     * What a decision may spend: wall-clock milliseconds for a move, a cap on the nodes searched (tests), and
-     * wall-clock milliseconds for choosing a layout. The first depth is always completed, so the bot always
-     * answers, even with nothing left.
+     * What a move may spend: wall-clock milliseconds and a cap on the nodes searched (tests). The first depth is
+     * always completed, so the bot always answers, even with nothing left. The layout costs nothing (the book).
      */
-    public record Budget(long timeMillis, long nodeCap, long layoutMillis) {
-        public Budget(long timeMillis, long nodeCap) {
-            this(timeMillis, nodeCap, timeMillis * 3);
-        }
+    public record Budget(long timeMillis, long nodeCap) {
     }
 
     /** The outcome of a search: the pit, its score for the side to move, the depth completed and the nodes spent. */

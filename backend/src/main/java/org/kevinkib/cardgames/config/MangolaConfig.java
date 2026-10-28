@@ -34,9 +34,8 @@ public class MangolaConfig {
     /** A bot "thinks" for a random 700-1300 ms before acting (properties {@code mangola.bots.delay-min-ms} / {@code delay-max-ms}). */
     public static final String DEFAULT_DELAY_MIN_MS = "700";
     public static final String DEFAULT_DELAY_MAX_MS = "1300";
-    /** The expert searches for 300 ms a move ({@code mangola.bots.think-ms}) and 1000 ms a layout ({@code mangola.bots.layout-ms}). */
+    /** The expert searches for 300 ms a move ({@code mangola.bots.think-ms}); its layout comes from a fixed book. */
     public static final String DEFAULT_THINK_MS = "300";
-    public static final String DEFAULT_LAYOUT_MS = "1000";
     /** A safety net on the nodes of one search, far above what the time budget reaches. */
     static final long EXPERT_NODE_CAP = 5_000_000L;
 
@@ -106,9 +105,8 @@ public class MangolaConfig {
             @Qualifier("mangolaRandom") RandomGenerator mangolaRandom,
             @Value("${mangola.bots.delay-min-ms:" + DEFAULT_DELAY_MIN_MS + "}") long minMillis,
             @Value("${mangola.bots.delay-max-ms:" + DEFAULT_DELAY_MAX_MS + "}") long maxMillis,
-            @Value("${mangola.bots.think-ms:" + DEFAULT_THINK_MS + "}") long thinkMillis,
-            @Value("${mangola.bots.layout-ms:" + DEFAULT_LAYOUT_MS + "}") long layoutMillis) {
-        ExpertMangolaBot.Budget budget = new ExpertMangolaBot.Budget(thinkMillis, EXPERT_NODE_CAP, layoutMillis);
+            @Value("${mangola.bots.think-ms:" + DEFAULT_THINK_MS + "}") long thinkMillis) {
+        ExpertMangolaBot.Budget budget = new ExpertMangolaBot.Budget(thinkMillis, EXPERT_NODE_CAP);
         MangolaBotCoordinator coordinator = new MangolaBotCoordinator(
                 sessionService::botSeats, botSeatOptions, actions, botScheduler,
                 new UniformThinkingDelay(minMillis, maxMillis, mangolaRandom),

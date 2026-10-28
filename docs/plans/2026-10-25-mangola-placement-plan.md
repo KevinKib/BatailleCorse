@@ -32,13 +32,13 @@ start of each chunk; test-first visible in git (`test:` commit before `feat:`); 
 
 ## Status
 
-| Chunk | Title | Cost | Needs | Runs |
-|-------|-------|------|-------|------|
-| S0 | `test: continue the Mangola placement oracle until it settles` | M (about 1 CPU-hour on 4 threads) | the owner's go on the table | first, alone (optional: skip it to ship the current lists) |
-| P0 | `feat: Mangola placement book (contract)` | S (< 30 min) | S0 merged or skipped | after S0, alone |
-| P1 | `feat: the Mangola expert places from the placement book` | M | P0 merged | parallel with P2 |
-| P2 | `feat: the Mangola medium bot places from the placement book` | S | P0 merged | parallel with P1 |
-| P3 | `feat: Mangola placement book, integration` | S | P1, P2 merged | last (integration) |
+| Chunk | Title | Cost | Needs | Runs | State |
+|-------|-------|------|-------|------|-------|
+| S0 | `test: continue the Mangola placement oracle until it settles` | M (about 1 CPU-hour on 4 threads) | the owner's go on the table | first, alone (optional: skip it to ship the current lists) | merged |
+| P0 | `feat: Mangola placement book (contract)` | S (< 30 min) | S0 merged or skipped | after S0, alone | merged (#392) |
+| P1 | `feat: the Mangola expert places from the placement book` | M | P0 merged | parallel with P2 | merged (#394) |
+| P2 | `feat: the Mangola medium bot places from the placement book` | S | P0 merged | parallel with P1 | merged (#395) |
+| P3 | `feat: Mangola placement book, integration` | S | P1, P2 merged | last (integration) | in review (this PR) |
 
 ## Files at risk of conflict
 

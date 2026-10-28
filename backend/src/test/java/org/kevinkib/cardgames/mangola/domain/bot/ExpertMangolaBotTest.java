@@ -265,7 +265,7 @@ class ExpertMangolaBotTest {
             boolean expertStarts = played % 2 == 0;
             Side expertSide = expertStarts ? Side.A : Side.B;
             ExpertMangolaBot expert = new ExpertMangolaBot(new Random(seed * 17),
-                    new ExpertMangolaBot.Budget(60_000, nodeCap, 20));
+                    new ExpertMangolaBot.Budget(60_000, nodeCap));
             GreedyMangolaBot greedy = new GreedyMangolaBot(new Random(seed * 31));
             MangolaBoard board = source == Layouts.RANDOM_BOARDS
                     ? MangolaLayouts.random(new Random(seed))
