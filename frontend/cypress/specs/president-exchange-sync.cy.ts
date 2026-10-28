@@ -160,8 +160,8 @@ describe('President exchange synchronisation, reload and timeout', () => {
   it('a reload during the view shows the board again, without flights, and still waits for Bob', () => {
     startAtTheView().then(({ id, bob, carol }) => {
       serverStillWaits(carol);
-      // The `test` profile forfeits a seat that stays disconnected for 5 s (presence.forfeit-grace-seconds), and a reload
-      // of the dev server can take longer: a twin on the browser's seat asserts its presence all through the reload, as
+      // The `test` profile forfeits a seat that stays disconnected for 30 s (presence.forfeit-grace-seconds), and a reload
+      // of a loaded dev server can take a good part of it: a twin on the browser's seat asserts its presence all through the reload, as
       // the reconnecting page does within the grace period of a real table. The twin never acknowledges the exchange.
       let keepAlive: ReturnType<typeof setInterval> | undefined;
       connectMyself(id).then((me) => {
