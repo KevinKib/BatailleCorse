@@ -218,7 +218,7 @@ export const morrisVariantRules: Messages['morrisVariantRules'] = {
       },
       {
         kind: 'text',
-        title: 'Jouer contre un bot',
+        title: 'Contre un bot',
         body: ['Le niveau Expert voit trois coups d’avance sur ce plateau\u00A0: un joueur attentif peut le battre.'],
       },
       {
@@ -307,7 +307,7 @@ export const mangola: Messages['mangola'] = {
     },
     {
       kind: 'text',
-      title: 'Jouer contre un bot',
+      title: 'Contre un bot',
       body: ['L’hôte peut ajouter un bot à trois niveaux\u00A0: Facile joue au hasard, Moyen joue pour prendre le plus de graines un coup à l’avance, Expert voit plusieurs coups d’avance. Expert est fort, mais pas parfait.'],
     },
   ],
