@@ -3,6 +3,8 @@ import { computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import TitleCardFan from '../components/TitleCardFan.vue';
 import GameChoiceCard from '../components/GameChoiceCard.vue';
+import LanguagePicker from '../components/LanguagePicker.vue';
+import { SUPPORTED_LOCALES } from '../locales';
 import { preloadAllCards } from '../composables/useCardAnimation';
 import { useI18n } from '../composables/useI18n';
 import { gameChoice } from '../locales/gameChoice';
@@ -23,6 +25,11 @@ onMounted(() => preloadAllCards());
   <div class="titlescreen">
     <main class="title-panel">
       <TitleCardFan />
+
+      <!-- Top right corner of the panel, out of the flow so the picker keeps its height (375x667 fits). -->
+      <div v-if="SUPPORTED_LOCALES.length > 1" class="language-corner">
+        <LanguagePicker variant="menu" />
+      </div>
 
       <div class="title-block">
         <div class="suit-row" aria-hidden="true">
@@ -95,6 +102,13 @@ onMounted(() => preloadAllCards());
 @media (min-width: 900px) and (max-height: 800px) {
   .titlescreen { padding-top: 88px; padding-bottom: 12px; }
   .title-panel { gap: 12px; padding: 28px 40px var(--space-3); }
+}
+
+.language-corner {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  z-index: 3;
 }
 
 .title-block {

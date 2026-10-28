@@ -627,7 +627,8 @@ export interface BatailleCorseUiMessages {
 
 // The language picker and the languages' own names.
 export interface LanguageMessages {
-  label: string;                       // accessible name of the picker
+  label: string;                       // accessible name of the picker, and the heading of its row
+  settings: string;                    // name of the settings gear and panel once they hold more than the shortcuts
   names: Record<'en' | 'fr', string>;  // each language written in itself, shown whatever the current language
 }
 

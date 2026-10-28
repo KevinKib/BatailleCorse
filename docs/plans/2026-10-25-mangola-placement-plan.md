@@ -6,9 +6,11 @@ table** (and answers Q1, Q2, Q4).
 
 ## Key decisions (from the spec)
 
-1. **The Expert draws its layout from a fixed side-aware list** (6 layouts as starter, 9 as second player, with
-   probabilities): no layout search any more. Measured 0.633 ± 0.047 against the current Expert placement (0.61 ±
-   0.10 at the production-like budget), at the cost of about 0.10 against weak placements (spec Q1).
+1. **The Expert draws its layout from a fixed side-aware list** (18 layouts as starter, 15 as second player after S0's
+   fifteen oracle rounds, with probabilities): no layout search any more. Measured 0.605 ± 0.048 against the current
+   Expert placement (0.520 ± 0.098 at the production-like budget), with no real cost against weak placements (0.870
+   against Medium's, 0.860 against Easy's; spec Q1, "What changed after round 2"). S0 is done: the lists to freeze
+   are in the spec's proposal, and the study's `book` stage prints them.
 2. **The lists are data in the domain** (`mangola/domain/bot`), frozen from the study; the study harness (test
    scope) is the tool that regenerates them. No property, no host option.
 3. **Medium draws uniformly from the same lists** (spec Q2); Easy is unchanged; the evaluation weights and the

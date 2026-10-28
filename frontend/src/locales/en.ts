@@ -1079,6 +1079,7 @@ export const messagesEn: Messages = {
   },
   language: {
     label: 'Language',
+    settings: 'Settings',
     names: { en: 'English', fr: 'Français' },
   },
   gamePicker: {
