@@ -2,6 +2,7 @@ package org.kevinkib.cardgames.ninetynine.domain.bot;
 
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.ninetynine.domain.Direction;
+import org.kevinkib.cardgames.ninetynine.domain.NinetyNine;
 import org.kevinkib.cardgames.ninetynine.domain.NinetyNineOptions;
 import org.kevinkib.cardgames.ninetynine.domain.Phase;
 import org.kevinkib.cards.domain.Card;
@@ -12,7 +13,7 @@ import java.util.Map;
 /**
  * What a human at one seat sees of a 99 game, in domain types: the seat's own hand, the other hands as sizes only,
  * the lives, and the public pile since the last reshuffle. A strategy receives this view, never the aggregate.
- * The factory {@code forSeat(game, seat)} and its DTO parity test arrive with the presentation chunk (C3).
+ * {@link #forSeat} builds it from the aggregate; a parity test pins it against the seat's DTO.
  */
 public record NinetyNineBotView(
         PlayerId seat,
@@ -36,5 +37,14 @@ public record NinetyNineBotView(
         handSizes = Map.copyOf(handSizes);
         lives = Map.copyOf(lives);
         liveSeats = List.copyOf(liveSeats);
+    }
+
+    /** What the seat sees of the game right now, read under the game's monitor so it is one consistent snapshot. */
+    public static NinetyNineBotView forSeat(NinetyNine game, PlayerId seat) {
+        synchronized (game) {
+            return new NinetyNineBotView(seat, game.version(), game.round(), game.phase(), game.currentSeat(),
+                    game.total(), game.direction(), game.hand(seat), game.pileSinceReshuffle(), game.handSizes(),
+                    game.lives(), game.liveSeats(), game.stockSize(), game.options());
+        }
     }
 }

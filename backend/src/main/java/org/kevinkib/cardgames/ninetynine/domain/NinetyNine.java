@@ -54,6 +54,7 @@ public class NinetyNine implements Game {
     private int round;
     private Phase phase = Phase.PLAYING;
     private Busted lastBust;
+    private LastPlay lastPlay;
     private NinetyNineResult result;
     private int version;
 
@@ -128,11 +129,13 @@ public class NinetyNine implements Game {
         List<NinetyNineEvent> events = new ArrayList<>();
         hand.remove(card);
         pile.add(card);
+        int before = total;
         total = after;
         boolean reversed = CardEffect.reverses(card);
         if (reversed) {
             direction = direction.reversed();
         }
+        lastPlay = new LastPlay(seat, card, used, before, after, reversed);
         events.add(new Played(seat, card, used, after, reversed));
         draw(seat, events);
         current = nextLive(seat, direction);
@@ -214,6 +217,7 @@ public class NinetyNine implements Game {
         current = starter;
         phase = Phase.PLAYING;
         lastBust = null;
+        lastPlay = null;
     }
 
     /** Draws the replacement card, rebuilding the stock from the pile (top card kept) when it is empty. */
@@ -376,6 +380,11 @@ public class NinetyNine implements Game {
     /** The bust that ended the last round, until the next deal. */
     public synchronized Optional<Busted> lastBust() {
         return Optional.ofNullable(lastBust);
+    }
+
+    /** The last card played in the current round, until the next deal. */
+    public synchronized Optional<LastPlay> lastPlay() {
+        return Optional.ofNullable(lastPlay);
     }
 
     /** Places of the seats that are out (everyone once the game is over). */
