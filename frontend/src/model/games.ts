@@ -90,6 +90,12 @@ export const GAMES: readonly GameDefinition[] = [
     supportsBots: true,
     picker: { icon: 'pi pi-circle', severity: 'help' },
   }),
+  // Cards are tapped (an Ace asks for its value): no remappable shortcut, so no gear.
+  // Bots play at three levels (a seat option).
+  define('ninety-nine', {
+    supportsBots: true,
+    picker: { icon: 'pi pi-hashtag', severity: 'danger' },
+  }),
 ];
 
 export function findGame(key: unknown): GameDefinition | undefined {

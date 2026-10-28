@@ -6,7 +6,7 @@ import { messagesFr } from './fr';
 const SAME_AS_ENGLISH_ALLOWED: readonly string[] = [
   'language.names.en', 'language.names.fr',
   // T1
-  'gamePicker.games.kobo.name', 'gamePicker.games.mangola.name',
+  'gamePicker.games.kobo.name', 'gamePicker.games.mangola.name', 'gamePicker.games.ninety-nine.name',
   'rules.sections[2].labels.sandwich',
   'options.bataillecorse.tier.1', 'options.bataillecorse.tier.6', 'options.bataillecorse.tier.7',
   'options.bullshit.vars.range.deckSize.32',
@@ -23,7 +23,7 @@ const SAME_AS_ENGLISH_ALLOWED: readonly string[] = [
   'koboUi.botLabel', 'koboUi.table.total', 'koboUi.regions.table', 'koboUi.sheet.totalChange', 'koboUi.sheet.pills.gift',
   'koboUi.sheet.columns.total', 'koboUi.end.totals.total',
   // 99: bot name, same word in French, and the lives options are digits
-  'ninetyNineUi.botLabel', 'ninetyNineUi.table.opponents', 'options.ninetyNine.lives',
+  'ninetyNine.panelTitle', 'ninetyNineUi.botLabel', 'ninetyNineUi.table.opponents', 'options.ninetyNine.lives',
   // T5: section identifiers are anchors, not text
   'privacy.sections[0].id', 'privacy.sections[1].id', 'privacy.sections[2].id',
   'privacy.sections[3].id', 'privacy.sections[4].id', 'privacy.sections[5].id',

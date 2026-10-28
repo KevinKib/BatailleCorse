@@ -3,7 +3,7 @@ import { GAMES, findGame, type GameDefinition, type GameKey } from './games';
 
 describe('game registry', () => {
   it('givenEveryGame_thenEachDeclaresItsRoutesUnderTheirKey', () => {
-    expect(GAMES.map(g => g.key)).toEqual(['bataillecorse', 'bullshit', 'kobo', 'three-men-morris', 'president', 'mangola']);
+    expect(GAMES.map(g => g.key)).toEqual(['bataillecorse', 'bullshit', 'kobo', 'three-men-morris', 'president', 'mangola', 'ninety-nine']);
     for (const g of GAMES) {
       expect(g.gameHomeRoute).toBe(`/${g.key}`);
       expect(g.joinRoute()).toBe(`/${g.key}/join`);
@@ -58,6 +58,15 @@ describe('game registry', () => {
     expect(mangola?.supportsBots).toBe(true);
     expect(mangola?.hotkeys).toBeUndefined();
     expect(mangola?.picker).toEqual({ icon: 'pi pi-circle', severity: 'help' });
+  });
+
+  it('givenNinetyNine_thenItIsRegisteredWithBotsButNoShortcutsAndItsOwnPickerStyle', () => {
+    const ninetyNine = findGame('ninety-nine');
+    expect(ninetyNine?.serverType).toBe('ninety-nine');
+    expect(ninetyNine?.supportsBots).toBe(true);
+    expect(ninetyNine?.hotkeys).toBeUndefined();
+    expect(ninetyNine?.picker).toEqual({ icon: 'pi pi-hashtag', severity: 'danger' });
+    expect(ninetyNine?.roomRoute('abc')).toBe('/ninety-nine/room/abc');
   });
 
   it('givenPresident_thenItIsRegisteredWithBotsButNoShortcutsAndItsOwnPickerStyle', () => {

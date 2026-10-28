@@ -43,24 +43,25 @@ describe('GamePickerView', () => {
     const text = wrapper.text();
     const p = messagesEn.gamePicker;
     expect(wrapper.get('h1').text()).toBe(p.title);
-    for (const game of [p.games.bataillecorse!, p.games.bullshit!, p.games.kobo!, p.games['three-men-morris']!, p.games.president!, p.games.mangola!]) {
+    for (const game of [p.games.bataillecorse!, p.games.bullshit!, p.games.kobo!, p.games['three-men-morris']!, p.games.president!, p.games.mangola!, p.games['ninety-nine']!]) {
       expect(text).toContain(game.name);
       expect(text).toContain(game.description);
       expect(text).toContain(game.players);
     }
-    expect(wrapper.findAll('article')).toHaveLength(6);
+    expect(wrapper.findAll('article')).toHaveLength(7);
   });
 
   it('givenPicker_thenEachCardHasAKeyboardReachablePlayButtonNamedAfterItsGame', async () => {
     const { wrapper } = await mountPicker();
     const buttons = wrapper.findAll('button');
-    expect(buttons).toHaveLength(6);
+    expect(buttons).toHaveLength(7);
     expect(buttons[0].attributes('aria-label')).toBe('Play Bataille Corse');
     expect(buttons[1].attributes('aria-label')).toBe('Play Bullshit');
     expect(buttons[2].attributes('aria-label')).toBe('Play Kobo');
     expect(buttons[3].attributes('aria-label')).toBe('Play Morris');
     expect(buttons[4].attributes('aria-label')).toBe('Play President');
     expect(buttons[5].attributes('aria-label')).toBe('Play Mangola');
+    expect(buttons[6].attributes('aria-label')).toBe('Play 99');
   });
 
   it('givenPlayOnPresident_thenGoesToItsGameHome', async () => {
@@ -75,6 +76,13 @@ describe('GamePickerView', () => {
     await wrapper.get('[data-test="play-mangola"]').trigger('click');
     await flushPromises();
     expect(router.currentRoute.value.fullPath).toBe('/mangola');
+  });
+
+  it('givenPlayOnNinetyNine_thenGoesToItsGameHome', async () => {
+    const { wrapper, router } = await mountPicker();
+    await wrapper.get('[data-test="play-ninety-nine"]').trigger('click');
+    await flushPromises();
+    expect(router.currentRoute.value.fullPath).toBe('/ninety-nine');
   });
 
   it('givenPlayOnBatailleCorse_thenGoesToItsGameHome', async () => {
@@ -114,7 +122,7 @@ describe('GamePickerView', () => {
     // It is the last thing in the panel's flow, after the games (the panel gap spaces it, no absolute position).
     expect(link.element.parentElement!.lastElementChild).toBe(link.element);
     // It sits after the games, not among them: the Play buttons stay the only buttons.
-    expect(wrapper.findAll('button')).toHaveLength(6);
+    expect(wrapper.findAll('button')).toHaveLength(7);
     await link.trigger('click');
     await flushPromises();
     expect(router.currentRoute.value.fullPath).toBe('/privacy');
