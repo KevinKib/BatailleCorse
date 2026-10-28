@@ -5,7 +5,7 @@ import NinetyNineSeatPlate from './NinetyNineSeatPlate.vue';
 import { useI18n } from '../../composables/useI18n';
 import {
   centerBox, chooseLayout, directionArrows, plateSizeFor, radiiFor, ringCenters, trackRadii, type Frame,
-} from '../../model/ninetynine/ringLayout';
+} from '../../model/table/ringLayout';
 import { seatsAtTable, seatsInTurnOrder } from '../../model/ninetynine/seatOrder';
 import type Card from '../../model/Card';
 import type { NinetyNineDirection, NinetyNinePlayer } from '../../model/ninetynine/NinetyNineState';
