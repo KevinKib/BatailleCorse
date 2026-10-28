@@ -449,11 +449,25 @@ describe('DraughtsGameScreen', () => {
       store.applyEvent({ type: 'state-update', state: { ...ended, version: 90 } });
       store.applyEvent({
         type: 'event', eventType: 'GAME_OVER', message: '',
-        eventData: { seat: 0, from: 33, to: 22, path: [22], captures: [28], promotes: false },
+        eventData: { seat: 1, from: 33, to: 22, path: [22], captures: [28], promotes: false },
       });
       await flushPromises();
       expect(wrapper.find('[data-test="end"]').exists()).toBe(false);
       await vi.advanceTimersByTimeAsync(5000);
+      expect(wrapper.find('[data-test="end"]').exists()).toBe(true);
+    });
+
+    it('does not hold the table for my own last move, which is not animated', async () => {
+      vi.useFakeTimers();
+      const { wrapper, store } = await mountScreen(draughtsOpeningState);
+      const ended = over('NO_PIECES', 0);
+      store.applyEvent({ type: 'state-update', state: { ...ended, version: 90 } });
+      store.applyEvent({
+        type: 'event', eventType: 'GAME_OVER', message: '',
+        eventData: { seat: 0, from: 33, to: 22, path: [22], captures: [28], promotes: false },
+      });
+      await flushPromises();
+      await vi.advanceTimersByTimeAsync(700);
       expect(wrapper.find('[data-test="end"]').exists()).toBe(true);
     });
   });

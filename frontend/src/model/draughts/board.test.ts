@@ -73,15 +73,7 @@ describe('selectable', () => {
     expect(selectable(draughtsState({ availableActions: ['ACCEPT_DRAW', 'DECLINE_DRAW'] }), 0)).toEqual([]);
   });
 
-  it('keeps only the capturing pieces when a capture is compulsory', () => {
-    const mixed = draughtsState({
-      captureRequired: true,
-      legalMoves: [
-        { from: 33, to: 22, path: [22], captures: [28], promotes: false },
-        { from: 40, to: 35, path: [35], captures: [], promotes: false },
-      ],
-    });
-    expect(selectable(mixed, 0)).toEqual([33]);
+  it('lists the capturing pieces the server allows when a capture is compulsory', () => {
     expect(selectable(draughtsCaptureState, 0)).toEqual([33, 34]);
   });
 });

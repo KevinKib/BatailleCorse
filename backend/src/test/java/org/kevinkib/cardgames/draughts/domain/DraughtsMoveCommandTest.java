@@ -62,6 +62,14 @@ class DraughtsMoveCommandTest {
     }
 
     @Test
+    void aNullCaptureSquareIsAnInvalidSquareNotANullPointer() {
+        Draughts game = DraughtsGames.opening();
+
+        assertThatThrownBy(() -> game.move(WHITE, 32, 28, java.util.Arrays.asList((Integer) null)))
+                .isInstanceOf(InvalidSquareException.class);
+    }
+
+    @Test
     void aSquareOutsideTheBoardIsRefused() {
         Draughts game = DraughtsGames.opening();
 
@@ -155,5 +163,25 @@ class DraughtsMoveCommandTest {
         assertThat(game.men(BLACK)).isEqualTo(20);
         assertThat(game.captured(WHITE)).isZero();
         assertThat(game.captured(BLACK)).isZero();
+    }
+
+    @Test
+    void theLegalMovesAreGeneratedOncePerPositionWhateverTheNumberOfQueries() throws Exception {
+        Draughts game = DraughtsGames.opening();
+        int before = game.legalMoveGenerations();
+
+        game.legalMoves(WHITE);
+        game.captureRequired(WHITE);
+        game.maxCaptures(WHITE);
+        game.availableActions(BLACK);
+        game.legalMoves(BLACK);
+
+        assertThat(game.legalMoveGenerations()).isEqualTo(before + 1);
+
+        game.move(WHITE, 32, 28, List.of());
+        game.legalMoves(BLACK);
+        game.captureRequired(BLACK);
+
+        assertThat(game.legalMoveGenerations()).isEqualTo(before + 2);
     }
 }

@@ -153,6 +153,20 @@ class DraughtsDrawTest {
     }
 
     @Test
+    void theProposersOwnMoveDoesNotWithdrawItsOffer() throws Exception {
+        Draughts game = DraughtsGames.opening();
+        game.offerDraw(WHITE);
+
+        game.move(WHITE, 32, 28, List.of());
+
+        assertThat(game.drawOffer()).isEqualTo(WHITE);
+        assertThat(game.availableActions(BLACK)).contains(Action.ACCEPT_DRAW, Action.DECLINE_DRAW);
+        assertThat(game.availableActions(WHITE)).doesNotContain(Action.OFFER_DRAW);
+        game.acceptDraw(BLACK);
+        assertThat(game.result()).isEqualTo(new DraughtsResult(null, DraughtsResult.Reason.DRAW_AGREED));
+    }
+
+    @Test
     void theOpponentMovingDeclinesThePendingOffer() throws Exception {
         Draughts game = DraughtsGames.opening();
         game.offerDraw(BLACK);

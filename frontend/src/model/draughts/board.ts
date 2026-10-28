@@ -54,7 +54,8 @@ function canMove(state: DraughtsState, mySeat: number): boolean {
 /** The moves the viewer may pick from: only the capturing ones while a capture is compulsory. */
 function playable(state: DraughtsState, mySeat: number): DraughtsLegalMove[] {
   if (!canMove(state, mySeat)) return [];
-  return state.captureRequired ? state.legalMoves.filter(m => m.captures.length > 0) : state.legalMoves;
+  // The server's legal moves already hold only the compulsory (majority) captures when a capture is due.
+  return state.legalMoves;
 }
 
 const unique = (squares: number[]): number[] => [...new Set(squares)];
@@ -67,9 +68,7 @@ export function selectable(state: DraughtsState, mySeat: number): number[] {
 /** The destinations of the selected piece (each once), as far as the viewer may move. */
 export function targets(state: DraughtsState, selected: number | null, mySeat?: number): number[] {
   if (selected === null) return [];
-  const moves = mySeat === undefined
-    ? state.legalMoves.filter(m => !state.captureRequired || m.captures.length > 0)
-    : playable(state, mySeat);
+  const moves = mySeat === undefined ? state.legalMoves : playable(state, mySeat);
   return unique(moves.filter(m => m.from === selected).map(m => m.to));
 }
 
@@ -109,8 +108,7 @@ export function onSquare(state: DraughtsState, mySeat: number, selected: number 
   const pieces = selectable(state, mySeat);
   if (pieces.length === 0) return { kind: 'none' };
   if (selected !== null && targets(state, selected, mySeat).includes(square)) {
-    const candidates = candidatesFor(state, selected, square)
-      .filter(m => !state.captureRequired || m.captures.length > 0);
+    const candidates = candidatesFor(state, selected, square);
     return candidates.length === 1
       ? playOf(candidates[0])
       : { kind: 'choose', from: selected, to: square, candidates };
