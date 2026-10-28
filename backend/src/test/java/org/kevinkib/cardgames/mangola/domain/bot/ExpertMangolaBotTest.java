@@ -165,6 +165,66 @@ class ExpertMangolaBotTest {
         assertThat(BotFixtures.list(first), is(BotFixtures.list(second)));
     }
 
+    // ---------------------------------------------------------------- placement book
+
+    private static void assertDrawnFromTheBook(Side side) {
+        ExpertMangolaBot bot = new ExpertMangolaBot(new Random(side == Side.A ? 3 : 4),
+                new ExpertMangolaBot.Budget(0, 100));
+        List<MangolaPlacementBook.Entry> book = MangolaPlacementBook.of(side);
+        int[] drawn = new int[book.size()];
+        int decisions = 200;
+        for (int i = 0; i < decisions; i++) {
+            List<Integer> layout = BotFixtures.list(bot.decideLayout(OWNER, side, Set.of()));
+            int index = -1;
+            for (int e = 0; e < book.size(); e++) {
+                if (BotFixtures.list(book.get(e).counts()).equals(layout)) {
+                    index = e;
+                }
+            }
+            assertThat("layout " + layout + " is in the " + side + " list", index >= 0, is(true));
+            drawn[index]++;
+        }
+        for (int e = 0; e < book.size(); e++) {
+            assertThat(book.get(e).name() + " frequency", Math.abs(drawn[e] / (double) decisions - book.get(e).weight()),
+                    lessThanOrEqualTo(0.05));
+        }
+    }
+
+    @Test
+    void theStarterDrawsItsLayoutFromTheStarterList() {
+        assertDrawnFromTheBook(Side.A);
+    }
+
+    @Test
+    void theSecondPlayerDrawsItsLayoutFromTheSecondList() {
+        assertDrawnFromTheBook(Side.B);
+    }
+
+    @Test
+    void aRefusedLayoutIsNeverProposedAgainAndTheDecisionEndsWhenTheWholeListIsRefused() {
+        for (Side side : Side.values()) {
+            ExpertMangolaBot bot = new ExpertMangolaBot(new Random(11), new ExpertMangolaBot.Budget(0, 100));
+            Set<List<Integer>> rejected = new HashSet<>();
+            int listSize = MangolaPlacementBook.of(side).size();
+            for (int attempt = 0; attempt < listSize + 3; attempt++) {
+                int[] layout = bot.decideLayout(OWNER, side, rejected);
+                assertThat(BotFixtures.isLegalLayout(layout), is(true));
+                assertThat(rejected.contains(BotFixtures.list(layout)), is(false));
+                rejected.add(BotFixtures.list(layout));
+            }
+        }
+    }
+
+    @Test
+    void withTheWholeListRefusedItFallsBackOnAnotherLegalLayout() {
+        Set<List<Integer>> rejected = new HashSet<>();
+        MangolaPlacementBook.of(Side.A).forEach(entry -> rejected.add(BotFixtures.list(entry.counts())));
+        int[] layout = new ExpertMangolaBot(BotFixtures.CONSTANT, new ExpertMangolaBot.Budget(0, 100))
+                .decideLayout(OWNER, Side.A, rejected);
+        assertThat(BotFixtures.isLegalLayout(layout), is(true));
+        assertThat(rejected.contains(BotFixtures.list(layout)), is(false));
+    }
+
     // ---------------------------------------------------------------- strength
 
     /** Where the 32 + 32 seeds come from in a match. */
