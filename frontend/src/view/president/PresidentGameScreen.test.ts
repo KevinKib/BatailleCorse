@@ -793,7 +793,7 @@ describe('PresidentGameScreen', () => {
       standings: [{ seat: 0, points: 10 }, { seat: 2, points: 10 }, { seat: 1, points: 3 }],
       outcome: { status: 'FINISHED', winners: [0, 2], reason: 'ROUNDS' },
     })));
-    expect(wrapper.get('[data-test="end-winner"]').text()).toBe('Winners: P0, P2');
+    expect(wrapper.get('[data-test="end-winner"]').text()).toBe('Winners: P0 and P2');
     expect(wrapper.get('.end-title').text()).toBe(messagesEn.endScreen.victory);
     expect(wrapper.get('[data-test="end-sub"]').text()).toBe('10 points');
   });

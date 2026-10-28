@@ -28,6 +28,33 @@ class MangolaPlacementStudyTest {
     }
 
     @Test
+    void theOracleStopsAfterTheFirstRoundThatAddsNothing() {
+        List<Integer> asked = new java.util.ArrayList<>();
+        int played = OracleRounds.run(3, 8, round -> {
+            asked.add(round);
+            return false; // a stub oracle that finds nothing
+        });
+        assertThat(played, is(1));
+        assertThat(asked, is(List.of(3)));
+    }
+
+    @Test
+    void theOracleKeepsGoingWhileRoundsAddAndStopsAtTheLimit() {
+        assertThat(OracleRounds.run(3, 5, round -> true), is(3));
+        assertThat(OracleRounds.run(3, 8, round -> round < 5), is(3));
+        assertThat(OracleRounds.run(6, 5, round -> true), is(0));
+    }
+
+    @Test
+    void theLastPlayedRoundIsReadFromTheOracleLayoutNames() {
+        int[] layout = MangolaLayouts.catalogue().get(0);
+        List<PlacementTournament.Placement> pool = List.of(new PlacementTournament.Placement("C00", layout),
+                new PlacementTournament.Placement("O1A1", layout), new PlacementTournament.Placement("O12B0", layout));
+        assertThat(MangolaPlacementStudy.lastRound(pool), is(12));
+        assertThat(MangolaPlacementStudy.lastRound(pool.subList(0, 1)), is(0));
+    }
+
+    @Test
     void thePoolHoldsTheCatalogueFifteenRandomAndTheExpertsLayoutsWithoutDuplicates() {
         List<PlacementTournament.Placement> pool = MangolaPlacementStudy.basePool();
         Set<List<Integer>> distinct = new HashSet<>();
