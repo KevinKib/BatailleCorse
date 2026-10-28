@@ -291,6 +291,6 @@ export const turn: Messages['turn'] = {
 
 export const language: Messages['language'] = {
   label: 'Langue',
-  settings: 'Réglages',
+  settings: 'Paramètres',
   names: { en: 'English', fr: 'Français' },
 };
