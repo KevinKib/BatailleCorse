@@ -24,3 +24,5 @@ pnpm-debug.log*
 # Cypress failure screenshots / videos
 cypress/screenshots/
 cypress/videos/
+# Cypress run log and CI results
+cypress/results/

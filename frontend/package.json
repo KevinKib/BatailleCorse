@@ -9,6 +9,8 @@
     "test:watch": "vitest",
     "cy:open": "cypress open",
     "cy:run": "cypress run",
+    "cy:smoke": "node scripts/cypress-smoke.mjs",
+    "cy:component": "cypress run --component",
     "lock:sync": "bash sync-lock.sh"
   },
   "dependencies": {
