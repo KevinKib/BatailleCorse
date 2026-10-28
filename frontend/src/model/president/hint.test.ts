@@ -13,7 +13,7 @@ describe('hintText', () => {
     [{ code: 'notPlayable' as const }, 'This play is not allowed.'],
     [{ code: 'wrongCount' as const, counts: [2] }, 'Number of cards to play: 2.'],
     [{ code: 'wrongCount' as const, counts: [1, 2] }, 'Number of cards to play: 1 or 2.'],
-    [{ code: 'wrongCount' as const, counts: [1, 2, 3] }, 'Number of cards to play: 1, 2 or 3.'],
+    [{ code: 'wrongCount' as const, counts: [1, 2, 3] }, 'Number of cards to play: 1, 2, or 3.'],
     [{ code: 'notHigher' as const, rank: '9', count: 1 }, 'Play a card higher than 9.'],
     [{ code: 'notHigher' as const, rank: 'JACK', count: 2 }, 'Play 2 cards higher than Jack.'],
     [{ code: 'matchOnly' as const, rank: 'JACK', count: 1 }, 'Play a Jack or nothing.'],
