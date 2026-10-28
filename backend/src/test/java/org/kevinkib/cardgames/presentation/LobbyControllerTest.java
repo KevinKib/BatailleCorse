@@ -62,7 +62,8 @@ class LobbyControllerTest {
                 new GameFactories(List.of(new BullshitFactory(), new BatailleCorseFactory(), new TieredFactory(),
                         new KoboFactory(), new ThreeMenMorrisFactory(),
                         new org.kevinkib.cardgames.mangola.domain.MangolaFactory(),
-                        new org.kevinkib.cardgames.president.domain.PresidentFactory())));
+                        new org.kevinkib.cardgames.president.domain.PresidentFactory(),
+                        new org.kevinkib.cardgames.draughts.domain.DraughtsFactory())));
         messaging = new RecordingMessaging();
         messaging.resolvingTokensWith(sessionService);
         broadcaster = new RecordingBroadcaster();

@@ -69,6 +69,8 @@ class MalformedTokenIT {
     @Autowired
     private org.kevinkib.cardgames.president.presentation.PresidentWebSocketController president;
     @Autowired
+    private org.kevinkib.cardgames.draughts.presentation.DraughtsWebSocketController draughts;
+    @Autowired
     private LobbyController lobby;
     @Autowired
     private LifecycleController lifecycle;
@@ -120,6 +122,26 @@ class MalformedTokenIT {
     @TestFactory
     Stream<DynamicTest> threeMenMorrisRest() {
         return restViewAnswers403("/api/three-men-morris/game/", ThreeMenMorrisFactory.GAME_TYPE);
+    }
+
+    @TestFactory
+    Stream<DynamicTest> draughtsRest() {
+        return restViewAnswers403("/api/draughts/game/", org.kevinkib.cardgames.draughts.domain.DraughtsFactory.GAME_TYPE);
+    }
+
+    @TestFactory
+    Stream<DynamicTest> draughtsWebSocket() {
+        String type = org.kevinkib.cardgames.draughts.domain.DraughtsFactory.GAME_TYPE;
+        String id = StartedRooms.start(sessions, type, 2).getId().uuid().toString();
+        String room = sessions.createRoom(type, "Alice").gameId();
+        return Stream.of(
+                forEachBadToken("draughts start", t -> assertDoesNotThrow(() -> draughts.start(new GameActionPayload(room, t)))),
+                forEachBadToken("draughts move", t -> assertDoesNotThrow(() -> draughts.move(
+                        new org.kevinkib.cardgames.draughts.presentation.api.DraughtsMovePayload(id, t, 32, 28, List.of())))),
+                forEachBadToken("draughts offerDraw", t -> assertDoesNotThrow(() -> draughts.offerDraw(new GameActionPayload(id, t)))),
+                forEachBadToken("draughts acceptDraw", t -> assertDoesNotThrow(() -> draughts.acceptDraw(new GameActionPayload(id, t)))),
+                forEachBadToken("draughts declineDraw", t -> assertDoesNotThrow(() -> draughts.declineDraw(new GameActionPayload(id, t)))))
+                .flatMap(s -> s);
     }
 
     @TestFactory
