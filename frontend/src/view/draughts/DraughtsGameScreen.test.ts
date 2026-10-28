@@ -18,7 +18,6 @@ const ui = messagesEn.draughtsUi;
 
 const DESCRIPTORS = [
   { key: 'hostColour', type: 'CHOICE' as const, values: ['white', 'black', 'random'], defaultValue: 'random', labelKey: 'options.draughts.hostColour' },
-  { key: 'drawOffers', type: 'CHOICE' as const, values: ['on', 'off'], defaultValue: 'on', labelKey: 'options.draughts.drawOffers' },
 ];
 
 function lobbyView(overrides: Partial<LobbyView> = {}): LobbyView {
@@ -27,7 +26,7 @@ function lobbyView(overrides: Partial<LobbyView> = {}): LobbyView {
     players: [{ seat: 0, name: 'Alice', joined: true }, { seat: 1, name: null, joined: false }],
     seatOptionDescriptors: [], removableBotSeats: [],
     hostSeat: 0, mySeat: 0, minPlayers: 2, maxPlayers: 2, canStart: false, lobbyVersion: 1,
-    optionDescriptors: DESCRIPTORS, options: { hostColour: 'random', drawOffers: 'on' }, canEditOptions: true,
+    optionDescriptors: DESCRIPTORS, options: { hostColour: 'random' }, canEditOptions: true,
     ...overrides,
   };
 }
@@ -79,13 +78,13 @@ describe('DraughtsGameScreen', () => {
       expect(wrapper.find('[data-test="draughts-board"]').exists()).toBe(false);
     });
 
-    it('shows the shared lobby with the mini board, who plays White and the draw offers', async () => {
+    it('shows the shared lobby with the mini board, who plays White', async () => {
       const { wrapper } = await mountScreen(lobbyView());
       expect(wrapper.find('[data-test="lobby"]').exists()).toBe(true);
       expect(wrapper.text()).toContain('Draughts');
       expect(wrapper.find('[data-test="draughts-mini-board"]').exists()).toBe(true);
       expect(wrapper.get('[data-test="option-hostColour"]').text()).toContain('Host plays');
-      expect(wrapper.get('[data-test="option-drawOffers"]').text()).toContain('Draw offers');
+      expect(wrapper.find('[data-test="option-drawOffers"]').exists()).toBe(false);
       expect(wrapper.find('[data-test="add-bot"]').exists()).toBe(true);
     });
 
@@ -93,8 +92,8 @@ describe('DraughtsGameScreen', () => {
       const publish = publishSpy();
       const { wrapper, store } = await mountScreen(lobbyView());
       store.restore('d1', 0, 'tok');
-      await wrapper.get('[data-test="option-drawOffers-off"]').setValue(true);
-      expect(publish).toHaveBeenCalledWith('/app/lobby/setOptions', expect.stringContaining('"drawOffers":"off"'));
+      await wrapper.get('[data-test="option-hostColour-black"]').setValue(true);
+      expect(publish).toHaveBeenCalledWith('/app/lobby/setOptions', expect.stringContaining('"hostColour":"black"'));
     });
 
     it('lets the host set the level of a bot on its seat (Easy, Medium, Expert)', async () => {
@@ -267,9 +266,9 @@ describe('DraughtsGameScreen', () => {
       expect(wrapper.get('[data-test="draw-offer"]').attributes('disabled')).toBeDefined();
     });
 
-    it('has no offer button when the lobby switched draw offers off', async () => {
-      const { wrapper } = await mountScreen(draughtsState({ drawOffersAllowed: false, availableActions: ['MOVE'] }));
-      expect(wrapper.find('[data-test="draw-offer"]').exists()).toBe(false);
+    it('always shows the offer button during play, disabled when no offer can be made', async () => {
+      const { wrapper } = await mountScreen(draughtsState({ availableActions: ['MOVE'] }));
+      expect(wrapper.get('[data-test="draw-offer"]').attributes('disabled')).toBeDefined();
     });
 
     it('asks me to accept or decline the opponent’s offer', async () => {

@@ -204,8 +204,7 @@ camel `draughts`. Display name "Draughts" ([Q6]: "International draughts" on the
 - **State**: `id`, `whiteSeat` (seat 0 or 1), `position`, `phase` (`PLAY`, `FINISHED`), `version`, `result`
   (`DraughtsResult(winner, reason)`), the repetition counts (`Map<Key, Integer>`), `kingOnlyPlies` (6.2),
   `endgameCase` and `endgamePlies` (6.3 / 6.4), the draw offer (`drawOffer` seat or null, and
-  `offeredSinceOwnMove[2]`), `lastMove`, `history` (the notation of every move, for the move list), and the
-  rules switches from the lobby (`drawOffersAllowed`).
+  `offeredSinceOwnMove[2]`), `lastMove`, `history` (the notation of every move, for the move list).
 - **Commands** (all `synchronized`, version bumped on every accepted command, like Morris):
   - `move(seat, from, to, captures)`: checks the game is running, the seat is to move, then finds the legal
     move with that `from`, `to` and captured **set** (order free). None: `IllegalMoveException`. If
@@ -216,7 +215,7 @@ camel `draughts`. Display name "Draughts" ([Q6]: "International draughts" on the
     (`BLOCKED`), threefold repetition (`DRAW_REPETITION`), 6.3/6.4 count (`DRAW_ENDGAME`), 6.2 count
     (`DRAW_KINGS_ONLY`).
   - `offerDraw(seat)`, `acceptDraw(seat)`, `declineDraw(seat)`: the Morris contract [V] (`DrawOfferNotAllowed`
-    when offers are off or already made since one's own move, `DrawOfferPending`, `NoDrawOffer`), with
+    when already made since one's own move, `DrawOfferPending`, `NoDrawOffer`), with
     `DRAW_AGREED`.
   - `forfeit(loser)`: `FORFEIT` (the shared presence context calls it on resignation, disconnection, Leave).
 - **Queries**: `position()`, `currentSeat()`, `colourOf(seat)`, `legalMoves(seat)` (empty when it is not that
@@ -235,7 +234,8 @@ camel `draughts`. Display name "Draughts" ([Q6]: "International draughts" on the
 - Lobby options (strict, `GameFactory.validate`):
   - `hostColour` = `white|black|random`, default **`random`** (the Morris default since 2026-10-18 [V]),
     label `options.draughts.hostColour`; the generator is drawn once per game (constant under `test`).
-  - `drawOffers` = `on|off`, default `on`, label `options.draughts.drawOffers` [Q4].
+  - No draw-offers option (decided 2026-10-28): offers are always allowed. A legacy `drawOffers` key sent by a
+    client is dropped by `DraughtsFactory.validate` instead of being refused [Q4].
 - Seat option `level` = `random|greedy|expert`, default `greedy`, label `options.draughts.level` (the Mangola
   keys [V]; displayed Easy, Medium, Expert).
 
@@ -312,7 +312,7 @@ camel `draughts`. Display name "Draughts" ([Q6]: "International draughts" on the
   - `legalMoves` (viewer, on its turn): `[{from, to, path, captures, promotes}]`;
   - `captureRequired` (viewer, on its turn) and `maxCaptures` (the count of the majority rule), for the hint;
   - `lastMove`: `{seat, from, to, path, captures, promotes}` or absent;
-  - `drawOffer`: `{by: seat}` or absent; `drawOffersAllowed`;
+  - `drawOffer`: `{by: seat}` or absent;
   - `drawCounters`: `{kingOnlyPlies, kingOnlyLimit (50), endgame: {case: "SIXTEEN" | "FIVE", plies, limit}}`,
     each part present only once it matters (king-only plies from 30, the endgame case as soon as it applies), so
     the client never hard-codes a limit;
@@ -357,7 +357,7 @@ camel `draughts`. Display name "Draughts" ([Q6]: "International draughts" on the
   counts ("10 moves left before a draw: kings only" and the 6.3 / 6.4 counts); the repetition hint (from 2).
 - **End screen**: the shared `EndGameOverlay` with subtitles per reason (no pieces left, blocked, resigned or
   left, agreed draw, threefold repetition, 25 moves of kings, short ending).
-- **Lobby**: the generic options mechanism (`hostColour`, `drawOffers`) and the seat `level`; a mini board on
+- **Lobby**: the generic options mechanism (`hostColour`) and the seat `level`; a mini board on
   the lobby card is a canvas choice.
 - **Move list** (if [Q5] says yes): a collapsible list of the notation, newest last.
 
@@ -443,7 +443,7 @@ is new (**all proposed**).
 | Two-against-one count (6.4) | - | **10 plies** (5 moves each) | domain constant |
 | Repetition draw | threefold (Morris, Mangola) | threefold | domain |
 | Warning for the kings-only count | from 40 of 50 (Six) | from 30 of 50 (10 moves each left) | DTO threshold |
-| Draw offers | on, one pending (Morris) | on by default, lobby `drawOffers=off` possible | factory |
+| Draw offers | on, one pending (Morris) | always allowed (no lobby option) | factory |
 | Host colour default | `random` (Morris) | `random` | factory |
 
 ## What we do not do
@@ -478,7 +478,7 @@ session core, to the other games, or to the shared lobby logic.
 - **Q2 Bot strength.** Recommend three levels with Expert capped at 6 plies and 300 ms (modest, beatable by a
   careful player), as the owner asked for board games; confirm, or ask for weaker (4 plies).
 - **Q3 Clock.** Recommend **no clock in v1**; the values above if wanted later, as an optional lobby option.
-- **Q4 Draw offers.** Recommend offers on by default, a lobby switch `drawOffers` to turn them off, and no
+- **Q4 Draw offers.** Offers are always allowed (owner decision, no lobby switch), and there is no
   40-move threshold (competition rule).
 - **Q5 Move list.** Recommend sending `history` (cheap) and letting the canvas decide whether and where to show
   it.

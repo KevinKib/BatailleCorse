@@ -179,16 +179,6 @@ class DraughtsDrawTest {
     }
 
     @Test
-    void anOfferIsRefusedWhenOffersAreOff() {
-        Draughts game = DraughtsGames.fromWithoutOffers(DraughtsPosition.initial());
-
-        assertThat(game.drawOffersAllowed()).isFalse();
-        assertThat(game.availableActions(WHITE)).doesNotContain(Action.OFFER_DRAW);
-        assertThatThrownBy(() -> game.offerDraw(WHITE)).isInstanceOf(DrawOfferNotAllowedException.class);
-        assertThat(game.version()).isZero();
-    }
-
-    @Test
     void onlyOneOfferMayBePendingAndTheOffererCannotAnswerIt() throws Exception {
         Draughts game = DraughtsGames.opening();
         game.offerDraw(WHITE);

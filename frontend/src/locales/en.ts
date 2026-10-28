@@ -846,7 +846,6 @@ export const messagesEn: Messages = {
       notYourTurn: 'It is not your turn.',
       invalidSquare: 'That square does not exist.',
       gameFinished: 'The game is over.',
-      drawOffersOff: 'Draw offers are switched off in this game.',
       drawAlreadyOffered: 'You already offered a draw: play a move before offering again.',
       ownDrawOffer: 'You cannot answer your own draw offer.',
       drawOfferPending: 'A draw offer is waiting for an answer.',
@@ -1724,7 +1723,6 @@ export const messagesEn: Messages = {
     },
     draughts: {
       hostColour: { label: 'Host plays', white: 'White', black: 'Black', random: 'Random' },
-      drawOffers: { label: 'Draw offers', on: 'Allowed', off: 'Off' },
       level: { label: 'Level', random: 'Easy', greedy: 'Medium', expert: 'Expert' },
     },
     kobo: {

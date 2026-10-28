@@ -1,6 +1,8 @@
 package org.kevinkib.cardgames.draughts.domain;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.random.RandomGenerator;
 import org.kevinkib.cardgames.draughts.domain.bot.DraughtsBotLevel;
 import org.kevinkib.cardgames.game.Game;
@@ -15,7 +17,8 @@ public class DraughtsFactory implements GameFactory {
 
     public static final String GAME_TYPE = "draughts";
     public static final String HOST_COLOUR_KEY = "hostColour";
-    public static final String DRAW_OFFERS_KEY = "drawOffers";
+    /** Retired lobby option (draw offers are always allowed): a client may still send it, it is ignored. */
+    private static final String LEGACY_DRAW_OFFERS_KEY = "drawOffers";
     public static final String LEVEL_KEY = "level";
 
     /** The levels of a computer seat, weakest first; Medium (greedy) unless the host picks another. */
@@ -23,8 +26,6 @@ public class DraughtsFactory implements GameFactory {
             .map(DraughtsBotLevel::key).toList();
     public static final String DEFAULT_LEVEL = DraughtsBotLevel.DEFAULT.key();
 
-    private static final String ON = "on";
-    private static final String OFF = "off";
     private static final PlayerId HOST = new PlayerId(0);
     private static final PlayerId GUEST = new PlayerId(1);
 
@@ -71,8 +72,7 @@ public class DraughtsFactory implements GameFactory {
                     + " players, not " + nbPlayers);
         }
         HostColour hostColour = options.get(HOST_COLOUR_KEY).map(HostColour::fromKey).orElse(HostColour.DEFAULT);
-        boolean drawOffers = !OFF.equals(options.get(DRAW_OFFERS_KEY).orElse(ON));
-        return new Draughts(id, whiteSeat(hostColour), drawOffers);
+        return new Draughts(id, whiteSeat(hostColour));
     }
 
     private PlayerId whiteSeat(HostColour hostColour) {
@@ -88,9 +88,15 @@ public class DraughtsFactory implements GameFactory {
         return List.of(
                 new OptionDescriptor(HOST_COLOUR_KEY, OptionType.CHOICE,
                         java.util.Arrays.stream(HostColour.values()).map(HostColour::key).toList(),
-                        HostColour.DEFAULT.key(), "options.draughts.hostColour"),
-                new OptionDescriptor(DRAW_OFFERS_KEY, OptionType.CHOICE, List.of(ON, OFF), ON,
-                        "options.draughts.drawOffers"));
+                        HostColour.DEFAULT.key(), "options.draughts.hostColour"));
+    }
+
+    /** Strict like every game, except that the retired {@code drawOffers} key is dropped instead of refused. */
+    @Override
+    public GameOptions validate(GameOptions requested) {
+        Map<String, String> current = new LinkedHashMap<>(requested.values());
+        current.remove(LEGACY_DRAW_OFFERS_KEY);
+        return GameFactory.super.validate(GameOptions.of(current));
     }
 
     /** A computer seat plays at one of three levels. */
