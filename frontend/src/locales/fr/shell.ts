@@ -292,7 +292,10 @@ export const hotkeys: Messages['hotkeys'] = {
   open: 'Raccourcis clavier',
   title: 'Raccourcis clavier',
   enabled: 'Raccourcis activés',
-  actions: { discard: 'Défausser', call: 'Dire Menteur', send: 'Envoyer une carte', slap: 'Taper sur le tas' },
+  actions: {
+    discard: 'Défausser', call: 'Dire Menteur', send: 'Envoyer une carte', slap: 'Taper sur le tas',
+    pass1: 'Passer la carte 1', pass2: 'Passer la carte 2', pass3: 'Passer la carte 3', pass4: 'Passer la carte 4',
+  },
   change: 'Modifier',
   changeAria: 'Modifier la touche pour {action}',
   listening: 'Appuyez sur une touche…',

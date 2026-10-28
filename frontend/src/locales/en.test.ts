@@ -673,6 +673,62 @@ describe('99 messages', () => {
   });
 });
 
+describe('Kilo de merde messages', () => {
+  const emptyLeaves = (node: unknown, path: string): string[] => {
+    if (typeof node === 'string') return node.trim() === '' ? [path] : [];
+    if (Array.isArray(node)) return node.flatMap((v, i) => emptyLeaves(v, `${path}[${i}]`));
+    if (node && typeof node === 'object') return Object.entries(node).flatMap(([k, v]) => emptyLeaves(v, `${path}.${k}`));
+    return [];
+  };
+
+  it('givenTheRules_thenTheyCoverGoalSetupPassingSlappingKilosAndEnd', () => {
+    const rules = messagesEn.kiloDeMerde;
+    expect(rules.toggleLabel).toBeTruthy();
+    expect(rules.panelTitle).toBe('Kilo de merde');
+    expect(rules.closeLabel).toBeTruthy();
+    for (const topic of ['goal', 'setup', 'passing', 'slapping', 'kilos', 'end']) {
+      expect(rules.sections.some(s => s.title.toLowerCase().includes(topic)), topic).toBe(true);
+    }
+  });
+
+  it('givenTheMessages_thenEveryLeafStringIsNonEmpty', () => {
+    expect(emptyLeaves(messagesEn.kiloDeMerdeUi, 'kiloDeMerdeUi')).toEqual([]);
+    expect(emptyLeaves(messagesEn.kiloDeMerde, 'kiloDeMerde')).toEqual([]);
+    expect(emptyLeaves(messagesEn.options.kiloDeMerde, 'options.kiloDeMerde')).toEqual([]);
+  });
+
+  it('givenTheOutcomeLines_thenTheyCarryTheirParameters', () => {
+    const outcome = messagesEn.kiloDeMerdeUi.outcome;
+    for (const line of [outcome.last, outcome.falseSlap]) {
+      expect(line).toContain('{name}');
+      expect(line).toContain('{card}');
+      expect(line).toContain('{kg}');
+    }
+    expect(outcome.flush).toContain('{name}');
+    expect(outcome.stalled).toBeTruthy();
+  });
+
+  it('givenTheOptions_thenRoundsListFiveTenFifteenTwentyAndLevelsAreNamed', () => {
+    const options = messagesEn.options.kiloDeMerde;
+    expect(options.rounds.label).toBe('Rounds');
+    for (const rounds of ['5', '10', '15', '20']) expect(options.rounds[rounds], rounds).toBeTruthy();
+    expect(options.level).toMatchObject({ easy: 'Easy', medium: 'Medium', hard: 'Hard' });
+  });
+
+  it('givenTheHotkeys_thenThePassActionsAreNamed', () => {
+    for (const action of ['pass1', 'pass2', 'pass3', 'pass4'] as const) {
+      expect(messagesEn.hotkeys.actions[action], action).toBeTruthy();
+    }
+  });
+
+  it('givenTheRefusals_thenEveryServerCodeHasAText', () => {
+    const errors = messagesEn.kiloDeMerdeUi.errors;
+    for (const code of ['finishedGame', 'wrongPhase', 'alreadyChose', 'cardNotInHand', 'alreadySlapped', 'notActiveSeat'] as const) {
+      expect(errors[code], code).toBeTruthy();
+    }
+  });
+});
+
 describe('Blackjack messages', () => {
   const emptyLeaves = (node: unknown, path: string): string[] => {
     if (typeof node === 'string') return node.trim() === '' ? [path] : [];
