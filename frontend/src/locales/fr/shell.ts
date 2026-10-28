@@ -118,6 +118,12 @@ export const gamePicker: Messages['gamePicker'] = {
       players: '2 joueurs',
       play: 'Jouer',
     },
+    blackjack: {
+      name: 'Blackjack',
+      description: 'Battez le croupier, seul ou dans un tournoi à 100 points',
+      players: '1 à 6 joueurs',
+      play: 'Jouer',
+    },
   },
 };
 
