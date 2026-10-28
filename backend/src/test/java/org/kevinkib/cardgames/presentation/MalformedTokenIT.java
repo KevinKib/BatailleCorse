@@ -73,6 +73,8 @@ class MalformedTokenIT {
     @Autowired
     private org.kevinkib.cardgames.ninetynine.presentation.NinetyNineWebSocketController ninetyNine;
     @Autowired
+    private org.kevinkib.cardgames.blackjack.presentation.BlackjackWebSocketController blackjack;
+    @Autowired
     private LobbyController lobby;
     @Autowired
     private LifecycleController lifecycle;
@@ -162,6 +164,27 @@ class MalformedTokenIT {
                 forEachBadToken("ninety-nine start", t -> assertDoesNotThrow(() -> ninetyNine.start(new GameActionPayload(room, t)))),
                 forEachBadToken("ninety-nine play", t -> assertDoesNotThrow(() -> ninetyNine.play(
                         new org.kevinkib.cardgames.ninetynine.presentation.api.NinetyNinePlayPayload(id, t, card, null)))))
+                .flatMap(s -> s);
+    }
+
+    @TestFactory
+    Stream<DynamicTest> blackjackRest() {
+        return restViewAnswers403("/api/blackjack/game/", org.kevinkib.cardgames.blackjack.domain.BlackjackFactory.GAME_TYPE);
+    }
+
+    @TestFactory
+    Stream<DynamicTest> blackjackWebSocket() {
+        String type = org.kevinkib.cardgames.blackjack.domain.BlackjackFactory.GAME_TYPE;
+        String id = StartedRooms.start(sessions, type, 2).getId().uuid().toString();
+        String room = sessions.createRoom(type, "Alice").gameId();
+        return Stream.of(
+                forEachBadToken("blackjack start", t -> assertDoesNotThrow(() -> blackjack.start(new GameActionPayload(room, t)))),
+                forEachBadToken("blackjack bet", t -> assertDoesNotThrow(() -> blackjack.bet(
+                        new org.kevinkib.cardgames.blackjack.presentation.api.BlackjackBetPayload(id, t, 10)))),
+                forEachBadToken("blackjack hit", t -> assertDoesNotThrow(() -> blackjack.hit(new GameActionPayload(id, t)))),
+                forEachBadToken("blackjack stand", t -> assertDoesNotThrow(() -> blackjack.stand(new GameActionPayload(id, t)))),
+                forEachBadToken("blackjack double", t -> assertDoesNotThrow(() -> blackjack.doubleDown(new GameActionPayload(id, t)))),
+                forEachBadToken("blackjack split", t -> assertDoesNotThrow(() -> blackjack.split(new GameActionPayload(id, t)))))
                 .flatMap(s -> s);
     }
 

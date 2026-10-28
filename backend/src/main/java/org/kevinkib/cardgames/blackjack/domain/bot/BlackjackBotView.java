@@ -1,9 +1,13 @@
 package org.kevinkib.cardgames.blackjack.domain.bot;
 
 import org.kevinkib.cardgames.blackjack.domain.Action;
+import org.kevinkib.cardgames.blackjack.domain.Blackjack;
 import org.kevinkib.cardgames.blackjack.domain.BlackjackOptions;
+import org.kevinkib.cardgames.blackjack.domain.HandValue;
 import org.kevinkib.cardgames.blackjack.domain.Phase;
+import org.kevinkib.cardgames.blackjack.domain.SeatState;
 import org.kevinkib.cardgames.game.PlayerId;
+import org.kevinkib.cards.domain.Card;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -57,5 +61,37 @@ public record BlackjackBotView(
         hands = List.copyOf(hands);
         availableActions = List.copyOf(availableActions);
         stacks = Collections.unmodifiableMap(new LinkedHashMap<>(stacks));
+    }
+
+    /** What the seat sees of the game right now, read under the game's monitor so it is one consistent snapshot. */
+    public static BlackjackBotView forSeat(Blackjack game, PlayerId seat) {
+        synchronized (game) {
+            Phase phase = game.phase();
+            SeatState mine = game.seat(seat);
+            List<Hand> hands = mine.hands().stream().map(h -> {
+                HandValue value = h.value();
+                boolean pair = h.cards().size() == 2
+                        && HandValue.of(List.of(h.cards().get(0)), false).total()
+                        == HandValue.of(List.of(h.cards().get(1)), false).total();
+                return new Hand(value.total(), value.soft(), pair, h.bet(), h.doubled());
+            }).toList();
+            Card up = game.dealerUpCard();
+            List<Action> actions = game.availableActions(seat);
+            boolean betting = phase == Phase.BETTING && actions.contains(Action.BET);
+            Map<PlayerId, Integer> stacks = new LinkedHashMap<>();
+            for (PlayerId other : game.getPlayerIds()) {
+                SeatState state = game.seat(other);
+                if (!state.eliminated()) {
+                    stacks.put(other, state.stack());
+                }
+            }
+            PlayerId current = game.currentSeat();
+            return new BlackjackBotView(seat, game.version(), game.handNumber(),
+                    game.handsTotal() - game.handNumber() + 1, phase,
+                    current == null ? 0 : game.seat(current).activeHandIndex(), hands,
+                    up == null ? 0 : HandValue.of(List.of(up), false).total(), actions,
+                    betting ? BlackjackOptions.MIN_BET : 0, betting ? game.maxBetFor(seat) : 0, stacks,
+                    game.button(), game.isSolo(), game.options());
+        }
     }
 }
