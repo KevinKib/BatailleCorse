@@ -49,7 +49,7 @@ export interface KiloDeMerdeDraw {
 
 export interface KiloDeMerdeSeatHand {
   seat: number;
-  hand: Card[];
+  cards: Card[];
 }
 
 /** How the last round ended; every hand is public once the round is over. */
@@ -70,7 +70,7 @@ export interface KiloDeMerdePlace {
 }
 
 export interface KiloDeMerdeResult {
-  places: KiloDeMerdePlace[];
+  standings: KiloDeMerdePlace[];
   reason: KiloDeMerdeEndReason;
 }
 

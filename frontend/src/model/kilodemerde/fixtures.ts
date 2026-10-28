@@ -101,10 +101,10 @@ export const kiloDeMerdeRaceState: KiloDeMerdeState = base({
 });
 
 const fourHands: KiloDeMerdeSeatHand[] = [
-  { seat: 0, hand: [kiloCard('JACK', 'CLUB'), kiloCard('JACK', 'HEART'), kiloCard('JACK', 'DIAMOND'), kiloCard('QUEEN', 'SPADE')] },
-  { seat: 1, hand: [kiloCard('KING', 'CLUB'), kiloCard('KING', 'HEART'), kiloCard('KING', 'DIAMOND'), kiloCard('KING', 'SPADE')] },
-  { seat: 2, hand: [kiloCard('QUEEN', 'CLUB'), kiloCard('QUEEN', 'HEART'), kiloCard('QUEEN', 'DIAMOND'), kiloCard('JACK', 'SPADE')] },
-  { seat: 3, hand: [kiloCard('2', 'CLUB'), kiloCard('2', 'HEART'), kiloCard('2', 'DIAMOND'), kiloCard('2', 'SPADE')] },
+  { seat: 0, cards: [kiloCard('JACK', 'CLUB'), kiloCard('JACK', 'HEART'), kiloCard('JACK', 'DIAMOND'), kiloCard('QUEEN', 'SPADE')] },
+  { seat: 1, cards: [kiloCard('KING', 'CLUB'), kiloCard('KING', 'HEART'), kiloCard('KING', 'DIAMOND'), kiloCard('KING', 'SPADE')] },
+  { seat: 2, cards: [kiloCard('QUEEN', 'CLUB'), kiloCard('QUEEN', 'HEART'), kiloCard('QUEEN', 'DIAMOND'), kiloCard('JACK', 'SPADE')] },
+  { seat: 3, cards: [kiloCard('2', 'CLUB'), kiloCard('2', 'HEART'), kiloCard('2', 'DIAMOND'), kiloCard('2', 'SPADE')] },
 ];
 
 const roundOverOutcome: KiloDeMerdeRoundOutcome = {
@@ -150,7 +150,7 @@ export const kiloDeMerdeFinishedState: KiloDeMerdeState = base({
   lastOutcome: roundOverOutcome,
   result: {
     reason: 'ROUNDS_PLAYED',
-    places: [
+    standings: [
       { seat: 0, place: 1, kilos: 0 },
       { seat: 2, place: 1, kilos: 0 },
       { seat: 1, place: 3, kilos: 24 },

@@ -25,7 +25,7 @@ const SAME_AS_ENGLISH_ALLOWED: readonly string[] = [
   // 99: bot name, same word in French, and the lives options are digits
   'ninetyNine.panelTitle', 'ninetyNineUi.botLabel', 'ninetyNineUi.table.opponents', 'options.ninetyNine.lives',
   // Blackjack: the name and the Blackjack tags are the same word, the bot label and the stack unit are shared, "Max"
-  'gamePicker.games.blackjack.name', 'blackjack.panelTitle', 'blackjackUi.botLabel', 'blackjackUi.dealer.blackjack',
+  'gamePicker.games.blackjack.name', 'gamePicker.games.kilo-de-merde.name','blackjack.panelTitle', 'blackjackUi.botLabel', 'blackjackUi.dealer.blackjack',
   'blackjackUi.status.blackjack', 'blackjackUi.table.stack', 'blackjackUi.bet.max',
   'blackjackUi.end.stackOf',
   // Kilo de merde: the game's name, the bot name, the "kg" unit and a word that is the same in French

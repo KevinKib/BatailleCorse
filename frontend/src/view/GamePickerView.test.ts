@@ -43,18 +43,18 @@ describe('GamePickerView', () => {
     const text = wrapper.text();
     const p = messagesEn.gamePicker;
     expect(wrapper.get('h1').text()).toBe(p.title);
-    for (const game of [p.games.bataillecorse!, p.games.bullshit!, p.games.kobo!, p.games['three-men-morris']!, p.games.president!, p.games.mangola!, p.games['ninety-nine']!, p.games.draughts!, p.games.blackjack!]) {
+    for (const game of [p.games.bataillecorse!, p.games.bullshit!, p.games.kobo!, p.games['three-men-morris']!, p.games.president!, p.games.mangola!, p.games['ninety-nine']!, p.games.draughts!, p.games.blackjack!, p.games['kilo-de-merde']!]) {
       expect(text).toContain(game.name);
       expect(text).toContain(game.description);
       expect(text).toContain(game.players);
     }
-    expect(wrapper.findAll('article')).toHaveLength(9);
+    expect(wrapper.findAll('article')).toHaveLength(10);
   });
 
   it('givenPicker_thenEachCardHasAKeyboardReachablePlayButtonNamedAfterItsGame', async () => {
     const { wrapper } = await mountPicker();
     const buttons = wrapper.findAll('button');
-    expect(buttons).toHaveLength(9);
+    expect(buttons).toHaveLength(10);
     expect(buttons[0].attributes('aria-label')).toBe('Play Bataille Corse');
     expect(buttons[1].attributes('aria-label')).toBe('Play Bullshit');
     expect(buttons[2].attributes('aria-label')).toBe('Play Kobo');
@@ -64,6 +64,7 @@ describe('GamePickerView', () => {
     expect(buttons[6].attributes('aria-label')).toBe('Play 99');
     expect(buttons[7].attributes('aria-label')).toBe('Play Draughts');
     expect(buttons[8].attributes('aria-label')).toBe('Play Blackjack');
+    expect(buttons[9].attributes('aria-label')).toBe('Play Kilo de merde');
   });
 
   it('givenPlayOnDraughts_thenGoesToItsGameHome', async () => {
@@ -92,6 +93,13 @@ describe('GamePickerView', () => {
     await wrapper.get('[data-test="play-ninety-nine"]').trigger('click');
     await flushPromises();
     expect(router.currentRoute.value.fullPath).toBe('/ninety-nine');
+  });
+
+  it('givenPlayOnKiloDeMerde_thenGoesToItsGameHome', async () => {
+    const { wrapper, router } = await mountPicker();
+    await wrapper.get('[data-test="play-kilo-de-merde"]').trigger('click');
+    await flushPromises();
+    expect(router.currentRoute.value.fullPath).toBe('/kilo-de-merde');
   });
 
   it('givenPlayOnBlackjack_thenGoesToItsGameHome', async () => {
@@ -138,7 +146,7 @@ describe('GamePickerView', () => {
     // It is the last thing in the panel's flow, after the games (the panel gap spaces it, no absolute position).
     expect(link.element.parentElement!.lastElementChild).toBe(link.element);
     // It sits after the games, not among them: the Play buttons stay the only buttons.
-    expect(wrapper.findAll('button')).toHaveLength(9);
+    expect(wrapper.findAll('button')).toHaveLength(10);
     await link.trigger('click');
     await flushPromises();
     expect(router.currentRoute.value.fullPath).toBe('/privacy');
@@ -150,7 +158,7 @@ describe('GamePickerView', () => {
     expect(draughts.find('svg[data-test="checkerboard-icon"]').exists()).toBe(true);
     expect(draughts.find('svg').attributes('aria-hidden')).toBe('true');
     expect(draughts.find('.pi-table').exists()).toBe(false);
-    for (const key of ['bataillecorse', 'bullshit', 'kobo', 'three-men-morris', 'president', 'mangola', 'ninety-nine', 'blackjack']) {
+    for (const key of ['bataillecorse', 'bullshit', 'kobo', 'three-men-morris', 'president', 'mangola', 'ninety-nine', 'blackjack', 'kilo-de-merde']) {
       const button = wrapper.get(`[data-test="play-${key}"]`);
       expect(button.find('span.pi').exists()).toBe(true);
       expect(button.find('svg').exists()).toBe(false);

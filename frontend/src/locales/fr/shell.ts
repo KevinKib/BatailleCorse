@@ -124,6 +124,12 @@ export const gamePicker: Messages['gamePicker'] = {
       players: '1 à 6 joueurs',
       play: 'Jouer',
     },
+    'kilo-de-merde': {
+      name: 'Kilo de merde',
+      description: 'Passez, réunissez un carré, tapez sur le tas. Le dernier ramasse les kilos.',
+      players: '3 à 10 joueurs',
+      play: 'Jouer',
+    },
   },
 };
 

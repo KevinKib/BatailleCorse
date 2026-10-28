@@ -8,6 +8,7 @@ import { useMangolaStore } from '../state/Mangola.store';
 import { useNinetyNineStore } from '../state/NinetyNine.store';
 import { useDraughtsStore } from '../state/Draughts.store';
 import { useBlackjackStore } from '../state/Blackjack.store';
+import { useKiloDeMerdeStore } from '../state/KiloDeMerde.store';
 
 /** What the Game home and the join page need from a game: open a lobby, claim a seat in one. */
 export interface GameRoomClient {
@@ -31,6 +32,7 @@ export function useGameRooms(): (game: GameDefinition) => GameRoomClient {
   const ninetyNine = useNinetyNineStore();
   const draughts = useDraughtsStore();
   const blackjack = useBlackjackStore();
+  const kiloDeMerde = useKiloDeMerdeStore();
   const clients: { [K in GameKey]?: GameRoomClient } = {
     bataillecorse: { create: (name, ...rest) => batailleCorse.create(name, ...rest), join: (id, name) => batailleCorse.join(id, name) },
     bullshit: { create: (name, ...rest) => bullshit.create(name, ...rest), join: (id, name) => bullshit.join(id, name) },
@@ -41,6 +43,7 @@ export function useGameRooms(): (game: GameDefinition) => GameRoomClient {
     'ninety-nine': { create: (name, ...rest) => ninetyNine.create(name, ...rest), join: (id, name) => ninetyNine.join(id, name) },
     draughts: { create: (name, ...rest) => draughts.create(name, ...rest), join: (id, name) => draughts.join(id, name) },
     blackjack: { create: (name, ...rest) => blackjack.create(name, ...rest), join: (id, name) => blackjack.join(id, name) },
+    'kilo-de-merde': { create: (name, ...rest) => kiloDeMerde.create(name, ...rest), join: (id, name) => kiloDeMerde.join(id, name) },
   };
   return (game) => {
     const client = clients[game.key];

@@ -45,7 +45,7 @@ describe('kilo de merde fixtures', () => {
   });
 
   it('the finished game has a shared first place', () => {
-    const places = kiloDeMerdeFinishedState.result?.places ?? [];
+    const places = kiloDeMerdeFinishedState.result?.standings ?? [];
     expect(kiloDeMerdeFinishedState.phase).toBe('FINISHED');
     expect(places.filter((p) => p.place === 1).length).toBe(2);
     expect(kiloDeMerdeFinishedState.availableActions).toEqual([]);

@@ -65,14 +65,14 @@ branches `feat/kilo-de-merde-…`; conventional titles; backend paths relative t
 
 | Chunk | Title | Cost | Needs | Parallel with | State |
 |-------|-------|------|-------|---------------|-------|
-| P0 | `feat: kilo de merde shared types (interfaces)` | S (< 30 min) | plan merged | T | [ ] |
-| T | `feat: kilo de merde texts (en, fr)` | S | plan merged | P0, C1, C2, C3, F1 | [ ] |
-| C1 | `feat: kilo de merde rules in the domain` | L | P0 | C2, F1, T, F2 | [ ] |
-| C2 | `feat: kilo de merde bot strategies` | M | P0 | C1, C3, F1, T, F2 | [ ] |
-| F1 | `feat: kilo de merde frontend model, session and store` | M | P0 | C1, C2, C3, T | [ ] |
-| F2 | `feat: kilo de merde table components and screen` | L | P0, T | C1, C2, C3, F1 | [ ] |
-| C3 | `feat: kilo de merde presentation, timers and bot coordinator` | L | C1 | C2, F1, F2 | [ ] |
-| I | `feat: kilo de merde playable (entry PR)` (integration) | M | C2, C3, F1, F2 | - | [ ] |
+| P0 | `feat: kilo de merde shared types (interfaces)` | S (< 30 min) | plan merged | T | [x] |
+| T | `feat: kilo de merde texts (en, fr)` | S | plan merged | P0, C1, C2, C3, F1 | [x] |
+| C1 | `feat: kilo de merde rules in the domain` | L | P0 | C2, F1, T, F2 | [x] |
+| C2 | `feat: kilo de merde bot strategies` | M | P0 | C1, C3, F1, T, F2 | [x] |
+| F1 | `feat: kilo de merde frontend model, session and store` | M | P0 | C1, C2, C3, T | [x] |
+| F2 | `feat: kilo de merde table components and screen` | L | P0, T | C1, C2, C3, F1 | [x] |
+| C3 | `feat: kilo de merde presentation, timers and bot coordinator` | L | C1 | C2, F1, F2 | [x] |
+| I | `feat: kilo de merde playable (entry PR)` (integration) | M | C2, C3, F1, F2 | - | [x] |
 
 About 9 to 11 days of work, 8 PRs. Critical path: P0, C1, C3, I (F2 runs alongside C1 and C3).
 
