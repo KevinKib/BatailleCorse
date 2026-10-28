@@ -3,7 +3,7 @@ import GamePickerView from './view/GamePickerView.vue';
 import GameHomeView from './view/GameHomeView.vue';
 import PrivacyView from './view/PrivacyView.vue';
 import GameJoinView from './view/GameJoinView.vue';
-import GameScreen from './view/alpha/GameScreen.vue';
+import BatailleCorseGameScreen from './view/bataillecorse/BatailleCorseGameScreen.vue';
 import BullshitGameScreen from './view/bullshit/BullshitGameScreen.vue';
 import KoboGameScreen from './view/kobo/KoboGameScreen.vue';
 import ThreeMenMorrisGameScreen from './view/threemenmorris/ThreeMenMorrisGameScreen.vue';
@@ -31,7 +31,7 @@ export const routes = [
   // Both games create their lobby straight from the Game home: the former /create and /new paths lead there.
   { path: `${BASE}/new`, redirect: BASE },
   { path: `${BASE}/create`, redirect: BASE },
-  { path: `${BASE}/room/:id`, name: 'room', component: GameScreen },
+  { path: `${BASE}/room/:id`, name: 'room', component: BatailleCorseGameScreen },
   { path: '/bullshit/new', redirect: '/bullshit' },
   { path: '/bullshit/create', redirect: '/bullshit' },
   { path: '/bullshit/room/:id', name: 'bullshit-room', component: BullshitGameScreen, props: (route: { params: Record<string, unknown> }) => ({ gameId: route.params.id }) },

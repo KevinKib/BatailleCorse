@@ -1,4 +1,5 @@
-import { ref, type Ref } from 'vue';
+import { ref, toRef, type Ref } from 'vue';
+import { useSettingsStore } from '../state/Settings.store';
 
 export const HOTKEY_STORAGE_KEY = 'bullshit.hotkeys';
 
@@ -60,8 +61,41 @@ export function saveHotkeySettings(settings: HotkeySettings): void {
   }
 }
 
+// Bataille Corse's Send and Slap keys live on the settings store, which already persists them
+// (`bc_sendKey`, `bc_slapKey`, the keys players hold); there is no master switch for this game.
+const BATAILLE_CORSE_DEFAULTS = { send: 'q', slap: 'd' };
+
+function useBatailleCorseHotkeys(): HotkeyPanelApi {
+  const store = useSettingsStore();
+  const send = toRef(store, 'sendKey');
+  const slap = toRef(store, 'slapKey');
+
+  function setKey(action: string, e: { key: string; code: string }) {
+    const target = action === 'send' ? send : slap;
+    const result = validateHotkey(e, (action === 'send' ? slap : send).value);
+    if (result.ok) target.value = result.key;
+    return result;
+  }
+  function reset() {
+    send.value = BATAILLE_CORSE_DEFAULTS.send;
+    slap.value = BATAILLE_CORSE_DEFAULTS.slap;
+  }
+  return { actions: [{ id: 'send', key: send }, { id: 'slap', key: slap }], setKey, reset };
+}
+
+/**
+ * Local shortcut preferences of a game, as the settings panel needs them. Bullshit (the default) keeps its
+ * own storage and exposes its keys by name; Bataille Corse reads and writes the settings store. Only the
+ * game asked for is read.
+ */
+export function useHotkeySettings(game: 'bataillecorse'): HotkeyPanelApi;
+export function useHotkeySettings(game?: 'bullshit'): ReturnType<typeof useBullshitHotkeySettings>;
+export function useHotkeySettings(game: 'bullshit' | 'bataillecorse' = 'bullshit') {
+  return game === 'bataillecorse' ? useBatailleCorseHotkeys() : useBullshitHotkeySettings();
+}
+
 // Reactive preference for a screen: read once, written on every change.
-export function useHotkeySettings() {
+function useBullshitHotkeySettings() {
   const initial = loadHotkeySettings();
   const enabled = ref(initial.enabled);
   const discardKey = ref(initial.discard);
