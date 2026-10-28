@@ -307,6 +307,18 @@ the Ace value, who is next), so three levels are meaningful.
   the next live player in the resulting direction is stuck, minus the probability that the bot itself is stuck on
   its next turn after one round of plays by greedy opponents, weighted by lives (hurting the leader is worth more).
   Hidden information makes an exact solve pointless; the cap is 20 ms a decision.
+- **Strength benchmark** (C2, opt-in: `mvn test -Dtest=NinetyNineBotStrengthBenchmark -Dninetynine.bench=true`,
+  200 games of 4 players, seats rotated, default options; a fair seat wins 25%, one run so about ±3 points of noise;
+  the three same-level seats are individual seats, hence their spread):
+
+  | Table | Focus level wins | Others |
+  |-------|------------------|--------|
+  | 1 hard, 3 medium | hard 31.5% | medium 16.0 / 23.0 / 29.5% |
+  | 1 hard, 3 easy | hard 71.5% | easy 8.5 / 7.5 / 12.5% |
+  | 1 medium, 3 easy | medium 63.5% | easy 15.5 / 10.5 / 10.5% |
+  | 1 hard, 1 medium, 2 easy | hard 45.5% | medium 42.5%, easy 6.5 / 5.5% |
+
+  Hard beats medium by a modest margin and both beat easy clearly, as intended: the strongest level stays beatable.
 - **Coordinator** (`presentation/bot/NinetyNineBotCoordinator`, President/Morris pattern): after each broadcast,
   one task for the bot on turn, after `ThinkingDelay` (`ninetynine.bots.delay-min-ms` / `delay-max-ms`, 0 under
   `test`), keyed on `version()`; a failing strategy falls back to the first safe card (Ace at +1).
