@@ -70,7 +70,7 @@ const layout = computed(() => chooseLayout(ring.value.length, known.value));
 const plate = computed(() => plateSizeFor(frame.value.width));
 const compact = computed(() => plate.value.w < 100);
 const nameOfSeat = (seat: number) => seat === props.mySeat ? ui.you : props.nameOf(seat);
-const handOf = (seat: number) => props.hands?.find(h => h.seat === seat)?.hand ?? null;
+const handOf = (seat: number) => props.hands?.find(h => h.seat === seat)?.cards ?? null;
 
 const plates = computed(() => {
   const f = frame.value;

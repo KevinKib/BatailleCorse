@@ -220,7 +220,7 @@ const motion = useTableMotion<KiloDeMerdeTableEvent, KiloDeMerdeAnchor>({
 void motion;
 
 // --- The end -------------------------------------------------------------------------------------------------------
-const winners = computed(() => (store.game?.result?.places ?? []).filter(p => p.place === 1).map(p => p.seat));
+const winners = computed(() => (store.game?.result?.standings ?? []).filter(p => p.place === 1).map(p => p.seat));
 const iWon = computed(() => winners.value.includes(store.mySeat));
 const winnerLine = computed(() => {
   if (winners.value.length === 0) return undefined;
@@ -277,7 +277,7 @@ const rematchButton = computed(() =>
       :rematch-button="rematchButton"
       :error="store.rematch === 'failed' ? ui.end.rematchFailed : undefined"
       @play-again="store.playAgain()">
-      <KiloDeMerdeStandings v-if="store.game" :players="store.game.players" :places="store.game.result?.places ?? null"
+      <KiloDeMerdeStandings v-if="store.game" :players="store.game.players" :places="store.game.result?.standings ?? null"
                             :name-of="displayName" :my-seat="store.mySeat" />
     </EndGameOverlay>
 
