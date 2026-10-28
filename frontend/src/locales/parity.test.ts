@@ -13,7 +13,7 @@ const SAME_AS_ENGLISH_ALLOWED: readonly string[] = [
   'options.threeMenMorris.variant.tapatan', 'options.threeMenMorris.variant.achi',
   'batailleCorseUi.botLabel', 'batailleCorseUi.botWithTier', 'gamePicker.playAria',
   'lobby.botName', 'lobby.botBadge', 'join.publicGames.bots',
-  'options.mangola.level.expert', 'options.threeMenMorris.level.perfect',
+  'options.mangola.level.expert', 'options.threeMenMorris.level.perfect', 'options.draughts.level.expert',
   // T2: rank chips, bot name, symbols and words identical in French
   'bullshit.sections[3].steps', 'bullshitUi.botLabel', 'bullshitUi.table.bluff', 'bullshitUi.table.verdictAnnouncement',
   'presidentUi.botLabel', 'presidentUi.roundOver.place', 'presidentUi.summary.points', 'presidentUi.standings.points', 'presidentUi.end.standing',

@@ -6,8 +6,11 @@ import org.kevinkib.cardgames.mangola.domain.MangolaGeometry;
 import org.kevinkib.cardgames.mangola.domain.MangolaRules;
 import org.kevinkib.cardgames.mangola.domain.Side;
 
+import java.util.HashSet;
+import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -97,6 +100,44 @@ class GreedyMangolaBotTest {
         MangolaBoard board = BotFixtures.board("b1:1 d1:1 f1:1 h1:1 a2:1 c2:1 e2:1 g2:1 h2:3 a4:2");
         int pit = new GreedyMangolaBot(new Random(1)).decideMove(BotFixtures.position(draw, board, 0), Side.A);
         assertThat(MangolaGeometry.name(pit), is("h2"));
+    }
+
+    @Test
+    void itsLayoutsComeFromItsSideOfThePlacementBook() {
+        for (Side side : Side.values()) {
+            Set<List<Integer>> book = MangolaPlacementBook.of(side).stream()
+                    .map(entry -> BotFixtures.list(entry.counts())).collect(Collectors.toSet());
+            GreedyMangolaBot bot = new GreedyMangolaBot(new Random(7));
+            for (int i = 0; i < 200; i++) {
+                assertThat(book.contains(BotFixtures.list(bot.decideLayout(OWNER, side, Set.of()))), is(true));
+            }
+        }
+    }
+
+    @Test
+    void everyLayoutOfTheBookAppearsOverTwoHundredDecisions() {
+        for (Side side : Side.values()) {
+            Set<List<Integer>> book = MangolaPlacementBook.of(side).stream()
+                    .map(entry -> BotFixtures.list(entry.counts())).collect(Collectors.toSet());
+            GreedyMangolaBot bot = new GreedyMangolaBot(new Random(9));
+            Set<List<Integer>> seen = new HashSet<>();
+            for (int i = 0; i < 200; i++) {
+                seen.add(BotFixtures.list(bot.decideLayout(OWNER, side, Set.of())));
+            }
+            assertThat(seen, is(book));
+        }
+    }
+
+    @Test
+    void aRefusedLayoutIsNeverProposedAgain() {
+        GreedyMangolaBot bot = new GreedyMangolaBot(new Random(3));
+        Set<List<Integer>> rejected = new HashSet<>();
+        int size = MangolaPlacementBook.of(Side.A).size();
+        for (int i = 0; i < size; i++) {
+            List<Integer> layout = BotFixtures.list(bot.decideLayout(OWNER, Side.A, rejected));
+            assertThat(rejected.contains(layout), is(false));
+            rejected.add(layout);
+        }
     }
 
     @Test

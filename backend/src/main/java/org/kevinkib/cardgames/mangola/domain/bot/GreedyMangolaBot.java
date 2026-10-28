@@ -13,6 +13,9 @@ import java.util.random.RandomGenerator;
  * Medium: one ply. The pit that leaves it the most seeds on its own half (that is, the biggest capture), then the
  * most pits left to sow, then at random. A sowing that never ends (a draw, when the rules allow it) is played
  * only when nothing else is left.
+ *
+ * <p>Its layout is drawn uniformly from the placement book's list for its side ({@link MangolaPlacementBook}, frozen
+ * from the placement study); a refused layout is drawn again without it, then the base fallback applies.
  */
 public final class GreedyMangolaBot extends AbstractMangolaBot {
 
@@ -22,7 +25,7 @@ public final class GreedyMangolaBot extends AbstractMangolaBot {
 
     @Override
     protected int[] proposeLayout(MangolaRules rules, Side side, Set<List<Integer>> rejected) {
-        return randomOrPattern();
+        return fromBook(rules, side, rejected, false);
     }
 
     @Override
