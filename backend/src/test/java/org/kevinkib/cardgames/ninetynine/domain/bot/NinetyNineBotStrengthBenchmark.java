@@ -74,7 +74,7 @@ class NinetyNineBotStrengthBenchmark {
                     continue;
                 }
                 PlayerId seat = game.currentSeat();
-                NinetyNineDecision.Play play = (NinetyNineDecision.Play) strategies.get(seat.getId())
+                NinetyNineDecision.Play play = (NinetyNineDecision.Play) strategies.get(seat.id())
                         .decide(viewOf(game, seat));
                 game.play(seat, play.card(), play.aceValue());
             } catch (Exception e) {
@@ -82,7 +82,7 @@ class NinetyNineBotStrengthBenchmark {
             }
         }
         return game.result().orElseThrow().places().entrySet().stream()
-                .filter(entry -> entry.getValue() == 1).findFirst().orElseThrow().getKey().getId();
+                .filter(entry -> entry.getValue() == 1).findFirst().orElseThrow().getKey().id();
     }
 
     private static NinetyNineBotView viewOf(NinetyNine game, PlayerId seat) {
