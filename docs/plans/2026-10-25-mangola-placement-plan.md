@@ -84,7 +84,7 @@ Shared interface, no behaviour change, nothing deleted.
 
 - `ExpertMangolaBot.proposeLayout` → `fromBook(rules, side, rejected, true)`; delete `typicalOpponents`,
   `layoutScore`, `mutate`, `LAYOUT_NODE_CAP`, `LAYOUT_CANDIDATES`, `LAYOUT_MUTANTS`; the class comment's layout
-  paragraph rewritten (the list, why, the study). `Budget.layoutMillis` stays (P3 decides).
+  paragraph rewritten (the list, why, the study). `Budget.layoutMillis` stays until P3 (removed there).
 - Tests first (`ExpertMangolaBotTest`): side A layouts are drawn from the starter list and side B from the second
   list (200 seeded decisions each, every layout in the list, frequencies within 0.05); a refused layout is never
   proposed again and the decision ends when every list layout is refused (falls back on the catalogue); the
@@ -103,9 +103,9 @@ Shared interface, no behaviour change, nothing deleted.
 
 ## P3 `feat: Mangola placement book, integration` (S)
 
-- `MangolaConfig`: per Q4, either drop `mangola.bots.layout-ms` (property, `DEFAULT_LAYOUT_MS`, the `Budget`
-  field, `application-test.properties`, the `MangolaBotWiringIT` assertion) or keep it documented as unused.
+- `MangolaConfig`: per Q4 (decided: remove at once), `mangola.bots.layout-ms` is gone (property, `DEFAULT_LAYOUT_MS`, the
+  `Budget` field, `application-test.properties`, the `MangolaBotWiringIT` assertion).
 - `MangolaPlacementStudy`: a `regression` stage, the book against the October 2026 search (`StudyExpert`), 400
-  games, to re-check the spec's 0.633 after the merge.
+  games, to re-check the spec's 0.605 after the merge (done: 0.630 ± 0.047).
 - Base spec `2026-10-15-mangola-design.md`, Bots, "Layouts": the book replaces the search sentence; link the study.
 - All suites; a review of the whole branch; the roadmap issue commented once merged.

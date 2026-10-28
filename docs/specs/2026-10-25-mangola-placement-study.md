@@ -94,7 +94,7 @@ All in `backend/src/test/java/org/kevinkib/cardgames/mangola/domain/bot/`:
 | `ZeroSumGame` | Alternating fictitious play (Brown 1951; Robinson's theorem gives convergence for zero-sum games) with the guaranteed lower and upper values, weak dominance, maximin. | `ZeroSumGameTest` (rock-paper-scissors, a 2x2 game with a known mix, dominance) |
 | `MangolaPlacementStudy` | The on-demand runner (all stages below). Not matched by Surefire's includes and disabled without `-Dmangola.study`. | `MangolaPlacementStudyTest` (Spearman, layout display, pool) |
 
-Reproduce (about 40 minutes of wall time on 4 threads; results are written to `backend/target/mangola-study/`, and
+Reproduce (the `book` stage needs the `oracle` stage run first in the same `target/`; about 40 minutes of wall time on 4 threads; results are written to `backend/target/mangola-study/`, and
 a second run reuses the base round robin from there):
 
 ```sh
@@ -386,6 +386,7 @@ October 2026 layout search (`StudyExpert`), 400 games, seed 900001, both seats s
 **0.630 ± 0.047** (252 wins, 0 draws, 148 losses; 116/200 won when starting, 136/200 when second), 80 s wall and 217 s
 CPU on 4 threads. The study measured **0.605 ± 0.048** for the round-15 lists (same seed and budget): the two figures
 are within their intervals (the draws use different random streams), so the frozen code reproduces the study. No regression.
+
 ## Limits
 
 - The opponent model is the expert itself at 4,000 nodes; humans play differently, and the greedy move search
