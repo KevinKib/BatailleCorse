@@ -1,6 +1,6 @@
 # BatailleCorse : consignes pour Claude
 
-Jeux de société temps réel (Bataille Corse, Bullshit, Kobo, President , la marelle à trois pions, Three Men's Morris, Mangola, le 99 et les dames internationales) : backend Spring Boot (compilé en `-source/-target 17` selon le `pom.xml`, exécuté sur JDK 22 dans le Dockerfile et la CI ; WebSocket/STOMP, état en mémoire, pas de base de données) et frontend Vue 3 + Vite + Pinia + PrimeVue, orchestrés avec Docker Compose. Les commandes détaillées sont dans le `README.md`. Les règles communes à tous les projets (worktrees, conventions git, vérifications, workflow) sont dans le `CLAUDE.md` global de l'utilisateur.
+Jeux de société temps réel (Bataille Corse, Bullshit, Kobo, President , la marelle à trois pions, Three Men's Morris, Mangola, le 99, les dames internationales et le Blackjack) : backend Spring Boot (compilé en `-source/-target 17` selon le `pom.xml`, exécuté sur JDK 22 dans le Dockerfile et la CI ; WebSocket/STOMP, état en mémoire, pas de base de données) et frontend Vue 3 + Vite + Pinia + PrimeVue, orchestrés avec Docker Compose. Les commandes détaillées sont dans le `README.md`. Les règles communes à tous les projets (worktrees, conventions git, vérifications, workflow) sont dans le `CLAUDE.md` global de l'utilisateur.
 
 ## Langue
 

@@ -9,6 +9,7 @@ import { usePresidentStore } from '../state/President.store';
 import { useBatailleCorseStore } from '../state/BatailleCorse.store';
 import { useMangolaStore } from '../state/Mangola.store';
 import { useNinetyNineStore } from '../state/NinetyNine.store';
+import { useBlackjackStore } from '../state/Blackjack.store';
 import { useDraughtsStore } from '../state/Draughts.store';
 
 describe('useGameRooms', () => {
@@ -109,6 +110,17 @@ describe('useGameRooms', () => {
     expect(join).toHaveBeenCalledWith('g8', 'Bob');
   });
 
+  it('givenBlackjack_thenCreateAndJoinGoThroughItsStore', async () => {
+    const store = useBlackjackStore();
+    const create = vi.spyOn(store, 'create').mockResolvedValue('g9');
+    const join = vi.spyOn(store, 'join').mockResolvedValue();
+    const room = useGameRooms()(findGame('blackjack')!);
+    expect(await room.create('Alice')).toBe('g9');
+    await room.join('g9', 'Bob');
+    expect(create).toHaveBeenCalledWith('Alice');
+    expect(join).toHaveBeenCalledWith('g9', 'Bob');
+  });
+
   it('givenAGameWithNoRoomClient_thenItFailsLoudlyInsteadOfJoiningAnotherGame', () => {
     const unwired = { ...findGame('bullshit')!, key: 'chess' } as unknown as GameDefinition;
     expect(() => useGameRooms()(unwired)).toThrow(/chess/);
@@ -119,6 +131,7 @@ describe('useGameRooms', () => {
       bataillecorse: useBatailleCorseStore(), bullshit: useBullshitStore(), kobo: useKoboStore(),
       'three-men-morris': useThreeMenMorrisStore(), president: usePresidentStore(), mangola: useMangolaStore(),
       'ninety-nine': useNinetyNineStore(), draughts: useDraughtsStore(),
+      blackjack: useBlackjackStore(),
     };
     for (const g of GAMES) {
       const create = vi.spyOn(stores[g.key], 'create').mockResolvedValue('g');

@@ -108,6 +108,11 @@ export const GAMES: readonly GameDefinition[] = [
     supportsBots: true,
     picker: { icon: CheckerboardIcon, severity: 'secondary' },
   }),
+  // Bets are chips and play is four buttons: no remappable shortcut, so no gear. Bots play at three levels (a seat option).
+  define('blackjack', {
+    supportsBots: true,
+    picker: { icon: 'pi pi-wallet', severity: 'success' },
+  }),
 ];
 
 export function findGame(key: unknown): GameDefinition | undefined {
