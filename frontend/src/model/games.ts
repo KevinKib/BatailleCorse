@@ -108,6 +108,11 @@ export const GAMES: readonly GameDefinition[] = [
     supportsBots: true,
     picker: { icon: CheckerboardIcon, severity: 'secondary' },
   }),
+  // Bets are chips and play is four buttons: no remappable shortcut, so no gear. Bots play at three levels (a seat option).
+  define('blackjack', {
+    supportsBots: true,
+    picker: { icon: 'pi pi-wallet', severity: 'success' },
+  }),
   // Cards are tapped and the pile is slapped; the keys (1 to 4 pass, Space slaps) are fixed, so no gear.
   // Bots play at three levels (a seat option).
   define('kilo-de-merde', {

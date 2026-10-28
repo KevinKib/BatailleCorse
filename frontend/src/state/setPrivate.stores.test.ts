@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { setActivePinia, createPinia } from 'pinia';
 import webSocketService from '../service/WebSocketService';
 import { useBatailleCorseStore } from './BatailleCorse.store';
+import { useBlackjackStore } from './Blackjack.store';
 import { useBullshitStore } from './Bullshit.store';
 import { useDraughtsStore } from './Draughts.store';
 import { useKiloDeMerdeStore } from './KiloDeMerde.store';
@@ -14,6 +15,7 @@ import { useThreeMenMorrisStore } from './ThreeMenMorris.store';
 // The Private game switch of every lobby goes through its game's store to the shared /app/lobby/setPrivate command.
 const stores = {
   bataillecorse: useBatailleCorseStore,
+  blackjack: useBlackjackStore,
   bullshit: useBullshitStore,
   draughts: useDraughtsStore,
   kilodemerde: useKiloDeMerdeStore,

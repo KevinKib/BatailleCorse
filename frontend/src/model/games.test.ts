@@ -3,7 +3,7 @@ import { GAMES, findGame, type GameDefinition, type GameKey } from './games';
 
 describe('game registry', () => {
   it('givenEveryGame_thenEachDeclaresItsRoutesUnderTheirKey', () => {
-    expect(GAMES.map(g => g.key)).toEqual(['bataillecorse', 'bullshit', 'kobo', 'three-men-morris', 'president', 'mangola', 'ninety-nine', 'draughts', 'kilo-de-merde']);
+    expect(GAMES.map(g => g.key)).toEqual(['bataillecorse', 'bullshit', 'kobo', 'three-men-morris', 'president', 'mangola', 'ninety-nine', 'draughts', 'blackjack', 'kilo-de-merde']);
     for (const g of GAMES) {
       expect(g.gameHomeRoute).toBe(`/${g.key}`);
       expect(g.joinRoute()).toBe(`/${g.key}/join`);
@@ -86,6 +86,15 @@ describe('game registry', () => {
     expect(draughts?.picker.severity).toBe('secondary');
     expect(typeof draughts?.picker.icon).not.toBe('string');
     expect(draughts?.roomRoute('abc')).toBe('/draughts/room/abc');
+  });
+
+  it('givenBlackjack_thenItIsRegisteredWithBotsButNoShortcutsAndItsOwnPickerStyle', () => {
+    const blackjack = findGame('blackjack');
+    expect(blackjack?.serverType).toBe('blackjack');
+    expect(blackjack?.supportsBots).toBe(true);
+    expect(blackjack?.hotkeys).toBeUndefined();
+    expect(blackjack?.picker).toEqual({ icon: 'pi pi-wallet', severity: 'success' });
+    expect(blackjack?.roomRoute('abc')).toBe('/blackjack/room/abc');
   });
 
   it('givenPresident_thenItIsRegisteredWithBotsButNoShortcutsAndItsOwnPickerStyle', () => {

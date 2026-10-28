@@ -7,6 +7,8 @@ delivered as a series of PRs (plan: `docs/plans/2026-10-28-blackjack-plan.md`). 
 `docs/architecture/add-a-game.md`. The closest model is 99 (`docs/specs/2026-10-28-ninety-nine-design.md`: a
 multi-player card game with automatic deals, a deck seam, three bot levels and one Cypress spec).
 
+Status: implemented; the entry PR (chunk E) makes it playable.
+
 **The owner delegated every decision for this game** ("decide autonomously, I will test the finished game and give
 feedback"). There are no owner questions and no Claude Design canvas: every rule and the UI layout are decided
 here, and each decision is listed in section 2 with its reason and the rejected alternative, so the owner can
@@ -500,7 +502,7 @@ The exact rules are pinned by hand-written views in the bots chunk; the numbers 
   simulator of the rules because the aggregate was not yet on `main`; a tie for first splits the win; the standard
   error is about 1.4 points): 1 `hard` vs 3 `medium`: `hard` 36.5%, `medium` 21.2% per seat; 1 `medium` vs 3
   `easy`: `medium` 66.9%, `easy` 11.1%; `hard` + `medium` + 2 `easy`: 43.5% / 39.8% / 8.4%; 4 `medium` (control):
-  25.0%. No tuning of `BlackjackBotTuning` was needed. To be re-run on the aggregate once it is on `main`.
+  25.0%. No tuning of `BlackjackBotTuning` was needed. Re-run on the real aggregate (entry chunk, opt-in `BlackjackBotAggregateBenchmark`, same scenarios, bots deciding from `BlackjackBotView.forSeat`): 1 `hard` vs 3 `medium`: `hard` 36.2%, `medium` 21.3%; 1 `medium` vs 3 `easy`: `medium` 63.0%, `easy` 12.3%; `hard` + `medium` + 2 `easy`: 42.4% / 40.9% / 8.4%; 4 `medium`: 25.0%. Same ordering and magnitudes as the simulator, so the figures above stand.
 - **Coordinator** (`presentation/bot/BlackjackBotCoordinator`, the 99 pattern): after each broadcast, during
   `BETTING` one task per bot seat that has not bet, during `PLAYING` one task for the bot on turn; each after
   `ThinkingDelay` (0 under `test`), keyed on `version()` and dropped when stale; a failing strategy falls back to a

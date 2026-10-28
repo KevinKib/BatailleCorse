@@ -22,7 +22,7 @@ describe('app router', () => {
   });
 
   it('givenAGameHome_thenStaysUnderItsOwnPathForBothGames', async () => {
-    for (const key of ['bataillecorse', 'bullshit', 'kobo', 'three-men-morris', 'president', 'mangola', 'ninety-nine', 'draughts', 'kilo-de-merde']) {
+    for (const key of ['bataillecorse', 'bullshit', 'kobo', 'three-men-morris', 'president', 'mangola', 'ninety-nine', 'draughts', 'blackjack', 'kilo-de-merde']) {
       const route = await resolveAt(`/${key}`);
       expect(route.fullPath).toBe(`/${key}`);
       expect(route.name).toBe('game-home');
@@ -31,7 +31,7 @@ describe('app router', () => {
   });
 
   it('givenInviteLinks_thenTheyAreNotRedirected', async () => {
-    for (const key of ['bataillecorse', 'bullshit', 'kobo', 'three-men-morris', 'president', 'mangola', 'ninety-nine', 'draughts', 'kilo-de-merde']) {
+    for (const key of ['bataillecorse', 'bullshit', 'kobo', 'three-men-morris', 'president', 'mangola', 'ninety-nine', 'draughts', 'blackjack', 'kilo-de-merde']) {
       const join = await resolveAt(`/${key}/join/abc`);
       expect(join.fullPath).toBe(`/${key}/join/abc`);
       expect(join.name).toBe('game-join');
@@ -46,6 +46,7 @@ describe('app router', () => {
     expect((await resolveAt('/mangola/room/abc')).name).toBe('mangola-room');
     expect((await resolveAt('/ninety-nine/room/abc')).name).toBe('ninety-nine-room');
     expect((await resolveAt('/draughts/room/abc')).name).toBe('draughts-room');
+    expect((await resolveAt('/blackjack/room/abc')).name).toBe('blackjack-room');
     expect((await resolveAt('/kilo-de-merde/room/abc')).name).toBe('kilo-de-merde-room');
   });
 
