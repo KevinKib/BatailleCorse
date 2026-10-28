@@ -88,7 +88,7 @@ export const draughtsUi: Messages['draughtsUi'] = {
     took: 'a pris {n}',
     plateLabel: '{name}, {colour} : {counts}',
     kingsOnly: { one: 'Dames seules : {n} coup restant', other: 'Dames seules : {n} coups restants' },
-    shortEnding: { one: 'Fin courte : nulle dans {n} coup', other: 'Fin courte : nulle dans {n} coups' },
+    shortEnding: { one: 'Nulle dans {n} coup', other: 'Nulle dans {n} coups' },
     repetition: 'Cette position est apparue deux fois. À la troisième, la partie est nulle.',
     forfeited: '{player} a déclaré forfait',
     offline: 'Connexion perdue. Reconnexion…',

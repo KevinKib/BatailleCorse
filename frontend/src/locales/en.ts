@@ -591,7 +591,7 @@ export const messagesEn: Messages = {
       took: 'took {n}',
       plateLabel: '{name}, {colour}: {counts}',
       kingsOnly: { one: 'Kings only: {n} move left', other: 'Kings only: {n} moves left' },
-      shortEnding: { one: 'Short ending: draw in {n} move', other: 'Short ending: draw in {n} moves' },
+      shortEnding: { one: 'Draw in {n} move', other: 'Draw in {n} moves' },
       repetition: 'This position has now appeared twice. A third time is a draw.',
       forfeited: '{player} forfeited',
       offline: 'Connection lost. Reconnecting…',

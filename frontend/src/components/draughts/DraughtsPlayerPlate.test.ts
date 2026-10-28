@@ -67,10 +67,10 @@ describe('DraughtsCounterChips', () => {
 
   it('counts the moves left in a short ending and says which one', () => {
     const w = chips({ counters: { endgame: { case: 'FIVE', plies: 4, limit: 10 } } });
-    expect(w.get('[data-test="short-ending"]').text()).toBe('Short ending: draw in 3 moves');
+    expect(w.get('[data-test="short-ending"]').text()).toBe('Draw in 3 moves');
     expect(w.get('[data-test="short-ending"]').attributes('data-case')).toBe('FIVE');
     const sixteen = chips({ counters: { endgame: { case: 'SIXTEEN', plies: 17, limit: 32 } } });
-    expect(sixteen.get('[data-test="short-ending"]').text()).toBe('Short ending: draw in 8 moves');
+    expect(sixteen.get('[data-test="short-ending"]').text()).toBe('Draw in 8 moves');
   });
 
   it('shows both counts together', () => {
