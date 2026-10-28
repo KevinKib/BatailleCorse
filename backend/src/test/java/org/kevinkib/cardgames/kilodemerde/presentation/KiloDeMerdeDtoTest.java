@@ -16,6 +16,7 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.kevinkib.cardgames.kilodemerde.presentation.KiloDeMerdeTable.ALL_SETS;
 import static org.kevinkib.cardgames.kilodemerde.presentation.KiloDeMerdeTable.NO_SET;
+import static org.kevinkib.cardgames.kilodemerde.presentation.KiloDeMerdeTable.NO_SET_4;
 import static org.kevinkib.cardgames.kilodemerde.presentation.KiloDeMerdeTable.card;
 import static org.kevinkib.cardgames.kilodemerde.presentation.KiloDeMerdeTable.cards;
 
@@ -194,15 +195,14 @@ class KiloDeMerdeDtoTest {
     @Test
     void aFinishedGameCarriesTheStandings() throws Exception {
         KiloDeMerde game = table.start(NO_SET);
-        game.forfeit(S1);
-        game.forfeit(S2);
+        game.forfeit(S1); // two seats are left: below the minimum, the game ends at once
 
         KiloDeMerdeDto dto = view(game, S0);
 
         assertThat(dto.phase()).isEqualTo("FINISHED");
         assertThat(dto.result().reason()).isEqualTo("FORFEIT");
         assertThat(dto.result().standings()).extracting(KiloDeMerdeDto.StandingDto::seat).containsExactly(0, 1, 2);
-        assertThat(dto.result().standings()).extracting(KiloDeMerdeDto.StandingDto::place).containsExactly(1, 3, 2);
+        assertThat(dto.result().standings()).extracting(KiloDeMerdeDto.StandingDto::place).containsExactly(1, 3, 1);
         assertThat(dto.players().get(0).place()).isEqualTo(1);
         assertThat(dto.players().get(1).active()).isFalse();
         assertThat(dto.availableActions()).isEmpty();
@@ -210,7 +210,7 @@ class KiloDeMerdeDtoTest {
 
     @Test
     void aVoidedRoundKeepsItsNumberAndRestartsAtStepOne() throws Exception {
-        KiloDeMerde game = table.start(4, NO_SET + " / 2S 2H 2D 2C", KiloDeMerdeTable.PILE);
+        KiloDeMerde game = table.start(4, NO_SET_4, KiloDeMerdeTable.PILE);
         game.forfeit(S1);
 
         KiloDeMerdeDto dto = view(game, S0);

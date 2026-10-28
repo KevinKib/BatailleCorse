@@ -23,6 +23,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.kevinkib.cardgames.kilodemerde.presentation.KiloDeMerdeTable.NO_SET;
+import static org.kevinkib.cardgames.kilodemerde.presentation.KiloDeMerdeTable.NO_SET_4;
 
 class KiloDeMerdeRestAndLifecycleTest {
 
@@ -134,7 +135,7 @@ class KiloDeMerdeRestAndLifecycleTest {
     @Test
     void aForfeitAnnouncesTheNewDealOrTheEndOfTheGameAfterTheForfeitItself() {
         KiloDeMerdeLifecycleBroadcaster lifecycle = new KiloDeMerdeLifecycleBroadcaster(table.broadcaster, table.actions);
-        KiloDeMerde four = table.start(4, NO_SET + " / 2S 2H 2D 2C", KiloDeMerdeTable.PILE);
+        KiloDeMerde four = table.start(4, NO_SET_4, KiloDeMerdeTable.PILE);
         four.forfeit(S1);
 
         lifecycle.forfeited(four, S1, ForfeitReason.RESIGNED);

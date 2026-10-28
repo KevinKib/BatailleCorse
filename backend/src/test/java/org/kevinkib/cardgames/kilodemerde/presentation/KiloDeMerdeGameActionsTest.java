@@ -17,6 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.kevinkib.cardgames.kilodemerde.presentation.KiloDeMerdeTable.ALL_SETS;
 import static org.kevinkib.cardgames.kilodemerde.presentation.KiloDeMerdeTable.NO_SET;
+import static org.kevinkib.cardgames.kilodemerde.presentation.KiloDeMerdeTable.NO_SET_4;
 import static org.kevinkib.cardgames.kilodemerde.presentation.KiloDeMerdeTable.card;
 
 class KiloDeMerdeGameActionsTest {
@@ -185,7 +186,7 @@ class KiloDeMerdeGameActionsTest {
 
     @Test
     void aPassTimerOfAVoidedDealDoesNotHitTheNewDealAtTheSameRoundAndStep() throws Exception {
-        KiloDeMerde game = table.start(4, NO_SET + " / 2S 2H 2D 2C", KiloDeMerdeTable.PILE);
+        KiloDeMerde game = table.start(4, NO_SET_4, KiloDeMerdeTable.PILE);
         KiloDeMerdeStepKey beforeTheForfeit = KiloDeMerdeStepKey.of(game);
         game.forfeit(S1); // the round is voided and redealt: still round 1, step 1
         table.messaging.clear();
@@ -255,13 +256,14 @@ class KiloDeMerdeGameActionsTest {
 
     @Test
     void whatAForfeitCausedIsAnnouncedAfterwards() throws Exception {
-        KiloDeMerde four = table.start(4, NO_SET + " / 2S 2H 2D 2C", KiloDeMerdeTable.PILE);
+        KiloDeMerde four = table.start(4, NO_SET_4, KiloDeMerdeTable.PILE);
         four.forfeit(S1);
         table.messaging.clear();
 
         table.actions.announceForfeitAftermath(four, "Player 1 forfeited.");
 
-        assertThat(eventTypes()).containsExactly("ROUND_START");
+        assertThat(table.messaging.payloads.stream().map(Response::getEventType).distinct().toList())
+                .containsExactly("ROUND_START"); // one message to each of the four seats
 
         KiloDeMerde three = table.start(NO_SET);
         three.forfeit(S1);

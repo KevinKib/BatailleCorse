@@ -13,6 +13,7 @@ import java.time.Duration;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.kevinkib.cardgames.kilodemerde.presentation.KiloDeMerdeTable.ALL_SETS;
 import static org.kevinkib.cardgames.kilodemerde.presentation.KiloDeMerdeTable.NO_SET;
+import static org.kevinkib.cardgames.kilodemerde.presentation.KiloDeMerdeTable.NO_SET_4;
 import static org.kevinkib.cardgames.kilodemerde.presentation.KiloDeMerdeTable.card;
 
 /**
@@ -112,7 +113,7 @@ class KiloDeMerdeTimersTest {
 
     @Test
     void aVoidedRoundKeepsItsNumbersButNotTheOldTimer() {
-        KiloDeMerde game = table.start(4, NO_SET + " / 2S 2H 2D 2C", KiloDeMerdeTable.PILE);
+        KiloDeMerde game = table.start(4, NO_SET_4, KiloDeMerdeTable.PILE);
         announce(game, "START");
         ManualBotScheduler.Entry beforeTheForfeit = scheduler.pending().get(0);
 
@@ -210,9 +211,9 @@ class KiloDeMerdeTimersTest {
         assertThat(game.phase()).isEqualTo(Phase.ROUND_OVER);
         ManualBotScheduler.Entry pause = scheduler.pending().stream().filter(e -> e.delay().equals(PAUSE)).findFirst()
                 .orElseThrow();
-        table.messaging.clear();
         announce(game, "OPPONENT_DISCONNECTED");
         assertThat(scheduler.pending().stream().filter(e -> e.delay().equals(PAUSE))).hasSize(1); // still the same task
+        table.messaging.clear();
 
         pause.run();
 
@@ -223,7 +224,7 @@ class KiloDeMerdeTimersTest {
 
     @Test
     void aForfeitDuringTheRoundEndKeepsTheSamePauseAndAFinishedGameHasNone() throws Exception {
-        KiloDeMerde game = table.start(4, NO_SET + " / 2S 2H 2D 2C", KiloDeMerdeTable.PILE);
+        KiloDeMerde game = table.start(4, NO_SET_4, KiloDeMerdeTable.PILE);
         table.actions.slap(game.getId(), S0);
         ManualBotScheduler.Entry pause = scheduler.pending().stream().filter(e -> e.delay().equals(PAUSE)).findFirst()
                 .orElseThrow();

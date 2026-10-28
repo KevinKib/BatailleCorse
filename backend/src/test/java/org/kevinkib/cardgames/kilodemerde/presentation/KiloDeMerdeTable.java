@@ -32,6 +32,8 @@ public final class KiloDeMerdeTable {
 
     /** Three seats, no four of a kind anywhere: a slap now is a false slap. */
     public static final String NO_SET = "KS KH KD QC / JS JH QD QH / KC JD JC QS";
+    /** Four seats, no four of a kind anywhere. */
+    public static final String NO_SET_4 = "KS KH KD 2C / JS JH QD QH / KC JD JC QS / 2S 2H 2D QC";
     /** Three seats, each holding a four of a kind: any slap is valid. */
     public static final String ALL_SETS = "KS KH KD KC / JS JH JD JC / QS QH QD QC";
     /** The top card first; every card is in the kilo pile of a three-seat game. */

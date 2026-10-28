@@ -42,6 +42,7 @@ import java.util.function.Function;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.kevinkib.cardgames.kilodemerde.presentation.KiloDeMerdeTable.ALL_SETS;
 import static org.kevinkib.cardgames.kilodemerde.presentation.KiloDeMerdeTable.NO_SET;
+import static org.kevinkib.cardgames.kilodemerde.presentation.KiloDeMerdeTable.NO_SET_4;
 import static org.kevinkib.cardgames.kilodemerde.presentation.KiloDeMerdeTable.PILE;
 import static org.kevinkib.cardgames.kilodemerde.presentation.KiloDeMerdeTable.card;
 import static org.kevinkib.cardgames.kilodemerde.presentation.KiloDeMerdeTable.hands;
@@ -154,10 +155,11 @@ class KiloDeMerdeBotCoordinatorTest {
 
         assertThat(scheduler.pending()).hasSize(1);
         assertThat(scheduler.pending().get(0).delay()).isEqualTo(Duration.ofMillis(PASS_MS));
+        KiloDeMerdeBotView expected = KiloDeMerdeBotView.forSeat(game, S1);
         scheduler.runNext();
         assertThat(game.chosen(S1)).contains(card("QH"));
         assertThat(bot.views).hasSize(1);
-        assertThat(bot.views.get(0)).isEqualTo(KiloDeMerdeBotView.forSeat(game, S1));
+        assertThat(bot.views.get(0)).isEqualTo(expected);
         assertThat(levelsAsked).containsExactly(KiloDeMerdeBotLevel.MEDIUM);
     }
 
@@ -298,9 +300,10 @@ class KiloDeMerdeBotCoordinatorTest {
 
     @Test
     void aTaskOfAVoidedDealDoesNotActOnTheNewDeal() {
-        KiloDeMerde game = register(4, NO_SET + " / 2S 2H 2D 2C", null, 2);
+        KiloDeMerde game = register(4, NO_SET_4, null, 2);
         start(game);
         ManualBotScheduler.Entry before = scheduler.pending().get(0);
+        decks.fixDeal(game.getId(), hands(NO_SET), List.of()); // the new deal holds no four of a kind
 
         game.forfeit(S1); // round 1, step 1 again, three seats: a different deal under the same numbers
         before.run();
