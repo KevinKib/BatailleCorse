@@ -58,6 +58,12 @@ jobs:
       # No vue-tsc in the project: there is no type-check script to run yet.
       - name: Build
         run: npx vite build
+      # Geometry guards as Cypress component tests: no Compose stack, but the Cypress binary
+      # (skipped by npm ci above) is installed here for this step only.
+      - name: Install the Cypress binary
+        run: npx cypress install
+      - name: Component tests
+        run: npm run cy:component
 
   # Not a required check: the smoke subset (frontend/cypress/smoke-specs.json) on the same
   # Compose stack the agents use. It becomes required only after the run log shows it stable.
