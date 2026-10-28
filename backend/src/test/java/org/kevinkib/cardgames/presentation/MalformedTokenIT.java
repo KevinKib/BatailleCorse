@@ -187,7 +187,10 @@ class MalformedTokenIT {
                 forEachBadToken("blackjack stand", t -> assertDoesNotThrow(() -> blackjack.stand(new GameActionPayload(id, t)))),
                 forEachBadToken("blackjack double", t -> assertDoesNotThrow(() -> blackjack.doubleDown(new GameActionPayload(id, t)))),
                 forEachBadToken("blackjack split", t -> assertDoesNotThrow(() -> blackjack.split(new GameActionPayload(id, t)))))
+                .flatMap(s -> s);
+    }
 
+    @TestFactory
     Stream<DynamicTest> kiloDeMerdeRest() {
         String prefix = "/api/kilo-de-merde/game/";
         String type = org.kevinkib.cardgames.kilodemerde.domain.KiloDeMerdeFactory.GAME_TYPE;

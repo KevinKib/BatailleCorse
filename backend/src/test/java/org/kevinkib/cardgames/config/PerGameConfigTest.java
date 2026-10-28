@@ -40,11 +40,11 @@ class PerGameConfigTest {
         for (String type : GAME_TYPES) {
             assertEquals(type, gameFactories.factoryFor(type).gameType());
         }
-        assertEquals(9, factories.size());
+        assertEquals(10, factories.size());
     }
 
     @Test
     void everyGameHasALifecycleBroadcaster() {
-        assertEquals(9, broadcasters.size());
+        assertEquals(10, broadcasters.size());
     }
 }
