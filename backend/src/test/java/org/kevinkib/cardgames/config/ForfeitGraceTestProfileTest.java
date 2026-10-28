@@ -18,7 +18,7 @@ class ForfeitGraceTestProfileTest {
     @Autowired PresenceService presence;
 
     @Test
-    void e2eProfileShortensTheGraceToFiveSeconds() {
-        assertEquals(Duration.ofSeconds(5), presence.forfeitGrace());
+    void e2eProfileLengthensTheGraceToThirtySeconds() {
+        assertEquals(Duration.ofSeconds(30), presence.forfeitGrace());
     }
 }

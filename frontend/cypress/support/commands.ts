@@ -5,6 +5,11 @@ declare global {
       createGame(options?: { tier?: string }): Chainable<void>;
       /** Opens a Bataille Corse lobby from the Game home and resolves its game id. */
       openBatailleCorseLobby(name?: string): Chainable<string>;
+      /**
+       * Shortens the forfeit grace of one game (the `test` profile's is 30 s) so a spec that waits for a dropped
+       * player to forfeit does not wait for it. Test profile only: the endpoint does not exist in production.
+       */
+      shortenForfeitGrace(gameId: string, seconds?: number): Chainable<void>;
     }
   }
 }
@@ -30,6 +35,10 @@ Cypress.Commands.add('createGame', (options?: { tier?: string }) => {
     // The lobby fades out while the table fades in: the table is settled (and measurable) once it is alone.
     cy.get('[data-test="lobby"]').should('not.exist');
   });
+});
+
+Cypress.Commands.add('shortenForfeitGrace', (gameId: string, seconds = 3) => {
+  cy.request('PUT', `/api/test/presence/${gameId}/forfeit-grace`, { seconds }).its('status').should('eq', 204);
 });
 
 export {};
