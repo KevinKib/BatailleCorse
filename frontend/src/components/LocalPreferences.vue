@@ -1,22 +1,30 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import HotkeySettings from './HotkeySettings.vue';
+import LanguagePicker from './LanguagePicker.vue';
 import type { GameDefinition } from '../model/games';
+import { SUPPORTED_LOCALES } from '../locales';
 import { useGameHotkeySettings } from '../composables/useGameHotkeySettings';
 import { useI18n } from '../composables/useI18n';
 
-// The per-device preferences of a game (today its keyboard shortcuts), reachable before the game
-// starts: the same gear and panel as on the table, in the same corner of the Game home and the lobby.
+// The per-device preferences of a game, reachable before the game starts: the same gear and panel as on
+// the table, in the same corner of the Game home and the lobby. A game with shortcuts gets the gear, whose
+// panel also holds the language row; a game without gets a globe menu in the same corner. With only one
+// language offered, the gear is the shortcuts alone and a game without shortcuts shows nothing.
 // The settings are read once; a table mounted later reads the same storage.
 const props = defineProps<{ game: GameDefinition }>();
 const messages = useI18n();
 const settings = useGameHotkeySettings(props.game);
 const labels = computed(() => messages.hotkeys.actions);
+const languages = SUPPORTED_LOCALES.length > 1;
 </script>
 
 <template>
-  <div v-if="settings" class="local-preferences">
-    <HotkeySettings :settings="settings" :labels="labels" />
+  <div v-if="settings || languages" class="local-preferences">
+    <HotkeySettings v-if="settings" :settings="settings" :labels="labels" :title="languages ? messages.language.settings : undefined">
+      <LanguagePicker v-if="languages" variant="row" />
+    </HotkeySettings>
+    <LanguagePicker v-else variant="menu" />
   </div>
 </template>
 
