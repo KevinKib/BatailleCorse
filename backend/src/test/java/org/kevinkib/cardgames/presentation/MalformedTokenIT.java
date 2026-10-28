@@ -73,6 +73,8 @@ class MalformedTokenIT {
     @Autowired
     private org.kevinkib.cardgames.ninetynine.presentation.NinetyNineWebSocketController ninetyNine;
     @Autowired
+    private org.kevinkib.cardgames.kilodemerde.presentation.KiloDeMerdeWebSocketController kiloDeMerde;
+    @Autowired
     private org.kevinkib.cardgames.blackjack.presentation.BlackjackWebSocketController blackjack;
     @Autowired
     private LobbyController lobby;
@@ -185,6 +187,29 @@ class MalformedTokenIT {
                 forEachBadToken("blackjack stand", t -> assertDoesNotThrow(() -> blackjack.stand(new GameActionPayload(id, t)))),
                 forEachBadToken("blackjack double", t -> assertDoesNotThrow(() -> blackjack.doubleDown(new GameActionPayload(id, t)))),
                 forEachBadToken("blackjack split", t -> assertDoesNotThrow(() -> blackjack.split(new GameActionPayload(id, t)))))
+
+    Stream<DynamicTest> kiloDeMerdeRest() {
+        String prefix = "/api/kilo-de-merde/game/";
+        String type = org.kevinkib.cardgames.kilodemerde.domain.KiloDeMerdeFactory.GAME_TYPE;
+        String started = StartedRooms.start(sessions, type, 3).getId().uuid().toString();
+        String room = sessions.createRoom(type, "Alice").gameId();
+        return Stream.of(started, room).flatMap(id ->
+                forEachBadToken("GET " + prefix + " " + (id.equals(room) ? "lobby" : "started"),
+                        t -> assertEquals(403, statusOfGet(prefix + id, t))));
+    }
+
+    @TestFactory
+    Stream<DynamicTest> kiloDeMerdeWebSocket() {
+        String type = org.kevinkib.cardgames.kilodemerde.domain.KiloDeMerdeFactory.GAME_TYPE;
+        String id = StartedRooms.start(sessions, type, 3).getId().uuid().toString();
+        String room = sessions.createRoom(type, "Alice").gameId();
+        org.kevinkib.cardgames.presentation.dto.CardDto card =
+                new org.kevinkib.cardgames.presentation.dto.CardDto("KING", "HEART", "HEART_KING");
+        return Stream.of(
+                forEachBadToken("kilo-de-merde start", t -> assertDoesNotThrow(() -> kiloDeMerde.start(new GameActionPayload(room, t)))),
+                forEachBadToken("kilo-de-merde pass", t -> assertDoesNotThrow(() -> kiloDeMerde.pass(
+                        new org.kevinkib.cardgames.kilodemerde.presentation.api.KiloDeMerdePassPayload(id, t, card)))),
+                forEachBadToken("kilo-de-merde slap", t -> assertDoesNotThrow(() -> kiloDeMerde.slap(new GameActionPayload(id, t)))))
                 .flatMap(s -> s);
     }
 

@@ -653,9 +653,27 @@ export interface BlackjackUiMessages {
     push: string;
     eliminated: string;                // '{player}'
   };
+  /** The live region lines of `model/blackjack/eventLog` (`blackjackUi.events.<name>`), seats already named ('{player}'). */
+  events: {
+    bet: string;                       // '{player}'
+    deal: string;                      // '{hand}'
+    dealerBlackjack: string;
+    hit: string;                       // '{player}', '{total}'
+    stand: string;                     // '{player}'
+    double: string;                    // '{player}', '{total}'
+    split: string;                     // '{player}'
+    bust: string;                      // '{player}', '{total}'
+    dealerBusts: string;               // '{total}'
+    dealerStands: string;              // '{total}'
+    settleWin: string;                 // '{amount}'
+    settleLoss: string;                // '{amount}'
+    settlePush: string;
+    eliminated: string;                // '{player}'
+    gameOver: string;
+  };
   /** The codes the server sends on a refused command, by wire code. */
   errors: Record<string, string>;
-  notice: { connection: string };
+  notice: { connection: string; moveImpossible: string };
   motion: {
     speed: string;                     // '{speed}': name of the speed button
     speeds: { normal: string; fast: string; instant: string };

@@ -65,6 +65,7 @@ class LobbyControllerTest {
                         new org.kevinkib.cardgames.president.domain.PresidentFactory(),
                         new org.kevinkib.cardgames.draughts.domain.DraughtsFactory(),
                         new org.kevinkib.cardgames.ninetynine.domain.NinetyNineFactory(),
+                        new org.kevinkib.cardgames.kilodemerde.domain.KiloDeMerdeFactory(),
                         new org.kevinkib.cardgames.blackjack.domain.BlackjackFactory())));
         messaging = new RecordingMessaging();
         messaging.resolvingTokensWith(sessionService);

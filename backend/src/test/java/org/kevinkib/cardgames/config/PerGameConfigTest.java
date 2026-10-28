@@ -18,9 +18,9 @@ class PerGameConfigTest {
 
     private static final List<String> CONFIGS = List.of("BatailleCorseConfig", "BullshitConfig", "KoboConfig",
             "ThreeMenMorrisConfig", "MangolaConfig", "PresidentConfig", "DraughtsConfig", "NinetyNineConfig",
-            "BlackjackConfig");
+            "KiloDeMerdeConfig", "BlackjackConfig");
     private static final List<String> GAME_TYPES = List.of("bataille-corse", "bullshit", "kobo",
-            "three-men-morris", "mangola", "president", "draughts", "ninety-nine", "blackjack");
+            "three-men-morris", "mangola", "president", "draughts", "ninety-nine", "kilo-de-merde", "blackjack");
 
     @Autowired ApplicationContext context;
     @Autowired GameFactories gameFactories;
