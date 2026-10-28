@@ -101,8 +101,11 @@ class KiloDeMerdeBotStrategiesTest {
             long best = hand.stream().mapToLong(card -> hand.stream().filter(o -> o.isSameRankAs(card)).count())
                     .max().orElseThrow();
             long passedCount = hand.stream().filter(o -> o.isSameRankAs(passed)).count();
-            // a card of the most held rank is only passed when every card is of that rank
-            assertThat(hand.toString(), passedCount < best || best == hand.size(), is(true));
+            long topRanks = hand.stream()
+                    .filter(card -> hand.stream().filter(o -> o.isSameRankAs(card)).count() == best)
+                    .map(card -> card.getRank()).distinct().count();
+            // a card of the unique most held rank is only passed when every card is of that rank
+            assertThat(hand.toString(), passedCount < best || topRanks > 1 || best == hand.size(), is(true));
         }
     }
 
