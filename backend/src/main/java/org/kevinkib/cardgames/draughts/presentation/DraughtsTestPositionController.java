@@ -11,6 +11,7 @@ import org.kevinkib.cardgames.presentation.dto.event.EmptyEventData;
 import org.kevinkib.cardgames.presentation.state.SeatStateBroadcaster;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
 import org.springframework.context.annotation.Profile;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -60,6 +61,9 @@ public class DraughtsTestPositionController {
                 return ResponseEntity.notFound().build();
             }
             synchronized (game) {
+                if (game.isFinished()) {
+                    return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "The game is over"));
+                }
                 game.replacePosition(position);
                 sessionService.touch(id);
                 broadcaster.broadcast(game, POSITION_EVENT, new EmptyEventData(), "Position replaced.");
