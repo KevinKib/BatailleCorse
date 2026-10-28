@@ -721,6 +721,8 @@ export interface BatailleCorseUiMessages {
   send: string;                        // button that sends the played card
   slap: string;                        // button that slaps the pile
   you: string;                         // my own label when I have no name
+  sound: { mute: string; unmute: string }; // accessible names of the sound toggle (the action it performs)
+  offline: string;                     // my own connection is down; the socket retries by itself
 }
 
 // The language picker and the languages' own names.

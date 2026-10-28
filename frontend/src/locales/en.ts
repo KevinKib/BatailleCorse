@@ -961,6 +961,8 @@ export const messagesEn: Messages = {
     send: 'Send',
     slap: 'Slap',
     you: 'You',
+    sound: { mute: 'Mute sound', unmute: 'Unmute sound' },
+    offline: 'Connection lost. Reconnecting…',
   },
   koboUi: {
     connecting: 'Joining the table…',

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { shallowMount, flushPromises } from '@vue/test-utils';
+import { mount, shallowMount, flushPromises } from '@vue/test-utils';
+import PrimeVue from 'primevue/config';
 import { createPinia, setActivePinia } from 'pinia';
 import { nextTick } from 'vue';
 
@@ -26,8 +27,17 @@ vi.mock('../../service/WebSocketService', () => ({
   },
 }));
 
+vi.mock('../../composables/useCardSound', () => ({ cardSound: { play: vi.fn() } }));
+
 import GameScreen from './GameScreen.vue';
 import DisconnectOverlay from '../../components/DisconnectOverlay.vue';
+import SeatDisconnectBadge from '../../components/SeatDisconnectBadge.vue';
+import GameTimer from '../../components/GameTimer.vue';
+import RulesPanel from '../../components/RulesPanel.vue';
+import { cardSound } from '../../composables/useCardSound';
+import { setConnectionOnline } from '../../composables/useConnectionStatus';
+import { SOUND_STORAGE_KEY } from '../../composables/useSoundPreference';
+import { buildCard, buildPile } from '../../model/fixtures';
 import HotkeySettings from '../../components/HotkeySettings.vue';
 import GameLobby from '../../components/lobby/GameLobby.vue';
 import EndGameOverlay from '../../components/EndGameOverlay.vue';
@@ -229,33 +239,158 @@ describe('GameScreen', () => {
         eventData: { disconnectedSeat: 1, deadlineEpochMs: Date.now() + 60_000 } });
     }
 
-    it('shows the countdown banner while the opponent is disconnected, hides it on reconnect', async () => {
+    it('shows the reconnecting badge on the opponent deck, hides it on reconnect, and no full-screen card', async () => {
       const wrapper = await mountGameScreen();
       const store = playing(0);
       disconnect(store);
       await nextTick();
 
-      const overlay = wrapper.findComponent(DisconnectOverlay);
-      expect(overlay.exists()).toBe(true);
-      expect(overlay.props('secondsRemaining')).toBeGreaterThan(0);
+      const badge = wrapper.getComponent(SeatDisconnectBadge);
+      expect(badge.props('secondsRemaining')).toBeGreaterThan(0);
+      expect(wrapper.get('[data-test="opponent-deck"]').classes()).toContain('opponent-deck--disconnected');
+      expect(wrapper.get('[data-test="opponent-deck"]').findComponent(SeatDisconnectBadge).exists()).toBe(true);
+      expect(wrapper.findComponent(DisconnectOverlay).exists()).toBe(false);
 
       store.applyEvent({ type: 'presence-event', eventType: 'OPPONENT_RECONNECTED', eventData: { reconnectedSeat: 1 } });
       await nextTick();
-      expect(wrapper.findComponent(DisconnectOverlay).exists()).toBe(false);
+      expect(wrapper.findComponent(SeatDisconnectBadge).exists()).toBe(false);
+      expect(wrapper.get('[data-test="opponent-deck"]').classes()).not.toContain('opponent-deck--disconnected');
     });
 
-    it('hides the banner once the game is over, even if the disconnect lingers', async () => {
+    it('hides the badge once the game is over, even if the disconnect lingers', async () => {
       const wrapper = await mountGameScreen();
       const store = playing(0);
       disconnect(store);
       await nextTick();
-      expect(wrapper.findComponent(DisconnectOverlay).exists()).toBe(true);
+      expect(wrapper.findComponent(SeatDisconnectBadge).exists()).toBe(true);
 
       // The disconnect deadline expires server-side and a win is broadcast, with no
-      // reconnect event — the disconnect entry lingers but the overlay must hide.
+      // reconnect event: the disconnect entry lingers but the badge must hide.
       store.applyEvent({ type: 'state-update', state: buildGame({ winner: { id: '0' } }) });
       await nextTick();
-      expect(wrapper.findComponent(DisconnectOverlay).exists()).toBe(false);
+      expect(wrapper.findComponent(SeatDisconnectBadge).exists()).toBe(false);
+    });
+  });
+
+  describe('what the table shows (nothing may disappear)', () => {
+    it('keeps every piece of information visible with the new top bar', async () => {
+      const wrapper = mount(GameScreen, { global: { plugins: [PrimeVue], stubs: { RouterLink: true } } });
+      mounted.push(wrapper);
+      await flushPromises();
+      const store = playing(0, buildGame({
+        pile: buildPile({ cards: [buildCard(), buildCard()] }),
+        players: [buildPlayer({ id: '0', nbCards: 20, availableActions: ['SEND'] }), buildPlayer({ id: '1', nbCards: 30 })],
+      }));
+      store.applyEvent({ type: 'seats-change', seats: [{ id: 0, name: 'Alice', joined: true }, { id: 1, name: 'Bob', joined: true }] });
+      store.applyEvent({ type: 'presence-event', eventType: 'OPPONENT_DISCONNECTED',
+        eventData: { disconnectedSeat: 1, deadlineEpochMs: Date.now() + 41_000 } });
+      await flushPromises();
+
+      const tags = wrapper.findAll('h1.player_tag').map(t => t.text());
+      expect(tags).toEqual(['Bob', 'Alice']);
+      expect(wrapper.get('[data-cy="opponent-card-count"]').text()).toBe('30');
+      expect(wrapper.get('[data-cy="player-card-count"]').text()).toBe('20');
+      expect(wrapper.get('[data-cy="pile-card-count"]').text()).toBe('2');
+      expect(wrapper.get('[data-cy="game-timer"]').text()).toMatch(/\d\d:\d\d/);
+      const labels = wrapper.findAll('.action_button').map(b => b.text());
+      expect(labels).toEqual([messagesEn.batailleCorseUi.send, messagesEn.batailleCorseUi.slap]);
+      expect(wrapper.get('.back_button').exists()).toBe(true);
+      expect(wrapper.find('[data-test="hotkeys-button"]').exists() || wrapper.findComponent(HotkeySettings).exists()).toBe(true);
+      expect(wrapper.get('[data-test="seat-disconnect-badge"]').text()).toMatch(/^Reconnecting… \d+s$/);
+      expect(wrapper.get('[data-test="sound-toggle"]').exists()).toBe(true);
+    });
+  });
+
+  describe('top bar', () => {
+    it('holds the timer (inline) then the sound toggle, with the rules panel on the table', async () => {
+      const wrapper = await mountGameScreen();
+      playing();
+      await nextTick();
+      const bar = wrapper.get('.top-bar');
+      expect(bar.findComponent(GameTimer).props('inline')).toBe(true);
+      expect(bar.element.children[0].tagName.toLowerCase()).toBe('game-timer-stub');
+      expect(bar.element.children[1].getAttribute('data-test')).toBe('sound-toggle');
+      expect(wrapper.findComponent(RulesPanel).exists()).toBe(true);
+    });
+  });
+
+  describe('sound', () => {
+    beforeEach(() => { vi.mocked(cardSound.play).mockClear(); });
+
+    function pileOf(n: number) {
+      return buildPile({ cards: Array.from({ length: n }, () => buildCard()) });
+    }
+
+    it('plays a card sound when a card lands on the pile, not when the pile is taken', async () => {
+      await mountGameScreen();
+      const store = playing(0, buildGame({ pile: pileOf(1) }));
+      await nextTick();
+      store.applyEvent({ type: 'state-update', state: buildGame({ pile: pileOf(2) }) });
+      await nextTick();
+      expect(cardSound.play).toHaveBeenCalledTimes(1);
+
+      store.applyEvent({ type: 'state-update', state: buildGame({ pile: pileOf(0) }) });
+      await nextTick();
+      expect(cardSound.play).toHaveBeenCalledTimes(1);
+    });
+
+    it('stays silent once muted, with the toggle naming the action and the choice stored for every game', async () => {
+      const wrapper = await mountGameScreen();
+      const store = playing(0, buildGame({ pile: pileOf(1) }));
+      await nextTick();
+      const toggle = () => wrapper.get('[data-test="sound-toggle"]');
+      expect(toggle().attributes('aria-label')).toBe(messagesEn.batailleCorseUi.sound.mute);
+
+      await toggle().trigger('click');
+      expect(toggle().attributes('aria-label')).toBe(messagesEn.batailleCorseUi.sound.unmute);
+      expect(localStorage.getItem(SOUND_STORAGE_KEY)).toBe('off');
+
+      store.applyEvent({ type: 'state-update', state: buildGame({ pile: pileOf(2) }) });
+      await nextTick();
+      expect(cardSound.play).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('my own connection', () => {
+    afterEach(() => setConnectionOnline(true));
+
+    it('shows nothing while connected', async () => {
+      const wrapper = await mountGameScreen();
+      playing();
+      await nextTick();
+      expect(wrapper.find('[data-test="offline"]').exists()).toBe(false);
+    });
+
+    it('announces the lost connection and disables Send and Slap until it is back', async () => {
+      const wrapper = await mountGameScreen();
+      playing(0, buildGame({ players: [buildPlayer({ id: '0', availableActions: ['SEND', 'SLAP'] }), buildPlayer({ id: '1' })] }));
+      await nextTick();
+      const disabled = () => wrapper.findAll('.action_button').map(b => b.attributes('disabled') === 'true');
+      expect(disabled()).toEqual([false, false]);
+
+      setConnectionOnline(false);
+      await nextTick();
+      const banner = wrapper.get('[data-test="offline"]');
+      expect(banner.attributes('role')).toBe('alert');
+      expect(banner.text()).toBe('Connection lost. Reconnecting…');
+      expect(disabled()).toEqual([true, true]);
+
+      setConnectionOnline(true);
+      await nextTick();
+      expect(wrapper.find('[data-test="offline"]').exists()).toBe(false);
+      expect(disabled()).toEqual([false, false]);
+    });
+
+    it('re-fetches the state once the connection is back, since events may have been missed', async () => {
+      await mountGameScreen();
+      const store = playing(0);
+      const hydrate = vi.spyOn(store, 'hydrate').mockResolvedValue(undefined as never);
+      setConnectionOnline(false);
+      await nextTick();
+      expect(hydrate).not.toHaveBeenCalled();
+      setConnectionOnline(true);
+      await nextTick();
+      expect(hydrate).toHaveBeenCalledTimes(1);
     });
   });
 
