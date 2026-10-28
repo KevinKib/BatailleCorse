@@ -194,7 +194,7 @@ Plus a spec, a plan and a tracking issue. **Total ≈ 75 to 80 files, of which 2
    `startGame(id, token, Class)`. Add the game to the three ArchUnit lists by hand: nothing will tell you.
 2. Frontend: subclass `SeatGameSession` (config: game type, REST base, token prefix, start destination),
    build the store on `useSeatRoom`, the bootstrap on `useSeatGameBootstrap`. Do **not** start from Bataille
-   Corse (`GameSession.ts`, `view/alpha/`): it is the legacy outlier.
+   Corse (`GameSession.ts`, `view/bataillecorse/`): it is the legacy outlier.
 3. Keep the game invisible until the last PR: model/session/store and components first (0 shared files),
    one **entry PR** that registers the game (`games.ts`, route, `useGameRooms`, locales, shared tests). Never
    run two entry PRs at once; rebase the second.
