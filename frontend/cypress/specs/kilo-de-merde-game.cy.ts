@@ -3,11 +3,12 @@
 //  - Deal: Alice K♠ K♥ K♦ Q♣, Bob J♠ J♥ Q♦ Q♥, Carol K♣ J♦ J♣ Q♠; the kilo pile is the single card A♠ (a one-round game).
 //  - Step 1: everybody passes to the seat on their left (seat i to seat i + 1): Alice Q♣, Bob Q♦, Carol K♣. Alice then
 //    holds the four Kings.
-//  - Race: Alice slaps by tapping the pile, Bob then Carol slap through STOMP; Carol is last and draws the Ace (100 kg).
+//  - Race: Alice slaps by tapping the pile, Bob slaps through STOMP; the race closes with all but one seat slapped, so Carol is
+//    last and draws the Ace (100 kg).
 //  - The pile is empty: the game ends. Alice and Bob share 1st place at 0 kg, Carol is 3rd with 100 kg.
 // The round pause is 0 under `test`, so the round banner is covered by Vitest, not here. Everything is waited on through
 // DOM states and frames, never a fixed delay.
-import { joinAsScriptedPlayer, waitForFrame, type ScriptedPlayer } from '../support/stompPlayer';
+import { joinAsScriptedPlayer, type ScriptedPlayer } from '../support/stompPlayer';
 import { expectGap, expectNoOverlap } from '../support/spacing';
 
 type Guest = ScriptedPlayer & { token: string; seat: number };
@@ -78,11 +79,10 @@ describe('Kilo de merde, three players on a fixed deal', () => {
           cy.get('[data-card="CLUB_KING"]', { timeout: 10000 }).should('exist');
           cy.get('[data-card]').should('have.length', 4);
 
-          // Alice holds the four Kings and slaps the pile; Bob then Carol slap, Carol last.
+          // Alice holds the four Kings and slaps the pile; Bob slaps next: with three seats the race closes once all but one have
+          // slapped, so Carol, who did not, is last and draws the Ace without any slap of hers.
           cy.get('[data-test="pile"]').should('not.be.disabled').click();
           scriptedSlap(bob);
-          waitForFrame(carol, (f) => f.state?.phase === 'RACE' && f.state.race?.order?.length === 2);
-          scriptedSlap(carol);
 
           // The pile is empty after Carol's draw: the game is over.
           cy.get('[data-test="end"]', { timeout: 10000 }).should('be.visible');
