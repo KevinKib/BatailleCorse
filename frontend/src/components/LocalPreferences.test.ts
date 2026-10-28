@@ -1,10 +1,16 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import PrimeVue from 'primevue/config';
 import LocalPreferences from './LocalPreferences.vue';
 import { findGame, type GameDefinition, type GameKey } from '../model/games';
 import { messagesEn } from '../locales/en';
+
+// These tests cover the single-language UI; the two-language UI is in the *.language.test.ts files.
+vi.mock('../locales', async (original) => ({
+  ...(await original<typeof import('../locales')>()),
+  SUPPORTED_LOCALES: ['en'],
+}));
 
 function mountFor(key: GameKey) {
   return mount(LocalPreferences, { props: { game: findGame(key)! }, global: { plugins: [PrimeVue] }, attachTo: document.body });

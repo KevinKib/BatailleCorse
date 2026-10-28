@@ -1,10 +1,10 @@
 import { messagesEn } from './en';
 import type { Messages } from './Messages';
 
-// Every locale the code knows; French is written but not yet offered to players (dark launch).
+// Every locale the code knows.
 export type Locale = 'en' | 'fr';
-// The locales a player can get today. The integration chunk adds 'fr'.
-export const SUPPORTED_LOCALES: readonly Locale[] = ['en'];
+// The locales a player can choose from (the language picker shows when there are several).
+export const SUPPORTED_LOCALES: readonly Locale[] = ['en', 'fr'];
 // Eagerly loaded bundles. French is loaded on demand (`locales/fr`), so it is absent until then.
 export const messages: { en: Messages } & Partial<Record<Locale, Messages>> = { en: messagesEn };
 export const DEFAULT_LOCALE: Locale = 'en';

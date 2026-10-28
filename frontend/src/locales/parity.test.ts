@@ -2,18 +2,6 @@ import { describe, it, expect } from 'vitest';
 import { messagesEn } from './en';
 import { messagesFr } from './fr';
 
-// Areas whose French is written: the completeness and typography checks run on them only.
-// Each translation chunk adds its own areas; the integration chunk turns this into "every area".
-const TRANSLATED_AREAS: readonly (keyof typeof messagesEn)[] = [
-  // shell, lobby and Bataille Corse (T1)
-  'rules', 'batailleCorseUi', 'gamePicker', 'home', 'join', 'lobby', 'options', 'endScreen', 'endGame',
-  'disconnect', 'leaveGuard', 'hotkeys', 'turn', 'language',
-  'bullshit', 'bullshitUi', 'president', 'presidentUi', // T2
-  'threeMenMorris', 'threeMenMorrisUi', 'morrisLobby', 'morrisVariantRules', 'morrisBoard', 'mangola', 'mangolaUi',
-  'kobo', 'koboUi', // T3
-  'privacy', // T5
-];
-
 // French leaves that may equal the English leaf (proper nouns, symbols). Keys are dotted paths prefixes.
 const SAME_AS_ENGLISH_ALLOWED: readonly string[] = [
   'language.names.en', 'language.names.fr',
@@ -95,9 +83,10 @@ describe('English and French messages', () => {
   });
 });
 
+// Every area is translated: the checks below run on all of them.
 describe('translated areas', () => {
-  const en = leavesOf(messagesEn, TRANSLATED_AREAS);
-  const fr = leavesOf(messagesFr, TRANSLATED_AREAS);
+  const en = leavesOf(messagesEn);
+  const fr = leavesOf(messagesFr);
 
   it('givenATranslatedArea_thenNoLeafIsStillEnglish', () => {
     for (const [path, text] of fr) {
@@ -117,6 +106,12 @@ describe('translated areas', () => {
       expect(text, path).not.toMatch(/ :/); // U+00A0 before :
       expect(text, path).not.toMatch(/\w'\w/); // ’ rather than '
       expect(text, path).not.toMatch(/\.\.\./); // … rather than ...
+    }
+  });
+
+  it('givenEitherLocale_thenNoLeafHoldsAReplacementCharacter', () => {
+    for (const [path, text] of [...en, ...fr]) {
+      if (typeof text === 'string') expect(text, path).not.toContain('�');
     }
   });
 });

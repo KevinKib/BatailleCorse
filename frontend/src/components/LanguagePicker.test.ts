@@ -27,9 +27,9 @@ describe('LanguagePicker', () => {
     }
   });
 
-  it('givenTheDefaultLocales_thenNothingIsRenderedUntilFrenchIsOffered', () => {
+  it('givenTheDefaultLocales_thenThePickerIsRendered', () => {
     const wrapper = mount(LanguagePicker, { props: { variant: 'menu' } });
-    expect(wrapper.find('[data-test="language-button"]').exists()).toBe(false);
+    expect(wrapper.find('[data-test="language-button"]').exists()).toBe(true);
   });
 
   describe('menu variant', () => {

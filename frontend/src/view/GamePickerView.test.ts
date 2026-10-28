@@ -1,10 +1,16 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { flushPromises, mount } from '@vue/test-utils';
 import PrimeVue from 'primevue/config';
 import { createAppRouter } from '../router';
 import { createMemoryHistory } from 'vue-router';
 import GamePickerView from './GamePickerView.vue';
 import { messagesEn } from '../locales/en';
+
+// These tests cover the single-language UI; the two-language UI is in the *.language.test.ts files.
+vi.mock('../locales', async (original) => ({
+  ...(await original<typeof import('../locales')>()),
+  SUPPORTED_LOCALES: ['en'],
+}));
 
 async function mountPicker() {
   const router = createAppRouter(createMemoryHistory());
