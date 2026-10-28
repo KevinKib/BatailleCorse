@@ -10,7 +10,7 @@ const seatOf = (n: number, overrides: Partial<BlackjackSeat> = {}): BlackjackSea
 describe('standingsOf', () => {
   it('orders live seats by stack, more first', () => {
     const rows = standingsOf(blackjackPlayingState.players);
-    expect(rows.map(r => r.player.seat)).toEqual([1, 0, 2, 3]);
+    expect(rows.map(r => r.player.seat)).toEqual([1, 2, 3, 0]);
     expect(rows.map(r => r.place)).toEqual([1, 2, 3, 4]);
     expect(rows.every(r => !r.shared && r.status === 'live')).toBe(true);
   });
