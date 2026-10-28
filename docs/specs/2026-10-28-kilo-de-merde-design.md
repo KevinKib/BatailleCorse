@@ -414,6 +414,22 @@ Three levels: the choice is real twice (what to pass, how fast to slap), so thre
 - **Strength benchmark** (C2, opt-in: `mvn test -Dtest=KiloDeMerdeBotStrengthBenchmark -Dkilodemerde.bench=true`):
   200 games of 4 players, 10 rounds, seats rotated, races simulated with each level's sampled delays; mean kilos per
   level written in this section. Expected order: hard < medium < easy in kilos.
+  **Result (C2, simulator of the rules in the test tree because the aggregate was not merged yet; 2,000 games of 4
+  bots, 10 rounds, seats rotated, default delays of section 7):** mean kilos per player, fewer is better.
+
+  | Table | easy | medium | hard |
+  |-------|------|--------|------|
+  | easy, medium, hard, hard | 89.9 | 6.2 | 0.1 |
+  | 1 hard + 3 medium | | 44.7 | 0.2 |
+  | 1 hard + 3 easy | 42.4 | | 0.0 |
+  | 1 medium + 3 easy | 43.4 | 0.0 | |
+  | 4 medium (control) | | 23.1 | |
+
+  The expected order holds (hard < medium < easy). The gap is almost entirely the reaction time: the last
+  slapper draws, so a seat that is never last never draws. The two passing strategies barely matter against the
+  delays, and the delays of section 7 make `hard` nearly unbeatable and `easy` the usual loser among bots. This is
+  only bot against bot; against a human (about 300 ms plus network) the owner may want `easy` and `medium` slower
+  and `hard` less extreme: every range is a property (`kilodemerde.bots.*`).
 - **Coordinator** (`presentation/bot/KiloDeMerdeBotCoordinator`): after each broadcast, for each bot seat:
   - `PASSING`, not chosen this step: one pass task after the pass delay, keyed on `(round, step)`;
   - `PASSING`, its own hand is four of a kind: one slap task after `ownSetDelay`, keyed on `(round, step)`;

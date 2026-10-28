@@ -112,7 +112,7 @@ public final class NinetyNineTable {
 
     /**
      * Three seats, nothing played: seat 0 holds KS 9S 4S, seat 1 7H 8H 2H, seat 2 JC QC 3C. When seat 0 plays the K
-     * the total is 99 and seat 1, stuck, busts at once.
+     * the total is 99 and seat 1 is stuck: it must play a card (7H) which busts it.
      */
     NinetyNine beforeABust() {
         return start(3, "KS 7H JC 9S 8H QC 4S 2H 3C 5D");

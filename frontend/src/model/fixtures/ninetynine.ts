@@ -36,6 +36,7 @@ function base(overrides: Partial<NinetyNineState>): NinetyNineState {
     lastPlay: null,
     lastBust: null,
     outcome: { status: 'ONGOING' },
+    stuck: false,
     hand: [],
     playable: [],
     availableActions: [],
@@ -88,19 +89,38 @@ export function buildNinetyNineTwelveSeatRound(): NinetyNineState {
   });
 }
 
-/** Seat 2 was stuck at 96 with 7, 8 and J and lost a life; the next round follows after the pause. */
+/** The viewer (seat 0) is stuck at 99: 7, Ace and J all go over, yet one must be played and costs a life. */
+export function buildNinetyNineStuck(): NinetyNineState {
+  const hand = [buildNinetyNineCard('7', 'HEART'), buildNinetyNineCard('ACE', 'CLUB'), buildNinetyNineCard('JACK', 'SPADE')];
+  return base({
+    version: 13,
+    total: 99,
+    currentSeat: 0,
+    pileTop: buildNinetyNineCard('2', 'DIAMOND'),
+    pileCount: 13,
+    stockSize: 23,
+    players: [0, 1, 2, 3].map((seat) => player(seat)),
+    stuck: true,
+    hand,
+    playable: [safe(hand[0]), safe(hand[1], [1]), safe(hand[2])],
+    availableActions: ['PLAY'],
+  });
+}
+
+/** Seat 2 was stuck at 96, played its 7 (103) and lost a life; the next round follows after the pause. */
 export function buildNinetyNineBust(): NinetyNineState {
-  const hand = [buildNinetyNineCard('7', 'HEART'), buildNinetyNineCard('8', 'CLUB'), buildNinetyNineCard('JACK', 'SPADE')];
+  const hand = [buildNinetyNineCard('8', 'CLUB'), buildNinetyNineCard('JACK', 'SPADE')];
   return base({
     version: 14,
     phase: 'ROUND_OVER',
-    total: 96,
+    total: 103,
     currentSeat: 2,
-    pileTop: buildNinetyNineCard('2', 'DIAMOND'),
+    pileTop: buildNinetyNineCard('7', 'HEART'),
     pileCount: 14,
     stockSize: 22,
     players: [0, 1, 2, 3].map((seat) => player(seat, seat === 2 ? { lives: 2 } : {})),
-    lastBust: { seat: 2, totalBefore: 96, hand, livesLeft: 2, eliminated: false },
+    lastPlay: { seat: 2, card: buildNinetyNineCard('7', 'HEART'), aceValue: null, totalBefore: 96, totalAfter: 103, reversed: false },
+    lastBust: { seat: 2, totalBefore: 103, hand, livesLeft: 2, eliminated: false },
     hand: [buildNinetyNineCard('5', 'HEART'), buildNinetyNineCard('9', 'CLUB'), buildNinetyNineCard('3', 'SPADE')],
     playable: [],
     availableActions: [],

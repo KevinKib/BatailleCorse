@@ -107,20 +107,25 @@ class NinetyNineForfeitTest {
     }
 
     @Test
-    void forfeitMovingTheTurnToAStuckSeatBustsIt() {
+    void forfeitMovingTheTurnToAStuckSeatDoesNotBustItYet() throws NinetyNineException {
         NinetyNine game = game(3).total(95).hand(A, "9H 2H 3H").hand(B, "7H 8H JH").build();
 
         game.forfeit(A);
 
+        assertEquals(Phase.PLAYING, game.phase());
+        assertEquals(B, game.currentSeat());
+        assertEquals(3, game.lives().get(B));
+        assertTrue(game.lastBust().isEmpty());
+        game.play(B, NinetyNineBuilder.c("7H"), null);
         assertEquals(Phase.ROUND_OVER, game.phase());
         assertEquals(2, game.lives().get(B));
-        assertEquals(B, game.lastBust().orElseThrow().seat());
     }
 
     @Test
     void forfeitBetweenRoundsLetsTheNextRoundStartWithTheNextLiveSeat() throws NinetyNineException {
         NinetyNine game = game(3).total(95).current(C).hand(C, "9H 2H 3H").hand(A, "7H 8H JH").build();
         game.play(C, NinetyNineBuilder.c("9H"), null);
+        game.play(A, NinetyNineBuilder.c("7H"), null);
         assertEquals(Phase.ROUND_OVER, game.phase());
 
         game.forfeit(A);

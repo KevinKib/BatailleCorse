@@ -79,6 +79,8 @@ export interface NinetyNineState {
   lastPlay: NinetyNineLastPlay | null;
   lastBust: NinetyNineLastBust | null;
   outcome: NinetyNineOutcome;
+  /** The seat on turn holds no safe card: it must play a card that goes over 99 and lose a life. */
+  stuck: boolean;
   /** The viewer's own hand; the other hands are never sent. */
   hand: Card[];
   /** Per card of the viewer's hand: safe or not, and the Ace values allowed. */

@@ -44,11 +44,34 @@ class NinetyNineBotLegalityTest {
 
     @ParameterizedTest
     @EnumSource(NinetyNineBotLevel.class)
-    void aSeatWithNothingSafeToPlayIsRefused(NinetyNineBotLevel level) {
+    void aStuckSeatPlaysTheCardThatGoesLeastOver99(NinetyNineBotLevel level) {
         NinetyNineBotStrategy strategy = NinetyNineBots.forLevel(level, new Random(1));
         NinetyNineBotView stuck = NinetyNineBotViews.view(3, 99, "AH 2H 3H", "", 30);
 
-        assertThrows(IllegalStateException.class, () -> strategy.decide(stuck));
+        Play play = (Play) strategy.decide(stuck);
+
+        assertThat(play.card(), is(NinetyNineBotViews.c("AH")));
+        assertThat(play.aceValue(), is(1));
+    }
+
+    @ParameterizedTest
+    @EnumSource(NinetyNineBotLevel.class)
+    void aStuckSeatAlwaysPlaysACardOfItsHand(NinetyNineBotLevel level) {
+        Random viewRandom = new Random(5);
+        NinetyNineBotStrategy strategy = NinetyNineBots.forLevel(level, new Random(3));
+        for (int i = 0; i < 200; i++) {
+            NinetyNineBotView view = NinetyNineBotViews.randomStuckView(viewRandom);
+            assertThat(CardEffect.safeCards(view.total(), view.hand()).isEmpty(), is(true));
+
+            Play play = (Play) strategy.decide(view);
+
+            assertThat(view.hand(), hasItem(play.card()));
+            if (play.card().getRank() == FrenchRank.ACE) {
+                assertThat(play.aceValue() == 1 || play.aceValue() == 11, is(true));
+            } else {
+                assertThat(play.aceValue(), nullValue());
+            }
+        }
     }
 
     @Test

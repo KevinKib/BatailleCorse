@@ -1,5 +1,6 @@
 package org.kevinkib.cardgames.kilodemerde.domain;
 
+import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cards.domain.Card;
 
 import java.util.List;
@@ -14,4 +15,14 @@ public interface DeckSource {
 
     /** The kilo pile in its new order; the first card is the top. */
     List<Card> shufflePile(List<Card> pile);
+
+    /** Same as {@link #shuffleHandDeck(List)} for one game; a scripted source may fix the order per game. */
+    default List<Card> shuffleHandDeck(GameId id, List<Card> handDeck) {
+        return shuffleHandDeck(handDeck);
+    }
+
+    /** Same as {@link #shufflePile(List)} for one game; a scripted source may fix the order per game. */
+    default List<Card> shufflePile(GameId id, List<Card> pile) {
+        return shufflePile(pile);
+    }
 }

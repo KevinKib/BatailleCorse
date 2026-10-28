@@ -71,6 +71,7 @@ class NinetyNineFixedDealIT {
         send(HttpMethod.PUT, room.gameId(), "{\"round\":2,\"cards\":[\"QS\",\"8D\"]}");
         NinetyNine game = start(room);
         game.play(new PlayerId(0), card("KS"), null);
+        game.play(new PlayerId(1), card("7H"), null);
         game.nextRound();
 
         assertThat(game.hand(new PlayerId(0)).get(0), is(card("QS")));

@@ -88,6 +88,7 @@ class NinetyNineRoundTest {
         // counter-clockwise from C is B: B plays a 9, then A is next and stuck
         game.play(C, c("9H"), null);
         game.play(B, c("9S"), null);
+        game.play(A, c("7H"), null);
         assertEquals(Phase.ROUND_OVER, game.phase());
 
         List<NinetyNineEvent> events = game.nextRound();
@@ -108,6 +109,7 @@ class NinetyNineRoundTest {
     void nextRoundDealsOnlyToLiveSeatsAndStartsWithTheNextLiveSeatAfterAnElimination() throws NinetyNineException {
         NinetyNine game = game(3).total(95).current(B).lives(C, 1).hand(B, "9H 2H 3H").hand(C, "7H 8H JH").build();
         game.play(B, c("9H"), null);
+        game.play(C, c("7H"), null);
         assertEquals(Phase.ROUND_OVER, game.phase());
 
         game.nextRound();
@@ -132,6 +134,7 @@ class NinetyNineRoundTest {
     void nextRoundBumpsTheVersion() throws NinetyNineException {
         NinetyNine game = game(3).total(95).current(C).hand(C, "9H 2H 3H").hand(A, "7H 8H JH").build();
         game.play(C, c("9H"), null);
+        game.play(A, c("7H"), null);
         int version = game.version();
 
         game.nextRound();
@@ -146,6 +149,7 @@ class NinetyNineRoundTest {
                 .hand(A, "7H 8H JH").build();
         source.fix(game.getId(), 2, cards("KH QH JH 10H 9H 8H 7H 6H 5H"));
         game.play(C, c("9H"), null);
+        game.play(A, c("7H"), null);
 
         game.nextRound();
 
@@ -164,10 +168,13 @@ class NinetyNineRoundTest {
                 continue;
             }
             PlayerId seat = game.currentSeat();
-            var card = game.safeCards(seat).get(0);
+            boolean stuck = game.isStuck();
+            var card = stuck ? game.hand(seat).get(0) : game.safeCards(seat).get(0);
             Integer ace = card.getRank() == FrenchRank.ACE ? 1 : null;
             game.play(seat, card, ace);
-            assertTrue(game.total() >= 0 && game.total() <= 99);
+            // only a stuck seat takes the total over 99, and that ends the round
+            assertTrue(game.total() >= 0 && (stuck || game.total() <= 99));
+            assertTrue(!stuck || game.phase() != Phase.PLAYING);
         }
         assertTrue(game.isFinished());
     }
@@ -188,6 +195,7 @@ class NinetyNineRoundTest {
         NinetyNine game = game(3).deckSource(flaky).total(95).current(C).hand(C, "9H 2H 3H").hand(A, "7H 8H JH")
                 .build();
         game.play(C, c("9H"), null);
+        game.play(A, c("7H"), null);
         int round = game.round();
         int version = game.version();
         failing[0] = true;

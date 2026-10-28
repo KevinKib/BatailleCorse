@@ -75,10 +75,15 @@ Q counts +10 and the Ace only +1. The main source wins everywhere it speaks.
 - **A player who holds a safe card must play a safe card** [U, Q4]: the domain refuses an unsafe card when a safe
   one is in hand, and an Ace at +11 when +11 goes over. Going over on purpose never helps (it only costs a life),
   so the rule only removes misclicks.
-- **Stuck** [O "dépasse 99", U on the mechanics, Q4]: when the turn reaches a seat whose three cards are all
-  unsafe, that seat goes over at once: no command is awaited, the domain records `BUST(seat, total, hand)` with
-  the stuck hand revealed to the table (the proof that no card could be played), the seat loses one life, and the
-  round ends. The alternative (the stuck player must still click a card, which goes over) is listed in Q4.
+- **Stuck** [owner change, 28 Oct 2026, after playing; supersedes the automatic bust of the first version]: when
+  the turn reaches a seat whose cards are all unsafe, the seat is **not** busted: it stays on turn (`stuck: true` in
+  the view, public) and **must play one of its cards**, which takes the total over 99. That play is a normal
+  `Played` event, shown to everyone with the card and the total; the same command then records `Busted(seat, total
+  over 99, the hand it still holds)`, the seat loses one life and the round ends. Any card is accepted when stuck;
+  an Ace counts 1 or 11 (both go over; the client sends 1). The stuck seat draws no replacement (the round is
+  over). A forfeit that moves the turn to a stuck seat leaves it stuck on turn. Bots of all levels play the card
+  that goes the least over 99. The round pause is 4 s (was 2.5 s) and the client holds the bust overlay 1.5 s so
+  the table shows the busting card first.
 - **Round end**: the round enters `ROUND_OVER`, shows who lost a life (and who is eliminated), then the next round
   is dealt after a pause (`ninetynine.round-pause-ms`, section 10) [D, Q9]; no ready barrier, so 12 players never
   wait for the slowest click.
@@ -165,7 +170,7 @@ outside `ROUND_OVER`), `forfeit(PlayerId)`.
 
 `play` order: phase and turn checks; card in hand; ace value valid; safety (6.2); then apply the effect, put the
 card on the pile, draw (reshuffle if the stock is empty), move to the next live seat in the direction; then, if
-that seat is **stuck**, bust it at once (3.3). A bust ends the round: lives −1, elimination and place, end check
+that seat is **stuck**, it stays on turn (3.3) and its play may go over 99 (any card, an Ace as 1 or 11). A play over 99 busts the seat: lives −1, elimination and place, end check
 (3.4), else `ROUND_OVER`.
 
 Queries: `phase()`, `round()`, `version()`, `currentSeat()`, `direction()`, `total()`, `hand(seat)`,
@@ -178,7 +183,7 @@ Queries: `phase()`, `round()`, `version()`, `currentSeat()`, `direction()`, `tot
 Three players A, B, C in seat order, 3 lives, one parameterised test row each.
 
 1. Total 90, A plays K: total 99. B holds 9: plays it, total 99, C next.
-2. Total 95, A holds 7, 8, J: stuck. When C's play passes the turn to A, A busts at once with the hand shown:
+2. Total 95, A holds 7, 8, J: stuck. When C's play passes the turn to A, A stays on turn, plays the 7 (total 102) and busts with the hand 8, J shown:
    A has 2 lives, `ROUND_OVER`, A starts the next round.
 3. Total 89, A holds A, 2, 4: plays A; `aceValue = 11` is refused (100), `aceValue = 1` gives 90. A missing ace value
    is refused for an Ace, ignored for other cards [D].

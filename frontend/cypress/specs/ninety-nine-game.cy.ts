@@ -1,10 +1,10 @@
 // A scripted 99 game on a fixed deal (PUT /api/test/ninety-nine/{id}/deal, test profile only), lives = 2: the browser is
 // seat 0 (Alice), a scripted guest is seat 1 (Bob).
-//  - Round 1: Alice plays the 9 (total 0), Bob plays a 2, Alice plays the King (total 99); Bob holds only 3, 5, 6, so he
-//    is stuck and loses a life (the server shows his hand to the table and deals the next round at once under `test`).
+//  - Round 1: Alice plays the 9 (total 0), Bob plays a 2, Alice plays the King (total 99); Bob holds only 3, 5, 6, so he is
+//    stuck: it is still his turn, he must play one of them (the 3, total 102) and then loses a life (the next round is dealt at once under `test`).
 //  - Round 2: Bob, who lost, leads with a 2; Alice plays the King again; Bob is stuck on his last life, so he is
-//    eliminated and the end screen names Alice the winner.
-// The nominal path only: bots, quick mode and the 12-seat table are covered by the backend and Vitest suites.
+//  - Round 2: Bob, who lost, leads with a 2; Alice plays the King again; Bob is
+//    stuck on his last life: he plays his 3 (total 102), is eliminated and the end screen names Alice the winner.
 // Everything is waited on through DOM states and frames, never a fixed delay.
 import { joinAsScriptedPlayer, waitForFrame, type ScriptedPlayer } from '../support/stompPlayer';
 
@@ -65,12 +65,15 @@ describe('99, two players on a fixed deal', () => {
         cy.get('[data-test="status"]').should('contain.text', 'Your turn');
         cy.get('[data-card="HEART_KING"]').should('not.be.disabled').click();
 
-        // Bob holds 3, 5 and 6: nothing fits under 99. His stuck hand is public and he loses a life.
+        // Bob holds 3, 5 and 6: nothing fits under 99. He is not busted at once: it is still his turn and he must
+        // play a card that goes over 99, then he loses a life.
+        waitForFrame(bob, (f) => f.state?.phase === 'PLAYING' && f.state.currentSeat === bob.seat && f.state.stuck === true);
+        scriptedPlay(bob, 1, 'CLUB_3');
         waitForFrame(bob, (f) => f.state?.phase === 'ROUND_OVER' && f.state.lastBust?.seat === bob.seat).then((frame) => {
-          expect(frame.state.lastBust.totalBefore, 'total at the bust').to.eq(99);
+          expect(frame.state.lastBust.totalBefore, 'total at the bust').to.eq(102);
           expect(frame.state.lastBust.livesLeft, 'lives left').to.eq(1);
-          expect(frame.state.lastBust.hand.map((c: { name: string }) => c.name).sort(), 'the stuck hand')
-            .to.deep.eq(['CLUB_3', 'CLUB_5', 'CLUB_6']);
+          expect(frame.state.lastBust.hand.map((c: { name: string }) => c.name).sort(), 'what he still holds')
+            .to.deep.eq(['CLUB_5', 'CLUB_6']);
         });
 
         // Round 2: Bob, who lost the round, leads; his plate shows the life he has left.
@@ -81,7 +84,8 @@ describe('99, two players on a fixed deal', () => {
         cy.get('[data-test="status"]').should('contain.text', 'Your turn');
         cy.get('[data-card="SPADE_KING"]').should('not.be.disabled').click();
 
-        // Bob is stuck on his last life: he is out and Alice wins.
+        // Bob is stuck on his last life: he must still play a card (the 3, total 102), then he is out and Alice wins.
+        scriptedPlay(bob, 2, 'DIAMOND_3');
         cy.get('[data-test="end"]', { timeout: 10000 }).should('be.visible');
         cy.get('[data-test="end-winner"]').should('have.text', 'Winner: You');
         cy.get('[data-test="place-row"]').should('have.length', 2);

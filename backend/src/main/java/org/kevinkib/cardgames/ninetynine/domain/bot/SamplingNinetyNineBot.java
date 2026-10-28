@@ -53,7 +53,8 @@ public class SamplingNinetyNineBot implements NinetyNineBotStrategy {
     public NinetyNineDecision decide(NinetyNineBotView view) {
         List<Move> moves = NinetyNineMoves.of(view.total(), view.hand());
         if (moves.isEmpty()) {
-            throw new IllegalStateException("No safe card to play at " + view.total());
+            lastSampleCount = 0;
+            return NinetyNineMoves.stuck(view.total(), view.hand()).toDecision();
         }
         lastSampleCount = 0;
         if (moves.size() == 1) {

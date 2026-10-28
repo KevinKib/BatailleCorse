@@ -481,6 +481,7 @@ export interface NinetyNineUiMessages {
     cardOver: string;                  // '{card}': accessible name of a card that cannot be played
     cardEffect: string;                // '{card}', '{effect}'
     waiting: string;                   // the hand while it is not my turn
+    stuckHint: string;                 // my turn, no safe card: play any card, lose a life
   };
   ace: {
     title: string;                     // "Play the Ace as"
