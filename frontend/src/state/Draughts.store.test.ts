@@ -136,6 +136,16 @@ describe('Draughts store', () => {
       expect(store.selected).toBeNull();
     });
 
+    it('keeps the selection and the chooser when a state of the same version arrives (presence, a draw offer)', () => {
+      const store = playing(0, draughtsAmbiguousState);
+      store.squareClicked(46);
+      store.squareClicked(19);
+      expect(store.choice).toHaveLength(2);
+      store.applyEvent({ type: 'state-update', state: { ...draughtsAmbiguousState } });
+      expect(store.selected).toBe(46);
+      expect(store.choice).toHaveLength(2);
+    });
+
     it('with a compulsory capture, only capturing pieces can be selected, and the hint carries the majority', () => {
       const store = playing(0, draughtsCaptureState);
       expect(store.selectableSquares).toEqual([33, 34]);

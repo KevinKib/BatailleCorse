@@ -37,6 +37,9 @@ public class Draughts implements Game {
     private Phase phase = Phase.PLAY;
     private DraughtsResult result = DraughtsResult.ONGOING;
     private int version;
+    private int legalMoveGenerations;
+    private List<DraughtsMove> generated;
+    private int generatedAtVersion;
     private PlayerId drawOffer;
     private final boolean[] offeredSinceOwnMove = new boolean[PLAYERS];
     private PlayedMove lastMove;
@@ -75,7 +78,10 @@ public class Draughts implements Game {
         requireSquare(from);
         requireSquare(to);
         List<Integer> taken = captures == null ? List.of() : captures;
-        for (int square : taken) {
+        for (Integer square : taken) {
+            if (square == null) {
+                throw new InvalidSquareException();
+            }
             requireSquare(square);
         }
         DraughtsMove move = findMove(from, to, taken);
@@ -87,7 +93,9 @@ public class Draughts implements Game {
         history.add(move.notation());
         lastMove = new PlayedMove(seat, move);
         version++;
-        drawOffer = null;
+        if (drawOffer != null && !drawOffer.equals(seat)) {
+            drawOffer = null;
+        }
         offeredSinceOwnMove[seat.id()] = false;
         checkEnd(seat);
         return new DraughtsEvent.Moved(seat, move);
@@ -95,7 +103,7 @@ public class Draughts implements Game {
 
     /**
      * Offers a draw. Allowed at any time of the game, whoever's turn it is, when offers are on, no offer is pending
-     * and the seat has not offered since its own last move. The next move of either player withdraws it.
+     * and the seat has not offered since its own last move. The opponent's next move declines it; the proposer's own move leaves it standing.
      */
     public synchronized DraughtsEvent offerDraw(PlayerId seat) throws DraughtsException {
         requireSeat(seat);
@@ -155,6 +163,10 @@ public class Draughts implements Game {
         phase = Phase.PLAY;
         result = DraughtsResult.ONGOING;
         version++;
+        Optional<DraughtsResult.Reason> loss = GENERATOR.lossReason(newPosition);
+        if (loss.isPresent()) {
+            finish(other(currentSeat()), loss.get());
+        }
     }
 
     // --------------------------------------------------------------- queries
@@ -215,7 +227,7 @@ public class Draughts implements Game {
         if (isFinished() || !seat.equals(currentSeat())) {
             return List.of();
         }
-        return GENERATOR.legalMoves(position);
+        return generate();
     }
 
     /** Whether the seat, on its turn, must capture. */
@@ -291,8 +303,23 @@ public class Draughts implements Game {
 
     // --------------------------------------------------------------- helpers
 
+    /** How many times the generator ran (a cache check). */
+    synchronized int legalMoveGenerations() {
+        return legalMoveGenerations;
+    }
+
+    /** The legal moves of the current position, generated once per version (every position change bumps it). */
+    private List<DraughtsMove> generate() {
+        if (generatedAtVersion != version || generated == null) {
+            legalMoveGenerations++;
+            generated = GENERATOR.legalMoves(position);
+            generatedAtVersion = version;
+        }
+        return generated;
+    }
+
     private DraughtsMove findMove(int from, int to, List<Integer> captures) throws DraughtsException {
-        List<DraughtsMove> sameEnds = GENERATOR.legalMoves(position).stream()
+        List<DraughtsMove> sameEnds = generate().stream()
                 .filter(m -> m.from() == from && m.to() == to).toList();
         if (captures.isEmpty()) {
             if (sameEnds.isEmpty()) {

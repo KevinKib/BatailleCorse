@@ -32,8 +32,7 @@ import { rematchButtonFor } from '../../model/RematchButton';
 import { format, plural } from '../../locales/format';
 
 // The draughts table: the board between two plates, what to do now, the draw and resign controls and the move list.
-// Every rule is the server's (`legalMoves`): the screen only shows and sends. Not routed yet: the entry PR registers
-// the game.
+// Every rule is the server's (`legalMoves`): the screen only shows and sends.
 const props = defineProps<{ gameId: string }>();
 const messages = useI18n();
 const ui = messages.draughtsUi;
@@ -150,7 +149,7 @@ function stopHold() {
 watch(() => store.phase, (phase) => {
   stopHold();
   const outcome = store.game?.outcome;
-  const move = store.lastMove;
+  const move = store.opponentLastMove;
   if (phase !== 'finished' || !move || outcome?.status !== 'FINISHED' || !ENDS_ON_A_MOVE.includes(outcome.reason)) return;
   holdingLastMove.value = true;
   holdTimer = setTimeout(stopHold, planMove(move, tempo.value).totalMs + END_HOLD_MS);

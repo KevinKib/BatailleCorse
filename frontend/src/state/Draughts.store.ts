@@ -82,9 +82,13 @@ export const useDraughtsStore = defineStore('draughts-store', () => {
   function applyEvent(event: DraughtsSessionEvent) {
     switch (event.type) {
       case 'state-update':
-        // A selection belongs to the state it was made on: whatever the server says next replaces it.
-        selected.value = null;
-        choice.value = null;
+        // A selection belongs to the state it was made on: a new version replaces it, while an update of the
+        // same version (a presence change) leaves it alone.
+        const before = state.value?.started ? state.value.version : null;
+        if (!event.state.started || before !== event.state.version) {
+          selected.value = null;
+          choice.value = null;
+        }
         state.value = event.state;
         room.onStateUpdate(event.state.started);
         // The lobby records the levels; the game view carries them too (a reload mid-game has no lobby) and, when
