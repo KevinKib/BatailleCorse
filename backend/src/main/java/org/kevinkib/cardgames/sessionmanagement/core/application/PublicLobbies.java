@@ -62,6 +62,6 @@ public final class PublicLobbies {
 
     private static String hostName(SessionGame session) {
         SessionPlayer host = session.players().get(SessionGame.HOST_SEAT);
-        return host.name() != null ? host.name() : host.defaultName();
+        return host.name();
     }
 }

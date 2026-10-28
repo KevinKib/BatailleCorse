@@ -26,14 +26,14 @@ public class SessionPlayer {
     public void claim(String name) {
         this.claimed = true;
         this.bot = false;
-        this.name = (name == null || name.isBlank()) ? defaultName() : name.trim();
+        this.name = typedName(name);
     }
 
     /** Claims the seat for a computer player; its token stays internal to the session. */
-    void claimAsBot(String name, String defaultBotName) {
+    void claimAsBot(String name) {
         this.claimed = true;
         this.bot = true;
-        this.name = (name == null || name.isBlank()) ? defaultBotName : name.trim();
+        this.name = typedName(name);
     }
 
     /**
@@ -78,8 +78,9 @@ public class SessionPlayer {
         return Map.copyOf(options);
     }
 
-    public String defaultName() {
-        return "Player " + (id.id() + 1);
+    /** The trimmed name, or null when none was typed: an unnamed seat is labelled by the client. */
+    private static String typedName(String name) {
+        return (name == null || name.isBlank()) ? null : name.trim();
     }
 
     /** True while the human's connection is known to be down in a lobby (the host may remove the seat). */
@@ -107,6 +108,7 @@ public class SessionPlayer {
         return bot;
     }
 
+    /** The name the occupant typed, null when none (the seat number is its identity). */
     public String name() {
         return name;
     }

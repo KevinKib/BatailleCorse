@@ -2,6 +2,7 @@ import { format } from '../../locales/format';
 import type { Messages } from '../../locales/Messages';
 import type { LobbyPlayer, OptionDescriptor } from './LobbyView';
 import { optionLabel } from './optionLabel';
+import { seatDisplayName, type SeatLabels } from '../table/displayName';
 
 /** A seat of a lobby or of a game view: the lobby says `bot` and `seatOptions`, the game view `bot` and `level`. */
 export type BotSeatInfo = Pick<LobbyPlayer, 'seat' | 'bot' | 'seatOptions'> & { level?: string | null };
@@ -35,4 +36,18 @@ export function nameWithBotLevel(
   if (level === undefined) return name;
   const descriptor: OptionDescriptor = { key: 'level', type: 'CHOICE', values: [], defaultValue: level, labelKey };
   return format(template, { name, level: optionLabel(messages, descriptor, level, {}) });
+}
+
+/**
+ * How a seat of a two-player table is called: the name its player typed, "Player N" when there is none, "Bot N"
+ * for a computer seat (the server sends no name for either), then its level when known. `botLabel` is the
+ * '{n}' template of the bots.
+ */
+export function seatNameWithBotLevel(
+  messages: Messages, labelKey: string, template: string,
+  players: { seat: number; name?: string | null; bot?: boolean }[], seat: number,
+  levels: Record<number, string>, labels: SeatLabels,
+): string {
+  const seated = players.map(p => ({ id: String(p.seat), name: p.name, bot: p.bot === true || levels[p.seat] !== undefined }));
+  return nameWithBotLevel(messages, labelKey, template, seatDisplayName(seated, seat, labels), levels[seat]);
 }

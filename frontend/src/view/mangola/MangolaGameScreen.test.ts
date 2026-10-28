@@ -613,7 +613,7 @@ describe('MangolaGameScreen', () => {
       const { wrapper, store } = await mountScreen(lobby);
       const before = beforeOpponentMove();
       store.applyEvent({ type: 'state-update', state: {
-        ...before, players: before.players.map(p => (p.seat === 1 ? { ...p, name: 'Bot 1' } : p)),
+        ...before, players: before.players.map(p => (p.seat === 1 ? { ...p, name: null, bot: true } : p)),
       } });
       await flushPromises();
       expect(wrapper.findAll('[data-test="tag-name"]').map(t => t.text())).toEqual(['Bot 1 (Expert)', 'Alice']);
@@ -624,7 +624,7 @@ describe('MangolaGameScreen', () => {
       const before = beforeOpponentMove();
       const { wrapper } = await mountScreen({
         ...before,
-        players: before.players.map(p => (p.seat === 1 ? { ...p, name: 'Bot 1', bot: true, level: 'expert' } : p)),
+        players: before.players.map(p => (p.seat === 1 ? { ...p, name: null, bot: true, level: 'expert' } : p)),
       });
       expect(wrapper.findAll('[data-test="tag-name"]').map(t => t.text())).toEqual(['Bot 1 (Expert)', 'Alice']);
       expect(thinking(wrapper).text()).toBe('Bot 1 (Expert) is thinking…');

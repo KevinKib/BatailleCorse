@@ -27,7 +27,7 @@ import DraughtsPlayerPlate from '../../components/draughts/DraughtsPlayerPlate.v
 import { findGame } from '../../model/games';
 import { planMove } from '../../model/draughts/motion';
 import { tempoFor } from '../../model/draughts/tempo';
-import { nameWithBotLevel } from '../../model/lobby/botLevel';
+import { seatNameWithBotLevel } from '../../model/lobby/botLevel';
 import { rematchButtonFor } from '../../model/RematchButton';
 import { format, plural } from '../../locales/format';
 
@@ -48,12 +48,11 @@ const END_SCREEN_MAX_WAIT_MS = 6000;
 /** The reasons that follow a move: the last move is worth showing before the end screen. */
 const ENDS_ON_A_MOVE = ['NO_PIECES', 'BLOCKED', 'DRAW_REPETITION', 'DRAW_KINGS_ONLY', 'DRAW_ENDGAME'];
 
-// Names are user input: only ever rendered as text. A player without a typed name is "Player N" (from 1).
+// Names are user input: only ever rendered as text. A player without a typed name is "Player N" (from 1), a computer seat "Bot N" (the server sends neither).
 // A computer seat also says its level: "Bot 1 (Expert)".
-const displayName = (seat: number): string => {
-  const name = store.game?.players.find(p => p.seat === seat)?.name?.trim() || format(ui.playerLabel, { n: seat + 1 });
-  return nameWithBotLevel(messages, 'options.draughts.level', ui.botWithLevel, name, store.botLevels[seat]);
-};
+const displayName = (seat: number): string =>
+  seatNameWithBotLevel(messages, 'options.draughts.level', ui.botWithLevel, store.game?.players ?? [], seat, store.botLevels,
+    { player: ui.playerLabel, bot: messages.lobby.botName });
 const nameOrYou = (seat: number): string => (seat === store.mySeat ? ui.you : displayName(seat));
 const colourOf = (seat: number): 'white' | 'black' => (store.colourOf(seat) === 'WHITE' ? 'white' : 'black');
 

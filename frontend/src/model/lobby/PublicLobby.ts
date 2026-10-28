@@ -9,7 +9,8 @@ export interface PublicLobby {
   gameId: string;
   /** The server game type (`GameDefinition.serverType`). */
   gameType: string;
-  hostName: string;
+  /** What the host typed; null when none (the client then labels seat 1). */
+  hostName: string | null;
   /** Taken seats, bots included. */
   joined: number;
   bots: number;

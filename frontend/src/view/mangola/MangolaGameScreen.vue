@@ -24,7 +24,7 @@ import MangolaLobbyOptions from '../../components/mangola/MangolaLobbyOptions.vu
 import MangolaBoard from '../../components/mangola/MangolaBoard.vue';
 import MangolaPlacementEditor from '../../components/mangola/MangolaPlacementEditor.vue';
 import { findGame } from '../../model/games';
-import { nameWithBotLevel } from '../../model/lobby/botLevel';
+import { seatNameWithBotLevel } from '../../model/lobby/botLevel';
 import { rowsWithBoard } from '../../model/mangola/board';
 import { moveSentence } from '../../model/mangola/announce';
 import { NO_BOARD_MARKS } from '../../model/mangola/marks';
@@ -42,12 +42,11 @@ const router = useRouter();
 const game = findGame('mangola')!;
 useMangolaBootstrap(props.gameId, game);
 
-// Names are user input: only ever rendered as text. A player without a typed name is "Player N" (from 1).
+// Names are user input: only ever rendered as text. A player without a typed name is "Player N" (from 1), a computer seat "Bot N" (the server sends neither).
 // A computer seat also says its level: "Bot 1 (Expert)".
-const displayName = (seat: number): string => {
-  const name = store.game?.players.find(p => p.seat === seat)?.name?.trim() || format(ui.playerLabel, { n: seat + 1 });
-  return nameWithBotLevel(messages, 'options.mangola.level', ui.botWithLevel, name, store.botLevels[seat]);
-};
+const displayName = (seat: number): string =>
+  seatNameWithBotLevel(messages, 'options.mangola.level', ui.botWithLevel, store.game?.players ?? [], seat, store.botLevels,
+    { player: ui.playerLabel, bot: messages.lobby.botName });
 
 const { online } = useConnectionStatus();
 watch(online, (isOnline, wasOnline) => {

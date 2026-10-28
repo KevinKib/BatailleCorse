@@ -90,12 +90,12 @@ class SessionGameTest {
         }
 
         @Test
-        public void givenBlankName_whenClaimNextFreeSeat_thenSeatGetsDefaultName() {
+        public void givenBlankName_whenClaimNextFreeSeat_thenSeatHasNoName() {
             var sessionGame = SessionGame.create(GameId.generate(), playerIds(2), "bullshit");
 
             var claimed = sessionGame.claimNextFreeSeat("  ");
 
-            assertThat(claimed.name(), is("Player 1"));
+            assertThat(claimed.name(), is((String) null));
         }
     }
 
