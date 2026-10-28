@@ -11,6 +11,7 @@ const TRANSLATED_AREAS: readonly (keyof typeof messagesEn)[] = [
   'bullshit', 'bullshitUi', 'president', 'presidentUi', // T2
   'threeMenMorris', 'threeMenMorrisUi', 'morrisLobby', 'morrisVariantRules', 'morrisBoard', 'mangola', 'mangolaUi',
   'kobo', 'koboUi', // T3
+  'privacy', // T5
 ];
 
 // French leaves that may equal the English leaf (proper nouns, symbols). Keys are dotted paths prefixes.
@@ -33,6 +34,9 @@ const SAME_AS_ENGLISH_ALLOWED: readonly string[] = [
   // T3: Kobo, same word in both languages, or a symbol
   'koboUi.botLabel', 'koboUi.table.total', 'koboUi.regions.table', 'koboUi.sheet.totalChange', 'koboUi.sheet.pills.gift',
   'koboUi.sheet.columns.total', 'koboUi.end.totals.total',
+  // T5: section identifiers are anchors, not text
+  'privacy.sections[0].id', 'privacy.sections[1].id', 'privacy.sections[2].id',
+  'privacy.sections[3].id', 'privacy.sections[4].id', 'privacy.sections[5].id',
 ];
 
 type Leaves = Map<string, string | number | boolean>;
