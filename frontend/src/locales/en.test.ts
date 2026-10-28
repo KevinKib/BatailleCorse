@@ -728,3 +728,61 @@ describe('Kilo de merde messages', () => {
     }
   });
 });
+
+describe('Blackjack messages', () => {
+  const emptyLeaves = (node: unknown, path: string): string[] => {
+    if (typeof node === 'string') return node.trim() === '' ? [path] : [];
+    if (Array.isArray(node)) return node.flatMap((v, i) => emptyLeaves(v, `${path}[${i}]`));
+    if (node && typeof node === 'object') return Object.entries(node).flatMap(([k, v]) => emptyLeaves(v, `${path}.${k}`));
+    return [];
+  };
+
+  it('givenThePicker_thenBlackjackIsNamedWithAShortPitchAndItsOneToSixPlayers', () => {
+    expect(messagesEn.gamePicker.games.blackjack).toEqual({
+      name: 'Blackjack',
+      description: 'Beat the dealer, alone or in a 100-point tournament',
+      players: '1–6 players',
+      play: 'Play',
+    });
+  });
+
+  it('givenTheRules_thenTheyHaveTheSevenSections', () => {
+    const rules = messagesEn.blackjack;
+    expect(rules.toggleLabel).toBeTruthy();
+    expect(rules.panelTitle).toBe('Blackjack');
+    expect(rules.closeLabel).toBeTruthy();
+    expect(rules.sections).toHaveLength(7);
+    for (const topic of ['goal', 'stacks', 'card values', 'your turn', 'dealer', 'payouts', 'end']) {
+      expect(rules.sections.some(s => s.title.toLowerCase().includes(topic)), topic).toBe(true);
+    }
+  });
+
+  it('givenTheMessages_thenEveryLeafStringIsNonEmpty', () => {
+    expect(emptyLeaves(messagesEn.blackjackUi, 'blackjackUi')).toEqual([]);
+    expect(emptyLeaves(messagesEn.blackjack, 'blackjack')).toEqual([]);
+    expect(emptyLeaves(messagesEn.options.blackjack, 'options.blackjack')).toEqual([]);
+  });
+
+  it('givenTheErrorCodesOfTheServer_thenEachHasAText', () => {
+    const errors = messagesEn.blackjackUi.errors;
+    for (const code of ['NOT_YOUR_TURN', 'WRONG_PHASE', 'ALREADY_BET', 'INVALID_BET', 'ACTION_NOT_ALLOWED', 'GAME_FINISHED']) {
+      expect(errors[code], code).toBeTruthy();
+    }
+  });
+
+  it('givenTheEndScreen_thenTheFourReasonsAndTheSoloNetAreTold', () => {
+    const end = messagesEn.blackjackUi.end;
+    for (const reason of ['HANDS_PLAYED', 'LAST_STANDING', 'BROKE', 'FORFEIT']) {
+      expect(end.reasons[reason], reason).toBeTruthy();
+    }
+    expect(end.soloFinal).toContain('{stack}');
+    expect(end.soloFinal).toContain('{net}');
+  });
+
+  it('givenTheLobbyOptions_thenHandsMaxBetAndLevelHaveLabels', () => {
+    const o = messagesEn.options.blackjack;
+    expect(o.hands.label).toBeTruthy();
+    expect(o.maxBet.label).toBeTruthy();
+    expect(Object.keys(o.level)).toEqual(['label', 'easy', 'medium', 'hard']);
+  });
+});
