@@ -92,7 +92,6 @@ export interface DraughtsState {
   maxCaptures: number;
   lastMove?: DraughtsLastMove;
   drawOffer?: DraughtsDrawOffer;
-  drawOffersAllowed: boolean;
   drawCounters?: DraughtsDrawCounters;
   /** Repetition count of the current position, sent from 2. */
   repetitions?: number;

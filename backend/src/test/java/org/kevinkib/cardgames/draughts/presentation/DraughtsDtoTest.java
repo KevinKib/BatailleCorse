@@ -51,7 +51,6 @@ class DraughtsDtoTest {
         assertThat(dto.maxCaptures()).isZero();
         assertThat(dto.lastMove()).isNull();
         assertThat(dto.drawOffer()).isNull();
-        assertThat(dto.drawOffersAllowed()).isTrue();
         assertThat(dto.drawCounters()).isNull();
         assertThat(dto.repetitions()).isNull();
         assertThat(dto.history()).isEmpty();
@@ -146,16 +145,6 @@ class DraughtsDtoTest {
     }
 
     @Test
-    void offersSwitchedOffAreReportedAndNotOffered() {
-        Draughts game = DraughtsGames.fromWithoutOffers(DraughtsPosition.initial());
-
-        DraughtsDto dto = DraughtsDto.forViewer(game, WHITE);
-
-        assertThat(dto.drawOffersAllowed()).isFalse();
-        assertThat(dto.availableActions()).containsExactly("MOVE");
-    }
-
-    @Test
     void kingsOnlyPliesAreShownFromThirty() throws Exception {
         Draughts game = DraughtsGames.from(layout(Colour.WHITE, "W50", "W49", "B1", "B2"));
         DraughtsGames.playQuietPlies(game, 29);
@@ -220,7 +209,7 @@ class DraughtsDtoTest {
 
     @Test
     void whenTheHostPlaysBlackTheWhiteSeatIsTheGuest() {
-        Draughts game = new Draughts(org.kevinkib.cardgames.game.GameId.generate(), BLACK, true);
+        Draughts game = new Draughts(org.kevinkib.cardgames.game.GameId.generate(), BLACK);
 
         DraughtsDto dto = DraughtsDto.forViewer(game, BLACK);
 

@@ -151,7 +151,6 @@ export const draughtsUi: Messages['draughtsUi'] = {
     notYourTurn: 'Ce n’est pas votre tour.',
     invalidSquare: 'Cette case n’existe pas.',
     gameFinished: 'La partie est terminée.',
-    drawOffersOff: 'Les propositions de nulle sont désactivées dans cette partie.',
     drawAlreadyOffered: 'Vous avez déjà proposé la nulle : jouez un coup avant de la reproposer.',
     ownDrawOffer: 'Vous ne pouvez pas répondre à votre propre proposition de nulle.',
     drawOfferPending: 'Une proposition de nulle attend une réponse.',
@@ -161,6 +160,5 @@ export const draughtsUi: Messages['draughtsUi'] = {
 
 export const draughtsOptions: Messages['options']['draughts'] = {
   hostColour: { label: 'L’hôte joue', white: 'Blancs', black: 'Noirs', random: 'Au hasard' },
-  drawOffers: { label: 'Propositions de nulle', on: 'Autorisées', off: 'Désactivées' },
   level: { label: 'Niveau', random: 'Facile', greedy: 'Moyen', expert: 'Expert' },
 };
