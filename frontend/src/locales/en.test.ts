@@ -585,6 +585,20 @@ describe('Draughts messages', () => {
     expect(emptyLeaves(messagesEn.options.draughts, 'options.draughts')).toEqual([]);
   });
 
+  it('givenThePicker_thenDraughtsIsNamedWithItsPitchAndTwoPlayers', () => {
+    expect(messagesEn.gamePicker.games.draughts).toEqual({
+      name: 'Draughts',
+      description: 'International draughts on a 10 by 10 board. Take every piece, or leave your opponent without a move.',
+      players: '2 players',
+      play: 'Play',
+    });
+  });
+
+  it('givenThePrivacyPage_thenTheDraughtsSeatTokenKeyIsListed', () => {
+    const text = JSON.stringify(messagesEn.privacy);
+    expect(text).toContain('draughts:tokens:<game id>');
+  });
+
   it('givenTheRulesPanel_thenItCoversTheRulesOfTheSpecAndTheBots', () => {
     expect(messagesEn.draughts.panelTitle).toBe('Draughts');
     expect(messagesEn.draughts.sections.map(s => s.title)).toEqual([

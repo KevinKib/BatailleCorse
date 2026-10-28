@@ -3,7 +3,7 @@ import { GAMES, findGame, type GameDefinition, type GameKey } from './games';
 
 describe('game registry', () => {
   it('givenEveryGame_thenEachDeclaresItsRoutesUnderTheirKey', () => {
-    expect(GAMES.map(g => g.key)).toEqual(['bataillecorse', 'bullshit', 'kobo', 'three-men-morris', 'president', 'mangola', 'ninety-nine']);
+    expect(GAMES.map(g => g.key)).toEqual(['bataillecorse', 'bullshit', 'kobo', 'three-men-morris', 'president', 'mangola', 'ninety-nine', 'draughts']);
     for (const g of GAMES) {
       expect(g.gameHomeRoute).toBe(`/${g.key}`);
       expect(g.joinRoute()).toBe(`/${g.key}/join`);
@@ -67,6 +67,15 @@ describe('game registry', () => {
     expect(ninetyNine?.hotkeys).toBeUndefined();
     expect(ninetyNine?.picker).toEqual({ icon: 'pi pi-hashtag', severity: 'danger' });
     expect(ninetyNine?.roomRoute('abc')).toBe('/ninety-nine/room/abc');
+  });
+
+  it('givenDraughts_thenItIsRegisteredWithBotsButNoShortcutsAndItsOwnPickerStyle', () => {
+    const draughts = findGame('draughts');
+    expect(draughts?.serverType).toBe('draughts');
+    expect(draughts?.supportsBots).toBe(true);
+    expect(draughts?.hotkeys).toBeUndefined();
+    expect(draughts?.picker).toEqual({ icon: 'pi pi-table', severity: 'secondary' });
+    expect(draughts?.roomRoute('abc')).toBe('/draughts/room/abc');
   });
 
   it('givenPresident_thenItIsRegisteredWithBotsButNoShortcutsAndItsOwnPickerStyle', () => {

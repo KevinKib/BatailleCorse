@@ -65,6 +65,12 @@ describe('Game picker', () => {
       cy.contains('2–12 players');
       cy.contains('button', 'Play');
     });
+    cy.get('[data-test="choice-draughts"]').within(() => {
+      cy.contains('h2', 'Draughts');
+      cy.contains('International draughts on a 10 by 10 board. Take every piece, or leave your opponent without a move.');
+      cy.contains('2 players');
+      cy.contains('button', 'Play');
+    });
   });
 
   it('plays President: Game home with New game and Join game, Back returns to the picker', () => {
@@ -94,6 +100,17 @@ describe('Game picker', () => {
     cy.get('[data-test="play-ninety-nine"]').click();
     cy.location('pathname').should('eq', '/ninety-nine');
     cy.contains('h1', '99').should('be.visible');
+    cy.contains('button', 'New game').should('be.visible');
+    cy.contains('button', 'Join game').should('be.visible');
+    cy.get('[data-test="back"]').click();
+    cy.location('pathname').should('eq', '/');
+  });
+
+  it('plays Draughts: Game home with New game and Join game, Back returns to the picker', () => {
+    cy.visit('/');
+    cy.get('[data-test="play-draughts"]').click();
+    cy.location('pathname').should('eq', '/draughts');
+    cy.contains('h1', 'Draughts').should('be.visible');
     cy.contains('button', 'New game').should('be.visible');
     cy.contains('button', 'Join game').should('be.visible');
     cy.get('[data-test="back"]').click();

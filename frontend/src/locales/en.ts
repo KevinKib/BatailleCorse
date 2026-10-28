@@ -1365,7 +1365,7 @@ export const messagesEn: Messages = {
         heading: 'What your browser stores',
         paragraphs: [
           'The site uses the local storage of your browser, not cookies. Only the site itself reads it, to resume a game and to remember your choices. You can erase it in your browser settings.',
-          'Seat token, which lets you come back to the game you were playing: tokens:<game id> (Bataille Corse), bullshit:tokens:<game id>, kobo:tokens:<game id>, three-men-morris:tokens:<game id>, president:tokens:<game id>, mangola:tokens:<game id> and ninety-nine:tokens:<game id>. It is removed when you leave the game.',
+          'Seat token, which lets you come back to the game you were playing: tokens:<game id> (Bataille Corse), bullshit:tokens:<game id>, kobo:tokens:<game id>, three-men-morris:tokens:<game id>, president:tokens:<game id>, mangola:tokens:<game id>, ninety-nine:tokens:<game id> and draughts:tokens:<game id>. It is removed when you leave the game.',
           'Display name: bc_playerName. Keyboard shortcuts: bc_sendKey, bc_slapKey and bullshit.hotkeys. Sound: bullshit.sound and kobo.sound. Animation speed: animationSpeed. Kobo hint already seen: kobo.matchCoach. Language: bc_locale.',
           'The font of the site is served by the site itself, so your browser contacts no other server to display it, and nothing is sent to a third party.',
         ],
@@ -1449,6 +1449,12 @@ export const messagesEn: Messages = {
         name: '99',
         description: 'Keep the running total at 99 or less. Whoever cannot play loses a life.',
         players: '2–12 players',
+        play: 'Play',
+      },
+      draughts: {
+        name: 'Draughts',
+        description: 'International draughts on a 10 by 10 board. Take every piece, or leave your opponent without a move.',
+        players: '2 players',
         play: 'Play',
       },
     },

@@ -64,15 +64,15 @@ domains are): the orchestrator merges each chunk after review and green CI. D ne
 
 | Chunk | Title | Cost | Needs | Parallel with | State |
 |-------|-------|------|-------|---------------|-------|
-| P0 | `feat: draughts interfaces (types, geometry, contract)` | S | spec merged | D | [ ] |
-| D | Claude Design canvas, 2-3 options, owner chooses | S | spec merged | P0, B1, F1 | [ ] |
-| B1 | `feat: draughts rules engine (move generation, majority capture)` | L | P0 | F1, F2, D | [ ] |
-| F1 | `feat: draughts frontend model, session and store` | M | P0 | B1, B2, B3, F2 | [ ] |
-| F2 | `feat: draughts board and table components` | L | P0, D | B1, B2, B3, F1 | [ ] |
-| B2 | `feat: draughts aggregate, endpoints and wiring` | L | B1 | B3, F1, F2 | [ ] |
-| B3 | `feat: draughts bot strategies` | M-L | B1 | B2, F1, F2 | [ ] |
-| B4 | `feat: draughts bot coordinator` | S | B2, B3 | F2 | [ ] |
-| E | `feat: draughts on the game picker` (entry, Cypress, docs) | M | B2, B4, F1, F2 | - | [ ] |
+| P0 | `feat: draughts interfaces (types, geometry, contract)` | S | spec merged | D | [x] |
+| D | Claude Design canvas, 2-3 options, owner chooses | S | spec merged | P0, B1, F1 | [x] |
+| B1 | `feat: draughts rules engine (move generation, majority capture)` | L | P0 | F1, F2, D | [x] |
+| F1 | `feat: draughts frontend model, session and store` | M | P0 | B1, B2, B3, F2 | [x] |
+| F2 | `feat: draughts board and table components` | L | P0, D | B1, B2, B3, F1 | [x] |
+| B2 | `feat: draughts aggregate, endpoints and wiring` | L | B1 | B3, F1, F2 | [x] |
+| B3 | `feat: draughts bot strategies` | M-L | B1 | B2, F1, F2 | [x] |
+| B4 | `feat: draughts bot coordinator` | S | B2, B3 | F2 | [x] |
+| E | `feat: draughts on the game picker` (entry, Cypress, docs) | M | B2, B4, F1, F2 | - | [x] |
 
 About 10 to 12 days of work, 8 PRs plus the canvas. Critical path: P0, B1, B2, B4, E (with F2 waiting on D).
 
