@@ -93,8 +93,8 @@ const rail = computed(() => {
   }));
 });
 const sizes = computed(() => (compact.value
-  ? { '--nn-pile-w': '38px', '--nn-total-size': '44px', '--nn-card-w': '70px' }
-  : { '--nn-pile-w': '64px', '--nn-total-size': '76px', '--nn-card-w': '90px' }));
+  ? { '--nn-pile-w': '38px', '--nn-total-size': '44px', '--nn-card-w': '70px', '--nn-bust-w': '11rem' }
+  : { '--nn-pile-w': '64px', '--nn-total-size': '76px', '--nn-card-w': '90px', '--nn-bust-w': '17rem' }));
 </script>
 
 <template>

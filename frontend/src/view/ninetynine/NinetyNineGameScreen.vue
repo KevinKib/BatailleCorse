@@ -389,6 +389,8 @@ const rematchButton = computed(() =>
 
 .table-footer { flex: none; display: flex; align-items: center; gap: var(--space-2); }
 .table-footer .speed { margin-left: auto; }
+/* 44 px touch target (frontend-spacing). */
+.table-footer :deep(.back-button.p-button) { min-height: 44px; }
 
 .sr-only {
   position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;

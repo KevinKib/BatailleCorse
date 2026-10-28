@@ -47,7 +47,8 @@ const outcome = computed(() => props.bust.eliminated
 <style scoped>
 .bust {
   box-sizing: border-box;
-  width: min(100%, 17rem);
+  /* Narrow enough to sit between the side plates of a 12-seat ring on a phone (the table sets it wider on a wide felt). */
+  width: min(100%, var(--nn-bust-w, 11rem));
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -61,7 +62,7 @@ const outcome = computed(() => props.bust.eliminated
 }
 .bust-title { font-size: 1rem; overflow-wrap: anywhere; }
 .bust-hand { display: flex; gap: var(--space-2); }
-.bust-card { display: block; width: 46px; }
+.bust-card { display: block; width: 44px; }
 .bust-card :deep(.playing_card) { display: block; width: 100%; height: auto; aspect-ratio: 167.575 / 243.1375; border: 1px solid #000; border-radius: 6%; }
 .bust-reason { font-size: 0.75rem; color: rgba(255, 255, 255, 0.8); }
 .bust-lives { font-size: 0.8125rem; font-weight: 700; color: #fecaca; overflow-wrap: anywhere; }
