@@ -79,7 +79,9 @@ class BlackjackFixedShoeIT {
         game.bet(new PlayerId(1), 10);
 
         assertThat(game.handNumber(), is(2));
-        assertThat(game.seat(new PlayerId(1)).hands().get(0).cards(), contains(card("KC"), card("QC")));
+        // the button moved to seat 1, so the deal starts there
+        assertThat(game.seat(new PlayerId(1)).hands().get(0).cards(), contains(card("AS"), card("9H")));
+        assertThat(game.seat(new PlayerId(0)).hands().get(0).cards(), contains(card("KC"), card("QC")));
     }
 
     @Test
