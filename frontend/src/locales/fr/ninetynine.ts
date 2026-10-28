@@ -113,3 +113,66 @@ export const ninetyNineOptions: Messages['options']['ninetyNine'] = {
   quick: { label: 'Mode rapide', off: 'Désactivé', on: 'Activé' },
   level: { label: 'Niveau', easy: 'Facile', medium: 'Moyen', hard: 'Difficile' },
 };
+
+// The rules panel of 99.
+export const ninetyNine: Messages['ninetyNine'] = {
+  toggleLabel: 'Règles',
+  panelTitle: '99',
+  closeLabel: 'Fermer les règles',
+  sections: [
+    {
+      kind: 'text',
+      title: 'But du jeu',
+      body: ['Gardez le total à 99 ou moins. Un joueur qui ne peut pas jouer sans dépasser 99 perd une vie ; le dernier joueur à avoir encore des vies gagne.'],
+    },
+    {
+      kind: 'text',
+      title: 'Un tour',
+      body: [
+        'Chacun tient trois cartes. À votre tour, jouez une carte face visible sur la défausse : le total change de la valeur de la carte, et une nouvelle carte vous est donnée aussitôt.',
+        'Le jeu passe ensuite au joueur suivant, dans le sens en cours.',
+      ],
+    },
+    {
+      kind: 'text',
+      title: 'Ce que font les cartes',
+      body: [
+        'Les 2, 3, 5, 6, 7 et 8 ajoutent leur valeur.',
+        'Le valet et la dame ajoutent 10. Le 10 retire 10, mais le total ne descend jamais sous 0.',
+        'Le 4 n’ajoute rien et inverse le sens du jeu. Le 9 n’ajoute rien.',
+        'Le roi fait passer le total à 99, quel qu’il soit. On peut toujours le jouer.',
+      ],
+    },
+    {
+      kind: 'text',
+      title: 'L’as',
+      body: ['L’as ajoute 1 ou 11, au choix. Vous ne pouvez choisir 11 que si le total reste à 99 ou moins.'],
+    },
+    {
+      kind: 'text',
+      title: 'Dépasser 99',
+      body: [
+        'Si vous tenez une carte qui garde le total à 99 ou moins, vous devez en jouer une. Si aucune de vos trois cartes ne peut être jouée, vous êtes bloqué : vous dépassez 99 et perdez une vie. Vos cartes sont montrées à la table, et une nouvelle manche commence avec un jeu neuf et le total remis à 0.',
+        'La manche suivante est ouverte par le joueur qui a perdu, ou par le joueur suivant s’il est éliminé.',
+      ],
+    },
+    {
+      kind: 'text',
+      title: 'Vies et fin de la partie',
+      body: [
+        'L’hôte choisit 2, 3 ou 4 vies. Un joueur sans vie est éliminé et regarde la suite. Le dernier joueur à avoir encore des vies gagne.',
+        'En mode rapide, la partie s’arrête dès qu’un joueur perd sa dernière vie. Les autres joueurs sont classés selon les vies qui leur restent, et ceux qui en ont autant partagent leur place.',
+      ],
+    },
+    {
+      kind: 'text',
+      title: 'Quitter la partie',
+      body: ['Quitter la partie, ou rester déconnecté trop longtemps, vous élimine aussitôt, sous les joueurs encore en jeu.'],
+    },
+    {
+      kind: 'text',
+      title: 'Jouer contre un bot',
+      body: ['L’hôte peut ajouter des bots à trois niveaux : Facile joue n’importe quelle carte jouable, Moyen fait monter le total en gardant ses cartes sûres, Difficile raisonne aussi sur les cartes qu’il ne voit pas.'],
+    },
+  ],
+};

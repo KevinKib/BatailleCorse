@@ -106,6 +106,12 @@ export const gamePicker: Messages['gamePicker'] = {
       players: '2 joueurs',
       play: 'Jouer',
     },
+    'ninety-nine': {
+      name: '99',
+      description: 'Gardez le total à 99 ou moins. Celui qui ne peut plus jouer perd une vie.',
+      players: '2 à 12 joueurs',
+      play: 'Jouer',
+    },
   },
 };
 

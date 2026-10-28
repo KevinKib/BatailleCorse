@@ -5,6 +5,7 @@ import { useBatailleCorseStore } from './BatailleCorse.store';
 import { useBullshitStore } from './Bullshit.store';
 import { useKoboStore } from './Kobo.store';
 import { useMangolaStore } from './Mangola.store';
+import { useNinetyNineStore } from './NinetyNine.store';
 import { usePresidentStore } from './President.store';
 import { useThreeMenMorrisStore } from './ThreeMenMorris.store';
 
@@ -14,6 +15,7 @@ const stores = {
   bullshit: useBullshitStore,
   kobo: useKoboStore,
   mangola: useMangolaStore,
+  ninetynine: useNinetyNineStore,
   president: usePresidentStore,
   threemenmorris: useThreeMenMorrisStore,
 } as const;
