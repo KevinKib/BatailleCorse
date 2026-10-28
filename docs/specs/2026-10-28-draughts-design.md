@@ -364,6 +364,26 @@ its path preview and an ambiguous destination, a kings-only ending with the draw
 look (wood, flat, felt), piece and king look (the crown mark must not depend on colour alone), plates layout,
 the move list, and the lobby. The owner chooses; the components chunk adds a "UI addendum" to this spec.
 
+### UI addendum (F2)
+
+The owner chose option A, "Felt" (canvas: https://claude.ai/artifact/4oJCE9drXcPU5xzmhUHFiC), dark theme only.
+
+- Look: green felt board with a darker playing square, ivory and ebony pieces, a gold ring on selectable pieces, a crown
+  mark on kings (the king is never told by colour alone). No square numbers on the board; the notation appears in the
+  move list, the live region and the end summary.
+- Plates: opponent above the board, me below (my name is "You"); each shows colour, men, kings and pieces taken; the
+  side to move has a gold ring.
+- Notes block of fixed height above the board (capture hint with the count, what to do, colour hint before the first
+  move, draw counters, repetition warning); a draw offer for me replaces it while it lasts, so the board never resizes.
+- Squares are about 34 px at 375 px wide (the whole square is the target, spec Q8); the board takes what the fixed rows
+  leave, using container units.
+- Ambiguous destination: a bottom sheet lists the routes ("Takes 37, 28"), and the pieces of each route are numbered on
+  the board; either choice sends the captured set. Cancel is a 44 px icon button.
+- Move list: a side panel (240 px) on wide screens, open by default; a sheet over the bottom on phones, closed by default.
+- Lobby: the shared lobby with a small starting-position board and a one-line summary in the options slot (GameLobby has
+  no header slot).
+- Actions row: Offer a draw (hidden when the host switched offers off), Resign (same confirmation as leaving), Moves.
+
 ## Rules panel text (draft, `locales/en.ts` `draughts: RulesMessages`, kind `text` sections)
 
 - **Goal**: "Take all your opponent's pieces, or leave them without a move on their turn."
