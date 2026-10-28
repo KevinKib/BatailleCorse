@@ -28,9 +28,9 @@ const props = defineProps<{
 }>();
 const ui = useI18n().ninetyNineUi;
 
-const outText = computed(() => format(ui.table.outPlace, {
-  place: props.player.place === null ? '' : ordinal(props.player.place, ui.ordinal),
-}).replace(/\s*·\s*$/, ''));
+const outText = computed(() => props.player.place === null
+  ? ui.table.out
+  : format(ui.table.outPlace, { place: ordinal(props.player.place, ui.ordinal) }));
 const cardsText = computed(() => plural(ui.table.cards, props.player.handSize));
 const accessibleName = computed(() => {
   if (props.player.eliminated) return `${props.label}, ${outText.value}`;
