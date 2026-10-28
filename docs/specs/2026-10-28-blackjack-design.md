@@ -496,6 +496,11 @@ The exact rules are pinned by hand-written views in the bots chunk; the numbers 
   clearly more than 25% against three `medium`; `medium` beats `easy`. The results are written into this section
   by the bots chunk (as 99 did). If `hard` does not beat `medium`, the bots chunk tunes `BlackjackBotTuning` and
   says so in its PR.
+- **Measured** (bots chunk, 1,000 tournaments of 4 seats, 10 hands, default options, seats rotated, on the test-tree
+  simulator of the rules because the aggregate was not yet on `main`; a tie for first splits the win; the standard
+  error is about 1.4 points): 1 `hard` vs 3 `medium`: `hard` 36.5%, `medium` 21.2% per seat; 1 `medium` vs 3
+  `easy`: `medium` 66.9%, `easy` 11.1%; `hard` + `medium` + 2 `easy`: 43.5% / 39.8% / 8.4%; 4 `medium` (control):
+  25.0%. No tuning of `BlackjackBotTuning` was needed. To be re-run on the aggregate once it is on `main`.
 - **Coordinator** (`presentation/bot/BlackjackBotCoordinator`, the 99 pattern): after each broadcast, during
   `BETTING` one task per bot seat that has not bet, during `PLAYING` one task for the bot on turn; each after
   `ThinkingDelay` (0 under `test`), keyed on `version()` and dropped when stale; a failing strategy falls back to a

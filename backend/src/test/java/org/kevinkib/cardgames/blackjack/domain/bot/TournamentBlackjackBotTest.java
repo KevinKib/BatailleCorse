@@ -42,8 +42,8 @@ class TournamentBlackjackBotTest {
         assertEquals(1, bot.decideBet(betting(2, MaxBet.FIFTY, 100, 30)));
         // second has 60: secondCap 50, lead 40 <= 100: min(cap 50, 50) = 50
         assertEquals(50, bot.decideBet(betting(2, MaxBet.FIFTY, 100, 60)));
-        // my stack is the small cap: lead 10, cap 30, secondCap 30: 30
-        assertEquals(30, bot.decideBet(betting(1, MaxBet.FIFTY, 30, 20)));
+        // my stack is the small cap: lead 10, cap 30, secondCap 20: 20
+        assertEquals(20,bot.decideBet(betting(1, MaxBet.FIFTY, 30, 20)));
     }
 
     @Test

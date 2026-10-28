@@ -16,7 +16,8 @@ class BasicStrategyTest {
     private static final int[] UPS = {2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
 
     private static void row(int total, boolean soft, boolean pair, String expected, List<Action> available) {
-        for (int i = 0; i < UPS.length; i++) {
+        for (int column = 0; column < UPS.length; column++) {
+            int i = column;
             Action want = switch (expected.charAt(i)) {
                 case 'H' -> Action.HIT;
                 case 'S' -> Action.STAND;
