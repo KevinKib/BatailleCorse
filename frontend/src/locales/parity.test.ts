@@ -4,10 +4,24 @@ import { messagesFr } from './fr';
 
 // Areas whose French is written: the completeness and typography checks run on them only.
 // Each translation chunk adds its own areas; the integration chunk turns this into "every area".
-const TRANSLATED_AREAS: readonly (keyof typeof messagesEn)[] = [];
+const TRANSLATED_AREAS: readonly (keyof typeof messagesEn)[] = [
+  // shell, lobby and Bataille Corse
+  'rules', 'batailleCorseUi', 'gamePicker', 'home', 'join', 'lobby', 'options', 'endScreen', 'endGame',
+  'disconnect', 'leaveGuard', 'hotkeys', 'turn', 'language',
+];
 
 // French leaves that may equal the English leaf (proper nouns, symbols). Keys are dotted paths prefixes.
-const SAME_AS_ENGLISH_ALLOWED: readonly string[] = ['language.names.en', 'language.names.fr'];
+const SAME_AS_ENGLISH_ALLOWED: readonly string[] = [
+  'language.names.en', 'language.names.fr',
+  'gamePicker.games.kobo.name', 'gamePicker.games.mangola.name',
+  'rules.sections[2].labels.sandwich',
+  'options.bataillecorse.tier.1', 'options.bataillecorse.tier.6', 'options.bataillecorse.tier.7',
+  'options.bullshit.vars.range.deckSize.32',
+  'options.threeMenMorris.variant.tapatan', 'options.threeMenMorris.variant.achi',
+  'batailleCorseUi.botLabel', 'batailleCorseUi.botWithTier', 'gamePicker.playAria',
+  'lobby.botName', 'lobby.botBadge', 'join.publicGames.bots',
+  'options.mangola.level.expert', 'options.threeMenMorris.level.perfect',
+];
 
 type Leaves = Map<string, string | number | boolean>;
 
@@ -72,6 +86,7 @@ describe('translated areas', () => {
   it('givenATranslatedArea_thenNoLeafIsStillEnglish', () => {
     for (const [path, text] of fr) {
       if (typeof text !== 'string') continue;
+      if (path.endsWith('.kind')) continue; // a rules section kind is a discriminant, not text
       if (SAME_AS_ENGLISH_ALLOWED.some(allowed => path.startsWith(allowed))) continue;
       expect(text, path).not.toBe(en.get(path));
     }
