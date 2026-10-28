@@ -13,8 +13,14 @@ abstract class AbstractDraughtsBot implements DraughtsBot {
 
     @Override
     public DraughtsDecision decide(DraughtsPosition position, Colour me, boolean drawOfferPending) {
+        return decide(position, me, drawOfferPending, DraughtsDrawContext.LATE);
+    }
+
+    @Override
+    public DraughtsDecision decide(DraughtsPosition position, Colour me, boolean drawOfferPending,
+                                   DraughtsDrawContext drawContext) {
         if (drawOfferPending) {
-            return DraughtsMaterial.acceptsDraw(position, me)
+            return !drawContext.tooEarly() && DraughtsMaterial.acceptsDraw(position, me)
                     ? new DraughtsDecision.AcceptDraw()
                     : new DraughtsDecision.DeclineDraw();
         }

@@ -11,4 +11,13 @@ public interface DraughtsBot {
      * pending draw offer.
      */
     DraughtsDecision decide(DraughtsPosition position, Colour me, boolean drawOfferPending);
+
+    /**
+     * Same, with the situation of the game for the answer to a draw offer ({@link DraughtsDrawContext}). The default
+     * ignores the context.
+     */
+    default DraughtsDecision decide(DraughtsPosition position, Colour me, boolean drawOfferPending,
+                                    DraughtsDrawContext drawContext) {
+        return decide(position, me, drawOfferPending);
+    }
 }

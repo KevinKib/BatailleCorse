@@ -71,7 +71,7 @@ class DraughtsEarlyDrawAnswerTest {
         assertThat(DraughtsDrawContext.of(3, fresh, 2).counterRunning()).isTrue();
         assertThat(DraughtsDrawContext.of(3, fresh, 2).plies()).isEqualTo(3);
 
-        DrawTracker shortEnding = DrawTracker.start(BotFixtures.white("W32", "W33", "W34", "b12"));
+        DrawTracker shortEnding = DrawTracker.start(BotFixtures.white("W32", "W33", "W34", "B12"));
         assertThat(DraughtsDrawContext.of(3, shortEnding, 1).counterRunning()).isTrue();
     }
 }

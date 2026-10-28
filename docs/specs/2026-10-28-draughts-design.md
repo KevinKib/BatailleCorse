@@ -274,8 +274,13 @@ camel `draughts`. Display name "Draughts" ([Q6]: "International draughts" on the
     plies (so the shot "sacrifice, forced capture, double capture" is seen even at depth 1); the first depth
     ignores the time and node budgets, so a decision always exists; the root of each iteration uses a window of
     one point below the best score so far, which keeps every move equal to the best for the random tie-break.
-- **Draw offers**: a bot accepts when its material (man 1, king 3) is not ahead of the opponent's, declines
-  otherwise; bots never offer (the Six rule [V]). With offers off, nothing to answer.
+- **Draw offers**: a bot never accepts a draw immediately [owner decision]. Before ply 20 (`DraughtsDrawContext.MIN_PLIES_TO_ACCEPT_DRAW`,
+  plies = moves played by both sides) it declines every offer; from ply 20 it accepts when its material (man 1, king 3)
+  is not ahead of the opponent's, declines otherwise. While a draw counter is running (a position seen twice, the
+  kings-only count shown from 30 plies, a 6.3 / 6.4 short ending) it answers by material even before ply 20. The
+  coordinator passes the situation through `DraughtsBot.decide(position, seat, offerPending, drawContext)` (the
+  three-argument form stays, with no early restriction). Bots never offer (the Six rule [V]). With offers off,
+  nothing to answer.
 - **Coordinator** `DraughtsBotCoordinator` (a `GameStateListener` and a `GameEvictionListener`, over the shared
   `BotScheduler` and `ThinkingDelay` [V]): after each broadcast, one task per bot seat that must move or
   answer an offer, after the thinking delay (700 to 1300 ms, 0 under `test`). **The decision is computed outside
