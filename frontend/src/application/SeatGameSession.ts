@@ -147,6 +147,7 @@ export default class SeatGameSession<
     // attributable to this seat (drives the disconnect grace timer + forfeit).
     // The WebSocketService re-asserts presence on reconnect.
     this.webSocket.setPresence(JSON.stringify({ gameId, token }));
+    this.onBind(gameId, seat, token);
     this.callbacks.onEvent({ type: 'game-id-change', gameId });
     this.callbacks.onEvent({ type: 'seat-change', seat });
   }
@@ -156,6 +157,7 @@ export default class SeatGameSession<
    * means the removal of this seat was among the lost frames: tear down as for a REMOVED frame.
    */
   private async onConnected(): Promise<void> {
+    if (!this.shouldHydrateOnConnect()) return;
     const result = await this.hydrate();
     if ((result === 'lost' || result === 'gone') && !this.left) this.removedByHost();
   }
@@ -180,27 +182,60 @@ export default class SeatGameSession<
     if (res.status === 404) return 'gone';
     if (res.status === 403) return 'lost';
     if (!res.ok) return 'unavailable';
-    this.applyView(await res.json() as View);
+    const view = this.parseView(await res.json());
+    if (this.applyView(view)) await this.onViewHydrated(view);
     return 'ok';
+  }
+
+  // --- Extension points -----------------------------------------------------------------------------------
+  // Every hook below has a neutral default: a game that needs none of them is unaffected.
+
+  /** Turns a server payload (REST answer or seat-channel state) into the session's view. */
+  protected parseView(raw: unknown): View {
+    return raw as View;
+  }
+
+  /** The session just bound to a seat (create, join, restore, Play again). */
+  protected onBind(_gameId: string, _seat: number, _token: string): void {}
+
+  /** The client left, or was removed from, the room. */
+  protected onTearDown(): void {}
+
+  /** False to skip the reload that follows a (re)connection of the seat channel. */
+  protected shouldHydrateOnConnect(): boolean {
+    return true;
+  }
+
+  /** A hydration just applied this view (not a stale one); the hydrate call resolves once it settles. */
+  protected async onViewHydrated(_view: View): Promise<void> {}
+
+  protected get isLeft(): boolean { return this.left; }
+  protected get hasStarted(): boolean { return this.started; }
+  protected get currentSeat(): number | null { return this.mySeat; }
+  protected get currentGameId(): string | null { return this.gameId; }
+
+  /** Whether a started state of this version is older than the one held (a late answer overtaken by a frame). */
+  protected isStaleVersion(version: number | undefined): boolean {
+    return version !== undefined && this.gameVersion !== null && version < this.gameVersion;
   }
 
   /**
    * Applies a view from the server: a lobby view no newer than the one held is dropped, and the seat the
    * server reports replaces ours (it moves when a seat above is vacated), in the store and in the stored entry.
    */
-  private applyView(view: View): void {
-    if (this.left) return;
+  protected applyView(view: View): boolean {
+    if (this.left) return false;
     if (!view.started) {
-      if (this.started) return;
+      if (this.started) return false;
       const incoming = view.lobbyVersion;
       if (incoming !== undefined) {
-        if (this.lobbyVersion !== null && incoming <= this.lobbyVersion) return;
+        if (this.lobbyVersion !== null && incoming <= this.lobbyVersion) return false;
         this.lobbyVersion = incoming;
       }
     } else {
       // A started state older than the one held is a late hydration answer overtaken by a broadcast.
       if (view.version !== undefined) {
-        if (this.gameVersion !== null && view.version < this.gameVersion) return;
+        if (this.isStaleVersion(view.version)) return false;
         this.gameVersion = view.version;
       }
       this.started = true;
@@ -215,6 +250,7 @@ export default class SeatGameSession<
       this.callbacks.onEvent({ type: 'seat-change', seat });
     }
     this.callbacks.onEvent({ type: 'state-update', state: view });
+    return true;
   }
 
   /**
@@ -266,6 +302,7 @@ export default class SeatGameSession<
     if (!gameId || this.myToken === null) return;
     this.lobby.leave();
     this.left = true;
+    this.onTearDown();
     this.webSocket.unsubscribeFromSeat();
     this.webSocket.unsubscribeFromGame();
     this.webSocket.clearPresence();
@@ -281,6 +318,7 @@ export default class SeatGameSession<
   private removedByHost(): void {
     const gameId = this.gameId;
     this.left = true;
+    this.onTearDown();
     this.webSocket.unsubscribeFromSeat();
     this.webSocket.unsubscribeFromGame();
     this.webSocket.clearPresence();
@@ -316,12 +354,12 @@ export default class SeatGameSession<
     }
     if (response.success === false) {
       // Refused action (e.g. a bot change the server rejected): keep the state it carries, if any, and surface the error.
-      if (response.state) this.applyView(response.state);
+      if (response.state) this.applyView(this.parseView(response.state));
       this.callbacks.onEvent({ type: 'error', eventType: response.eventType, message: response.message });
       return;
     }
     if (response.state) {
-      this.applyView(response.state);
+      this.applyView(this.parseView(response.state));
     }
     this.callbacks.onEvent({ type: 'event', eventType: response.eventType, eventData: response.eventData, message: response.message });
   }
