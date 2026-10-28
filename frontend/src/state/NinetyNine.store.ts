@@ -66,14 +66,28 @@ export const useNinetyNineStore = defineStore('ninety-nine-store', () => {
     onEvent(event: NinetyNineSessionEvent) { applyEvent(event); },
   });
 
+  // The play on its way: the version it was sent from and the card. Only the answer to it frees the table.
+  let pending: { version: number; cardName: string } | null = null;
+
+  // Whether a state is the answer to the pending play: newer than the one it was sent from, and showing my card
+  // played or the turn gone elsewhere. A state of someone else's doing (a forfeit, a reconnection notice) is not.
+  function answersPending(next: NinetyNineState | null): boolean {
+    if (!pending || !next) return true; // nothing pending, or back to a lobby
+    if (next.version <= pending.version) return false;
+    const mine = next.lastPlay?.seat === mySeat.value && next.lastPlay.card.name === pending.cardName;
+    return mine || next.currentSeat !== mySeat.value || next.phase !== 'PLAYING';
+  }
+
   function applyEvent(event: NinetyNineSessionEvent) {
     switch (event.type) {
       case 'state-update': {
         const next = event.state;
         const nextGame = next.started ? next : null;
-        previousGame = game.value;
+        // One command sends several events, each with the state after the whole command (same version): the state
+        // before the command is kept until the version moves on.
+        if (!game.value || !nextGame || nextGame.version !== game.value.version) previousGame = game.value;
         state.value = next;
-        busy.value = false;
+        if (busy.value && answersPending(nextGame)) busy.value = false;
         room.onStateUpdate(next.started);
         if (nextGame) {
           for (const p of nextGame.players) roster.value = { ...roster.value, [p.seat]: p };
@@ -171,7 +185,10 @@ export const useNinetyNineStore = defineStore('ninety-nine-store', () => {
       value = aceValue ?? (allowed.length === 1 ? allowed[0] : null);
       if (value === null || !allowed.includes(value)) return false;
     }
-    return send(() => session.play(card, value));
+    const sentFrom = { version: current.version, cardName: card.name };
+    const sentOk = send(() => session.play(card, value));
+    if (sentOk) pending = sentFrom;
+    return sentOk;
   }
 
   // Leaves the lobby and forgets everything about it, so the next room starts from a clean store.

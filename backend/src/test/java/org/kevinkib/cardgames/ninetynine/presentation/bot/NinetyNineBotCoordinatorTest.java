@@ -63,6 +63,7 @@ class NinetyNineBotCoordinatorTest {
     private NinetyNineBotCoordinator coordinator;
     private final List<NinetyNineBotLevel> levelsAsked = new ArrayList<>();
     private Scripted bot;
+    private boolean botSeatsFail;
 
     /** A strategy the test scripts: what it was asked, whether it held the game monitor, and its answer. */
     private final class Scripted implements NinetyNineBotStrategy {
@@ -93,7 +94,12 @@ class NinetyNineBotCoordinatorTest {
         actions = new NinetyNineGameActions(sessions, broadcaster);
         scheduler = new ManualBotScheduler();
         bot = new Scripted();
-        coordinator = new NinetyNineBotCoordinator(sessions::botSeats, sessions::seatOptions, actions, scheduler,
+        coordinator = new NinetyNineBotCoordinator(id -> {
+                    if (botSeatsFail) {
+                        throw new IllegalStateException("lookup failed");
+                    }
+                    return sessions.botSeats(id);
+                }, sessions::seatOptions, actions, scheduler,
                 new FixedThinkingDelay(DELAY), level -> {
                     levelsAsked.add(level);
                     return bot;
@@ -193,6 +199,38 @@ class NinetyNineBotCoordinatorTest {
 
         assertThat(bot.views).isEmpty();
         assertThat(game.currentSeat()).isEqualTo(BOT);
+    }
+
+    @Test
+    void aFailingBotLookupKeepsTheWaitingTaskInsteadOfCancellingIt() throws Exception {
+        NinetyNine game = register(1);
+        start(game);
+        actions.play(game.getId(), HUMAN, card("9S"), null);
+        ManualBotScheduler.Entry task = scheduler.pending().get(0);
+
+        botSeatsFail = true;
+        broadcaster.broadcast(game, "OPPONENT_DISCONNECTED", new EmptyEventData(), "");
+
+        assertThat(task.isCancelled()).isFalse();
+        botSeatsFail = false;
+        task.run();
+        assertThat(game.currentSeat()).isEqualTo(OTHER_HUMAN);
+    }
+
+    @Test
+    void aBotLookupThatFailsOnAStateChangeIsRetriedLater() throws Exception {
+        NinetyNine game = register(1);
+        start(game);
+        botSeatsFail = true;
+
+        actions.play(game.getId(), HUMAN, card("9S"), null); // the bot is now on turn, but the lookup fails
+        assertThat(scheduler.pending()).hasSize(1); // a retry, not the bot's play
+        botSeatsFail = false;
+        scheduler.runNext(); // the retry finds the bot on turn and schedules its play
+        assertThat(scheduler.pending()).hasSize(1);
+        scheduler.runNext();
+
+        assertThat(game.currentSeat()).isEqualTo(OTHER_HUMAN);
     }
 
     @Test

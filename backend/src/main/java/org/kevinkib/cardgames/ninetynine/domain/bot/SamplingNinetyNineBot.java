@@ -121,7 +121,7 @@ public class SamplingNinetyNineBot implements NinetyNineBotStrategy {
         List<PlayerId> live = view.liveSeats();
         int me = live.indexOf(view.seat());
         int total = move.totalAfter();
-        Direction direction = CardEffect.reverses(move.card()) ? reverse(view.direction()) : view.direction();
+        Direction direction = CardEffect.reverses(move.card()) ? view.direction().reversed() : view.direction();
         List<Card> mine = new ArrayList<>(view.hand());
         mine.remove(move.card());
         draw(mine, deal.stock());
@@ -142,7 +142,7 @@ public class SamplingNinetyNineBot implements NinetyNineBotStrategy {
             draw(hand, deal.stock());
             total = reply.totalAfter();
             if (CardEffect.reverses(reply.card())) {
-                direction = reverse(direction);
+                direction = direction.reversed();
             }
             first = false;
             current = step(current, direction, live.size());
@@ -157,10 +157,6 @@ public class SamplingNinetyNineBot implements NinetyNineBotStrategy {
         if (!stock.isEmpty()) {
             hand.add(stock.remove(stock.size() - 1));
         }
-    }
-
-    private static Direction reverse(Direction direction) {
-        return direction == Direction.CLOCKWISE ? Direction.COUNTER_CLOCKWISE : Direction.CLOCKWISE;
     }
 
     private static int step(int index, Direction direction, int size) {

@@ -119,4 +119,57 @@ class NinetyNineRoundPauseTest {
 
         assertThat(task.isCancelled()).isTrue();
     }
+
+    /** A fresh table whose round pause deals through actions that fail {@code failures} times first. */
+    private final class FlakyTable {
+        final NinetyNineTable own = new NinetyNineTable();
+        final ManualBotScheduler own_scheduler = new ManualBotScheduler();
+        final int[] calls = {0};
+
+        FlakyTable(int failures) {
+            NinetyNineGameActions flaky = new NinetyNineGameActions(own.sessions, own.broadcaster) {
+                @Override
+                public void nextRound(org.kevinkib.cardgames.game.GameId id, int version)
+                        throws org.kevinkib.cardgames.ninetynine.domain.NinetyNineException {
+                    if (calls[0]++ < failures) {
+                        throw new IllegalStateException("deal failed");
+                    }
+                    super.nextRound(id, version);
+                }
+            };
+            own.broadcaster.addListener(new NinetyNineRoundPause(flaky, own_scheduler, PAUSE));
+        }
+    }
+
+    @Test
+    void aFailedDealIsRetriedSoTheGameDoesNotStayInRoundOver() throws Exception {
+        FlakyTable flaky = new FlakyTable(2);
+        NinetyNine game = flaky.own.beforeABust();
+        flaky.own.actions.play(game.getId(), S0, card("KS"), null);
+
+        flaky.own_scheduler.runNext();
+        assertThat(game.phase()).isEqualTo(Phase.ROUND_OVER);
+        assertThat(flaky.own_scheduler.pending()).hasSize(1);
+        flaky.own_scheduler.runNext();
+        assertThat(flaky.own_scheduler.pending()).hasSize(1);
+        flaky.own_scheduler.runNext();
+
+        assertThat(game.phase()).isEqualTo(Phase.PLAYING);
+        assertThat(game.round()).isEqualTo(2);
+        assertThat(flaky.own_scheduler.pending()).isEmpty();
+    }
+
+    @Test
+    void aDealThatKeepsFailingIsTriedAtMostMaxAttemptsTimes() throws Exception {
+        FlakyTable flaky = new FlakyTable(Integer.MAX_VALUE);
+        NinetyNine game = flaky.own.beforeABust();
+        flaky.own.actions.play(game.getId(), S0, card("KS"), null);
+
+        while (!flaky.own_scheduler.pending().isEmpty()) {
+            flaky.own_scheduler.runNext();
+        }
+
+        assertThat(flaky.calls[0]).isEqualTo(NinetyNineRoundPause.MAX_ATTEMPTS);
+        assertThat(game.phase()).isEqualTo(Phase.ROUND_OVER);
+    }
 }

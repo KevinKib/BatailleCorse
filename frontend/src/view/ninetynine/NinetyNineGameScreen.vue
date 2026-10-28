@@ -83,7 +83,10 @@ watch(online, (isOnline, wasOnline) => {
 });
 
 // --- What the table shows ------------------------------------------------------------------------------------------
-const maxLives = computed(() => Number(store.game?.options.lives ?? 3) || 3);
+// The lives each player started with: the `lives` option the server sends (defaults filled); should it be missing, the
+// most lives any seat holds.
+const maxLives = computed(() => Number(store.game?.options.lives)
+  || Math.max(0, ...(store.game?.players ?? []).map(p => p.lives)));
 const roundOver = computed(() => store.game?.phase === 'ROUND_OVER');
 const roundText = computed(() => {
   const g = store.game;
@@ -275,7 +278,7 @@ const rematchButton = computed(() =>
         :disconnected="seatDisconnected"
         :seconds-remaining="seatSecondsRemaining">
         <template #overlay>
-          <NinetyNineBustBanner v-if="bust" :bust="bust" :label="nameOrYou(bust.seat)" :mine="bust.seat === store.mySeat" :pause="true" />
+          <NinetyNineBustBanner v-if="bust" :bust="bust" :label="nameOrYou(bust.seat)" :mine="bust.seat === store.mySeat" />
         </template>
       </NinetyNineTable>
 
