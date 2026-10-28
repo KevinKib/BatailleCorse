@@ -2,13 +2,18 @@
   <div class="seat-disconnect-badge" data-test="seat-disconnect-badge">
     <span class="dot" aria-hidden="true"></span>
     <span class="text">
-      Reconnecting<template v-if="secondsRemaining !== null">… {{ secondsRemaining }}s</template>
+      {{ secondsRemaining !== null ? format(disconnect.reconnectingCountdown, { n: secondsRemaining }) : disconnect.reconnecting }}
     </span>
   </div>
 </template>
 
 <script setup lang="ts">
+import { useI18n } from '../composables/useI18n';
+import { format } from '../locales/format';
+
 defineProps<{ secondsRemaining: number | null }>();
+
+const { disconnect } = useI18n();
 </script>
 
 <style scoped>

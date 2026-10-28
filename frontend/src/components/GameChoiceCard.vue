@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { Button } from 'primevue';
+import { useI18n } from '../composables/useI18n';
+import { format } from '../locales/format';
 import type { GameChoiceMessages } from '../locales/Messages';
 import type { GamePickerStyle } from '../model/games';
 
@@ -13,6 +15,8 @@ defineProps<{
 }>();
 
 defineEmits<{ play: [] }>();
+
+const { gamePicker } = useI18n();
 </script>
 
 <template>
@@ -28,7 +32,7 @@ defineEmits<{ play: [] }>();
       :label="choice.play"
       :icon="icon"
       :severity="severity"
-      :aria-label="`${choice.play} ${choice.name}`"
+      :aria-label="format(gamePicker.playAria, { play: choice.play, name: choice.name })"
       rounded
       @click="$emit('play')"
     />
