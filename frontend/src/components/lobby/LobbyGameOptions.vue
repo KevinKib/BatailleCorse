@@ -60,10 +60,9 @@ function pick(event: Event, d: OptionDescriptor, value: string) {
 <style scoped>
 .options { width: 100%; display: flex; flex-direction: column; gap: 8px; }
 .field-label {
-  font-size: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 700;
   line-height: 1rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
   color: rgba(255, 255, 255, 0.6);
   margin: 0;
   padding: 0;
@@ -80,7 +79,7 @@ function pick(event: Event, d: OptionDescriptor, value: string) {
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 8px;
 }
-.option-value { color: var(--gold); font-weight: 600; font-size: 0.875rem; line-height: 1.25rem; }
+.option-value { color: var(--gold); font-weight: 700; font-size: 0.875rem; line-height: 1.25rem; }
 /* A block, not a flex column: a legend is not a flex item, so a gap would not apply to it. Its margin does. */
 .option--edit { display: block; }
 .option--edit .field-label { display: block; margin-bottom: var(--space-2); }
@@ -98,7 +97,7 @@ function pick(event: Event, d: OptionDescriptor, value: string) {
   text-align: center;
   font-size: 0.8125rem;
   line-height: 1.1rem;
-  font-weight: 600;
+  font-weight: 700;
   color: rgba(255, 255, 255, 0.85);
   background: rgba(0, 0, 0, 0.25);
   border: 1px solid rgba(255, 255, 255, 0.15);

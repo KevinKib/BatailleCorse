@@ -174,7 +174,7 @@ export const join: Messages['join'] = {
   started: 'Cette partie a déjà commencé.',
   notFound: 'Aucune partie trouvée. Elle a peut-être été fermée, ou l’identifiant est erroné.',
   back: 'Retour',
-  or: 'ou choisissez une partie publique',
+  or: 'Ou choisissez une partie publique',
   publicGames: {
     title: 'Parties publiques',
     openCount: 'Ouvertes : {open}',

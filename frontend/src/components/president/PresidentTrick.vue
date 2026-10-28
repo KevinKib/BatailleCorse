@@ -243,7 +243,7 @@ const chipTexts = computed(() => props.chips.flatMap((chip) => {
   display: inline-flex;
   align-items: center;
   font-size: 0.7rem;
-  font-weight: 600;
+  font-weight: 700;
   color: rgba(255, 255, 255, 0.9);
   background: rgba(0, 0, 0, 0.5);
   border: 1px solid rgba(255, 255, 255, 0.18);

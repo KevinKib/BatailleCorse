@@ -611,10 +611,8 @@ onBeforeUnmount(() => {
   box-sizing: border-box;
   margin-left: auto;
   margin-right: auto;
-  font-size: 0.8rem;
+  font-size: 0.875rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
   color: rgba(255, 255, 255, 0.8);
   background: rgba(0, 0, 0, 0.45);
   border: 1px solid rgba(255, 255, 255, 0.1);

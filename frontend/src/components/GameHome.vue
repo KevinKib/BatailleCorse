@@ -124,6 +124,6 @@ onMounted(() => preloadAllCards());
 .private-row { width: 100%; display: flex; align-items: flex-start; gap: 12px; min-height: 44px; }
 .private-box { flex: none; width: 24px; height: 24px; margin: 10px 0 0; accent-color: var(--gold); cursor: pointer; }
 .private-text { display: flex; flex-direction: column; gap: 2px; padding-top: 10px; text-align: left; }
-.private-label { font-size: 0.875rem; line-height: 1.25rem; font-weight: 600; color: rgba(255, 255, 255, 0.9); cursor: pointer; }
+.private-label { font-size: 0.875rem; line-height: 1.25rem; font-weight: 700; color: rgba(255, 255, 255, 0.9); cursor: pointer; }
 .private-hint { margin: 0; font-size: 0.8125rem; line-height: 1.2rem; color: rgba(255, 255, 255, 0.6); }
 </style>

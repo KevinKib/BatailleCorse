@@ -70,10 +70,9 @@ function selectAll(event: FocusEvent) {
 <style scoped>
 .field-group { width: 100%; display: flex; flex-direction: column; gap: 8px; }
 .field-label {
-  font-size: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 700;
   line-height: 1rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
   color: rgba(255, 255, 255, 0.6);
   margin: 0;
 }

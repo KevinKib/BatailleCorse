@@ -133,9 +133,8 @@ const lostParts = computed(() => countParts(ui.table.lost));
 }
 .tag-colour {
   flex: none;
-  font-size: 0.72rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  font-size: 0.875rem;
+  font-weight: 700;
   color: rgba(255, 255, 255, 0.6);
 }
 .tag-sep {

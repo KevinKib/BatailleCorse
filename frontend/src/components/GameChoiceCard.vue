@@ -9,7 +9,7 @@ import type { GamePickerStyle } from '../model/games';
 // Props down, event up: the page decides where "play" leads.
 defineProps<{
   choice: GameChoiceMessages;
-  icon: string;
+  icon: GamePickerStyle['icon'];
   severity: GamePickerStyle['severity'];
   gameKey: string;
 }>();
@@ -30,12 +30,16 @@ const { gamePicker } = useI18n();
       class="choice-play"
       :data-test="`play-${gameKey}`"
       :label="choice.play"
-      :icon="icon"
+      :icon="typeof icon === 'string' ? icon : undefined"
       :severity="severity"
       :aria-label="format(gamePicker.playAria, { play: choice.play, name: choice.name })"
       rounded
       @click="$emit('play')"
-    />
+    >
+      <template v-if="typeof icon !== 'string'" #icon>
+        <component :is="icon" />
+      </template>
+    </Button>
   </article>
 </template>
 
@@ -71,10 +75,8 @@ const { gamePicker } = useI18n();
 
 .choice-players {
   flex-shrink: 0;
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-size: 0.875rem;
+  font-weight: 700;
   color: rgba(255, 255, 255, 0.6);
 }
 

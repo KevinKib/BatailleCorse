@@ -88,7 +88,7 @@ const emit = defineEmits<{ submit: [] }>();
   margin: 4px 0 0;
   font-family: var(--font-title);
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.6);
@@ -101,9 +101,8 @@ const emit = defineEmits<{ submit: [] }>();
 
 :deep(.field-group) { width: 100%; display: flex; flex-direction: column; gap: 8px; }
 :deep(.field-label) {
-  font-size: 0.75rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-size: 0.875rem;
+  font-weight: 700;
   color: rgba(255, 255, 255, 0.6);
   margin: 0;
   padding: 0;
