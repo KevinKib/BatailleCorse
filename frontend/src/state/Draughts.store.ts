@@ -79,6 +79,18 @@ export const useDraughtsStore = defineStore('draughts-store', () => {
     drawNotice.value = null;
   }
 
+  // A command refused in a started game is a race (the opponent moved first, a double tap, a stale view): the UI
+  // prevents the rest. Nothing is shown; the view is reloaded as on reconnection, and one reload runs at a time.
+  let resyncing = false;
+  function resyncAfterRefusal(key: string) {
+    console.debug(key);
+    selected.value = null;
+    choice.value = null;
+    if (resyncing) return;
+    resyncing = true;
+    session.hydrate().catch(() => {}).finally(() => { resyncing = false; });
+  }
+
   function applyEvent(event: DraughtsSessionEvent) {
     switch (event.type) {
       case 'state-update':
@@ -101,6 +113,7 @@ export const useDraughtsStore = defineStore('draughts-store', () => {
       case 'game-id-change': gameId.value = event.gameId; break;
       case 'error':
         room.onError(state.value?.started === true, event.message);
+        if (state.value?.started === true) resyncAfterRefusal(event.message);
         break;
       case 'removed':
         state.value = null;
