@@ -23,7 +23,11 @@ public enum DraughtsBotLevel {
 
     /** The strategy of this level; ties go through the generator, the expert spends the budget. */
     public DraughtsBot bot(RandomGenerator random, ExpertDraughtsBot.Budget budget) {
-        throw new UnsupportedOperationException("not implemented");
+        return switch (this) {
+            case RANDOM -> new RandomDraughtsBot(random);
+            case GREEDY -> new GreedyDraughtsBot(random);
+            case EXPERT -> new ExpertDraughtsBot(random, budget);
+        };
     }
 
     /** The level named by a seat option value; anything absent or unknown gives the default. */

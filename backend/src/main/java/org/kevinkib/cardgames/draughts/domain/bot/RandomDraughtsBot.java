@@ -17,6 +17,6 @@ public class RandomDraughtsBot extends AbstractDraughtsBot {
 
     @Override
     protected DraughtsMove choose(DraughtsPosition position, Colour me, List<DraughtsMove> moves) {
-        throw new UnsupportedOperationException("not implemented");
+        return moves.get(random.nextInt(moves.size()));
     }
 }
