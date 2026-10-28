@@ -326,6 +326,11 @@ export interface OptionsMessages {
     quick: OptionTexts;                // `label`, then `off` / `on`
     level: OptionTexts;                // a bot seat's level: `label`, then `easy` / `medium` / `hard`
   };
+  blackjack: {
+    hands: OptionTexts;                // `label`, then `10` / `5` / `15` / `20`
+    maxBet: OptionTexts;               // `label`, then `50` / `25` / `100`
+    level: OptionTexts;                // a bot seat's level: `label`, then `easy` / `medium` / `hard`
+  };
   kiloDeMerde: {
     rounds: OptionTexts;               // `label`, then `5` / `10` / `15` / `20`
     level: OptionTexts;                // a bot seat's level: `label`, then `easy` / `medium` / `hard`
@@ -523,7 +528,141 @@ export interface NinetyNineUiMessages {
   };
 }
 
-export type PresidentTitleKey = 'president' | 'vicePresident' | 'neutral' | 'viceScum' | 'scum';
+/** Blackjack screens: the dealer strip, the plates, the bet panel, the action bar, the summary and the end screen. */
+export interface BlackjackUiMessages {
+  connecting: string;
+  back: string;
+  you: string;
+  playerLabel: string;                 // '{n}' = 1-based seat number, for a player without a name
+  botLabel: string;                    // '{n}'
+  ordinal: OrdinalForms;               // a place: '1st', '2nd'... ('{n}')
+  ranks: Record<string, string>;       // by backend rank label (`JACK`...); a number is its own name
+  suits: Record<string, string>;       // by backend suit (`HEART`...)
+  cardLabel: string;                   // '{rank}', '{suit}': accessible name of a card
+  cardHidden: string;                  // the face-down hole card
+  header: {
+    hand: string;                      // '{n}', '{total}': "Hand 3 / 10"
+  };
+  dealer: {
+    name: string;
+    total: string;                     // '{total}': "Dealer 17"
+    totalLabel: string;                // '{total}': accessible name of the total of the shown cards
+    upCard: string;                    // '{card}'
+    blackjack: string;
+    bust: string;
+  };
+  table: {
+    opponents: string;                 // region names
+    yourSeat: string;
+    stack: string;                     // '{n}': "{n} pts"
+    stackLabel: string;                // '{n}': accessible name of a stack
+    standing: string;                  // '{place}': "#2"
+    betPlaced: string;                 // another seat's sealed bet
+    bet: string;                       // '{n}': the amount once it is shown
+    handLabel: string;                 // '{n}', '{count}': "Hand 1 of 2"
+    total: string;                     // '{total}': a hand total
+    soft: string;                      // '{low}', '{high}': "7 / 17"
+    current: string;                   // the seat to play
+    out: string;                       // a seat without points
+    outPlace: string;                  // '{place}'
+    forfeited: string;                 // '{player}'
+    disconnected: string;              // the badge of a seat that dropped
+    offline: string;
+  };
+  status: {
+    blackjack: string;
+    bust: string;
+    double: string;
+    split: string;
+    push: string;
+    stand: string;
+    soft: string;
+    win: string;
+    lose: string;
+  };
+  bet: {
+    title: string;
+    limits: string;                    // '{min}', '{max}'
+    chip: string;                      // '{n}': accessible name of a chip button ("Add 5")
+    max: string;
+    clear: string;
+    place: string;                     // '{n}': "Bet 10"
+    waitingOthers: string;             // my bet is in, the others are still betting
+    yourBet: string;                   // '{n}'
+  };
+  actions: {
+    label: string;                     // region name of the action bar
+    hit: string;
+    stand: string;
+    double: string;
+    split: string;
+  };
+  wait: {
+    betting: string;                   // betting is open and I am out of it (eliminated or forfeited)
+    for: string;                       // '{player}'
+    dealer: string;                    // the dealer plays
+    yourTurn: string;
+  };
+  summary: {
+    title: string;
+    dealer: string;                    // '{total}'
+    dealerBust: string;                // '{total}'
+    dealerBlackjack: string;
+    you: string;                       // '{net}'
+    bestHand: string;                  // '{players}', '{net}'
+    bestHandBadge: string;
+    nobodyGained: string;
+  };
+  lobby: {
+    fixed: string;                     // the read-only line under the two choices
+    soloHint: string;                  // under Start in a 1-seat room
+  };
+  end: {
+    reasons: Record<string, string>;   // by `BlackjackResult` reason: HANDS_PLAYED, LAST_STANDING, BROKE, FORFEIT
+    winner: string;                    // '{players}'
+    winners: string;
+    soloFinal: string;                 // '{stack}', '{net}'
+    soloWon: string;
+    soloLost: string;
+    places: string;                    // region name of the final places
+    stackOf: string;                   // '{n}'
+    eliminated: string;
+    forfeited: string;
+    playAgain: string;
+    rematchPending: string;
+    rematchFailed: string;
+  };
+  /** The live region: one line per event, read once ('{player}', '{card}', '{total}', '{n}'). */
+  live: {
+    betsOpen: string;
+    bet: string;                       // '{player}'
+    dealt: string;                     // '{n}'
+    dealerBlackjack: string;
+    yourTurn: string;
+    hit: string;                       // '{player}', '{card}', '{total}'
+    stand: string;                     // '{player}', '{total}'
+    double: string;                    // '{player}', '{card}', '{total}'
+    split: string;                     // '{player}'
+    bust: string;                      // '{player}', '{total}'
+    dealerReveals: string;             // '{card}', '{total}'
+    dealerDraws: string;               // '{card}', '{total}'
+    dealerBusts: string;               // '{total}'
+    dealerStands: string;              // '{total}'
+    win: string;                       // '{n}'
+    lose: string;                      // '{n}'
+    push: string;
+    eliminated: string;                // '{player}'
+  };
+  /** The codes the server sends on a refused command, by wire code. */
+  errors: Record<string, string>;
+  notice: { connection: string };
+  motion: {
+    speed: string;                     // '{speed}': name of the speed button
+    speeds: { normal: string; fast: string; instant: string };
+  };
+}
+
+export type PresidentTitleKey ='president' | 'vicePresident' | 'neutral' | 'viceScum' | 'scum';
 
 /** President screens: the lobby card, the table, the hand, the hints and the end screen. */
 export interface PresidentUiMessages {
@@ -1151,6 +1290,8 @@ export interface Messages {
   kiloDeMerdeUi: KiloDeMerdeUiMessages; // Kilo de merde screens
   draughts: RulesMessages;          // Draughts
   draughtsUi: DraughtsUiMessages;   // Draughts screens
+  blackjack: RulesMessages;         // Blackjack
+  blackjackUi: BlackjackUiMessages; // Blackjack screens
   threeMenMorris: RulesMessages;    // Three Men's Morris
   morrisBoard: MorrisBoardMessages; // Three Men's Morris board
   mangola: RulesMessages;   // Mangola
