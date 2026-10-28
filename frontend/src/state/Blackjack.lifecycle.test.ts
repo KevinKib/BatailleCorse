@@ -60,8 +60,8 @@ describe('Blackjack room lifecycle', () => {
     // A bot and an option go through the shared lobby commands.
     store.addBot();
     store.setOption('hands', '5');
-    expect(sent().map(s => s.dest)).toEqual(['/app/lobby/addBot', '/app/lobby/setOption']);
-    expect(sent()[1].body).toMatchObject({ gameId: 'g1', token: 'tok0', key: 'hands', value: '5' });
+    expect(sent().map(s => s.dest)).toEqual(['/app/lobby/addBot', '/app/lobby/setOptions']);
+    expect(sent()[1].body).toMatchObject({ gameId: 'g1', token: 'tok0', values: { hands: '5' } });
     store.applyEvent({ type: 'state-update', state: lobbyView({
       lobbyVersion: 2, players: [{ seat: 0, name: 'Ann', joined: true }, { seat: 1, name: 'Bot', joined: true, bot: true }],
       options: { hands: '5', maxBet: '50' },

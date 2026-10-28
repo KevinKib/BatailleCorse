@@ -11,6 +11,7 @@ import PresidentGameScreen from './view/president/PresidentGameScreen.vue';
 import MangolaGameScreen from './view/mangola/MangolaGameScreen.vue';
 import NinetyNineGameScreen from './view/ninetynine/NinetyNineGameScreen.vue';
 import DraughtsGameScreen from './view/draughts/DraughtsGameScreen.vue';
+import BlackjackGameScreen from './view/blackjack/BlackjackGameScreen.vue';
 import { findGame } from './model/games';
 
 const BASE = '/bataillecorse';
@@ -45,6 +46,7 @@ export const routes = [
   { path: '/mangola/room/:id', name: 'mangola-room', component: MangolaGameScreen, props: (route: { params: Record<string, unknown> }) => ({ gameId: route.params.id }) },
   { path: '/ninety-nine/room/:id', name: 'ninety-nine-room', component: NinetyNineGameScreen, props: (route: { params: Record<string, unknown> }) => ({ gameId: route.params.id }) },
   { path: '/draughts/room/:id', name: 'draughts-room', component: DraughtsGameScreen, props: (route: { params: Record<string, unknown> }) => ({ gameId: route.params.id }) },
+  { path: '/blackjack/room/:id', name: 'blackjack-room', component: BlackjackGameScreen, props: (route: { params: Record<string, unknown> }) => ({ gameId: route.params.id }) },
   { path: '/:pathMatch(.*)*', redirect: { name: 'games' } },
 ];
 

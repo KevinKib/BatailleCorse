@@ -237,6 +237,38 @@ describe('Draughts table chrome', () => {
   });
 });
 
+describe('Blackjack table chrome', () => {
+  VIEWPORTS.forEach(([vw, vh]) => {
+    it(`${vw}x${vh}: no gear, the table, the timer, Back and rules all on screen, nothing overlaps or scrolls`, () => {
+      cy.viewport(vw, vh);
+      cy.clearLocalStorage();
+      cy.visit('/blackjack');
+      cy.get('[data-test="name"]').type('Alice');
+      cy.get('[data-test="new-game"]').click();
+      cy.url({ timeout: 10000 }).should('match', /\/blackjack\/room\/.+/);
+      cy.get('[data-test="lobby"]', { timeout: 10000 }).should('be.visible');
+      // No gear on the lobby either: the game has no remappable shortcut.
+      cy.get('[data-test="hotkeys-button"]').should('not.exist');
+      // One seat is enough to start: Blackjack plays solo against the dealer.
+      cy.get('[data-test="start"]', { timeout: 10000 }).should('not.be.disabled').click();
+      cy.get('[data-test="blackjack-table"]', { timeout: 10000 }).should('be.visible');
+      cy.get('[data-test="lobby"]').should('not.exist');
+      cy.get('[data-cy="game-timer"]').should('be.visible');
+      cy.get('[data-test="hotkeys-button"]').should('not.exist');
+      noScroll();
+      cy.document().then((doc) => {
+        const boxes = boxesOf(doc, {
+          timer: '[data-cy="game-timer"]',
+          rules: '[data-cy="rules-toggle"]',
+          back: '[data-test="back"]',
+          table: '[data-test="blackjack-table"]',
+        });
+        expectNoOverlap(boxes, vw, vh);
+      });
+    });
+  });
+});
+
 describe('Local preferences gear on the Game home and in the lobby', () => {
   const gearOffsets: Record<string, { fromRight: number; fromTop: number }> = {};
 

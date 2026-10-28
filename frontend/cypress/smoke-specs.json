@@ -12,6 +12,7 @@
     "cypress/specs/morris-game.cy.ts",
     "cypress/specs/ninety-nine-game.cy.ts",
     "cypress/specs/draughts-game.cy.ts",
+    "cypress/specs/blackjack-game.cy.ts",
     "cypress/specs/i18n-french.cy.ts"
   ]
 }

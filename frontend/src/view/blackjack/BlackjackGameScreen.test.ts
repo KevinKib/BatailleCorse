@@ -4,14 +4,6 @@ import { setActivePinia, createPinia } from 'pinia';
 import { createMemoryHistory, createRouter } from 'vue-router';
 import PrimeVue from 'primevue/config';
 
-// Blackjack is not registered yet (the entry PR does it): the screen is mounted with a stand-in registry entry.
-vi.mock('../../model/games', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../../model/games')>();
-  const stand = { ...actual.GAMES[0], key: 'blackjack', serverType: 'blackjack', gameHomeRoute: '/blackjack',
-    roomRoute: (id: string) => `/blackjack/room/${id}`, joinRoute: (id?: string) => (id ? `/blackjack/join/${id}` : '/blackjack/join') };
-  return { ...actual, findGame: (key: unknown) => (key === 'blackjack' ? stand : actual.findGame(key)) };
-});
-
 import BlackjackGameScreen from './BlackjackGameScreen.vue';
 import { useBlackjackStore } from '../../state/Blackjack.store';
 import { messagesEn } from '../../locales/en';
