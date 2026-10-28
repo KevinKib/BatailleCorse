@@ -1,8 +1,345 @@
-import { messagesEn } from '../en';
 import type { Messages } from '../Messages';
 
-// T2: Bullshit and President. English placeholders until the French is written.
-export const bullshit: Messages['bullshit'] = messagesEn.bullshit;
-export const bullshitUi: Messages['bullshitUi'] = messagesEn.bullshitUi;
-export const president: Messages['president'] = messagesEn.president;
-export const presidentUi: Messages['presidentUi'] = messagesEn.presidentUi;
+// T2: Bullshit (Menteur) and President (Président).
+// Typography: U+00A0 before ':' and U+202F before ';' '!' '?' and inside « » (enforced by parity.test.ts).
+
+export const bullshit: Messages['bullshit'] = {
+  toggleLabel: 'Règles',
+  panelTitle: 'Comment jouer',
+  closeLabel: 'Fermer',
+  sections: [
+    {
+      kind: 'text',
+      title: 'But',
+      body: ['Soyez le premier à vider votre main, en survivant à la contestation sur votre toute dernière carte.'],
+    },
+    {
+      kind: 'text',
+      title: 'La donne',
+      body: ['Tout le paquet est distribué. Chacun commence avec une belle poignée de cartes.'],
+    },
+    {
+      kind: 'text',
+      title: 'À votre tour',
+      body: ['Posez de 1 à 4 cartes face cachée et annoncez qu’elles sont du rang demandé. Vous choisissez combien et lesquelles, donc vous pouvez bluffer.'],
+    },
+    {
+      kind: 'cycle',
+      title: 'L’annonce avance toute seule',
+      steps: ['A', '2', '3', '4', '…', 'R'],
+      loops: true,
+      caption: 'Le rang annoncé est imposé à chaque tour. Il avance automatiquement, puis revient à A et recommence. Vous ne choisissez jamais le rang, seulement vos cartes.',
+      note: 'Certaines variantes font tourner les couleurs (♥ ♦ ♣ ♠) à la place des rangs : l’annonce avance toujours toute seule.',
+    },
+    {
+      kind: 'branch',
+      title: 'Crier « Menteur ! »',
+      intro: 'Vous pensez que la dernière pose est un mensonge ? Criez « Menteur ! », mais jamais sur votre propre pose. Les cartes sont retournées :',
+      outcomes: [
+        { tone: 'negative', condition: 'Les cartes ne correspondent pas : c’était un bluff', result: 'Le bluffeur ramasse tout le tas.' },
+        { tone: 'positive', condition: 'Les cartes correspondent : l’annonce était vraie', result: 'Celui qui a crié ramasse tout le tas.' },
+      ],
+    },
+    {
+      kind: 'text',
+      title: 'Victoire',
+      body: ['Posez votre dernière carte et survivez à la contestation pour gagner. Si l’on vous prend en train de bluffer sur cette carte, tout le tas vous revient.'],
+    },
+  ],
+};
+
+export const bullshitUi: Messages['bullshitUi'] = {
+  playerLabel: 'Joueur {n}',
+  botLabel: 'Bot {n}',
+  you: 'Vous',
+  back: 'Retour',
+  sound: { mute: 'Couper le son', unmute: 'Rétablir le son' },
+  connecting: 'Arrivée à la table…',
+  table: {
+    claim: 'Annonce :',
+    myCards: { one: '{n} carte dans votre main', other: '{n} cartes dans votre main' },
+    cardLabel: '{rank} de {suit}',
+    discardAs: 'Poser comme {target}',
+    callBullshit: 'Menteur !',
+    truthful: 'SINCÈRE',
+    bluff: 'BLUFF',
+    revealCaption: '{caller} crie « Menteur ! » sur {claimant} — {picker} ramasse le tas',
+    playedFaceDown: {
+      one: '{player} a posé {n} carte face cachée',
+      other: '{player} a posé {n} cartes face cachée',
+    },
+    forfeited: '{player} a déclaré forfait',
+    verdictAnnouncement: '{verdict}. {caption}',
+    shortcut: 'Raccourci : {key}',
+    keysHint: 'Touches : {discard} poser · {call} Menteur',
+    offline: 'Connexion perdue. Reconnexion…',
+  },
+  end: {
+    winner: 'Gagnant : {player}',
+    youWon: 'Vous avez vidé votre main en premier.',
+    youLost: 'Un autre joueur a vidé sa main en premier.',
+    youWonResigned: '{player} a abandonné.',
+    youWonDisconnected: 'La connexion de {player} est perdue.',
+    youWonOthersLeft: 'Les autres joueurs ont quitté la partie.',
+    playAgain: 'Rejouer',
+    rematchPending: 'Arrivée à la nouvelle table…',
+    rematchFailed: 'Impossible de lancer une nouvelle partie. Réessayez.',
+  },
+};
+
+export const president: Messages['president'] = {
+  toggleLabel: 'Règles',
+  panelTitle: 'Comment jouer',
+  closeLabel: 'Fermer',
+  sections: [
+    {
+      kind: 'text',
+      title: 'But',
+      body: ['Débarrassez-vous de toutes vos cartes le premier. L’ordre de sortie donne à chacun un titre : président en haut, trou en bas. Les titres passent à la manche suivante.'],
+    },
+    {
+      kind: 'text',
+      title: 'Ordre des cartes',
+      body: ['Du plus faible au plus fort : 3, 4, 5, 6, 7, 8, 9, 10, valet, dame, roi, as, 2. Les couleurs ne comptent pas.'],
+    },
+    {
+      kind: 'text',
+      title: 'Jouer',
+      body: [
+        'Un coup se compose d’une ou plusieurs cartes du même rang : une carte seule, une paire, un brelan ou un carré.',
+        'Celui qui entame un pli joue ce qu’il veut. Les suivants doivent jouer autant de cartes d’un rang supérieur, ou passer.',
+        'Un joueur qui a passé peut rejouer quand le tour lui revient dans le même pli. Quand tous les autres ont passé, le dernier à avoir joué met le pli de côté et entame le suivant.',
+      ],
+    },
+    {
+      kind: 'text',
+      title: 'Jeu égal et carré',
+      body: [
+        'En jeu égal, vous pouvez répondre avec le même rang et le même nombre de cartes, au lieu d’un rang supérieur. Le joueur suivant doit alors suivre aussi (« 9 ou rien ») ou passer, et la première passe met fin à la série.',
+        'Quand les quatre cartes d’un rang ont été jouées à la suite, le pli est fermé et le dernier à avoir joué entame. Un joueur qui a les cartes manquantes peut compléter le carré aussitôt, même hors de son tour, tant que personne n’a joué depuis : la fenêtre s’ouvre avec le deuxième coup de la série.',
+      ],
+    },
+    {
+      kind: 'text',
+      title: 'Le 2, le carré et le jeu obligatoire',
+      body: [
+        'Un 2 joué seul ferme le pli dès qu’il est posé, dès le premier 2 : son joueur entame ensuite. Il peut se jouer sur n’importe quel coup, y compris une série « 9 ou rien ». Un carré posé d’un coup ferme aussi le pli.',
+        'L’hôte peut décider qu’un joueur qui peut jouer n’a pas le droit de passer.',
+      ],
+    },
+    {
+      kind: 'text',
+      title: 'Sortie et titres',
+      body: [
+        'Celui qui pose sa dernière carte sort de la manche. Le dernier joueur à garder des cartes est le trou.',
+        'Sortir sur un 2 est interdit par défaut : ce joueur est classé dernier, sous tous les autres, et le pli n’est pas fermé par son 2.',
+        'Les titres : président, vice-président, neutre, vice-trou, trou (à trois joueurs : président, neutre, trou).',
+      ],
+    },
+    {
+      kind: 'text',
+      title: 'Échange',
+      body: ['À partir de la manche 2, le trou donne ses meilleures cartes au président, qui lui rend les cartes de son choix. Le vice-trou et le vice-président font de même avec une carte.'],
+    },
+    {
+      kind: 'text',
+      title: 'Première entame',
+      body: ['À la manche 1, celui qui a le roi de cœur entame. Ensuite, c’est le trou qui entame. L’hôte peut changer cette règle dans le salon.'],
+    },
+    {
+      kind: 'text',
+      title: 'Partie',
+      body: ['Chaque manche rapporte des points selon la place d’arrivée. La partie s’arrête après le nombre de manches choisi, ou dès que quelqu’un atteint le score cible ; l’hôte les règle dans le salon.'],
+    },
+  ],
+};
+
+export const presidentUi: Messages['presidentUi'] = {
+  connecting: 'Connexion…',
+  back: 'Retour',
+  you: 'Vous',
+  playerLabel: 'Joueur {n}',
+  botLabel: 'Bot {n}',
+  titles: {
+    president: 'Président',
+    vicePresident: 'Vice-président',
+    neutral: 'Neutre',
+    viceScum: 'Vice-trou',
+    scum: 'Trou',
+  },
+  ordinal: { one: '{n}er', two: '{n}e', few: '{n}e', other: '{n}e' },
+  ranks: { JACK: 'Valet', QUEEN: 'Dame', KING: 'Roi', ACE: 'As' },
+  suits: { HEART: 'cœur', DIAMOND: 'carreau', CLUB: 'trèfle', SPADE: 'pique' },
+  cardLabel: '{rank} de {suit}',
+  cardSelected: '{card}, sélectionnée',
+  cardReceived: '{card}, reçue',
+  receivedTag: 'Nouvelle',
+  lobby: {
+    classicTitle: 'Classique',
+    classicSummary: 'Le roi de cœur entame, on peut rejouer après une passe, 5 manches.',
+    customTitle: 'Personnalisée',
+    customSummary: 'Certaines règles diffèrent du mode Classique.',
+    reset: 'Revenir à Classique',
+  },
+  table: {
+    round: 'Manche {n}',
+    roundOf: 'Manche {n} sur {total}',
+    cards: { one: '{n} carte', other: '{n} cartes' },
+    current: 'À jouer',
+    passed: 'A passé',
+    outForbidden: 'Sorti sur un 2',
+    outForbiddenPlace: 'Sorti sur un 2, place {n}',
+    medal: { out: 'Sorti', label: 'Sorti, {place}' },
+    ready: 'Prêt',
+    emptyTrick: 'Rien n’a encore été joué',
+    playedBy: '{player} a joué',
+    playedByYou: 'Vous avez joué',
+    yourCards: 'Vos cartes',
+    opponents: 'Adversaires',
+    pile: 'Pli en cours',
+    forfeited: '{player} a quitté la partie',
+    offline: 'Vous êtes hors ligne. Reconnexion…',
+  },
+  chips: {
+    beat: 'À battre : {count} × {rank}',
+    match: '{rank} ou rien',
+    chain: '{count} coups de suite : {rank}',
+    'afterPass.reenter': 'Après une passe : on peut rejouer',
+    'afterPass.out': 'Après une passe : hors du pli',
+    'mustPlay.on': 'Jeu obligatoire',
+    'reducedCut.on': 'Coupe réduite',
+  },
+  trickEnd: {
+    ALL_PASSED: '{player} met le pli de côté : tous les autres ont passé.',
+    FIRST_OUT: '{player} est sorti et le pli est fermé.',
+    CUT: '{player} a fermé le pli avec un 2.',
+    QUAD: '{player} a fermé le pli avec un carré.',
+    forbidden: '{player} a fermé le pli avec un 2 et est sorti : il finira dernier.',
+  },
+  actions: { play: 'Jouer', complete: 'Compléter le carré', pass: 'Passer', clear: 'Effacer' },
+  hint: {
+    nothingSelected: 'Touchez les cartes à jouer.',
+    mixedRanks: 'Un seul rang à la fois.',
+    mustPass: 'Aucune de vos cartes ne peut jouer : passez.',
+    wrongCount: 'Nombre de cartes à jouer : {counts}.',
+    notHigher: { one: 'Jouez plus haut que : {rank}.', other: 'Jouez {n} cartes plus hautes que : {rank}.' },
+    matchOnly: { one: 'Jouez un {rank} ou rien.', other: 'Jouez {n} cartes du même rang ({rank}), ou rien.' },
+    notPlayable: 'Ce coup n’est pas autorisé.',
+    cannotPlay: 'Attendez votre tour.',
+  },
+  phase: {
+    yourTurn: 'À vous de jouer',
+    waiting: '{player} joue',
+    roundOver: 'La manche {n} est terminée',
+  },
+  exchangeView: {
+    watching: 'L’échange',
+    waitingOne: 'En attente de {player}, qui regarde l’échange',
+    waitingTwo: 'En attente de {a} et de {b}',
+    waitingMany: 'En attente de {n} joueurs',
+    starting: 'Le premier pli commence',
+  },
+  exchange: {
+    label: 'Échange de cartes',
+    youAre: {
+      president: 'Vous êtes président',
+      vicePresident: 'Vous êtes vice-président',
+      neutral: 'Vous êtes neutre',
+      viceScum: 'Vous êtes vice-trou',
+      scum: 'Vous êtes trou',
+    },
+    received: {
+      one: '{player} vous a donné sa meilleure carte. Elle est marquée dans votre main.',
+      other: '{player} vous a donné ses {n} meilleures cartes. Elles sont marquées dans votre main.',
+    },
+    choose: { one: 'Choisissez {n} carte à donner à {player}.', other: 'Choisissez {n} cartes à donner à {player}.' },
+    give: { one: 'Donner {n} carte à {player}', other: 'Donner {n} cartes à {player}' },
+    suggest: 'Suggérer',
+    gave: {
+      one: 'Vous avez rendu {n} carte à {player}. En attente des autres.',
+      other: 'Vous avez rendu {n} cartes à {player}. En attente des autres.',
+    },
+    taken: {
+      one: 'Votre meilleure carte est partie chez {player}. En attente de sa carte en retour.',
+      other: 'Vos {n} meilleures cartes sont parties chez {player}. En attente de {n} cartes en retour.',
+    },
+    returned: {
+      one: '{player} a rendu {n} carte. En attente des autres.',
+      other: '{player} a rendu {n} cartes. En attente des autres.',
+    },
+    idle: 'Vous ne donnez ni ne recevez rien. En attente des autres.',
+    board: {
+      title: 'L’échange',
+      neutral: 'Vous êtes neutre : pas d’échange pour vous',
+      choosing: '{player} choisit {n}',
+      youChoose: 'Vous choisissez {n}',
+      seen: 'J’ai vu l’échange',
+      states: {
+        giving: 'Donne les meilleures cartes',
+        choosing: 'Choisit les cartes à rendre',
+        returning: 'Rend des cartes',
+        done: 'Terminé',
+      },
+      row: {
+        one: '{low} donne sa meilleure carte à {high}, {high} en rend une : {state}',
+        other: '{low} donne ses {n} meilleures cartes à {high}, {high} en rend {n} : {state}',
+      },
+    },
+  },
+  roundOver: { ready: 'Manche suivante', waiting: 'En attente des autres', place: '{n}. {player}', finalScores: 'Scores finaux' },
+  summary: {
+    points: '+{n}',
+    pointsLabel: 'Points de la manche',
+    totalLabel: 'Total des points',
+    up: 'Monte (avant : {title})',
+    down: 'Descend (avant : {title})',
+    same: 'Même titre',
+    ready: 'Prêt',
+    forbidden: 'Sur un 2',
+    forbiddenLabel: 'Sorti sur un 2 : classé dernier',
+  },
+  standings: { title: 'Classement', scores: 'Totaux', close: 'Fermer', rank: 'Rang', player: 'Joueur', points: 'Points' },
+  notice: {
+    moveImpossible: 'Ce coup a été refusé. Vérifiez vos cartes.',
+    connection: 'Impossible de joindre le serveur. Réessayez.',
+  },
+  end: {
+    winner: 'Gagnant : {players}',
+    winners: 'Gagnants : {players}',
+    standing: '{n} points',
+    youWonResigned: '{player} est parti. Vous gagnez par forfait.',
+    youWonDisconnected: 'La connexion de {player} est perdue. Vous gagnez par forfait.',
+    youWonOthersLeft: 'Les autres sont partis. Vous gagnez par forfait.',
+    playAgain: 'Rejouer',
+    rematchPending: 'Lancement…',
+    rematchFailed: 'Impossible de lancer une nouvelle partie. Réessayez.',
+  },
+  live: { yourTurn: 'À vous de jouer' },
+  announce: {
+    out: '{player} est sorti, {place}',
+    outYou: 'Vous êtes sorti, {place}',
+    card: '{card}',
+    best: { one: '{low} a donné sa meilleure carte à {high}', other: '{low} a donné ses {n} meilleures cartes à {high}' },
+    bestMine: { one: 'Vous avez donné {cards} à {high}', other: 'Vous avez donné {cards} à {high}' },
+    bestToMe: { one: '{low} vous a donné {cards}', other: '{low} vous a donné {cards}' },
+    back: { one: '{high} a rendu {n} carte à {low}', other: '{high} a rendu {n} cartes à {low}' },
+    backMine: { one: 'Vous avez rendu {cards} à {low}', other: 'Vous avez rendu {cards} à {low}' },
+    backToMe: { one: '{high} vous a rendu {cards}', other: '{high} vous a rendu {cards}' },
+  },
+  motion: {
+    trickCount: { one: '{n} carte dans le pli', other: '{n} cartes dans le pli' },
+    closed: {
+      CUT: 'Fermé par un 2',
+      QUAD: 'Carré',
+      FIRST_OUT: 'Sortie du premier',
+      ALL_PASSED: 'Tous ont passé',
+    },
+    closedOther: 'Pli fermé',
+    binding: { orNothing: 'ou rien', played: '{n} sur 4 jouées' },
+    leads: '{player} entame',
+    youLead: 'Vous entamez',
+    bubbles: { pass: 'Passe', outForbidden: 'Sorti sur un 2', completed: 'Carré complété', out: 'Sorti · {place}' },
+    speed: 'Vitesse d’animation : {speed}',
+    speeds: { normal: 'Normale', fast: 'Rapide', instant: 'Instantanée' },
+  },
+};
