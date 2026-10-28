@@ -80,11 +80,13 @@ final class BlackjackBuilder {
         return new Blackjack(id, options, source, Arrays.stream(stacks).boxed().toList(), handNumber, button);
     }
 
-    /** Every listed seat bets the given amount, in seat order from the first. */
-    static void bets(Blackjack game, int... amounts) throws BlackjackException {
+    /** Every listed seat bets the given amount, in seat order from the first; returns the events of the last bet. */
+    static List<BlackjackEvent> bets(Blackjack game, int... amounts) throws BlackjackException {
+        List<BlackjackEvent> last = List.of();
         for (int i = 0; i < amounts.length; i++) {
-            game.bet(seat(i), amounts[i]);
+            last = game.bet(seat(i), amounts[i]);
         }
+        return last;
     }
 
     static <T extends BlackjackEvent> T event(List<BlackjackEvent> events, Class<T> type) {

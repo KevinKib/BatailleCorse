@@ -139,12 +139,13 @@ class BlackjackDealTest {
 
     @Test
     void whenEverySeatHasABlackjackTheDealerPlaysAtOnce() throws Exception {
-        // Solo: A: AS KS; up 9H; hole 7C (16): the dealer draws 5D: 21. The blackjack still wins.
+        // Solo: A: AS KS; up 9H; hole 7C (16). Nobody is left to beat, so the dealer shows the hole card and
+        // draws nothing; the blackjack wins.
         Blackjack game = game(1).shoe("AS 9H KS 7C 5D").build();
 
         List<BlackjackEvent> events = bets(game, 10);
 
-        assertEquals(cards("9H 7C 5D"), game.lastHand().dealerCards());
+        assertEquals(cards("9H 7C"), game.lastHand().dealerCards());
         assertEquals(15, event(events, HandSettled.class).nets().get(A));
         assertEquals(115, game.seat(A).stack());
         assertEquals(Phase.BETTING, game.phase());
