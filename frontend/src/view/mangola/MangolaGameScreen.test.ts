@@ -354,7 +354,7 @@ describe('MangolaGameScreen', () => {
       expect(pit(wrapper, 'h4').attributes('data-last-start')).toBe('true');
       expect(pit(wrapper, 'g2').attributes('data-captured')).toBe('true');
       expect(pit(wrapper, 'a1').attributes('data-selectable')).toBe('true');
-      expect(wrapper.get('[data-test="board-live"]').text()).toBe('Bob sowed from h4: 1 relay, 2 seeds captured.');
+      expect(wrapper.get('[data-test="board-live"]').text()).toBe('Bob sowed from h4: 1 relay and 2 seeds captured.');
     });
 
     it('plays the whole sowing by itself when nobody skips it', async () => {

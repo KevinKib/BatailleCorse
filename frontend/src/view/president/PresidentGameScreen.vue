@@ -35,7 +35,7 @@ import { seatPositions } from '../../model/table/seatRing';
 import { rematchButtonFor } from '../../model/RematchButton';
 import { ruleChips } from '../../model/president/chips';
 import { hintText } from '../../model/president/hint';
-import { format, ordinal, plural } from '../../locales/format';
+import { format, formatList, ordinal, plural } from '../../locales/format';
 import {
   AnimationSpeedButton, CARD_RATIO, CardMotionLayer, defineAnchors, eventSpanMs, speedFactor, useAnimationSpeed,
   useDisplayedState, useInFlightCounts, useSeatBubbles, useTableMotion, visibleRect, type CardMotionLayerPlay, type DomQuery,
@@ -537,7 +537,6 @@ function endLeg(key: string, announceFor: PresidentState | null) {
   if (text) announcements.announce(text);
 }
 onBeforeUnmount(() => { legTimers.forEach(clearTimeout); legTimers.clear(); });
-const listFormat = new Intl.ListFormat('en', { type: 'conjunction' });
 /** What a leg that has landed says, from the state that sent it (the cards by name in my own pair only). */
 function legAnnouncement(key: string, state: PresidentState): string | null {
   const [pairKey, leg] = key.split(':');
@@ -547,7 +546,7 @@ function legAnnouncement(key: string, state: PresidentState): string | null {
   const mine = asLow || pair.high === store.mySeat;
   const faces = !mine ? [] : leg === 'best' ? (asLow ? state.given : state.received) : (asLow ? state.received : state.given);
   const cards = faces.length > 0
-    ? listFormat.format(faces.slice(0, pair.count).map(c => format(ui.announce.card, { card: cardLabel(c, ui, false).toLowerCase() })))
+    ? formatList(faces.slice(0, pair.count).map(c => format(ui.announce.card, { card: cardLabel(c, ui, false).toLowerCase() })), 'conjunction')
     : null;
   const low = displayName(pair.low);
   const high = displayName(pair.high);
@@ -614,7 +613,7 @@ const winners = computed(() => {
 const iWon = computed(() => winners.value.includes(store.mySeat));
 const winnerLine = computed(() => {
   if (winners.value.length === 0) return undefined;
-  const players = winners.value.map(displayName).join(', ');
+  const players = formatList(winners.value.map(displayName), 'conjunction');
   return format(winners.value.length > 1 ? ui.end.winners : ui.end.winner, { players });
 });
 const endSubtitle = computed(() => {
