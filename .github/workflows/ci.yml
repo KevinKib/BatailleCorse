@@ -58,3 +58,68 @@ jobs:
       # No vue-tsc in the project: there is no type-check script to run yet.
       - name: Build
         run: npx vite build
+
+  # Not a required check: the smoke subset (frontend/cypress/smoke-specs.json) on the same
+  # Compose stack the agents use. It becomes required only after the run log shows it stable.
+  e2e-smoke:
+    name: E2E smoke (Cypress)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      # The setup-java settings.xml holds ${env.GITHUB_TOKEN}, which is not set inside the
+      # Docker build, so write a standalone file (consumed as the maven_settings BuildKit
+      # secret, never baked into an image layer). Not committed: deploy/docker/settings.xml is ignored.
+      - name: Write Maven settings for the Docker build
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          umask 077
+          cat > deploy/docker/settings.xml <<EOF
+          <settings>
+            <servers>
+              <server>
+                <id>github</id>
+                <username>${GITHUB_ACTOR}</username>
+                <password>${GITHUB_TOKEN}</password>
+              </server>
+            </servers>
+          </settings>
+          EOF
+      - name: Start the e2e stack
+        run: docker compose -f docker-compose.e2e.yml up --build -d --wait
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/Cypress
+          key: cypress-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json') }}
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+      - name: Smoke specs
+        working-directory: frontend
+        run: npm run cy:smoke
+      - name: Stack logs
+        if: always()
+        run: docker compose -f docker-compose.e2e.yml logs --no-color
+      - name: Stop the stack
+        if: always()
+        run: docker compose -f docker-compose.e2e.yml down
+      - name: Remove Maven settings
+        if: always()
+        run: rm -f deploy/docker/settings.xml
+      - name: Upload Cypress artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-smoke
+          path: |
+            frontend/cypress/screenshots
+            frontend/cypress/videos
+            frontend/cypress/results
+          if-no-files-found: ignore

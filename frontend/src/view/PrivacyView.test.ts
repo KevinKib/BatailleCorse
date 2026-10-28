@@ -45,6 +45,7 @@ describe('PrivacyView', () => {
     expect(text).toContain('No cookie');
     expect(text).toContain('bc_playerName');
     expect(text).toContain('animationSpeed');
+    expect(text).toContain('Language: bc_locale');
     expect(text).toContain('only in the memory of the server');
     expect(text).toContain('No accounts');
     expect(text).toContain('No advertising');

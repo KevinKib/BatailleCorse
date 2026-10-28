@@ -1044,7 +1044,7 @@ export const messagesEn: Messages = {
         paragraphs: [
           'The site uses the local storage of your browser, not cookies. Only the site itself reads it, to resume a game and to remember your choices. You can erase it in your browser settings.',
           'Seat token, which lets you come back to the game you were playing: tokens:<game id> (Bataille Corse), bullshit:tokens:<game id>, kobo:tokens:<game id>, three-men-morris:tokens:<game id>, president:tokens:<game id> and mangola:tokens:<game id>. It is removed when you leave the game.',
-          'Display name: bc_playerName. Keyboard shortcuts: bc_sendKey, bc_slapKey and bullshit.hotkeys. Sound: bullshit.sound and kobo.sound. Animation speed: animationSpeed. Kobo hint already seen: kobo.matchCoach.',
+          'Display name: bc_playerName. Keyboard shortcuts: bc_sendKey, bc_slapKey and bullshit.hotkeys. Sound: bullshit.sound and kobo.sound. Animation speed: animationSpeed. Kobo hint already seen: kobo.matchCoach. Language: bc_locale.',
           'The font of the site is served by the site itself, so your browser contacts no other server to display it, and nothing is sent to a third party.',
         ],
       },
