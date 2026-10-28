@@ -31,7 +31,15 @@ describe('NinetyNine store', () => {
     publish.mockClear();
     return store;
   }
-  const sent = () => publish.mock.calls.map(c => ({ dest: c[0], body: JSON.parse(c[1] as string) }));
+  // The state the server sends once my card is played: the version moved on, the turn went to the next seat.
+  const afterMyPlay = (card: NinetyNineState['hand'][number]): NinetyNineState => {
+    const round = buildNinetyNineFourSeatRound();
+    return {
+      ...round, version: round.version + 1, currentSeat: 1, availableActions: [],
+      lastPlay: { seat: 0, card, aceValue: null, totalBefore: round.total, totalAfter: round.total + 7, reversed: false },
+    };
+  };
+  const sent = () =>publish.mock.calls.map(c => ({ dest: c[0], body: JSON.parse(c[1] as string) }));
 
   beforeEach(() => {
     setActivePinia(createPinia());
@@ -99,6 +107,26 @@ describe('NinetyNine store', () => {
       expect(store.lastEvent?.eventType).toBe('RESHUFFLE');
     });
 
+    it('gives every event of one command the state from before the command, not the one after it', () => {
+      const store = boot();
+      const state = buildNinetyNineFourSeatRound();
+      // One command, three events: each is sent with the state after the whole command (same version).
+      const after = { ...state, version: 7, total: 99 };
+      store.applyEvent({ type: 'state-update', state: after });
+      store.applyEvent({ type: 'event', eventType: 'PLAY', eventData: eventData({ seat: 3, card: state.hand[0], totalAfter: 99 }) });
+      store.applyEvent({ type: 'state-update', state: after });
+      store.applyEvent({ type: 'event', eventType: 'BUST', eventData: eventData({ seat: 0, livesLeft: 2 }) });
+      store.applyEvent({ type: 'state-update', state: after });
+      store.applyEvent({ type: 'event', eventType: 'RESHUFFLE', eventData: eventData({ stockSize: 30 }) });
+      expect(store.events.map(e => [e.eventType, e.totalBefore])).toEqual([
+        ['RESHUFFLE', 42], ['BUST', 42], ['PLAY', 42],
+      ]);
+      // The next command starts from the state it follows.
+      store.applyEvent({ type: 'state-update', state: { ...after, version: 8, total: 0 } });
+      store.applyEvent({ type: 'event', eventType: 'ROUND_START', eventData: eventData({}) });
+      expect(store.events[0]).toMatchObject({ eventType: 'ROUND_START', totalBefore: 99 });
+    });
+
     it('does not log presence events and never the start of the game', () => {
       const store = boot();
       store.applyEvent({ type: 'event', eventType: 'START', eventData: null });
@@ -136,8 +164,30 @@ describe('NinetyNine store', () => {
       expect(store.busy).toBe(true);
       expect(store.play(seven)).toBe(false);
       expect(sent()).toHaveLength(1);
-      store.applyEvent({ type: 'state-update', state: { ...buildNinetyNineFourSeatRound(), version: 7 } });
+      store.applyEvent({ type: 'state-update', state: afterMyPlay(seven) });
       expect(store.busy).toBe(false);
+    });
+
+    it('stays busy through a state that is not the answer to my command, until my play shows or the turn moves', () => {
+      const store = boot();
+      const seven = store.hand[0];
+      store.play(seven);
+      // Another seat forfeits meanwhile: the version moves, it is still my turn and my card is not played.
+      store.applyEvent({ type: 'state-update', state: { ...buildNinetyNineFourSeatRound(), version: 7 } });
+      expect(store.busy).toBe(true);
+      expect(store.play(seven)).toBe(false);
+      expect(sent()).toHaveLength(1);
+      // The turn moved on without my play showing (a reload after a reconnection): nothing is pending any more.
+      store.applyEvent({ type: 'state-update', state: { ...buildNinetyNineFourSeatRound(), version: 8, currentSeat: 2 } });
+      expect(store.busy).toBe(false);
+    });
+
+    it('a state of the version I sent from is not the answer either', () => {
+      const store = boot();
+      const seven = store.hand[0];
+      store.play(seven);
+      store.applyEvent({ type: 'state-update', state: { ...afterMyPlay(seven), version: 6 } });
+      expect(store.busy).toBe(true);
     });
 
     it('sends the Ace with the chosen value, and refuses an Ace without one when two are allowed', () => {

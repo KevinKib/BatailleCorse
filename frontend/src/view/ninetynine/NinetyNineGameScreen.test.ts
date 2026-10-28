@@ -109,6 +109,14 @@ describe('NinetyNineGameScreen', () => {
       expect(wrapper.findAll('[data-test="heart"][data-full="true"]')).toHaveLength(12);
     });
 
+    it('givenNoLivesOption_thenTheHeartRowsFollowTheLivesTheServerSent_notAConstant', async () => {
+      const state = buildNinetyNineFourSeatRound();
+      state.options = {};
+      state.players = state.players.map(p => ({ ...p, lives: 2 }));
+      const { wrapper } = await mountRoom(room(state));
+      expect(wrapper.findAll('[data-test="heart"]')).toHaveLength(8);
+    });
+
     it('givenMyTurn_thenAPlainSafeCardIsPlayedThroughTheStore', async () => {
       const { wrapper, store } = await mountRoom(room(buildNinetyNineFourSeatRound()));
       const play = vi.spyOn(store, 'play').mockReturnValue(true);

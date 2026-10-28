@@ -51,10 +51,29 @@ describe('NinetyNineHand', () => {
     expect(wrapper.get('[data-card="DIAMOND_7"]').attributes('aria-label')).toBe('7 of diamonds: adds 7');
   });
 
-  it('givenTheAceAwaitingItsValue_thenItIsPressed', () => {
+  it('givenTheAceAwaitingItsValue_thenOnlyTheAceIsPressedAndOtherCardsHaveNoPressedState', () => {
     const wrapper = mountHand({ aceName: 'CLUB_ACE' });
     expect(wrapper.get('[data-card="CLUB_ACE"]').attributes('aria-pressed')).toBe('true');
-    expect(wrapper.get('[data-card="SPADE_KING"]').attributes('aria-pressed')).toBe('false');
+    expect(wrapper.get('[data-card="SPADE_KING"]').attributes('aria-pressed')).toBeUndefined();
+    expect(wrapper.get('[data-card="DIAMOND_7"]').attributes('aria-pressed')).toBeUndefined();
+  });
+
+  it('givenAnAceWithTwoValuesAndNoChoiceOpen_thenItIsNotPressedYet', () => {
+    const wrapper = mountHand({ aceName: null });
+    expect(wrapper.get('[data-card="CLUB_ACE"]').attributes('aria-pressed')).toBe('false');
+    expect(wrapper.get('[data-card="SPADE_KING"]').attributes('aria-pressed')).toBeUndefined();
+  });
+
+  it('givenAnAceWithASingleValue_thenItHasNoPressedState', () => {
+    const wrapper = mountHand({
+      aceName: null,
+      playable: [
+        { card: king, safe: true, aceValues: [] },
+        { card: seven, safe: false, aceValues: [] },
+        { card: ace, safe: true, aceValues: [1] },
+      ],
+    });
+    expect(wrapper.get('[data-card="CLUB_ACE"]').attributes('aria-pressed')).toBeUndefined();
   });
 
   it('givenTheCardsOfTheHand_thenTheyKeepTheServerOrder', () => {
