@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import GameSession, { type WebSocketPort, type GameSessionCallbacks } from './GameSession';
+import BatailleCorseSession, { type WebSocketPort, type GameSessionCallbacks } from './BatailleCorseSession';
 import type { GameEvent } from './GameEvent';
 import type { LobbyView } from '../model/lobby/LobbyView';
 import {
@@ -73,7 +73,7 @@ function makeSession(awaitAnimation: () => Promise<void> = () => Promise.resolve
     awaitAnimation,
   };
 
-  const session = new GameSession(webSocket, callbacks);
+  const session = new BatailleCorseSession(webSocket, callbacks);
 
   return {
     session, events, published, subscribed, seatSubs, presence, teardown,
@@ -99,7 +99,7 @@ const lastOf = <T extends GameEvent['type']>(events: GameEvent[], type: T) =>
 // Tests
 // ---------------------------------------------------------------------------
 
-describe('GameSession', () => {
+describe('BatailleCorseSession', () => {
   beforeEach(() => { localStorage.clear(); });
   afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 
@@ -247,7 +247,7 @@ describe('GameSession', () => {
     it('are ignored once the game state came in', async () => {
       const { session, events, fireSeat } = makeSession();
       session.restore('game-1', 0, 'tok-0');
-      await session.onResponse(buildResponse({ eventType: 'START' as never, state: buildGame() }));
+      await session.onGameResponse(buildResponse({ eventType: 'START' as never, state: buildGame() }));
       events.length = 0;
 
       fireSeat(buildResponse({ eventType: 'JOIN', state: lobbyView({ lobbyVersion: 9 }) as never }));
@@ -302,7 +302,7 @@ describe('GameSession', () => {
 
       session.leave();
       fireSeat(buildResponse({ eventType: 'JOIN', state: lobbyView({ lobbyVersion: 9 }) as never }));
-      await session.onResponse(buildResponse({ eventType: 'START' as never, state: buildGame() }));
+      await session.onGameResponse(buildResponse({ eventType: 'START' as never, state: buildGame() }));
 
       expect(published.at(-1)?.dest).toBe('/app/lobby/leave');
       expect(teardown).toEqual(['seat', 'game', 'presence']);
@@ -338,11 +338,11 @@ describe('GameSession', () => {
 
     it('a finished game ignores the states of the next one until I play again', async () => {
       const { session, events } = playing(1);
-      await session.onResponse(buildResponse({ eventType: 'GRAB', state: buildGame({ winner: { id: '0' } }) }));
+      await session.onGameResponse(buildResponse({ eventType: 'GRAB', state: buildGame({ winner: { id: '0' } }) }));
       events.length = 0;
 
       // The other player already played again and started a new game on the same id.
-      await session.onResponse(buildResponse({ eventType: 'START' as never, state: buildGame() }));
+      await session.onGameResponse(buildResponse({ eventType: 'START' as never, state: buildGame() }));
 
       expect(events).toHaveLength(0);
     });
@@ -380,11 +380,11 @@ describe('GameSession', () => {
 
     it('drops a game frame older than the one held, with its animation, and applies an equal one', async () => {
       const { session, events } = playing(0);
-      await session.onResponse(frame(5) as any);
-      await session.onResponse(frame(4) as any);
+      await session.onGameResponse(frame(5) as any);
+      await session.onGameResponse(frame(4) as any);
       expect(events.filter(e => e.type === 'state-update')).toHaveLength(1);
       expect(events.filter(e => e.type === 'send')).toHaveLength(1);
-      await session.onResponse(frame(5) as any);
+      await session.onGameResponse(frame(5) as any);
       expect(events.filter(e => e.type === 'state-update')).toHaveLength(2);
     });
 
@@ -393,7 +393,7 @@ describe('GameSession', () => {
         .mockResolvedValue(respond({ players: [] })));
       const { session, events } = makeSession();
       session.restore('game-1', 0, 'tok-0');
-      await session.onResponse(frame(7) as any);
+      await session.onGameResponse(frame(7) as any);
       events.length = 0;
       expect(await session.hydrate()).toBe('ok');
       expect(events.filter(e => e.type === 'state-update')).toHaveLength(0);
@@ -401,7 +401,7 @@ describe('GameSession', () => {
 
     it('keeps the error of a refusal that carries an older state, without applying the state', () => {
       const { session, events, fireSeat } = playing(0);
-      void session.onResponse(frame(5) as any);
+      void session.onGameResponse(frame(5) as any);
       events.length = 0;
       fireSeat({ success: false, eventType: 'SEND', eventData: {}, message: 'Not your turn', state: gameJson({ version: 2 }) });
       expect(events.map(e => e.type)).toEqual(['error']);
@@ -409,17 +409,17 @@ describe('GameSession', () => {
 
     it('applies frames without a version as before', async () => {
       const { session, events } = playing(0);
-      await session.onResponse(frame(5) as any);
-      await session.onResponse(frame(undefined) as any);
+      await session.onGameResponse(frame(5) as any);
+      await session.onGameResponse(frame(undefined) as any);
       expect(events.filter(e => e.type === 'state-update')).toHaveLength(2);
     });
 
     it('starts from zero again after a new bind (Play again)', async () => {
       const { session, events } = playing(0);
-      await session.onResponse(frame(9) as any);
+      await session.onGameResponse(frame(9) as any);
       session.restore('game-1', 0, 'tok-0');
       events.length = 0;
-      await session.onResponse(frame(0) as any);
+      await session.onGameResponse(frame(0) as any);
       expect(events.filter(e => e.type === 'state-update')).toHaveLength(1);
     });
   });
@@ -429,7 +429,7 @@ describe('GameSession', () => {
       const cardBeforeGrab = buildCard({ rank: 'A', suit: 'spade' });
       const { session, events } = playing(0, buildGame({ pile: buildPile({ cards: [cardBeforeGrab] }) }));
 
-      await session.onResponse(buildGrabResponse('0', buildGame({ pile: buildPile({ cards: [] }) })));
+      await session.onGameResponse(buildGrabResponse('0', buildGame({ pile: buildPile({ cards: [] }) })));
 
       const grabEvent = lastOf(events, 'grab');
       expect(grabEvent!.winnerPlayerIndex).toBe(0);
@@ -443,7 +443,7 @@ describe('GameSession', () => {
       const cardInPile = buildCard({ rank: 'K' });
       const { session, events } = playing(0, buildGame({ pile: buildPile({ cards: [cardInPile] }) }));
 
-      await session.onResponse(buildSlapResponse(true, '1'));
+      await session.onGameResponse(buildSlapResponse(true, '1'));
 
       const slapEvent = lastOf(events, 'successful-slap');
       expect(slapEvent!.winnerPlayerIndex).toBe(1);
@@ -452,7 +452,7 @@ describe('GameSession', () => {
 
     it('emits erroneous-slap event with the slapper index', async () => {
       const { session, events } = playing(0);
-      await session.onResponse(buildSlapResponse(false, '0'));
+      await session.onGameResponse(buildSlapResponse(false, '0'));
       expect(lastOf(events, 'erroneous-slap')!.playerIndex).toBe(0);
     });
   });
@@ -503,7 +503,7 @@ describe('GameSession', () => {
       vi.useFakeTimers();
       const { session, published } = playing(0);
 
-      await session.onResponse(grabbableBy('0'));
+      await session.onGameResponse(grabbableBy('0'));
 
       vi.advanceTimersByTime(1499);
       expect(published.some(p => p.dest === '/app/grab')).toBe(false);
@@ -516,7 +516,7 @@ describe('GameSession', () => {
       vi.useFakeTimers();
       const { session, published } = playing(0);
 
-      await session.onResponse(grabbableBy('1'));
+      await session.onGameResponse(grabbableBy('1'));
       vi.advanceTimersByTime(5000);
 
       expect(published.some(p => p.dest === '/app/grab')).toBe(false);
@@ -526,10 +526,10 @@ describe('GameSession', () => {
       vi.useFakeTimers();
       const { session, published } = playing(0);
 
-      await session.onResponse(grabbableBy('0'));
+      await session.onGameResponse(grabbableBy('0'));
       vi.advanceTimersByTime(500);
-      await session.onResponse(buildResponse({ eventType: 'SEND', state: buildGame() }));
-      await session.onResponse(grabbableBy('0'));
+      await session.onGameResponse(buildResponse({ eventType: 'SEND', state: buildGame() }));
+      await session.onGameResponse(grabbableBy('0'));
       session.cancelAll();
       vi.advanceTimersByTime(5000);
 
@@ -544,7 +544,7 @@ describe('GameSession', () => {
       const topCard = buildCard({ rank: 'K', suit: 'spade' });
       const { session, events } = playing(1, buildGame({ pile: buildPile({ cards: [topCard] }) }));
 
-      await session.onResponse(buildResponse({ eventType: 'SEND', eventData: { player: { id: '0' } }, state: buildGame() }));
+      await session.onGameResponse(buildResponse({ eventType: 'SEND', eventData: { player: { id: '0' } }, state: buildGame() }));
 
       expect(lastOf(events, 'send')).toMatchObject({ playerIndex: 0, topCard });
     });
@@ -553,7 +553,7 @@ describe('GameSession', () => {
       const { session, events } = playing(1, buildGame({ pile: buildPile({ cards: [buildCard()] }) }));
 
       session.send();
-      await session.onResponse(buildResponse({ eventType: 'SEND', eventData: { player: { id: '1' } }, state: buildGame() }));
+      await session.onGameResponse(buildResponse({ eventType: 'SEND', eventData: { player: { id: '1' } }, state: buildGame() }));
 
       expect(events.filter(e => e.type === 'send')).toHaveLength(1);
     });
@@ -566,9 +566,9 @@ describe('GameSession', () => {
       session.hydrateGame(buildGame({ players: [buildPlayer({ id: '0' }), buildPlayer({ id: '1' })] }));
 
       // A GRAB by the opponent blocks on awaitAnimation, letting the queue build.
-      const drain = session.onResponse(buildGrabResponse('0', buildGame()));
+      const drain = session.onGameResponse(buildGrabResponse('0', buildGame()));
       for (let i = 0; i < 4; i++) {
-        session.onResponse(buildResponse({ eventType: 'SEND', eventData: { player: { id: '0' } }, state: buildGame() }));
+        session.onGameResponse(buildResponse({ eventType: 'SEND', eventData: { player: { id: '0' } }, state: buildGame() }));
       }
       releaseAnimation();
       await drain;
@@ -586,13 +586,13 @@ describe('GameSession', () => {
       ['OPPONENT_RECONNECTED', { reconnectedSeat: 1 }],
     ] as const)('forwards %s verbatim', async (eventType, eventData) => {
       const { session, events } = playing(0);
-      await session.onResponse(buildResponse({ eventType, eventData }));
+      await session.onGameResponse(buildResponse({ eventType, eventData }));
       expect(events).toContainEqual({ type: 'presence-event', eventType, eventData });
     });
   });
 });
 
-describe('GameSession re-hydrates once the seat subscription is live', () => {
+describe('BatailleCorseSession re-hydrates once the seat subscription is live', () => {
   beforeEach(() => { localStorage.clear(); });
   afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 
