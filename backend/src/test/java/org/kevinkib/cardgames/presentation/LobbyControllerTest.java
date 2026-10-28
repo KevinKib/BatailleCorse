@@ -154,6 +154,19 @@ class LobbyControllerTest {
     }
 
     @Test
+    void givenHostOfDraughts_whenAddBot_thenTheComputerTakesTheGuestSeat() {
+        RoomCreated room = sessionService.createRoom(
+                org.kevinkib.cardgames.draughts.domain.DraughtsFactory.GAME_TYPE, "Alice");
+        messaging.clear();
+
+        controller.addBot(new GameActionPayload(room.gameId(), room.hostToken()));
+
+        assertThat(messaging.payloads.get(0).isSuccess(), is(true));
+        assertThat(lobbyOf(messaging.payloads.get(0)).players().get(1).bot(), is(true));
+        assertThat(sessionService.botSeats(new GameId(room.gameId())), is(java.util.Set.of(new PlayerId(1))));
+    }
+
+    @Test
     void givenNonHost_whenAddBot_thenErrorToTheActingSeatOnly() {
         RoomCreated room = sessionService.createRoom("bullshit", "Alice");
         String bobToken = sessionService.joinRoom(new GameId(room.gameId()), "Bob").token();
