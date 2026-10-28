@@ -3,7 +3,7 @@ import { GAMES, findGame, type GameDefinition, type GameKey } from './games';
 
 describe('game registry', () => {
   it('givenEveryGame_thenEachDeclaresItsRoutesUnderTheirKey', () => {
-    expect(GAMES.map(g => g.key)).toEqual(['bataillecorse', 'bullshit', 'kobo', 'three-men-morris', 'president', 'mangola', 'ninety-nine', 'draughts']);
+    expect(GAMES.map(g => g.key)).toEqual(['bataillecorse', 'bullshit', 'kobo', 'three-men-morris', 'president', 'mangola', 'ninety-nine', 'draughts', 'kilo-de-merde']);
     for (const g of GAMES) {
       expect(g.gameHomeRoute).toBe(`/${g.key}`);
       expect(g.joinRoute()).toBe(`/${g.key}/join`);
@@ -67,6 +67,15 @@ describe('game registry', () => {
     expect(ninetyNine?.hotkeys).toBeUndefined();
     expect(ninetyNine?.picker).toEqual({ icon: 'pi pi-hashtag', severity: 'danger' });
     expect(ninetyNine?.roomRoute('abc')).toBe('/ninety-nine/room/abc');
+  });
+
+  it('givenKiloDeMerde_thenItIsRegisteredWithBotsButNoRemappableShortcutsAndItsOwnPickerStyle', () => {
+    const kilo = findGame('kilo-de-merde');
+    expect(kilo?.serverType).toBe('kilo-de-merde');
+    expect(kilo?.supportsBots).toBe(true);
+    expect(kilo?.hotkeys).toBeUndefined();
+    expect(kilo?.picker).toEqual({ icon: 'pi pi-stopwatch', severity: 'warn' });
+    expect(kilo?.roomRoute('abc')).toBe('/kilo-de-merde/room/abc');
   });
 
   it('givenDraughts_thenItIsRegisteredWithBotsButNoShortcutsAndItsOwnPickerStyle', () => {

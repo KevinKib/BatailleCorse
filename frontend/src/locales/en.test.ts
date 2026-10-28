@@ -681,6 +681,15 @@ describe('Kilo de merde messages', () => {
     return [];
   };
 
+  it('givenThePicker_thenKiloDeMerdeHasAShortPitchAndItsThreeToTenPlayers', () => {
+    expect(messagesEn.gamePicker.games['kilo-de-merde']).toEqual({
+      name: 'Kilo de merde',
+      description: 'Pass, collect four of a kind, slap the pile. Last one takes the kilos.',
+      players: '3–10 players',
+      play: 'Play',
+    });
+  });
+
   it('givenTheRules_thenTheyCoverGoalSetupPassingSlappingKilosAndEnd', () => {
     const rules = messagesEn.kiloDeMerde;
     expect(rules.toggleLabel).toBeTruthy();

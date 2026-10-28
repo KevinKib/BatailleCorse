@@ -10,6 +10,7 @@ import { useBatailleCorseStore } from '../state/BatailleCorse.store';
 import { useMangolaStore } from '../state/Mangola.store';
 import { useNinetyNineStore } from '../state/NinetyNine.store';
 import { useDraughtsStore } from '../state/Draughts.store';
+import { useKiloDeMerdeStore } from '../state/KiloDeMerde.store';
 
 describe('useGameRooms', () => {
   beforeEach(() => { setActivePinia(createPinia()); });
@@ -98,6 +99,17 @@ describe('useGameRooms', () => {
     expect(join).toHaveBeenCalledWith('g7', 'Bob');
   });
 
+  it('givenKiloDeMerde_thenCreateAndJoinGoThroughItsStore', async () => {
+    const store = useKiloDeMerdeStore();
+    const create = vi.spyOn(store, 'create').mockResolvedValue('g9');
+    const join = vi.spyOn(store, 'join').mockResolvedValue();
+    const room = useGameRooms()(findGame('kilo-de-merde')!);
+    expect(await room.create('Alice')).toBe('g9');
+    await room.join('g9', 'Bob');
+    expect(create).toHaveBeenCalledWith('Alice');
+    expect(join).toHaveBeenCalledWith('g9', 'Bob');
+  });
+
   it('givenDraughts_thenCreateAndJoinGoThroughItsStore', async () => {
     const store = useDraughtsStore();
     const create = vi.spyOn(store, 'create').mockResolvedValue('g8');
@@ -119,6 +131,7 @@ describe('useGameRooms', () => {
       bataillecorse: useBatailleCorseStore(), bullshit: useBullshitStore(), kobo: useKoboStore(),
       'three-men-morris': useThreeMenMorrisStore(), president: usePresidentStore(), mangola: useMangolaStore(),
       'ninety-nine': useNinetyNineStore(), draughts: useDraughtsStore(),
+      'kilo-de-merde': useKiloDeMerdeStore(),
     };
     for (const g of GAMES) {
       const create = vi.spyOn(stores[g.key], 'create').mockResolvedValue('g');
