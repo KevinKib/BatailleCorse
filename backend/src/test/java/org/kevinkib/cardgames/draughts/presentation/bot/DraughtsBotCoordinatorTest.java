@@ -57,10 +57,18 @@ class DraughtsBotCoordinatorTest {
     private final class Scripted implements DraughtsBot {
         final List<Boolean> offerPending = new ArrayList<>();
         final List<Colour> colours = new ArrayList<>();
+        final List<org.kevinkib.cardgames.draughts.domain.bot.DraughtsDrawContext> contexts = new ArrayList<>();
         final List<Boolean> underMonitor = new ArrayList<>();
         Draughts watched;
         Function<DraughtsPosition, DraughtsDecision> answer = position -> new DraughtsDecision.Play(
                 new org.kevinkib.cardgames.draughts.domain.MoveGenerator().legalMoves(position).get(0));
+
+        @Override
+        public DraughtsDecision decide(DraughtsPosition position, Colour me, boolean drawOfferPending,
+                                       org.kevinkib.cardgames.draughts.domain.bot.DraughtsDrawContext drawContext) {
+            contexts.add(drawContext);
+            return decide(position, me, drawOfferPending);
+        }
 
         @Override
         public DraughtsDecision decide(DraughtsPosition position, Colour me, boolean drawOfferPending) {
@@ -242,6 +250,18 @@ class DraughtsBotCoordinatorTest {
         assertThat(bot.offerPending).containsExactly(true);
         assertThat(game.isFinished()).isTrue();
         assertThat(game.result().reason()).isEqualTo(DraughtsResult.Reason.DRAW_AGREED);
+    }
+
+    @Test
+    void theBotIsToldHowManyPliesWerePlayedAndWhetherACounterRuns() throws Exception {
+        Draughts game = register();
+        start(game);
+
+        actions.offerDraw(game.getId(), HUMAN);
+        scheduler.runNext();
+
+        assertThat(bot.contexts).containsExactly(
+                new org.kevinkib.cardgames.draughts.domain.bot.DraughtsDrawContext(game.history().size(), false));
     }
 
     @Test

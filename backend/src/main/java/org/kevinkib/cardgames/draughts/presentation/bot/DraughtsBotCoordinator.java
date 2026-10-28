@@ -16,6 +16,7 @@ import org.kevinkib.cardgames.draughts.domain.Phase;
 import org.kevinkib.cardgames.draughts.domain.bot.DraughtsBot;
 import org.kevinkib.cardgames.draughts.domain.bot.DraughtsBotLevel;
 import org.kevinkib.cardgames.draughts.domain.bot.DraughtsDecision;
+import org.kevinkib.cardgames.draughts.domain.bot.DraughtsDrawContext;
 import org.kevinkib.cardgames.draughts.presentation.DraughtsGameActions;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cardgames.game.PlayerId;
@@ -180,7 +181,8 @@ public class DraughtsBotCoordinator implements GameStateListener<Draughts>, Game
 
     // ---- a bot acts --------------------------------------------------------------------------
 
-    private record Snapshot(DraughtsPosition position, Colour colour, boolean offerPending, DraughtsBotLevel level) {
+    private record Snapshot(DraughtsPosition position, Colour colour, boolean offerPending, DraughtsBotLevel level,
+                            DraughtsDrawContext drawContext) {
     }
 
     private void act(Draughts game, PlayerId seat, int version) {
@@ -192,7 +194,8 @@ public class DraughtsBotCoordinator implements GameStateListener<Draughts>, Game
             try {
                 snapshot = new Snapshot(game.position(), game.colourOf(seat), offerToAnswer(game, seat),
                         DraughtsBotLevel.fromOption(
-                                seatOptions.seatOptions(game.getId(), seat).get(DraughtsFactory.LEVEL_KEY)));
+                                seatOptions.seatOptions(game.getId(), seat).get(DraughtsFactory.LEVEL_KEY)),
+                        DraughtsDrawContext.of(game.history().size(), game.draws(), game.repetitions()));
             } catch (RuntimeException e) {
                 log.warn("Bot {} could not be set up in game {}; falling back", seat, game.getId(), e);
                 fallback(game, seat);
@@ -203,7 +206,7 @@ public class DraughtsBotCoordinator implements GameStateListener<Draughts>, Game
         DraughtsDecision decision = null;
         try {
             decision = bots.apply(snapshot.level()).decide(snapshot.position(), snapshot.colour(),
-                    snapshot.offerPending());
+                    snapshot.offerPending(), snapshot.drawContext());
         } catch (Exception e) {
             log.warn("Bot {} failed in game {}; falling back", seat, game.getId(), e);
         }
