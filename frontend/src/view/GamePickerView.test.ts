@@ -135,4 +135,17 @@ describe('GamePickerView', () => {
     await flushPromises();
     expect(router.currentRoute.value.fullPath).toBe('/privacy');
   });
+
+  it('givenTheGames_thenOnlyDraughtsDrawsACustomSvgIconAndTheOthersKeepTheirPrimeIcon', async () => {
+    const { wrapper } = await mountPicker();
+    const draughts = wrapper.get('[data-test="play-draughts"]');
+    expect(draughts.find('svg[data-test="checkerboard-icon"]').exists()).toBe(true);
+    expect(draughts.find('svg').attributes('aria-hidden')).toBe('true');
+    expect(draughts.find('.pi-table').exists()).toBe(false);
+    for (const key of ['bataillecorse', 'bullshit', 'kobo', 'three-men-morris', 'president', 'mangola', 'ninety-nine']) {
+      const button = wrapper.get(`[data-test="play-${key}"]`);
+      expect(button.find('span.pi').exists()).toBe(true);
+      expect(button.find('svg').exists()).toBe(false);
+    }
+  });
 });

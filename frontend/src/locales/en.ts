@@ -1507,7 +1507,7 @@ export const messagesEn: Messages = {
     started: 'This game has already started.',
     notFound: 'No game found. It may have been closed, or the ID is wrong.',
     back: 'Back',
-    or: 'or pick a public game',
+    or: 'Or pick a public game',
     publicGames: {
       title: 'Public games',
       openCount: '{open} open',

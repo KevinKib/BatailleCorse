@@ -198,7 +198,7 @@ const armed = computed(() => props.pending.kind === 'match-armed' || props.pendi
   text-align: center;
   color: rgba(255, 255, 255, 0.85);
 }
-.prompt { color: var(--gold); font-weight: 600; }
+.prompt { color: var(--gold); font-weight: 700; }
 .notice {
   position: absolute;
   top: 0;

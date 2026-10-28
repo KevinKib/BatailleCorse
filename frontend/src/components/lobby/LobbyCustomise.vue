@@ -39,7 +39,7 @@ watch(() => props.reveal, (now) => { if (now) open.value = true; });
   padding: 4px 12px;
   font: inherit;
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: 700;
   color: rgba(255, 255, 255, 0.9);
   background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.2);

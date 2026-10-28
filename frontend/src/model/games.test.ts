@@ -74,7 +74,8 @@ describe('game registry', () => {
     expect(draughts?.serverType).toBe('draughts');
     expect(draughts?.supportsBots).toBe(true);
     expect(draughts?.hotkeys).toBeUndefined();
-    expect(draughts?.picker).toEqual({ icon: 'pi pi-table', severity: 'secondary' });
+    expect(draughts?.picker.severity).toBe('secondary');
+    expect(typeof draughts?.picker.icon).not.toBe('string');
     expect(draughts?.roomRoute('abc')).toBe('/draughts/room/abc');
   });
 

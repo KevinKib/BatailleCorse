@@ -95,10 +95,8 @@ const hasMarkers = computed(() =>
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 0.72rem;
+  font-size: 0.875rem;
   font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
   line-height: 1.2;
   color: rgba(255, 255, 255, 0.85);
   background: rgba(0, 0, 0, 0.45);

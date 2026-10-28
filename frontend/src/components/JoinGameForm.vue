@@ -122,9 +122,8 @@ async function joinFromList(gameId: string) {
   display: flex;
   align-items: center;
   gap: 12px;
-  font-size: 0.75rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-size: 0.875rem;
+  font-weight: 700;
   color: rgba(255, 255, 255, 0.7);
 }
 .or-divider::before,

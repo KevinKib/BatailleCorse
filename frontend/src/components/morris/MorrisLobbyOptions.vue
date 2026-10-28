@@ -118,10 +118,9 @@ function pick(event: Event, key: string, value: string, current: string) {
   display: block;
   margin: 0 0 var(--space-2, 8px);
   padding: 0;
-  font-size: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 700;
   line-height: 1rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
   color: rgba(255, 255, 255, 0.6);
 }
 
@@ -165,7 +164,7 @@ function pick(event: Event, key: string, value: string, current: string) {
   padding: 4px 8px;
   box-sizing: border-box;
   font-size: 0.8125rem;
-  font-weight: 600;
+  font-weight: 700;
   color: rgba(255, 255, 255, 0.85);
   background: rgba(0, 0, 0, 0.25);
   border: 1px solid rgba(255, 255, 255, 0.15);
@@ -196,5 +195,5 @@ function pick(event: Event, key: string, value: string, current: string) {
 .read .card { width: 100%; max-width: 160px; }
 .read--colour { min-height: 44px; justify-content: center; padding: 2px 12px; box-sizing: border-box; background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 8px; }
 .read--colour .field-label { margin: 0; }
-.read-value { display: inline-flex; align-items: center; gap: 8px; color: var(--gold); font-weight: 600; font-size: 0.875rem; line-height: 1.25rem; }
+.read-value { display: inline-flex; align-items: center; gap: 8px; color: var(--gold); font-weight: 700; font-size: 0.875rem; line-height: 1.25rem; }
 </style>

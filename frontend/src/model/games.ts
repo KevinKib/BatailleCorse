@@ -1,12 +1,18 @@
+import type { Component } from 'vue';
+import CheckerboardIcon from '../components/icons/CheckerboardIcon.vue';
+
 /**
  * Every game the app knows by key. Keys are opened ahead of their game: a game only appears on the Game
  * selection once its own change registers it in `GAMES`.
  */
 export type GameKey = 'bataillecorse' | 'bullshit' | 'kobo' | 'three-men-morris' | 'president' | 'mangola' | 'ninety-nine' | 'draughts';
 
-/** How a game's card looks on the Game selection (PrimeVue button icon and severity). */
+/**
+ * How a game's card looks on the Game selection (PrimeVue button icon and severity). The icon is a PrimeIcons
+ * class, or a component (an inline SVG) for a glyph PrimeIcons does not have.
+ */
 export interface GamePickerStyle {
-  icon: string;
+  icon: string | Component;
   severity: 'success' | 'warn' | 'info' | 'secondary' | 'danger' | 'help' | 'contrast';
 }
 
@@ -99,7 +105,7 @@ export const GAMES: readonly GameDefinition[] = [
   // Pieces are tapped on the board: no remappable shortcut, so no gear. Bots play at three levels (a seat option).
   define('draughts', {
     supportsBots: true,
-    picker: { icon: 'pi pi-table', severity: 'secondary' },
+    picker: { icon: CheckerboardIcon, severity: 'secondary' },
   }),
 ];
 

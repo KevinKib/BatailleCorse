@@ -251,9 +251,8 @@ const handStyle = computed(() => {
 
 .mg-board__legend {
   margin: var(--space-1) 0;
-  font-size: 0.75rem;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  font-size: 0.875rem;
+  font-weight: 700;
   text-align: center;
   opacity: 0.75;
 }

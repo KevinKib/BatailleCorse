@@ -182,7 +182,7 @@ const sizes = computed(() => (compact.value
 
 .rail { display: flex; flex-direction: column; gap: var(--space-2); flex: none; }
 .rail-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
-.rail-title { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(255, 255, 255, 0.7); }
+.rail-title { font-size: 0.875rem; font-weight: 700; color: rgba(255, 255, 255, 0.7); }
 .rail-reversed { font-size: 0.75rem; font-weight: 700; color: var(--gold); }
 .rail-list { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-2); }
 .rail-item { min-width: 0; }
