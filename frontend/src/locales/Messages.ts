@@ -316,6 +316,11 @@ export interface OptionsMessages {
     direction: OptionTexts;            // `label`, then `anticlockwise` / `clockwise`
     level: OptionTexts;                // a bot seat's level: `label`, then `random` (Easy) / `greedy` (Medium) / `expert` (Expert)
   };
+  draughts: {
+    hostColour: OptionTexts;           // `label`, then `white` / `black` / `random`
+    drawOffers: OptionTexts;           // `label`, then `on` / `off`
+    level: OptionTexts;                // a bot seat's level: `label`, then `random` (Easy) / `greedy` (Medium) / `expert` (Expert)
+  };
   ninetyNine: {
     lives: OptionTexts;                // `label`, then `2` / `3` / `4`
     quick: OptionTexts;                // `label`, then `off` / `on`
@@ -924,6 +929,113 @@ export interface ThreeMenMorrisUiMessages {
   };
 }
 
+/** Draughts screen, board, plates, move list and end screen. Placeholders use `{name}` and are filled by `format()` / `plural()`. */
+export interface DraughtsUiMessages {
+  white: string;
+  black: string;
+  you: string;
+  playerLabel: string;                 // '{n}' = 1-based seat number, for a player without a name
+  botWithLevel: string;                // '{name}', '{level}'
+  back: string;
+  connecting: string;                  // shown while the first server state is on its way
+  board: {
+    label: string;                     // name of the board group
+    squareLabel: string;               // '{square}' = 1-50, '{state}' = the state words joined by commas
+    whiteMan: string;
+    whiteKing: string;
+    blackMan: string;
+    blackKing: string;
+    empty: string;
+    canMove: string;                   // I may select this piece
+    selected: string;                  // this piece is the selected one
+    destination: string;               // the selected piece may go here
+    lastMove: string;                  // the opponent's last move started or ended here
+    taken: string;                     // the previewed capture takes this piece
+    route: string;                     // '{n}': this piece belongs to route n of the chooser
+  };
+  table: {
+    youPlay: string;                   // '{colour}'
+    waitingFor: string;                // '{player}'
+    hintMove: string;                  // my turn, nothing selected
+    hintDestination: string;           // my turn, a piece is selected
+    mustCapture: PluralForms;          // '{n}' = pieces the majority capture takes
+    chooseIntro: string;               // '{to}' = the square where the captures end
+    takes: string;                     // '{squares}': the chooser option, the squares it takes
+    chooseCancel: string;
+    men: PluralForms;                  // '{n}'
+    kings: PluralForms;                // '{n}'
+    took: string;                      // '{n}' = opponent pieces taken so far
+    plateLabel: string;                // '{name}', '{colour}', '{counts}': accessible name of a plate
+    kingsOnly: PluralForms;            // '{n}' = moves each player has left before the draw
+    shortEnding: PluralForms;          // '{n}'
+    repetition: string;
+    forfeited: string;                 // '{player}'
+    offline: string;
+    resign: string;
+    movesToggle: string;
+  };
+  moves: {
+    title: string;
+    hide: string;
+    show: string;
+    white: string;
+    black: string;
+    number: string;
+    empty: string;
+    label: string;                     // '{n}' = moves played: accessible name of the list
+  };
+  announce: {
+    moved: string;                     // '{player}', '{move}'
+    movedTaking: PluralForms;          // '{player}', '{move}', '{n}' = pieces taken
+  };
+  draw: {
+    offer: string;
+    offered: string;
+    incoming: string;                  // '{player}'
+    incomingHint: string;
+    accept: string;
+    decline: string;
+    offeredBy: string;                 // '{player}'
+    declinedBy: string;                // '{player}'
+    agreed: string;
+    byRepetition: string;
+    byKingsOnly: string;
+    byShortEnding: string;
+  };
+  end: {
+    winner: string;                    // '{player}'
+    noPiecesWon: string;               // '{player}' = the loser
+    noPiecesLost: string;              // '{player}' = the winner
+    blockedWon: string;                // '{player}' = the loser
+    blockedLost: string;               // '{player}' = the winner
+    youWonResigned: string;            // '{player}'
+    youWonDisconnected: string;        // '{player}'
+    youWonForfeit: string;
+    youLostForfeit: string;
+    summary: string;                   // '{moves}' (plural text), '{move}' = the last move
+    moves: PluralForms;                // '{n}'
+    playAgain: string;
+    rematchPending: string;
+    rematchFailed: string;
+  };
+  lobby: {
+    summary: string;                   // the line next to the mini board of the lobby
+  };
+  // The codes the server sends on a refused command (`draughts.errors.<code>`).
+  errors: {
+    illegalMove: string;
+    ambiguousMove: string;
+    notYourTurn: string;
+    invalidSquare: string;
+    gameFinished: string;
+    drawOffersOff: string;
+    drawAlreadyOffered: string;
+    ownDrawOffer: string;
+    drawOfferPending: string;
+    noDrawOffer: string;
+  };
+}
+
 // Whole-app message tree. Each game owns a rules namespace; future namespaces
 // (game, lobby, ...) are added here additively.
 export interface Messages {
@@ -935,6 +1047,8 @@ export interface Messages {
   president: RulesMessages;         // President
   presidentUi: PresidentUiMessages; // President screens
   ninetyNineUi: NinetyNineUiMessages; // 99 screens (the rules texts come with the entry PR)
+  draughts: RulesMessages;          // Draughts
+  draughtsUi: DraughtsUiMessages;   // Draughts screens
   threeMenMorris: RulesMessages;    // Three Men's Morris
   morrisBoard: MorrisBoardMessages; // Three Men's Morris board
   mangola: RulesMessages;   // Mangola

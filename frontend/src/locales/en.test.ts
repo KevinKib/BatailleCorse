@@ -570,3 +570,57 @@ describe('Mangola messages', () => {
     expect(ui.end.youWonResigned).toContain('{player}');
   });
 });
+
+describe('Draughts messages', () => {
+  const emptyLeaves = (node: unknown, path: string): string[] => {
+    if (typeof node === 'string') return node.trim() === '' ? [path] : [];
+    if (Array.isArray(node)) return node.flatMap((v, i) => emptyLeaves(v, `${path}[${i}]`));
+    if (node && typeof node === 'object') return Object.entries(node).flatMap(([k, v]) => emptyLeaves(v, `${path}.${k}`));
+    return [];
+  };
+
+  it('givenTheDraughtsMessages_thenEveryLeafStringIsNonEmpty', () => {
+    expect(emptyLeaves(messagesEn.draughtsUi, 'draughtsUi')).toEqual([]);
+    expect(emptyLeaves(messagesEn.draughts, 'draughts')).toEqual([]);
+    expect(emptyLeaves(messagesEn.options.draughts, 'options.draughts')).toEqual([]);
+  });
+
+  it('givenTheRulesPanel_thenItCoversTheRulesOfTheSpecAndTheBots', () => {
+    expect(messagesEn.draughts.panelTitle).toBe('Draughts');
+    expect(messagesEn.draughts.sections.map(s => s.title)).toEqual([
+      'Goal', 'The board', 'Moving', 'Capturing', 'The majority rule', 'Kings', 'End of the game', 'Bots',
+    ]);
+    expect(messagesEn.draughts.sections.every(s => s.kind === 'text' && s.body.length > 0)).toBe(true);
+  });
+
+  it('givenTheOptions_thenTheHostColourTheDrawOffersAndTheBotLevelsAreNamed', () => {
+    const { hostColour, drawOffers, level } = messagesEn.options.draughts;
+    expect(['white', 'black', 'random'].map(v => hostColour[v])).toEqual(['White', 'Black', 'Random']);
+    expect(['on', 'off'].map(v => drawOffers[v])).toEqual(['Allowed', 'Off']);
+    expect(['random', 'greedy', 'expert'].map(v => level[v])).toEqual(['Easy', 'Medium', 'Expert']);
+  });
+
+  it('givenTheBackendErrorCodes_thenEveryOneHasAText', () => {
+    const errors = messagesEn.draughtsUi.errors as Record<string, string>;
+    const codes = ['illegalMove', 'ambiguousMove', 'notYourTurn', 'invalidSquare', 'gameFinished', 'drawOffersOff',
+      'drawAlreadyOffered', 'ownDrawOffer', 'drawOfferPending', 'noDrawOffer'];
+    for (const code of codes) expect(errors[code], code).toBeTruthy();
+  });
+
+  it('givenTheTableTexts_thenCountsHintsAndEveryEndReasonAreWorded', () => {
+    const ui = messagesEn.draughtsUi;
+    expect(ui.table.mustCapture.one).toContain('{n}');
+    expect(ui.table.mustCapture.other).toContain('{n}');
+    expect(ui.table.takes).toContain('{squares}');
+    expect(ui.table.chooseIntro).toContain('{to}');
+    expect(ui.draw.incoming).toContain('{player}');
+    expect(ui.end.noPiecesWon).toContain('{player}');
+    expect(ui.end.noPiecesLost).toContain('{player}');
+    expect(ui.end.blockedWon).toContain('{player}');
+    expect(ui.end.blockedLost).toContain('{player}');
+    expect(ui.draw.agreed).toBeTruthy();
+    expect(ui.draw.byRepetition).toContain('three times');
+    expect(ui.draw.byKingsOnly).toBeTruthy();
+    expect(ui.draw.byShortEnding).toBeTruthy();
+  });
+});
