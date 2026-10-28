@@ -127,7 +127,7 @@ describe('DraughtsGameScreen', () => {
       const game = draughtsState();
       const { wrapper } = await mountScreen({
         ...game,
-        players: game.players.map(p => (p.seat === 1 ? { ...p, name: 'Bot 1', bot: true, level: 'expert' } : p)),
+        players: game.players.map(p => (p.seat === 1 ? { ...p, name: null, bot: true, level: 'expert' } : p)),
       });
       expect(wrapper.findAll('[data-test="plate-name"]')[0].text()).toBe('Bot 1 (Expert)');
     });

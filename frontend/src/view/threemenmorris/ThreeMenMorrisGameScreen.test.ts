@@ -144,7 +144,7 @@ describe('ThreeMenMorrisGameScreen', () => {
       }));
       const game = morrisState();
       store.applyEvent({ type: 'state-update', state: {
-        ...game, players: game.players.map(p => (p.seat === 1 ? { ...p, name: 'Bot 1' } : p)),
+        ...game, players: game.players.map(p => (p.seat === 1 ? { ...p, name: null, bot: true } : p)),
       } });
       await flushPromises();
       const tags = wrapper.findAll('[data-test="player-tag"]');
@@ -155,7 +155,7 @@ describe('ThreeMenMorrisGameScreen', () => {
       const game = morrisState();
       const { wrapper } = await mountScreen({
         ...game,
-        players: game.players.map(p => (p.seat === 1 ? { ...p, name: 'Bot 1', bot: true, level: 'perfect' } : p)),
+        players: game.players.map(p => (p.seat === 1 ? { ...p, name: null, bot: true, level: 'perfect' } : p)),
       });
       const tags = wrapper.findAll('[data-test="player-tag"]');
       expect(tags.map(t => t.get('[data-test="tag-name"]').text())).toEqual(['Bot 1 (Expert)', 'Alice']);

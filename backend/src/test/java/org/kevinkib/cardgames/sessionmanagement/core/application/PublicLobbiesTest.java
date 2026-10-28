@@ -129,11 +129,11 @@ class PublicLobbiesTest {
     }
 
     @Test
-    void theHostNameDefaultsToPlayer1() {
+    void theHostNameIsNullWhenTheHostTypedNone() {
         SessionGame session = SessionGame.create(GameId.generate(), 4, "kobo");
         session.claimNextFreeSeat(null);
 
-        assertThat(list(List.of(entry(session, false, 0))).lobbies().get(0).hostName(), is("Player 1"));
+        assertThat(list(List.of(entry(session, false, 0))).lobbies().get(0).hostName(), is((String) null));
     }
 
     @Test

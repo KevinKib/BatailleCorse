@@ -44,7 +44,7 @@ class SessionServiceBotsTest {
 
         assertThat(seat, is(new PlayerId(1)));
         assertThat(service.seats(id).get(1).bot(), is(true));
-        assertThat(service.seats(id).get(1).name(), is("Bot 1"));
+        assertThat(service.seats(id).get(1).name(), is((String) null));
         assertThat(service.seats(id).get(1).joined(), is(true));
         assertThat(service.botSeats(id), is(Set.of(new PlayerId(1))));
     }

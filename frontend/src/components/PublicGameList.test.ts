@@ -63,6 +63,13 @@ describe('PublicGameList', () => {
     expect(row.text()).toContain('· 1 bot');
   });
 
+  it.each([null, '', '   '])('namesAHostWithoutANameLikeSeatOne (%j)', async (hostName) => {
+    const { wrapper } = await mountList({ lobbies: [lobby('a', { hostName })], total: 1 });
+    const label = messagesEn.lobby.playerLabel.replace('{n}', '1');
+    expect(wrapper.get('[data-game-id="a"] .pg-host').text()).toBe(label);
+    expect(wrapper.get('[data-game-id="a"]').html()).toContain(`Join ${label}`);
+  });
+
   it('showsNoBotTextWithoutBots', async () => {
     const { wrapper } = await mountList({ lobbies: [lobby('a', { bots: 0 })], total: 1 });
     expect(wrapper.get('[data-game-id="a"]').text()).not.toContain('bot');

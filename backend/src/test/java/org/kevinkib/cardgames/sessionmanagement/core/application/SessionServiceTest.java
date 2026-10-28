@@ -126,7 +126,7 @@ class SessionServiceTest {
     void givenCreateRoomWithBlankName_thenSeatZeroGetsDefaultName() {
         RoomCreated room = service.createRoom("bataille-corse", "  ");
 
-        assertThat(service.seats(new GameId(room.gameId())).get(0).name(), is("Player 1"));
+        assertThat(service.seats(new GameId(room.gameId())).get(0).name(), is((String) null));
     }
 
     @Test
@@ -148,7 +148,7 @@ class SessionServiceTest {
 
         service.joinRoom(id, null);
 
-        assertThat(service.seats(id).get(1).name(), is("Player 2"));
+        assertThat(service.seats(id).get(1).name(), is((String) null));
     }
 
     @Nested

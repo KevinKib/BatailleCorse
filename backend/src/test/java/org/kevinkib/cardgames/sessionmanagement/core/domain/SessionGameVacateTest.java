@@ -33,7 +33,7 @@ class SessionGameVacateTest {
     }
 
     private List<String> names() {
-        return lobby.seats().stream().map(s -> s.isClaimed() ? s.name() : "-").toList();
+        return lobby.seats().stream().map(s -> s.isClaimed() ? (s.name() == null ? "(none)" : s.name()) : "-").toList();
     }
 
     private void assertContiguous(int claimed) {
@@ -94,7 +94,7 @@ class SessionGameVacateTest {
         assertThat(lobby.findPlayerByToken(carolToken).get(), is(seat(0)));
         assertThat(lobby.isBot(seat(0)), is(false));
         assertThat(lobby.isBot(seat(1)), is(true));
-        assertThat(names(), is(List.of("Carol", "Bot 1", "-", "-", "-", "-")));
+        assertThat(names(), is(List.of("Carol", "(none)", "-", "-", "-", "-")));
         assertContiguous(2);
     }
 
@@ -107,7 +107,7 @@ class SessionGameVacateTest {
 
         lobby.vacate(seat(0));
 
-        assertThat(names(), is(List.of("Bob", "Bot 1", "Bot 2", "-", "-", "-")));
+        assertThat(names(), is(List.of("Bob", "(none)", "(none)", "-", "-", "-")));
         assertThat(lobby.findPlayerByToken(bobToken).get(), is(seat(0)));
         assertContiguous(3);
     }
@@ -122,7 +122,7 @@ class SessionGameVacateTest {
 
         lobby.vacate(seat(1));
 
-        assertThat(names(), is(List.of("Alice", "Bot 1", "Carol", "-", "-", "-")));
+        assertThat(names(), is(List.of("Alice", "(none)", "Carol", "-", "-", "-")));
         assertThat(lobby.isBot(seat(1)), is(true));
         assertThat(lobby.players().get(seat(1)).options().get("tier"), is("2"));
         assertThat(lobby.findPlayerByToken(carolToken).get(), is(seat(2)));
@@ -138,7 +138,7 @@ class SessionGameVacateTest {
 
         lobby.vacate(seat(1));
 
-        assertThat(names(), is(List.of("Alice", "Bot 1", "Bot 2", "-", "-", "-")));
+        assertThat(names(), is(List.of("Alice", "(none)", "(none)", "-", "-", "-")));
         assertContiguous(3);
     }
 
@@ -161,7 +161,7 @@ class SessionGameVacateTest {
     }
 
     @Test
-    void givenDefaultNames_whenAGuestLeaves_thenDefaultHumanNamesAreRenumberedAndChosenOnesKept() {
+    void givenDefaultNames_whenAGuestLeaves_thenUnnamedStayUnnamedAndChosenOnesKept() {
         human(null);
         human(null);
         human("Carol");
@@ -169,18 +169,18 @@ class SessionGameVacateTest {
 
         lobby.vacate(seat(1));
 
-        assertThat(names(), is(List.of("Player 1", "Carol", "Player 3", "-", "-", "-")));
+        assertThat(names(), is(List.of("(none)", "Carol", "(none)", "-", "-", "-")));
     }
 
     @Test
-    void givenDefaultNames_whenHostLeaves_thenTheNewHostIsPlayerOne() {
+    void givenDefaultNames_whenHostLeaves_thenTheNewHostIsStillUnnamed() {
         human(null);
         human(null);
         human(null);
 
         lobby.vacate(seat(0));
 
-        assertThat(names(), is(List.of("Player 1", "Player 2", "-", "-", "-", "-")));
+        assertThat(names(), is(List.of("(none)", "(none)", "-", "-", "-", "-")));
     }
 
     @Test
@@ -190,7 +190,7 @@ class SessionGameVacateTest {
 
         lobby.vacate(seat(0));
 
-        assertThat(names(), is(List.of("Bot 1", "-", "-", "-", "-", "-")));
+        assertThat(names(), is(List.of("(none)", "-", "-", "-", "-", "-")));
         assertThat(lobby.players().values().stream().anyMatch(p -> p.isClaimed() && !p.isBot()), is(false));
     }
 

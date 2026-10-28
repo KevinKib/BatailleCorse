@@ -31,7 +31,7 @@ class SessionGameBotsTest {
         assertThat(bot.id(), is(new PlayerId(1)));
         assertThat(bot.isBot(), is(true));
         assertThat(bot.isClaimed(), is(true));
-        assertThat(bot.name(), is("Bot 1"));
+        assertThat(bot.name(), is((String) null));
         assertThat(lobby.isBot(new PlayerId(1)), is(true));
         assertThat(lobby.isBot(new PlayerId(0)), is(false));
     }
@@ -43,8 +43,8 @@ class SessionGameBotsTest {
         SessionPlayer first = lobby.claimBot("");
         SessionPlayer second = lobby.claimBot("  ");
 
-        assertThat(first.name(), is("Bot 1"));
-        assertThat(second.name(), is("Bot 2"));
+        assertThat(first.name(), is((String) null));
+        assertThat(second.name(), is((String) null));
     }
 
     @Test
@@ -126,8 +126,8 @@ class SessionGameBotsTest {
 
         assertThat(lobby.botSeats(), is(Set.of(new PlayerId(1), new PlayerId(2))));
         assertThat(lobby.isClaimed(new PlayerId(3)), is(false));
-        assertThat(lobby.seats().get(1).name(), is("Bot 1"));
-        assertThat(lobby.seats().get(2).name(), is("Bot 2"));
+        assertThat(lobby.seats().get(1).name(), is((String) null));
+        assertThat(lobby.seats().get(2).name(), is((String) null));
         assertThat(lobby.claimedCount(), is(3));
     }
 
@@ -204,7 +204,7 @@ class SessionGameBotsTest {
     }
 
     @Test
-    void givenHuman_whenRenameSeat_thenTrimmedCutAndBlankRestoresTheDefault() {
+    void givenHuman_whenRenameSeat_thenTrimmedCutAndBlankClearsTheName() {
         lobby.renameSeat(new PlayerId(0), "  Alicia ");
         assertThat(lobby.players().get(new PlayerId(0)).name(), is("Alicia"));
 
@@ -212,7 +212,7 @@ class SessionGameBotsTest {
         assertThat(lobby.players().get(new PlayerId(0)).name(), is("abcdefghijklmnopqrst"));
 
         lobby.renameSeat(new PlayerId(0), " ");
-        assertThat(lobby.players().get(new PlayerId(0)).name(), is("Player 1"));
+        assertThat(lobby.players().get(new PlayerId(0)).name(), is((String) null));
     }
 
     @Test
@@ -232,7 +232,7 @@ class SessionGameBotsTest {
         assertThat(lobby.seats().get(1).name(), is("Bob"));
         assertThat(lobby.findPlayerByToken(bob.token()), is(java.util.Optional.of(new PlayerId(1))));
         assertThat(lobby.botSeats(), is(Set.of(new PlayerId(2), new PlayerId(3))));
-        assertThat(lobby.seats().get(2).name(), is("Bot 1"));
+        assertThat(lobby.seats().get(2).name(), is((String) null));
         assertThat(lobby.seats().get(3).name(), is("Robo"));
         assertThat(lobby.seats().get(3).options(), is(java.util.Map.of("tier", "2")));
         assertThat(lobby.removableBotSeats(), contains(new PlayerId(2), new PlayerId(3)));
@@ -246,7 +246,7 @@ class SessionGameBotsTest {
         SessionPlayer first = reopened.claimSeatAheadOfBots(null);
 
         assertThat(first.id(), is(new PlayerId(0)));
-        assertThat(first.name(), is("Player 1"));
+        assertThat(first.name(), is((String) null));
         assertThat(reopened.botSeats(), is(Set.of(new PlayerId(1))));
     }
 

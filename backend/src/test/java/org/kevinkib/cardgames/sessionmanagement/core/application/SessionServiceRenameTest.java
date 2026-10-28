@@ -52,17 +52,17 @@ class SessionServiceRenameTest {
     }
 
     @Test
-    void givenBlankName_whenRenameSeat_thenDefaultNameRestored() {
+    void givenBlankName_whenRenameSeat_thenNameCleared() {
         service.renameSeat(id, guestToken, "   ");
 
-        assertThat(nameAt(1), is("Player 2"));
+        assertThat(nameAt(1), is((String) null));
     }
 
     @Test
-    void givenNullName_whenRenameSeat_thenDefaultNameRestored() {
+    void givenNullName_whenRenameSeat_thenNameCleared() {
         service.renameSeat(id, hostToken, null);
 
-        assertThat(nameAt(0), is("Player 1"));
+        assertThat(nameAt(0), is((String) null));
     }
 
     @Test

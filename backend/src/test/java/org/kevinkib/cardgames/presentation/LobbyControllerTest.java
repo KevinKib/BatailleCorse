@@ -92,7 +92,7 @@ class LobbyControllerTest {
         assertThat(response.getEventType(), is("JOIN"));
         LobbyView lobby = lobbyOf(response);
         assertThat(lobby.players().get(2).bot(), is(true));
-        assertThat(lobby.players().get(2).name(), is("Bot 1"));
+        assertThat(lobby.players().get(2).name(), is((String) null));
     }
 
     @Test

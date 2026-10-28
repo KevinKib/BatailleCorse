@@ -24,7 +24,7 @@ import { findGame } from '../../model/games';
 import MorrisLobbyOptions from '../../components/morris/MorrisLobbyOptions.vue';
 import { WINNING_LINE_HOLD_MS } from '../../model/threemenmorris/board';
 import { rematchButtonFor } from '../../model/RematchButton';
-import { nameWithBotLevel } from '../../model/lobby/botLevel';
+import { seatNameWithBotLevel } from '../../model/lobby/botLevel';
 import { format, plural } from '../../locales/format';
 
 const props = defineProps<{ gameId: string }>();
@@ -35,12 +35,11 @@ const router = useRouter();
 const game = findGame('three-men-morris')!;
 useMorrisBootstrap(props.gameId, game);
 
-// Names are user input: only ever rendered as text. A player without a typed name is "Player N" (from 1).
+// Names are user input: only ever rendered as text. A player without a typed name is "Player N" (from 1), a computer seat "Bot N" (the server sends neither).
 // A computer seat also says its level: "Bot 1 (Expert)".
-const displayName = (seat: number): string => {
-  const name = store.game?.players.find(p => p.seat === seat)?.name?.trim() || format(ui.playerLabel, { n: seat + 1 });
-  return nameWithBotLevel(messages, 'options.threeMenMorris.level', ui.botWithLevel, name, store.botLevels[seat]);
-};
+const displayName = (seat: number): string =>
+  seatNameWithBotLevel(messages, 'options.threeMenMorris.level', ui.botWithLevel, store.game?.players ?? [], seat, store.botLevels,
+    { player: ui.playerLabel, bot: messages.lobby.botName });
 const colourOf = (seat: number): 'white' | 'black' => (store.colourOf(seat) === 'WHITE' ? 'white' : 'black');
 
 const me = computed(() => store.game?.players.find(p => p.seat === store.mySeat));

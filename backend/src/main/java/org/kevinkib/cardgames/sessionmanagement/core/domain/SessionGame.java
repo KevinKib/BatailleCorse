@@ -137,15 +137,15 @@ public record SessionGame(GameId id, String gameType, GameOptions options, Map<P
     }
 
     /**
-     * Claims the lowest-numbered free seat for a computer player. Bots are numbered over bots only
-     * ("Bot 1", "Bot 2", ...) when no name is given.
+     * Claims the lowest-numbered free seat for a computer player. A bot keeps only a name it was given; the client
+     * labels an unnamed bot.
      */
     public SessionPlayer claimBot(String name) {
         SessionPlayer free = players.values().stream()
                 .filter(seat -> !seat.isClaimed())
                 .min(Comparator.comparingInt(seat -> seat.id().id()))
                 .orElseThrow(() -> new NoFreeSeatException(id));
-        free.claimAsBot(name, botName(botSeats().size() + 1));
+        free.claimAsBot(name);
         return free;
     }
 
@@ -162,7 +162,7 @@ public record SessionGame(GameId id, String gameType, GameOptions options, Map<P
                     .filter(seat -> !seat.isClaimed() && !seat.id().equals(HOST_SEAT))
                     .findFirst()
                     .orElseThrow(() -> new NoFreeSeatException(id));
-            free.claimAsBot(former.name(), botName(botSeats().size() + 1));
+            free.claimAsBot(former.name());
             free.replaceOptions(former.options());
         }
     }
@@ -170,7 +170,7 @@ public record SessionGame(GameId id, String gameType, GameOptions options, Map<P
     /**
      * Frees a bot seat. A game is dealt to the contiguous seats 0..claimed-1, so a gap must not
      * appear below a human: removal is refused when a human sits after the bot. Bots after it shift
-     * down one seat (they carry no identity) and their default names are renumbered.
+     * down one seat (they carry no identity).
      */
     public void removeBot(PlayerId playerId) {
         SessionPlayer target = seatOrThrow(playerId);
@@ -184,22 +184,21 @@ public record SessionGame(GameId id, String gameType, GameOptions options, Map<P
         for (int i = ordered.indexOf(target); i < ordered.size(); i++) {
             SessionPlayer next = i + 1 < ordered.size() ? ordered.get(i + 1) : null;
             if (next != null && next.isClaimed()) {
-                ordered.get(i).claimAsBot(next.name(), next.name());
+                ordered.get(i).claimAsBot(next.name());
                 ordered.get(i).replaceOptions(next.options());
             } else {
                 ordered.get(i).release();
                 break;
             }
         }
-        renumberBots();
     }
 
     /**
      * A human leaves the lobby. Seats stay contiguous (a game is dealt to seats 0..claimed-1): later occupants shift
      * down one seat and every seat left free gets a fresh token. Each occupant keeps its own token, name, bot flag,
      * seat options and rematch flags on its new seat. When the host (seat 0) leaves, the first human by seat order
-     * takes seat 0 and becomes the host: a bot is never the host. Default names ("Player N", "Bot N") are renumbered
-     * so that two seats never share one.
+     * takes seat 0 and becomes the host: a bot is never the host. A seat with no name has none after the move either:
+     * the client labels it by its new seat number.
      */
     public void vacate(PlayerId leaver) {
         SessionPlayer leaving = seatOrThrow(leaver);
@@ -223,8 +222,6 @@ public record SessionGame(GameId id, String gameType, GameOptions options, Map<P
                     ? staying.get(i).movedTo(seatId)
                     : new SessionPlayer(seatId, SessionToken.generate()));
         }
-        renumberBots();
-        renumberDefaultHumanNames();
     }
 
     /**
@@ -261,20 +258,12 @@ public record SessionGame(GameId id, String gameType, GameOptions options, Map<P
                 .orElse(false);
     }
 
-    private void renumberDefaultHumanNames() {
-        for (SessionPlayer seat : seats()) {
-            if (seat.isClaimed() && !seat.isBot() && seat.name() != null && seat.name().matches("Player \\d+")) {
-                seat.rename(seat.defaultName());
-            }
-        }
-    }
-
     /** Longest player name kept; a longer one is cut. */
     public static final int MAX_NAME_LENGTH = 20;
 
     /**
      * Renames the human occupying a seat: trimmed, cut at {@link #MAX_NAME_LENGTH} characters, a blank name
-     * restores the default "Player N".
+     * clears it (the client then labels the seat).
      */
     public void renameSeat(PlayerId playerId, String name) {
         SessionPlayer seat = seatOrThrow(playerId);
@@ -285,7 +274,7 @@ public record SessionGame(GameId id, String gameType, GameOptions options, Map<P
         if (trimmed.length() > MAX_NAME_LENGTH) {
             trimmed = trimmed.substring(0, MAX_NAME_LENGTH).trim();
         }
-        seat.rename(trimmed.isEmpty() ? seat.defaultName() : trimmed);
+        seat.rename(trimmed.isEmpty() ? null : trimmed);
     }
 
     /** Sets an opaque option on a computer seat; the game validates the key and value before this is called. */
@@ -295,22 +284,6 @@ public record SessionGame(GameId id, String gameType, GameOptions options, Map<P
             throw new NotABotSeatException(playerId);
         }
         seat.setOption(key, value);
-    }
-
-    private void renumberBots() {
-        int number = 1;
-        for (SessionPlayer seat : seats()) {
-            if (seat.isClaimed() && seat.isBot()) {
-                if (seat.name() != null && seat.name().matches("Bot \\d+")) {
-                    seat.rename(botName(number));
-                }
-                number++;
-            }
-        }
-    }
-
-    private static String botName(int number) {
-        return "Bot " + number;
     }
 
     public boolean isBot(PlayerId playerId) {
