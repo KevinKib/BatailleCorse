@@ -14,7 +14,7 @@ Jeux de société temps réel (Bataille Corse, Bullshit, Kobo, President , la ma
 - Ajouter un jeu : suivre `docs/architecture/add-a-game.md` et les noms de `docs/architecture/game-conventions.md`.
 - Les règles métier vivent dans le domaine (`<jeu>/domain`), jamais dans les contrôleurs (`presentation`) ni dans le frontend. `sessionmanagement` ne dépend que du noyau `game`, jamais d'un jeu concret ; un jeu ne connaît ni sessions, ni jetons, ni transport.
 - Une action est authentifiée par le jeton de siège (`SessionToken`) ; les DTO et les événements WebSocket sont dans `presentation/`.
-- Frontend : Composition API avec `<script setup>` et TypeScript (skill `vue-best-practices`). Tout nouveau texte visible passe par `frontend/src/locales/`.
+- Frontend : Composition API avec `<script setup>` et TypeScript (skill `vue-best-practices`). Tout nouveau texte visible passe par `frontend/src/locales/`, en anglais (`en.ts`) et en français (`fr/`) ; le test de parité (`parity.test.ts`) échoue si une clé manque en français ou y reste en anglais.
 - Dépendance privée `org.kevinkib:frenchcards` (GitHub Packages) : elle se résout avec `deploy/docker/settings.xml` (ignoré par git, voir le README). Sans ce fichier, rien ne se construit.
 
 ## Suivi

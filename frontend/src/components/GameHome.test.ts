@@ -1,6 +1,5 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { flushPromises, mount } from '@vue/test-utils';
-import { vi } from 'vitest';
 import { setActivePinia, createPinia } from 'pinia';
 import { createMemoryHistory } from 'vue-router';
 import PrimeVue from 'primevue/config';
@@ -9,6 +8,12 @@ import { createAppRouter } from '../router';
 import { findGame } from '../model/games';
 import { useSettingsStore } from '../state/Settings.store';
 import { messagesEn } from '../locales/en';
+
+// These tests cover the single-language UI; the two-language UI is in the *.language.test.ts files.
+vi.mock('../locales', async (original) => ({
+  ...(await original<typeof import('../locales')>()),
+  SUPPORTED_LOCALES: ['en'],
+}));
 
 async function mountHome(key: 'bataillecorse' | 'bullshit', query = '',
   createLobby: (name?: string, privateGame?: boolean) => Promise<string> = vi.fn().mockResolvedValue('g1')) {

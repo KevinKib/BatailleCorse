@@ -8,8 +8,8 @@ import {
 const BOTH = ['en', 'fr'] as const;
 
 describe('locale contract', () => {
-  it('givenTheContract_thenOnlyEnglishIsSupportedUntilFrenchLaunches', () => {
-    expect([...SUPPORTED_LOCALES]).toEqual(['en']);
+  it('givenTheContract_thenEnglishAndFrenchAreSupported', () => {
+    expect([...SUPPORTED_LOCALES]).toEqual(['en', 'fr']);
     expect(DEFAULT_LOCALE).toBe('en');
   });
 
@@ -39,9 +39,9 @@ describe('resolveLocale', () => {
     expect(resolveLocale(null, [], BOTH)).toBe('en');
   });
 
-  it('givenTheShippedSupportList_thenFrenchIsNeverChosen', () => {
-    expect(resolveLocale('fr', ['fr-FR'])).toBe('en');
-    expect(resolveLocale(null, ['fr-FR'])).toBe('en');
+  it('givenTheShippedSupportList_thenFrenchCanBeChosen', () => {
+    expect(resolveLocale('fr', ['fr-FR'])).toBe('fr');
+    expect(resolveLocale(null, ['fr-FR'])).toBe('fr');
   });
 });
 
@@ -62,11 +62,11 @@ describe('initLocale and setLocale', () => {
     expect(currentLocale()).toBe('en');
   });
 
-  it('givenTheShippedSupportList_whenBrowserIsFrench_thenPlayersStayInEnglish', async () => {
+  it('givenTheShippedSupportList_whenBrowserIsFrench_thenPlayersGetFrench', async () => {
     vi.stubGlobal('navigator', { languages: ['fr-FR'] });
     await initLocale();
-    expect(currentLocale()).toBe('en');
-    expect(document.documentElement.lang).toBe('en');
+    expect(currentLocale()).toBe('fr');
+    expect(document.documentElement.lang).toBe('fr');
   });
 
   it('givenFrenchSupportedAndSaved_thenLoadsTheFrenchBundleAndSetsHtmlLang', async () => {

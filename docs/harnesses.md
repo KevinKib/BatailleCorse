@@ -124,6 +124,14 @@ Plan `docs/plans/2026-10-28-e2e-cost-plan.md`: chunks P0, A to E merged, then th
 
 Why: `docs/architecture/e2e-cypress-report.md` showed Cypress at 26 % of agents' active time; CI is now the Cypress verification of a PR, so agents no longer replay specs locally. Left to the two-week read-out of the run log: deleting specs and making the smoke job a required check.
 
+## 2026-10-28: French available to players
+
+- `SUPPORTED_LOCALES` is now `['en', 'fr']` (the dark launch ended): the language pickers render, the browser language can select French.
+- `parity.test.ts` now covers every area (no `TRANSLATED_AREAS` allow-list): a missing or untranslated French key fails the suite, only `SAME_AS_ENGLISH_ALLOWED` is tolerated; it also rejects U+FFFD in either locale.
+- `length.test.ts` lists short French strings more than 60% longer than English, as a checklist for the 375 px layouts.
+- `cypress/specs/i18n-french.cy.ts` is in the smoke list (`cypress/smoke-specs.json`).
+- `CLAUDE.md`: new visible text goes through both `en.ts` and `fr/`.
+
 ## Inventory (versioned in this project)
 
 | Item | Role |

@@ -629,7 +629,7 @@ export const messagesEn: Messages = {
     actions: { discard: 'Discard', call: 'Call Bullshit', send: 'Send card', slap: 'Slap pile' },
     change: 'Change',
     changeAria: 'Change the key for {action}',
-    listening: 'Press a key�',
+    listening: 'Press a key…',
     reset: 'Reset to defaults',
     errors: {
       reserved: 'Use a single letter or symbol key (not Tab, Enter, Space, Esc, arrows or modifiers).',

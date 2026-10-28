@@ -118,6 +118,10 @@ Helper scripts live in `scripts/` (POSIX `sh`, run them from Git Bash on Windows
 Under the e2e (`test`) Spring profile the forfeit grace of a dropped player is 5 s instead of 60 s
 (`presence.forfeit-grace-seconds` in `application-test.properties`); production keeps 60 s.
 
+## Languages
+
+The UI is available in English and French. The language comes from the player's saved choice (`bc_locale` in `localStorage`), then the browser languages, then English; the globe button on the game picker and the language section of the settings panel switch it (the page reloads). Texts live in `frontend/src/locales/` (`en.ts`, `fr/`, `Messages.ts` for the shape). `npm test` fails if a French key is missing or still English (`parity.test.ts`), and `length.test.ts` lists short French strings much longer than English ones (`LIST_LONG_FRENCH=<file>` writes the list). See `docs/architecture/i18n.md`.
+
 ## Production
 
 Runs at https://cardgames.kevinkib.com behind the shared gateway
