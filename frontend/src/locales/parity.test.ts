@@ -5,6 +5,9 @@ import { messagesFr } from './fr';
 // Areas whose French is written: the completeness and typography checks run on them only.
 // Each translation chunk adds its own areas; the integration chunk turns this into "every area".
 const TRANSLATED_AREAS: readonly (keyof typeof messagesEn)[] = [
+  // shell, lobby and Bataille Corse (T1)
+  'rules', 'batailleCorseUi', 'gamePicker', 'home', 'join', 'lobby', 'options', 'endScreen', 'endGame',
+  'disconnect', 'leaveGuard', 'hotkeys', 'turn', 'language',
   'bullshit', 'bullshitUi', 'president', 'presidentUi', // T2
   'threeMenMorris', 'threeMenMorrisUi', 'morrisLobby', 'morrisVariantRules', 'morrisBoard', 'mangola', 'mangolaUi',
   'kobo', 'koboUi', // T3
@@ -13,6 +16,15 @@ const TRANSLATED_AREAS: readonly (keyof typeof messagesEn)[] = [
 // French leaves that may equal the English leaf (proper nouns, symbols). Keys are dotted paths prefixes.
 const SAME_AS_ENGLISH_ALLOWED: readonly string[] = [
   'language.names.en', 'language.names.fr',
+  // T1
+  'gamePicker.games.kobo.name', 'gamePicker.games.mangola.name',
+  'rules.sections[2].labels.sandwich',
+  'options.bataillecorse.tier.1', 'options.bataillecorse.tier.6', 'options.bataillecorse.tier.7',
+  'options.bullshit.vars.range.deckSize.32',
+  'options.threeMenMorris.variant.tapatan', 'options.threeMenMorris.variant.achi',
+  'batailleCorseUi.botLabel', 'batailleCorseUi.botWithTier', 'gamePicker.playAria',
+  'lobby.botName', 'lobby.botBadge', 'join.publicGames.bots',
+  'options.mangola.level.expert', 'options.threeMenMorris.level.perfect',
   // T2: rank chips, bot name, symbols and words identical in French
   'bullshit.sections[3].steps', 'bullshitUi.botLabel', 'bullshitUi.table.bluff', 'bullshitUi.table.verdictAnnouncement',
   'presidentUi.botLabel', 'presidentUi.roundOver.place', 'presidentUi.summary.points', 'presidentUi.standings.points', 'presidentUi.end.standing',
