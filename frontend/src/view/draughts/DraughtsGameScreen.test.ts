@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { mount, flushPromises } from '@vue/test-utils';
+import { mount, flushPromises, type VueWrapper } from '@vue/test-utils';
 import { setActivePinia, createPinia } from 'pinia';
 import { createMemoryHistory, createRouter } from 'vue-router';
 import PrimeVue from 'primevue/config';
@@ -32,7 +32,13 @@ function lobbyView(overrides: Partial<LobbyView> = {}): LobbyView {
   };
 }
 
+// Every screen mounted by a test, unmounted after it: a screen left alive keeps reacting to the module-level
+// connection status of the tests that follow.
+const mounted: VueWrapper[] = [];
+
+// Each table gets its own store: one that survived the previous table kept its forfeit and its bot levels.
 async function mountScreen(view: DraughtsState | LobbyView | null, mySeat = 0) {
+  setActivePinia(createPinia());
   const store = useDraughtsStore();
   store.applyEvent({ type: 'seat-change', seat: mySeat });
   if (view) store.applyEvent({ type: 'state-update', state: view });
@@ -44,6 +50,7 @@ async function mountScreen(view: DraughtsState | LobbyView | null, mySeat = 0) {
   await router.push('/draughts/room/d1');
   await router.isReady();
   const wrapper = mount(DraughtsGameScreen, { props: { gameId: 'd1' }, global: { plugins: [router, PrimeVue] }, attachTo: document.body });
+  mounted.push(wrapper);
   await flushPromises();
   return { store, router, wrapper };
 }
@@ -58,7 +65,12 @@ describe('DraughtsGameScreen', () => {
     localStorage.clear();
     setConnectionOnline(true);
   });
-  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); document.body.innerHTML = ''; });
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+    mounted.splice(0).forEach(w => w.unmount());
+    document.body.innerHTML = '';
+  });
 
   describe('before the game', () => {
     it('waits on a neutral screen until the first server state arrives', async () => {
@@ -421,6 +433,21 @@ describe('DraughtsGameScreen', () => {
         s.applyEvent({ type: 'event', eventType: 'FORFEIT', message: '', eventData: { loserSeat: 1, reason: 'DISCONNECTED' } });
       });
       expect(gone.text).toBe('Bob disconnected.');
+    });
+
+    it('starts every table from a clean store: nothing of the previous one (forfeit, bot level) shows up', async () => {
+      const game = over('FORFEIT', 0);
+      const withBot: DraughtsState = {
+        ...game, players: game.players.map(p => (p.seat === 1 ? { ...p, name: null, bot: true, level: 'expert' } : p)),
+      };
+      const first = await subtitle(withBot, 0, (s) => {
+        s.applyEvent({ type: 'event', eventType: 'FORFEIT', message: '', eventData: { loserSeat: 1, reason: 'DISCONNECTED' } });
+      });
+      expect(first.text).toBe('Bot 1 (Expert) disconnected.');
+      const second = await subtitle(over('FORFEIT', 0));
+      expect(second.text).toBe(ui.end.youWonForfeit);
+      expect(second.wrapper.get('[data-test="end-winner"]').text()).toBe('Winner: Alice');
+      expect(second.wrapper.findAll('[data-test="plate-name"]')[0].text()).toBe('Bob');
     });
 
     it('has no winner line for a draw, and calls it a draw', async () => {
