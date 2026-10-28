@@ -7,7 +7,7 @@ import type Card from "../model/Card";
 import type Response from "../model/Response";
 import type SessionSeat from '../model/SessionSeat';
 import type { LobbyView } from '../model/lobby/LobbyView';
-import GameSession from '../application/GameSession';
+import BatailleCorseSession from '../application/BatailleCorseSession';
 import type { GameEvent } from '../application/GameEvent';
 import { useSeatPresence } from '../composables/useSeatPresence';
 import type { RematchState } from '../model/RematchButton';
@@ -94,7 +94,7 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
     }
   }
 
-  const session = new GameSession(
+  const session = new BatailleCorseSession(
     webSocketService,
     {
       onEvent: applyEvent,
@@ -196,7 +196,7 @@ export const useBatailleCorseStore = defineStore('bataille-corse-store', () => {
     send:            () => session.send(),
     slap:            () => session.slap(),
     forfeit:         () => session.forfeit(),
-    onResponse:      (r: Response) => { session.onResponse(r); },
+    onResponse:      (r: Response) => { void session.onGameResponse(r); },
     notifyAnimationComplete,
     cancelAutoGrab:  () => session.cancelAll(),
   };
