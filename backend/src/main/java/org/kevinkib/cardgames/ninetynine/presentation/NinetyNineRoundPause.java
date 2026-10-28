@@ -28,6 +28,9 @@ public class NinetyNineRoundPause implements GameStateListener<NinetyNine>, Game
 
     private static final Logger log = LoggerFactory.getLogger(NinetyNineRoundPause.class);
 
+    /** How many times a deal is tried before the pause gives up and logs it (a failed deal changes nothing). */
+    public static final int MAX_ATTEMPTS = 3;
+
     private final NinetyNineGameActions actions;
     private final BotScheduler scheduler;
     private final Duration pause;
@@ -57,7 +60,7 @@ public class NinetyNineRoundPause implements GameStateListener<NinetyNine>, Game
                 return; // already waiting for this round end
             }
             cancel(id);
-            armed.put(id, new Armed(game, version, scheduler.schedule(pause, () -> fire(id, version))));
+            armed.put(id, new Armed(game, version, scheduler.schedule(pause, () -> fire(id, version, 1))));
         }
     }
 
@@ -66,11 +69,33 @@ public class NinetyNineRoundPause implements GameStateListener<NinetyNine>, Game
         cancel(id);
     }
 
-    private void fire(GameId id, int version) {
+    private void fire(GameId id, int version, int attempt) {
         try {
             actions.nextRound(id, version);
         } catch (Exception e) {
-            log.warn("The next round of game {} could not be dealt", id, e);
+            if (attempt >= MAX_ATTEMPTS) {
+                log.error("The next round of game {} could not be dealt after {} attempts; the game stays at its "
+                        + "round end", id, attempt, e);
+                return;
+            }
+            log.warn("The next round of game {} could not be dealt (attempt {} of {}); retrying", id, attempt,
+                    MAX_ATTEMPTS, e);
+            retry(id, version, attempt + 1);
+        }
+    }
+
+    /** Re-arms the task of the same round end, unless the state moved on (then the new state armed its own). */
+    private void retry(GameId id, int version, int attempt) {
+        Armed current = armed.get(id);
+        if (current == null || current.version() != version) {
+            return;
+        }
+        synchronized (current.game()) {
+            if (armed.get(id) != current) {
+                return;
+            }
+            armed.put(id, new Armed(current.game(), version,
+                    scheduler.schedule(pause, () -> fire(id, version, attempt))));
         }
     }
 

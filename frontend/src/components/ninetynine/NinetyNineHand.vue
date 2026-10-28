@@ -24,7 +24,13 @@ const ui = useI18n().ninetyNineUi;
 // Safe only matters on my turn: off turn nothing is "over 99", the cards are just waiting.
 const overLimit = (card: Card) =>
   props.canPlay && props.playable.find(p => p.card.name === card.name)?.safe !== true;
-const effectText = (card: Card) => format(ui.effect[effectCode(card.rank)], { n: card.rank });
+// The pressed state belongs to the Ace chooser only: an Ace with a choice of values. Every other card is a plain button.
+const hasAceChoice = (card: Card) =>
+  (props.playable.find(p => p.card.name === card.name)?.aceValues.length ?? 0) > 1;
+const pressed = (card: Card) => (hasAceChoice(card) ? props.aceName === card.name : undefined);
+// The effect label is display text only (the total after a play always comes from the server). The server's cards carry
+// no effect label, so the rank-to-sentence table stays on the client, in model/ninetynine/effect.ts.
+const effectText =(card: Card) => format(ui.effect[effectCode(card.rank)], { n: card.rank });
 
 function labelOf(card: Card): string {
   const name = cardLabel(card, ui, props.aceName === card.name);
@@ -42,7 +48,7 @@ function labelOf(card: Card): string {
         :class="{ 'hand-card--over': overLimit(card), 'hand-card--chosen': aceName === card.name }"
         :data-card="card.name"
         :aria-label="labelOf(card)"
-        :aria-pressed="aceName === undefined ? undefined : aceName === card.name"
+        :aria-pressed="pressed(card)"
         :disabled="!canPlay || overLimit(card)"
         @click="emit('play', card)">
         <PlayingCard :rank="card.rank" :suit="card.suit" />

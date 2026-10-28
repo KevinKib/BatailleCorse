@@ -14,6 +14,7 @@ import org.kevinkib.cardgames.presentation.bot.BotScheduler;
 import org.kevinkib.cardgames.presentation.bot.BotSeatOptions;
 import org.kevinkib.cardgames.presentation.bot.BotSeats;
 import org.kevinkib.cardgames.presentation.bot.ThinkingDelay;
+import org.kevinkib.cardgames.presentation.dto.event.EmptyEventData;
 import org.kevinkib.cardgames.presentation.dto.event.EventData;
 import org.kevinkib.cardgames.presentation.state.GameStateListener;
 import org.kevinkib.cardgames.sessionmanagement.core.application.GameEvictionListener;
@@ -27,6 +28,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Decides when a computer seat must act and applies its decision through the same use case as a human.
@@ -98,7 +100,16 @@ public class NinetyNineBotCoordinator implements GameStateListener<NinetyNine>, 
     public void onBroadcast(NinetyNine game, String eventType, EventData eventData) {
         synchronized (game) {
             GameId id = game.getId();
-            Set<PlayerId> bots = botsIn(game);
+            Set<PlayerId> bots;
+            try {
+                bots = botsIn(game);
+            } catch (RuntimeException e) {
+                // Unknown is not "no bots": keep what is armed and look again shortly, so the table never stalls.
+                log.warn("The bot seats of game {} could not be read; keeping the current task and retrying",
+                        game.getId(), e);
+                retryLookup(game);
+                return;
+            }
             if (bots.isEmpty() || game.isFinished()) {
                 drop(id);
                 return;
@@ -131,12 +142,24 @@ public class NinetyNineBotCoordinator implements GameStateListener<NinetyNine>, 
     }
 
     private Set<PlayerId> botsIn(NinetyNine game) {
-        try {
-            Set<PlayerId> seats = botSeats.botSeats(game.getId());
-            return game.getPlayerIds().stream().filter(seats::contains).collect(java.util.stream.Collectors.toSet());
-        } catch (RuntimeException e) {
-            return Set.of();
+        Set<PlayerId> seats = botSeats.botSeats(game.getId());
+        return game.getPlayerIds().stream().filter(seats::contains).collect(Collectors.toSet());
+    }
+
+    /**
+     * After a failed lookup: when the state this table last reasoned about is not the current one (so no task is
+     * armed for it), arms a retry of the whole decision. A task armed for the current state is left alone.
+     */
+    private void retryLookup(NinetyNine game) {
+        Table table = tables.get(game.getId());
+        if (table == null || table.game != game || game.isFinished()) {
+            return; // nothing was ever armed for this game: the next broadcast looks again
         }
+        if (table.scheduledVersion == game.version()) {
+            return;
+        }
+        table.cancelPending();
+        table.track(scheduler.schedule(thinkingDelay.next(), () -> onBroadcast(game, "RETRY", new EmptyEventData())));
     }
 
     private void drop(GameId id) {
