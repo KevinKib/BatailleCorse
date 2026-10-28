@@ -15,8 +15,6 @@ const props = defineProps<{
   label: string;
   /** The stuck player is me. */
   mine: boolean;
-  /** A next round follows (false once the game is over). */
-  pause: boolean;
 }>();
 const ui = useI18n().ninetyNineUi;
 
@@ -37,10 +35,8 @@ const outcome = computed(() => props.bust.eliminated
     </div>
     <span class="bust-reason" data-test="bust-reason">{{ ui.bust.reason }}</span>
     <span class="bust-lives" data-test="bust-lives">{{ outcome }}</span>
-    <template v-if="pause">
-      <div class="bust-bar" aria-hidden="true"><div class="bust-bar-fill"></div></div>
-      <span class="bust-next" data-test="bust-next">{{ ui.bust.next }}</span>
-    </template>
+    <div class="bust-bar" aria-hidden="true"><div class="bust-bar-fill"></div></div>
+    <span class="bust-next" data-test="bust-next">{{ ui.bust.next }}</span>
   </div>
 </template>
 

@@ -20,8 +20,11 @@ class SamplingNinetyNineBotTest {
     @Test
     void isDeterministicWithASeededRandom() {
         Random viewRandom = new Random(5);
-        SamplingNinetyNineBot first = new SamplingNinetyNineBot(new Random(42));
-        SamplingNinetyNineBot second = new SamplingNinetyNineBot(new Random(42));
+        // A frozen clock: the time cap must not decide how many samples each bot gets (it made this test flaky).
+        SamplingNinetyNineBot first = new SamplingNinetyNineBot(new Random(42), NinetyNineBotTuning.SAMPLES,
+                NinetyNineBotTuning.CAP_NANOS, () -> 0L);
+        SamplingNinetyNineBot second = new SamplingNinetyNineBot(new Random(42), NinetyNineBotTuning.SAMPLES,
+                NinetyNineBotTuning.CAP_NANOS, () -> 0L);
 
         for (int i = 0; i < 40; i++) {
             NinetyNineBotView view = NinetyNineBotViews.randomView(viewRandom);

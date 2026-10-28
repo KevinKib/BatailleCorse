@@ -98,6 +98,21 @@ class NinetyNineRestAndLifecycleTest {
     }
 
     @Test
+    void playAgainForgetsTheDealFixedForTheFinishedGame() {
+        java.util.List<GameId> forgotten = new java.util.ArrayList<>();
+        NinetyNineRestController rest = new NinetyNineRestController(table.sessions, table.broadcaster,
+                table.lobbyBroadcaster, forgotten::add);
+        RoomCreated room = table.sessions.createRoom(NinetyNineFactory.GAME_TYPE, "Alice");
+        table.sessions.joinRoom(new GameId(room.gameId()), "Bob");
+        NinetyNine game = (NinetyNine) table.sessions.startGame(new GameId(room.gameId()), room.hostToken());
+        game.forfeit(S1);
+
+        rest.playAgain(room.gameId(), new JoinGamePayload("Bob"));
+
+        assertThat(forgotten).containsExactly(new GameId(room.gameId()));
+    }
+
+    @Test
     void theSessionCoreHostsTheGameLikeAnyOther() {
         RoomCreated room = table.sessions.createRoom(NinetyNineFactory.GAME_TYPE, "Alice");
         GameId id = new GameId(room.gameId());
