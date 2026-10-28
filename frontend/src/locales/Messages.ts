@@ -178,6 +178,8 @@ export interface DisconnectMessages {
   title: string;           // '{player}'
   waiting: string;
   countdown: string;       // '{n}' = seconds left
+  reconnecting: string;    // seat badge while the grace period runs, no countdown known
+  reconnectingCountdown: string; // seat badge with the countdown, '{n}' = seconds left
 }
 
 export interface LeaveGuardMessages {
@@ -623,7 +625,8 @@ export interface BatailleCorseUiMessages {
 
 // The language picker and the languages' own names.
 export interface LanguageMessages {
-  label: string;                       // accessible name of the picker
+  label: string;                       // accessible name of the picker, and the heading of its row
+  settings: string;                    // name of the settings gear and panel once they hold more than the shortcuts
   names: Record<'en' | 'fr', string>;  // each language written in itself, shown whatever the current language
 }
 

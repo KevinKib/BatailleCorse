@@ -1077,6 +1077,7 @@ export const messagesEn: Messages = {
   },
   language: {
     label: 'Language',
+    settings: 'Settings',
     names: { en: 'English', fr: 'Français' },
   },
   gamePicker: {
@@ -1140,6 +1141,8 @@ export const messagesEn: Messages = {
     title: '{player} disconnected',
     waiting: 'Waiting for them to return…',
     countdown: 'You win in {n}s',
+    reconnecting: 'Reconnecting',
+    reconnectingCountdown: 'Reconnecting… {n}s',
   },
   leaveGuard: {
     confirm: 'Leave the game? You will forfeit and your opponent wins.',
