@@ -347,6 +347,63 @@ describe('Draughts store', () => {
     expect(store.lobbyError).toBeNull();
   });
 
+  describe('a command refused in a started game (silent resync)', () => {
+    const refusal = { type: 'error', eventType: 'MOVE', message: 'draughts.errors.notYourTurn' } as const;
+    const okView = () => ({ ok: true, status: 200, json: async () => ({ ...draughtsOpeningState, mySeat: 0 }) });
+
+    it('re-requests the state once, clears the selection and the chooser, and logs the key', async () => {
+      const fetchMock = vi.fn().mockResolvedValue(okView());
+      vi.stubGlobal('fetch', fetchMock);
+      const debug = vi.spyOn(console, 'debug').mockImplementation(() => {});
+      const store = playing(0);
+      store.squareClicked(31);
+      expect(store.selected).toBe(31);
+      store.applyEvent(refusal);
+      expect(store.selected).toBeNull();
+      expect(store.choice).toBeNull();
+      expect(debug).toHaveBeenCalledWith('draughts.errors.notYourTurn');
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(fetchMock.mock.calls[0][0]).toContain('/api/draughts/game/g1?token=tok-0');
+      await vi.waitFor(() => expect(store.state).not.toBeNull());
+      vi.unstubAllGlobals();
+    });
+
+    it('shows nothing: no lobby error, whatever the message', () => {
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue(okView()));
+      vi.spyOn(console, 'debug').mockImplementation(() => {});
+      const store = playing(0);
+      store.applyEvent(refusal);
+      expect(store.lobbyError).toBeNull();
+      vi.unstubAllGlobals();
+    });
+
+    it('does not loop: a refusal while the resync is on its way, or a failed resync, asks nothing more', async () => {
+      let release: (v: unknown) => void = () => {};
+      const fetchMock = vi.fn().mockReturnValue(new Promise(r => { release = r; }));
+      vi.stubGlobal('fetch', fetchMock);
+      vi.spyOn(console, 'debug').mockImplementation(() => {});
+      const store = playing(0);
+      store.applyEvent(refusal);
+      store.applyEvent(refusal);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      release({ ok: false, status: 500, json: async () => ({}) });
+      await new Promise(r => setTimeout(r, 0));
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      vi.unstubAllGlobals();
+    });
+
+    it('a lobby refusal does not resync', () => {
+      const fetchMock = vi.fn();
+      vi.stubGlobal('fetch', fetchMock);
+      const store = playing(0);
+      store.applyEvent({ type: 'state-update', state: lobbyView() });
+      store.applyEvent({ type: 'error', eventType: 'START', message: 'Not enough players' });
+      expect(fetchMock).not.toHaveBeenCalled();
+      expect(store.lobbyError).toBe('Not enough players');
+      vi.unstubAllGlobals();
+    });
+  });
+
   it('removed by the host clears the table', () => {
     const store = playing();
     store.squareClicked(31);
