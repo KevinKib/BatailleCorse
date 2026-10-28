@@ -3,20 +3,12 @@ import { flushPromises, mount } from '@vue/test-utils';
 import { setActivePinia, createPinia } from 'pinia';
 import { defineComponent, h } from 'vue';
 import { createMemoryHistory, createRouter } from 'vue-router';
-import type { GameDefinition } from '../model/games';
+import { findGame, type GameDefinition } from '../model/games';
 import { resolveDraughtsSession, useDraughtsBootstrap } from './useDraughtsBootstrap';
 import { useDraughtsStore } from '../state/Draughts.store';
 
-// The game is not in the registry yet (the entry PR adds it): the bootstrap takes its definition.
 const base = '/draughts';
-const game: GameDefinition = {
-  key: 'draughts',
-  gameHomeRoute: base,
-  joinRoute: (id) => (id ? `${base}/join/${id}` : `${base}/join`),
-  roomRoute: (id) => `${base}/room/${id}`,
-  supportsBots: true,
-  picker: { icon: 'pi pi-th-large', severity: 'info' },
-};
+const game: GameDefinition = findGame('draughts')!;
 
 describe('resolveDraughtsSession', () => {
   beforeEach(() => { localStorage.clear(); });
@@ -101,7 +93,23 @@ describe('useDraughtsBootstrap', () => {
     expect(localStorage.getItem('draughts:tokens:g1')).not.toBeNull();
   });
 
-  it('throws when no definition is given and the game is not registered', () => {
-    expect(() => useDraughtsBootstrap('g1')).toThrow(/not registered/);
+  it('takes the registered definition when none is given', async () => {
+    const page = { render: () => h('div') };
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        { path: base, component: page },
+        { path: `${base}/join/:id`, component: page },
+        { path: `${base}/room/:id`, component: page },
+      ],
+    });
+    await router.push(`${base}/room/g1`);
+    await router.isReady();
+    const Probe = defineComponent({
+      setup() { useDraughtsBootstrap('g1'); return () => h('div'); },
+    });
+    mount(Probe, { global: { plugins: [router] } });
+    await flushPromises();
+    expect(router.currentRoute.value.fullPath).toBe(`${base}/join/g1`);
   });
 });

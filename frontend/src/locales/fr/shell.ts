@@ -112,6 +112,12 @@ export const gamePicker: Messages['gamePicker'] = {
       players: '2 à 12 joueurs',
       play: 'Jouer',
     },
+    draughts: {
+      name: 'Dames',
+      description: 'Dames internationales sur un plateau de 10 sur 10. Prenez tous les pions, ou laissez l’adversaire sans coup possible.',
+      players: '2 joueurs',
+      play: 'Jouer',
+    },
   },
 };
 
