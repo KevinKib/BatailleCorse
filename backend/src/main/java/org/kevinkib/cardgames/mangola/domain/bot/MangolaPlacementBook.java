@@ -17,8 +17,9 @@ import java.util.random.RandomGenerator;
  * oracle rounds (chunk S0, October 2026). The published probabilities are rounded to three decimals, so the weights
  * are normalised here, when the lists are frozen, to sum to exactly 1.
  *
- * <p>To regenerate them (after a change of rules or engine), run the study harness's {@code book} stage
- * ({@code -Dmangola.study=book}, test scope), which prints the lists as Java {@link Entry} lines, and paste them
+ * <p>To regenerate them (after a change of rules or engine), run the study harness's {@code oracle} stage
+ * (fifteen rounds, see the study) and then its {@code book} stage ({@code -Dmangola.study=book}, test scope; it
+ * reads the {@code target/mangola-study/} cache the oracle wrote), which prints the lists as Java {@link Entry} lines, and paste them
  * below. The lists are data, with no property and no host option.
  */
 final class MangolaPlacementBook {

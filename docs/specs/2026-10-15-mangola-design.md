@@ -374,10 +374,19 @@ presentation, no other game).
     reachable in the budget; the end of most games is solved exactly by the search. **No perfect level:**
     a position is 32 pit counts summing to 64 (about 10^25 boards: C(95, 31)), so no retrograde table like
     Morris's is possible, and free placement means no fixed opening to precompute.
-  - **Layouts:** `random` and `greedy` draw a random layout or one of the presets; `expert` samples a set of
-    candidate layouts (the presets, random ones and mutations of the best) and keeps the one whose shallow
-    search against the opponent's layout scores best (with hidden placement it plays against a set of
-    typical layouts). Budget 1 s. Simple, and replaceable later.
+  - **Layouts:** `random` draws a random layout. `greedy` and `expert` play from the **placement book**
+    (`mangola/domain/bot/MangolaPlacementBook`): for each side, a fixed list of layouts frozen from the placement
+    study ([`2026-10-25-mangola-placement-study.md`](2026-10-25-mangola-placement-study.md)), the pruned
+    fictitious-play mix of the side-aware game over 161 layouts after fifteen oracle rounds. `expert` draws with
+    the book's probabilities (placement is hidden, so a good layout is a mixed strategy; this scores 0.605 against the
+    earlier layout search at no cost in time, so there is no layout budget and no `layout-ms` property),
+    `greedy` draws uniformly from its side's list. A layout the game refuses is never proposed again.
+    **The book is data computed for one set of rules and one engine: re-run the oracle whenever the rules or the
+    engine change** (the `oracle` stage, then the `book` stage, then paste the printed `Entry` lines into
+    `MangolaPlacementBook`; see the study's "Reproduce" paragraph):
+    `cd backend && mvn -s ../deploy/docker/settings.xml test -Dtest=MangolaPlacementStudy -Dmangola.study=oracle,book -Dmangola.study.rounds=15`
+    (about one CPU-hour on 4 threads), then `-Dmangola.study=regression` to compare the new book with the
+    October 2026 search.
 - **Coordinator** `presentation/bot/MangolaBotCoordinator` (as `MorrisBotCoordinator`): on each broadcast,
   for a bot seat that has an action, compute the decision **outside the game monitor** on a snapshot of the
   position, then under the monitor re-check the version and act through `MangolaGameActions`; delay

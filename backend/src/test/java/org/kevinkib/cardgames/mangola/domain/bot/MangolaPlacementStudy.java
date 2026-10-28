@@ -24,7 +24,7 @@ import java.util.stream.IntStream;
 /**
  * Not a test: the Mangola placement study (docs/specs/2026-10-25-mangola-placement-study.md), run on demand with
  * {@code mvn -s ../deploy/docker/settings.xml test -Dtest=MangolaPlacementStudy -Dmangola.study=all} (or a comma
- * list of stages: {@code tournament,layoutscore,budget,weights,oracle,duel,hybrid,book}). Optional {@code
+ * list of stages: {@code tournament,layoutscore,budget,weights,oracle,duel,hybrid,book,regression}). Optional {@code
  * -Dmangola.study.threads=4} and {@code -Dmangola.study.rounds=N} (oracle rounds in all: the extended pool of an
  * earlier run in {@code target/mangola-study/} is resumed, and the rounds stop early when one adds nothing). It prints its findings and writes them, with the matrices, to {@code
  * target/mangola-study/}. Every number is reproducible: seeds are fixed and the budgets are node counts, never
@@ -153,6 +153,9 @@ class MangolaPlacementStudy {
 
         if (stage("duel")) {
             duels(extended, extendedResults);
+        }
+        if (stage("regression")) {
+            regression();
         }
         if (stage("hybrid")) {
             List<PlacementTournament.Placement> finalPool = stage("oracle") ? extended : readLayouts("final");
@@ -687,8 +690,7 @@ class MangolaPlacementStudy {
             return draw(pool, uniform, random);
         };
         PlacementTournament.LayoutPolicy currentExpert = (side, random) ->
-                new ExpertMangolaBot(random, new ExpertMangolaBot.Budget(StudyExpert.UNLIMITED_MILLIS, 1,
-                        StudyExpert.UNLIMITED_MILLIS)).decideLayout(OWNER, side, Set.of());
+                octoberSearch(random, side);
         PlacementTournament.LayoutPolicy currentMedium = (side, random) ->
                 new GreedyMangolaBot(random).decideLayout(OWNER, side, Set.of());
         PlacementTournament.LayoutPolicy easy = (side, random) ->
@@ -723,8 +725,7 @@ class MangolaPlacementStudy {
         PlacementTournament.LayoutPolicy proposed = (side, random) ->
                 draw(pool, side == Side.A ? starterMix : secondMix, random);
         PlacementTournament.LayoutPolicy currentExpert = (side, random) ->
-                new ExpertMangolaBot(random, new ExpertMangolaBot.Budget(StudyExpert.UNLIMITED_MILLIS, 1,
-                        StudyExpert.UNLIMITED_MILLIS)).decideLayout(OWNER, side, Set.of());
+                octoberSearch(random, side);
         PlacementTournament.LayoutPolicy currentMedium = (side, random) ->
                 new GreedyMangolaBot(random).decideLayout(OWNER, side, Set.of());
         PlacementTournament.LayoutPolicy easy = (side, random) ->
@@ -738,6 +739,28 @@ class MangolaPlacementStudy {
         duel("proposed vs easy", proposed, easy);
         duel("current expert vs easy", currentExpert, easy);
         duel("hybrid vs easy", hybrid, easy);
+    }
+
+    /** The layout the production expert chose before the placement book: the October 2026 layout search. */
+    private static int[] octoberSearch(java.util.random.RandomGenerator random, Side side) {
+        return new StudyExpert(random, 1, StudyExpert.Weights.PRODUCTION).decideLayout(OWNER, side, Set.of());
+    }
+
+    /**
+     * The {@code regression} stage: the production expert's placement (the book, through {@code
+     * ExpertMangolaBot}) against the October 2026 layout search ({@link StudyExpert}), 400 games, the same seed,
+     * budget and move search as the validation duels. Re-run after any change of the book, the rules or the engine
+     * and compare with the 0.605 +- 0.048 the study measured for the round-15 lists.
+     */
+    private void regression() {
+        PlacementTournament.LayoutPolicy book = (side, random) ->
+                new ExpertMangolaBot(random, new ExpertMangolaBot.Budget(StudyExpert.UNLIMITED_MILLIS, 1))
+                        .decideLayout(OWNER, side, Set.of());
+        PlacementTournament.LayoutPolicy october = (side, random) -> octoberSearch(random, side);
+        line("");
+        line("=== REGRESSION (seed %d, %d games, both seats played by the expert at %d nodes): the placement book against the October 2026 layout search",
+                DUEL_SEED, DUEL_GAMES, CAP);
+        duel("placement book vs October 2026 search", book, october);
     }
 
     private static List<int[]> support(List<PlacementTournament.Placement> pool, double[] mix) {

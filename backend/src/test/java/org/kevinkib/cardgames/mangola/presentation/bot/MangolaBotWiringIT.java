@@ -117,14 +117,12 @@ class MangolaBotWiringIT {
         assertThat(environment.getProperty("mangola.bots.delay-min-ms"), is("0"));
         assertThat(environment.getProperty("mangola.bots.delay-max-ms"), is("0"));
         assertThat(environment.getProperty("mangola.bots.think-ms"), is("0"));
-        assertThat(environment.getProperty("mangola.bots.layout-ms"), is("0"));
     }
 
     @Test
-    void theDefaultsAre700To1300MillisecondsOfDelayAnd300ToSearchAnd1000ToArrange() {
+    void theDefaultsAre700To1300MillisecondsOfDelayAnd300ToSearch() {
         assertThat(MangolaConfig.DEFAULT_DELAY_MIN_MS, is("700"));
         assertThat(MangolaConfig.DEFAULT_DELAY_MAX_MS, is("1300"));
         assertThat(MangolaConfig.DEFAULT_THINK_MS, is("300"));
-        assertThat(MangolaConfig.DEFAULT_LAYOUT_MS, is("1000"));
     }
 }
