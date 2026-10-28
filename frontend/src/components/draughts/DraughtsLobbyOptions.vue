@@ -5,7 +5,7 @@ import DraughtsMiniBoard from './DraughtsMiniBoard.vue';
 import type { OptionDescriptor } from '../../model/lobby/LobbyView';
 
 // The options of a draughts lobby: a small board with the one-line description, then the generic options (who plays
-// White, whether draw offers are allowed). The host edits, everybody else reads; the lobby stays the source of truth.
+// White). The host edits, everybody else reads; the lobby stays the source of truth.
 defineProps<{
   descriptors: OptionDescriptor[];
   options: Record<string, string>;

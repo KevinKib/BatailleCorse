@@ -63,7 +63,6 @@ export function draughtsState(overrides: Partial<DraughtsState> = {}): DraughtsS
     ],
     captureRequired: false,
     maxCaptures: 0,
-    drawOffersAllowed: true,
     history: [],
     outcome: { status: 'ONGOING' },
     ...overrides,

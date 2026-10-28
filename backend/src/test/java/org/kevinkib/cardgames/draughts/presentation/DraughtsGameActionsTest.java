@@ -54,7 +54,7 @@ class DraughtsGameActionsTest {
     @Test
     void aCaptureCarriesThePathAndTheCapturedSquares() throws Exception {
         Draughts game = table.install(Draughts.fromPosition(GameId.generate(), WHITE,
-                layout(Colour.WHITE, "w32", "b28", "b19", "b1"), true));
+                layout(Colour.WHITE, "w32", "b28", "b19", "b1")));
 
         table.actions.move(game.getId(), WHITE, 32, 14, List.of(28, 19));
 
@@ -79,7 +79,7 @@ class DraughtsGameActionsTest {
     @Test
     void theMoveThatEndsTheGameIsAnnouncedAsGameOverWithTheMoveData() throws Exception {
         Draughts game = table.install(Draughts.fromPosition(GameId.generate(), WHITE,
-                layout(Colour.WHITE, "w27", "b21"), true));
+                layout(Colour.WHITE, "w27", "b21")));
 
         table.actions.move(game.getId(), WHITE, 27, 16, List.of(21));
 

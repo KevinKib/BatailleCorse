@@ -30,7 +30,7 @@ class DraughtsMoveCommandTest {
 
     @Test
     void theHostColourDecidesWhoStarts() throws Exception {
-        Draughts game = new Draughts(GameId.generate(), BLACK, true);
+        Draughts game = new Draughts(GameId.generate(), BLACK);
 
         assertThat(game.currentSeat()).isEqualTo(BLACK);
         assertThat(game.colourOf(BLACK)).isEqualTo(Colour.WHITE);
