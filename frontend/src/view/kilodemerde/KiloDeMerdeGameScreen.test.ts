@@ -14,6 +14,11 @@ import type { GameDefinition } from '../../model/games';
 import type { LobbyView } from '../../model/lobby/LobbyView';
 import type { KiloDeMerdeState } from '../../model/kilodemerde/KiloDeMerdeState';
 
+// The picker texts of the game arrive with the entry change; the lobby only needs its name here.
+vi.mock('../../locales/gameChoice', () => ({
+  gameChoice: () => ({ name: 'Kilo de merde', tagline: '', players: '' }),
+}));
+
 // The game is registered by the entry change, so the screen is handed its definition here.
 const GAME = {
   key: 'kilo-de-merde', serverType: 'kilo-de-merde', gameHomeRoute: '/kilo-de-merde',
@@ -97,7 +102,7 @@ describe('KiloDeMerdeGameScreen', () => {
     it('givenAStep_thenEverythingTheTableKnowsIsOnScreen', async () => {
       const { wrapper } = await mountRoom(room(kiloDeMerdeStepState));
       expect(names(wrapper)).toEqual(['You', 'Player 1', 'Player 2']);
-      expect(wrapper.get('[data-test="round-line"]').text()).toBe('Round 2 of 10 · pass 3');
+      expect(wrapper.get('[data-test="round-heading"]').text()).toBe('Round 2 of 10 · pass 3');
       expect(wrapper.get('[data-test="pile-count"]').text()).toBe('38');
       expect(wrapper.get('[data-test="seat-plate"][data-seat="2"] [data-test="seat-kilos"]').text()).toBe('13 kg');
       expect(wrapper.findAll('[data-test="seat-ready"]')).toHaveLength(1);

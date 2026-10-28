@@ -50,7 +50,7 @@ describe('KiloDeMerdeTable', () => {
 
   it('givenTheCentre_thenTheRoundLineAndThePileAreShownAndThePileSlaps', async () => {
     const wrapper = mountTable();
-    expect(wrapper.get('[data-test="round-line"]').text()).toBe('Round 4 of 10 · pass 6');
+    expect(wrapper.get('[data-test="round-heading"]').text()).toBe('Round 4 of 10 · pass 6');
     expect(wrapper.get('[data-test="pile"]').attributes('aria-label')).toContain('Slap the pile');
     expect(wrapper.get('[data-test="pile-count"]').text()).toBe('12');
     await wrapper.get('[data-test="pile"]').trigger('click');

@@ -25,6 +25,7 @@ describe('KiloDeMerdeLobbyOptions', () => {
 
   it('givenAGuest_thenTheChoicesCannotBeEdited', () => {
     const wrapper = mountOptions({ rounds: '10' }, false);
-    expect(wrapper.get('[data-test="option-rounds-5"]').attributes('disabled')).toBeDefined();
+    expect(wrapper.find('[data-test="option-rounds-5"]').exists()).toBe(false);
+    expect(wrapper.get('[data-test="option-rounds"]').text()).toContain('10');
   });
 });
