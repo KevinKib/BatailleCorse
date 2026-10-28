@@ -318,7 +318,6 @@ export interface OptionsMessages {
   };
   draughts: {
     hostColour: OptionTexts;           // `label`, then `white` / `black` / `random`
-    drawOffers: OptionTexts;           // `label`, then `on` / `off`
     level: OptionTexts;                // a bot seat's level: `label`, then `random` (Easy) / `greedy` (Medium) / `expert` (Expert)
   };
   ninetyNine: {
@@ -1029,7 +1028,6 @@ export interface DraughtsUiMessages {
     notYourTurn: string;
     invalidSquare: string;
     gameFinished: string;
-    drawOffersOff: string;
     drawAlreadyOffered: string;
     ownDrawOffer: string;
     drawOfferPending: string;

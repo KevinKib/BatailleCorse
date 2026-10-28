@@ -37,7 +37,7 @@ final class DraughtsTable {
     }
 
     Draughts newGame() {
-        return install(new Draughts(GameId.generate(), new org.kevinkib.cardgames.game.PlayerId(0), true));
+        return install(new Draughts(GameId.generate(), new org.kevinkib.cardgames.game.PlayerId(0)));
     }
 
     String token(Draughts game, int seat) {

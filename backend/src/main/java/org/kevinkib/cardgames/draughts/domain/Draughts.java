@@ -31,7 +31,6 @@ public class Draughts implements Game {
 
     private final GameId id;
     private final PlayerId whiteSeat;
-    private final boolean drawOffersAllowed;
     private DraughtsPosition position;
     private DrawTracker tracker;
     private Phase phase = Phase.PLAY;
@@ -46,23 +45,21 @@ public class Draughts implements Game {
     private final List<String> history = new ArrayList<>();
 
     /** A game from the opening position; {@code whiteSeat} plays White and moves first. */
-    public Draughts(GameId id, PlayerId whiteSeat, boolean drawOffersAllowed) {
-        this(id, whiteSeat, DraughtsPosition.initial(), drawOffersAllowed);
+    public Draughts(GameId id, PlayerId whiteSeat) {
+        this(id, whiteSeat, DraughtsPosition.initial());
     }
 
-    private Draughts(GameId id, PlayerId whiteSeat, DraughtsPosition position, boolean drawOffersAllowed) {
+    private Draughts(GameId id, PlayerId whiteSeat, DraughtsPosition position) {
         requireSeat(whiteSeat);
         this.id = id;
         this.whiteSeat = whiteSeat;
-        this.drawOffersAllowed = drawOffersAllowed;
         this.position = position;
         this.tracker = DrawTracker.start(position);
     }
 
     /** A game that starts from {@code position} (tests and the test-only seam); no end is looked for in it. */
-    public static Draughts fromPosition(GameId id, PlayerId whiteSeat, DraughtsPosition position,
-                                        boolean drawOffersAllowed) {
-        return new Draughts(id, whiteSeat, position, drawOffersAllowed);
+    public static Draughts fromPosition(GameId id, PlayerId whiteSeat, DraughtsPosition position) {
+        return new Draughts(id, whiteSeat, position);
     }
 
     // -------------------------------------------------------------- commands
@@ -102,15 +99,12 @@ public class Draughts implements Game {
     }
 
     /**
-     * Offers a draw. Allowed at any time of the game, whoever's turn it is, when offers are on, no offer is pending
+     * Offers a draw. Allowed at any time of the game, whoever's turn it is, when no offer is pending
      * and the seat has not offered since its own last move. The opponent's next move declines it; the proposer's own move leaves it standing.
      */
     public synchronized DraughtsEvent offerDraw(PlayerId seat) throws DraughtsException {
         requireSeat(seat);
         requireRunning();
-        if (!drawOffersAllowed) {
-            throw new DrawOfferNotAllowedException(DrawOfferNotAllowedException.OFFERS_OFF);
-        }
         if (drawOffer != null) {
             throw new DrawOfferPendingException();
         }
@@ -207,10 +201,6 @@ public class Draughts implements Game {
         return whiteSeat;
     }
 
-    public boolean drawOffersAllowed() {
-        return drawOffersAllowed;
-    }
-
     public Colour colourOf(PlayerId seat) {
         requireSeat(seat);
         return whiteSeat.equals(seat) ? Colour.WHITE : Colour.BLACK;
@@ -253,7 +243,7 @@ public class Draughts implements Game {
             actions.add(Action.MOVE);
         }
         if (drawOffer == null) {
-            if (drawOffersAllowed && !offeredSinceOwnMove[seat.id()]) {
+            if (!offeredSinceOwnMove[seat.id()]) {
                 actions.add(Action.OFFER_DRAW);
             }
         } else if (!drawOffer.equals(seat)) {

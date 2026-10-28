@@ -18,16 +18,12 @@ public final class DraughtsGames {
     }
 
     public static Draughts opening() {
-        return new Draughts(GameId.generate(), WHITE, true);
+        return new Draughts(GameId.generate(), WHITE);
     }
 
     /** Seat 0 plays White, offers allowed. */
     public static Draughts from(DraughtsPosition position) {
-        return Draughts.fromPosition(GameId.generate(), WHITE, position, true);
-    }
-
-    public static Draughts fromWithoutOffers(DraughtsPosition position) {
-        return Draughts.fromPosition(GameId.generate(), WHITE, position, false);
+        return Draughts.fromPosition(GameId.generate(), WHITE, position);
     }
 
     /** Plays the move written {@code from-to} or {@code fromxto} for the side to move, with its captured set. */
