@@ -24,8 +24,9 @@ import java.util.stream.IntStream;
 /**
  * Not a test: the Mangola placement study (docs/specs/2026-10-25-mangola-placement-study.md), run on demand with
  * {@code mvn -s ../deploy/docker/settings.xml test -Dtest=MangolaPlacementStudy -Dmangola.study=all} (or a comma
- * list of stages: {@code tournament,layoutscore,budget,weights,oracle,duel}). Optional {@code
- * -Dmangola.study.threads=4}. It prints its findings and writes them, with the matrices, to {@code
+ * list of stages: {@code tournament,layoutscore,budget,weights,oracle,duel,hybrid,book}). Optional {@code
+ * -Dmangola.study.threads=4} and {@code -Dmangola.study.rounds=N} (oracle rounds in all: the extended pool of an
+ * earlier run in {@code target/mangola-study/} is resumed, and the rounds stop early when one adds nothing). It prints its findings and writes them, with the matrices, to {@code
  * target/mangola-study/}. Every number is reproducible: seeds are fixed and the budgets are node counts, never
  * wall-clock time. Nothing here is part of the production jar, and nothing changes the bots.
  */
@@ -41,7 +42,8 @@ class MangolaPlacementStudy {
     private static final int MAX_PLIES = 600;
     private static final int FICTITIOUS_PLAY_ITERATIONS = 2_000_000;
     private static final double SUPPORT_THRESHOLD = 0.02;
-    private static final int ORACLE_ROUNDS = 2;
+    /** Oracle rounds in all (rounds already in the cache count): {@code -Dmangola.study.rounds}, default 2. */
+    private static final int ORACLE_ROUNDS = Integer.getInteger("mangola.study.rounds", 2);
     private static final int ORACLE_CLIMBS_PER_SIDE = 3;
     private static final int ORACLE_STEPS = 40;
     private static final int DUEL_GAMES = 400;
@@ -104,19 +106,49 @@ class MangolaPlacementStudy {
         List<PlacementTournament.Placement> extended = pool;
         PlacementTournament.Results extendedResults = results;
         if (stage("oracle") || stage("duel")) {
-            for (int round = 1; round <= ORACLE_ROUNDS; round++) {
-                List<PlacementTournament.Placement> responses = oracle(round, extended, extendedResults);
-                List<PlacementTournament.Placement> grown = new ArrayList<>(extended);
+            List<PlacementTournament.Placement> cached = Files.exists(OUT.resolve("layouts-final.csv"))
+                    ? readLayouts("final") : null;
+            PlacementTournament.Results cachedResults = cached == null ? null : readPairs("final", cached);
+            int firstRound = 1;
+            if (cachedResults != null) {
+                extended = cached;
+                extendedResults = cachedResults;
+                firstRound = lastRound(cached) + 1;
+                line("[extended pool of %d read back from %s: oracle rounds up to %d already played]", cached.size(),
+                        OUT.resolve("pairs-final.csv"), firstRound - 1);
+                analyse("CACHED FINAL POOL", extended, extendedResults);
+            }
+            State state = new State(extended, extendedResults);
+            int played = OracleRounds.run(firstRound, ORACLE_ROUNDS, round -> {
+                List<PlacementTournament.Placement> responses = oracle(round, state.pool, state.results);
+                if (responses.isEmpty()) {
+                    line("Oracle round %d found no new layout: the oracle has settled.", round);
+                    return false;
+                }
+                List<PlacementTournament.Placement> grown = new ArrayList<>(state.pool);
                 grown.addAll(responses);
-                PlacementTournament.Results known = extendedResults;
-                extendedResults = timed("oracle round " + round + " extension to " + grown.size(),
+                PlacementTournament.Results known = state.results;
+                state.results = timed("oracle round " + round + " extension to " + grown.size(),
                         () -> PlacementTournament.extend(known, grown,
                                 new PlacementTournament.Config(OWNER, REPETITIONS, TOURNAMENT_SEED, threads, MAX_PLIES),
                                 expert(CAP, StudyExpert.Weights.PRODUCTION)));
-                extended = grown;
-                analyse("AFTER ORACLE ROUND " + round, extended, extendedResults);
-            }
+                state.pool = grown;
+                analyse("AFTER ORACLE ROUND " + round, state.pool, state.results);
+                writeMatricesQuietly("final", state.pool, state.results);
+                boolean entered = enteredAMix(state.pool, state.results, round);
+                line("Oracle round %d: %d new layout(s), %s.", round, responses.size(),
+                        entered ? "at least one entered a mix" : "none entered a mix: the oracle has settled");
+                return entered;
+            });
+            line("Oracle rounds run in this execution: %d (cache up to round %d, limit %d).", played,
+                    firstRound - 1, ORACLE_ROUNDS);
+            extended = state.pool;
+            extendedResults = state.results;
             writeMatrices("final", extended, extendedResults);
+        }
+        if (stage("book")) {
+            List<PlacementTournament.Placement> finalPool = readLayouts("final");
+            book(finalPool, readPairs("final", finalPool));
         }
 
         if (stage("duel")) {
@@ -127,8 +159,79 @@ class MangolaPlacementStudy {
             PlacementTournament.Results finalResults = stage("oracle") ? extendedResults : readPairs("final", finalPool);
             hybridDuels(finalPool, finalResults);
         }
-        line("Total wall time %.1f s, %d threads", (System.nanoTime() - started) / 1e9, threads);
+        line("Total wall time %.1f s, %.1f s CPU (this JVM), %d threads", (System.nanoTime() - started) / 1e9,
+                cpuMillis() / 1e3, threads);
         Files.writeString(OUT.resolve("report.txt"), report.toString(), StandardCharsets.UTF_8);
+    }
+
+    // ------------------------------------------------------------------ oracle bookkeeping
+
+    /** The pool and results the oracle rounds grow, shared with the round lambda. */
+    private static final class State {
+        List<PlacementTournament.Placement> pool;
+        PlacementTournament.Results results;
+
+        State(List<PlacementTournament.Placement> pool, PlacementTournament.Results results) {
+            this.pool = pool;
+            this.results = results;
+        }
+    }
+
+    private static final java.util.regex.Pattern ORACLE_NAME = java.util.regex.Pattern.compile("O(\\d+)[AB]\\d+");
+
+    /** The highest oracle round whose layouts (named {@code O<round><side><n>}) are in the pool, or 0. */
+    static int lastRound(List<PlacementTournament.Placement> pool) {
+        int last = 0;
+        for (PlacementTournament.Placement p : pool) {
+            java.util.regex.Matcher m = ORACLE_NAME.matcher(p.name());
+            if (m.matches()) {
+                last = Math.max(last, Integer.parseInt(m.group(1)));
+            }
+        }
+        return last;
+    }
+
+    /** Whether a layout found in this round carries weight (at least the support threshold) in either pruned mix. */
+    private boolean enteredAMix(List<PlacementTournament.Placement> pool, PlacementTournament.Results results, int round) {
+        ZeroSumGame.Solution aware = ZeroSumGame.solve(results.starter(), FICTITIOUS_PLAY_ITERATIONS);
+        double[] starterMix = pruned(aware.rowMix());
+        double[] secondMix = pruned(aware.columnMix());
+        for (int i = 0; i < pool.size(); i++) {
+            if (pool.get(i).name().startsWith("O" + round) && (starterMix[i] > 0 || secondMix[i] > 0)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void writeMatricesQuietly(String tag, List<PlacementTournament.Placement> pool,
+                                      PlacementTournament.Results results) {
+        try {
+            writeMatrices(tag, pool, results);
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    /** The {@code book} stage: the final pruned mixes of the cached pool, as the Java the placement book will freeze. */
+    private void book(List<PlacementTournament.Placement> pool, PlacementTournament.Results results) {
+        ZeroSumGame.Solution aware = ZeroSumGame.solve(results.starter(), FICTITIOUS_PLAY_ITERATIONS);
+        line("");
+        line("=== BOOK (pool of %d, starter's value in [%.3f, %.3f], mixes pruned below %.0f%%)", pool.size(),
+                aware.lowerValue(), aware.upperValue(), SUPPORT_THRESHOLD * 100);
+        for (Side side : Side.values()) {
+            double[] mix = pruned(side == Side.A ? aware.rowMix() : aware.columnMix());
+            line("%s:", side == Side.A ? "starter (side A)" : "second player (side B)");
+            Integer[] order = IntStream.range(0, mix.length).boxed().toArray(Integer[]::new);
+            Arrays.sort(order, Comparator.comparingDouble((Integer i) -> -mix[i]));
+            for (int i : order) {
+                if (mix[i] > 0) {
+                    line("  new Entry(\"%s\", %.3f, new int[]{%s}), // %s", pool.get(i).name(), mix[i],
+                            Arrays.stream(pool.get(i).layout()).mapToObj(Integer::toString)
+                                    .collect(java.util.stream.Collectors.joining(",")), show(pool.get(i).layout()));
+                }
+            }
+        }
     }
 
     // ------------------------------------------------------------------ the pool

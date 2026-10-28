@@ -49,7 +49,7 @@ import { finalStandings } from '../../model/kobo/roundScores';
 import { useEndScreen } from '../../composables/useEndScreen';
 import { useEscapeKey } from '../../composables/useEscapeKey';
 import { useI18n } from '../../composables/useI18n';
-import { format, plural } from '../../locales/format';
+import { format, formatList, plural } from '../../locales/format';
 
 const props = defineProps<{ gameId: string }>();
 const messages = useI18n();
@@ -169,7 +169,7 @@ const standings = computed(() => finalStandings(store.game?.players ?? []));
 const winnerLine = computed(() => {
   const winners = summary.value?.winners ?? [];
   if (winners.length === 0) return undefined;
-  const players = winners.map(displayName).join(', ');
+  const players = formatList(winners.map(displayName), 'conjunction');
   return format(winners.length > 1 ? ui.end.winners : ui.end.winner, { players });
 });
 const endSubtitle = computed(() => {

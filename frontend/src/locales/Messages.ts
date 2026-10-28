@@ -178,6 +178,8 @@ export interface DisconnectMessages {
   title: string;           // '{player}'
   waiting: string;
   countdown: string;       // '{n}' = seconds left
+  reconnecting: string;    // seat badge while the grace period runs, no countdown known
+  reconnectingCountdown: string; // seat badge with the countdown, '{n}' = seconds left
 }
 
 export interface LeaveGuardMessages {
