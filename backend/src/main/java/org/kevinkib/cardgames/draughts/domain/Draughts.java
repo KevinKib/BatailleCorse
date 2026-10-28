@@ -37,6 +37,7 @@ public class Draughts implements Game {
     private Phase phase = Phase.PLAY;
     private DraughtsResult result = DraughtsResult.ONGOING;
     private int version;
+    private int legalMoveGenerations;
     private PlayerId drawOffer;
     private final boolean[] offeredSinceOwnMove = new boolean[PLAYERS];
     private PlayedMove lastMove;
@@ -215,7 +216,7 @@ public class Draughts implements Game {
         if (isFinished() || !seat.equals(currentSeat())) {
             return List.of();
         }
-        return GENERATOR.legalMoves(position);
+        return generate();
     }
 
     /** Whether the seat, on its turn, must capture. */
@@ -291,8 +292,18 @@ public class Draughts implements Game {
 
     // --------------------------------------------------------------- helpers
 
+    /** How many times the generator ran (a cache check). */
+    synchronized int legalMoveGenerations() {
+        return legalMoveGenerations;
+    }
+
+    private List<DraughtsMove> generate() {
+        legalMoveGenerations++;
+        return GENERATOR.legalMoves(position);
+    }
+
     private DraughtsMove findMove(int from, int to, List<Integer> captures) throws DraughtsException {
-        List<DraughtsMove> sameEnds = GENERATOR.legalMoves(position).stream()
+        List<DraughtsMove> sameEnds = generate().stream()
                 .filter(m -> m.from() == from && m.to() == to).toList();
         if (captures.isEmpty()) {
             if (sameEnds.isEmpty()) {

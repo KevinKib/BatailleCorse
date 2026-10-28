@@ -99,4 +99,27 @@ class DraughtsTestPositionIT {
         assertThrows(HttpClientErrorException.class, () -> put(GameId.generate().uuid().toString(),
                 "{\"layout\":\"" + SHORT_ENDING + "\",\"toMove\":\"white\"}"));
     }
+
+    @Test
+    void aPositionWithoutMovesForTheSideToMoveEndsTheGame() {
+        Draughts game = start();
+        // Black has no piece left and is to move: Black has lost
+        String layout = ".".repeat(27) + "w" + ".".repeat(22);
+
+        put(game.getId().uuid().toString(), "{\"layout\":\"" + layout + "\",\"toMove\":\"black\"}");
+
+        assertThat(game.isFinished(), is(true));
+        assertThat(game.result().winner(), is(game.whiteSeat()));
+    }
+
+    @Test
+    void aFinishedGameIsNotRevivedByAPosition() {
+        Draughts game = start();
+        game.forfeit(game.getPlayerIds().get(0));
+        String id = game.getId().uuid().toString();
+
+        assertThrows(HttpClientErrorException.Conflict.class,
+                () -> put(id, "{\"layout\":\"" + SHORT_ENDING + "\",\"toMove\":\"white\"}"));
+        assertThat(game.isFinished(), is(true));
+    }
 }
