@@ -546,7 +546,7 @@ function leaveLobby() {
   justify-content: center;
   gap: var(--space-1);
   min-height: 44px;
-  padding: 0 var(--space-4);
+  padding: 0 var(--space-3);
   border-radius: 6px;
   border: 1px solid rgba(255, 255, 255, 0.25);
   background: rgba(0, 0, 0, 0.35);
