@@ -24,7 +24,7 @@ describe('GamePickerView with two languages', () => {
     await globe.trigger('click');
     expect(wrapper.findAll('[data-test^="language-option-"]').map(o => o.text().replace(' ✓', ''))).toEqual(['English', 'Français']);
     // The games and the Privacy link are all still there.
-    expect(wrapper.findAll('article')).toHaveLength(7);
+    expect(wrapper.findAll('article')).toHaveLength(8);
     expect(wrapper.get('[data-test="privacy-link"]').text()).toBe(messagesEn.gamePicker.privacy);
   });
 });

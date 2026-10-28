@@ -9,6 +9,7 @@ import { usePresidentStore } from '../state/President.store';
 import { useBatailleCorseStore } from '../state/BatailleCorse.store';
 import { useMangolaStore } from '../state/Mangola.store';
 import { useNinetyNineStore } from '../state/NinetyNine.store';
+import { useDraughtsStore } from '../state/Draughts.store';
 
 describe('useGameRooms', () => {
   beforeEach(() => { setActivePinia(createPinia()); });
@@ -97,6 +98,17 @@ describe('useGameRooms', () => {
     expect(join).toHaveBeenCalledWith('g7', 'Bob');
   });
 
+  it('givenDraughts_thenCreateAndJoinGoThroughItsStore', async () => {
+    const store = useDraughtsStore();
+    const create = vi.spyOn(store, 'create').mockResolvedValue('g8');
+    const join = vi.spyOn(store, 'join').mockResolvedValue();
+    const room = useGameRooms()(findGame('draughts')!);
+    expect(await room.create('Alice')).toBe('g8');
+    await room.join('g8', 'Bob');
+    expect(create).toHaveBeenCalledWith('Alice');
+    expect(join).toHaveBeenCalledWith('g8', 'Bob');
+  });
+
   it('givenAGameWithNoRoomClient_thenItFailsLoudlyInsteadOfJoiningAnotherGame', () => {
     const unwired = { ...findGame('bullshit')!, key: 'chess' } as unknown as GameDefinition;
     expect(() => useGameRooms()(unwired)).toThrow(/chess/);
@@ -106,7 +118,7 @@ describe('useGameRooms', () => {
     const stores = {
       bataillecorse: useBatailleCorseStore(), bullshit: useBullshitStore(), kobo: useKoboStore(),
       'three-men-morris': useThreeMenMorrisStore(), president: usePresidentStore(), mangola: useMangolaStore(),
-      'ninety-nine': useNinetyNineStore(),
+      'ninety-nine': useNinetyNineStore(), draughts: useDraughtsStore(),
     };
     for (const g of GAMES) {
       const create = vi.spyOn(stores[g.key], 'create').mockResolvedValue('g');

@@ -1,11 +1,10 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { mount, flushPromises } from '@vue/test-utils';
 import { setActivePinia, createPinia } from 'pinia';
 import { createMemoryHistory, createRouter } from 'vue-router';
 import PrimeVue from 'primevue/config';
 import DraughtsGameScreen from './DraughtsGameScreen.vue';
 import { useDraughtsStore } from '../../state/Draughts.store';
-import { GAMES, type GameDefinition, type GameKey } from '../../model/games';
 import {
   draughtsAmbiguousState, draughtsCaptureState, draughtsFinishedState, draughtsOpeningState, draughtsState,
 } from '../../model/draughts/fixtures';
@@ -16,23 +15,6 @@ import { setConnectionOnline } from '../../composables/useConnectionStatus';
 import { messagesEn } from '../../locales/en';
 
 const ui = messagesEn.draughtsUi;
-
-// Draughts is not registered yet (the entry PR does it): the screen is tested with a definition added for the test only.
-const DRAUGHTS: GameDefinition = {
-  key: 'draughts' as GameKey, serverType: 'draughts', gameHomeRoute: '/draughts',
-  joinRoute: id => (id ? `/draughts/join/${id}` : '/draughts/join'),
-  roomRoute: id => `/draughts/room/${id}`,
-  supportsBots: true, picker: { icon: 'pi pi-table', severity: 'info' },
-};
-const games = messagesEn.gamePicker.games as Record<string, unknown>;
-beforeAll(() => {
-  (GAMES as GameDefinition[]).push(DRAUGHTS);
-  games['draughts'] = { name: 'Draughts', description: '', players: '2 players', play: 'Play' };
-});
-afterAll(() => {
-  (GAMES as GameDefinition[]).splice((GAMES as GameDefinition[]).indexOf(DRAUGHTS), 1);
-  delete games['draughts'];
-});
 
 const DESCRIPTORS = [
   { key: 'hostColour', type: 'CHOICE' as const, values: ['white', 'black', 'random'], defaultValue: 'random', labelKey: 'options.draughts.hostColour' },
