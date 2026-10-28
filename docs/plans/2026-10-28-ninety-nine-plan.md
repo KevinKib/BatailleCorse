@@ -55,14 +55,14 @@ each (issue #312 rule), on a shifted stack if 5173 is taken. A dev environment o
 
 | Chunk | Title | Cost | Needs | Parallel with | State |
 |-------|-------|------|-------|---------------|-------|
-| P0 | `feat: 99 shared types (interfaces)` | S (< 30 min) | plan approved | D | [ ] |
-| C1 | `feat: 99 rules in the domain` | L | P0 | C2, F1, D, F2 | [ ] |
-| C2 | `feat: 99 bot strategies` | M | P0 | C1, C3, F1, F2 | [ ] |
-| F1 | `feat: 99 frontend model, session and store` | S-M | P0 | C1, C2, C3, D | [ ] |
-| D | Claude Design canvas, 2-3 options, owner chooses | S | plan approved | P0, C1, C2, F1 | [ ] |
-| F2 | `feat: 99 table components and screen` | L | P0, D | C1, C2, C3, F1 | [ ] |
-| C3 | `feat: 99 presentation, config and bot coordinator` | M-L | C1 | C2, F1, F2 | [ ] |
-| I | `feat: 99 playable (entry PR)` (integration) | M | C2, C3, F1, F2 | - | [ ] |
+| P0 | `feat: 99 shared types (interfaces)` | S (< 30 min) | plan approved | D | [x] merged |
+| C1 | `feat: 99 rules in the domain` | L | P0 | C2, F1, D, F2 | [x] merged |
+| C2 | `feat: 99 bot strategies` | M | P0 | C1, C3, F1, F2 | [x] merged |
+| F1 | `feat: 99 frontend model, session and store` | S-M | P0 | C1, C2, C3, D | [x] merged |
+| D | Claude Design canvas, 2-3 options, owner chooses | S | plan approved | P0, C1, C2, F1 | [x] merged |
+| F2 | `feat: 99 table components and screen` | L | P0, D | C1, C2, C3, F1 | [x] merged |
+| C3 | `feat: 99 presentation, config and bot coordinator` | M-L | C1 | C2, F1, F2 | [x] merged |
+| I | `feat: 99 playable (entry PR)` (integration) | M | C2, C3, F1, F2 | - | [x] PR #391 |
 
 About 8 to 10 days of work, 7 PRs plus the canvas.
 

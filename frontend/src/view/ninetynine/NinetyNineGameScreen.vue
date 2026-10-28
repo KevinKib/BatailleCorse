@@ -14,6 +14,7 @@ import GameLobby from '../../components/lobby/GameLobby.vue';
 import EndGameOverlay from '../../components/EndGameOverlay.vue';
 import ForfeitBanner from '../../components/ForfeitBanner.vue';
 import GameTimer from '../../components/GameTimer.vue';
+import RulesPanel from '../../components/RulesPanel.vue';
 import NinetyNineAceChooser from '../../components/ninetynine/NinetyNineAceChooser.vue';
 import NinetyNineBustBanner from '../../components/ninetynine/NinetyNineBustBanner.vue';
 import NinetyNineHand from '../../components/ninetynine/NinetyNineHand.vue';
@@ -36,7 +37,7 @@ import type { NinetyNineLogEntry } from '../../model/ninetynine/eventLog';
 import type Card from '../../model/Card';
 
 // The 99 table: the ring of seats around the total, my hand and, for an Ace that can be 1 or 11, its two values. Every
-// rule is the server's (`playable`): the screen only shows and sends. Not routed yet: the entry PR registers the game.
+// rule is the server's (`playable`): the screen only shows and sends.
 const props = defineProps<{ gameId: string }>();
 const messages = useI18n();
 const ui = messages.ninetyNineUi;
@@ -236,6 +237,8 @@ const rematchButton = computed(() =>
     </div>
 
     <template v-else-if="store.game">
+      <RulesPanel :rules="messages.ninetyNine" />
+
       <div class="top-bar" data-test="top-bar">
         <GameTimer :time="formattedDuration" inline />
         <span class="round-chip" data-test="round">{{ roundText }}</span>

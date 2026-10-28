@@ -10,6 +10,7 @@
     "cypress/specs/president-game.cy.ts",
     "cypress/specs/bullshit-table-and-lobby.cy.ts",
     "cypress/specs/morris-game.cy.ts",
+    "cypress/specs/ninety-nine-game.cy.ts",
     "cypress/specs/i18n-french.cy.ts"
   ]
 }
