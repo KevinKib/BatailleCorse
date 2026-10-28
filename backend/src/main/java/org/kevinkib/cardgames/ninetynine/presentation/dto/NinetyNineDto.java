@@ -24,7 +24,8 @@ import java.util.Set;
 /**
  * One player's view of a 99 game, the only projection of the aggregate. Public information is the same for every
  * viewer; {@code hand}, {@code playable} and {@code availableActions} are the viewer's own. The other hands and the
- * stock order are never in it. A stuck hand is public ({@code lastBust.hand}): it proves the bust.
+ * stock order are never in it. {@code stuck} is public: the seat on turn holds no safe card, so it must play a card
+ * that goes over 99 and lose a life; the {@code lastBust.hand} is what it still held.
  */
 public record NinetyNineDto(
         boolean started,
@@ -44,6 +45,7 @@ public record NinetyNineDto(
         LastPlayDto lastPlay,
         LastBustDto lastBust,
         OutcomeDto outcome,
+        boolean stuck,
         List<CardDto> hand,
         List<PlayableDto> playable,
         List<String> availableActions) {
@@ -61,7 +63,10 @@ public record NinetyNineDto(
     public record LastBustDto(int seat, int totalBefore, List<CardDto> hand, int livesLeft, boolean eliminated) {
     }
 
-    /** A card of the viewer's hand: whether it may be played now and the Ace values allowed (empty for other cards). */
+    /**
+     * A card of the viewer's hand: whether it may be played now and the Ace values allowed (empty for other cards).
+     * A stuck seat on turn may play any card ({@code safe} true: the play costs a life, see {@code stuck}).
+     */
     public record PlayableDto(CardDto card, boolean safe, List<Integer> aceValues) {
     }
 
@@ -118,9 +123,10 @@ public record NinetyNineDto(
                             p.totalBefore(), p.totalAfter(), p.reversed())).orElse(null),
                     game.lastBust().map(b -> bustOf(b)).orElse(null),
                     outcomeOf(game),
+                    game.isStuck(),
                     hand.stream().map(CardDto::from).toList(),
-                    game.phase() == Phase.PLAYING ? hand.stream().map(card -> playableOf(game, card)).toList()
-                            : List.of(),
+                    game.phase() == Phase.PLAYING
+                            ? hand.stream().map(card -> playableOf(game, viewer, card)).toList() : List.of(),
                     game.availableActions(viewer).stream().map(Action::name).toList());
         }
     }
@@ -130,8 +136,12 @@ public record NinetyNineDto(
                 seatOptions.seatOptions(game.getId(), seat).get(NinetyNineFactory.LEVEL_KEY)).key();
     }
 
-    private static PlayableDto playableOf(NinetyNine game, Card card) {
+    private static PlayableDto playableOf(NinetyNine game, PlayerId viewer, Card card) {
         boolean ace = card.getRank() == FrenchRank.ACE;
+        if (game.isStuck() && viewer.equals(game.currentSeat())) {
+            // stuck: every card may be played (each goes over 99 and costs a life); an Ace is sent as 1
+            return new PlayableDto(CardDto.from(card), true, ace ? List.of(1) : List.of());
+        }
         return new PlayableDto(CardDto.from(card), CardEffect.isSafe(game.total(), card),
                 ace ? CardEffect.aceValues(game.total()) : List.of());
     }

@@ -9,25 +9,25 @@ describe('NinetyNineBustBanner', () => {
   it('givenAStuckHand_thenTheBannerNamesWhoIsStuckAtWhatTotal', () => {
     const wrapper = mount(NinetyNineBustBanner, { props: { bust, label: 'Gina', mine: false } });
     expect(wrapper.attributes('role')).toBe('alert');
-    expect(wrapper.get('[data-test="bust-title"]').text()).toBe('Gina is stuck at 96');
+    expect(wrapper.get('[data-test="bust-title"]').text()).toBe('Gina goes over 99 (103)');
   });
 
   it('givenMyOwnBust_thenTheTitleSaysYou', () => {
     const wrapper = mount(NinetyNineBustBanner, { props: { bust, label: 'You', mine: true } });
-    expect(wrapper.get('[data-test="bust-title"]').text()).toBe('You are stuck at 96');
+    expect(wrapper.get('[data-test="bust-title"]').text()).toBe('You go over 99 (103)');
   });
 
-  it('givenTheStuckHand_thenEveryCardIsRevealedAndNamed', () => {
+  it('givenTheRemainingHand_thenEveryCardIsRevealedAndNamed', () => {
     const wrapper = mount(NinetyNineBustBanner, { props: { bust, label: 'Gina', mine: false } });
     const cards = wrapper.findAll('[data-test="bust-card"]');
-    expect(cards).toHaveLength(3);
-    expect(cards.map(c => c.attributes('aria-label'))).toEqual(['7 of hearts', '8 of clubs', 'Jack of spades']);
+    expect(cards).toHaveLength(2);
+    expect(cards.map(c => c.attributes('aria-label'))).toEqual(['8 of clubs', 'Jack of spades']);
     expect(wrapper.get('[data-test="bust-hand"]').attributes('aria-label')).toBe('Hand of Gina');
   });
 
   it('givenTheReason_thenItSaysEveryCardGoesOver', () => {
     const wrapper = mount(NinetyNineBustBanner, { props: { bust, label: 'Gina', mine: false } });
-    expect(wrapper.get('[data-test="bust-reason"]').text()).toBe('Every card goes over 99.');
+    expect(wrapper.get('[data-test="bust-reason"]').text()).toBe('No card could stay at 99 or below.');
   });
 
   it('givenALifeLeft_thenTheBannerSaysTheLifeLostAndHowManyRemain', () => {

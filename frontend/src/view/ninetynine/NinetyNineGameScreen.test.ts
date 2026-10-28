@@ -7,7 +7,7 @@ import NinetyNineGameScreen from './NinetyNineGameScreen.vue';
 import { useNinetyNineStore } from '../../state/NinetyNine.store';
 import { messagesEn } from '../../locales/en';
 import {
-  buildNinetyNineBust, buildNinetyNineCard, buildNinetyNineFourSeatRound, buildNinetyNineQuickEnd,
+  buildNinetyNineBust, buildNinetyNineCard, buildNinetyNineFourSeatRound, buildNinetyNineQuickEnd, buildNinetyNineStuck,
   buildNinetyNineTwelveSeatRound, DEFAULT_NINETY_NINE_OPTIONS,
 } from '../../model/fixtures/ninetynine';
 import type { LobbyView } from '../../model/lobby/LobbyView';
@@ -197,11 +197,55 @@ describe('NinetyNineGameScreen', () => {
     });
   });
 
+  describe('a stuck player', () => {
+    it('givenIAmStuck_thenAHintSaysIMustPlayACardAndLoseALife', async () => {
+      const { wrapper } = await mountRoom(room(buildNinetyNineStuck()));
+      expect(wrapper.get('[data-test="stuck-hint"]').text()).toContain('You must play one of them and lose a life');
+    });
+
+    it('givenIAmStuck_thenEveryCardOfMyHandIsPlayable', async () => {
+      const { wrapper } = await mountRoom(room(buildNinetyNineStuck()));
+      const buttons = wrapper.findAll('[data-test="hand"] button');
+      expect(buttons).toHaveLength(3);
+      for (const b of buttons) expect(b.attributes('disabled')).toBeUndefined();
+      expect(wrapper.findAll('.over-limit')).toHaveLength(0);
+    });
+
+    it('givenIAmNotStuck_thenThereIsNoHint', async () => {
+      const { wrapper } = await mountRoom(room(buildNinetyNineFourSeatRound()));
+      expect(wrapper.find('[data-test="stuck-hint"]').exists()).toBe(false);
+    });
+
+    it('givenAnotherSeatIsStuck_thenIGetNoHint', async () => {
+      const state = { ...buildNinetyNineStuck(), currentSeat: 1, availableActions: [] };
+      const { wrapper } = await mountRoom(room(state as NinetyNineState));
+      expect(wrapper.find('[data-test="stuck-hint"]').exists()).toBe(false);
+    });
+
+    it('givenTheBustFollowsMyPlay_thenTheOverlayWaitsSoTheTableShowsTheCardFirst', async () => {
+      vi.useFakeTimers();
+      try {
+        const { wrapper, store } = await mountRoom(room(buildNinetyNineFourSeatRound()));
+        expect(wrapper.find('[data-test="bust"]').exists()).toBe(false);
+
+        store.applyEvent({ type: 'state-update', state: buildNinetyNineBust() as never });
+        await flushPromises();
+        expect(wrapper.find('[data-test="bust"]').exists()).toBe(false);
+        expect(wrapper.get('[data-test="total"]').attributes('aria-label')).toBe('Total 103 of 99');
+
+        await vi.advanceTimersByTimeAsync(1600);
+        expect(wrapper.find('[data-test="bust"]').exists()).toBe(true);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+  });
+
   describe('end of a round', () => {
     it('givenABust_thenTheStuckHandIsRevealedTheSeatIsHitAndNothingCanBePlayed', async () => {
       const { wrapper } = await mountRoom(room(buildNinetyNineBust()));
-      expect(wrapper.get('[data-test="bust-title"]').text()).toBe('Player 2 is stuck at 96');
-      expect(wrapper.findAll('[data-test="bust-card"]')).toHaveLength(3);
+      expect(wrapper.get('[data-test="bust-title"]').text()).toBe('Player 2 goes over 99 (103)');
+      expect(wrapper.findAll('[data-test="bust-card"]')).toHaveLength(2);
       expect(wrapper.get('[data-test="bust-lives"]').text()).toBe('Loses a life · 2 left');
       expect(wrapper.get('[data-test="bust-next"]').exists()).toBe(true);
       expect(wrapper.get('[data-test="seat-hit"]').text()).toBe('−1');
@@ -213,7 +257,7 @@ describe('NinetyNineGameScreen', () => {
       const state = buildNinetyNineBust();
       state.lastBust = { ...state.lastBust!, seat: 0 };
       const { wrapper } = await mountRoom(room(state));
-      expect(wrapper.get('[data-test="bust-title"]').text()).toBe('You are stuck at 96');
+      expect(wrapper.get('[data-test="bust-title"]').text()).toBe('You go over 99 (103)');
     });
 
     it('givenTheNextRoundStarts_thenTheBannerIsGone', async () => {

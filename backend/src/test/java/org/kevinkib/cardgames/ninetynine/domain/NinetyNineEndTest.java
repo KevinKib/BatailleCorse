@@ -30,16 +30,18 @@ class NinetyNineEndTest {
     }
 
     @Test
-    void example2_aStuckSeatBustsAtOnceAndLosesALife() throws NinetyNineException {
+    void example2_aStuckSeatPlaysACardOverNinetyNineAndLosesALife() throws NinetyNineException {
         NinetyNine game = aboutToBustA().build();
+        game.play(C, c("9H"), null);
+        assertEquals(Phase.PLAYING, game.phase());
 
-        List<NinetyNineEvent> events = game.play(C, c("9H"), null);
+        List<NinetyNineEvent> events = game.play(A, c("7H"), null);
 
-        assertEquals(new Busted(A, 95, NinetyNineBuilder.cards("7H 8H JH"), 2), events.get(1));
+        assertEquals(new Busted(A, 102, NinetyNineBuilder.cards("8H JH"), 2), events.get(1));
         assertEquals(Phase.ROUND_OVER, game.phase());
         assertEquals(2, game.lives().get(A));
         assertEquals(3, game.lives().get(B));
-        assertEquals(new Busted(A, 95, NinetyNineBuilder.cards("7H 8H JH"), 2), game.lastBust().orElseThrow());
+        assertEquals(new Busted(A, 102, NinetyNineBuilder.cards("8H JH"), 2), game.lastBust().orElseThrow());
         assertEquals(2, events.size());
         assertFalse(game.isFinished());
     }
@@ -48,6 +50,7 @@ class NinetyNineEndTest {
     void example2_theBustedSeatStartsTheNextRound() throws NinetyNineException {
         NinetyNine game = aboutToBustA().build();
         game.play(C, c("9H"), null);
+        game.play(A, c("7H"), null);
 
         game.nextRound();
 
@@ -55,20 +58,22 @@ class NinetyNineEndTest {
     }
 
     @Test
-    void theBustedHandStaysInThePlayersHandUntilTheNextDeal() throws NinetyNineException {
+    void theRemainingHandStaysInThePlayersHandUntilTheNextDeal() throws NinetyNineException {
         NinetyNine game = aboutToBustA().build();
         game.play(C, c("9H"), null);
+        game.play(A, c("7H"), null);
 
-        assertEquals(NinetyNineBuilder.cards("7H 8H JH"), game.hand(A));
+        assertEquals(NinetyNineBuilder.cards("8H JH"), game.hand(A));
     }
 
     @Test
     void example7_aSeatAtOneLifeIsEliminatedWithItsPlace() throws NinetyNineException {
         NinetyNine game = game(3).total(95).current(A).lives(B, 1).hand(A, "9H 2H 3H").hand(B, "7H 8H JH").build();
+        game.play(A, c("9H"), null);
 
-        List<NinetyNineEvent> events = game.play(A, c("9H"), null);
+        List<NinetyNineEvent> events = game.play(B, c("7H"), null);
 
-        assertEquals(new Busted(B, 95, NinetyNineBuilder.cards("7H 8H JH"), 0), events.get(1));
+        assertEquals(new Busted(B, 102, NinetyNineBuilder.cards("8H JH"), 0), events.get(1));
         assertEquals(new Eliminated(B, 3), events.get(2));
         assertEquals(Phase.ROUND_OVER, game.phase());
         assertEquals(Map.of(B, 3), game.places());
@@ -82,6 +87,7 @@ class NinetyNineEndTest {
     void anEliminatedSeatKeepsBeingShownWithoutCards() throws NinetyNineException {
         NinetyNine game = game(3).total(95).current(A).lives(B, 1).hand(A, "9H 2H 3H").hand(B, "7H 8H JH").build();
         game.play(A, c("9H"), null);
+        game.play(B, c("7H"), null);
         game.nextRound();
 
         assertEquals(0, game.lives().get(B));
@@ -101,8 +107,9 @@ class NinetyNineEndTest {
     void normalModeEndsWhenOnlyOneSeatHasLivesLeft() throws NinetyNineException {
         NinetyNine game = game(3).total(95).current(A).lives(B, 0).lives(C, 1).hand(A, "9H 2H 3H")
                 .hand(C, "7H 8H JH").build();
+        game.play(A, c("9H"), null);
 
-        List<NinetyNineEvent> events = game.play(A, c("9H"), null);
+        List<NinetyNineEvent> events = game.play(C, c("7H"), null);
 
         assertEquals(new Eliminated(C, 2), events.get(2));
         GameFinished finished = (GameFinished) events.get(3);
@@ -119,6 +126,7 @@ class NinetyNineEndTest {
         NinetyNine game = game(3).total(95).current(A).lives(B, 0).lives(C, 1).hand(A, "9H 2H 3H")
                 .hand(C, "7H 8H JH").build();
         game.play(A, c("9H"), null);
+        game.play(C, c("7H"), null);
         int version = game.version();
 
         assertThrows(FinishedGameException.class, () -> game.play(A, c("2H"), null));
@@ -131,7 +139,9 @@ class NinetyNineEndTest {
         NinetyNine game = game(3).quick().total(95).current(C).lives(A, 1).lives(B, 3).lives(C, 2)
                 .hand(C, "9H 2H 3H").hand(A, "7H 8H JH").build();
 
-        List<NinetyNineEvent> events = game.play(C, c("9H"), null);
+        game.play(C, c("9H"), null);
+
+        List<NinetyNineEvent> events = game.play(A, c("7H"), null);
 
         GameFinished finished = (GameFinished) events.get(events.size() - 1);
         assertEquals(new NinetyNineResult(Map.of(B, 1, C, 2, A, 3), NinetyNineResult.Reason.QUICK),
@@ -145,6 +155,7 @@ class NinetyNineEndTest {
                 .hand(C, "9H 2H 3H").hand(A, "7H 8H JH").build();
 
         game.play(C, c("9H"), null);
+        game.play(A, c("7H"), null);
 
         assertEquals(Map.of(B, 1, C, 1, A, 3), game.result().orElseThrow().places());
     }
@@ -155,6 +166,7 @@ class NinetyNineEndTest {
                 .lives(seat3(), 1).current(seat3()).hand(seat3(), "9H 2H 3H").hand(A, "7H 8H JH").build();
 
         game.play(seat3(), c("9H"), null);
+        game.play(A, c("7H"), null);
 
         // B and C share 1st; D (1 life) is 3rd; A busted last
         assertEquals(Map.of(B, 1, C, 1, seat3(), 3, A, 4), game.result().orElseThrow().places());
@@ -165,6 +177,7 @@ class NinetyNineEndTest {
         NinetyNine game = game(3).quick().total(95).current(C).hand(C, "9H 2H 3H").hand(A, "7H 8H JH").build();
 
         game.play(C, c("9H"), null);
+        game.play(A, c("7H"), null);
 
         assertEquals(Phase.ROUND_OVER, game.phase());
         assertTrue(game.result().isEmpty());
@@ -176,6 +189,7 @@ class NinetyNineEndTest {
                 .hand(B, "7H 8H JH").build();
 
         game.play(A, c("9H"), null);
+        game.play(B, c("7H"), null);
 
         assertEquals(Map.of(A, 1, B, 2), game.result().orElseThrow().places());
         assertEquals(NinetyNineResult.Reason.QUICK, game.result().orElseThrow().reason());

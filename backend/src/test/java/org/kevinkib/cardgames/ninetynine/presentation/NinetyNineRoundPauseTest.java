@@ -45,6 +45,7 @@ class NinetyNineRoundPauseTest {
         NinetyNine game = table.beforeABust();
 
         table.actions.play(game.getId(), S0, card("KS"), null);
+        table.actions.play(game.getId(), S1, card("7H"), null);
 
         assertThat(game.phase()).isEqualTo(Phase.ROUND_OVER);
         assertThat(scheduler.pending()).hasSize(1);
@@ -62,6 +63,7 @@ class NinetyNineRoundPauseTest {
     void severalBroadcastsOfTheSameRoundEndKeepASingleTask() throws Exception {
         NinetyNine game = table.beforeABust();
         table.actions.play(game.getId(), S0, card("KS"), null);
+        table.actions.play(game.getId(), S1, card("7H"), null);
 
         table.broadcaster.broadcast(game, "OPPONENT_DISCONNECTED", new EmptyEventData(), "");
         table.broadcaster.broadcast(game, "OPPONENT_RECONNECTED", new EmptyEventData(), "");
@@ -74,6 +76,7 @@ class NinetyNineRoundPauseTest {
     void aStateChangeBeforeTheTaskFiresMakesItStale() throws Exception {
         NinetyNine game = table.beforeABust();
         table.actions.play(game.getId(), S0, card("KS"), null);
+        table.actions.play(game.getId(), S1, card("7H"), null);
         ManualBotScheduler.Entry task = scheduler.pending().get(0);
         game.forfeit(S1); // the version moved on without a broadcast reaching the pause
         int round = game.round();
@@ -87,6 +90,7 @@ class NinetyNineRoundPauseTest {
     void aForfeitThatKeepsTheRoundOverRearmsTheTaskOnTheNewVersion() throws Exception {
         NinetyNine game = table.beforeABust();
         table.actions.play(game.getId(), S0, card("KS"), null);
+        table.actions.play(game.getId(), S1, card("7H"), null);
         ManualBotScheduler.Entry first = scheduler.pending().get(0);
 
         game.forfeit(new PlayerId(2));
@@ -113,6 +117,7 @@ class NinetyNineRoundPauseTest {
     void anEvictedGameCancelsItsTask() throws Exception {
         NinetyNine game = table.beforeABust();
         table.actions.play(game.getId(), S0, card("KS"), null);
+        table.actions.play(game.getId(), S1, card("7H"), null);
         ManualBotScheduler.Entry task = scheduler.pending().get(0);
 
         pause.onEvicted(game.getId());
@@ -146,6 +151,7 @@ class NinetyNineRoundPauseTest {
         FlakyTable flaky = new FlakyTable(2);
         NinetyNine game = flaky.own.beforeABust();
         flaky.own.actions.play(game.getId(), S0, card("KS"), null);
+        flaky.own.actions.play(game.getId(), S1, card("7H"), null);
 
         flaky.own_scheduler.runNext();
         assertThat(game.phase()).isEqualTo(Phase.ROUND_OVER);
@@ -164,6 +170,7 @@ class NinetyNineRoundPauseTest {
         FlakyTable flaky = new FlakyTable(Integer.MAX_VALUE);
         NinetyNine game = flaky.own.beforeABust();
         flaky.own.actions.play(game.getId(), S0, card("KS"), null);
+        flaky.own.actions.play(game.getId(), S1, card("7H"), null);
 
         while (!flaky.own_scheduler.pending().isEmpty()) {
             flaky.own_scheduler.runNext();

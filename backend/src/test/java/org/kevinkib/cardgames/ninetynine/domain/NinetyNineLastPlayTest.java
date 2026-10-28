@@ -51,9 +51,11 @@ class NinetyNineLastPlayTest {
         NinetyNine game = game(2).hand(A, "KS 9H 9D").hand(B, "7H 8H 2H").build();
 
         game.play(A, c("KS"), null);
+        game.play(B, c("7H"), null);
 
         assertEquals(Phase.ROUND_OVER, game.phase());
-        assertEquals(c("KS"), game.lastPlay().orElseThrow().card());
+        assertEquals(c("7H"), game.lastPlay().orElseThrow().card());
+        assertEquals(106, game.lastPlay().orElseThrow().totalAfter());
 
         game.nextRound();
 

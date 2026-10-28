@@ -16,6 +16,8 @@ export const NINETY_NINE_TEMPO = {
   reshuffle: { holdBeforeMs: 100, flightMs: 700, holdAfterMs: 200 } satisfies LegTempo,
   /** The ring on a seat that is stuck. */
   bust: { holdBeforeMs: 0, flightMs: 900, holdAfterMs: 0 } satisfies LegTempo,
+  /** The bust overlay waits this long after the card that busted was played, so the table shows it first. */
+  bustRevealMs: 1500,
   /** The deal of a round: one pack per live seat, leaving this far apart. */
   deal: { holdBeforeMs: 0, flightMs: 500, holdAfterMs: 150, staggerMs: 70 },
   /** How long the rings stay on the places a move touched. */

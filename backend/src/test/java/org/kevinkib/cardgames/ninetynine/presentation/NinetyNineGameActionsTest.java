@@ -76,15 +76,32 @@ class NinetyNineGameActionsTest {
     }
 
     @Test
-    void aPlayThatLeavesTheNextSeatStuckBroadcastsPlayThenBust() throws Exception {
+    void aPlayThatLeavesTheNextSeatStuckOnlyBroadcastsThePlay() throws Exception {
         NinetyNine game = table.beforeABust();
 
         table.actions.play(game.getId(), S0, card("KS"), null);
 
+        assertThat(eventTypes()).containsExactly("PLAY", "PLAY", "PLAY");
+        NinetyNineDto state = (NinetyNineDto) table.messaging.payloads.get(0).getState();
+        assertThat(state.phase()).isEqualTo("PLAYING");
+        assertThat(state.stuck()).isTrue();
+    }
+
+    @Test
+    void theStuckSeatPlaysThenTheBustFollowsTheSameCommand() throws Exception {
+        NinetyNine game = table.beforeABust();
+        table.actions.play(game.getId(), S0, card("KS"), null);
+        table.messaging.clear();
+
+        table.actions.play(game.getId(), S1, card("7H"), null);
+
         assertThat(eventTypes()).containsExactly("PLAY", "PLAY", "PLAY", "BUST", "BUST", "BUST");
+        NinetyNineEventData played = (NinetyNineEventData) table.messaging.payloads.get(0).getEventData();
+        assertThat(played.card()).isEqualTo(CardDto.from(card("7H")));
+        assertThat(played.totalAfter()).isEqualTo(106);
         NinetyNineEventData bust = (NinetyNineEventData) table.messaging.payloads.get(3).getEventData();
         assertThat(bust.seat()).isEqualTo(1);
-        assertThat(bust.hand()).isEqualTo(cards("7H 8H 2H").stream().map(CardDto::from).toList());
+        assertThat(bust.hand()).isEqualTo(cards("8H 2H").stream().map(CardDto::from).toList());
         assertThat(bust.livesLeft()).isEqualTo(2);
         assertThat(bust.card()).isNull();
         NinetyNineDto state = (NinetyNineDto) table.messaging.payloads.get(3).getState();
@@ -96,11 +113,13 @@ class NinetyNineGameActionsTest {
         NinetyNine game = table.start(2, GameOptions.of(Map.of("lives", "2")),
                 "KS 7H 9S 8H 4S 2H 5D", "KD 9D 5D 8D 6D 7D 2D 3D");
         table.actions.play(game.getId(), S0, card("KS"), null);
+        table.actions.play(game.getId(), S1, card("7H"), null);
         table.actions.nextRound(game.getId(), game.version());
         table.actions.play(game.getId(), S1, card("9D"), null);
+        table.actions.play(game.getId(), S0, card("KD"), null);
         table.messaging.clear();
 
-        table.actions.play(game.getId(), S0, card("KD"), null);
+        table.actions.play(game.getId(), S1, card("8D"), null);
 
         assertThat(eventTypes()).containsExactly("PLAY", "PLAY", "BUST", "BUST", "ELIMINATED", "ELIMINATED",
                 "GAME_OVER", "GAME_OVER");
@@ -114,6 +133,7 @@ class NinetyNineGameActionsTest {
     void nextRoundDealsAndBroadcastsRoundStartWithTheStarter() throws Exception {
         NinetyNine game = table.beforeABust();
         table.actions.play(game.getId(), S0, card("KS"), null);
+        table.actions.play(game.getId(), S1, card("7H"), null);
         table.messaging.clear();
 
         table.actions.nextRound(game.getId(), game.version());
@@ -131,8 +151,8 @@ class NinetyNineGameActionsTest {
     @Test
     void nextRoundOfAStaleVersionOrOutsideTheRoundEndDoesNothing() throws Exception {
         NinetyNine game = table.beforeABust();
-        table.actions.nextRound(game.getId(), game.version()); // still PLAYING
         table.actions.play(game.getId(), S0, card("KS"), null);
+        table.actions.play(game.getId(), S1, card("7H"), null);
         int version = game.version();
         table.messaging.clear();
 
