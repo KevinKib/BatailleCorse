@@ -192,7 +192,7 @@ import EndGameOverlay from '../../components/EndGameOverlay.vue';
 import { rematchButtonFor } from '../../model/RematchButton';
 import { Button } from 'primevue';
 import { storeToRefs } from 'pinia';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useBatailleCorseStore } from '../../state/BatailleCorse.store';
 import { useSettingsStore } from '../../state/Settings.store';
 import { findGame } from '../../model/games';
@@ -202,14 +202,14 @@ import { format } from '../../locales/format';
 import type SessionSeat from '../../model/SessionSeat';
 import { useGameAnimations } from '../../composables/useGameAnimations';
 import { useHotkeys } from '../../composables/useHotkeys';
-import { useBatailleCorseHotkeySettings } from '../../composables/useBatailleCorseHotkeySettings';
+import { useHotkeySettings } from '../../composables/useHotkeySettings';
 import { useEndScreen } from '../../composables/useEndScreen';
 import { useGameDuration } from '../../composables/useGameDuration';
 import { useSeatDisconnectCountdown } from '../../composables/useSeatDisconnectCountdown';
 import { useLeaveGuard } from '../../composables/useLeaveGuard';
 import { useRemovedRedirect } from '../../composables/useRemovedRedirect';
 import { useTurnIndicator } from '../../composables/useTurnIndicator';
-import { useGameBootstrap } from '../../composables/useGameBootstrap';
+import { useBatailleCorseBootstrap } from '../../composables/useBatailleCorseBootstrap';
 import { useI18n } from '../../composables/useI18n';
 import { Action } from '../../model/Action';
 import { computed, onBeforeUnmount, toRef, useTemplateRef, watch } from 'vue';
@@ -221,6 +221,7 @@ import { endGameMessage } from '../../model/endGameMessage';
 const messages = useI18n();
 const ui = messages.batailleCorseUi;
 const game = findGame('bataillecorse')!;
+const route = useRoute();
 const router = useRouter();
 const batailleCorseStore = useBatailleCorseStore();
 const { state: batailleCorse, lobby, phase, lobbyError, starting, rematch, myPlayerIndex, seats, mySeatInfo,
@@ -327,7 +328,7 @@ function leaveLobby() {
 const { showEndOverlay, revealImmediatelyIfOver, cancel: cancelEndScreen } =
   useEndScreen(() => isGameOver.value, () => isPileAnimating.value);
 
-useGameBootstrap({ revealImmediatelyIfOver });
+useBatailleCorseBootstrap(route.params.id as string, revealImmediatelyIfOver);
 
 // An in-progress game: state loaded, not yet over. Drives both the leave-confirmation guard and the
 // cosmetic game-duration timer.
@@ -366,7 +367,7 @@ const { showMyTurn, showOpponentTurn, showFirstTurnHint, cancel: cancelTurnIndic
   showEndOverlay: () => showEndOverlay.value,
 });
 
-const hotkeySettings = useBatailleCorseHotkeySettings();
+const hotkeySettings = useHotkeySettings('bataillecorse');
 
 useHotkeys(
   () => { if (!isButtonDisabled(myPlayerIndex.value, 'send')) send(); },

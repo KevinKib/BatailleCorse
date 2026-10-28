@@ -29,7 +29,7 @@ vi.mock('../../service/WebSocketService', () => ({
 
 vi.mock('../../composables/useCardSound', () => ({ cardSound: { play: vi.fn() } }));
 
-import GameScreen from './GameScreen.vue';
+import GameScreen from './BatailleCorseGameScreen.vue';
 import DisconnectOverlay from '../../components/DisconnectOverlay.vue';
 import SeatDisconnectBadge from '../../components/SeatDisconnectBadge.vue';
 import GameTimer from '../../components/GameTimer.vue';
@@ -76,7 +76,7 @@ async function mountGameScreen() {
   return wrapper;
 }
 
-describe('GameScreen', () => {
+describe('BatailleCorseGameScreen', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
     routeLeaveGuards.length = 0;

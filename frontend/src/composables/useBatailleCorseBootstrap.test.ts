@@ -12,7 +12,7 @@ vi.mock('../service/WebSocketService', () => ({
   },
 }));
 
-import { useGameBootstrap } from './useGameBootstrap';
+import { useBatailleCorseBootstrap } from './useBatailleCorseBootstrap';
 import { useBatailleCorseStore } from '../state/BatailleCorse.store';
 
 async function mountAtRoom(id: string) {
@@ -20,14 +20,14 @@ async function mountAtRoom(id: string) {
   await router.push(`/bataillecorse/room/${id}`);
   await router.isReady();
   const Probe = defineComponent({
-    setup() { useGameBootstrap({ revealImmediatelyIfOver: () => {} }); return () => h('div'); },
+    setup() { useBatailleCorseBootstrap(id, () => {}); return () => h('div'); },
   });
   mount(Probe, { global: { plugins: [router] } });
   await flushPromises();
   return router;
 }
 
-describe('useGameBootstrap restore failures', () => {
+describe('useBatailleCorseBootstrap restore failures', () => {
   beforeEach(() => { setActivePinia(createPinia()); localStorage.clear(); });
   afterEach(() => { vi.unstubAllGlobals(); });
 

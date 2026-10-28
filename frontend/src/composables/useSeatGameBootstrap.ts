@@ -11,11 +11,30 @@ export interface SeatGameBootstrapStore {
   hydrate(): Promise<HydrateResult>;
 }
 
+export interface SeatGameBootstrapOptions {
+  /**
+   * Accept only an entry holding exactly one seat with a string token; any other entry (Bataille Corse's
+   * former solo mode held both tokens in one browser) is forgotten and leads to the join form.
+   */
+  singleSeat?: boolean;
+  /** Runs once the room is loaded (not when the game is gone or the seat lost). */
+  onHydrated?: () => void;
+  /** Runs when the screen is torn down, after the bootstrap stops waiting for the server. */
+  onUnmount?: () => void;
+}
+
 /** Reads the persisted seat+token for a game (key `${tokenKeyPrefix}${gameId}`), or null if none stored. */
-export function resolveSeatSession(tokenKeyPrefix: string, gameId: string): { seat: number; token: string } | null {
-  const tokens = readStoredTokens(`${tokenKeyPrefix}${gameId}`);
+export function resolveSeatSession(
+  tokenKeyPrefix: string, gameId: string, singleSeat = false,
+): { seat: number; token: string } | null {
+  const key = `${tokenKeyPrefix}${gameId}`;
+  const tokens = readStoredTokens(key);
   if (!tokens) return null;
   const seats = Object.keys(tokens).map(Number);
+  if (singleSeat && (seats.length !== 1 || typeof tokens[String(seats[0])] !== 'string')) {
+    localStorage.removeItem(key);
+    return null;
+  }
   if (seats.length === 0) return null;
   const seat = seats[0];
   return { seat, token: tokens[String(seat)] };
@@ -27,13 +46,17 @@ export function useSeatGameBootstrap(
   gameId: string,
   tokenKeyPrefix: string,
   store: SeatGameBootstrapStore,
+  options: SeatGameBootstrapOptions = {},
 ) {
   const router = useRouter();
   let unmounted = false;
-  onBeforeUnmount(() => { unmounted = true; });
+  onBeforeUnmount(() => {
+    unmounted = true;
+    options.onUnmount?.();
+  });
 
   onMounted(async () => {
-    const session = resolveSeatSession(tokenKeyPrefix, gameId);
+    const session = resolveSeatSession(tokenKeyPrefix, gameId, options.singleSeat);
     if (!session) {
       // Someone shared the room URL instead of the invite link: join it.
       router.replace(game.joinRoute(gameId));
@@ -47,6 +70,8 @@ export function useSeatGameBootstrap(
       // token and offer a new game, saying which of the two happened.
       localStorage.removeItem(`${tokenKeyPrefix}${gameId}`);
       router.replace({ path: game.gameHomeRoute, query: result === 'lost' ? { lost: '1' } : { gone: '1' } });
+      return;
     }
+    options.onHydrated?.();
   });
 }
