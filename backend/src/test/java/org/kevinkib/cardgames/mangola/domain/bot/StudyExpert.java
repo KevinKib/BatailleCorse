@@ -15,8 +15,10 @@ import java.util.random.RandomGenerator;
 /**
  * Placement study only (test scope): a copy of {@link ExpertMangolaBot} whose evaluation weights and layout node
  * cap are parameters, and whose budget is a node count only (no clock), so that every run is reproducible. With
- * {@link Weights#PRODUCTION} it searches and chooses layouts exactly like the production expert given the same
- * generator ({@code StudyExpertTest} checks it); any change to the production expert must be mirrored here.
+ * {@link Weights#PRODUCTION} it searches exactly like the production expert given the same generator
+ * ({@code StudyExpertTest} checks it); any change to the production search must be mirrored here. Its layout
+ * choice is the October 2026 layout search, which the production expert replaced by the placement book: it is
+ * kept here as the baseline of the study.
  */
 final class StudyExpert implements MangolaBot {
 

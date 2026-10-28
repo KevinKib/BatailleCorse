@@ -7,7 +7,6 @@ import org.kevinkib.cardgames.mangola.domain.MangolaRules;
 import org.kevinkib.cardgames.mangola.domain.Side;
 
 import java.util.Random;
-import java.util.Set;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -35,20 +34,6 @@ class StudyExpertTest {
                     .search(board, side, OWNER);
             assertThat("seed " + seed, actual, is(expected));
             compared++;
-        }
-    }
-
-    @Test
-    void withTheProductionWeightsItChoosesTheExpertsLayout() {
-        for (long seed = 1; seed <= 4; seed++) {
-            for (Side side : Side.values()) {
-                int[] expected = new ExpertMangolaBot(new Random(seed),
-                        new ExpertMangolaBot.Budget(StudyExpert.UNLIMITED_MILLIS, 1_000, StudyExpert.UNLIMITED_MILLIS))
-                        .decideLayout(OWNER, side, Set.of());
-                int[] actual = new StudyExpert(new Random(seed), 1_000, StudyExpert.Weights.PRODUCTION)
-                        .proposeLayout(OWNER, side);
-                assertThat("seed " + seed + " " + side, BotFixtures.list(actual), is(BotFixtures.list(expected)));
-            }
         }
     }
 

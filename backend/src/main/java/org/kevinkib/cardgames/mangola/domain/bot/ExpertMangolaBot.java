@@ -24,9 +24,7 @@ import java.util.random.RandomGenerator;
  * {@code +-}{@link #WIN} minus the plies it took, so the quickest win and the slowest loss are preferred; a
  * sowing that never ends, when the rules make it a draw, is worth 0.
  *
- * <p>The layout is chosen with hidden placement in mind: candidates (the pattern catalogue, random layouts and
- * mutations of the best one) are scored by a shallow search against a few typical opponent layouts, never the
- * real one, which the bot cannot see.
+ * <p>The layout is not searched: it is drawn from the placement book ({@link MangolaPlacementBook}), a fixed list per\n * side with a probability for each layout, frozen from the Mangola placement study\n * (docs/specs/2026-10-25-mangola-placement-study.md). Placement is hidden, so a good layout is a mixed strategy;\n * the study found that this mix beats the earlier layout search (0.605 against it) at no cost against weaker\n * placements, and it needs no time budget.
  */
 public final class ExpertMangolaBot extends AbstractMangolaBot {
 
@@ -41,10 +39,6 @@ public final class ExpertMangolaBot extends AbstractMangolaBot {
     private static final int MOBILITY_WEIGHT = 3;
     private static final int OPPORTUNITY_WEIGHT = 5;
     private static final int EXPOSURE_WEIGHT = 3;
-
-    private static final int LAYOUT_NODE_CAP = 300;
-    private static final int LAYOUT_CANDIDATES = 24;
-    private static final int LAYOUT_MUTANTS = 24;
 
     /**
      * What a decision may spend: wall-clock milliseconds for a move, a cap on the nodes searched (tests), and
@@ -84,89 +78,10 @@ public final class ExpertMangolaBot extends AbstractMangolaBot {
 
     // ------------------------------------------------------------------ layout
 
+    /** The layout is drawn from the placement book of the side, with the book's probabilities. */
     @Override
     protected int[] proposeLayout(MangolaRules rules, Side side, Set<List<Integer>> rejected) {
-        long deadline = System.nanoTime() + budget.layoutMillis() * 1_000_000L;
-        List<int[]> opponents = typicalOpponents(rules, side.other());
-        List<int[]> catalogue = MangolaLayouts.catalogue();
-
-        int[] best = null;
-        double bestScore = -Double.MAX_VALUE;
-        int start = random.nextInt(catalogue.size());
-        for (int i = 0; i < LAYOUT_CANDIDATES; i++) {
-            int[] candidate = i < LAYOUT_CANDIDATES - 4
-                    ? catalogue.get((start + i * 3) % catalogue.size()).clone()
-                    : MangolaLayouts.random(random);
-            if (!acceptable(rules, side, candidate, rejected)) {
-                continue;
-            }
-            double score = layoutScore(rules, side, candidate, opponents);
-            if (best == null || score > bestScore) {
-                best = candidate;
-                bestScore = score;
-            }
-            if (System.nanoTime() > deadline) {
-                return best;
-            }
-        }
-        for (int i = 0; best != null && i < LAYOUT_MUTANTS && System.nanoTime() <= deadline; i++) {
-            int[] mutant = mutate(best);
-            if (!acceptable(rules, side, mutant, rejected)) {
-                continue;
-            }
-            double score = layoutScore(rules, side, mutant, opponents);
-            if (score > bestScore) {
-                best = mutant;
-                bestScore = score;
-            }
-        }
-        return best != null ? best : MangolaLayouts.random(random);
-    }
-
-    /** A copy with one or two seeds moved to other pits. */
-    private int[] mutate(int[] layout) {
-        int[] copy = layout.clone();
-        int moves = 1 + random.nextInt(2);
-        for (int i = 0; i < moves; i++) {
-            int from = random.nextInt(copy.length);
-            if (copy[from] == 0) {
-                from = (from + 1) % copy.length;
-                while (copy[from] == 0) {
-                    from = (from + 1) % copy.length;
-                }
-            }
-            copy[from]--;
-            copy[random.nextInt(copy.length)]++;
-        }
-        return copy;
-    }
-
-    /** The classic opening, two seeds per pit, and a few random layouts: what a hidden opponent might play. */
-    private List<int[]> typicalOpponents(MangolaRules rules, Side opponentSide) {
-        List<int[]> opponents = new ArrayList<>();
-        List<int[]> catalogue = MangolaLayouts.catalogue();
-        opponents.add(catalogue.get(0).clone());
-        opponents.add(catalogue.get(catalogue.size() / 2).clone());
-        opponents.add(MangolaLayouts.random(random));
-        opponents.add(MangolaLayouts.random(random));
-        return opponents;
-    }
-
-    /** The mean score, for the bot, of a shallow search from the first move against each typical opponent. */
-    private double layoutScore(MangolaRules rules, Side side, int[] layout, List<int[]> opponents) {
-        double total = 0;
-        int counted = 0;
-        for (int[] opponent : opponents) {
-            MangolaBoard board = MangolaBoard.empty().withLayout(side, layout).withLayout(side.other(), opponent);
-            if (MangolaMoves.moves(board, Side.A, rules).isEmpty()) {
-                continue; // such a start would be refused at the confirmation
-            }
-            SearchResult result = new Search(rules, 1_000, LAYOUT_NODE_CAP).run(board, Side.A, random);
-            int fromA = result.score();
-            total += side == Side.A ? fromA : -fromA;
-            counted++;
-        }
-        return counted == 0 ? 0 : total / counted;
+        return fromBook(rules, side, rejected, true);
     }
 
     // ------------------------------------------------------------------ search
