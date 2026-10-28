@@ -111,6 +111,19 @@ skills considered and not adopted: generic UI/design guideline skills (Vercel La
 frontend-design, community "web interface design" / "Refactoring UI" skills) give rules but no project scale and no
 measurement; nothing was installed.
 
+## 2026-10-28: e2e cost plan, integration (#312)
+
+Plan `docs/plans/2026-10-28-e2e-cost-plan.md`: chunks P0, A to E merged, then this integration chunk.
+
+| Friction | Fix | Where |
+|---|---|---|
+| Cypress is the largest agent cost and nobody could see which specs are slow, flaky or useless | CI job `E2E smoke (Cypress)` plays a nine-spec smoke subset on the e2e stack (not yet a required check); a run log (one JSON line per spec) and `npm run cy:summary` give per-spec runs, failures, retries and median time; one retry in run mode only | `.github/workflows/ci.yml`, `frontend/cypress/smoke-specs.json`, `frontend/cypress/runLog.ts`, `frontend/scripts/cypress-*.mjs`, `frontend/cypress.config.ts` |
+| Layout guards cost a full stack and minutes per run | Cypress component tests (pilot: Six Men's Morris stillness), run by `npm run cy:component` in the CI frontend job, where the Cypress binary is installed for that step only | `frontend/cypress/component/`, `.github/workflows/ci.yml` |
+| Scratch specs, `.only` or unreferenced skips slip into the suite; specs grow beyond the nominal path | Vitest guard `specHygiene.test.ts`; rule in `CLAUDE.md`: new Cypress tests cover the nominal path only, the rest goes to Vitest or the backend domain tests | `frontend/cypress/specHygiene.test.ts`, `CLAUDE.md` |
+| `morris-six` in the smoke list while the forfeit grace was broken | Swapped for `morris-game` now that the grace fix is in | `frontend/cypress/smoke-specs.json` |
+
+Why: `docs/architecture/e2e-cypress-report.md` showed Cypress at 26 % of agents' active time; CI is now the Cypress verification of a PR, so agents no longer replay specs locally. Left to the two-week read-out of the run log: deleting specs and making the smoke job a required check.
+
 ## Inventory (versioned in this project)
 
 | Item | Role |
@@ -121,7 +134,7 @@ measurement; nothing was installed.
 | `docs/harnesses.md` | This document |
 | `.claude/skills/frontend-spacing/SKILL.md`, `frontend/cypress/support/spacing.ts` | Spacing rules, pre-PR checklist and gap / overlap assertions for frontend layout changes |
 | `docs/architecture/add-a-game.md`, `docs/architecture/game-conventions.md` | Checklist and naming rules an agent follows to add a game |
-| `.github/workflows/ci.yml` | GitHub Actions: backend tests and frontend tests + build on push to `main` and on pull requests (no e2e yet) |
+| `.github/workflows/ci.yml` | GitHub Actions: backend tests, frontend tests + build + Cypress component tests, and the e2e smoke job, on push to `main` and on pull requests |
 
 ## Known limits
 
