@@ -33,6 +33,8 @@ const SAME_AS_ENGLISH_ALLOWED: readonly string[] = [
   // T3: Kobo, same word in both languages, or a symbol
   'koboUi.botLabel', 'koboUi.table.total', 'koboUi.regions.table', 'koboUi.sheet.totalChange', 'koboUi.sheet.pills.gift',
   'koboUi.sheet.columns.total', 'koboUi.end.totals.total',
+  // 99: the options are English until its French chunk (ninetyNineUi is not in TRANSLATED_AREAS yet)
+  'options.ninetyNine',
 ];
 
 type Leaves = Map<string, string | number | boolean>;

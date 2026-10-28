@@ -316,6 +316,106 @@ export interface OptionsMessages {
     direction: OptionTexts;            // `label`, then `anticlockwise` / `clockwise`
     level: OptionTexts;                // a bot seat's level: `label`, then `random` (Easy) / `greedy` (Medium) / `expert` (Expert)
   };
+  ninetyNine: {
+    lives: OptionTexts;                // `label`, then `2` / `3` / `4`
+    quick: OptionTexts;                // `label`, then `off` / `on`
+    level: OptionTexts;                // a bot seat's level: `label`, then `easy` / `medium` / `hard`
+  };
+}
+
+/** 99 screens: the table, the hand and the Ace, the stuck hand, the lobby note and the end screen. */
+export interface NinetyNineUiMessages {
+  connecting: string;
+  back: string;
+  you: string;
+  playerLabel: string;                 // '{n}' = 1-based seat number, for a player without a name
+  botLabel: string;                    // '{n}'
+  ordinal: OrdinalForms;               // a place: '1st', '2nd'... ('{n}')
+  ranks: Record<string, string>;       // by backend rank label (`JACK`...); a number is its own name
+  suits: Record<string, string>;       // by backend suit (`HEART`...)
+  cardLabel: string;                   // '{rank}', '{suit}': accessible name of a card
+  cardSelected: string;                // '{card}': the same, once tapped
+  table: {
+    round: string;                     // '{n}'
+    roundOver: string;                 // '{n}': the top bar once a round is over
+    total: string;                     // '{total}': accessible name of the running total
+    ofLimit: string;                   // "of 99", under the total
+    cards: PluralForms;                // '{n}' = cards a seat holds
+    lives: PluralForms;                // '{n}' = lives a seat has left
+    out: string;                       // a seat without lives, short word on its plate
+    outPlace: string;                  // '{place}': the same with its place ("1st")
+    current: string;                   // the seat to play
+    reversed: string;                  // the chip of a reversed direction
+    directionClockwise: string;        // accessible name of the arrows of the ring
+    directionReversed: string;
+    pile: string;                      // region and name of the pile
+    pileTop: string;                   // '{card}'
+    pileEmpty: string;
+    stock: string;
+    stockCount: PluralForms;           // '{n}' = cards left in the stock
+    yourCards: string;                 // region names
+    opponents: string;
+    turnOrder: string;                 // the rail's title (seats in turn order)
+    turnOrderItem: string;             // '{n}', '{player}', '{lives}': accessible name of a seat of the rail
+    forfeited: string;                 // '{player}'
+    offline: string;
+  };
+  phase: {
+    yourTurn: string;
+    waiting: string;                   // '{player}'
+    roundOver: string;                 // '{n}'
+  };
+  /** What a card does, said in its accessible name and the log line ('{n}' = the face value). */
+  effect: { face: string; ace: string; reverse: string; pass: string; minusTen: string; plusTen: string; ninetyNine: string };
+  hand: {
+    overLimit: string;                 // under a card that would go over 99
+    cardOver: string;                  // '{card}': accessible name of a card that cannot be played
+    cardEffect: string;                // '{card}', '{effect}'
+    waiting: string;                   // the hand while it is not my turn
+  };
+  ace: {
+    title: string;                     // "Play the Ace as"
+    group: string;                     // accessible name of the chooser
+    one: string;                       // "+1"
+    eleven: string;                    // "+11"
+    oneLabel: string;                  // accessible names of the two buttons
+    elevenLabel: string;
+    cancel: string;
+  };
+  /** The line under the total, told after each move ('{player}', '{card}', '{value}', '{total}'). */
+  log: { played: string; playedAce: string; reversed: string; started: string; reshuffled: string };
+  bust: {
+    stuck: string;                     // '{player}', '{total}'
+    stuckYou: string;                  // '{total}'
+    reason: string;                    // every card goes over 99
+    livesLeft: PluralForms;            // '{n}': "Loses a life · {n} left"
+    eliminated: string;                // '{player}'
+    eliminatedYou: string;
+    next: string;                      // the pause before the next deal
+    hit: string;                       // the badge on the seat that lost a life
+    handLabel: string;                 // '{player}': the stuck hand, as a region name
+  };
+  lobby: { quickHint: string; };
+  end: {
+    winner: string;                    // '{players}'
+    winners: string;
+    quick: string;                     // '{player}': the quick-mode finish
+    lastStanding: string;
+    youWonResigned: string;            // '{player}'
+    youWonDisconnected: string;        // '{player}'
+    youWonOthersLeft: string;
+    places: string;                    // region name of the final places
+    livesLeft: PluralForms;            // '{n}'
+    playAgain: string;
+    rematchPending: string;
+    rematchFailed: string;
+  };
+  notice: { moveImpossible: string; connection: string };
+  live: { yourTurn: string };
+  motion: {
+    speed: string;                     // '{speed}': name of the speed button
+    speeds: { normal: string; fast: string; instant: string };
+  };
 }
 
 export type PresidentTitleKey = 'president' | 'vicePresident' | 'neutral' | 'viceScum' | 'scum';
@@ -832,6 +932,7 @@ export interface Messages {
   turn: TurnMessages;      // turn cue shared by the tables
   president: RulesMessages;         // President
   presidentUi: PresidentUiMessages; // President screens
+  ninetyNineUi: NinetyNineUiMessages; // 99 screens (the rules texts come with the entry PR)
   threeMenMorris: RulesMessages;    // Three Men's Morris
   morrisBoard: MorrisBoardMessages; // Three Men's Morris board
   mangola: RulesMessages;   // Mangola
