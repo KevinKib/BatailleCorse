@@ -8,6 +8,7 @@ const GAMES = [
   { key: 'president', title: 'President', joinError: 'No game found' },
   { key: 'mangola', title: 'Mangola', joinError: 'No game found' },
   { key: 'ninety-nine', title: '99', joinError: 'No game found' },
+  { key: 'draughts', title: 'Draughts', joinError: 'No game found' },
 ];
 
 describe('Game home', () => {
