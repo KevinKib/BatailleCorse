@@ -96,9 +96,8 @@ button.pile:disabled { cursor: default; }
   .pile--action:not(:disabled):hover .pile-well { transform: none; }
 }
 .pile-caption {
-  font-size: 0.6rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: 0.875rem;
+  font-weight: 700;
   color: rgba(255, 255, 255, 0.7);
 }
 .pile-well { transition: transform 0.1s; position: relative; display: flex; align-items: center; justify-content: center; }

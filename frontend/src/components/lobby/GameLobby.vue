@@ -239,7 +239,7 @@ onBeforeUnmount(() => { if (noticeTimer) clearTimeout(noticeTimer); });
   margin: 0;
   font-family: var(--font-title);
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.5;
   letter-spacing: 0.2em;
   text-transform: uppercase;

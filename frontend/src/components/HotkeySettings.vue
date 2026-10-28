@@ -133,9 +133,8 @@ const keyOf = (id: string) => (props.settings.actions.find((a) => a.id === id)?.
 .divider { height: 1px; margin: var(--space-1) 0; background: rgba(255, 255, 255, 0.15); }
 .section-heading {
   padding: var(--space-1) var(--space-1) 0;
-  font-size: 0.6875rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-size: 0.875rem;
+  font-weight: 700;
   color: rgba(255, 255, 255, 0.6);
 }
 .row { display: flex; align-items: center; gap: var(--space-1); }

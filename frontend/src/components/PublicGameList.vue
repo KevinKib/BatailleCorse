@@ -190,9 +190,7 @@ watch(visible, next => {
 .pg-title {
   margin: 0;
   font-size: 0.875rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-weight: 700;
   color: rgba(255, 255, 255, 0.85);
 }
 .pg-title:focus-visible { outline: 2px solid rgba(232, 201, 109, 0.7); outline-offset: 4px; border-radius: 4px; }
@@ -216,7 +214,7 @@ watch(visible, next => {
 .pg-hint { font-size: 0.8125rem; color: rgba(255, 255, 255, 0.7); }
 .pg-new {
   display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px;
-  color: var(--gold, #e8c96d); font-weight: 600; text-decoration: underline;
+  color: var(--gold, #e8c96d); font-weight: 700; text-decoration: underline;
 }
 
 .pg-list { list-style: none; margin: 0; padding: 0; }
@@ -232,7 +230,7 @@ watch(visible, next => {
 .pg-row:last-child { border-bottom: 0; }
 .row--muted { color: rgba(255, 255, 255, 0.62); }
 .pg-main { display: flex; align-items: center; gap: 8px; min-width: 0; }
-.pg-host { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.pg-host { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; }
 .pg-badge { flex: none; padding: 1px 8px; font-size: 0.75rem; border-radius: 999px; border: 1px solid currentColor; }
 .badge--open { color: #7fd99a; }
 .badge--full, .badge--in_play { color: rgba(255, 255, 255, 0.7); }

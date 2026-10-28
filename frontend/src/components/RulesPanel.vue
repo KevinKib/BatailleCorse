@@ -236,10 +236,8 @@ onBeforeUnmount(() => document.removeEventListener('keydown', handleKeydown));
 }
 
 .rules-section__title {
-  font-size: 0.72rem;
+  font-size: 0.875rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
   color: rgba(255, 255, 255, 0.55);
   margin: 0 0 4px;
 }

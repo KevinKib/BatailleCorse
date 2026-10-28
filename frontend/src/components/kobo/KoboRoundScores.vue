@@ -65,11 +65,10 @@ const lines = computed(() => props.rows.map(r => ({
   font-size: 0.85rem;
   color: rgba(255, 255, 255, 0.9);
 }
-th, td { padding: 4px 6px; text-align: right; font-weight: 600; vertical-align: middle; }
+th, td { padding: 4px 6px; text-align: right; font-weight: 700; vertical-align: middle; }
 thead th {
-  font-size: 0.68rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: 0.875rem;
+  font-weight: 700;
   color: rgba(255, 255, 255, 0.55);
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 }

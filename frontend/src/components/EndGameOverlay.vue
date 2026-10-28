@@ -91,7 +91,7 @@ const emit = defineEmits<Emits>();
 
 .end-winner {
   font-size: 1.15rem;
-  font-weight: 600;
+  font-weight: 700;
   margin: 0;
   overflow-wrap: anywhere;
 }

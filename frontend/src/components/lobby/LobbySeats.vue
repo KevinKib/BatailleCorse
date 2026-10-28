@@ -145,15 +145,14 @@ function revertName() {
 <style scoped>
 .field-group { width: 100%; display: flex; flex-direction: column; gap: 8px; }
 .field-label {
-  font-size: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 700;
   line-height: 1rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
   color: rgba(255, 255, 255, 0.6);
   margin: 0;
 }
 .players-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-.player-count { font-weight: 600; font-size: 0.875rem; line-height: 1rem; color: var(--gold-soft); font-variant-numeric: tabular-nums; }
+.player-count { font-weight: 700; font-size: 0.875rem; line-height: 1rem; color: var(--gold-soft); font-variant-numeric: tabular-nums; }
 
 .players { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 4px; }
 .player {
@@ -186,7 +185,7 @@ function revertName() {
 }
 /* The seat number has a fixed column; the name starts the same distance after it whether it is a field (mine) or
    plain text (the others, bots): both carry the same 1px border and 6px padding. */
-.player-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; box-sizing: border-box; padding: 0 6px; border: 1px solid transparent; }
+.player-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; box-sizing: border-box; padding: 0 6px; border: 1px solid transparent; }
 /* My own name is a field that looks like the other names until it is focused. */
 :deep(.player-name--edit.p-inputtext) {
   align-self: stretch;
@@ -194,7 +193,7 @@ function revertName() {
   padding: 0 6px;
   font-family: var(--font-ui);
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 700;
   color: inherit;
   background: transparent;
   border-color: transparent;

@@ -50,7 +50,7 @@ const hintId = 'lobby-private-hint';
   box-sizing: border-box;
   font: inherit;
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: 700;
   color: rgba(255, 255, 255, 0.9);
   background: rgba(0, 0, 0, 0.25);
   border: 1px solid rgba(255, 255, 255, 0.2);

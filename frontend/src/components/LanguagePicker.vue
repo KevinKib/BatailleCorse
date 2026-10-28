@@ -142,9 +142,8 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', onPointerDown)
 .language-section { display: flex; flex-direction: column; gap: var(--space-1); }
 .heading {
   padding: var(--space-1) var(--space-1) 0;
-  font-size: 0.6875rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-size: 0.875rem;
+  font-weight: 700;
   color: rgba(255, 255, 255, 0.6);
 }
 .segmented {
