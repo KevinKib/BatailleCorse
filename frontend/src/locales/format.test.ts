@@ -1,5 +1,21 @@
 import { describe, it, expect } from 'vitest';
-import { format, ordinal, plural } from './format';
+import { format, formatList, ordinal, plural } from './format';
+
+describe('formatList', () => {
+  it('givenThreeItems_thenConjunctionJoinsWithCommasAndAnd', () => {
+    expect(formatList(['a', 'b', 'c'], 'conjunction')).toBe('a, b, and c');
+  });
+
+  it('givenThreeItems_thenDisjunctionJoinsWithCommasAndOr', () => {
+    expect(formatList(['1', '2', '3'], 'disjunction')).toBe('1, 2, or 3');
+  });
+
+  it('givenTwoItemsOrOneOrNone_thenNoComma', () => {
+    expect(formatList(['a', 'b'], 'conjunction')).toBe('a and b');
+    expect(formatList(['a'], 'disjunction')).toBe('a');
+    expect(formatList([], 'conjunction')).toBe('');
+  });
+});
 
 describe('format', () => {
   it('givenTemplateWithPlaceholders_thenReplacesEachWithItsValue', () => {

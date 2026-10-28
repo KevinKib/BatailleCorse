@@ -706,6 +706,8 @@ export const messagesEn: Messages = {
     },
     move: {
       sowed: '{player} sowed from {pit}',
+      sentence: '{head}: {details}.',
+      sentenceAlone: '{head}.',
       relays: { one: '{n} relay', other: '{n} relays' },
       captured: { one: '{n} seed captured', other: '{n} seeds captured' },
     },
@@ -850,6 +852,10 @@ export const messagesEn: Messages = {
     playAgain: 'Play again',
     rematchPending: 'Joining the new table…',
     rematchFailed: 'Could not start a new game. Try again.',
+    back: 'Back',
+    send: 'Send',
+    slap: 'Slap',
+    you: 'You',
   },
   koboUi: {
     connecting: 'Joining the table…',
@@ -1069,10 +1075,15 @@ export const messagesEn: Messages = {
     ],
     back: 'Back to the games',
   },
+  language: {
+    label: 'Language',
+    names: { en: 'English', fr: 'Français' },
+  },
   gamePicker: {
     title: 'Card Games',
     choose: 'Choose a game',
     back: 'Back',
+    playAria: '{play} {name}',
     privacy: 'Privacy',
     games: {
       bataillecorse: {
