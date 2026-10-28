@@ -360,7 +360,9 @@ class KiloDeMerdeBotCoordinatorTest {
         KiloDeMerde game = threeSeats(NO_SET, 1);
         start(game);
         ManualBotScheduler.Entry old = scheduler.pending().get(0);
-        KiloDeMerde rematch = new KiloDeMerde(game.getId(), 3, decks, KiloDeMerdeOptions.defaults());
+        // The same fixed table again: a random deal could hold a four of a kind and schedule a second bot task.
+        decks.fixDeal(game.getId(), hands(NO_SET), cards(PILE));
+        KiloDeMerde rematch =new KiloDeMerde(game.getId(), 3, decks, KiloDeMerdeOptions.defaults());
         SessionGame session = SessionGame.create(rematch.getId(), rematch.getPlayerIds(), KiloDeMerdeFactory.GAME_TYPE);
         session.claimHost("Alice");
         session.claimBot(null);
