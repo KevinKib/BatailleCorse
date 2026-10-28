@@ -550,6 +550,14 @@ describe('Mangola messages', () => {
     expect(bots?.kind === 'text' && bots.body.join(' ')).toContain('Expert is strong but not perfect');
   });
 
+  it('givenTheTextsMovedOutOfTemplates_thenEnglishKeepsTheWordsPlayersSeeToday', () => {
+    expect(messagesEn.batailleCorseUi).toMatchObject({ back: 'Back', send: 'Send', slap: 'Slap', you: 'You' });
+    expect(messagesEn.gamePicker.playAria).toBe('{play} {name}');
+    expect(messagesEn.mangolaUi.move.sentence).toBe('{head}: {details}.');
+    expect(messagesEn.mangolaUi.move.sentenceAlone).toBe('{head}.');
+    expect(messagesEn.language).toEqual({ label: 'Language', names: { en: 'English', fr: 'Français' } });
+  });
+
   it('givenTheTableMessages_thenTheEndScreenWordsEveryReason', () => {
     const ui = messagesEn.mangolaUi;
     expect(ui.end.winner).toBe('Winner: {player}');
