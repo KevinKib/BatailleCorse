@@ -59,7 +59,7 @@ export const batailleCorseUi: Messages['batailleCorseUi'] = {
   send: 'Envoyer',
   slap: 'Taper',
   you: 'Vous',
-  sound: { mute: 'Couper le son', unmute: 'Réactiver le son' },
+  sound: { mute: 'Couper le son', unmute: 'Activer le son' },
   offline: 'Connexion perdue. Reconnexion…',
 };
 
