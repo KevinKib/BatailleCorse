@@ -171,7 +171,7 @@ export const ninetyNine: Messages['ninetyNine'] = {
     },
     {
       kind: 'text',
-      title: 'Jouer contre un bot',
+      title: 'Contre un bot',
       body: ['L’hôte peut ajouter des bots à trois niveaux : Facile joue n’importe quelle carte jouable, Moyen fait monter le total en gardant ses cartes sûres, Difficile raisonne aussi sur les cartes qu’il ne voit pas.'],
     },
   ],
