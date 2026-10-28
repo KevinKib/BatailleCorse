@@ -71,6 +71,12 @@ describe('Game picker', () => {
       cy.contains('2 players');
       cy.contains('button', 'Play');
     });
+    cy.get('[data-test="choice-kilo-de-merde"]').within(() => {
+      cy.contains('h2', 'Kilo de merde');
+      cy.contains('Pass, collect four of a kind, slap the pile. Last one takes the kilos.');
+      cy.contains('3–10 players');
+      cy.contains('button', 'Play');
+    });
   });
 
   it('plays President: Game home with New game and Join game, Back returns to the picker', () => {
@@ -100,6 +106,17 @@ describe('Game picker', () => {
     cy.get('[data-test="play-ninety-nine"]').click();
     cy.location('pathname').should('eq', '/ninety-nine');
     cy.contains('h1', '99').should('be.visible');
+    cy.contains('button', 'New game').should('be.visible');
+    cy.contains('button', 'Join game').should('be.visible');
+    cy.get('[data-test="back"]').click();
+    cy.location('pathname').should('eq', '/');
+  });
+
+  it('plays Kilo de merde: Game home with New game and Join game, Back returns to the picker', () => {
+    cy.visit('/');
+    cy.get('[data-test="play-kilo-de-merde"]').click();
+    cy.location('pathname').should('eq', '/kilo-de-merde');
+    cy.contains('h1', 'Kilo de merde').should('be.visible');
     cy.contains('button', 'New game').should('be.visible');
     cy.contains('button', 'Join game').should('be.visible');
     cy.get('[data-test="back"]').click();

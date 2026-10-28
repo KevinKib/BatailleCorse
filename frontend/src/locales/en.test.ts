@@ -681,6 +681,10 @@ describe('Kilo de merde messages', () => {
     return [];
   };
 
+  it('givenThePrivacyPage_thenTheKiloDeMerdeSeatTokenKeyIsListed', () => {
+    expect(JSON.stringify(messagesEn.privacy)).toContain('kilo-de-merde:tokens:<game id>');
+  });
+
   it('givenThePicker_thenKiloDeMerdeHasAShortPitchAndItsThreeToTenPlayers', () => {
     expect(messagesEn.gamePicker.games['kilo-de-merde']).toEqual({
       name: 'Kilo de merde',

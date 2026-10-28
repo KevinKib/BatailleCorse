@@ -6,7 +6,7 @@ import CheckerboardIcon from '../components/icons/CheckerboardIcon.vue';
  * selection once its own change registers it in `GAMES`.
  */
 export type GameKey = 'bataillecorse' | 'bullshit' | 'kobo' | 'three-men-morris' | 'president' | 'mangola' | 'ninety-nine' | 'draughts'
-  | 'blackjack';
+  | 'blackjack' | 'kilo-de-merde';
 
 /**
  * How a game's card looks on the Game selection (PrimeVue button icon and severity). The icon is a PrimeIcons
@@ -107,6 +107,12 @@ export const GAMES: readonly GameDefinition[] = [
   define('draughts', {
     supportsBots: true,
     picker: { icon: CheckerboardIcon, severity: 'secondary' },
+  }),
+  // Cards are tapped and the pile is slapped; the keys (1 to 4 pass, Space slaps) are fixed, so no gear.
+  // Bots play at three levels (a seat option).
+  define('kilo-de-merde', {
+    supportsBots: true,
+    picker: { icon: 'pi pi-stopwatch', severity: 'warn' },
   }),
 ];
 
