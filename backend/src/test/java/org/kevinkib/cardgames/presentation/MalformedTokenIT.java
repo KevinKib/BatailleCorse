@@ -71,6 +71,8 @@ class MalformedTokenIT {
     @Autowired
     private org.kevinkib.cardgames.draughts.presentation.DraughtsWebSocketController draughts;
     @Autowired
+    private org.kevinkib.cardgames.ninetynine.presentation.NinetyNineWebSocketController ninetyNine;
+    @Autowired
     private LobbyController lobby;
     @Autowired
     private LifecycleController lifecycle;
@@ -141,6 +143,25 @@ class MalformedTokenIT {
                 forEachBadToken("draughts offerDraw", t -> assertDoesNotThrow(() -> draughts.offerDraw(new GameActionPayload(id, t)))),
                 forEachBadToken("draughts acceptDraw", t -> assertDoesNotThrow(() -> draughts.acceptDraw(new GameActionPayload(id, t)))),
                 forEachBadToken("draughts declineDraw", t -> assertDoesNotThrow(() -> draughts.declineDraw(new GameActionPayload(id, t)))))
+                .flatMap(s -> s);
+    }
+
+    @TestFactory
+    Stream<DynamicTest> ninetyNineRest() {
+        return restViewAnswers403("/api/ninety-nine/game/", org.kevinkib.cardgames.ninetynine.domain.NinetyNineFactory.GAME_TYPE);
+    }
+
+    @TestFactory
+    Stream<DynamicTest> ninetyNineWebSocket() {
+        String type = org.kevinkib.cardgames.ninetynine.domain.NinetyNineFactory.GAME_TYPE;
+        String id = StartedRooms.start(sessions, type, 2).getId().uuid().toString();
+        String room = sessions.createRoom(type, "Alice").gameId();
+        org.kevinkib.cardgames.presentation.dto.CardDto card =
+                new org.kevinkib.cardgames.presentation.dto.CardDto("NINE", "HEART", "HEART_NINE");
+        return Stream.of(
+                forEachBadToken("ninety-nine start", t -> assertDoesNotThrow(() -> ninetyNine.start(new GameActionPayload(room, t)))),
+                forEachBadToken("ninety-nine play", t -> assertDoesNotThrow(() -> ninetyNine.play(
+                        new org.kevinkib.cardgames.ninetynine.presentation.api.NinetyNinePlayPayload(id, t, card, null)))))
                 .flatMap(s -> s);
     }
 
