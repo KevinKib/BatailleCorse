@@ -1,6 +1,115 @@
-import { messagesEn } from '../en';
+import type { Messages } from '../Messages';
 
-// 99: the French translation comes in its own chunk. Until then the area re-exports the English texts, so that the
-// parity test (same keys, same placeholders) keeps passing. Not in `TRANSLATED_AREAS` of parity.test.ts yet.
-export const ninetyNineUi = messagesEn.ninetyNineUi;
-export const ninetyNineOptions = messagesEn.options.ninetyNine;
+// French typography: U+00A0 before ":" and U+202F before "!", "?", ";" and "»" (written as escapes so they stay visible).
+// Log lines use "{player} : …" without a conjugated verb because the player can be "Vous".
+export const ninetyNineUi: Messages['ninetyNineUi'] = {
+  connecting: 'Connexion…',
+  back: 'Retour',
+  you: 'Vous',
+  playerLabel: 'Joueur {n}',
+  botLabel: 'Bot {n}',
+  ordinal: { one: '{n}er', two: '{n}e', few: '{n}e', other: '{n}e' },
+  ranks: { JACK: 'Valet', QUEEN: 'Dame', KING: 'Roi', ACE: 'As' },
+  suits: { HEART: 'cœur', DIAMOND: 'carreau', CLUB: 'trèfle', SPADE: 'pique' },
+  cardLabel: '{rank} de {suit}',
+  cardSelected: '{card}, sélectionnée',
+  table: {
+    round: 'Manche {n}',
+    roundOver: 'Fin de la manche {n}',
+    total: 'Total : {total} sur 99',
+    ofLimit: 'sur 99',
+    cards: { one: '{n} carte', other: '{n} cartes' },
+    lives: { one: '{n} vie restante', other: '{n} vies restantes' },
+    out: 'ÉLIMINÉ',
+    outPlace: 'ÉLIMINÉ · {place}',
+    current: 'À qui de jouer',
+    reversed: 'Sens inversé',
+    directionClockwise: 'Le jeu tourne dans le sens horaire',
+    directionReversed: 'Le sens du jeu est inversé',
+    pile: 'Défausse',
+    pileTop: 'Défausse : {card}',
+    pileEmpty: 'Défausse : aucune carte jouée',
+    stock: 'Pioche',
+    stockCount: { one: '{n} carte dans la pioche', other: '{n} cartes dans la pioche' },
+    yourCards: 'Votre main',
+    opponents: 'Table',
+    turnOrder: 'Ordre de jeu',
+    turnOrderItem: '{n}, {player}, {lives}',
+    forfeited: '{player} a quitté la partie',
+    offline: 'Vous êtes hors ligne. Reconnexion…',
+  },
+  phase: {
+    yourTurn: 'À vous de jouer',
+    waiting: 'En attente de {player}…',
+    roundOver: 'Fin de la manche {n}',
+  },
+  effect: {
+    face: 'ajoute {n}',
+    ace: 'ajoute 1 ou 11',
+    reverse: 'inverse le sens',
+    pass: 'n’ajoute rien',
+    minusTen: 'retire 10',
+    plusTen: 'ajoute 10',
+    ninetyNine: 'le total passe à 99',
+  },
+  hand: {
+    overLimit: 'Plus de 99',
+    cardOver: '{card}, plus de 99',
+    cardEffect: '{card} : {effect}',
+    waiting: 'Attendez votre tour',
+  },
+  ace: {
+    title: 'Jouer l’As comme',
+    group: 'Choisir la valeur de l’As',
+    one: '+1',
+    eleven: '+11',
+    oneLabel: 'Jouer l’As comme 1',
+    elevenLabel: 'Jouer l’As comme 11',
+    cancel: 'Annuler',
+  },
+  log: {
+    played: '{player} : {card}.',
+    playedAce: '{player} : {card} comme {value}.',
+    reversed: '{player} : {card}, sens inversé.',
+    started: 'La manche commence.',
+    reshuffled: 'La défausse a été remélangée dans la pioche.',
+  },
+  bust: {
+    stuck: '{player} est bloqué à {total}',
+    stuckYou: 'Vous êtes bloqué à {total}',
+    reason: 'Toutes les cartes dépassent 99.',
+    livesLeft: { one: 'Perd une vie · {n} restante', other: 'Perd une vie · {n} restantes' },
+    eliminated: '{player} est éliminé',
+    eliminatedYou: 'Vous êtes éliminé',
+    next: 'La prochaine donne arrive dans un instant',
+    hit: '−1',
+    handLabel: 'Main de {player}',
+  },
+  lobby: { quickHint: 'Activé : la partie s’arrête à la première élimination, les autres sont classés selon leurs vies restantes.' },
+  end: {
+    winner: 'Gagnant : {players}',
+    winners: 'Gagnants : {players}',
+    quick: 'Mode rapide : {player} a perdu sa dernière vie. Classement selon les vies restantes.',
+    lastStanding: 'Dernier joueur en lice.',
+    youWonResigned: '{player} a abandonné. Vous gagnez par forfait.',
+    youWonDisconnected: 'La connexion de {player} est perdue. Vous gagnez par forfait.',
+    youWonOthersLeft: 'Les autres joueurs ont quitté la partie. Vous gagnez par forfait.',
+    places: 'Classement final',
+    livesLeft: { one: '{n} vie restante', other: '{n} vies restantes' },
+    playAgain: 'Rejouer',
+    rematchPending: 'Lancement…',
+    rematchFailed: 'Impossible de lancer une nouvelle partie. Réessayez.',
+  },
+  notice: { moveImpossible: 'Ce coup a été refusé.', connection: 'Connexion perdue. Réessayez.' },
+  live: { yourTurn: 'À vous de jouer' },
+  motion: {
+    speed: 'Vitesse d’animation : {speed}',
+    speeds: { normal: 'Normale', fast: 'Rapide', instant: 'Instantanée' },
+  },
+};
+
+export const ninetyNineOptions: Messages['options']['ninetyNine'] = {
+  lives: { label: 'Vies', '2': '2', '3': '3', '4': '4' },
+  quick: { label: 'Mode rapide', off: 'Désactivé', on: 'Activé' },
+  level: { label: 'Niveau', easy: 'Facile', medium: 'Moyen', hard: 'Difficile' },
+};
