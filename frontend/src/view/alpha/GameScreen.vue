@@ -30,17 +30,34 @@
   <template v-else>
   <div class="gamescreen flex">
 
-    <GameTimer :time="formattedDuration" />
-
     <RulesPanel :rules="messages.rules" />
+
+    <div class="top-bar">
+      <GameTimer :time="formattedDuration" inline />
+      <Button
+        data-test="sound-toggle"
+        class="sound-toggle"
+        severity="secondary"
+        variant="text"
+        rounded
+        :icon="soundEnabled ? 'pi pi-volume-up' : 'pi pi-volume-off'"
+        :aria-label="soundEnabled ? ui.sound.mute : ui.sound.unmute"
+        :aria-pressed="soundEnabled"
+        @click="toggleSound" />
+    </div>
+
+    <div v-if="!online" class="offline-notice" data-test="offline" role="alert">
+      <i class="pi pi-wifi" aria-hidden="true"></i>
+      {{ ui.offline }}
+    </div>
 
     <HotkeySettings class="gamescreen_hotkeys" :settings="hotkeySettings" :labels="messages.hotkeys.actions" />
 
     <div class="gamescreen_top flex">
       <div class="left_side"></div>
       <div class="middle_side">
-        <h1 :class="['player_tag', { 'player_tag--active': showOpponentTurn }]">{{ opponentLabel }}</h1>
-        <div class="card stacked">
+        <h1 :class="['player_tag', { 'player_tag--active': showOpponentTurn }]" :title="opponentLabel">{{ opponentLabel }}</h1>
+        <div :class="['card', 'stacked', { 'opponent-deck--disconnected': opponentDisconnected }]" data-test="opponent-deck">
           <PlayingCard
             ref="opponentCard"
             :size="90"
@@ -51,6 +68,10 @@
           <div class="card_counter" data-cy="opponent-card-count">
             <CardCounter :count="batailleCorse?.players.at(opponentIndex)?.nbCards"/>
           </div>
+          <SeatDisconnectBadge
+            v-if="opponentDisconnected"
+            class="seat-disconnect"
+            :seconds-remaining="secondsRemaining" />
         </div>
       </div>
       <div class="right_side"></div>
@@ -84,7 +105,7 @@
       <div class="middle_side">
         <div class="player_tag_wrap">
           <YourTurnIndicator class="turn-slot" :active="showFirstTurnHint" />
-          <h1 :class="['player_tag', { 'player_tag--active': showMyTurn }]">{{ myLabel }}</h1>
+          <h1 :class="['player_tag', { 'player_tag--active': showMyTurn }]" :title="myLabel">{{ myLabel }}</h1>
         </div>
         <div class="card stacked">
           <PlayingCard
@@ -108,12 +129,6 @@
 
       <div class="right_side"></div>
     </div>
-
-    <DisconnectOverlay
-      v-if="opponentDisconnected"
-      :opponent-label="opponentLabel"
-      :seconds-remaining="secondsRemaining"
-    />
 
     <EndGameOverlay
       v-if="showEndOverlay"
@@ -172,7 +187,7 @@ import HotkeySettings from '../../components/HotkeySettings.vue';
 import GameTimer from '../../components/GameTimer.vue';
 import YourTurnIndicator from '../../components/YourTurnIndicator.vue';
 import GameLobby from '../../components/lobby/GameLobby.vue';
-import DisconnectOverlay from '../../components/DisconnectOverlay.vue';
+import SeatDisconnectBadge from '../../components/SeatDisconnectBadge.vue';
 import EndGameOverlay from '../../components/EndGameOverlay.vue';
 import { rematchButtonFor } from '../../model/RematchButton';
 import { Button } from 'primevue';
@@ -197,7 +212,10 @@ import { useTurnIndicator } from '../../composables/useTurnIndicator';
 import { useGameBootstrap } from '../../composables/useGameBootstrap';
 import { useI18n } from '../../composables/useI18n';
 import { Action } from '../../model/Action';
-import { computed, onBeforeUnmount, toRef, useTemplateRef } from 'vue';
+import { computed, onBeforeUnmount, toRef, useTemplateRef, watch } from 'vue';
+import { useSoundPreference } from '../../composables/useSoundPreference';
+import { useConnectionStatus } from '../../composables/useConnectionStatus';
+import { cardSound } from '../../composables/useCardSound';
 import { endGameMessage } from '../../model/endGameMessage';
 
 const messages = useI18n();
@@ -223,9 +241,24 @@ const {
   centerPileAreaEl: () => centerPileArea.value,
 });
 
+// My own connection. While it is down Send and Slap are disabled (a publish would throw); once it is back,
+// events may have been missed in between, so the state is fetched again.
+const { online } = useConnectionStatus();
+watch(online, (isOnline, wasOnline) => {
+  if (isOnline && !wasOnline) void batailleCorseStore.hydrate();
+});
+
 function isButtonDisabled(playerIndex: number, action: Action) {
-  return !(batailleCorse.value?.canPlayerAct(playerIndex, action) ?? false);
+  return !online.value || !(batailleCorse.value?.canPlayerAct(playerIndex, action) ?? false);
 }
+
+// A card laid on the pile (mine or the opponent's) makes a sound, unless muted. The preference is stored
+// once for the device and shared by every game.
+const { enabled: soundEnabled, toggle: toggleSound } = useSoundPreference();
+// The first state of the table (a load, a reload) is not a card being laid.
+watch(() => batailleCorse.value?.pile.cards.length, (size, previous) => {
+  if (size !== undefined && previous !== undefined && size > previous && soundEnabled.value) cardSound.play(1);
+});
 
 // The buttons and the shortcuts act for my own seat only.
 function send() {
@@ -569,6 +602,12 @@ onBeforeUnmount(() => {
 
 .player_tag {
   width: fit-content;
+  /* A long typed name is cut with an ellipsis instead of widening the tag. */
+  max-width: 14rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  box-sizing: border-box;
   margin-left: auto;
   margin-right: auto;
   font-size: 0.8rem;
@@ -579,7 +618,7 @@ onBeforeUnmount(() => {
   background: rgba(0, 0, 0, 0.45);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 999px;
-  padding: 4px 14px;
+  padding: var(--space-1) 14px;
 }
 
 .action_buttons {
@@ -718,6 +757,53 @@ onBeforeUnmount(() => {
 
 .card-delta--negative {
   color: rgb(var(--accent-negative-rgb));
+}
+
+/* Top row of the table, as on Bullshit: the duration chip, then the sound toggle, on one centre line (the
+   rules toggle, pinned at the right, is centred on it too). Same height and side gutter as the chips. */
+.top-bar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  box-sizing: border-box;
+  height: calc(var(--hud-inset) * 2 + var(--hud-chip-h) + env(safe-area-inset-top, 0px));
+  padding: env(safe-area-inset-top, 0px) 0 0 calc(var(--hud-inset) + env(safe-area-inset-left, 0px));
+  /* Leaves the right corner free for the rules toggle. */
+  padding-right: 120px;
+}
+
+/* A dropped opponent: the deck is dimmed and the reconnecting badge sits centred over it. */
+.opponent-deck--disconnected :deep(.playing_card) {
+  filter: grayscale(1) brightness(0.6);
+}
+.seat-disconnect {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+}
+
+/* Under the top bar; it only shows while the socket is down. */
+.offline-notice {
+  position: absolute;
+  top: 56px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1800;
+  width: max-content;
+  max-width: calc(100% - 24px);
+  box-sizing: border-box;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.82);
+  border: 1px solid rgba(var(--accent-negative-rgb), 0.7);
+  border-radius: 999px;
+  padding: 6px 18px; /* same pill as the Bullshit notice */
+  text-align: center;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5);
 }
 
 /* --- Turn indicator --- */
