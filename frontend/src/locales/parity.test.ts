@@ -22,8 +22,8 @@ const SAME_AS_ENGLISH_ALLOWED: readonly string[] = [
   // T3: Kobo, same word in both languages, or a symbol
   'koboUi.botLabel', 'koboUi.table.total', 'koboUi.regions.table', 'koboUi.sheet.totalChange', 'koboUi.sheet.pills.gift',
   'koboUi.sheet.columns.total', 'koboUi.end.totals.total',
-  // 99: the options are English until its French chunk (ninetyNineUi is not in TRANSLATED_AREAS yet)
-  'options.ninetyNine',
+  // 99: the options are English until its French chunk (ninetyNineUi too; both leave this list in the 99 French chunk)
+  'options.ninetyNine', 'ninetyNineUi',
   // T5: section identifiers are anchors, not text
   'privacy.sections[0].id', 'privacy.sections[1].id', 'privacy.sections[2].id',
   'privacy.sections[3].id', 'privacy.sections[4].id', 'privacy.sections[5].id',
