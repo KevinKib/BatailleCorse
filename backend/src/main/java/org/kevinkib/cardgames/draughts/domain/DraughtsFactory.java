@@ -2,6 +2,7 @@ package org.kevinkib.cardgames.draughts.domain;
 
 import java.util.List;
 import java.util.random.RandomGenerator;
+import org.kevinkib.cardgames.draughts.domain.bot.DraughtsBotLevel;
 import org.kevinkib.cardgames.game.Game;
 import org.kevinkib.cardgames.game.GameFactory;
 import org.kevinkib.cardgames.game.GameId;
@@ -18,8 +19,9 @@ public class DraughtsFactory implements GameFactory {
     public static final String LEVEL_KEY = "level";
 
     /** The levels of a computer seat, weakest first; Medium (greedy) unless the host picks another. */
-    public static final List<String> LEVELS = List.of("random", "greedy", "expert");
-    public static final String DEFAULT_LEVEL = "greedy";
+    public static final List<String> LEVELS = java.util.Arrays.stream(DraughtsBotLevel.values())
+            .map(DraughtsBotLevel::key).toList();
+    public static final String DEFAULT_LEVEL = DraughtsBotLevel.DEFAULT.key();
 
     private static final String ON = "on";
     private static final String OFF = "off";

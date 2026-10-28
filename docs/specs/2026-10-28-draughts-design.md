@@ -261,6 +261,19 @@ camel `draughts`. Display name "Draughts" ([Q6]: "International draughts" on the
   against Medium and Medium against Easy in this spec; expected Expert beats Medium most of the time and Medium
   beats Easy nearly always [H]. If Expert turns out stronger than "beatable by a careful club player", the depth
   cap goes down (a one-number change).
+  - **Measured (B3, `DraughtsStrengthBenchmark`, `-Ddraughts.bench=true -Dtest=DraughtsStrengthBenchmark`, 100
+    games per pairing, colours alternating, draw after 200 plies, real Expert budget, JDK 22 on the developer
+    machine):** Expert against Medium: 100 wins, 0 losses, 0 draws; Medium against Easy: 100 wins, 0 losses, 0
+    draws. Expert decision time: mean 33 ms, worst 300 ms (the time budget; the node cap of 2 million was never
+    the limit). Medium decided in under 1 ms and Easy instantly. The results are one-sided because Medium only
+    looks two plies ahead by material, so a clean sweep says Expert is clearly stronger than Medium, not that it
+    is strong: six unrefined plies of search with a plain material evaluation stay far from a club player. The
+    depth cap stays at 6 and the budget at 300 ms; if the owner finds Expert too hard in play, the cap goes
+    down (a one-number change in `ExpertDraughtsBot.Budget.DEFAULT`).
+  - **Implementation notes (B3):** a position with a capture to make is extended at the horizon by up to 4
+    plies (so the shot "sacrifice, forced capture, double capture" is seen even at depth 1); the first depth
+    ignores the time and node budgets, so a decision always exists; the root of each iteration uses a window of
+    one point below the best score so far, which keeps every move equal to the best for the random tie-break.
 - **Draw offers**: a bot accepts when its material (man 1, king 3) is not ahead of the opponent's, declines
   otherwise; bots never offer (the Six rule [V]). With offers off, nothing to answer.
 - **Coordinator** `DraughtsBotCoordinator` (a `GameStateListener` and a `GameEvictionListener`, over the shared
