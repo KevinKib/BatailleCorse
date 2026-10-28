@@ -4,10 +4,13 @@ import { messagesFr } from './fr';
 
 // Areas whose French is written: the completeness and typography checks run on them only.
 // Each translation chunk adds its own areas; the integration chunk turns this into "every area".
-const TRANSLATED_AREAS: readonly (keyof typeof messagesEn)[] = [];
+const TRANSLATED_AREAS: readonly (keyof typeof messagesEn)[] = ['kobo', 'koboUi'];
 
 // French leaves that may equal the English leaf (proper nouns, symbols). Keys are dotted paths prefixes.
-const SAME_AS_ENGLISH_ALLOWED: readonly string[] = ['language.names.en', 'language.names.fr'];
+const SAME_AS_ENGLISH_ALLOWED: readonly string[] = ['language.names.en', 'language.names.fr',
+  // Kobo: same word in both languages, or a symbol.
+  'koboUi.botLabel', 'koboUi.table.total', 'koboUi.regions.table', 'koboUi.sheet.totalChange', 'koboUi.sheet.pills.gift',
+  'koboUi.sheet.columns.total', 'koboUi.end.totals.total'];
 
 type Leaves = Map<string, string | number | boolean>;
 
@@ -72,6 +75,7 @@ describe('translated areas', () => {
   it('givenATranslatedArea_thenNoLeafIsStillEnglish', () => {
     for (const [path, text] of fr) {
       if (typeof text !== 'string') continue;
+      if (path.endsWith('.kind')) continue; // a rules section kind is an identifier, not text
       if (SAME_AS_ENGLISH_ALLOWED.some(allowed => path.startsWith(allowed))) continue;
       expect(text, path).not.toBe(en.get(path));
     }
