@@ -24,11 +24,11 @@ describe('99 fixtures', () => {
     expect(state.direction).toBe('COUNTER_CLOCKWISE');
   });
 
-  it('builds a bust that reveals the stuck hand', () => {
+  it('builds a bust that reveals what the busted seat still holds', () => {
     const state = buildNinetyNineBust();
     expect(state.phase).toBe('ROUND_OVER');
-    expect(state.lastBust?.hand).toHaveLength(3);
-    expect(state.lastBust?.totalBefore).toBeGreaterThanOrEqual(92);
+    expect(state.lastBust?.hand).toHaveLength(2);
+    expect(state.lastBust?.totalBefore).toBeGreaterThan(99);
     expect(state.lastBust?.eliminated).toBe(false);
   });
 

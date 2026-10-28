@@ -57,6 +57,7 @@ export const ninetyNineUi: Messages['ninetyNineUi'] = {
     cardOver: '{card}, plus de 99',
     cardEffect: '{card} : {effect}',
     waiting: 'Attendez votre tour',
+    stuckHint: 'Aucune de vos cartes ne garde le total à 99 ou moins. Vous devez en jouer une et perdre une vie.',
   },
   ace: {
     title: 'Jouer l’As comme',
@@ -75,9 +76,9 @@ export const ninetyNineUi: Messages['ninetyNineUi'] = {
     reshuffled: 'La défausse a été remélangée dans la pioche.',
   },
   bust: {
-    stuck: '{player} est bloqué à {total}',
-    stuckYou: 'Vous êtes bloqué à {total}',
-    reason: 'Toutes les cartes dépassent 99.',
+    stuck: '{player} dépasse 99 ({total})',
+    stuckYou: 'Vous dépassez 99 ({total})',
+    reason: 'Aucune carte ne pouvait rester à 99 ou moins.',
     livesLeft: { one: 'Perd une vie · {n} restante', other: 'Perd une vie · {n} restantes' },
     eliminated: '{player} est éliminé',
     eliminatedYou: 'Vous êtes éliminé',

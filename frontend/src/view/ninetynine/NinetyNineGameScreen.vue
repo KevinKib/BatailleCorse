@@ -102,7 +102,26 @@ const statusText = computed(() => {
 });
 const lastLine = computed(() => store.game ? lastPlayLine(store.game.lastPlay, nameOrYou, ui) : '');
 const noticeText = computed(() => store.notice ? ui.notice[store.notice] : '');
-const bust = computed(() => roundOver.value ? store.game?.lastBust ?? null : null);
+// The seat on turn is me and holds no safe card: I must play one of them (the server makes them all playable).
+const stuckHint = computed(() =>
+  store.isMyTurn && store.game?.phase === 'PLAYING' && store.game.stuck ? ui.hand.stuckHint : '');
+// The bust follows the card that busted: the overlay waits a moment so the table shows that card and the total first.
+const lastBust = computed(() => roundOver.value ? store.game?.lastBust ?? null : null);
+const bustRevealed = ref(false);
+let bustTimer: ReturnType<typeof setTimeout> | null = null;
+function clearBustTimer() {
+  if (bustTimer !== null) { clearTimeout(bustTimer); bustTimer = null; }
+}
+watch(lastBust, (current, previous, onCleanup) => {
+  onCleanup(clearBustTimer);
+  if (!current) { bustRevealed.value = false; return; }
+  // Opening the screen during the pause (reload) or an instant speed: nothing to wait for.
+  if (previous === undefined || speed.value === 'instant') { bustRevealed.value = true; return; }
+  bustRevealed.value = false;
+  bustTimer = setTimeout(() => { bustRevealed.value = true; bustTimer = null; }, NINETY_NINE_TEMPO.bustRevealMs);
+}, { immediate: true });
+onBeforeUnmount(clearBustTimer);
+const bust = computed(() => bustRevealed.value ? lastBust.value : null);
 
 // One polite region for the turn: cleared and set again so that two turns in a row are both read.
 const liveText = computed(() => store.isMyTurn && store.game?.phase === 'PLAYING' ? ui.live.yourTurn : '');
@@ -287,6 +306,7 @@ const rematchButton = computed(() =>
         <span class="status-turn" :class="{ 'status-turn--mine': store.isMyTurn && !roundOver }">{{ statusText }}</span>
         <span v-if="lastLine" class="status-last" data-test="last-play">{{ lastLine }}</span>
         <span v-if="noticeText" class="status-notice" data-test="notice" role="alert">{{ noticeText }}</span>
+        <span v-if="stuckHint" class="status-stuck" data-test="stuck-hint">{{ stuckHint }}</span>
       </div>
 
       <div class="my-area" data-test="my-zone">
@@ -378,6 +398,7 @@ const rematchButton = computed(() =>
 .status-turn--mine { font-weight: 700; color: var(--gold); }
 .status-last { color: rgba(255, 255, 255, 0.8); }
 .status-notice { color: rgb(var(--accent-negative-rgb)); font-weight: 700; }
+.status-stuck { color: rgb(var(--accent-negative-rgb)); font-weight: 600; }
 
 .my-area {
   position: relative;

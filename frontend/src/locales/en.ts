@@ -439,7 +439,7 @@ export const messagesEn: Messages = {
         kind: 'text',
         title: 'Going over 99',
         body: [
-          'If you hold a card that keeps the total at 99 or less, you must play one. If none of your three cards can be played, you are stuck: you go over 99 and lose a life. Your cards are shown to the table, and a new round starts with a fresh deck and the total back at 0.',
+          'If you hold a card that keeps the total at 99 or less, you must play one. If none of your cards can be played, you are stuck: you must still play one of them, which takes the total over 99, and you lose a life. The table sees the card and the total before the round ends, and a new round starts with a fresh deck and the total back at 0.',
           'The next round is led by the player who lost, or by the next player if they were eliminated.',
         ],
       },
@@ -518,6 +518,7 @@ export const messagesEn: Messages = {
       cardOver: '{card}, over 99',
       cardEffect: '{card}: {effect}',
       waiting: 'Wait for your turn',
+      stuckHint: 'None of your cards keeps the total at 99 or below. You must play one of them and lose a life.',
     },
     ace: {
       title: 'Play the Ace as',
@@ -536,9 +537,9 @@ export const messagesEn: Messages = {
       reshuffled: 'The pile was shuffled back into the stock.',
     },
     bust: {
-      stuck: '{player} is stuck at {total}',
-      stuckYou: 'You are stuck at {total}',
-      reason: 'Every card goes over 99.',
+      stuck: '{player} goes over 99 ({total})',
+      stuckYou: 'You go over 99 ({total})',
+      reason: 'No card could stay at 99 or below.',
       livesLeft: { one: 'Loses a life · {n} left', other: 'Loses a life · {n} left' },
       eliminated: '{player} is out',
       eliminatedYou: 'You are out',
