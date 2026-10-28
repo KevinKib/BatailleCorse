@@ -115,7 +115,7 @@ class MangolaBotGameIT {
             actions = new MangolaGameActions(sessions, broadcaster);
             Random botRandom = new Random(seed);
             human = new Random(seed * 31 + 7);
-            ExpertMangolaBot.Budget budget = new ExpertMangolaBot.Budget(0, 300, 0);
+            ExpertMangolaBot.Budget budget = new ExpertMangolaBot.Budget(0, 300);
             coordinator = new MangolaBotCoordinator(sessions::botSeats, sessions::seatOptions, actions, scheduler,
                     new FixedThinkingDelay(Duration.ZERO),
                     l -> new CheckedBot(l.bot(botRandom, budget), violations));

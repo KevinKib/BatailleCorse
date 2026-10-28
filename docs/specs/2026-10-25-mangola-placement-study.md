@@ -94,7 +94,7 @@ All in `backend/src/test/java/org/kevinkib/cardgames/mangola/domain/bot/`:
 | `ZeroSumGame` | Alternating fictitious play (Brown 1951; Robinson's theorem gives convergence for zero-sum games) with the guaranteed lower and upper values, weak dominance, maximin. | `ZeroSumGameTest` (rock-paper-scissors, a 2x2 game with a known mix, dominance) |
 | `MangolaPlacementStudy` | The on-demand runner (all stages below). Not matched by Surefire's includes and disabled without `-Dmangola.study`. | `MangolaPlacementStudyTest` (Spearman, layout display, pool) |
 
-Reproduce (about 40 minutes of wall time on 4 threads; results are written to `backend/target/mangola-study/`, and
+Reproduce (the `book` stage needs the `oracle` stage run first in the same `target/`; about 40 minutes of wall time on 4 threads; results are written to `backend/target/mangola-study/`, and
 a second run reuses the base round robin from there):
 
 ```sh
@@ -102,8 +102,10 @@ cd backend && mvn -s ../deploy/docker/settings.xml test -Dtest=MangolaPlacementS
   -Dmangola.study=all -Dmangola.study.threads=4 -Dsurefire.failIfNoSpecifiedTests=false
 ```
 
-Stages: `tournament`, `layoutscore`, `budget`, `weights`, `oracle`, `duel`, `hybrid`, `book` (comma list, or `all`;
-`book` prints the final pruned mixes as Java `Entry` lines for the placement book).
+Stages: `tournament`, `layoutscore`, `budget`, `weights`, `oracle`, `duel`, `hybrid`, `book`, `regression` (comma list,
+or `all`). `book` prints the final pruned mixes as Java `Entry` lines for the placement book, from the cache the
+`oracle` stage wrote. `regression` plays the production Expert's placement (the book) against the October 2026
+layout search kept in `StudyExpert`, 400 games, same seed and move search as the validation duels (`all` includes it; alone: `-Dmangola.study=regression`).
 
 Continuing the oracle (S0): `-Dmangola.study.rounds=N` is the number of oracle rounds in all (default 2). The
 extended pool is cached after every round in `target/mangola-study/layouts-final.csv` and `pairs-final.csv` and
@@ -333,7 +335,7 @@ unmeasured option D, for later: option A as second player and an exploitative se
 | Expert uses its side | only through the search | a different list for side A and side B | **yes** |
 | Expert starter list / second-player list | none | the two tables above (18 and 15 layouts, constants in the domain) | **yes** (new) |
 | `LAYOUT_NODE_CAP`, `LAYOUT_CANDIDATES`, `LAYOUT_MUTANTS` | 300, 24, 24 | removed | **yes** |
-| `mangola.bots.layout-ms` / `Budget.layoutMillis` | 1000 ms (0 under `test`) | no longer read by the Expert; kept for one release then removed (Q4) | **yes** |
+| `mangola.bots.layout-ms` / `Budget.layoutMillis` | 1000 ms (0 under `test`) | removed with the property, `DEFAULT_LAYOUT_MS` and the budget field (Q4, P3) | **yes** |
 | Layout refused at confirmation (stuck start) | `AbstractMangolaBot` asks again (4 proposals), then the catalogue, then random | a draw from the side's list without the refused layouts; when the list is exhausted, the current fallback | **yes** (small) |
 | Medium layout (`GreedyMangolaBot.proposeLayout`) | random or catalogue, half and half | a uniform draw from the Expert's list of its side | **yes** (Q2) |
 | Easy layout | a random layout | unchanged | no |
@@ -376,6 +378,14 @@ Owner decisions (2026-10-28):
 - **Q5:** decided: re-run the study (the oracle part, `-Dmangola.study=oracle,book`, after deleting the cache)
   whenever the rules or the engine change; the lists are a frozen artefact of the current rules
   (`MangolaRules.OWNER`).
+
+### Regression after the merge (P3, 2026-10-28)
+
+The `regression` stage plays the production Expert's placement (the frozen book, through `ExpertMangolaBot`) against the
+October 2026 layout search (`StudyExpert`), 400 games, seed 900001, both seats searching 4,000 nodes: score
+**0.630 ± 0.047** (252 wins, 0 draws, 148 losses; 116/200 won when starting, 136/200 when second), 80 s wall and 217 s
+CPU on 4 threads. The study measured **0.605 ± 0.048** for the round-15 lists (same seed and budget): the two figures
+are within their intervals (the draws use different random streams), so the frozen code reproduces the study. No regression.
 
 ## Limits
 
