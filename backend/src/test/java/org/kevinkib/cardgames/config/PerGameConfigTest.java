@@ -17,9 +17,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class PerGameConfigTest {
 
     private static final List<String> CONFIGS = List.of("BatailleCorseConfig", "BullshitConfig", "KoboConfig",
-            "ThreeMenMorrisConfig", "MangolaConfig", "PresidentConfig", "DraughtsConfig", "NinetyNineConfig", "KiloDeMerdeConfig");
+            "ThreeMenMorrisConfig", "MangolaConfig", "PresidentConfig", "DraughtsConfig", "NinetyNineConfig",
+            "KiloDeMerdeConfig", "BlackjackConfig");
     private static final List<String> GAME_TYPES = List.of("bataille-corse", "bullshit", "kobo",
-            "three-men-morris", "mangola", "president", "draughts", "ninety-nine", "kilo-de-merde");
+            "three-men-morris", "mangola", "president", "draughts", "ninety-nine", "kilo-de-merde", "blackjack");
 
     @Autowired ApplicationContext context;
     @Autowired GameFactories gameFactories;
@@ -39,11 +40,11 @@ class PerGameConfigTest {
         for (String type : GAME_TYPES) {
             assertEquals(type, gameFactories.factoryFor(type).gameType());
         }
-        assertEquals(9, factories.size());
+        assertEquals(10, factories.size());
     }
 
     @Test
     void everyGameHasALifecycleBroadcaster() {
-        assertEquals(9, broadcasters.size());
+        assertEquals(10, broadcasters.size());
     }
 }

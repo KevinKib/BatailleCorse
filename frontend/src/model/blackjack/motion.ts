@@ -73,12 +73,20 @@ function drawOf(data: BlackjackEventData, mySeat: number, leg: { holdBeforeMs: n
 function splitOf(data: BlackjackEventData, mySeat: number): BlackjackMovement[] {
   if (data.seat === null) return [];
   const { holdBeforeMs, flightMs, holdAfterMs } = TEMPO.split;
-  return [
+  // `cards` is the flat list the two hands hold right after the split: hand 0 (the pair's first card and its new
+  // card) then hand 1 (the pair's second card, plus its new card for split Aces).
+  const cards = data.cards ?? [];
+  const plan = [
     travel(handAnchor(data.seat, 0), handAnchor(data.seat, 1), data.seat, mySeat,
-      { delayMs: holdBeforeMs, durationMs: flightMs, holdAfterMs }),
+      { delayMs: holdBeforeMs, durationMs: flightMs, holdAfterMs }, cards[2] ?? null),
     travel('shoe', handAnchor(data.seat, 0), data.seat, mySeat,
-      { delayMs: holdBeforeMs + flightMs, durationMs: flightMs, holdAfterMs }, data.cards?.[0] ?? null),
+      { delayMs: holdBeforeMs + flightMs, durationMs: flightMs, holdAfterMs }, cards[1] ?? null),
   ];
+  if (cards.length > 3) {
+    plan.push(travel('shoe', handAnchor(data.seat, 1), data.seat, mySeat,
+      { delayMs: holdBeforeMs + 2 * flightMs, durationMs: flightMs, holdAfterMs }, cards[3]));
+  }
+  return plan;
 }
 
 function dealerOf(data: BlackjackEventData, mySeat: number, drawn: Card[]): BlackjackMovement[] {

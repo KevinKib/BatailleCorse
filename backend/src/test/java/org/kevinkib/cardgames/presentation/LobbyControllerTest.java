@@ -65,7 +65,8 @@ class LobbyControllerTest {
                         new org.kevinkib.cardgames.president.domain.PresidentFactory(),
                         new org.kevinkib.cardgames.draughts.domain.DraughtsFactory(),
                         new org.kevinkib.cardgames.ninetynine.domain.NinetyNineFactory(),
-                    new org.kevinkib.cardgames.kilodemerde.domain.KiloDeMerdeFactory())));
+                        new org.kevinkib.cardgames.kilodemerde.domain.KiloDeMerdeFactory(),
+                        new org.kevinkib.cardgames.blackjack.domain.BlackjackFactory())));
         messaging = new RecordingMessaging();
         messaging.resolvingTokensWith(sessionService);
         broadcaster = new RecordingBroadcaster();
@@ -158,6 +159,19 @@ class LobbyControllerTest {
     void givenHostOfDraughts_whenAddBot_thenTheComputerTakesTheGuestSeat() {
         RoomCreated room = sessionService.createRoom(
                 org.kevinkib.cardgames.draughts.domain.DraughtsFactory.GAME_TYPE, "Alice");
+        messaging.clear();
+
+        controller.addBot(new GameActionPayload(room.gameId(), room.hostToken()));
+
+        assertThat(messaging.payloads.get(0).isSuccess(), is(true));
+        assertThat(lobbyOf(messaging.payloads.get(0)).players().get(1).bot(), is(true));
+        assertThat(sessionService.botSeats(new GameId(room.gameId())), is(java.util.Set.of(new PlayerId(1))));
+    }
+
+    @Test
+    void givenHostOfBlackjack_whenAddBot_thenTheComputerTakesTheNextSeatAndTheHostCanStillStartAlone() {
+        RoomCreated room = sessionService.createRoom(
+                org.kevinkib.cardgames.blackjack.domain.BlackjackFactory.GAME_TYPE, "Alice");
         messaging.clear();
 
         controller.addBot(new GameActionPayload(room.gameId(), room.hostToken()));

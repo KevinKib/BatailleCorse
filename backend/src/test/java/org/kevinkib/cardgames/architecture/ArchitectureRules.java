@@ -15,7 +15,7 @@ import java.util.List;
 final class ArchitectureRules {
 
     static final List<String> GAMES = List.of("bataillecorse", "bullshit", "kobo", "threemenmorris", "president",
-            "mangola", "draughts", "ninetynine", "kilodemerde");
+            "mangola", "draughts", "ninetynine", "kilodemerde", "blackjack");
 
     private final String root;
 
