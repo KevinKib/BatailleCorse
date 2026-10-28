@@ -5,6 +5,7 @@ import App from './App.vue';
 import PrimeVue from 'primevue/config';
 import { primeVueConfig } from './primeVueConfig';
 
+import { initLocale } from './locales/locale';
 import webSocketService from './service/WebSocketService';
 import { createPinia } from 'pinia';
 
@@ -19,6 +20,9 @@ const pinia = createPinia();
 app.use(pinia);
 app.use(router);
 
-app.mount('#app');
-webSocketService.init();
+// The locale is resolved and its messages loaded before anything renders.
+initLocale().then(() => {
+  app.mount('#app');
+  webSocketService.init();
+});
 

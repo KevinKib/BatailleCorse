@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { format, formatList, ordinal, plural } from './format';
+import { setCurrentLocaleForTest } from './locale';
 
 describe('formatList', () => {
   it('givenThreeItems_thenConjunctionJoinsWithCommasAndAnd', () => {
@@ -61,5 +62,32 @@ describe('ordinal', () => {
 
   it('givenNumbersPastTwenty_thenTheLastDigitDecides', () => {
     expect([21, 22, 23, 24, 101].map(n => ordinal(n, forms))).toEqual(['21st', '22nd', '23rd', '24th', '101st']);
+  });
+});
+
+describe('locale-aware formatting in French', () => {
+  beforeEach(() => setCurrentLocaleForTest('fr'));
+  afterEach(() => setCurrentLocaleForTest('en'));
+
+  it('givenFrench_thenZeroIsSingular', () => {
+    const forms = { one: '{n} carte', other: '{n} cartes' };
+    expect(plural(forms, 0)).toBe('0 carte');
+    expect(plural(forms, 1)).toBe('1 carte');
+    expect(plural(forms, 2)).toBe('2 cartes');
+  });
+
+  it('givenFrench_thenOrdinalsAreErThenE', () => {
+    const forms = { one: '{n}er', two: '{n}e', few: '{n}e', other: '{n}e' };
+    expect([1, 2, 3, 11].map(n => ordinal(n, forms))).toEqual(['1er', '2e', '3e', '11e']);
+  });
+
+  it('givenFrench_thenListsUseEtAndOu', () => {
+    expect(formatList(['a', 'b', 'c'], 'conjunction')).toBe('a, b et c');
+    expect(formatList(['1', '2', '3'], 'disjunction')).toBe('1, 2 ou 3');
+  });
+
+  it('givenEnglishAgain_thenEnglishRulesApply', () => {
+    setCurrentLocaleForTest('en');
+    expect(plural({ one: '{n} card', other: '{n} cards' }, 0)).toBe('0 cards');
   });
 });
