@@ -79,7 +79,8 @@ export interface HotkeyMessages {
   open: string;                        // accessible name and tooltip of the gear button
   title: string;
   enabled: string;                     // label of the master switch (pressed = shortcuts on)
-  actions: { discard: string; call: string; send: string; slap: string }; // names of the remappable actions
+  // names of the remappable actions (`pass1`..`pass4`: Kilo de merde passes the card in that slot of the hand)
+  actions: { discard: string; call: string; send: string; slap: string; pass1: string; pass2: string; pass3: string; pass4: string };
   change: string;                      // button that starts listening for a new key
   changeAria: string;                  // '{action}': accessible name of that button
   listening: string;                   // shown on the button while it waits for a key
@@ -324,6 +325,105 @@ export interface OptionsMessages {
     lives: OptionTexts;                // `label`, then `2` / `3` / `4`
     quick: OptionTexts;                // `label`, then `off` / `on`
     level: OptionTexts;                // a bot seat's level: `label`, then `easy` / `medium` / `hard`
+  };
+  kiloDeMerde: {
+    rounds: OptionTexts;               // `label`, then `5` / `10` / `15` / `20`
+    level: OptionTexts;                // a bot seat's level: `label`, then `easy` / `medium` / `hard`
+  };
+}
+
+/** Kilo de merde screens: the table, the pile and the race, the round result, the standings and the end screen. */
+export interface KiloDeMerdeUiMessages {
+  connecting: string;
+  back: string;
+  you: string;
+  playerLabel: string;                 // '{n}' = 1-based seat number, for a player without a name
+  botLabel: string;                    // '{n}'
+  ordinal: OrdinalForms;               // a place or a slap rank: '1st', '2nd'... ('{n}')
+  ranks: Record<string, string>;       // by backend rank label (`JACK`...); a number is its own name
+  suits: Record<string, string>;       // by backend suit (`HEART`...)
+  cardLabel: string;                   // '{rank}', '{suit}': accessible name of a card
+  cardSelected: string;                // '{card}': the same, once passed
+  levels: { easy: string; medium: string; hard: string }; // the level shown on a bot's plate
+  table: {
+    roundLine: string;                 // '{round}', '{total}', '{step}': "Round 3 of 10 · pass 7"
+    countdown: string;                 // '{seconds}': accessible name of the pass countdown ring
+    kilos: string;                     // '{kg}': the kilos of a plate ("113 kg")
+    kilosLabel: string;                // '{player}', '{kg}': accessible name of a plate's kilos
+    pile: string;                      // region name and label of the kilo pile
+    pileCount: PluralForms;            // '{n}' = cards left in the kilo pile
+    slap: string;                      // "Slap the pile": the pile button, in every state
+    yourCards: string;                 // region names
+    opponents: string;
+    standings: string;
+    ready: string;                     // '{player}': the check on a seat that chose its card this step
+    forfeited: string;                 // '{player}'
+    offline: string;
+  };
+  hand: {
+    passing: string;                   // under the card I passed: "Passing…"
+    passCard: string;                  // '{card}': accessible name of a card that can be passed
+    waiting: string;                   // the hand while the step resolves
+    received: string;                  // '{name}': "from {name}", under the card I received
+    revealed: string;                  // '{player}': a hand shown at the end of a round, as a region name
+  };
+  race: {
+    slapped: string;                   // '{name}': "{name} slapped! Slap!"
+    slappedYou: string;                // my own slap, waiting for the others
+    rank: string;                      // '{n}': a plate's slap rank ("1")
+    order: string;                     // the live order of the slaps, as a region name
+  };
+  /** The result of a round, said by the banner and the live region ('{name}', '{card}' and '{kg}' as noted). */
+  outcome: {
+    last: string;                      // '{name}', '{card}', '{kg}': the last to slap draws
+    falseSlap: string;                 // '{name}', '{card}', '{kg}': a slap with no set
+    flush: string;                     // '{name}': a 7 was drawn
+    stalled: string;                   // nobody completed a set
+    voided: string;                    // a player left: the round does not count
+    noCard: string;                    // '{name}': the kilo pile was empty, nothing was drawn
+    lastTag: string;                   // the "last" tag on the plate that drew
+  };
+  kiloPopover: {
+    title: string;                     // '{player}'
+    none: string;
+    total: string;                     // '{kg}'
+  };
+  standings: {
+    player: string;
+    kilos: string;
+    cards: string;
+    toggle: string;                    // the button that folds the standings on a phone
+  };
+  end: {
+    winner: string;                    // '{players}'
+    winners: string;
+    reasons: { roundsPlayed: string; pileEmpty: string; forfeit: string }; // '{n}' in the first: rounds played
+    youWonForfeit: string;
+    places: string;                    // region name of the final places
+    playAgain: string;
+    rematchPending: string;
+    rematchFailed: string;
+  };
+  /** Spoken by the live regions ('{n}', '{card}', '{name}' as noted). */
+  live: {
+    round: string;                     // '{n}'
+    received: string;                  // '{card}', '{name}'
+    slapped: string;                   // '{name}'
+    kilosChange: string;               // '{name}', '{kg}'
+  };
+  /** The codes the server sends on a refused command (`kiloDeMerdeUi.errors.<code>`). */
+  errors: {
+    finishedGame: string;
+    wrongPhase: string;
+    alreadyChose: string;
+    cardNotInHand: string;
+    alreadySlapped: string;
+    notActiveSeat: string;
+  };
+  notice: { connection: string };
+  motion: {
+    speed: string;                     // '{speed}': name of the speed button
+    speeds: { normal: string; fast: string; instant: string };
   };
 }
 
@@ -1046,6 +1146,8 @@ export interface Messages {
   presidentUi: PresidentUiMessages; // President screens
   ninetyNine: RulesMessages;        // 99
   ninetyNineUi: NinetyNineUiMessages; // 99 screens
+  kiloDeMerde: RulesMessages;       // Kilo de merde
+  kiloDeMerdeUi: KiloDeMerdeUiMessages; // Kilo de merde screens
   draughts: RulesMessages;          // Draughts
   draughtsUi: DraughtsUiMessages;   // Draughts screens
   threeMenMorris: RulesMessages;    // Three Men's Morris
