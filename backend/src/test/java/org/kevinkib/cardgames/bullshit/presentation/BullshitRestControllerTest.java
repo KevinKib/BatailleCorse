@@ -132,7 +132,7 @@ class BullshitRestControllerTest {
 
         assertThat(dto.players().get(0).name(), is("Alice"));
         assertThat(dto.players().get(1).name(), is("Bob"));
-        assertThat(dto.players().get(2).name(), is("Player 3"));
+        assertThat(dto.players().get(2).name(), is((String) null));
         assertThat(dto.players().get(3).bot(), is(true));
         assertThat(dto.players().get(3).name(), is((String) null));
         assertThat(dto.players().get(0).bot(), is(false));

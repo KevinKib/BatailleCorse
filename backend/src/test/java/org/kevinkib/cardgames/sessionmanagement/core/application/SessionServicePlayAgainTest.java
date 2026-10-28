@@ -47,8 +47,8 @@ class SessionServicePlayAgainTest {
         assertThat(service.botSeats(id), is(Set.of(new PlayerId(1), new PlayerId(2))));
         assertThat(service.seatOptions(id, new PlayerId(1)), is(Map.of("tier", "0")));
         assertThat(service.seatOptions(id, new PlayerId(2)), is(Map.of("tier", "2")));
-        assertThat(service.seats(id).get(1).name(), is("Bot 1"));
-        assertThat(service.seats(id).get(2).name(), is("Bot 2"));
+        assertThat(service.seats(id).get(1).name(), is((String) null));
+        assertThat(service.seats(id).get(2).name(), is((String) null));
     }
 
     @Test
@@ -76,7 +76,7 @@ class SessionServicePlayAgainTest {
         assertThat(second.playerId(), is(new PlayerId(1)));
         assertThat(service.botSeats(id), is(Set.of(new PlayerId(2))));
         assertThat(service.seatOptions(id, new PlayerId(2)), is(Map.of("tier", "2")));
-        assertThat(service.seats(id).get(2).name(), is("Bot 1"));
+        assertThat(service.seats(id).get(2).name(), is((String) null));
         assertThat(service.seats(id).get(1).name(), is("Bob"));
     }
 
