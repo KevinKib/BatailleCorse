@@ -132,6 +132,13 @@ Why: `docs/architecture/e2e-cypress-report.md` showed Cypress at 26 % of agents'
 - `cypress/specs/i18n-french.cy.ts` is in the smoke list (`cypress/smoke-specs.json`).
 - `CLAUDE.md`: new visible text goes through both `en.ts` and `fr/`.
 
+## 2026-10-28: merge `main` again before merging a PR when a shared test changed
+
+Friction: the 99 table PR (#380) was green on its last commit, then merged after #383 had tightened `frontend/src/locales/parity.test.ts` (every locale area checked). The merge commit was never tested with the new check, `main` went red, and a hotfix (#387) was needed.
+
+- Rule (`CLAUDE.md`, Tests section): before merging a PR, if `main` gained a merge since the PR's last CI run that touched a shared test (`parity.test.ts`, architecture tests, `smoke-specs.json`), merge `main` into the PR branch and merge only once CI is green on that commit. After any merge, read the CI of `main` before launching the next chunk.
+- Mechanism: instruction in `CLAUDE.md` (not a hook: it depends on what `main` changed, which needs judgement). Would become a GitHub "require branches to be up to date" setting if the repo ever needs a mechanical check.
+
 ## Inventory (versioned in this project)
 
 | Item | Role |
