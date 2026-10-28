@@ -171,4 +171,35 @@ class NinetyNineRoundTest {
         }
         assertTrue(game.isFinished());
     }
+
+    @Test
+    void aDealThatFailsLeavesTheRoundOverUntouchedSoItCanBeRetried() throws NinetyNineException {
+        boolean[] failing = {true};
+        DeckSource flaky = new ScriptedDeckSource(new RandomDeckSource()) {
+            @Override
+            public List<org.kevinkib.cards.domain.Card> shuffledDeck(org.kevinkib.cardgames.game.GameId id, int round) {
+                if (failing[0]) {
+                    throw new IllegalStateException("deck unavailable");
+                }
+                return super.shuffledDeck(id, round);
+            }
+        };
+        failing[0] = false;
+        NinetyNine game = game(3).deckSource(flaky).total(95).current(C).hand(C, "9H 2H 3H").hand(A, "7H 8H JH")
+                .build();
+        game.play(C, c("9H"), null);
+        int round = game.round();
+        int version = game.version();
+        failing[0] = true;
+
+        assertThrows(IllegalStateException.class, game::nextRound);
+
+        assertEquals(Phase.ROUND_OVER, game.phase());
+        assertEquals(round, game.round());
+        assertEquals(version, game.version());
+        failing[0] = false;
+        game.nextRound();
+        assertEquals(round + 1, game.round());
+        assertEquals(Phase.PLAYING, game.phase());
+    }
 }
