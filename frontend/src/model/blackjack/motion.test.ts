@@ -104,12 +104,24 @@ describe('planMovements', () => {
 
   describe('SPLIT', () => {
     it('moves the second card to a new hand, then deals the first hand its new card', () => {
-      const moves = planMovements(event('SPLIT', { seat: 0, cards: [card('THREE', 'HEART')] }), 0);
+      // The real payload: the flat cards the hands hold after the split, hand 0 (8C, new 3H) then hand 1 (8D).
+      const cards = [card('EIGHT', 'CLUB'), card('THREE', 'HEART'), card('EIGHT', 'DIAMOND')];
+      const moves = planMovements(event('SPLIT', { seat: 0, cards }), 0);
       expect(moves.map(m => [m.from, m.to])).toEqual([['seat-0-hand-0', 'seat-0-hand-1'], ['shoe', 'seat-0-hand-0']]);
       expect(moves[0].delayMs).toBe(TEMPO.split.holdBeforeMs);
       expect(moves[1].delayMs).toBe(TEMPO.split.holdBeforeMs + TEMPO.split.flightMs);
-      expect(moves[1].card).toEqual(card('THREE', 'HEART'));
+      expect(moves[0].card).toEqual(card('EIGHT', 'DIAMOND')); // the pair's second card changes hand
+      expect(moves[1].card).toEqual(card('THREE', 'HEART')); // the new card comes from the shoe
       expect(moves.every(m => m.byOpponent === false)).toBe(true);
+    });
+
+    it('split Aces also deal the second hand its card from the shoe', () => {
+      const cards = [card('ACE', 'CLUB'), card('KING', 'HEART'), card('ACE', 'DIAMOND'), card('FIVE', 'SPADE')];
+      const moves = planMovements(event('SPLIT', { seat: 0, cards }), 0);
+      expect(moves.map(m => [m.from, m.to])).toEqual([
+        ['seat-0-hand-0', 'seat-0-hand-1'], ['shoe', 'seat-0-hand-0'], ['shoe', 'seat-0-hand-1']]);
+      expect(moves[2].card).toEqual(card('FIVE', 'SPADE'));
+      expect(moves[2].delayMs).toBe(TEMPO.split.holdBeforeMs + 2 * TEMPO.split.flightMs);
     });
 
     it('is an opponent move for another seat', () => {
