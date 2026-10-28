@@ -279,13 +279,45 @@ class NinetyNineBotCoordinatorTest {
         NinetyNine game = register("KS 7H JC 9S 8H QC 4S 2H 3C 5D", null, 1);
         start(game);
         actions.play(game.getId(), HUMAN, card("KS"), null);
-        assertThat(game.phase()).isEqualTo(Phase.ROUND_OVER); // the bot, stuck, busted
+        assertThat(game.phase()).isEqualTo(Phase.PLAYING); // the bot is stuck: it must play a card
+        scheduler.runNext();
+        assertThat(game.phase()).isEqualTo(Phase.ROUND_OVER); // it played a card over 99 and lost a life
         assertThat(scheduler.pending()).isEmpty();
 
         actions.nextRound(game.getId(), game.version());
 
         assertThat(game.currentSeat()).isEqualTo(BOT);
         assertThat(scheduler.pending()).hasSize(1);
+    }
+
+    @Test
+    void aStuckBotPlaysACardThatGoesOver99AndLosesALife() throws Exception {
+        NinetyNine game = register("KS 7H JC 9S 8H QC 4S 2H 3C 5D", null, 1);
+        start(game);
+        actions.play(game.getId(), HUMAN, card("KS"), null);
+        assertThat(scheduler.pending()).hasSize(1);
+
+        scheduler.runNext();
+
+        assertThat(game.pileTop()).contains(card("7H"));
+        assertThat(game.total()).isEqualTo(106);
+        assertThat(game.lives().get(BOT)).isEqualTo(2);
+        assertThat(game.lastBust()).isPresent();
+    }
+
+    @Test
+    void aStuckBotWhoseStrategyFailsFallsBackToItsFirstCard() throws Exception {
+        NinetyNine game = register("KS 7H JC 9S 8H QC 4S 2H 3C 5D", null, 1);
+        bot.answer = view -> {
+            throw new IllegalStateException("boom");
+        };
+        start(game);
+        actions.play(game.getId(), HUMAN, card("KS"), null);
+
+        scheduler.runNext();
+
+        assertThat(game.phase()).isEqualTo(Phase.ROUND_OVER);
+        assertThat(game.pileTop()).contains(card("7H"));
     }
 
     @Test

@@ -78,6 +78,7 @@ class NinetyNineBotViewParityTest {
     void afterABustAndAfterTheNextDeal() throws Exception {
         NinetyNine game = table.beforeABust();
         table.actions.play(game.getId(), new PlayerId(0), card("KS"), null);
+        table.actions.play(game.getId(), new PlayerId(1), card("7H"), null);
         assertSameAsTheHumanView(game);
 
         table.actions.nextRound(game.getId(), game.version());

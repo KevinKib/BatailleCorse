@@ -200,15 +200,17 @@ class NinetyNinePlayTest {
     }
 
     @Test
-    void aSeatThatHoldsASafeCardIsNeverBustedAndAStuckSeatIsReportedWithItsHand() throws NinetyNineException {
+    void aSeatThatHoldsASafeCardIsNeverBustedAndAStuckSeatIsReportedWithItsRemainingHand() throws NinetyNineException {
         NinetyNine game = game(3).total(95).current(C).hand(C, "9H 2H 3H").hand(A, "7H 8H JH").build();
 
         List<NinetyNineEvent> events = game.play(C, c("9H"), null);
+        assertEquals(1, events.size());
+        events = game.play(A, c("7H"), null);
 
         Busted busted = (Busted) events.get(1);
         assertEquals(A, busted.seat());
-        assertEquals(95, busted.totalBefore());
-        assertEquals(cards("7H 8H JH"), busted.hand());
+        assertEquals(102, busted.totalBefore());
+        assertEquals(cards("8H JH"), busted.hand());
         assertEquals(2, busted.livesLeft());
     }
 
@@ -216,8 +218,9 @@ class NinetyNinePlayTest {
     void nothingIsAcceptedOutsideThePlayingPhase() throws NinetyNineException {
         NinetyNine game = game(3).total(95).current(C).hand(C, "9H 2H 3H").hand(A, "7H 8H JH").build();
         game.play(C, c("9H"), null);
+        game.play(A, c("7H"), null);
         assertEquals(Phase.ROUND_OVER, game.phase());
 
-        assertThrows(WrongPhaseException.class, () -> game.play(A, c("7H"), null));
+        assertThrows(WrongPhaseException.class, () -> game.play(A, c("8H"), null));
     }
 }

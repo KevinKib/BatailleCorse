@@ -149,16 +149,50 @@ class NinetyNineDtoTest {
     }
 
     @Test
-    void aBustShowsTheStuckHandToEverySeatAndTheLifeLost() throws Exception {
+    void aStuckSeatIsAnnouncedToEveryoneAndItsViewerMayPlayAnyCard() throws Exception {
         NinetyNine game = table.beforeABust();
+        assertThat(view(game, S0).stuck()).isFalse();
 
         table.actions.play(game.getId(), S0, card("KS"), null);
 
         for (PlayerId viewer : new PlayerId[] {S0, S1, S2}) {
             NinetyNineDto dto = view(game, viewer);
+            assertThat(dto.stuck()).isTrue();
+            assertThat(dto.phase()).isEqualTo("PLAYING");
+            assertThat(dto.currentSeat()).isEqualTo(1);
+            assertThat(dto.lastBust()).isNull();
+        }
+        assertThat(view(game, S1).playable()).containsExactly(
+                new NinetyNineDto.PlayableDto(dto("7H"), true, java.util.List.of()),
+                new NinetyNineDto.PlayableDto(dto("8H"), true, java.util.List.of()),
+                new NinetyNineDto.PlayableDto(dto("2H"), true, java.util.List.of()));
+        assertThat(view(game, S1).availableActions()).containsExactly("PLAY");
+    }
+
+    @Test
+    void aStuckAceIsPlayableAsOne() throws Exception {
+        NinetyNine game = table.start(2, "KS AH 9S 8H 7S 2H 5D");
+        table.actions.play(game.getId(), S0, card("KS"), null);
+
+        assertThat(view(game, S1).playable().get(0))
+                .isEqualTo(new NinetyNineDto.PlayableDto(dto("AH"), true, java.util.List.of(1)));
+    }
+
+    @Test
+    void aBustShowsTheRemainingHandToEverySeatAndTheLifeLost() throws Exception {
+        NinetyNine game = table.beforeABust();
+
+        table.actions.play(game.getId(), S0, card("KS"), null);
+        table.actions.play(game.getId(), S1, card("7H"), null);
+
+        for (PlayerId viewer : new PlayerId[] {S0, S1, S2}) {
+            NinetyNineDto dto = view(game, viewer);
             assertThat(dto.phase()).isEqualTo("ROUND_OVER");
-            assertThat(dto.lastBust()).isEqualTo(new NinetyNineDto.LastBustDto(1, 99,
-                    cards("7H 8H 2H").stream().map(CardDto::from).toList(), 2, false));
+            assertThat(dto.stuck()).isFalse();
+            assertThat(dto.total()).isEqualTo(106);
+            assertThat(dto.lastPlay()).isEqualTo(new NinetyNineDto.LastPlayDto(1, dto("7H"), null, 99, 106, false));
+            assertThat(dto.lastBust()).isEqualTo(new NinetyNineDto.LastBustDto(1, 106,
+                    cards("8H 2H").stream().map(CardDto::from).toList(), 2, false));
             assertThat(dto.players().get(1).lives()).isEqualTo(2);
             assertThat(dto.availableActions()).isEmpty();
             assertThat(dto.playable()).isEmpty();
@@ -170,10 +204,12 @@ class NinetyNineDtoTest {
         NinetyNine game = table.start(2, org.kevinkib.cardgames.game.GameOptions.of(Map.of("lives", "2")),
                 "KS 7H 9S 8H 4S 2H 5D", "KD 9D 5D 8D 6D 7D 2D 3D");
         table.actions.play(game.getId(), S0, card("KS"), null); // seat 1 is stuck: first life lost
+        table.actions.play(game.getId(), S1, card("7H"), null);
         table.actions.nextRound(game.getId(), game.version());
         table.actions.play(game.getId(), S1, card("9D"), null);
 
-        table.actions.play(game.getId(), S0, card("KD"), null); // seat 1 is stuck again: out
+        table.actions.play(game.getId(), S0, card("KD"), null);
+        table.actions.play(game.getId(), S1, card("8D"), null); // seat 1 is stuck again: out
 
         NinetyNineDto dto = view(game, S0);
         assertThat(dto.phase()).isEqualTo("FINISHED");

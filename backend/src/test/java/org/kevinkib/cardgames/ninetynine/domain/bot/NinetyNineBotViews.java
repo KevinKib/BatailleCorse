@@ -94,6 +94,15 @@ final class NinetyNineBotViews {
 
     /** A consistent random view where the bot holds at least one safe card. */
     static NinetyNineBotView randomView(Random random) {
+        return randomView(random, false);
+    }
+
+    /** A consistent random view where the bot holds no safe card: it must play a card that goes over 99. */
+    static NinetyNineBotView randomStuckView(Random random) {
+        return randomView(random, true);
+    }
+
+    private static NinetyNineBotView randomView(Random random, boolean stuck) {
         while (true) {
             int seats = 2 + random.nextInt(11);
             List<Card> deck = fullDeck();
@@ -104,7 +113,7 @@ final class NinetyNineBotViews {
             List<Card> pile = new ArrayList<>(deck.subList(3, 3 + pileSize));
             int stock = free - pileSize;
             int total = random.nextBoolean() ? 80 + random.nextInt(20) : random.nextInt(100);
-            if (CardEffect.safeCards(total, hand).isEmpty()) {
+            if (CardEffect.safeCards(total, hand).isEmpty() != stuck) {
                 continue;
             }
             Direction direction = random.nextBoolean() ? Direction.CLOCKWISE : Direction.COUNTER_CLOCKWISE;

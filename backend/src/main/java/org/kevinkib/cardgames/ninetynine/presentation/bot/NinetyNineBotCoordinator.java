@@ -43,7 +43,7 @@ import java.util.stream.Collectors;
  * only then plays. A stale answer is thrown away. The level is read from the seat option {@code level}.
  *
  * <p>A strategy that fails or proposes a card the game refuses falls back to the first safe card (an Ace counts 1),
- * so the table never stalls. Nothing is scheduled outside a running round (the round pause deals the next one), once
+ * or to the first card when the seat is stuck, so the table never stalls. Nothing is scheduled outside a running round (the round pause deals the next one), once
  * the game is over, or after the game was evicted; a new game under the same id (Play again) gets a fresh table.
  */
 public class NinetyNineBotCoordinator implements GameStateListener<NinetyNine>, GameEvictionListener {
@@ -223,10 +223,12 @@ public class NinetyNineBotCoordinator implements GameStateListener<NinetyNine>, 
     private void fallback(NinetyNine game, PlayerId seat) {
         try {
             List<Card> safe = game.safeCards(seat);
-            if (safe.isEmpty()) {
+            // a stuck seat has no safe card: it plays its first card (an Ace counts 1) and loses a life
+            List<Card> playable = safe.isEmpty() ? game.hand(seat) : safe;
+            if (playable.isEmpty()) {
                 return;
             }
-            Card card = safe.get(0);
+            Card card = playable.get(0);
             actions.play(game.getId(), seat, card, card.getRank() == FrenchRank.ACE ? 1 : null);
         } catch (Exception e) {
             log.error("Bot {} fallback failed in game {}", seat, game.getId(), e);

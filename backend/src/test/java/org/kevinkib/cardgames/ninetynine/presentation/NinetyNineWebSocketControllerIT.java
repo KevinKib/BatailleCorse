@@ -176,14 +176,16 @@ class NinetyNineWebSocketControllerIT {
         table.play(1, "9H", null);
         table.awaitBoth("PLAY");
         table.play(0, "9S", null);
-        for (int s = 0; s < 2; s++) { // the stuck seat 1 busts at once, its hand is shown to both
+        table.awaitBoth("PLAY");
+        table.play(1, "7H", null); // seat 1 is stuck: it must play a card, which goes over 99
+        for (int s = 0; s < 2; s++) { // then it busts, what it still holds is shown to both
             Map<String, Object> bust = table.frames[s].await(f -> "BUST".equals(f.get("eventType")));
             Map<String, Object> data = (Map<String, Object>) bust.get("eventData");
             assertThat(data.get("seat"), is(1));
             assertThat(data.get("livesLeft"), is(1));
-            assertThat(((List<Object>) data.get("hand")).size(), is(3));
+            assertThat(((List<Object>) data.get("hand")).size(), is(2));
             Map<String, Object> lastBust = (Map<String, Object>) state(bust).get("lastBust");
-            assertThat(lastBust.get("totalBefore"), is(99));
+            assertThat(lastBust.get("totalBefore"), is(106));
         }
 
         table.awaitBoth("ROUND_START"); // the pause is 0 under the test profile
@@ -193,6 +195,8 @@ class NinetyNineWebSocketControllerIT {
         table.play(1, "9D", null);
         table.awaitBoth("PLAY");
         table.play(0, "KD", null);
+        table.awaitBoth("PLAY");
+        table.play(1, "8D", null);
         for (int s = 0; s < 2; s++) {
             Map<String, Object> eliminated = table.frames[s].await(f -> "ELIMINATED".equals(f.get("eventType")));
             assertThat(((Map<String, Object>) eliminated.get("eventData")).get("place"), is(2));

@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * The {@code medium} level, deterministic: keep the escape cards (K, 10, 4, 9) while a plain card is safe and play
  * the plain card that brings the total highest (it pushes the next seat towards 99); when no plain card is safe,
- * spend a 9, then a 4, then a 10, and the K last.
+ * spend a 9, then a 4, then a 10, and the K last. A stuck seat plays the card that goes the least over 99.
  */
 public class GreedyNinetyNineBot implements NinetyNineBotStrategy {
 
@@ -20,7 +20,7 @@ public class GreedyNinetyNineBot implements NinetyNineBotStrategy {
     public NinetyNineDecision decide(NinetyNineBotView view) {
         Move move = pick(view.total(), view.hand());
         if (move == null) {
-            throw new IllegalStateException("No safe card to play at " + view.total());
+            return NinetyNineMoves.stuck(view.total(), view.hand()).toDecision();
         }
         return move.toDecision();
     }

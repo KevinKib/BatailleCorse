@@ -36,6 +36,25 @@ final class NinetyNineMoves {
         return moves;
     }
 
+    /**
+     * The move of a stuck hand (no safe card): the seat must play a card and loses a life whichever, so it plays the
+     * one that goes the least over 99 (an Ace counts 1). Every level plays it.
+     */
+    static Move stuck(int total, List<Card> hand) {
+        Move best = null;
+        for (Card card : hand) {
+            Integer value = isAce(card) ? 1 : null;
+            Move move = new Move(card, value, CardEffect.apply(total, card, value));
+            if (best == null || move.totalAfter() < best.totalAfter()) {
+                best = move;
+            }
+        }
+        if (best == null) {
+            throw new IllegalStateException("A stuck seat holds no card");
+        }
+        return best;
+    }
+
     /** The escape cards: always playable, kept for the moments nothing else is safe (K, 10, 4, 9). */
     static boolean isEscape(Card card) {
         FrenchRank rank = (FrenchRank) card.getRank();

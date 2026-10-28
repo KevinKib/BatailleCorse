@@ -104,8 +104,10 @@ public class NinetyNine implements Game {
 
     /**
      * Plays a card of the seat on its turn. An Ace needs a value (1, or 11 when that stays at 99); the value is
-     * ignored for other cards. A seat that holds a safe card must play a safe card. After the draw, the next seat
-     * busts at once when none of its cards is safe.
+     * ignored for other cards. A seat that holds a safe card must play a safe card. A seat that holds none is
+     * <em>stuck</em>: it is still on turn and must play one of its cards (an Ace counts 1 or 11, both go over),
+     * which takes the total over 99 and costs it a life: the {@link Played} event is followed by the
+     * {@link Busted} one, and the seat draws no replacement since the round ends.
      */
     public synchronized List<NinetyNineEvent> play(PlayerId seat, Card card, Integer aceValue)
             throws NinetyNineException {
@@ -117,14 +119,15 @@ public class NinetyNine implements Game {
         if (!hand.contains(card)) {
             throw new CardNotInHandException();
         }
+        boolean stuck = CardEffect.safeCards(total, hand).isEmpty();
         boolean ace = card.getRank() == FrenchRank.ACE;
         if (ace && (aceValue == null || (aceValue != 1 && aceValue != 11)
-                || (aceValue == 11 && total + 11 > CardEffect.LIMIT))) {
+                || (!stuck && aceValue == 11 && total + 11 > CardEffect.LIMIT))) {
             throw new AceValueException();
         }
         Integer used = ace ? aceValue : null;
         int after = CardEffect.apply(total, card, used);
-        if (after > CardEffect.LIMIT) {
+        if (after > CardEffect.LIMIT && !stuck) {
             throw new UnsafeCardException();
         }
 
@@ -139,9 +142,14 @@ public class NinetyNine implements Game {
         }
         lastPlay = new LastPlay(seat, card, used, before, after, reversed);
         events.add(new Played(seat, card, used, after, reversed));
+        if (after > CardEffect.LIMIT) {
+            bust(seat, events);
+            version++;
+            return events;
+        }
         draw(seat, events);
         current = nextLive(seat, direction);
-        bustIfStuck(events);
+        bustIfHandEmpty(events);
         version++;
         return events;
     }
@@ -188,7 +196,7 @@ public class NinetyNine implements Game {
             finish(NinetyNineResult.Reason.FORFEIT, events);
         } else if (phase == Phase.PLAYING && loser.equals(current)) {
             current = nextLive(loser, direction);
-            bustIfStuck(events);
+            bustIfHandEmpty(events);
         }
         version++;
         return events;
@@ -254,8 +262,9 @@ public class NinetyNine implements Game {
         }
     }
 
-    private void bustIfStuck(List<NinetyNineEvent> events) {
-        if (CardEffect.safeCards(total, hands.get(current)).isEmpty()) {
+    /** A seat on turn with no card at all cannot even play the card that busts it: it busts at once. */
+    private void bustIfHandEmpty(List<NinetyNineEvent> events) {
+        if (hands.get(current).isEmpty()) {
             bust(current, events);
         }
     }
@@ -427,6 +436,11 @@ public class NinetyNine implements Game {
             return List.of();
         }
         return CardEffect.safeCards(total, hands.get(seat));
+    }
+
+    /** Whether the seat on turn holds no safe card: it must play a card that goes over 99 and lose a life. */
+    public synchronized boolean isStuck() {
+        return phase == Phase.PLAYING && CardEffect.safeCards(total, hands.get(current)).isEmpty();
     }
 
     public synchronized List<Action> availableActions(PlayerId seat) {

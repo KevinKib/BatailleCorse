@@ -19,7 +19,7 @@ public class RandomNinetyNineBot implements NinetyNineBotStrategy {
     public NinetyNineDecision decide(NinetyNineBotView view) {
         List<Card> safe = CardEffect.safeCards(view.total(), view.hand());
         if (safe.isEmpty()) {
-            throw new IllegalStateException("No safe card to play at " + view.total());
+            return NinetyNineMoves.stuck(view.total(), view.hand()).toDecision();
         }
         Card card = safe.get(random.nextInt(safe.size()));
         if (NinetyNineMoves.isAce(card)) {
