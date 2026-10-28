@@ -395,6 +395,8 @@ describe('shared screen messages', () => {
       title: '{player} disconnected',
       waiting: 'Waiting for them to return…',
       countdown: 'You win in {n}s',
+      reconnecting: 'Reconnecting',
+      reconnectingCountdown: 'Reconnecting… {n}s',
     });
     expect(messagesEn.leaveGuard.confirm).toBe('Leave the game? You will forfeit and your opponent wins.');
   });

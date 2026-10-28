@@ -77,7 +77,7 @@
     <div class="gamescreen_bottom flex">
       <div class="left_side">
         <RouterLink to="/" class="back_button">
-          <Button severity="secondary" label="Back" icon="pi pi-undo" variant="text" rounded />
+          <Button severity="secondary" :label="ui.back" icon="pi pi-undo" variant="text" rounded />
         </RouterLink>
       </div>
 
@@ -99,9 +99,9 @@
           </div>
         </div>
         <div class="action_buttons">
-          <Button class="action_button" icon="pi pi-arrow-up" severity="success" label="Send" rounded
+          <Button class="action_button" icon="pi pi-arrow-up" severity="success" :label="ui.send" rounded
             @click="send()" :disabled="isButtonDisabled(myPlayerIndex, 'send')"/>
-          <Button class="action_button" icon="pi pi-hammer" severity="warn" label="Slap" rounded
+          <Button class="action_button" icon="pi pi-hammer" severity="warn" :label="ui.slap" rounded
             @click="slap()" :disabled="isButtonDisabled(myPlayerIndex, 'slap')"/>
         </div>
       </div>
@@ -255,7 +255,7 @@ function seatLabel(seat: SessionSeat): string {
   return seat.name?.trim() || format(ui.playerLabel, { n: seat.id + 1 });
 }
 const opponentLabel = computed(() => (opponentSeat.value ? seatLabel(opponentSeat.value) : ui.opponent));
-const myLabel = computed(() => mySeatInfo.value?.name?.trim() || settingsStore.playerName || 'You');
+const myLabel = computed(() => mySeatInfo.value?.name?.trim() || settingsStore.playerName || ui.you);
 
 const pileIsEmpty = computed(() => (batailleCorse.value?.pile.cards.length ?? 0) === 0);
 

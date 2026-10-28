@@ -22,7 +22,7 @@ describe('moveSentence', () => {
   it('counts the seeds captured, with the relays', () => {
     expect(moveSentence(lastMove('a2:2 c2:1 c3:2 c4:3', 'a2'), 'Alice', ui)).toBe('Alice sowed from a2: 5 seeds captured.');
     expect(moveSentence(lastMove('a2:2 c2:1 d2:1 c3:1 c4:2 d3:1 d4:1', 'a2'), 'Alice', ui))
-      .toBe('Alice sowed from a2: 1 relay, 5 seeds captured.');
+      .toBe('Alice sowed from a2: 1 relay and 5 seeds captured.');
   });
 
   it('uses the singular for one seed', () => {
