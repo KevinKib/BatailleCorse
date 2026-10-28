@@ -22,7 +22,7 @@ describe('app router', () => {
   });
 
   it('givenAGameHome_thenStaysUnderItsOwnPathForBothGames', async () => {
-    for (const key of ['bataillecorse', 'bullshit', 'kobo', 'three-men-morris', 'president', 'mangola', 'ninety-nine']) {
+    for (const key of ['bataillecorse', 'bullshit', 'kobo', 'three-men-morris', 'president', 'mangola', 'ninety-nine', 'draughts']) {
       const route = await resolveAt(`/${key}`);
       expect(route.fullPath).toBe(`/${key}`);
       expect(route.name).toBe('game-home');
@@ -31,7 +31,7 @@ describe('app router', () => {
   });
 
   it('givenInviteLinks_thenTheyAreNotRedirected', async () => {
-    for (const key of ['bataillecorse', 'bullshit', 'kobo', 'three-men-morris', 'president', 'mangola', 'ninety-nine']) {
+    for (const key of ['bataillecorse', 'bullshit', 'kobo', 'three-men-morris', 'president', 'mangola', 'ninety-nine', 'draughts']) {
       const join = await resolveAt(`/${key}/join/abc`);
       expect(join.fullPath).toBe(`/${key}/join/abc`);
       expect(join.name).toBe('game-join');
@@ -45,6 +45,7 @@ describe('app router', () => {
     expect((await resolveAt('/president/room/abc')).name).toBe('president-room');
     expect((await resolveAt('/mangola/room/abc')).name).toBe('mangola-room');
     expect((await resolveAt('/ninety-nine/room/abc')).name).toBe('ninety-nine-room');
+    expect((await resolveAt('/draughts/room/abc')).name).toBe('draughts-room');
   });
 
   it('givenLegacyCreatePaths_thenRedirectToTheGameHome', async () => {
