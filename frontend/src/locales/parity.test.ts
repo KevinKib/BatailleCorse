@@ -9,10 +9,10 @@ const TRANSLATED_AREAS: readonly (keyof typeof messagesEn)[] = [];
 // French leaves that may equal the English leaf (proper nouns, symbols). Keys are dotted paths prefixes.
 const SAME_AS_ENGLISH_ALLOWED: readonly string[] = ['language.names.en', 'language.names.fr'];
 
-type Leaves = Map<string, string>;
+type Leaves = Map<string, string | number | boolean>;
 
 function collect(value: unknown, path: string, out: Leaves): void {
-  if (typeof value === 'string') {
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
     out.set(path, value);
   } else if (Array.isArray(value)) {
     value.forEach((item, index) => collect(item, `${path}[${index}]`, out));
@@ -47,18 +47,20 @@ describe('English and French messages', () => {
 
   it('givenBothLocales_thenEveryLeafHasTheSamePlaceholders', () => {
     for (const [path, text] of en) {
-      expect(placeholders(fr.get(path) ?? ''), path).toEqual(placeholders(text));
+      expect(placeholders(String(fr.get(path) ?? '')), path).toEqual(placeholders(String(text)));
     }
   });
 
   it('givenBothLocales_thenEveryRulesSectionKeepsItsKind', () => {
-    const kinds = (leaves: Leaves) => [...leaves].filter(([p]) => p.endsWith('.kind'));
+    const kinds = (leaves: Leaves) => [...leaves]
+      .filter(([p]) => p.endsWith('.kind'))
+      .sort(([a], [b]) => a.localeCompare(b));
     expect(kinds(fr)).toEqual(kinds(en));
   });
 
   it('givenAnEmptyFrenchLeaf_thenItIsRejected', () => {
     for (const [path, text] of fr) {
-      if (en.get(path)) expect(text.trim(), path).not.toBe('');
+      if (typeof text === 'string' && en.get(path)) expect(text.trim(), path).not.toBe('');
     }
   });
 });
@@ -69,6 +71,7 @@ describe('translated areas', () => {
 
   it('givenATranslatedArea_thenNoLeafIsStillEnglish', () => {
     for (const [path, text] of fr) {
+      if (typeof text !== 'string') continue;
       if (SAME_AS_ENGLISH_ALLOWED.some(allowed => path.startsWith(allowed))) continue;
       expect(text, path).not.toBe(en.get(path));
     }
@@ -76,6 +79,7 @@ describe('translated areas', () => {
 
   it('givenATranslatedArea_thenItFollowsFrenchTypography', () => {
     for (const [path, text] of fr) {
+      if (typeof text !== 'string') continue;
       expect(text, path).not.toMatch(/ [;!?»]/); // U+202F before ;!?» instead of a plain space
       expect(text, path).not.toMatch(/« /); // U+202F after «
       expect(text, path).not.toMatch(/ :/); // U+00A0 before :

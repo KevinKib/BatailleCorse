@@ -17,6 +17,11 @@ export function plural(
   return format(n === 1 ? forms.one : forms.other, { ...vars, n });
 }
 
+// Joins items as a spoken list: "a, b, and c" (conjunction) or "a, b, or c" (disjunction).
+export function formatList(items: readonly string[], type: 'conjunction' | 'disjunction'): string {
+  return new Intl.ListFormat('en', { style: 'long', type }).format(items);
+}
+
 const ORDINALS = new Intl.PluralRules('en', { type: 'ordinal' });
 
 // Picks the English ordinal form of `n` (1st, 2nd, 3rd, 4th; 11th to 13th are "th") and fills `{n}`.

@@ -137,6 +137,7 @@ export interface GamePickerMessages {
   title: string;
   choose: string;          // accessible name of the list of games
   back: string;            // back link of a game menu, towards the picker
+  playAria: string;        // '{play}', '{name}': accessible name of a game card
   /** One entry per game, by registry key; a registered game must have its entry (see `gameChoice`). */
   games: { [K in GameKey]?: GameChoiceMessages };
   privacy: string;         // discreet footer link towards the privacy page
@@ -614,6 +615,16 @@ export interface BatailleCorseUiMessages {
   playAgain: string;
   rematchPending: string;              // my Play again request is in flight
   rematchFailed: string;               // the server refused it
+  back: string;                        // button that leaves the table
+  send: string;                        // button that sends the played card
+  slap: string;                        // button that slaps the pile
+  you: string;                         // my own label when I have no name
+}
+
+// The language picker and the languages' own names.
+export interface LanguageMessages {
+  label: string;                       // accessible name of the picker
+  names: Record<'en' | 'fr', string>;  // each language written in itself, shown whatever the current language
 }
 
 // Texts shared by several game tables.
@@ -667,6 +678,8 @@ export interface MangolaUiMessages {
   };
   move: {
     sowed: string;                     // '{player}', '{pit}': the live-region sentence of a move
+    sentence: string;                  // '{head}', '{details}': the sentence of a move with relays or captures
+    sentenceAlone: string;             // '{head}': the sentence of a move with neither
     relays: PluralForms;               // '{n}' = relays in the move
     captured: PluralForms;             // '{n}' = seeds the move captured
   };
@@ -826,6 +839,7 @@ export interface Messages {
   bullshitUi: BullshitUiMessages; // Bullshit screens
   koboUi: KoboUiMessages;   // Kobo screens
   batailleCorseUi: BatailleCorseUiMessages; // Bataille Corse table
+  language: LanguageMessages;     // Language picker
   gamePicker: GamePickerMessages; // Game choice page
   privacy: PrivacyMessages;       // Privacy page
   endScreen: EndScreenMessages;   // End overlay shared by the tables
