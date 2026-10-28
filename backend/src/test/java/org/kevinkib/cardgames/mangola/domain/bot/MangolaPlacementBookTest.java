@@ -38,7 +38,7 @@ class MangolaPlacementBookTest {
             for (MangolaPlacementBook.Entry entry : MangolaPlacementBook.of(side)) {
                 int[] counts = entry.counts();
                 assertThat(counts).as(entry.name()).hasSize(16);
-                assertThat(counts).as(entry.name()).allMatch(count -> count >= 0);
+                assertThat(java.util.Arrays.stream(counts).min().orElseThrow()).as(entry.name()).isNotNegative();
                 assertThat(BotFixtures.sum(counts)).as(entry.name()).isEqualTo(32);
                 assertThat(Mangola.onlyEndlessMoves(MangolaRules.OWNER, side, BotFixtures.list(counts)))
                         .as(entry.name() + " as side " + side).isFalse();
