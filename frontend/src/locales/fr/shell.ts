@@ -125,6 +125,8 @@ export const disconnect: Messages['disconnect'] = {
   title: '{player} est déconnecté',
   waiting: 'En attente de son retour…',
   countdown: 'Victoire dans {n} s',
+  reconnecting: 'Reconnexion',
+  reconnectingCountdown: 'Reconnexion… {n} s',
 };
 
 export const leaveGuard: Messages['leaveGuard'] = {
@@ -287,5 +289,6 @@ export const turn: Messages['turn'] = {
 
 export const language: Messages['language'] = {
   label: 'Langue',
+  settings: 'Réglages',
   names: { en: 'English', fr: 'Français' },
 };
