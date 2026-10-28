@@ -1,4 +1,4 @@
-import { format, plural } from '../../locales/format';
+import { format, formatList, plural } from '../../locales/format';
 import type { MangolaUiMessages } from '../../locales/Messages';
 import { pitName } from './geometry';
 import type { MangolaLastMove } from './MangolaState';
@@ -12,5 +12,7 @@ export function moveSentence(move: MangolaLastMove, player: string, ui: MangolaU
   if (relays > 0) details.push(plural(ui.move.relays, relays));
   if (captured > 0) details.push(plural(ui.move.captured, captured));
   const head = format(ui.move.sowed, { player, pit: pitName(move.pit) });
-  return details.length > 0 ? `${head}: ${details.join(', ')}.` : `${head}.`;
+  return details.length > 0
+    ? format(ui.move.sentence, { head, details: formatList(details, 'conjunction') })
+    : format(ui.move.sentenceAlone, { head });
 }

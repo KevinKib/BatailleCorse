@@ -1,5 +1,5 @@
 {
-  "comment": "Smoke subset of the e2e suite: single source for `npm run cy:smoke` and the CI e2e-smoke job. Only the integration chunk edits it (swap morris-six for morris-game once the forfeit grace fix has landed).",
+  "comment": "Smoke subset of the e2e suite: single source for `npm run cy:smoke` and the CI e2e-smoke job. Only the integration chunk edits it.",
   "specs": [
     "cypress/specs/create-game.cy.ts",
     "cypress/specs/send-card.cy.ts",
@@ -9,6 +9,6 @@
     "cypress/specs/mangola-game.cy.ts",
     "cypress/specs/president-game.cy.ts",
     "cypress/specs/bullshit-table-and-lobby.cy.ts",
-    "cypress/specs/morris-six.cy.ts"
+    "cypress/specs/morris-game.cy.ts"
   ]
 }

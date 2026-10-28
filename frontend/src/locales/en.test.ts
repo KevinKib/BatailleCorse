@@ -395,6 +395,8 @@ describe('shared screen messages', () => {
       title: '{player} disconnected',
       waiting: 'Waiting for them to return…',
       countdown: 'You win in {n}s',
+      reconnecting: 'Reconnecting',
+      reconnectingCountdown: 'Reconnecting… {n}s',
     });
     expect(messagesEn.leaveGuard.confirm).toBe('Leave the game? You will forfeit and your opponent wins.');
   });
@@ -555,7 +557,7 @@ describe('Mangola messages', () => {
     expect(messagesEn.gamePicker.playAria).toBe('{play} {name}');
     expect(messagesEn.mangolaUi.move.sentence).toBe('{head}: {details}.');
     expect(messagesEn.mangolaUi.move.sentenceAlone).toBe('{head}.');
-    expect(messagesEn.language).toEqual({ label: 'Language', names: { en: 'English', fr: 'Français' } });
+    expect(messagesEn.language).toEqual({ label: 'Language', settings: 'Settings', names: { en: 'English', fr: 'Français' } });
   });
 
   it('givenTheTableMessages_thenTheEndScreenWordsEveryReason', () => {

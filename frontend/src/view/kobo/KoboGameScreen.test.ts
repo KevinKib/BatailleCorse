@@ -1058,7 +1058,7 @@ describe('KoboGameScreen', () => {
           buildKoboPlayer(2, { name: 'Cleo', total: 101 }),
         ];
         const { wrapper } = await done([0, 1], 'SCORE', { players }, 1);
-        expect(wrapper.get('[data-test="end-winner"]').text()).toBe('Winners: Alice, Bob');
+        expect(wrapper.get('[data-test="end-winner"]').text()).toBe('Winners: Alice and Bob');
         expect(wrapper.get('.end-title').text()).toBe(messagesEn.endScreen.victory);
         expect(wrapper.get('[data-test="final-row-2"] [data-test="pill-over"]').text()).toBe('over 100');
         expect(wrapper.findAll('[data-test="pill-over"]')).toHaveLength(1);

@@ -5,7 +5,9 @@ import { useI18n } from '../composables/useI18n';
 import { format } from '../locales/format';
 import type { HotkeyPanelApi, HotkeyRejection } from '../composables/useHotkeySettings';
 
-const props = defineProps<{ settings: HotkeyPanelApi; labels: Record<string, string> }>();
+// The default slot holds other settings (the language row), shown above the shortcuts; `title` then
+// renames the gear and panel from "Keyboard shortcuts" to the general name.
+const props = defineProps<{ settings: HotkeyPanelApi; labels: Record<string, string>; title?: string }>();
 const ui = useI18n().hotkeys;
 
 const open = ref(false);
@@ -61,12 +63,17 @@ const keyOf = (id: string) => (props.settings.actions.find((a) => a.id === id)?.
       variant="text"
       rounded
       icon="pi pi-cog"
-      :aria-label="ui.open"
-      :title="ui.open"
+      :aria-label="title ?? ui.open"
+      :title="title ?? ui.open"
       :aria-expanded="open"
       aria-controls="hotkeys-panel"
       @click="open = !open" />
-    <div v-if="open" id="hotkeys-panel" class="panel" data-test="hotkeys-panel" role="group" :aria-label="ui.title">
+    <div v-if="open" id="hotkeys-panel" class="panel" data-test="hotkeys-panel" role="group" :aria-label="title ?? ui.title">
+      <template v-if="$slots.default">
+        <slot />
+        <div class="divider" />
+        <div class="section-heading" data-test="hotkeys-heading">{{ ui.title }}</div>
+      </template>
       <Button
         v-if="settings.enabled"
         data-test="hotkeys-enabled"
@@ -122,6 +129,14 @@ const keyOf = (id: string) => (props.settings.actions.find((a) => a.id === id)?.
   background: rgba(20, 24, 22, 0.96);
   color: #fff;
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+}
+.divider { height: 1px; margin: var(--space-1) 0; background: rgba(255, 255, 255, 0.15); }
+.section-heading {
+  padding: var(--space-1) var(--space-1) 0;
+  font-size: 0.6875rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
 }
 .row { display: flex; align-items: center; gap: var(--space-1); }
 .action-name { flex: 1 1 auto; }

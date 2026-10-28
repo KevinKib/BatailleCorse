@@ -78,6 +78,14 @@ inside the container at every start.
    npm run cy:open  # or the interactive runner
    ```
 
+Other commands (from `frontend`):
+
+```sh
+npm run cy:smoke      # the smoke subset of cypress/smoke-specs.json (what the CI e2e-smoke job runs)
+npm run cy:component  # Cypress component tests (cypress/component/), no stack needed
+npm run cy:summary    # per-spec summary of cypress/results/run-log.jsonl (runs, failures, retries, median time)
+```
+
 Specs live in `frontend/cypress/specs/`. When done, stop the stack with
 `docker compose -f docker-compose.e2e.yml down`.
 
