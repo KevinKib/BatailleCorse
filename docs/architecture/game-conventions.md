@@ -122,7 +122,7 @@ Components internal to a game's folder may use a shorter name (`MorrisBoard.vue`
 | Shared chrome | `components/` (`GameTimer`, `RulesPanel`, `EndGameOverlay`, `DisconnectOverlay`, `ForfeitBanner`, `lobby/GameLobby`…) | timer, rules, Back, overlays, lobby |
 | Card animation | `animation/` (import the barrel `animation/index.ts` only): `useTableMotion`, `defineAnchors`, `CardMotionLayer`, `useDisplayedState`, `useTableSettled`, `useAnimationSpeed` + `AnimationSpeedButton`… | flights, rings, burst queue, speed, reduced motion, texts that follow the picture; guide `animation/README.md`, map `docs/architecture/card-animation.md` |
 
-Do not start from Bataille Corse (`application/GameSession.ts`, `view/bataillecorse/`): it stays outside the generic
+Do not start from Bataille Corse (`application/BatailleCorseSession.ts`, `view/bataillecorse/`): its game topic, animation queue and auto-grab are specific to it, although its session now extends the generic
 session (see `docs/architecture/new-game-retrospective-three-men-morris.md`, F10).
 
 ## 5. Legacy names (do not copy)
@@ -134,7 +134,7 @@ Bataille Corse predates the convention. Its **server id is `bataille-corse`, its
 
 | Uses `bataille-corse` | Uses `bataillecorse` | Unprefixed (no game segment) |
 |-----------------------|----------------------|------------------------------|
-| `BatailleCorseFactory.GAME_TYPE`; `GameSession.ts` (`GAME_TYPE`); Pinia id `bataille-corse-store`; `ScriptedGameType` in `stompPlayer.ts` | Java package `bataillecorse` (normal `<pkg>`); STOMP `/app/bataillecorse/start`; properties `bataillecorse.bots.*`; label key `options.bataillecorse.tier`; `GameKey`, routes `/bataillecorse/...`, `gamePicker.games.bataillecorse`, `options.bataillecorse`; Cypress `bataillecorse-*.cy.ts` | REST `/api/game/{id}`, `/join`, `/play-again`; STOMP `/app/send`, `/app/slap`, `/app/grab`; token key `tokens:<gameId>`; room route name `room`; screen `view/bataillecorse/BatailleCorseGameScreen.vue`; session `application/GameSession.ts`; bootstrap `useBatailleCorseBootstrap` (over `useSeatGameBootstrap`); rules texts at `rules` |
+| `BatailleCorseFactory.GAME_TYPE`; `BatailleCorseSession.ts` (`GAME_TYPE`); Pinia id `bataille-corse-store`; `ScriptedGameType` in `stompPlayer.ts` | Java package `bataillecorse` (normal `<pkg>`); STOMP `/app/bataillecorse/start`; properties `bataillecorse.bots.*`; label key `options.bataillecorse.tier`; `GameKey`, routes `/bataillecorse/...`, `gamePicker.games.bataillecorse`, `options.bataillecorse`; Cypress `bataillecorse-*.cy.ts` | REST `/api/game/{id}`, `/join`, `/play-again`; STOMP `/app/send`, `/app/slap`, `/app/grab`; token key `tokens:<gameId>`; room route name `room`; screen `view/bataillecorse/BatailleCorseGameScreen.vue`; session `application/BatailleCorseSession.ts`; bootstrap `useBatailleCorseBootstrap` (over `useSeatGameBootstrap`); rules texts at `rules` |
 
 `stompPlayer.ts` maps the REST difference explicitly (`joinPath`). Bataille Corse also keeps its own
 `BatailleCorseStateBroadcaster` and `BatailleCorseLifecycleBroadcaster` instead of the seat helpers.
