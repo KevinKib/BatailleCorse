@@ -194,12 +194,13 @@ class NinetyNineWebSocketControllerIT {
         table.awaitBoth("PLAY");
         table.play(0, "KD", null);
         for (int s = 0; s < 2; s++) {
+            Map<String, Object> eliminated = table.frames[s].await(f -> "ELIMINATED".equals(f.get("eventType")));
+            assertThat(((Map<String, Object>) eliminated.get("eventData")).get("place"), is(2));
             Map<String, Object> over = table.frames[s].await(f -> "GAME_OVER".equals(f.get("eventType")));
             Map<String, Object> outcome = (Map<String, Object>) state(over).get("outcome");
             assertThat(outcome.get("status"), is("FINISHED"));
             assertThat(outcome.get("winners"), is(List.of(0)));
             assertThat(outcome.get("reason"), is("LAST_STANDING"));
-            table.frames[s].await(f -> "ELIMINATED".equals(f.get("eventType")));
         }
         assertThat(table.rehydrate(1).get("phase"), is("FINISHED"));
     }
