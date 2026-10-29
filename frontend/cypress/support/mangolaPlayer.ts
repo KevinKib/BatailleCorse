@@ -8,7 +8,7 @@ export const arrange = (p: Scripted, counts: number[]) => cy.then(() => p.publis
 export const confirmLayout = (p: Scripted) => cy.then(() => p.publish('/app/mangola/confirmLayout', {}));
 export const sow = (p: Scripted, pit: number) => cy.then(() => p.publish('/app/mangola/sow', { pit }));
 
-/** Two seeds in every pit: the opening whose first player wins in five plies (hand-checked against the rules). */
+/** Two seeds in every pit: the opening whose first player wins in four plies (hand-checked against the rules). */
 export const TWO_PER_PIT = Array<number>(16).fill(2);
 
 /** The pit named `a1..h4` (column letter, row number), numbered as the server does: row * 8 + column. */
