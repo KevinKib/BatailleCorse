@@ -71,19 +71,31 @@ public class SessionService implements GameDirectory {
     /**
      * Reports, once each, the started games that have ended since the last call (a win or a forfeit has no single
      * hook, so the cleanup sweep polls). A game is also reported when it is reopened for a rematch.
+     * <p>
+     * Lock order: a game action holds its game's monitor and then calls into this service while it broadcasts, so
+     * this service never asks a game anything (its {@code isFinished} may be synchronized) while it holds its own
+     * monitor. The games are asked first, outside the lock; a game replaced in the meantime is skipped.
      */
-    public synchronized void recordFinishedGames() {
-        Set<GameId> held = new HashSet<>();
-        for (Game game : repository.games()) {
-            held.add(game.getId());
-            reportFinished(game);
+    public void recordFinishedGames() {
+        List<Game> finished = repository.games().stream().filter(Game::isFinished).toList();
+        synchronized (this) {
+            Set<GameId> held = new HashSet<>();
+            for (Game game : repository.games()) {
+                held.add(game.getId());
+            }
+            for (Game game : finished) {
+                if (repository.findGame(game.getId()).orElse(null) == game) {
+                    reportFinished(game.getId());
+                }
+            }
+            reportedFinished.retainAll(held);
         }
-        reportedFinished.retainAll(held);
     }
 
-    private void reportFinished(Game game) {
-        if (game.isFinished() && reportedFinished.add(game.getId())) {
-            statistics.gameFinished(repository.loadSessionGame(game.getId()).gameType());
+    /** Reports, once, the end of the game held under {@code id}, already known to be finished. Under the lock. */
+    private void reportFinished(GameId id) {
+        if (reportedFinished.add(id)) {
+            statistics.gameFinished(repository.loadSessionGame(id).gameType());
         }
     }
 
@@ -110,16 +122,21 @@ public class SessionService implements GameDirectory {
      * Play-Again calls reopen exactly once before any of them claims a seat.
      */
     public JoinResult playAgain(GameId id, String name) {
-        return notifying(() -> playAgainUnderLock(id, name));
+        // Asked before taking the lock (see recordFinishedGames): a game is never asked anything under it.
+        Game seen = repository.findGame(id).orElse(null);
+        boolean seenFinished = seen != null && seen.isFinished();
+        return notifying(() -> playAgainUnderLock(id, name, seen, seenFinished));
     }
 
-    private JoinResult playAgainUnderLock(GameId id, String name) {
+    private JoinResult playAgainUnderLock(GameId id, String name, Game seen, boolean seenFinished) {
         SessionGame existing = repository.loadSessionGame(id);
         String type = existing.gameType();
         GameOptions options = existing.options();
         Optional<Game> running = repository.findGame(id);
         if (running.isPresent()) {
-            reportFinished(running.get());
+            if (seenFinished && running.get() == seen) {
+                reportFinished(id);
+            }
             reportedFinished.remove(id);
             statistics.rematch(type);
             SessionGame fresh = SessionGame.create(id, gameFactories.maxPlayers(type), type, options);
