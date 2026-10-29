@@ -56,7 +56,7 @@ export function planMovements(event: KiloDeMerdeTableEvent, mySeat: number): Kil
     case 'STEP': return stepOf(event, mySeat);
     case 'DRAW': return drawOf(event, mySeat);
     case 'FLUSH': return flushOf(event, mySeat);
-    case 'ROUND_DEALT': return dealOf(event, mySeat);
+    case 'ROUND_START': return dealOf(event, mySeat);
     default: return [];
   }
 }

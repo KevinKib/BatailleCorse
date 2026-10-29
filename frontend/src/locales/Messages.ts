@@ -353,6 +353,7 @@ export interface KiloDeMerdeUiMessages {
   table: {
     roundLine: string;                 // '{round}', '{total}', '{step}': "Round 3 of 10 · pass 7"
     countdown: string;                 // '{seconds}': accessible name of the pass countdown ring
+    raceCountdown: string;             // '{seconds}': accessible name of the ring while a race is open
     kilos: string;                     // '{kg}': the kilos of a plate ("113 kg")
     kilosLabel: string;                // '{player}', '{kg}': accessible name of a plate's kilos
     pile: string;                      // region name and label of the kilo pile
@@ -383,8 +384,8 @@ export interface KiloDeMerdeUiMessages {
     passCard: string;                  // '{card}': accessible name of a card that can be passed
     waiting: string;                   // the hand while the step resolves
     received: string;                  // '{name}': "from {name}", under the card I received
-    revealed: string;                  // '{player}': a hand shown at the end of a round, as a region name
-    revealedYou: string;               // my own hand shown at the end of a round
+    revealed: string;                  // '{player}', '{cards}': a hand shown at the end of a round, in a plate's accessible name
+    revealedYou: string;               // '{cards}': my own hand shown at the end of a round
   };
   race: {
     slapped: string;                   // '{name}': "{name} slapped! Slap!"
@@ -406,6 +407,7 @@ export interface KiloDeMerdeUiMessages {
     stalled: string;                   // nobody completed a set
     voided: string;                    // a player left: the round does not count
     noCard: string;                    // '{name}': the kilo pile was empty, nothing was drawn
+    noCardYou: string;                 // the same, when I was the one to draw
     lastTag: string;                   // the "last" tag on the plate that drew
   };
   kiloPopover: {
@@ -413,6 +415,7 @@ export interface KiloDeMerdeUiMessages {
     titleYou: string;                  // my own kilos
     none: string;
     total: string;                     // '{kg}'
+    close: string;                     // accessible name of the cross that closes the popover
   };
   standings: {
     player: string;

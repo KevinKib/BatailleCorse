@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { kiloLabel, kiloValue, kiloTotal } from './kilo';
+import { faceLetters, kiloLabel, kiloValue, kiloTotal } from './kilo';
 import { kiloCard } from './fixtures';
+import { messagesEn } from '../../locales/en';
+import { messagesFr } from '../../locales/fr';
 
 describe('kiloValue', () => {
   it.each([
@@ -32,6 +34,11 @@ describe('kiloLabel', () => {
     expect(kiloLabel(kiloCard('KING', 'SPADE'), fr)).toBe('R♠');
     expect(kiloLabel(kiloCard('JACK', 'SPADE'), fr)).toBe('V♠');
     expect(kiloLabel(kiloCard('8', 'SPADE'), fr)).toBe('8♠');
+  });
+
+  it('derives the face letters from the rank names of the locales', () => {
+    expect(faceLetters(messagesFr.kiloDeMerdeUi.ranks)).toEqual({ ACE: 'A', KING: 'R', QUEEN: 'D', JACK: 'V' });
+    expect(faceLetters(messagesEn.kiloDeMerdeUi.ranks)).toEqual({ ACE: 'A', KING: 'K', QUEEN: 'Q', JACK: 'J' });
   });
 
   it('keeps an unknown suit as given', () => {

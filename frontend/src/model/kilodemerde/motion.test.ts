@@ -138,9 +138,9 @@ describe('planMovements', () => {
     });
   });
 
-  describe('ROUND_DEALT', () => {
+  describe('ROUND_START', () => {
     it('deals one pack from the centre to every active seat, staggered, mine into my hand', () => {
-      const moves = planMovements(event('ROUND_DEALT', { round: 3 }, [0, 1, 2]), 0);
+      const moves = planMovements(event('ROUND_START', { round: 3 }, [0, 1, 2]), 0);
       expect(moves.map(m => [m.from, m.to])).toEqual([[pile, hand], [pile, seat(1)], [pile, seat(2)]]);
       expect(moves.map(m => m.delayMs)).toEqual([0, 1, 2].map(i => TEMPO.deal.holdBeforeMs + i * TEMPO.deal.staggerMs));
       expect(moves.every(m => m.card === null && m.flip === false)).toBe(true);
@@ -148,7 +148,7 @@ describe('planMovements', () => {
   });
 
   describe('other events', () => {
-    it.each(['START', 'PASS_CHOSEN', 'RACE_OPENED', 'SLAPPED', 'FALSE_SLAP', 'ROUND_OVER', 'GAME_OVER', 'FORFEIT', 'NOPE'])(
+    it.each(['START', 'PASS_CHOSEN', 'RACE', 'SLAP', 'FALSE_SLAP', 'ROUND_OVER', 'GAME_OVER', 'FORFEIT', 'NOPE'])(
       '%s moves nothing',
       (type) => {
         expect(planMovements(event(type, { seat: 1 }, [0, 1, 2]), 0)).toEqual([]);
@@ -163,7 +163,7 @@ describe('planMovements', () => {
   it('no movement lasts longer than the bound, on the busiest events of a 10-seat table', () => {
     const busiest = [
       event('STEP', {}, range(10)),
-      event('ROUND_DEALT', {}, range(10)),
+      event('ROUND_START', {}, range(10)),
       event('FLUSH', { seat: 9, returnedCount: 40 }, range(10)),
       event('DRAW', { seat: 9, card: kiloCard('ACE') }, range(10)),
     ];

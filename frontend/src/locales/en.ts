@@ -710,6 +710,7 @@ export const messagesEn: Messages = {
     table: {
       roundLine: 'Round {round} of {total} · pass {step}',
       countdown: '{seconds} seconds left to pass',
+      raceCountdown: '{seconds} seconds left to slap',
       kilos: '{kg} kg',
       kilosLabel: '{player}: {kg} kg',
       pile: 'Kilo pile',
@@ -739,8 +740,8 @@ export const messagesEn: Messages = {
       passCard: 'Pass {card}',
       waiting: 'Waiting for the others',
       received: 'from {name}',
-      revealed: 'Hand of {player}',
-      revealedYou: 'Your hand',
+      revealed: 'Hand of {player}: {cards}',
+      revealedYou: 'Your hand: {cards}',
     },
     race: {
       slapped: '{name} slapped! Slap!',
@@ -758,6 +759,7 @@ export const messagesEn: Messages = {
       stalled: 'Nobody completed a set: no kilos this round',
       voided: 'A player left: this round does not count',
       noCard: '{name} was last, but the kilo pile is empty',
+      noCardYou: 'You were last, but the kilo pile is empty',
       lastTag: 'Last',
     },
     kiloPopover: {
@@ -765,6 +767,7 @@ export const messagesEn: Messages = {
       titleYou: 'Your kilos',
       none: 'No kilo cards yet',
       total: 'Total: {kg} kg',
+      close: 'Close',
     },
     standings: {
       player: 'Player',
