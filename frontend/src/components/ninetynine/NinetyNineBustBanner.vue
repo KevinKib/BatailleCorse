@@ -4,6 +4,7 @@ import PlayingCard from '../PlayingCard.vue';
 import { useI18n } from '../../composables/useI18n';
 import { format, plural } from '../../locales/format';
 import { cardLabel } from '../../model/president/cardLabel';
+import { NINETY_NINE_TEMPO } from '../../model/ninetynine/tempo';
 import type { NinetyNineLastBust } from '../../model/ninetynine/NinetyNineState';
 
 // The end of a round: who is stuck and at what total, the stuck hand turned face up (it proves that no card could be
@@ -35,7 +36,7 @@ const outcome = computed(() => props.bust.eliminated
     </div>
     <span class="bust-reason" data-test="bust-reason">{{ ui.bust.reason }}</span>
     <span class="bust-lives" data-test="bust-lives">{{ outcome }}</span>
-    <div class="bust-bar" aria-hidden="true"><div class="bust-bar-fill"></div></div>
+    <div class="bust-bar" aria-hidden="true"><div class="bust-bar-fill" data-test="bust-bar-fill" :style="{ animationDuration: `${NINETY_NINE_TEMPO.bustShownMs}ms` }"></div></div>
     <span class="bust-next" data-test="bust-next">{{ ui.bust.next }}</span>
   </div>
 </template>
@@ -64,7 +65,7 @@ const outcome = computed(() => props.bust.eliminated
 .bust-lives { font-size: 0.8125rem; font-weight: 700; color: #fecaca; overflow-wrap: anywhere; }
 .bust-bar { width: 100%; height: 4px; border-radius: 2px; background: rgba(255, 255, 255, 0.15); overflow: hidden; }
 /* The pause before the next deal, drawn as a bar that fills; a picture only, the deal never waits for it. */
-.bust-bar-fill { width: 100%; height: 100%; background: var(--gold); transform-origin: left; animation: bust-fill 2.5s linear both; }
+.bust-bar-fill { width: 100%; height: 100%; background: var(--gold); transform-origin: left; animation: bust-fill 7.5s linear both; /* duration set inline from NINETY_NINE_TEMPO.bustShownMs */ }
 .bust-next { font-size: 0.6875rem; color: rgba(255, 255, 255, 0.75); }
 @keyframes bust-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 @media (prefers-reduced-motion: reduce) { .bust-bar-fill { animation: none; } }

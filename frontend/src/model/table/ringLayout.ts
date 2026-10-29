@@ -43,6 +43,40 @@ export function centerBox(frame: Frame): Box {
   return { x: frame.width / 2 - w / 2, y: cy - h / 2, w, h };
 }
 
+/** The total is never wider than this many digits (0 to 100): its slot is reserved for all of them at all times. */
+export const TOTAL_RESERVED_DIGITS = 3;
+/** A tabular digit is about this wide, in em, in the title font. */
+const DIGIT_EM = 0.6;
+/** The gap between the pile, the total and the stock. */
+export const CENTER_GAP = 6;
+
+export interface CenterRowSizes {
+  pileW: number;
+  totalSize: number;
+  /** The reserved width of the total's slot: three digits, whatever the total. */
+  totalW: number;
+  gap: number;
+  /** How far the stock's count badge sticks out on the right of the row. */
+  badgeOverhang: number;
+}
+
+/** The pile, total and stock sizes, all derived from the three-digit reserve so that the row fits `centerBox`. */
+export function centerRowSizes(compact: boolean): CenterRowSizes {
+  const totalSize = compact ? 36 : 76;
+  return {
+    pileW: compact ? 36 : 64,
+    totalSize,
+    totalW: Math.ceil(totalSize * DIGIT_EM * TOTAL_RESERVED_DIGITS),
+    gap: CENTER_GAP,
+    badgeOverhang: 6,
+  };
+}
+
+/** The width of the row (pile, total, stock), without the badge. */
+export function centerRowWidth(s: CenterRowSizes): number {
+  return s.pileW * 2 + s.gap * 2 + s.totalW;
+}
+
 /** The centre of each of `count` plates: seat 0 (me) at the bottom, the next seats on screen clockwise. */
 export function ringCenters(count: number, frame: Frame, rx: number, ry: number): { x: number; y: number }[] {
   return Array.from({ length: count }, (_, k) => {

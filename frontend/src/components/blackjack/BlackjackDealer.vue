@@ -26,7 +26,7 @@ const totalText = computed(() => format(ui.dealer.total, { total: props.dealer.t
         <PlayingCard v-if="dealer.holeHidden" data-test="hole-card" :size="56" hidden :alt="ui.cardHidden" />
       </div>
       <div class="bj-meta">
-        <span class="bj-name">{{ ui.dealer.name }}</span>
+        <span v-if="!hasCards" class="bj-name" data-test="dealer-name">{{ ui.dealer.name }}</span>
         <span v-if="hasCards" class="bj-total" data-test="dealer-total" :aria-label="format(ui.dealer.totalLabel, { total: dealer.total })">{{ totalText }}</span>
         <span v-if="dealer.blackjack" class="bj-tag" data-test="dealer-blackjack">{{ ui.dealer.blackjack }}</span>
         <span v-if="dealer.bust" class="bj-tag bj-tag--bust" data-test="dealer-bust">{{ ui.dealer.bust }}</span>

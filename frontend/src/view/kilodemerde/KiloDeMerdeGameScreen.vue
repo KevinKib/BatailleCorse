@@ -204,7 +204,9 @@ const motionLayer = ref<{ play: CardMotionLayerPlay<KiloDeMerdeAnchor> } | null>
 
 const resolveAnchor = defineAnchors<KiloDeMerdeAnchor>(() => screenEl.value, {
   seat: (anchor, q) => q.cardIn(q.find(`[data-test="seat-plate"][data-seat="${anchor.seat}"]`), 24),
-  hand: (_, q) => q.cardIn(q.find('[data-test="hand"]')),
+  // The card of the slot that changed; the first card of the zone would be another card than the one swapped.
+  hand: (anchor, q) => q.cardIn(q.find(
+    anchor.slot === undefined ? '[data-test="hand"]' : `[data-test="hand"] [data-slot="${anchor.slot}"]`)),
   pile: (_, q) => q.cardIn(q.find('[data-test="pile"]')),
 });
 

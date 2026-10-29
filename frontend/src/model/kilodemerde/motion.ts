@@ -7,8 +7,8 @@ import { KILO_DE_MERDE_TEMPO as TEMPO } from './tempo';
 export type KiloDeMerdeAnchor =
   /** Another seat's plate. */
   | { kind: 'seat'; seat: number }
-  /** My own hand zone. */
-  | { kind: 'hand' }
+  /** My own hand: the card in that slot (0-based, left to right), else the whole zone. */
+  | { kind: 'hand'; slot?: number }
   /** The kilo pile in the centre. */
   | { kind: 'pile' };
 
@@ -24,13 +24,18 @@ export interface KiloDeMerdeTableEvent {
   activeSeats: number[];
   /** The card I received at the last resolved step (the state that came with the event). */
   received: KiloDeMerdeReceived | null;
+  /**
+   * The slot of my hand holding that card when the event came. The server swaps the passed card for the received one in
+   * place, so it is also the slot the passed card left; null when unknown.
+   */
+  receivedSlot?: number | null;
 }
 
 const PILE: KiloDeMerdeAnchor = { kind: 'pile' };
 
 /** My seat is my hand zone, any other seat is its plate. */
-const placeOf = (seat: number, mySeat: number): KiloDeMerdeAnchor =>
-  seat === mySeat ? { kind: 'hand' } : { kind: 'seat', seat };
+const placeOf = (seat: number, mySeat: number, slot: number | null = null): KiloDeMerdeAnchor =>
+  seat === mySeat ? (slot === null ? { kind: 'hand' } : { kind: 'hand', slot }) : { kind: 'seat', seat };
 
 function travel(
   from: KiloDeMerdeAnchor, to: KiloDeMerdeAnchor, actor: number, mySeat: number,
@@ -60,10 +65,11 @@ function stepOf(event: KiloDeMerdeTableEvent, mySeat: number): KiloDeMerdeMoveme
   const seats = event.activeSeats;
   if (seats.length < 2) return [];
   const timing = { delayMs: TEMPO.step.holdBeforeMs, durationMs: TEMPO.step.flightMs, holdAfterMs: TEMPO.step.holdAfterMs };
+  const slot = event.received !== null ? event.receivedSlot ?? null : null;
   return seats.map((seat, i) => {
     const to = seats[(i + 1) % seats.length];
     const mine = to === mySeat;
-    const move = travel(placeOf(seat, mySeat), placeOf(to, mySeat), seat, mySeat, timing, mine ? event.received?.card ?? null : null, mine && event.received !== null);
+    const move = travel(placeOf(seat, mySeat, slot), placeOf(to, mySeat, slot), seat, mySeat, timing, mine ? event.received?.card ?? null : null, mine && event.received !== null);
     move.marks = mine ? [move.to] : [];
     return move;
   });

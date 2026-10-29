@@ -93,8 +93,9 @@ class BlackjackFixedShoeIT {
         Blackjack game = start(room);
 
         assertThat(cleared.getStatusCode().value(), is(204));
-        boolean stillFixed = game.dealerUpCard().equals(card("6D"))
-                && game.seat(new PlayerId(0)).hands().get(0).cards().get(0).equals(card("AS"));
+        // the random deal may end the hand at once, leaving no up card: compare null-safely
+        boolean stillFixed = card("6D").equals(game.dealerUpCard())
+                && card("AS").equals(game.seat(new PlayerId(0)).hands().get(0).cards().get(0));
         assertThat(stillFixed, is(false));
     }
 

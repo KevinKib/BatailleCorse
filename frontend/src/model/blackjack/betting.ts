@@ -28,6 +28,18 @@ export function defaultBet(lastBet: number | null, limits: BlackjackBetLimits | 
   return clampBet(lastBet ?? DEFAULT_BET, limits);
 }
 
+/** The number typed in the bet field: its digits only, 0 when there are none. */
+export function parseBetInput(text: string): number {
+  const digits = text.replace(/\D/g, '');
+  return digits === '' ? 0 : Number(digits);
+}
+
+/** The stack once the bet is placed, and once a double or split costs the same again (null when it could not). */
+export function chipsLeft(stack: number, bet: number): { after: number; afterDouble: number | null } {
+  const afterDouble = stack - 2 * bet;
+  return { after: stack - bet, afterDouble: afterDouble >= 0 ? afterDouble : null };
+}
+
 /** Whether the amount is a whole number inside the limits (the client only refuses what the server would). */
 export function isBetAllowed(amount: number, limits: BlackjackBetLimits | null): boolean {
   return limits !== null && Number.isInteger(amount) && amount >= limits.min && amount <= limits.max;

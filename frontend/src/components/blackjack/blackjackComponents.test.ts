@@ -5,6 +5,8 @@ import BlackjackActionBar from './BlackjackActionBar.vue';
 import BlackjackBetPanel from './BlackjackBetPanel.vue';
 import BlackjackDealer from './BlackjackDealer.vue';
 import BlackjackHand from './BlackjackHand.vue';
+import BlackjackLobbyOptions from './BlackjackLobbyOptions.vue';
+import BlackjackMySeat from './BlackjackMySeat.vue';
 import BlackjackHandSummary from './BlackjackHandSummary.vue';
 import BlackjackSeatPlate from './BlackjackSeatPlate.vue';
 import BlackjackStandings from './BlackjackStandings.vue';
@@ -22,6 +24,11 @@ describe('BlackjackDealer', () => {
     const w = mount(BlackjackDealer, { props: { dealer: blackjackPlayingState.dealer }, global });
     expect(w.find('[data-test="hole-card"]').exists()).toBe(true);
     expect(w.get('[data-test="dealer-total"]').text()).toBe('Dealer 6');
+  });
+
+  it('names the dealer once: the total already reads "Dealer 6"', () => {
+    const w = mount(BlackjackDealer, { props: { dealer: blackjackPlayingState.dealer }, global });
+    expect(w.find('[data-test="dealer-name"]').exists()).toBe(false);
   });
 
   it('shows no hole card once it is shown, and the tags', () => {
@@ -100,6 +107,98 @@ describe('BlackjackBetPanel', () => {
     const w = mount(BlackjackBetPanel, { props: { limits: null, lastBet: null, placed: true, placedAmount: 10 }, global });
     expect(w.find('[data-test="bet-place"]').exists()).toBe(false);
     expect(w.get('[data-test="waiting-bets"]').exists()).toBe(true);
+  });
+});
+
+describe('BlackjackMySeat', () => {
+  it('writes the total net of a settled round next to the stack, and nothing before', () => {
+    const base = blackjackPlayingState.players[0];
+    const hand = (net: number) => ({ ...base.hands[0], net });
+    const win = mount(BlackjackMySeat, { props: { player: { ...base, hands: [hand(10), hand(-5)] } }, global });
+    expect(win.get('[data-test="my-net"]').text()).toBe('+5');
+    const loss = mount(BlackjackMySeat, { props: { player: { ...base, hands: [hand(-20)] } }, global });
+    expect(loss.get('[data-test="my-net"]').text()).toBe('-20');
+    const half = mount(BlackjackMySeat, { props: { player: { ...base, hands: [hand(10), { ...base.hands[0] }] } }, global });
+    expect(half.find('[data-test="my-net"]').exists()).toBe(false);
+    const playing = mount(BlackjackMySeat, { props: { player: blackjackPlayingState.players[0] }, global });
+    expect(playing.find('[data-test="my-net"]').exists()).toBe(false);
+  });
+});
+
+describe('BlackjackBetPanel field and chips left', () => {
+  const limits = { min: 1, max: 50 };
+  const mountPanel = (extra = {}) => mount(BlackjackBetPanel, { props: { limits, lastBet: null, stack: 100, ...extra }, global });
+  const value = (w: ReturnType<typeof mountPanel>) => (w.get('[data-test="bet-input"]').element as HTMLInputElement).value;
+
+  it('has a numeric field for the amount, prefilled and mobile-keypad friendly', () => {
+    const w = mountPanel();
+    const input = w.get('[data-test="bet-input"]');
+    expect(value(w)).toBe('10');
+    expect(input.attributes('inputmode')).toBe('numeric');
+    expect(input.attributes('aria-label')).toBe('Bet amount');
+  });
+
+  it('follows what is typed, clamps to the maximum, ignores non-digits', async () => {
+    const w = mountPanel();
+    const input = w.get('[data-test="bet-input"]');
+    await input.setValue('35');
+    expect(w.get('[data-test="bet-place"]').text()).toBe('Bet 35');
+    await input.setValue('900');
+    expect(w.get('[data-test="bet-place"]').text()).toBe('Bet 50');
+    expect(value(w)).toBe('50');
+    await input.setValue('7x');
+    expect(w.get('[data-test="bet-place"]').text()).toBe('Bet 7');
+  });
+
+  it('refuses an empty amount until it is raised to the minimum on leaving the field', async () => {
+    const w = mountPanel();
+    const input = w.get('[data-test="bet-input"]');
+    await input.setValue('');
+    expect(w.get('[data-test="bet-place"]').attributes('disabled')).toBeDefined();
+    await input.trigger('blur');
+    expect(w.get('[data-test="bet-place"]').text()).toBe('Bet 1');
+  });
+
+  it('combines the field and the chips, and keeps them in sync', async () => {
+    const w = mountPanel();
+    await w.get('[data-test="bet-input"]').setValue('20');
+    await w.get('[data-test="chip-5"]').trigger('click');
+    expect(value(w)).toBe('25');
+    await w.get('[data-test="chip-max"]').trigger('click');
+    expect(value(w)).toBe('50');
+    await w.get('[data-test="chip-clear"]').trigger('click');
+    expect(value(w)).toBe('');
+  });
+
+  it('places the bet on Enter', async () => {
+    const w = mountPanel();
+    await w.get('[data-test="bet-input"]').setValue('12');
+    await w.get('[data-test="bet-input"]').trigger('keydown.enter');
+    expect(w.emitted('bet')).toEqual([[12]]);
+  });
+
+  it('writes the chips left after the bet, and after a double or split when it still fits', async () => {
+    const w = mountPanel();
+    expect(w.get('[data-test="bet-left"]').text()).toBe('You will have 90 pts left');
+    expect(w.get('[data-test="bet-left-double"]').text()).toBe('After a double or split: 80 pts');
+    await w.get('[data-test="bet-input"]').setValue('50');
+    expect(w.get('[data-test="bet-left"]').text()).toBe('You will have 50 pts left');
+    const short = mountPanel({ stack: 60 });
+    await short.get('[data-test="bet-input"]').setValue('40');
+    expect(short.get('[data-test="bet-left"]').text()).toBe('You will have 20 pts left');
+    expect(short.find('[data-test="bet-left-double"]').exists()).toBe(false);
+  });
+});
+
+describe('BlackjackLobbyOptions', () => {
+  it('shows the values in ascending order and preselects the default, not the first', () => {
+    const descriptors = [
+      { key: 'hands', type: 'CHOICE', values: ['5', '10', '15', '20'], defaultValue: '10', labelKey: 'options.blackjack.hands' },
+    ] as never;
+    const w = mount(BlackjackLobbyOptions, { props: { descriptors, options: {}, editable: true }, global });
+    const radios = w.findAll('input[type="radio"]').map(r => r.element as HTMLInputElement);
+    expect(radios.map(r => r.value)).toEqual(['5', '10', '15', '20']);
+    expect(radios.filter(r => r.checked).map(r => r.value)).toEqual(['10']);
   });
 });
 

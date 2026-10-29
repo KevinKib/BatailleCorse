@@ -18,6 +18,8 @@ export const NINETY_NINE_TEMPO = {
   bust: { holdBeforeMs: 0, flightMs: 900, holdAfterMs: 0 } satisfies LegTempo,
   /** The bust overlay waits this long after the card that busted was played, so the table shows it first. */
   bustRevealMs: 1500,
+  /** The overlay then stays this long: the server's round pause (9 s, `ninetynine.round-pause-ms`) minus the reveal delay; the progress bar runs for it. */
+  bustShownMs: 7500,
   /** The deal of a round: one pack per live seat, leaving this far apart. */
   deal: { holdBeforeMs: 0, flightMs: 500, holdAfterMs: 150, staggerMs: 70 },
   /** How long the rings stay on the places a move touched. */

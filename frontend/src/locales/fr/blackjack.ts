@@ -60,6 +60,9 @@ export const blackjackUi: Messages['blackjackUi'] = {
     clear: 'Effacer',
     place: 'Miser {n}',
     waitingOthers: 'En attente des autres mises…',
+    amount: 'Montant de la mise',
+    left: 'Il vous restera {n} pts',
+    leftDouble: 'Après un doublement ou une séparation : {n} pts',
     yourBet: 'Votre mise : {n}',
   },
   actions: {

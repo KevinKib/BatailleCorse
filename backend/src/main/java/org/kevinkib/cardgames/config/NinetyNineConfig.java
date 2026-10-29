@@ -38,7 +38,7 @@ public class NinetyNineConfig {
     public static final String DEFAULT_DELAY_MAX_MS = "1300";
 
     /** The table shows who lost a life for this long before the next deal (the card that busted shows first, then the overlay) (property {@code ninetynine.round-pause-ms}). */
-    public static final String DEFAULT_ROUND_PAUSE_MS = "4000";
+    public static final String DEFAULT_ROUND_PAUSE_MS = "9000";
 
     /** Production: a random deal. */
     @Bean

@@ -12,6 +12,16 @@ const mountPlate = (extra: Record<string, unknown> = {}, player: KiloDeMerdePlay
   mount(KiloDeMerdeSeatPlate, { props: { player, label: 'Alice', ...extra } });
 
 describe('KiloDeMerdeSeatPlate', () => {
+  it('givenARevealedHand_thenThePlateIsExpandedAndKeepsEveryFact', () => {
+    // jsdom has no layout: the class drives the CSS that lets the plate grow, wrap and scroll.
+    const wrapper = mountPlate({ hand: [kiloCard('JACK', 'CLUB'), kiloCard('JACK', 'HEART')], mine: true, last: true, ready: true });
+    expect(wrapper.get('[data-test="seat-plate"]').classes()).toContain('plate--expanded');
+    for (const hook of ['seat-name', 'seat-kilos', 'seat-hand', 'seat-last', 'seat-ready']) {
+      expect(wrapper.find(`[data-test="${hook}"]`).exists(), hook).toBe(true);
+    }
+    expect(mountPlate().get('[data-test="seat-plate"]').classes()).not.toContain('plate--expanded');
+  });
+
   it('givenAPlayer_thenTheNameAndTheKilosAreShownAndNamed', () => {
     const wrapper = mountPlate();
     expect(wrapper.get('[data-test="seat-name"]').text()).toBe('Alice');
