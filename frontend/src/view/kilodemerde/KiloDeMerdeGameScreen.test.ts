@@ -231,6 +231,13 @@ describe('KiloDeMerdeGameScreen', () => {
       expect(wrapper.get('[data-test="pile"]').attributes('disabled')).toBeUndefined();
     });
 
+    it('givenARace_thenTheCountdownIsNamedAfterTheRaceNotThePass', async () => {
+      const { wrapper } = await mountRoom(room(kiloDeMerdeRaceState));
+      const label = wrapper.get('[data-test="countdown"]').attributes('aria-label');
+      expect(label).toContain(messagesEn.kiloDeMerdeUi.table.raceCountdown.replace(/\{seconds\}.*/, ''));
+      expect(label).not.toContain('to pass');
+    });
+
     it('givenIAlreadySlapped_thenThePileNoLongerPulses', async () => {
       const players = kiloDeMerdeRaceState.players.map(p => p.seat === 0 ? { ...p, slapRank: 4 } : p);
       const state: KiloDeMerdeState = { ...kiloDeMerdeRaceState, players, availableActions: [] };
@@ -267,11 +274,19 @@ describe('KiloDeMerdeGameScreen', () => {
   describe('live regions', () => {
     it('givenASlapEvent_thenTheAssertiveRegionSaysWhoSlapped', async () => {
       const { wrapper, store } = await mountRoom(room(kiloDeMerdeRaceState));
-      store.applyEvent({ type: 'event', eventType: 'SLAPPED', eventData: { seat: 3, round: null, step: null, card: null, kilosAfter: null, rank: 1, returnedCount: null } });
+      store.applyEvent({ type: 'event', eventType: 'SLAP', eventData: { seat: 3, round: null, step: null, card: null, kilosAfter: null, rank: 1, returnedCount: null } });
       await flushPromises();
       expect(wrapper.get('[data-test="kilo-live-assertive"]').text()).toBe('Player 3 slapped! Slap!');
       expect(wrapper.get('[data-test="kilo-live-assertive"]').attributes('aria-live')).toBe('assertive');
       expect(wrapper.get('[data-test="kilo-live-polite"]').attributes('aria-live')).toBe('polite');
+    });
+
+    it('givenARoundStartEvent_thenThePoliteRegionAnnouncesTheRound', async () => {
+      // The server's event type is ROUND_START (KiloDeMerdeEventType), not the domain's RoundDealt.
+      const { wrapper, store } = await mountRoom(room(kiloDeMerdeStepState));
+      store.applyEvent({ type: 'event', eventType: 'ROUND_START', eventData: { seat: null, round: 4, step: null, card: null, kilosAfter: null, rank: null, returnedCount: null } });
+      await flushPromises();
+      expect(wrapper.get('[data-test="kilo-live-polite"]').text()).toBe('Round 4');
     });
 
     it('givenAStepEvent_thenThePoliteRegionSaysWhatIReceived', async () => {

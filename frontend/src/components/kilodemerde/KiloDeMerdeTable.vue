@@ -33,7 +33,7 @@ const props = defineProps<{
   /** The table waits for the ready confirmations (before the first round, between two rounds): each plate says who is ready. */
   confirming?: boolean;
   /** What the countdown ring counts down to: the end of the pass step or race (default), or of the wait for confirmations. */
-  countdownKind?: 'pass' | 'ready';
+  countdownKind?: 'pass' | 'race' | 'ready';
   /** Every hand, only once the round is over. */
   hands: KiloDeMerdeSeatHand[] | null;
   /** The seats that drew the kilo card of the round. */
@@ -74,7 +74,8 @@ const layout = computed(() => chooseLayout(ring.value.length, known.value));
 const plate = computed(() => plateSizeFor(frame.value.width));
 const compact = computed(() => plate.value.w < 100);
 const confirmOf = (p: KiloDeMerdePlayer) => props.confirming ? (p.ready ? 'ready' as const : 'waiting' as const) : null;
-const countdownLabel = computed(() => props.countdownKind === 'ready' ? ui.table.readyCountdown : ui.table.countdown);
+const countdownLabel = computed(() => props.countdownKind === 'ready' ? ui.table.readyCountdown
+  : props.countdownKind === 'race' ? ui.table.raceCountdown : ui.table.countdown);
 const nameOfSeat = (seat: number) => seat === props.mySeat ? ui.you : props.nameOf(seat);
 const handOf = (seat: number) => props.hands?.find(h => h.seat === seat)?.cards ?? null;
 
