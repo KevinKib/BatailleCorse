@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import { useI18n } from '../../composables/useI18n';
 import { format } from '../../locales/format';
 import { roundLineText } from '../../model/kilodemerde/roundLineText';
+import { faceLetters } from '../../model/kilodemerde/kilo';
 import type { KiloDeMerdeRace } from '../../model/kilodemerde/KiloDeMerdeState';
 import type { RoundLine } from '../../model/kilodemerde/roundSummary';
 
@@ -18,7 +19,7 @@ const props = defineProps<{
 }>();
 const ui = useI18n().kiloDeMerdeUi;
 
-const texts = computed(() => props.lines.map(line => roundLineText(line, props.nameOf, ui.outcome, props.mySeat ?? null)));
+const texts = computed(() => props.lines.map(line => roundLineText(line, props.nameOf, ui.outcome, props.mySeat ?? null, faceLetters(ui.ranks))));
 const raceTitle = computed(() => !props.race ? ''
   : props.race.firstSlapper === props.mySeat ? ui.race.slappedYou
     : format(ui.race.slapped, { name: props.nameOf(props.race.firstSlapper) }));

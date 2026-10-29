@@ -26,6 +26,9 @@ describe('KiloDeMerdeKiloPopover', () => {
       expect(title({ name: 'Vous', mine: true })).toBe('Vos kilos');
       expect(title({ name: 'Bob' })).toBe('Kilos de Bob');
       expect(title({ name: 'Alice' })).toBe('Kilos d’Alice');
+      const cards = mount(KiloDeMerdeKiloPopover, { props: { name: 'Bob', cards: [kiloCard('KING', 'SPADE'), kiloCard('JACK', 'CLUB')] } })
+        .findAll('[data-test="kilo-card"]').map(c => c.text());
+      expect(cards).toEqual(['R♠', 'V♣']);
     } finally {
       setCurrentLocaleForTest('en');
       delete messages.fr;

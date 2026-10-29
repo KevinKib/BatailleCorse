@@ -2,7 +2,7 @@
 import { computed, onMounted, ref } from 'vue';
 import { useI18n } from '../../composables/useI18n';
 import { format } from '../../locales/format';
-import { kiloLabel, kiloTotal } from '../../model/kilodemerde/kilo';
+import { faceLetters, kiloLabel, kiloTotal } from '../../model/kilodemerde/kilo';
 import type Card from '../../model/Card';
 
 // The kilo cards a seat holds and their weight, opened from a plate. Escape or the close button closes it.
@@ -13,6 +13,7 @@ const ui = useI18n().kiloDeMerdeUi;
 const title = computed(() => props.mine ? ui.kiloPopover.titleYou : format(ui.kiloPopover.title, { player: props.name }));
 
 const total = computed(() => kiloTotal(props.cards));
+const letters = faceLetters(ui.ranks);
 const root = ref<HTMLElement | null>(null);
 onMounted(() => root.value?.focus());
 </script>
@@ -28,7 +29,7 @@ onMounted(() => root.value?.focus());
     </div>
     <p v-if="cards.length === 0" class="popover-none" data-test="kilo-none">{{ ui.kiloPopover.none }}</p>
     <ul v-else class="popover-cards">
-      <li v-for="card in cards" :key="card.name" class="popover-card" data-test="kilo-card">{{ kiloLabel(card) }}</li>
+      <li v-for="card in cards" :key="card.name" class="popover-card" data-test="kilo-card">{{ kiloLabel(card, letters) }}</li>
     </ul>
     <p class="popover-total" data-test="kilo-total">{{ format(ui.kiloPopover.total, { kg: total }) }}</p>
   </div>

@@ -752,8 +752,8 @@ export const messagesEn: Messages = {
       passCard: 'Pass {card}',
       waiting: 'Waiting for the others',
       received: 'from {name}',
-      revealed: 'Hand of {player}',
-      revealedYou: 'Your hand',
+      revealed: 'Hand of {player}: {cards}',
+      revealedYou: 'Your hand: {cards}',
     },
     race: {
       slapped: '{name} slapped! Slap!',

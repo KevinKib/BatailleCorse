@@ -47,8 +47,8 @@ export const kiloDeMerdeUi: Messages['kiloDeMerdeUi'] = {
     passCard: 'Passer {card}',
     waiting: 'En attente des autres',
     received: 'de {name}',
-    revealed: 'Main de {player}',
-    revealedYou: 'Votre main',
+    revealed: 'Main de {player} : {cards}',
+    revealedYou: 'Votre main : {cards}',
   },
   race: {
     slapped: '{name} a tapé ! Tapez !',

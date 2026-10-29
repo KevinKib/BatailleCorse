@@ -383,8 +383,8 @@ export interface KiloDeMerdeUiMessages {
     passCard: string;                  // '{card}': accessible name of a card that can be passed
     waiting: string;                   // the hand while the step resolves
     received: string;                  // '{name}': "from {name}", under the card I received
-    revealed: string;                  // '{player}': a hand shown at the end of a round, as a region name
-    revealedYou: string;               // my own hand shown at the end of a round
+    revealed: string;                  // '{player}', '{cards}': a hand shown at the end of a round, in a plate's accessible name
+    revealedYou: string;               // '{cards}': my own hand shown at the end of a round
   };
   race: {
     slapped: string;                   // '{name}': "{name} slapped! Slap!"
