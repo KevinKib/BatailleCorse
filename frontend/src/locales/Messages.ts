@@ -140,6 +140,9 @@ export interface GameChoiceMessages {
 export interface GamePickerMessages {
   title: string;
   choose: string;          // accessible name of the list of games
+  navLabel: string;        // accessible name of the chips that scroll to a category
+  /** Section headings and chips, by category id (see `GAME_CATEGORIES`). */
+  categories: { cards: string; board: string };
   back: string;            // back link of a game menu, towards the picker
   playAria: string;        // '{play}', '{name}': accessible name of a game card
   /** One entry per game, by registry key; a registered game must have its entry (see `gameChoice`). */

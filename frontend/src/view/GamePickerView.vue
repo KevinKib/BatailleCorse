@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import TitleCardFan from '../components/TitleCardFan.vue';
 import GameChoiceCard from '../components/GameChoiceCard.vue';
@@ -8,13 +8,41 @@ import { SUPPORTED_LOCALES } from '../locales';
 import { preloadAllCards } from '../composables/useCardAnimation';
 import { useI18n } from '../composables/useI18n';
 import { gameChoice } from '../locales/gameChoice';
-import { GAMES } from '../model/games';
+import { GAMES, GAME_CATEGORIES, type GameCategoryId } from '../model/games';
 
 const router = useRouter();
 const route = useRoute();
 const messages = useI18n();
 const { gamePicker, lobby } = messages;
-const choices = GAMES.map(game => ({ game, choice: gameChoice(messages, game.key) }));
+// The games by section, in the section order of GAME_CATEGORIES and the registry order inside a section.
+// A section without a game is left out, with its chip.
+const sections = computed(() => GAME_CATEGORIES
+  .map(category => ({
+    ...category,
+    title: gamePicker.categories[category.id],
+    choices: GAMES.filter(game => game.category === category.id)
+      .map(game => ({ game, choice: gameChoice(messages, game.key) })),
+  }))
+  .filter(section => section.choices.length > 0));
+
+// Line icons (24x24 viewBox, stroke): a card for the card games, a pawn for the board games.
+const CATEGORY_ICONS: Record<GameCategoryId, string> = {
+  cards: 'M8 3h8a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM17 6l3.5 1-3.5 14',
+  board: 'M12 3a3 3 0 1 0 0 6a3 3 0 1 0 0-6zM9.5 9.5L8 17h8l-1.5-7.5M5 21h14M7 17h10v4H7z',
+};
+
+const sectionEls = ref<Record<string, HTMLElement | undefined>>({});
+
+// Smooth scroll to the section, unless the visitor asked for less motion; the section takes the focus so the
+// keyboard and the screen reader continue from there.
+function goTo(event: Event, anchor: string) {
+  const target = sectionEls.value[anchor];
+  if (!target) return;
+  event.preventDefault();
+  const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+  target.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
+  target.focus({ preventScroll: true });
+}
 // Set when the host removed this player from a lobby.
 const removed = computed(() => route.query.removed === '1');
 
@@ -45,17 +73,51 @@ onMounted(() => preloadAllCards());
 
       <div class="panel-divider" />
 
-      <section class="choices" :aria-label="gamePicker.choose">
-        <GameChoiceCard
-          v-for="{ game, choice } in choices"
-          :key="game.key"
-          :game-key="game.key"
-          :choice="choice"
-          :icon="game.picker.icon"
-          :severity="game.picker.severity"
-          @play="router.push(game.gameHomeRoute)"
-        />
-      </section>
+      <nav class="category-chips" :aria-label="gamePicker.navLabel" data-test="category-chips">
+        <a
+          v-for="section in sections"
+          :key="section.id"
+          class="category-chip"
+          :href="`#${section.anchor}`"
+          :data-test="`chip-${section.id}`"
+          @click="goTo($event, section.anchor)"
+        >
+          <svg class="category-icon" viewBox="0 0 24 24" aria-hidden="true"><path :d="CATEGORY_ICONS[section.id]" /></svg>
+          <span>{{ section.title }}</span>
+          <span class="category-count">{{ section.choices.length }}</span>
+        </a>
+      </nav>
+
+      <div class="sections">
+        <section
+          v-for="section in sections"
+          :id="section.anchor"
+          :ref="(el) => { sectionEls[section.anchor] = el as HTMLElement | null ?? undefined; }"
+          :key="section.id"
+          class="category-section"
+          tabindex="-1"
+          :aria-label="section.title"
+          :data-test="`section-${section.id}`"
+        >
+          <h2 class="category-heading">
+            <svg class="category-icon" viewBox="0 0 24 24" aria-hidden="true"><path :d="CATEGORY_ICONS[section.id]" /></svg>
+            <span>{{ section.title }}</span>
+            <span class="category-badge">{{ section.choices.length }}</span>
+            <span class="category-rule" aria-hidden="true" />
+          </h2>
+          <div class="choices">
+            <GameChoiceCard
+              v-for="{ game, choice } in section.choices"
+              :key="game.key"
+              :game-key="game.key"
+              :choice="choice"
+              :icon="game.picker.icon"
+              :severity="game.picker.severity"
+              @play="router.push(game.gameHomeRoute)"
+            />
+          </div>
+        </section>
+      </div>
 
       <RouterLink :to="{ name: 'privacy' }" class="privacy-link" data-test="privacy-link">{{ gamePicker.privacy }}</RouterLink>
     </main>
@@ -153,6 +215,68 @@ onMounted(() => preloadAllCards());
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
 }
 
+.category-chips {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+.category-chip {
+  min-height: 44px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--gold-soft) 40%, transparent);
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--gold-soft);
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+.category-chip:hover { border-color: var(--gold-soft); }
+.category-chip:focus-visible { outline: 2px solid var(--gold-soft); outline-offset: 2px; }
+.category-count { font-weight: 400; color: color-mix(in srgb, var(--gold-soft) 70%, white); }
+.category-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.sections { width: 100%; display: flex; flex-direction: column; gap: 28px; }
+.category-section { display: flex; flex-direction: column; gap: 12px; scroll-margin-top: 16px; }
+.category-section:focus { outline: none; }
+.category-heading {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+  line-height: 1.2;
+  color: var(--gold-soft);
+}
+.category-heading .category-icon { width: 1.125rem; height: 1.125rem; }
+.category-badge {
+  font-size: 0.8125rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--gold-soft) 14%, transparent);
+  color: var(--gold-soft);
+}
+.category-rule {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--panel-border), transparent);
+}
+
 .choices {
   width: 100%;
   display: grid;
@@ -175,7 +299,10 @@ onMounted(() => preloadAllCards());
   .titlescreen { padding: 88px 12px 16px; }
   .title-panel { padding: 44px 16px var(--space-3); gap: 12px; }
   .game-title { font-size: 2rem; }
-  /* Two columns: four games fit a 375x667 phone with no scrolling, nothing hidden. */
+  .sections { gap: 20px; }
+  .category-section { gap: 8px; }
+  .category-heading { font-size: 0.875rem; }
+  /* Two columns per section; the page scrolls, nothing is hidden. */
   .choices { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 }
 /* Short phones (375x667): the fan above the panel takes less room. */

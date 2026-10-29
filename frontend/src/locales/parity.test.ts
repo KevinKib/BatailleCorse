@@ -5,6 +5,7 @@ import { messagesFr } from './fr';
 // French leaves that may equal the English leaf (proper nouns, symbols). Keys are dotted paths prefixes.
 const SAME_AS_ENGLISH_ALLOWED: readonly string[] = [
   'language.names.en', 'language.names.fr',
+  'gamePicker.title', // the site name, a proper noun in both languages
   // T1
   'gamePicker.games.kobo.name', 'gamePicker.games.mangola.name', 'gamePicker.games.ninety-nine.name',
   'rules.sections[2].labels.sandwich',

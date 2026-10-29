@@ -22,7 +22,7 @@ const { gamePicker } = useI18n();
 <template>
   <article class="game-choice" :data-test="`choice-${gameKey}`">
     <header class="choice-head">
-      <h2 class="choice-name">{{ choice.name }}</h2>
+      <h3 class="choice-name">{{ choice.name }}</h3>
       <span class="choice-players">{{ choice.players }}</span>
     </header>
     <p class="choice-description">{{ choice.description }}</p>

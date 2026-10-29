@@ -3,7 +3,7 @@
 import { GAMES } from '../../src/model/games';
 import { expectGap } from '../support/spacing';
 
-// Phones first: every game must fit without any scrolling, however many GAMES the app registers.
+// Phones first: every game, in its section, must show complete and unclipped (the page scrolls between sections).
 const VIEWPORTS: Array<[number, number]> = [[375, 667], [360, 640], [390, 844], [768, 1024], [1280, 720]];
 
 describe('Game picker', () => {
@@ -21,64 +21,64 @@ describe('Game picker', () => {
 
   it('shows the title and every game with description, player count and Play', () => {
     cy.visit('/');
-    cy.get('[data-test="picker-title"]').should('be.visible').and('contain.text', 'Card Games');
+    cy.get('[data-test="picker-title"]').should('be.visible').and('contain.text', 'CardGamesZone');
 
     cy.get('[data-test="choice-bataillecorse"]').within(() => {
-      cy.contains('h2', 'Bataille Corse');
+      cy.contains('h3', 'Bataille Corse');
       cy.contains('Fast two-player duel. Slap the pile when you spot a pattern.');
       cy.contains('2 players');
       cy.contains('button', 'Play');
     });
     cy.get('[data-test="choice-bullshit"]').within(() => {
-      cy.contains('h2', 'Bullshit');
+      cy.contains('h3', 'Bullshit');
       cy.contains('Bluff your way to an empty hand. Call out the liars.');
       cy.contains('2–6 players');
       cy.contains('button', 'Play');
     });
     cy.get('[data-test="choice-kobo"]').within(() => {
-      cy.contains('h2', 'Kobo');
+      cy.contains('h3', 'Kobo');
       cy.contains('Remember your hidden cards and end the round with the fewest points.');
       cy.contains('2–6 players');
       cy.contains('button', 'Play');
     });
     cy.get('[data-test="choice-three-men-morris"]').within(() => {
-      cy.contains('h2', 'Morris');
+      cy.contains('h3', 'Morris');
       cy.contains("Tapatan, Achi or Six Men's Morris. Place, then slide.");
       cy.contains('2 players');
       cy.contains('button', 'Play');
     });
     cy.get('[data-test="choice-president"]').within(() => {
-      cy.contains('h2', 'President');
+      cy.contains('h3', 'President');
       cy.contains('Shed your cards first and take the top title.');
       cy.contains('3–8 players');
       cy.contains('button', 'Play');
     });
     cy.get('[data-test="choice-mangola"]').within(() => {
-      cy.contains('h2', 'Mangola');
+      cy.contains('h3', 'Mangola');
       cy.contains('Lay out your seeds, then sow and capture. Take every seed of your opponent.');
       cy.contains('2 players');
       cy.contains('button', 'Play');
     });
     cy.get('[data-test="choice-ninety-nine"]').within(() => {
-      cy.contains('h2', '99');
+      cy.contains('h3', '99');
       cy.contains('Keep the running total at 99 or less. Whoever cannot play loses a life.');
       cy.contains('2–12 players');
       cy.contains('button', 'Play');
     });
     cy.get('[data-test="choice-draughts"]').within(() => {
-      cy.contains('h2', 'Draughts');
+      cy.contains('h3', 'Draughts');
       cy.contains('International draughts on a 10 by 10 board. Take every piece, or leave your opponent without a move.');
       cy.contains('2 players');
       cy.contains('button', 'Play');
     });
     cy.get('[data-test="choice-blackjack"]').within(() => {
-      cy.contains('h2', 'Blackjack');
+      cy.contains('h3', 'Blackjack');
       cy.contains('Beat the dealer, alone or in a 100-point tournament');
       cy.contains('1–6 players');
       cy.contains('button', 'Play');
     });
     cy.get('[data-test="choice-kilo-de-merde"]').within(() => {
-      cy.contains('h2', 'Kilo de merde');
+      cy.contains('h3', 'Kilo de merde');
       cy.contains('Pass, collect four of a kind, slap the pile. Last one takes the kilos.');
       cy.contains('3–10 players');
       cy.contains('button', 'Play');
@@ -223,16 +223,26 @@ describe('Game picker', () => {
     });
   });
 
+  it('groups the games in a card section then a board section, with chips that scroll to them', () => {
+    cy.visit('/');
+    cy.get('nav[aria-label="Go to a category"] a').should('have.length', 2);
+    cy.get('#cartes').should('exist').find('[data-test^="choice-"]').should('have.length', 7);
+    cy.get('#plateau').should('exist').find('[data-test^="choice-"]').should('have.length', 3);
+    cy.get('[data-test="chip-board"]').click();
+    cy.get('#plateau h2').should('be.visible');
+    cy.get('[data-test="play-draughts"]').should('be.visible');
+  });
+
   VIEWPORTS.forEach(([width, height]) => {
-    it(`fits every game with no scrolling at ${width}x${height}`, () => {
+    it(`shows every game complete and unclipped at ${width}x${height}`, () => {
       cy.viewport(width, height);
       cy.visit('/');
       cy.get('[data-test^="choice-"]').should('have.length', GAMES.length);
       GAMES.forEach(({ key }) => {
-        cy.get(`[data-test="play-${key}"]`).should('be.visible').then(($el) => {
+        // The page scrolls (two sections): each card is brought into view before it is measured.
+        cy.get(`[data-test="play-${key}"]`).scrollIntoView().should('be.visible').then(($el) => {
           const box = $el[0].getBoundingClientRect();
           expect(box.height, `${key} Play height`).to.be.at.least(44);
-          expect(box.bottom, `${key} Play bottom`).to.be.at.most(height);
           expect(box.right, `${key} Play right`).to.be.at.most(width);
         });
         // Nothing is clipped: the title, pitch and player count of each card stay inside it.
@@ -241,7 +251,7 @@ describe('Game picker', () => {
           expect(card.scrollWidth, `${key} card overflow x`).to.be.at.most(card.clientWidth);
           expect(card.scrollHeight, `${key} card overflow y`).to.be.at.most(card.clientHeight);
           const outer = card.getBoundingClientRect();
-          card.querySelectorAll('h2, p, span, button').forEach((el) => {
+          card.querySelectorAll('h3, p, span, button').forEach((el) => {
             const box = el.getBoundingClientRect();
             expect(box.left, `${key} ${el.tagName} left`).to.be.at.least(outer.left - 0.5);
             expect(box.right, `${key} ${el.tagName} right`).to.be.at.most(outer.right + 0.5);
@@ -249,17 +259,16 @@ describe('Game picker', () => {
         });
       });
       // The Privacy link breathes: clear of the games, and 8 px or more above the card's bottom edge.
-      expectGap('.choices', '[data-test="privacy-link"]', 8);
+      cy.get('[data-test="privacy-link"]').scrollIntoView();
+      expectGap('#plateau .choices', '[data-test="privacy-link"]', 8);
       cy.get('[data-test="privacy-link"]').then(($link) => {
         const edge = ($link[0].closest('.title-panel') as HTMLElement).getBoundingClientRect().bottom;
         expect(edge - $link[0].getBoundingClientRect().bottom + 0.5, 'Privacy link to the card bottom').to.be.at.least(8);
       });
       cy.window().then((win) => {
         const doc = win.document.documentElement;
-        expect(doc.scrollHeight, 'page height').to.be.at.most(win.innerHeight);
         expect(doc.scrollWidth, 'page width').to.be.at.most(win.innerWidth);
         const screen = win.document.querySelector('.titlescreen') as HTMLElement;
-        expect(screen.scrollHeight, 'picker screen height').to.be.at.most(screen.clientHeight);
         expect(screen.scrollWidth, 'picker screen width').to.be.at.most(screen.clientWidth);
       });
     });
