@@ -1,0 +1,310 @@
+[ {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "OPPONENT_DISCONNECTED",
+    "eventData" : {
+      "disconnectedSeat" : 1,
+      "deadlineEpochMs" : 1700000000000
+    },
+    "message" : "Player 1 disconnected.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "blackjack",
+      "version" : 0,
+      "phase" : "BETTING",
+      "handNumber" : 1,
+      "handsTotal" : 10,
+      "solo" : false,
+      "button" : 0,
+      "currentSeat" : -1,
+      "activeHandIndex" : 0,
+      "options" : {
+        "hands" : "10",
+        "maxBet" : "50",
+        "startingStack" : 100,
+        "minBet" : 1
+      },
+      "dealer" : {
+        "upCard" : null,
+        "cards" : [ ],
+        "holeHidden" : false,
+        "total" : 0,
+        "soft" : false,
+        "blackjack" : false,
+        "bust" : false
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "stack" : 100,
+        "betPlaced" : false,
+        "bet" : null,
+        "hands" : [ ],
+        "eliminated" : false,
+        "forfeited" : false,
+        "place" : null,
+        "standing" : 1
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "stack" : 100,
+        "betPlaced" : false,
+        "bet" : null,
+        "hands" : [ ],
+        "eliminated" : false,
+        "forfeited" : false,
+        "place" : null,
+        "standing" : 1
+      } ],
+      "lastHand" : null,
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "availableActions" : [ "BET" ],
+      "betLimits" : {
+        "min" : 1,
+        "max" : 50
+      },
+      "lastBet" : null
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "OPPONENT_RECONNECTED",
+    "eventData" : {
+      "reconnectedSeat" : 1
+    },
+    "message" : "Player 1 reconnected.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "blackjack",
+      "version" : 0,
+      "phase" : "BETTING",
+      "handNumber" : 1,
+      "handsTotal" : 10,
+      "solo" : false,
+      "button" : 0,
+      "currentSeat" : -1,
+      "activeHandIndex" : 0,
+      "options" : {
+        "hands" : "10",
+        "maxBet" : "50",
+        "startingStack" : 100,
+        "minBet" : 1
+      },
+      "dealer" : {
+        "upCard" : null,
+        "cards" : [ ],
+        "holeHidden" : false,
+        "total" : 0,
+        "soft" : false,
+        "blackjack" : false,
+        "bust" : false
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "stack" : 100,
+        "betPlaced" : false,
+        "bet" : null,
+        "hands" : [ ],
+        "eliminated" : false,
+        "forfeited" : false,
+        "place" : null,
+        "standing" : 1
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "stack" : 100,
+        "betPlaced" : false,
+        "bet" : null,
+        "hands" : [ ],
+        "eliminated" : false,
+        "forfeited" : false,
+        "place" : null,
+        "standing" : 1
+      } ],
+      "lastHand" : null,
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "availableActions" : [ "BET" ],
+      "betLimits" : {
+        "min" : 1,
+        "max" : 50
+      },
+      "lastBet" : null
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "FORFEIT",
+    "eventData" : {
+      "loserSeat" : 1,
+      "reason" : "RESIGNED"
+    },
+    "message" : "Player 1 forfeited.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "blackjack",
+      "version" : 1,
+      "phase" : "FINISHED",
+      "handNumber" : 1,
+      "handsTotal" : 10,
+      "solo" : false,
+      "button" : 0,
+      "currentSeat" : -1,
+      "activeHandIndex" : 0,
+      "options" : {
+        "hands" : "10",
+        "maxBet" : "50",
+        "startingStack" : 100,
+        "minBet" : 1
+      },
+      "dealer" : {
+        "upCard" : null,
+        "cards" : [ ],
+        "holeHidden" : false,
+        "total" : 0,
+        "soft" : false,
+        "blackjack" : false,
+        "bust" : false
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "stack" : 100,
+        "betPlaced" : false,
+        "bet" : null,
+        "hands" : [ ],
+        "eliminated" : false,
+        "forfeited" : false,
+        "place" : 1,
+        "standing" : 1
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "stack" : 100,
+        "betPlaced" : false,
+        "bet" : null,
+        "hands" : [ ],
+        "eliminated" : true,
+        "forfeited" : true,
+        "place" : 2,
+        "standing" : 0
+      } ],
+      "lastHand" : null,
+      "outcome" : {
+        "status" : "FINISHED",
+        "places" : {
+          "0" : 1,
+          "1" : 2
+        },
+        "stacks" : {
+          "0" : 100,
+          "1" : 100
+        },
+        "reason" : "FORFEIT"
+      },
+      "availableActions" : [ ],
+      "betLimits" : null,
+      "lastBet" : null
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "GAME_OVER",
+    "eventData" : {
+      "seat" : null,
+      "handIndex" : null,
+      "card" : null,
+      "value" : null,
+      "cards" : null,
+      "holeCard" : null,
+      "handNumber" : null,
+      "button" : null,
+      "bets" : null,
+      "nets" : null,
+      "stacks" : null,
+      "bestSeats" : null
+    },
+    "message" : "Player 1 forfeited.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "blackjack",
+      "version" : 1,
+      "phase" : "FINISHED",
+      "handNumber" : 1,
+      "handsTotal" : 10,
+      "solo" : false,
+      "button" : 0,
+      "currentSeat" : -1,
+      "activeHandIndex" : 0,
+      "options" : {
+        "hands" : "10",
+        "maxBet" : "50",
+        "startingStack" : 100,
+        "minBet" : 1
+      },
+      "dealer" : {
+        "upCard" : null,
+        "cards" : [ ],
+        "holeHidden" : false,
+        "total" : 0,
+        "soft" : false,
+        "blackjack" : false,
+        "bust" : false
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "stack" : 100,
+        "betPlaced" : false,
+        "bet" : null,
+        "hands" : [ ],
+        "eliminated" : false,
+        "forfeited" : false,
+        "place" : 1,
+        "standing" : 1
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "stack" : 100,
+        "betPlaced" : false,
+        "bet" : null,
+        "hands" : [ ],
+        "eliminated" : true,
+        "forfeited" : true,
+        "place" : 2,
+        "standing" : 0
+      } ],
+      "lastHand" : null,
+      "outcome" : {
+        "status" : "FINISHED",
+        "places" : {
+          "0" : 1,
+          "1" : 2
+        },
+        "stacks" : {
+          "0" : 100,
+          "1" : 100
+        },
+        "reason" : "FORFEIT"
+      },
+      "availableActions" : [ ],
+      "betLimits" : null,
+      "lastBet" : null
+    },
+    "success" : true
+  }
+} ]

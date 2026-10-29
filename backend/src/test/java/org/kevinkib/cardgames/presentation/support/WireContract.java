@@ -2,9 +2,15 @@ package org.kevinkib.cardgames.presentation.support;
 
 import org.kevinkib.cardgames.game.Game;
 import org.kevinkib.cardgames.game.PlayerId;
+import org.kevinkib.cardgames.presentation.api.JoinGamePayload;
 import org.kevinkib.cardgames.presentation.api.Response;
+import org.kevinkib.cardgames.presentation.dto.JoinResponseDto;
+import org.kevinkib.cardgames.sessionmanagement.core.application.RoomCreated;
+import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
+import org.springframework.http.ResponseEntity;
 import org.kevinkib.cardgames.sessionmanagement.presence.port.ForfeitReason;
 import org.kevinkib.cardgames.sessionmanagement.presence.port.GameLifecycleBroadcaster;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.SerializationFeature;
 import tools.jackson.databind.json.JsonMapper;
@@ -16,9 +22,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.function.BiFunction;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
@@ -50,6 +60,7 @@ public final class WireContract {
 
     private final String game;
     private final List<Map<String, Object>> entries = new ArrayList<>();
+    private final Set<String> seen = new HashSet<>();
 
     private WireContract(String game) {
         this.game = game;
@@ -65,10 +76,30 @@ public final class WireContract {
         return add("message", response);
     }
 
-    /** Every message of the list, in order. */
+    /**
+     * The messages of the list, in order, keeping only those that show something new: a field path with a JSON type
+     * (null included) not seen yet for that event type. A long game then records every distinct thing the client
+     * has to read, not every move.
+     */
     public WireContract messages(List<Response> responses) {
-        responses.forEach(this::message);
+        for (Response response : responses) {
+            Set<String> facts = new TreeSet<>();
+            shape(response.getEventType(), MAPPER.valueToTree(response), facts);
+            if (seen.addAll(facts)) {
+                message(response);
+            }
+        }
         return this;
+    }
+
+    /** Collects {@code path:type} for every value of the tree, array items under {@code path[]}. */
+    private static void shape(String path, JsonNode node, Set<String> facts) {
+        facts.add(path + ":" + node.getNodeType());
+        switch (node.getNodeType()) {
+            case OBJECT -> node.properties().forEach(e -> shape(path + "." + e.getKey(), e.getValue(), facts));
+            case ARRAY -> node.forEach(item -> shape(path + "[]", item, facts));
+            default -> { }
+        }
     }
 
     /** What one seat received since the last {@link RecordingMessaging#clear()}, in order. */
@@ -79,6 +110,27 @@ public final class WireContract {
     /** A REST body; {@code kind} names the endpoint ({@code state}, {@code join}, {@code lobbies}...). */
     public WireContract rest(String kind, Object body) {
         return add(kind, body);
+    }
+
+    /**
+     * Opens a room of {@code gameType} for "Alice" and seats the {@code guests} through the game's REST join, recording
+     * the first join answer, the host's lobby as the REST state and the lobby messages the host received. Returns
+     * the room, not started.
+     */
+    public RoomCreated lobby(SessionService sessions, RecordingMessaging messaging, String gameType,
+                             BiFunction<String, JoinGamePayload, ResponseEntity<JoinResponseDto>> join,
+                             BiFunction<String, String, ResponseEntity<?>> state, String... guests) {
+        RoomCreated room = sessions.createRoom(gameType, "Alice");
+        for (int i = 0; i < guests.length; i++) {
+            JoinResponseDto joined = join.apply(room.gameId(), new JoinGamePayload(guests[i])).getBody();
+            if (i == 0) {
+                rest("join", joined);
+            }
+        }
+        rest("state", state.apply(room.gameId(), room.hostToken()).getBody());
+        messagesTo(messaging, 0);
+        messaging.clear();
+        return room;
     }
 
     private WireContract add(String kind, Object payload) {

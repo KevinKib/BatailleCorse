@@ -4,6 +4,7 @@ import org.kevinkib.cardgames.bataillecorse.domain.penality.PutCardsUnderPile;
 import org.kevinkib.cardgames.bataillecorse.domain.slaprules.SlapRules;
 import org.kevinkib.cardgames.game.GameId;
 import org.kevinkib.cards.domain.deck.french.FrenchRank;
+import org.kevinkib.cards.domain.deck.french.FrenchSuit;
 import org.kevinkib.cards.testhelpers.HandBuilder;
 
 import java.util.List;
@@ -33,10 +34,21 @@ public final class BatailleCorseScenario {
         return game(id, seat0, seat1, SlapRules.DEFAULT);
     }
 
+    /** As {@link #game(List, List)}, every card a spade: the cards a real deck deals, a suit included. */
+    public static BatailleCorse suitedGame(List<FrenchRank> seat0, List<FrenchRank> seat1) {
+        return new BatailleCorse(
+                GameId.generate(),
+                List.of(player(0, seat0, FrenchSuit.SPADE), player(1, seat1, FrenchSuit.SPADE)),
+                0,
+                CentralPileBuilder.aCentralPile().withNoCards().withState(CentralPileState.NEUTRAL).build(),
+                SlapRules.DEFAULT,
+                new PutCardsUnderPile(2));
+    }
+
     private static BatailleCorse game(GameId id, List<FrenchRank> seat0, List<FrenchRank> seat1, SlapRules rules) {
         return new BatailleCorse(
                 id,
-                List.of(player(0, seat0), player(1, seat1)),
+                List.of(player(0, seat0, null), player(1, seat1, null)),
                 0,
                 CentralPileBuilder.aCentralPile().withNoCards().withState(CentralPileState.NEUTRAL).build(),
                 rules,
@@ -60,10 +72,13 @@ public final class BatailleCorseScenario {
         }
     }
 
-    private static Player player(int id, List<FrenchRank> ranks) {
+    private static Player player(int id, List<FrenchRank> ranks, FrenchSuit suit) {
         return PlayerBuilder.aPlayer().withId(id)
                 .withHand(HandBuilder.aHand()
-                        .withCards(ranks.stream().map(rank -> aCard().withRank(rank).build()).toList())
+                        .withCards(ranks.stream()
+                                .map(rank -> suit == null ? aCard().withRank(rank).build()
+                                        : aCard().withRank(rank).withSuit(suit).build())
+                                .toList())
                         .build())
                 .build();
     }

@@ -6,7 +6,6 @@ import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.kilodemerde.domain.KiloDeMerde;
 import org.kevinkib.cardgames.kilodemerde.presentation.dto.event.KiloDeMerdeEventType;
 import org.kevinkib.cardgames.presentation.api.GameActionPayload;
-import org.kevinkib.cardgames.presentation.api.JoinGamePayload;
 import org.kevinkib.cardgames.presentation.support.WireContract;
 import org.kevinkib.cardgames.sessionmanagement.core.application.RoomCreated;
 
@@ -30,11 +29,9 @@ class KiloDeMerdeWireContractTest {
     @Test
     void aGameFromTheLobbyToTheForfeit() throws Exception {
         WireContract contract = WireContract.of(GAME_TYPE);
-        RoomCreated room = table.sessions.createRoom(GAME_TYPE, "Alice");
+        RoomCreated room = contract.lobby(table.sessions, table.messaging, GAME_TYPE, table.rest::joinGame,
+                table.rest::getGame, "Bob", "Cleo");
         GameId id = new GameId(room.gameId());
-        contract.rest("join", table.rest.joinGame(room.gameId(), new JoinGamePayload("Bob")).getBody());
-        table.rest.joinGame(room.gameId(), new JoinGamePayload("Cleo"));
-        contract.rest("state", table.rest.getGame(room.gameId(), room.hostToken()).getBody());
         table.decks.fixDeal(id, hands(ALL_SETS), cards(PILE));
 
         table.ws.start(new GameActionPayload(room.gameId(), room.hostToken()));

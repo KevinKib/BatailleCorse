@@ -34,6 +34,8 @@ export interface GameContract {
   eventType: string | null;
   /** The type of `eventData` by event type; `*` for the others. Lifecycle types are filled in by the check. */
   eventData: Record<string, string>;
+  /** The type of a whole STOMP message, its `state` aside (checked against `view`); a generic envelope by default. */
+  response?: string;
   /** The type of each other REST body, by recorded kind. */
   rest?: Record<string, string>;
   /** Typed test fixtures of the game: their own type errors fail the check too (they must mirror the wire). */
@@ -54,6 +56,8 @@ interface Envelope {
 }
 
 const EMPTY_DATA = 'Record<string, never>';
+/** The fields of a STOMP message; a game with more (Blackjack's `errorCode`) names its own `response` type. */
+const ENVELOPE = '{ success: boolean; eventType: string; eventData: unknown; message: string | null; state: unknown }';
 /** The data of the shared events; START is the session's start (no data) unless a game says otherwise. */
 const SHARED_DATA: Record<string, string> = {
   START: EMPTY_DATA,
@@ -112,16 +116,15 @@ class Source {
   static readonly HEADER_LINES = 1;
 }
 
-function addScenario(source: Source, game: GameContract, file: string, lifecycle: Set<string>): void {
+function addScenario(source: Source, game: GameContract, file: string, lifecycle: Set<string>,
+  problems: string[]): void {
   const recorded = readJson<Recorded[]>(path.join(CONTRACT_DIR, game.folder, file));
   recorded.forEach((entry, index) => {
     const where = `${game.folder}/${file} #${index} (${entry.kind}`;
     if (entry.kind === 'message') {
       const envelope = entry.payload as Envelope;
       const eventType = envelope.eventType ?? '';
-      source.add(`${where} ${eventType} envelope)`,
-        '{ success: boolean; eventType: string; eventData: unknown; message: string | null; state: unknown }',
-        envelope);
+      source.add(`${where} ${eventType} envelope)`, game.response ?? ENVELOPE, { ...envelope, state: null });
       if (envelope.state !== null && envelope.state !== undefined) {
         source.add(`${where} ${eventType} state)`, game.view, envelope.state);
       }
@@ -134,28 +137,35 @@ function addScenario(source: Source, game: GameContract, file: string, lifecycle
       }
       const dataType = game.eventData[eventType] ?? SHARED_DATA[eventType] ?? game.eventData['*'];
       if (!dataType) {
-        throw new Error(`${where}): no eventData type for ${eventType} in the contract manifest`);
+        problems.push(`${where}): no frontend type reads the eventData of ${eventType} (contract manifest)`);
+        return;
       }
       source.add(`${where} ${eventType} eventData)`, dataType, envelope.eventData);
     } else if (entry.kind === 'state') {
       source.add(`${where})`, game.view, entry.payload);
     } else {
       const type = game.rest?.[entry.kind];
-      if (!type) throw new Error(`${where}): no type for the REST kind ${entry.kind} in the contract manifest`);
+      if (!type) {
+        problems.push(`${where}): no frontend type for the REST kind ${entry.kind} (contract manifest)`);
+        return;
+      }
       source.add(`${where})`, type, entry.payload);
     }
   });
 }
 
-function addEventTypes(source: Source, game: GameContract, lifecycle: string[]): void {
+function addEventTypes(source: Source, game: GameContract, lifecycle: string[], problems: string[]): void {
   if (!game.eventType) return;
   const file = path.join(CONTRACT_DIR, game.folder, 'event-types.json');
-  if (!fs.existsSync(file)) return;
+  if (!fs.existsSync(file)) {
+    problems.push(`${game.folder}: no event-types.json pins the event types the frontend union is checked against`);
+    return;
+  }
   const server = readJson<string[]>(file);
   const known = [...new Set([...server, ...lifecycle])].map((s) => JSON.stringify(s)).join(' | ');
-  source.raw(`${game.folder}/event-types.json (a server event type the frontend does not know)`,
-    `const _types_${game.folder.replace(/\W/g, '_')}: ${game.eventType}[] = ${JSON.stringify(server)};`);
   const id = game.folder.replace(/\W/g, '_');
+  source.raw(`${game.folder}/event-types.json (a server event type the frontend does not know)`,
+    `const _types_${id}: ${game.eventType}[] = ${JSON.stringify(server)};`);
   source.raw(`${game.folder}/event-types.json (a frontend event type the server never sends)`,
     `const _extra_${id}: never = null as unknown as Exclude<${game.eventType}, ${known}>;`);
 }
@@ -179,9 +189,10 @@ export function checkWireContract(games: GameContract[]): string[] {
   const lifecycleTypes = lifecycleEventTypes();
   const lifecycle = new Set(lifecycleTypes);
   const source = new Source();
+  const missing: string[] = [];
   for (const game of games) {
-    for (const file of scenarioFiles(game.folder)) addScenario(source, game, file, lifecycle);
-    addEventTypes(source, game, lifecycleTypes);
+    for (const file of scenarioFiles(game.folder)) addScenario(source, game, file, lifecycle, missing);
+    addEventTypes(source, game, lifecycleTypes, missing);
   }
   const text = source.text();
   const host = ts.createCompilerHost(OPTIONS);
@@ -220,5 +231,6 @@ export function checkWireContract(games: GameContract[]): string[] {
       report(`${path.relative(SRC_DIR, file)}${where}: ${message}`, `${path.relative(SRC_DIR, file)}${where}: ${message}`);
     }
   }
+  for (const problem of missing) report(problem.replace(/ #\d+ /, ' '), problem);
   return [...problems.values()].map(({ first, count }) => (count > 1 ? `${first} (x${count})` : first));
 }
