@@ -5,6 +5,8 @@ import { useRouter } from 'vue-router';
 import { useKiloDeMerdeStore } from '../../state/KiloDeMerde.store';
 import { useKiloDeMerdeBootstrap } from '../../composables/useKiloDeMerdeBootstrap';
 import { useHotkeys } from '../../composables/useHotkeys';
+import { useKiloHotkeySettings } from '../../composables/useKiloHotkeySettings';
+import HotkeySettings from '../../components/HotkeySettings.vue';
 import { useLeaveGuard } from '../../composables/useLeaveGuard';
 import { useRemovedRedirect } from '../../composables/useRemovedRedirect';
 import { useSeatDisconnectCountdown } from '../../composables/useSeatDisconnectCountdown';
@@ -187,8 +189,9 @@ watch(() => store.lastEvent?.id, () => {
 });
 
 // --- Keys ----------------------------------------------------------------------------------------------------------
-// Space slaps, 1 to 4 pass the card in that slot, R confirms I am ready. All only when the server allows the action. (Remapping lives with
-// the game's registration, which declares the shortcuts.)
+// By default Space slaps, 1 to 4 pass the card in that slot, R confirms I am ready; every key is remappable (and can be
+// switched off) from the gear, like the other games. All only when the server allows the action.
+const hotkeys = useKiloHotkeySettings();
 function slap() { if (canSlap.value) store.slap(); }
 function ready() { if (canReady.value) store.ready(); }
 function passSlot(slot: number) {
@@ -199,12 +202,13 @@ useHotkeys(
   () => {},
   slap,
   () => [],
-  () => [' '],
+  () => [hotkeys.keyOf('slap')],
   (key) => {
-    if (/^[1-4]$/.test(key)) passSlot(Number(key) - 1);
-    else if (key === 'r') ready();
+    if (key === hotkeys.keyOf('ready')) { ready(); return; }
+    const slot = (['pass1', 'pass2', 'pass3', 'pass4'] as const).findIndex(a => hotkeys.keyOf(a) === key);
+    if (slot >= 0) passSlot(slot);
   },
-  () => store.screen === 'playing',
+  () => store.screen === 'playing' && hotkeys.enabled.value,
 );
 
 // --- The pictures of the table -------------------------------------------------------------------------------------
@@ -360,7 +364,8 @@ const rematchButton = computed(() =>
       <div v-if="confirming" class="ready-gate" data-test="ready-gate">
         <template v-if="canReady || !store.me?.ready">
           <p class="ready-prompt" data-test="ready-prompt">{{ readyPrompt }}</p>
-          <Button data-test="ready" class="ready-button" :label="ui.readyGate.button" icon="pi pi-check" aria-keyshortcuts="R"
+          <Button data-test="ready" class="ready-button" :label="ui.readyGate.button" icon="pi pi-check"
+                  :aria-keyshortcuts="hotkeys.enabled.value ? hotkeys.keyOf('ready').toUpperCase() : undefined"
                   :disabled="!canReady" @click="ready()" />
         </template>
         <p v-else class="ready-prompt" data-test="ready-waiting">
@@ -383,6 +388,7 @@ const rematchButton = computed(() =>
                 severity="secondary" variant="text" rounded @click="router.push({ name: 'games' })" />
         <AnimationSpeedButton class="speed" :speed="speed" :names="ui.motion.speeds" :label="ui.motion.speed"
                               @cycle="cycleSpeed()" />
+        <HotkeySettings :settings="hotkeys" :labels="messages.hotkeys.actions" />
       </div>
     </template>
   </div>

@@ -15,7 +15,7 @@ vi.mock('../locales', async (original) => ({
   SUPPORTED_LOCALES: ['en'],
 }));
 
-async function mountHome(key: 'bataillecorse' | 'bullshit', query = '',
+async function mountHome(key: 'bataillecorse' | 'bullshit' | 'kilo-de-merde', query = '',
   createLobby: (name?: string, privateGame?: boolean) => Promise<string> = vi.fn().mockResolvedValue('g1')) {
   const router = createAppRouter(createMemoryHistory());
   await router.push(`/${key}${query}`);
@@ -169,7 +169,7 @@ describe('GameHome', () => {
 describe('GameHome local preferences', () => {
   beforeEach(() => { setActivePinia(createPinia()); localStorage.clear(); });
 
-  for (const [key, actions] of [['bataillecorse', ['send', 'slap']], ['bullshit', ['discard', 'call']]] as const) {
+  for (const [key, actions] of [['bataillecorse', ['send', 'slap']], ['bullshit', ['discard', 'call']], ['kilo-de-merde', ['slap', 'pass1', 'pass2', 'pass3', 'pass4', 'ready']]] as const) {
     it(`given_${key}_thenAGearOpensItsShortcutsBeforeAnyGameStarts`, async () => {
       const { wrapper } = await mountHome(key);
       const gear = wrapper.get('[data-test="hotkeys-button"]');

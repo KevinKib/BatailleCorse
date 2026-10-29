@@ -300,15 +300,16 @@ export const hotkeys: Messages['hotkeys'] = {
   enabled: 'Raccourcis activés',
   actions: {
     discard: 'Défausser', call: 'Dire Menteur', send: 'Envoyer une carte', slap: 'Taper sur le tas',
-    pass1: 'Passer la carte 1', pass2: 'Passer la carte 2', pass3: 'Passer la carte 3', pass4: 'Passer la carte 4',
+    pass1: 'Passer la carte 1', pass2: 'Passer la carte 2', pass3: 'Passer la carte 3', pass4: 'Passer la carte 4', ready: 'Prêt',
   },
   change: 'Modifier',
   changeAria: 'Modifier la touche pour {action}',
   listening: 'Appuyez sur une touche…',
   reset: 'Rétablir les valeurs par défaut',
+  space: 'Espace',
   errors: {
     reserved: 'Utilisez une lettre ou un symbole seul (pas Tab, Entrée, Espace, Échap, les flèches ni les modificateurs).',
-    duplicate: 'Cette touche est déjà utilisée par l’autre action.',
+    duplicate: 'Cette touche est déjà utilisée par une autre action.',
   },
 };
 

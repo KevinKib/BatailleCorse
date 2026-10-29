@@ -16,6 +16,12 @@ describe('useGameHotkeySettings', () => {
     expect(settings?.actions.map(a => a.id)).toEqual(['send', 'slap']);
   });
 
+  it('givenKiloDeMerde_thenItsOwnSettingsAreReturned', () => {
+    const settings = useGameHotkeySettings(findGame('kilo-de-merde')!);
+    expect(settings?.actions.map(a => a.id)).toEqual(['slap', 'pass1', 'pass2', 'pass3', 'pass4', 'ready']);
+    expect(settings?.enabled?.value).toBe(true);
+  });
+
   it('givenAGameWithoutHotkeys_thenNothingIsReturnedAndNoOtherGamesSettingsLeakIn', () => {
     const quiet: GameDefinition = { ...findGame('bullshit')!, key: 'kobo', hotkeys: undefined };
     expect(useGameHotkeySettings(quiet)).toBeNull();
