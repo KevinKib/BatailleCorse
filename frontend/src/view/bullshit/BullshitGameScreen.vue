@@ -20,6 +20,7 @@ import OpponentSeat from '../../components/bullshit/OpponentSeat.vue';
 import BullshitHand from '../../components/bullshit/BullshitHand.vue';
 import GameLobby from '../../components/lobby/GameLobby.vue';
 import { findGame } from '../../model/games';
+import { rankLabel } from '../../model/president/cardLabel';
 import { useI18n } from '../../composables/useI18n';
 import { CardMotionLayer, canAnimate, useTableMotion, type CardMotionLayerPlay } from '../../animation';
 import {
@@ -90,6 +91,12 @@ const seatPositions = computed(() => ringPositions(opponents.value.length));
 
 // Suit claims get their symbol next to the word (rank claims: null).
 const targetSuit = computed(() => claimSuit(store.game?.currentTarget.label));
+// The claim's word in the UI language: the server names the target by its enum (`KING`, `HEART`).
+const targetLabel = computed(() => {
+  const label = store.game?.currentTarget.label;
+  if (!label) return '';
+  return ui.table.suits[label.toUpperCase()] ?? rankLabel(label, ui.table);
+});
 // A suit target means a suit claim mode (the game view does not carry the mode itself): the hand sorts by suit.
 const handSortMode = computed<ClaimMode>(() => (targetSuit.value ? CLAIM_MODE_SUIT : CLAIM_MODE_RANK));
 const myCardCount = computed(() => store.game?.myHand.length ?? 0);
@@ -334,7 +341,7 @@ function leaveLobby() {
             <strong>
               <span v-if="targetSuit" data-test="claim-suit" aria-hidden="true"
                     :class="['claim-suit', { 'claim-suit--red': targetSuit.red }]">{{ targetSuit.glyph }}</span>
-              {{ store.game?.currentTarget.label }}
+              {{ targetLabel }}
             </strong>
           </div>
 
@@ -394,7 +401,7 @@ function leaveLobby() {
         <div class="actions">
           <Button
             data-test="discard"
-            :label="format(ui.table.discardAs, { target: store.game?.currentTarget.label ?? '' })"
+            :label="format(ui.table.discardAs, { target: targetLabel })"
             icon="pi pi-arrow-up"
             severity="success"
             rounded

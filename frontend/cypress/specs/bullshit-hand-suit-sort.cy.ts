@@ -1,7 +1,7 @@
 // Non-regression: in suit claim mode the hand is grouped by suit (claim cycle order), then by
 // rank in the suit, on at most two rows and without scrolling.
-const SUIT_ORDER = ['heart', 'diamond', 'club', 'spade'];
-const RANK_ORDER = ['ace', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'jack', 'queen', 'king'];
+const SUIT_ORDER = ['hearts', 'diamonds', 'clubs', 'spades'];
+const RANK_ORDER = ['Ace', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'Jack', 'Queen', 'King'];
 
 function startSuitGame() {
   cy.visit('/');
