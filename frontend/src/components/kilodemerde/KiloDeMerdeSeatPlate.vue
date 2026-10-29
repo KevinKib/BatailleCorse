@@ -70,7 +70,8 @@ const accessibleName = computed(() => {
     <span v-if="confirm === 'ready'" class="plate-ready" data-test="seat-confirmed" aria-hidden="true"><i class="pi pi-check"></i></span>
     <span v-else-if="confirm === 'waiting'" class="plate-ready plate-ready--waiting" data-test="seat-waiting" aria-hidden="true"><i class="pi pi-hourglass"></i></span>
     <span v-if="player.slapRank !== null" class="plate-rank" data-test="seat-rank" aria-hidden="true">{{ player.slapRank }}</span>
-    <span v-if="last" class="plate-last" data-test="seat-last" aria-hidden="true">{{ ui.outcome.lastTag }}</span>
+    <!-- Once the hand is revealed the round lines name who was last: the tag is not drawn over the composition. -->
+    <span v-if="last && !hand" class="plate-last" data-test="seat-last" aria-hidden="true">{{ ui.outcome.lastTag }}</span>
     <span v-if="disconnected" class="plate-badge"><SeatDisconnectBadge :seconds-remaining="secondsRemaining ?? null" /></span>
   </div>
   </div>
@@ -137,11 +138,13 @@ const accessibleName = computed(() => {
 }
 .plate--compact .plate-hand { font-size: 0.5625rem; }
 .plate-ready {
-  position: absolute; top: -8px; right: -6px; z-index: 1;
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 18px; height: 18px; border-radius: 50%;
-  background: rgb(var(--accent-active-rgb)); color: #141413; font-size: 0.625rem;
+  position: absolute; top: -10px; right: -8px; z-index: 1;
+  display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box;
+  width: 22px; height: 22px; padding: 5px; border-radius: 50%;
+  background: rgb(var(--accent-active-rgb)); color: #141413; font-size: 0.5625rem; line-height: 1;
 }
+/* The icon keeps 5 px of air inside its circle: it never touches the border. */
+.plate-ready .pi { font-size: inherit; line-height: 1; }
 .plate-ready--waiting { background: rgba(255, 255, 255, 0.85); }
 .plate-rank {
   position: absolute; top: -10px; left: -6px; z-index: 1;
