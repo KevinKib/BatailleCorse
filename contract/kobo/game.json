@@ -1,0 +1,1947 @@
+[ {
+  "kind" : "join",
+  "payload" : {
+    "playerId" : 1,
+    "token" : "00000000-0000-0000-0000-000000000000"
+  }
+}, {
+  "kind" : "state",
+  "payload" : {
+    "started" : false,
+    "gameId" : "00000000-0000-0000-0000-000000000000",
+    "players" : [ {
+      "seat" : 0,
+      "name" : "Alice",
+      "joined" : true,
+      "bot" : false,
+      "seatOptions" : { },
+      "disconnected" : false
+    }, {
+      "seat" : 1,
+      "name" : "Bob",
+      "joined" : true,
+      "bot" : false,
+      "seatOptions" : { },
+      "disconnected" : false
+    }, {
+      "seat" : 2,
+      "name" : null,
+      "joined" : false,
+      "bot" : false,
+      "seatOptions" : { },
+      "disconnected" : false
+    }, {
+      "seat" : 3,
+      "name" : null,
+      "joined" : false,
+      "bot" : false,
+      "seatOptions" : { },
+      "disconnected" : false
+    }, {
+      "seat" : 4,
+      "name" : null,
+      "joined" : false,
+      "bot" : false,
+      "seatOptions" : { },
+      "disconnected" : false
+    }, {
+      "seat" : 5,
+      "name" : null,
+      "joined" : false,
+      "bot" : false,
+      "seatOptions" : { },
+      "disconnected" : false
+    } ],
+    "hostSeat" : 0,
+    "mySeat" : 0,
+    "minPlayers" : 2,
+    "maxPlayers" : 6,
+    "canStart" : true,
+    "options" : { },
+    "optionDescriptors" : [ ],
+    "seatOptionDescriptors" : [ {
+      "key" : "level",
+      "type" : "CHOICE",
+      "values" : [ "easy", "medium", "hard" ],
+      "defaultValue" : "medium",
+      "labelKey" : "options.kobo.level"
+    } ],
+    "canEditOptions" : false,
+    "removableBotSeats" : [ ],
+    "lobbyVersion" : 1,
+    "privateGame" : false
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "JOIN",
+    "eventData" : { },
+    "message" : "Player 2 joined.",
+    "state" : {
+      "started" : false,
+      "gameId" : "00000000-0000-0000-0000-000000000000",
+      "players" : [ {
+        "seat" : 0,
+        "name" : "Alice",
+        "joined" : true,
+        "bot" : false,
+        "seatOptions" : { },
+        "disconnected" : false
+      }, {
+        "seat" : 1,
+        "name" : "Bob",
+        "joined" : true,
+        "bot" : false,
+        "seatOptions" : { },
+        "disconnected" : false
+      }, {
+        "seat" : 2,
+        "name" : null,
+        "joined" : false,
+        "bot" : false,
+        "seatOptions" : { },
+        "disconnected" : false
+      }, {
+        "seat" : 3,
+        "name" : null,
+        "joined" : false,
+        "bot" : false,
+        "seatOptions" : { },
+        "disconnected" : false
+      }, {
+        "seat" : 4,
+        "name" : null,
+        "joined" : false,
+        "bot" : false,
+        "seatOptions" : { },
+        "disconnected" : false
+      }, {
+        "seat" : 5,
+        "name" : null,
+        "joined" : false,
+        "bot" : false,
+        "seatOptions" : { },
+        "disconnected" : false
+      } ],
+      "hostSeat" : 0,
+      "mySeat" : 0,
+      "minPlayers" : 2,
+      "maxPlayers" : 6,
+      "canStart" : true,
+      "options" : { },
+      "optionDescriptors" : [ ],
+      "seatOptionDescriptors" : [ {
+        "key" : "level",
+        "type" : "CHOICE",
+        "values" : [ "easy", "medium", "hard" ],
+        "defaultValue" : "medium",
+        "labelKey" : "options.kobo.level"
+      } ],
+      "canEditOptions" : false,
+      "removableBotSeats" : [ ],
+      "lobbyVersion" : 1,
+      "privateGame" : false
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "DISCARD_DRAWN",
+    "eventData" : {
+      "seat" : 0,
+      "action" : "DISCARD_DRAWN",
+      "slot" : null,
+      "targetSeat" : null,
+      "targetSlot" : null,
+      "card" : {
+        "rank" : "9",
+        "suit" : "HEART",
+        "name" : "HEART_9"
+      },
+      "givenSlot" : null,
+      "success" : null,
+      "barrierOpened" : null
+    },
+    "message" : "Player 0 discarded the drawn card.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "kobo",
+      "version" : 1,
+      "round" : 1,
+      "phase" : "POWER",
+      "currentSeat" : 0,
+      "readySeats" : [ ],
+      "announcer" : null,
+      "finalTurnsRemaining" : [ ],
+      "pendingPower" : "PEEK_OTHER",
+      "drawPileSize" : 5,
+      "discardSize" : 1,
+      "discardTop" : {
+        "rank" : "9",
+        "suit" : "HEART",
+        "name" : "HEART_9"
+      },
+      "revealed" : false,
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "current" : true,
+        "total" : 0,
+        "handSize" : 4,
+        "slots" : [ {
+          "slot" : 0,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 1,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 2,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 3,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        } ]
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "current" : false,
+        "total" : 0,
+        "handSize" : 4,
+        "slots" : [ {
+          "slot" : 0,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 1,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 2,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 3,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        } ]
+      } ],
+      "hasDrawn" : false,
+      "drawnCard" : null,
+      "startingCards" : [ ],
+      "reveal" : null,
+      "availableActions" : [ "PEEK", "SKIP_POWER", "MATCH_DISCARD" ],
+      "lastRound" : null,
+      "outcome" : {
+        "status" : "ONGOING"
+      }
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "PEEK",
+    "eventData" : {
+      "seat" : 0,
+      "action" : "PEEK",
+      "slot" : null,
+      "targetSeat" : 1,
+      "targetSlot" : 3,
+      "card" : null,
+      "givenSlot" : null,
+      "success" : null,
+      "barrierOpened" : null
+    },
+    "message" : "Player 0 looked at a card.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "kobo",
+      "version" : 2,
+      "round" : 1,
+      "phase" : "TURN_END",
+      "currentSeat" : 0,
+      "readySeats" : [ ],
+      "announcer" : null,
+      "finalTurnsRemaining" : [ ],
+      "pendingPower" : "NONE",
+      "drawPileSize" : 5,
+      "discardSize" : 1,
+      "discardTop" : {
+        "rank" : "9",
+        "suit" : "HEART",
+        "name" : "HEART_9"
+      },
+      "revealed" : false,
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "current" : true,
+        "total" : 0,
+        "handSize" : 4,
+        "slots" : [ {
+          "slot" : 0,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 1,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 2,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 3,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        } ]
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "current" : false,
+        "total" : 0,
+        "handSize" : 4,
+        "slots" : [ {
+          "slot" : 0,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 1,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 2,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 3,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        } ]
+      } ],
+      "hasDrawn" : false,
+      "drawnCard" : null,
+      "startingCards" : [ ],
+      "reveal" : {
+        "seat" : 1,
+        "slot" : 3,
+        "revision" : 0,
+        "card" : {
+          "rank" : "KING",
+          "suit" : "SPADE",
+          "name" : "SPADE_KING"
+        }
+      },
+      "availableActions" : [ "END_TURN", "ANNOUNCE_KOBO", "MATCH_DISCARD" ],
+      "lastRound" : null,
+      "outcome" : {
+        "status" : "ONGOING"
+      }
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "MATCH",
+    "eventData" : {
+      "seat" : 0,
+      "action" : "MATCH",
+      "slot" : null,
+      "targetSeat" : null,
+      "targetSlot" : null,
+      "card" : null,
+      "givenSlot" : null,
+      "success" : false,
+      "barrierOpened" : null
+    },
+    "message" : "Player 0 tried to discard a card.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "kobo",
+      "version" : 1,
+      "round" : 1,
+      "phase" : "DRAW",
+      "currentSeat" : 0,
+      "readySeats" : [ ],
+      "announcer" : null,
+      "finalTurnsRemaining" : [ ],
+      "pendingPower" : "NONE",
+      "drawPileSize" : 4,
+      "discardSize" : 1,
+      "discardTop" : {
+        "rank" : "7",
+        "suit" : "HEART",
+        "name" : "HEART_7"
+      },
+      "revealed" : false,
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "current" : true,
+        "total" : 0,
+        "handSize" : 5,
+        "slots" : [ {
+          "slot" : 0,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 1,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 2,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 3,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 4,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        } ]
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "current" : false,
+        "total" : 0,
+        "handSize" : 4,
+        "slots" : [ {
+          "slot" : 0,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 1,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 2,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 3,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        } ]
+      } ],
+      "hasDrawn" : false,
+      "drawnCard" : null,
+      "startingCards" : [ ],
+      "reveal" : null,
+      "availableActions" : [ "DRAW", "MATCH_DISCARD" ],
+      "lastRound" : null,
+      "outcome" : {
+        "status" : "ONGOING"
+      }
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "MATCH",
+    "eventData" : {
+      "seat" : 0,
+      "action" : "MATCH",
+      "slot" : null,
+      "targetSeat" : 0,
+      "targetSlot" : 0,
+      "card" : {
+        "rank" : "7",
+        "suit" : "SPADE",
+        "name" : "SPADE_7"
+      },
+      "givenSlot" : null,
+      "success" : true,
+      "barrierOpened" : null
+    },
+    "message" : "Player 0 tried to discard a card.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "kobo",
+      "version" : 2,
+      "round" : 1,
+      "phase" : "DRAW",
+      "currentSeat" : 0,
+      "readySeats" : [ ],
+      "announcer" : null,
+      "finalTurnsRemaining" : [ ],
+      "pendingPower" : "NONE",
+      "drawPileSize" : 4,
+      "discardSize" : 2,
+      "discardTop" : {
+        "rank" : "7",
+        "suit" : "SPADE",
+        "name" : "SPADE_7"
+      },
+      "revealed" : false,
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "current" : true,
+        "total" : 0,
+        "handSize" : 4,
+        "slots" : [ {
+          "slot" : 0,
+          "occupied" : false,
+          "revision" : 1,
+          "card" : null
+        }, {
+          "slot" : 1,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 2,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 3,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 4,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        } ]
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "current" : false,
+        "total" : 0,
+        "handSize" : 4,
+        "slots" : [ {
+          "slot" : 0,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 1,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 2,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 3,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        } ]
+      } ],
+      "hasDrawn" : false,
+      "drawnCard" : null,
+      "startingCards" : [ ],
+      "reveal" : null,
+      "availableActions" : [ "DRAW", "MATCH_DISCARD" ],
+      "lastRound" : null,
+      "outcome" : {
+        "status" : "ONGOING"
+      }
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "READY",
+    "eventData" : {
+      "seat" : 0,
+      "action" : "READY",
+      "slot" : null,
+      "targetSeat" : null,
+      "targetSlot" : null,
+      "card" : null,
+      "givenSlot" : null,
+      "success" : null,
+      "barrierOpened" : false
+    },
+    "message" : "Player 0 is ready.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "kobo",
+      "version" : 1,
+      "round" : 1,
+      "phase" : "MEMORISING",
+      "currentSeat" : 0,
+      "readySeats" : [ 0 ],
+      "announcer" : null,
+      "finalTurnsRemaining" : [ ],
+      "pendingPower" : "NONE",
+      "drawPileSize" : 3,
+      "discardSize" : 1,
+      "discardTop" : {
+        "rank" : "2",
+        "suit" : "SPADE",
+        "name" : "SPADE_2"
+      },
+      "revealed" : false,
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "current" : true,
+        "total" : 0,
+        "handSize" : 4,
+        "slots" : [ {
+          "slot" : 0,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 1,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 2,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 3,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        } ]
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "current" : false,
+        "total" : 0,
+        "handSize" : 4,
+        "slots" : [ {
+          "slot" : 0,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 1,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 2,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 3,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        } ]
+      } ],
+      "hasDrawn" : false,
+      "drawnCard" : null,
+      "startingCards" : [ {
+        "slot" : 2,
+        "card" : {
+          "rank" : "3",
+          "suit" : "HEART",
+          "name" : "HEART_3"
+        }
+      }, {
+        "slot" : 3,
+        "card" : {
+          "rank" : "4",
+          "suit" : "HEART",
+          "name" : "HEART_4"
+        }
+      } ],
+      "reveal" : null,
+      "availableActions" : [ ],
+      "lastRound" : null,
+      "outcome" : {
+        "status" : "ONGOING"
+      }
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "ROUND_START",
+    "eventData" : {
+      "seat" : 1,
+      "action" : "READY",
+      "slot" : null,
+      "targetSeat" : null,
+      "targetSlot" : null,
+      "card" : null,
+      "givenSlot" : null,
+      "success" : null,
+      "barrierOpened" : true
+    },
+    "message" : "Player 1 is ready.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "kobo",
+      "version" : 2,
+      "round" : 1,
+      "phase" : "DRAW",
+      "currentSeat" : 0,
+      "readySeats" : [ ],
+      "announcer" : null,
+      "finalTurnsRemaining" : [ ],
+      "pendingPower" : "NONE",
+      "drawPileSize" : 3,
+      "discardSize" : 1,
+      "discardTop" : {
+        "rank" : "2",
+        "suit" : "SPADE",
+        "name" : "SPADE_2"
+      },
+      "revealed" : false,
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "current" : true,
+        "total" : 0,
+        "handSize" : 4,
+        "slots" : [ {
+          "slot" : 0,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 1,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 2,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 3,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        } ]
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "current" : false,
+        "total" : 0,
+        "handSize" : 4,
+        "slots" : [ {
+          "slot" : 0,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 1,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 2,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 3,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        } ]
+      } ],
+      "hasDrawn" : false,
+      "drawnCard" : null,
+      "startingCards" : [ {
+        "slot" : 2,
+        "card" : {
+          "rank" : "3",
+          "suit" : "HEART",
+          "name" : "HEART_3"
+        }
+      }, {
+        "slot" : 3,
+        "card" : {
+          "rank" : "4",
+          "suit" : "HEART",
+          "name" : "HEART_4"
+        }
+      } ],
+      "reveal" : null,
+      "availableActions" : [ "DRAW", "MATCH_DISCARD" ],
+      "lastRound" : null,
+      "outcome" : {
+        "status" : "ONGOING"
+      }
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "DRAW",
+    "eventData" : {
+      "seat" : 0,
+      "action" : "DRAW",
+      "slot" : null,
+      "targetSeat" : null,
+      "targetSlot" : null,
+      "card" : null,
+      "givenSlot" : null,
+      "success" : null,
+      "barrierOpened" : null
+    },
+    "message" : "Player 0 drew a card.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "kobo",
+      "version" : 3,
+      "round" : 1,
+      "phase" : "DECISION",
+      "currentSeat" : 0,
+      "readySeats" : [ ],
+      "announcer" : null,
+      "finalTurnsRemaining" : [ ],
+      "pendingPower" : "NONE",
+      "drawPileSize" : 2,
+      "discardSize" : 1,
+      "discardTop" : {
+        "rank" : "2",
+        "suit" : "SPADE",
+        "name" : "SPADE_2"
+      },
+      "revealed" : false,
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "current" : true,
+        "total" : 0,
+        "handSize" : 4,
+        "slots" : [ {
+          "slot" : 0,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 1,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 2,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 3,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        } ]
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "current" : false,
+        "total" : 0,
+        "handSize" : 4,
+        "slots" : [ {
+          "slot" : 0,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 1,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 2,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 3,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        } ]
+      } ],
+      "hasDrawn" : true,
+      "drawnCard" : {
+        "rank" : "2",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_2"
+      },
+      "startingCards" : [ ],
+      "reveal" : null,
+      "availableActions" : [ "SWAP_DRAWN", "DISCARD_DRAWN", "MATCH_DISCARD" ],
+      "lastRound" : null,
+      "outcome" : {
+        "status" : "ONGOING"
+      }
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "SWAP",
+    "eventData" : {
+      "seat" : 0,
+      "action" : "SWAP",
+      "slot" : 0,
+      "targetSeat" : null,
+      "targetSlot" : null,
+      "card" : {
+        "rank" : "ACE",
+        "suit" : "HEART",
+        "name" : "HEART_ACE"
+      },
+      "givenSlot" : null,
+      "success" : null,
+      "barrierOpened" : null
+    },
+    "message" : "Player 0 swapped the drawn card.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "kobo",
+      "version" : 4,
+      "round" : 1,
+      "phase" : "TURN_END",
+      "currentSeat" : 0,
+      "readySeats" : [ ],
+      "announcer" : null,
+      "finalTurnsRemaining" : [ ],
+      "pendingPower" : "NONE",
+      "drawPileSize" : 2,
+      "discardSize" : 2,
+      "discardTop" : {
+        "rank" : "ACE",
+        "suit" : "HEART",
+        "name" : "HEART_ACE"
+      },
+      "revealed" : false,
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "current" : true,
+        "total" : 0,
+        "handSize" : 4,
+        "slots" : [ {
+          "slot" : 0,
+          "occupied" : true,
+          "revision" : 1,
+          "card" : null
+        }, {
+          "slot" : 1,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 2,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 3,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        } ]
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "current" : false,
+        "total" : 0,
+        "handSize" : 4,
+        "slots" : [ {
+          "slot" : 0,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 1,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 2,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 3,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        } ]
+      } ],
+      "hasDrawn" : false,
+      "drawnCard" : null,
+      "startingCards" : [ ],
+      "reveal" : null,
+      "availableActions" : [ "END_TURN", "ANNOUNCE_KOBO", "MATCH_DISCARD" ],
+      "lastRound" : null,
+      "outcome" : {
+        "status" : "ONGOING"
+      }
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "KOBO",
+    "eventData" : {
+      "seat" : 1,
+      "action" : "KOBO",
+      "slot" : null,
+      "targetSeat" : null,
+      "targetSlot" : null,
+      "card" : null,
+      "givenSlot" : null,
+      "success" : null,
+      "barrierOpened" : null
+    },
+    "message" : "Player 1 announced Kobo.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "kobo",
+      "version" : 1,
+      "round" : 1,
+      "phase" : "DRAW",
+      "currentSeat" : 0,
+      "readySeats" : [ ],
+      "announcer" : 1,
+      "finalTurnsRemaining" : [ 0 ],
+      "pendingPower" : "NONE",
+      "drawPileSize" : 3,
+      "discardSize" : 1,
+      "discardTop" : {
+        "rank" : "2",
+        "suit" : "SPADE",
+        "name" : "SPADE_2"
+      },
+      "revealed" : false,
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "current" : true,
+        "total" : 0,
+        "handSize" : 4,
+        "slots" : [ {
+          "slot" : 0,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 1,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 2,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 3,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        } ]
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "current" : false,
+        "total" : 80,
+        "handSize" : 4,
+        "slots" : [ {
+          "slot" : 0,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 1,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 2,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 3,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        } ]
+      } ],
+      "hasDrawn" : false,
+      "drawnCard" : null,
+      "startingCards" : [ ],
+      "reveal" : null,
+      "availableActions" : [ "DRAW", "MATCH_DISCARD" ],
+      "lastRound" : null,
+      "outcome" : {
+        "status" : "ONGOING"
+      }
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "DRAW",
+    "eventData" : {
+      "seat" : 0,
+      "action" : "DRAW",
+      "slot" : null,
+      "targetSeat" : null,
+      "targetSlot" : null,
+      "card" : null,
+      "givenSlot" : null,
+      "success" : null,
+      "barrierOpened" : null
+    },
+    "message" : "Player 0 drew a card.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "kobo",
+      "version" : 2,
+      "round" : 1,
+      "phase" : "DECISION",
+      "currentSeat" : 0,
+      "readySeats" : [ ],
+      "announcer" : 1,
+      "finalTurnsRemaining" : [ 0 ],
+      "pendingPower" : "NONE",
+      "drawPileSize" : 2,
+      "discardSize" : 1,
+      "discardTop" : {
+        "rank" : "2",
+        "suit" : "SPADE",
+        "name" : "SPADE_2"
+      },
+      "revealed" : false,
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "current" : true,
+        "total" : 0,
+        "handSize" : 4,
+        "slots" : [ {
+          "slot" : 0,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 1,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 2,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 3,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        } ]
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "current" : false,
+        "total" : 80,
+        "handSize" : 4,
+        "slots" : [ {
+          "slot" : 0,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 1,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 2,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 3,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        } ]
+      } ],
+      "hasDrawn" : true,
+      "drawnCard" : {
+        "rank" : "2",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_2"
+      },
+      "startingCards" : [ ],
+      "reveal" : null,
+      "availableActions" : [ "SWAP_DRAWN", "DISCARD_DRAWN", "MATCH_DISCARD" ],
+      "lastRound" : null,
+      "outcome" : {
+        "status" : "ONGOING"
+      }
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "DISCARD_DRAWN",
+    "eventData" : {
+      "seat" : 0,
+      "action" : "DISCARD_DRAWN",
+      "slot" : null,
+      "targetSeat" : null,
+      "targetSlot" : null,
+      "card" : {
+        "rank" : "2",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_2"
+      },
+      "givenSlot" : null,
+      "success" : null,
+      "barrierOpened" : null
+    },
+    "message" : "Player 0 discarded the drawn card.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "kobo",
+      "version" : 3,
+      "round" : 1,
+      "phase" : "TURN_END",
+      "currentSeat" : 0,
+      "readySeats" : [ ],
+      "announcer" : 1,
+      "finalTurnsRemaining" : [ 0 ],
+      "pendingPower" : "NONE",
+      "drawPileSize" : 2,
+      "discardSize" : 2,
+      "discardTop" : {
+        "rank" : "2",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_2"
+      },
+      "revealed" : false,
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "current" : true,
+        "total" : 0,
+        "handSize" : 4,
+        "slots" : [ {
+          "slot" : 0,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 1,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 2,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 3,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        } ]
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "current" : false,
+        "total" : 80,
+        "handSize" : 4,
+        "slots" : [ {
+          "slot" : 0,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 1,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 2,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 3,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        } ]
+      } ],
+      "hasDrawn" : false,
+      "drawnCard" : null,
+      "startingCards" : [ ],
+      "reveal" : null,
+      "availableActions" : [ "END_TURN", "MATCH_DISCARD" ],
+      "lastRound" : null,
+      "outcome" : {
+        "status" : "ONGOING"
+      }
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "GAME_OVER",
+    "eventData" : {
+      "seat" : 0,
+      "action" : "END_TURN",
+      "slot" : null,
+      "targetSeat" : null,
+      "targetSlot" : null,
+      "card" : null,
+      "givenSlot" : null,
+      "success" : null,
+      "barrierOpened" : null
+    },
+    "message" : "Player 0 ended their turn.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "kobo",
+      "version" : 4,
+      "round" : 1,
+      "phase" : "FINISHED",
+      "currentSeat" : 0,
+      "readySeats" : [ ],
+      "announcer" : 1,
+      "finalTurnsRemaining" : [ ],
+      "pendingPower" : "NONE",
+      "drawPileSize" : 2,
+      "discardSize" : 2,
+      "discardTop" : {
+        "rank" : "2",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_2"
+      },
+      "revealed" : true,
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "current" : true,
+        "total" : 2,
+        "handSize" : 4,
+        "slots" : [ {
+          "slot" : 0,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : {
+            "rank" : "ACE",
+            "suit" : "HEART",
+            "name" : "HEART_ACE"
+          }
+        }, {
+          "slot" : 1,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : {
+            "rank" : "KING",
+            "suit" : "HEART",
+            "name" : "HEART_KING"
+          }
+        }, {
+          "slot" : 2,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : {
+            "rank" : "KING",
+            "suit" : "DIAMOND",
+            "name" : "DIAMOND_KING"
+          }
+        }, {
+          "slot" : 3,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : {
+            "rank" : "ACE",
+            "suit" : "DIAMOND",
+            "name" : "DIAMOND_ACE"
+          }
+        } ]
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "current" : false,
+        "total" : 133,
+        "handSize" : 4,
+        "slots" : [ {
+          "slot" : 0,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : {
+            "rank" : "5",
+            "suit" : "SPADE",
+            "name" : "SPADE_5"
+          }
+        }, {
+          "slot" : 1,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : {
+            "rank" : "6",
+            "suit" : "SPADE",
+            "name" : "SPADE_6"
+          }
+        }, {
+          "slot" : 2,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : {
+            "rank" : "9",
+            "suit" : "DIAMOND",
+            "name" : "DIAMOND_9"
+          }
+        }, {
+          "slot" : 3,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : {
+            "rank" : "KING",
+            "suit" : "SPADE",
+            "name" : "SPADE_KING"
+          }
+        } ]
+      } ],
+      "hasDrawn" : false,
+      "drawnCard" : null,
+      "startingCards" : [ ],
+      "reveal" : null,
+      "availableActions" : [ ],
+      "lastRound" : {
+        "players" : [ {
+          "seat" : 0,
+          "handValue" : 2,
+          "roundPoints" : 2,
+          "totalBefore" : 0,
+          "totalAfter" : 2
+        }, {
+          "seat" : 1,
+          "handValue" : 33,
+          "roundPoints" : 53,
+          "totalBefore" : 80,
+          "totalAfter" : 133
+        } ],
+        "announcer" : 1,
+        "announcerWon" : false,
+        "giftTo" : null
+      },
+      "outcome" : {
+        "status" : "FINISHED",
+        "winners" : [ 0 ],
+        "reason" : "SCORE"
+      }
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "ROUND_END",
+    "eventData" : {
+      "seat" : 0,
+      "action" : "END_TURN",
+      "slot" : null,
+      "targetSeat" : null,
+      "targetSlot" : null,
+      "card" : null,
+      "givenSlot" : null,
+      "success" : null,
+      "barrierOpened" : null
+    },
+    "message" : "Player 0 ended their turn.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "kobo",
+      "version" : 4,
+      "round" : 1,
+      "phase" : "ROUND_OVER",
+      "currentSeat" : 0,
+      "readySeats" : [ ],
+      "announcer" : 1,
+      "finalTurnsRemaining" : [ ],
+      "pendingPower" : "NONE",
+      "drawPileSize" : 2,
+      "discardSize" : 2,
+      "discardTop" : {
+        "rank" : "2",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_2"
+      },
+      "revealed" : true,
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "current" : true,
+        "total" : 2,
+        "handSize" : 4,
+        "slots" : [ {
+          "slot" : 0,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : {
+            "rank" : "ACE",
+            "suit" : "HEART",
+            "name" : "HEART_ACE"
+          }
+        }, {
+          "slot" : 1,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : {
+            "rank" : "KING",
+            "suit" : "HEART",
+            "name" : "HEART_KING"
+          }
+        }, {
+          "slot" : 2,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : {
+            "rank" : "KING",
+            "suit" : "DIAMOND",
+            "name" : "DIAMOND_KING"
+          }
+        }, {
+          "slot" : 3,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : {
+            "rank" : "ACE",
+            "suit" : "DIAMOND",
+            "name" : "DIAMOND_ACE"
+          }
+        } ]
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "current" : false,
+        "total" : 53,
+        "handSize" : 4,
+        "slots" : [ {
+          "slot" : 0,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : {
+            "rank" : "5",
+            "suit" : "SPADE",
+            "name" : "SPADE_5"
+          }
+        }, {
+          "slot" : 1,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : {
+            "rank" : "6",
+            "suit" : "SPADE",
+            "name" : "SPADE_6"
+          }
+        }, {
+          "slot" : 2,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : {
+            "rank" : "9",
+            "suit" : "DIAMOND",
+            "name" : "DIAMOND_9"
+          }
+        }, {
+          "slot" : 3,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : {
+            "rank" : "KING",
+            "suit" : "SPADE",
+            "name" : "SPADE_KING"
+          }
+        } ]
+      } ],
+      "hasDrawn" : false,
+      "drawnCard" : null,
+      "startingCards" : [ ],
+      "reveal" : null,
+      "availableActions" : [ "READY" ],
+      "lastRound" : {
+        "players" : [ {
+          "seat" : 0,
+          "handValue" : 2,
+          "roundPoints" : 2,
+          "totalBefore" : 0,
+          "totalAfter" : 2
+        }, {
+          "seat" : 1,
+          "handValue" : 33,
+          "roundPoints" : 53,
+          "totalBefore" : 0,
+          "totalAfter" : 53
+        } ],
+        "announcer" : 1,
+        "announcerWon" : false,
+        "giftTo" : null
+      },
+      "outcome" : {
+        "status" : "ONGOING"
+      }
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "READY",
+    "eventData" : {
+      "seat" : 0,
+      "action" : "READY",
+      "slot" : null,
+      "targetSeat" : null,
+      "targetSlot" : null,
+      "card" : null,
+      "givenSlot" : null,
+      "success" : null,
+      "barrierOpened" : false
+    },
+    "message" : "Player 0 is ready.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "kobo",
+      "version" : 5,
+      "round" : 1,
+      "phase" : "ROUND_OVER",
+      "currentSeat" : 0,
+      "readySeats" : [ 0 ],
+      "announcer" : 1,
+      "finalTurnsRemaining" : [ ],
+      "pendingPower" : "NONE",
+      "drawPileSize" : 2,
+      "discardSize" : 2,
+      "discardTop" : {
+        "rank" : "2",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_2"
+      },
+      "revealed" : true,
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "current" : true,
+        "total" : 2,
+        "handSize" : 4,
+        "slots" : [ {
+          "slot" : 0,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : {
+            "rank" : "ACE",
+            "suit" : "HEART",
+            "name" : "HEART_ACE"
+          }
+        }, {
+          "slot" : 1,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : {
+            "rank" : "KING",
+            "suit" : "HEART",
+            "name" : "HEART_KING"
+          }
+        }, {
+          "slot" : 2,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : {
+            "rank" : "KING",
+            "suit" : "DIAMOND",
+            "name" : "DIAMOND_KING"
+          }
+        }, {
+          "slot" : 3,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : {
+            "rank" : "ACE",
+            "suit" : "DIAMOND",
+            "name" : "DIAMOND_ACE"
+          }
+        } ]
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "current" : false,
+        "total" : 53,
+        "handSize" : 4,
+        "slots" : [ {
+          "slot" : 0,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : {
+            "rank" : "5",
+            "suit" : "SPADE",
+            "name" : "SPADE_5"
+          }
+        }, {
+          "slot" : 1,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : {
+            "rank" : "6",
+            "suit" : "SPADE",
+            "name" : "SPADE_6"
+          }
+        }, {
+          "slot" : 2,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : {
+            "rank" : "9",
+            "suit" : "DIAMOND",
+            "name" : "DIAMOND_9"
+          }
+        }, {
+          "slot" : 3,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : {
+            "rank" : "KING",
+            "suit" : "SPADE",
+            "name" : "SPADE_KING"
+          }
+        } ]
+      } ],
+      "hasDrawn" : false,
+      "drawnCard" : null,
+      "startingCards" : [ ],
+      "reveal" : null,
+      "availableActions" : [ ],
+      "lastRound" : {
+        "players" : [ {
+          "seat" : 0,
+          "handValue" : 2,
+          "roundPoints" : 2,
+          "totalBefore" : 0,
+          "totalAfter" : 2
+        }, {
+          "seat" : 1,
+          "handValue" : 33,
+          "roundPoints" : 53,
+          "totalBefore" : 0,
+          "totalAfter" : 53
+        } ],
+        "announcer" : 1,
+        "announcerWon" : false,
+        "giftTo" : null
+      },
+      "outcome" : {
+        "status" : "ONGOING"
+      }
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "state",
+  "payload" : {
+    "started" : true,
+    "id" : "00000000-0000-0000-0000-000000000000",
+    "gameType" : "kobo",
+    "version" : 4,
+    "round" : 1,
+    "phase" : "FINISHED",
+    "currentSeat" : 0,
+    "readySeats" : [ ],
+    "announcer" : 1,
+    "finalTurnsRemaining" : [ ],
+    "pendingPower" : "NONE",
+    "drawPileSize" : 2,
+    "discardSize" : 2,
+    "discardTop" : {
+      "rank" : "2",
+      "suit" : "DIAMOND",
+      "name" : "DIAMOND_2"
+    },
+    "revealed" : true,
+    "players" : [ {
+      "seat" : 0,
+      "name" : null,
+      "current" : true,
+      "total" : 2,
+      "handSize" : 4,
+      "slots" : [ {
+        "slot" : 0,
+        "occupied" : true,
+        "revision" : 0,
+        "card" : {
+          "rank" : "ACE",
+          "suit" : "HEART",
+          "name" : "HEART_ACE"
+        }
+      }, {
+        "slot" : 1,
+        "occupied" : true,
+        "revision" : 0,
+        "card" : {
+          "rank" : "KING",
+          "suit" : "HEART",
+          "name" : "HEART_KING"
+        }
+      }, {
+        "slot" : 2,
+        "occupied" : true,
+        "revision" : 0,
+        "card" : {
+          "rank" : "KING",
+          "suit" : "DIAMOND",
+          "name" : "DIAMOND_KING"
+        }
+      }, {
+        "slot" : 3,
+        "occupied" : true,
+        "revision" : 0,
+        "card" : {
+          "rank" : "ACE",
+          "suit" : "DIAMOND",
+          "name" : "DIAMOND_ACE"
+        }
+      } ]
+    }, {
+      "seat" : 1,
+      "name" : null,
+      "current" : false,
+      "total" : 133,
+      "handSize" : 4,
+      "slots" : [ {
+        "slot" : 0,
+        "occupied" : true,
+        "revision" : 0,
+        "card" : {
+          "rank" : "5",
+          "suit" : "SPADE",
+          "name" : "SPADE_5"
+        }
+      }, {
+        "slot" : 1,
+        "occupied" : true,
+        "revision" : 0,
+        "card" : {
+          "rank" : "6",
+          "suit" : "SPADE",
+          "name" : "SPADE_6"
+        }
+      }, {
+        "slot" : 2,
+        "occupied" : true,
+        "revision" : 0,
+        "card" : {
+          "rank" : "9",
+          "suit" : "DIAMOND",
+          "name" : "DIAMOND_9"
+        }
+      }, {
+        "slot" : 3,
+        "occupied" : true,
+        "revision" : 0,
+        "card" : {
+          "rank" : "KING",
+          "suit" : "SPADE",
+          "name" : "SPADE_KING"
+        }
+      } ]
+    } ],
+    "hasDrawn" : false,
+    "drawnCard" : null,
+    "startingCards" : [ ],
+    "reveal" : null,
+    "availableActions" : [ ],
+    "lastRound" : {
+      "players" : [ {
+        "seat" : 0,
+        "handValue" : 2,
+        "roundPoints" : 2,
+        "totalBefore" : 0,
+        "totalAfter" : 2
+      }, {
+        "seat" : 1,
+        "handValue" : 33,
+        "roundPoints" : 53,
+        "totalBefore" : 80,
+        "totalAfter" : 133
+      } ],
+      "announcer" : 1,
+      "announcerWon" : false,
+      "giftTo" : null
+    },
+    "outcome" : {
+      "status" : "FINISHED",
+      "winners" : [ 0 ],
+      "reason" : "SCORE"
+    }
+  }
+} ]

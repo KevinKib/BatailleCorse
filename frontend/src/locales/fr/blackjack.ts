@@ -2,7 +2,8 @@ import type { Messages } from '../Messages';
 
 // French typography: U+00A0 before ":" and U+202F before "!", "?", ";" and "»" and after "«" (written as escapes so they
 // stay visible). Addressed with "vous". Action verbs stay short for the bar at 375 px: Carte, Rester, Doubler, Séparer.
-// Live-region lines use "{player} : …" without a conjugated verb because the player can be "Vous".
+// Live-region lines about another seat read "{player} : …"; a line about my own seat has its `…You` key conjugated
+// for "vous" ("Vous brûlez", never "Vous : brûle").
 export const blackjackUi: Messages['blackjackUi'] = {
   connecting: 'Connexion…',
   back: 'Retour',
@@ -112,41 +113,28 @@ export const blackjackUi: Messages['blackjackUi'] = {
     rematchPending: 'Lancement…',
     rematchFailed: 'Impossible de lancer une nouvelle partie. Réessayez.',
   },
-  live: {
-    betsOpen: 'Placez vos mises',
-    bet: '{player} : mise placée',
-    dealt: 'Main {n} distribuée',
-    dealerBlackjack: 'Le croupier a un Blackjack',
-    yourTurn: 'À vous de jouer',
-    hit: '{player} : carte {card}, total {total}',
-    stand: '{player} : reste sur {total}',
-    double: '{player} : double, carte {card}, total {total}',
-    split: '{player} : sépare',
-    bust: '{player} : brûle avec {total}',
-    dealerReveals: 'Le croupier dévoile {card}, total {total}',
-    dealerDraws: 'Le croupier tire {card}, total {total}',
-    dealerBusts: 'Le croupier brûle avec {total}',
-    dealerStands: 'Le croupier reste sur {total}',
-    win: 'Gain : {n}',
-    lose: 'Perte : {n}',
-    push: 'Égalité',
-    eliminated: '{player} : éliminé',
-  },
   events: {
     bet: '{player} : mise placée',
+    betYou: 'Votre mise est placée',
     deal: 'Main {hand} distribuée',
     dealerBlackjack: 'Le croupier a un Blackjack',
     hit: '{player} : carte, total {total}',
+    hitYou: 'Vous tirez une carte : total {total}',
     stand: '{player} : reste',
+    standYou: 'Vous restez',
     double: '{player} : double, total {total}',
+    doubleYou: 'Vous doublez : total {total}',
     split: '{player} : sépare',
+    splitYou: 'Vous séparez',
     bust: '{player} : brûle avec {total}',
+    bustYou: 'Vous brûlez avec {total}',
     dealerBusts: 'Le croupier brûle avec {total}',
     dealerStands: 'Le croupier reste sur {total}',
     settleWin: 'Vous gagnez {amount}',
     settleLoss: 'Vous perdez {amount}',
     settlePush: 'Égalité pour vous',
     eliminated: '{player} : éliminé',
+    eliminatedYou: 'Vous êtes éliminé',
     gameOver: 'Fin de la partie',
   },
   errors: {

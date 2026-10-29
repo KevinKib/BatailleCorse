@@ -49,9 +49,9 @@ class BlackjackEventDataTest {
         assertThat(BlackjackEventType.of(new DealerBlackjack(card("KD")))).isEqualTo(BlackjackEventType.DEALER_BLACKJACK);
         assertThat(BlackjackEventType.of(new CardDrawn(S0, 0, card("2C"), 12))).isEqualTo(BlackjackEventType.HIT);
         assertThat(BlackjackEventType.of(new Stood(S0, 0))).isEqualTo(BlackjackEventType.STAND);
-        assertThat(BlackjackEventType.of(new Doubled(S0, 0, card("2C")))).isEqualTo(BlackjackEventType.DOUBLE);
+        assertThat(BlackjackEventType.of(new Doubled(S0, 0, card("2C"), 14))).isEqualTo(BlackjackEventType.DOUBLE);
         assertThat(BlackjackEventType.of(new SplitHand(S0, cards("8C 3H 8D")))).isEqualTo(BlackjackEventType.SPLIT);
-        assertThat(BlackjackEventType.of(new Busted(S0, 0))).isEqualTo(BlackjackEventType.BUST);
+        assertThat(BlackjackEventType.of(new Busted(S0, 0, 23))).isEqualTo(BlackjackEventType.BUST);
         assertThat(BlackjackEventType.of(new DealerPlayed(card("5H"), List.of(), 17)))
                 .isEqualTo(BlackjackEventType.DEALER_PLAY);
         assertThat(BlackjackEventType.of(new HandSettled(1, Map.of(), Map.of(), List.of())))
@@ -84,6 +84,18 @@ class BlackjackEventDataTest {
         assertThat(data.card()).isEqualTo(dto("4S"));
         assertThat(data.value()).isEqualTo(15);
         assertThat(data.cards()).isNull();
+    }
+
+    @Test
+    void aDoubleAndABustCarryTheHandTotal() {
+        BlackjackEventData doubled = BlackjackEventData.from(new Doubled(S1, 0, card("9H"), 20));
+        BlackjackEventData bust = BlackjackEventData.from(new Busted(S1, 1, 26));
+
+        assertThat(doubled.card()).isEqualTo(dto("9H"));
+        assertThat(doubled.value()).isEqualTo(20);
+        assertThat(bust.seat()).isEqualTo(1);
+        assertThat(bust.handIndex()).isEqualTo(1);
+        assertThat(bust.value()).isEqualTo(26);
     }
 
     @Test

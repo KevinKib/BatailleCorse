@@ -82,7 +82,8 @@ public record BlackjackBotView(
             for (PlayerId other : game.getPlayerIds()) {
                 SeatState state = game.seat(other);
                 if (!state.eliminated()) {
-                    stacks.put(other, state.stack());
+                    // Another seat's sealed bet stays hidden, as in the human view.
+                    stacks.put(other, other.equals(seat) ? state.stack() : game.publicStack(other));
                 }
             }
             PlayerId current = game.currentSeat();

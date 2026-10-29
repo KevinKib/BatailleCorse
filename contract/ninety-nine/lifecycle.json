@@ -1,0 +1,817 @@
+[ {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "PLAY",
+    "eventData" : {
+      "seat" : 0,
+      "card" : {
+        "rank" : "ACE",
+        "suit" : "SPADE",
+        "name" : "SPADE_ACE"
+      },
+      "aceValue" : 11,
+      "totalAfter" : 11,
+      "reversed" : false,
+      "hand" : null,
+      "livesLeft" : null,
+      "place" : null,
+      "stockSize" : null
+    },
+    "message" : "Player 0 played.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "ninety-nine",
+      "version" : 1,
+      "round" : 1,
+      "phase" : "PLAYING",
+      "total" : 11,
+      "direction" : "CLOCKWISE",
+      "currentSeat" : 1,
+      "pileTop" : {
+        "rank" : "ACE",
+        "suit" : "SPADE",
+        "name" : "SPADE_ACE"
+      },
+      "pileCount" : 1,
+      "stockSize" : 42,
+      "options" : {
+        "lives" : "3",
+        "quick" : "off"
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "lives" : 3,
+        "handSize" : 3,
+        "eliminated" : false,
+        "place" : null
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "lives" : 3,
+        "handSize" : 3,
+        "eliminated" : false,
+        "place" : null
+      }, {
+        "seat" : 2,
+        "name" : null,
+        "lives" : 3,
+        "handSize" : 3,
+        "eliminated" : false,
+        "place" : null
+      } ],
+      "lastPlay" : {
+        "seat" : 0,
+        "card" : {
+          "rank" : "ACE",
+          "suit" : "SPADE",
+          "name" : "SPADE_ACE"
+        },
+        "aceValue" : 11,
+        "totalBefore" : 0,
+        "totalAfter" : 11,
+        "reversed" : false
+      },
+      "lastBust" : null,
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "stuck" : false,
+      "hand" : [ {
+        "rank" : "4",
+        "suit" : "SPADE",
+        "name" : "SPADE_4"
+      }, {
+        "rank" : "5",
+        "suit" : "SPADE",
+        "name" : "SPADE_5"
+      }, {
+        "rank" : "5",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_5"
+      } ],
+      "playable" : [ {
+        "card" : {
+          "rank" : "4",
+          "suit" : "SPADE",
+          "name" : "SPADE_4"
+        },
+        "safe" : true,
+        "aceValues" : [ ]
+      }, {
+        "card" : {
+          "rank" : "5",
+          "suit" : "SPADE",
+          "name" : "SPADE_5"
+        },
+        "safe" : true,
+        "aceValues" : [ ]
+      }, {
+        "card" : {
+          "rank" : "5",
+          "suit" : "DIAMOND",
+          "name" : "DIAMOND_5"
+        },
+        "safe" : true,
+        "aceValues" : [ ]
+      } ],
+      "availableActions" : [ ]
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "PLAY",
+    "eventData" : {
+      "seat" : 1,
+      "card" : {
+        "rank" : "7",
+        "suit" : "HEART",
+        "name" : "HEART_7"
+      },
+      "aceValue" : null,
+      "totalAfter" : 18,
+      "reversed" : false,
+      "hand" : null,
+      "livesLeft" : null,
+      "place" : null,
+      "stockSize" : null
+    },
+    "message" : "Player 1 played.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "ninety-nine",
+      "version" : 2,
+      "round" : 1,
+      "phase" : "PLAYING",
+      "total" : 18,
+      "direction" : "CLOCKWISE",
+      "currentSeat" : 2,
+      "pileTop" : {
+        "rank" : "7",
+        "suit" : "HEART",
+        "name" : "HEART_7"
+      },
+      "pileCount" : 2,
+      "stockSize" : 41,
+      "options" : {
+        "lives" : "3",
+        "quick" : "off"
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "lives" : 3,
+        "handSize" : 3,
+        "eliminated" : false,
+        "place" : null
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "lives" : 3,
+        "handSize" : 3,
+        "eliminated" : false,
+        "place" : null
+      }, {
+        "seat" : 2,
+        "name" : null,
+        "lives" : 3,
+        "handSize" : 3,
+        "eliminated" : false,
+        "place" : null
+      } ],
+      "lastPlay" : {
+        "seat" : 1,
+        "card" : {
+          "rank" : "7",
+          "suit" : "HEART",
+          "name" : "HEART_7"
+        },
+        "aceValue" : null,
+        "totalBefore" : 11,
+        "totalAfter" : 18,
+        "reversed" : false
+      },
+      "lastBust" : null,
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "stuck" : false,
+      "hand" : [ {
+        "rank" : "4",
+        "suit" : "SPADE",
+        "name" : "SPADE_4"
+      }, {
+        "rank" : "5",
+        "suit" : "SPADE",
+        "name" : "SPADE_5"
+      }, {
+        "rank" : "5",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_5"
+      } ],
+      "playable" : [ {
+        "card" : {
+          "rank" : "4",
+          "suit" : "SPADE",
+          "name" : "SPADE_4"
+        },
+        "safe" : true,
+        "aceValues" : [ ]
+      }, {
+        "card" : {
+          "rank" : "5",
+          "suit" : "SPADE",
+          "name" : "SPADE_5"
+        },
+        "safe" : true,
+        "aceValues" : [ ]
+      }, {
+        "card" : {
+          "rank" : "5",
+          "suit" : "DIAMOND",
+          "name" : "DIAMOND_5"
+        },
+        "safe" : true,
+        "aceValues" : [ ]
+      } ],
+      "availableActions" : [ ]
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "PLAY",
+    "eventData" : {
+      "seat" : 2,
+      "card" : {
+        "rank" : "JACK",
+        "suit" : "CLUB",
+        "name" : "CLUB_JACK"
+      },
+      "aceValue" : null,
+      "totalAfter" : 28,
+      "reversed" : false,
+      "hand" : null,
+      "livesLeft" : null,
+      "place" : null,
+      "stockSize" : null
+    },
+    "message" : "Player 2 played.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "ninety-nine",
+      "version" : 3,
+      "round" : 1,
+      "phase" : "PLAYING",
+      "total" : 28,
+      "direction" : "CLOCKWISE",
+      "currentSeat" : 0,
+      "pileTop" : {
+        "rank" : "JACK",
+        "suit" : "CLUB",
+        "name" : "CLUB_JACK"
+      },
+      "pileCount" : 3,
+      "stockSize" : 40,
+      "options" : {
+        "lives" : "3",
+        "quick" : "off"
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "lives" : 3,
+        "handSize" : 3,
+        "eliminated" : false,
+        "place" : null
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "lives" : 3,
+        "handSize" : 3,
+        "eliminated" : false,
+        "place" : null
+      }, {
+        "seat" : 2,
+        "name" : null,
+        "lives" : 3,
+        "handSize" : 3,
+        "eliminated" : false,
+        "place" : null
+      } ],
+      "lastPlay" : {
+        "seat" : 2,
+        "card" : {
+          "rank" : "JACK",
+          "suit" : "CLUB",
+          "name" : "CLUB_JACK"
+        },
+        "aceValue" : null,
+        "totalBefore" : 18,
+        "totalAfter" : 28,
+        "reversed" : false
+      },
+      "lastBust" : null,
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "stuck" : false,
+      "hand" : [ {
+        "rank" : "4",
+        "suit" : "SPADE",
+        "name" : "SPADE_4"
+      }, {
+        "rank" : "5",
+        "suit" : "SPADE",
+        "name" : "SPADE_5"
+      }, {
+        "rank" : "5",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_5"
+      } ],
+      "playable" : [ {
+        "card" : {
+          "rank" : "4",
+          "suit" : "SPADE",
+          "name" : "SPADE_4"
+        },
+        "safe" : true,
+        "aceValues" : [ ]
+      }, {
+        "card" : {
+          "rank" : "5",
+          "suit" : "SPADE",
+          "name" : "SPADE_5"
+        },
+        "safe" : true,
+        "aceValues" : [ ]
+      }, {
+        "card" : {
+          "rank" : "5",
+          "suit" : "DIAMOND",
+          "name" : "DIAMOND_5"
+        },
+        "safe" : true,
+        "aceValues" : [ ]
+      } ],
+      "availableActions" : [ "PLAY" ]
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "OPPONENT_DISCONNECTED",
+    "eventData" : {
+      "disconnectedSeat" : 1,
+      "deadlineEpochMs" : 1700000000000
+    },
+    "message" : "Player 1 disconnected.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "ninety-nine",
+      "version" : 4,
+      "round" : 1,
+      "phase" : "PLAYING",
+      "total" : 28,
+      "direction" : "COUNTER_CLOCKWISE",
+      "currentSeat" : 2,
+      "pileTop" : {
+        "rank" : "4",
+        "suit" : "SPADE",
+        "name" : "SPADE_4"
+      },
+      "pileCount" : 4,
+      "stockSize" : 39,
+      "options" : {
+        "lives" : "3",
+        "quick" : "off"
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "lives" : 3,
+        "handSize" : 3,
+        "eliminated" : false,
+        "place" : null
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "lives" : 3,
+        "handSize" : 3,
+        "eliminated" : false,
+        "place" : null
+      }, {
+        "seat" : 2,
+        "name" : null,
+        "lives" : 3,
+        "handSize" : 3,
+        "eliminated" : false,
+        "place" : null
+      } ],
+      "lastPlay" : {
+        "seat" : 0,
+        "card" : {
+          "rank" : "4",
+          "suit" : "SPADE",
+          "name" : "SPADE_4"
+        },
+        "aceValue" : null,
+        "totalBefore" : 28,
+        "totalAfter" : 28,
+        "reversed" : true
+      },
+      "lastBust" : null,
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "stuck" : false,
+      "hand" : [ {
+        "rank" : "5",
+        "suit" : "SPADE",
+        "name" : "SPADE_5"
+      }, {
+        "rank" : "5",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_5"
+      }, {
+        "rank" : "8",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_8"
+      } ],
+      "playable" : [ {
+        "card" : {
+          "rank" : "5",
+          "suit" : "SPADE",
+          "name" : "SPADE_5"
+        },
+        "safe" : true,
+        "aceValues" : [ ]
+      }, {
+        "card" : {
+          "rank" : "5",
+          "suit" : "DIAMOND",
+          "name" : "DIAMOND_5"
+        },
+        "safe" : true,
+        "aceValues" : [ ]
+      }, {
+        "card" : {
+          "rank" : "8",
+          "suit" : "DIAMOND",
+          "name" : "DIAMOND_8"
+        },
+        "safe" : true,
+        "aceValues" : [ ]
+      } ],
+      "availableActions" : [ ]
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "OPPONENT_RECONNECTED",
+    "eventData" : {
+      "reconnectedSeat" : 1
+    },
+    "message" : "Player 1 reconnected.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "ninety-nine",
+      "version" : 4,
+      "round" : 1,
+      "phase" : "PLAYING",
+      "total" : 28,
+      "direction" : "COUNTER_CLOCKWISE",
+      "currentSeat" : 2,
+      "pileTop" : {
+        "rank" : "4",
+        "suit" : "SPADE",
+        "name" : "SPADE_4"
+      },
+      "pileCount" : 4,
+      "stockSize" : 39,
+      "options" : {
+        "lives" : "3",
+        "quick" : "off"
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "lives" : 3,
+        "handSize" : 3,
+        "eliminated" : false,
+        "place" : null
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "lives" : 3,
+        "handSize" : 3,
+        "eliminated" : false,
+        "place" : null
+      }, {
+        "seat" : 2,
+        "name" : null,
+        "lives" : 3,
+        "handSize" : 3,
+        "eliminated" : false,
+        "place" : null
+      } ],
+      "lastPlay" : {
+        "seat" : 0,
+        "card" : {
+          "rank" : "4",
+          "suit" : "SPADE",
+          "name" : "SPADE_4"
+        },
+        "aceValue" : null,
+        "totalBefore" : 28,
+        "totalAfter" : 28,
+        "reversed" : true
+      },
+      "lastBust" : null,
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "stuck" : false,
+      "hand" : [ {
+        "rank" : "5",
+        "suit" : "SPADE",
+        "name" : "SPADE_5"
+      }, {
+        "rank" : "5",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_5"
+      }, {
+        "rank" : "8",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_8"
+      } ],
+      "playable" : [ {
+        "card" : {
+          "rank" : "5",
+          "suit" : "SPADE",
+          "name" : "SPADE_5"
+        },
+        "safe" : true,
+        "aceValues" : [ ]
+      }, {
+        "card" : {
+          "rank" : "5",
+          "suit" : "DIAMOND",
+          "name" : "DIAMOND_5"
+        },
+        "safe" : true,
+        "aceValues" : [ ]
+      }, {
+        "card" : {
+          "rank" : "8",
+          "suit" : "DIAMOND",
+          "name" : "DIAMOND_8"
+        },
+        "safe" : true,
+        "aceValues" : [ ]
+      } ],
+      "availableActions" : [ ]
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "FORFEIT",
+    "eventData" : {
+      "loserSeat" : 1,
+      "reason" : "RESIGNED"
+    },
+    "message" : "Player 1 forfeited.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "ninety-nine",
+      "version" : 5,
+      "round" : 1,
+      "phase" : "PLAYING",
+      "total" : 28,
+      "direction" : "COUNTER_CLOCKWISE",
+      "currentSeat" : 2,
+      "pileTop" : {
+        "rank" : "4",
+        "suit" : "SPADE",
+        "name" : "SPADE_4"
+      },
+      "pileCount" : 4,
+      "stockSize" : 39,
+      "options" : {
+        "lives" : "3",
+        "quick" : "off"
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "lives" : 3,
+        "handSize" : 3,
+        "eliminated" : false,
+        "place" : null
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "lives" : 0,
+        "handSize" : 0,
+        "eliminated" : true,
+        "place" : 3
+      }, {
+        "seat" : 2,
+        "name" : null,
+        "lives" : 3,
+        "handSize" : 3,
+        "eliminated" : false,
+        "place" : null
+      } ],
+      "lastPlay" : {
+        "seat" : 0,
+        "card" : {
+          "rank" : "4",
+          "suit" : "SPADE",
+          "name" : "SPADE_4"
+        },
+        "aceValue" : null,
+        "totalBefore" : 28,
+        "totalAfter" : 28,
+        "reversed" : true
+      },
+      "lastBust" : null,
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "stuck" : false,
+      "hand" : [ {
+        "rank" : "5",
+        "suit" : "SPADE",
+        "name" : "SPADE_5"
+      }, {
+        "rank" : "5",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_5"
+      }, {
+        "rank" : "8",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_8"
+      } ],
+      "playable" : [ {
+        "card" : {
+          "rank" : "5",
+          "suit" : "SPADE",
+          "name" : "SPADE_5"
+        },
+        "safe" : true,
+        "aceValues" : [ ]
+      }, {
+        "card" : {
+          "rank" : "5",
+          "suit" : "DIAMOND",
+          "name" : "DIAMOND_5"
+        },
+        "safe" : true,
+        "aceValues" : [ ]
+      }, {
+        "card" : {
+          "rank" : "8",
+          "suit" : "DIAMOND",
+          "name" : "DIAMOND_8"
+        },
+        "safe" : true,
+        "aceValues" : [ ]
+      } ],
+      "availableActions" : [ ]
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "ELIMINATED",
+    "eventData" : {
+      "seat" : 1,
+      "card" : null,
+      "aceValue" : null,
+      "totalAfter" : null,
+      "reversed" : null,
+      "hand" : null,
+      "livesLeft" : null,
+      "place" : 3,
+      "stockSize" : null
+    },
+    "message" : "Player 1 forfeited.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "ninety-nine",
+      "version" : 5,
+      "round" : 1,
+      "phase" : "PLAYING",
+      "total" : 28,
+      "direction" : "COUNTER_CLOCKWISE",
+      "currentSeat" : 2,
+      "pileTop" : {
+        "rank" : "4",
+        "suit" : "SPADE",
+        "name" : "SPADE_4"
+      },
+      "pileCount" : 4,
+      "stockSize" : 39,
+      "options" : {
+        "lives" : "3",
+        "quick" : "off"
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "lives" : 3,
+        "handSize" : 3,
+        "eliminated" : false,
+        "place" : null
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "lives" : 0,
+        "handSize" : 0,
+        "eliminated" : true,
+        "place" : 3
+      }, {
+        "seat" : 2,
+        "name" : null,
+        "lives" : 3,
+        "handSize" : 3,
+        "eliminated" : false,
+        "place" : null
+      } ],
+      "lastPlay" : {
+        "seat" : 0,
+        "card" : {
+          "rank" : "4",
+          "suit" : "SPADE",
+          "name" : "SPADE_4"
+        },
+        "aceValue" : null,
+        "totalBefore" : 28,
+        "totalAfter" : 28,
+        "reversed" : true
+      },
+      "lastBust" : null,
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "stuck" : false,
+      "hand" : [ {
+        "rank" : "5",
+        "suit" : "SPADE",
+        "name" : "SPADE_5"
+      }, {
+        "rank" : "5",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_5"
+      }, {
+        "rank" : "8",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_8"
+      } ],
+      "playable" : [ {
+        "card" : {
+          "rank" : "5",
+          "suit" : "SPADE",
+          "name" : "SPADE_5"
+        },
+        "safe" : true,
+        "aceValues" : [ ]
+      }, {
+        "card" : {
+          "rank" : "5",
+          "suit" : "DIAMOND",
+          "name" : "DIAMOND_5"
+        },
+        "safe" : true,
+        "aceValues" : [ ]
+      }, {
+        "card" : {
+          "rank" : "8",
+          "suit" : "DIAMOND",
+          "name" : "DIAMOND_8"
+        },
+        "safe" : true,
+        "aceValues" : [ ]
+      } ],
+      "availableActions" : [ ]
+    },
+    "success" : true
+  }
+} ]

@@ -32,6 +32,8 @@ export interface BullshitState {
   players: BullshitPlayer[];
   currentTarget: { label: string };
   discardPileSize: number;
+  /** The deck in play (`32` or `52` cards), from the `deckSize` option. */
+  deckSize: number;
   table: TableView;
   pendingWinner: PendingWinnerView;
   outcome: OutcomeView;

@@ -31,6 +31,21 @@ describe('eventLine', () => {
       .toEqual({ key: 'blackjackUi.events.bust', params: { seat: 3, total: 24 } });
   });
 
+  // "You" takes its own verb form ("You bust", "Vous brûlez"), never the third person of "{player} busts".
+  it('reads my own actions with their …You variant', () => {
+    expect(eventLine(ev('BET', { seat: 0 }), 0)).toEqual({ key: 'blackjackUi.events.betYou', params: { seat: 0 } });
+    expect(eventLine(ev('HIT', { seat: 0, value: 18 }), 0))
+      .toEqual({ key: 'blackjackUi.events.hitYou', params: { seat: 0, total: 18 } });
+    expect(eventLine(ev('STAND', { seat: 0 }), 0)).toEqual({ key: 'blackjackUi.events.standYou', params: { seat: 0 } });
+    expect(eventLine(ev('DOUBLE', { seat: 0, value: 19 }), 0))
+      .toEqual({ key: 'blackjackUi.events.doubleYou', params: { seat: 0, total: 19 } });
+    expect(eventLine(ev('SPLIT', { seat: 0 }), 0)).toEqual({ key: 'blackjackUi.events.splitYou', params: { seat: 0 } });
+    expect(eventLine(ev('BUST', { seat: 0, value: 24 }), 0))
+      .toEqual({ key: 'blackjackUi.events.bustYou', params: { seat: 0, total: 24 } });
+    expect(eventLine(ev('ELIMINATED', { seat: 0 }), 0))
+      .toEqual({ key: 'blackjackUi.events.eliminatedYou', params: { seat: 0 } });
+  });
+
   it('reads the deal with the hand number and the dealer blackjack', () => {
     expect(eventLine(ev('DEAL', { handNumber: 3 }), 0)).toEqual({ key: 'blackjackUi.events.deal', params: { hand: 3 } });
     expect(eventLine(ev('DEALER_BLACKJACK'), 0)).toEqual({ key: 'blackjackUi.events.dealerBlackjack', params: {} });

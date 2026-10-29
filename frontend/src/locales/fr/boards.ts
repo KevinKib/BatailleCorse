@@ -59,7 +59,7 @@ export const threeMenMorrisUi: Messages['threeMenMorrisUi'] = {
     waitingFor: 'En attente de {player}…',
     piecesLeft: { one: '{n} pion restant à poser', other: '{n} pions restants à poser' },
     colourTag: '{name}, {colour}',
-    countsTag: '{name}, {colour}\u00A0: {board} sur le plateau, {hand} en main, {lost} perdus',
+    countsTag: '{name}, {colour}\u00A0: {board} sur le plateau, {hand} en main, perdus : {lost}',
     onBoard: 'sur le plateau\u00A0: {n}',
     lost: 'perdus\u00A0: {n}',
     placed: '{player} a posé un pion sur {point}.',

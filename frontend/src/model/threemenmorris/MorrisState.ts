@@ -114,12 +114,17 @@ export interface MorrisRemovalEventData {
   seat: number;
   action: 'REMOVE';
   point: number;
+  from: null;
+  to: null;
 }
 
 /** Public description of a draw command; an accepted offer comes as the `GAME_OVER` with `ACCEPT_DRAW`. */
 export interface MorrisDrawEventData {
   seat: number;
   action: 'OFFER_DRAW' | 'DECLINE_DRAW' | 'ACCEPT_DRAW';
+  point: null;
+  from: null;
+  to: null;
 }
 
 export interface MorrisResponse {

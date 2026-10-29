@@ -1,0 +1,131 @@
+[ {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "OPPONENT_DISCONNECTED",
+    "eventData" : {
+      "disconnectedSeat" : 1,
+      "deadlineEpochMs" : 1700000000000
+    },
+    "message" : "Player 1 disconnected.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "mangola",
+      "version" : 0,
+      "phase" : "PLACEMENT",
+      "currentSeat" : 0,
+      "seatA" : 0,
+      "direction" : "anticlockwise",
+      "board" : [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null ],
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "current" : false,
+        "side" : "A",
+        "seeds" : 0,
+        "ready" : false
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "current" : false,
+        "side" : "B",
+        "seeds" : null,
+        "ready" : false
+      } ],
+      "legalPits" : [ ],
+      "availableActions" : [ "ARRANGE" ],
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "draftOnlyEndless" : false
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "OPPONENT_RECONNECTED",
+    "eventData" : {
+      "reconnectedSeat" : 1
+    },
+    "message" : "Player 1 reconnected.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "mangola",
+      "version" : 0,
+      "phase" : "PLACEMENT",
+      "currentSeat" : 0,
+      "seatA" : 0,
+      "direction" : "anticlockwise",
+      "board" : [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null ],
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "current" : false,
+        "side" : "A",
+        "seeds" : 0,
+        "ready" : false
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "current" : false,
+        "side" : "B",
+        "seeds" : null,
+        "ready" : false
+      } ],
+      "legalPits" : [ ],
+      "availableActions" : [ "ARRANGE" ],
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "draftOnlyEndless" : false
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "FORFEIT",
+    "eventData" : {
+      "loserSeat" : 1,
+      "reason" : "RESIGNED"
+    },
+    "message" : "Player 1 forfeited.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "mangola",
+      "version" : 1,
+      "phase" : "FINISHED",
+      "currentSeat" : 0,
+      "seatA" : 0,
+      "direction" : "anticlockwise",
+      "board" : [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null ],
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "current" : false,
+        "side" : "A",
+        "seeds" : 0,
+        "ready" : false
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "current" : false,
+        "side" : "B",
+        "seeds" : null,
+        "ready" : false
+      } ],
+      "legalPits" : [ ],
+      "availableActions" : [ ],
+      "outcome" : {
+        "status" : "FINISHED",
+        "winner" : 0,
+        "reason" : "FORFEIT"
+      },
+      "draftOnlyEndless" : false
+    },
+    "success" : true
+  }
+} ]

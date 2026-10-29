@@ -68,10 +68,10 @@ export const draughtsUi: Messages['draughtsUi'] = {
     blackKing: 'dame noire',
     empty: 'vide',
     canMove: 'peut jouer',
-    selected: 'sélectionné',
+    selected: 'pièce choisie',
     destination: 'peut aller ici',
     lastMove: 'dernier coup',
-    taken: 'serait pris',
+    taken: 'prise possible',
     route: 'chemin {n}',
   },
   table: {

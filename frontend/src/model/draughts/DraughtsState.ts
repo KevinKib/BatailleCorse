@@ -114,6 +114,11 @@ export interface DraughtsMoveEventData {
   promotes: boolean;
 }
 
+/** Data of `DRAW_OFFERED` and `DRAW_DECLINED`, and of the `GAME_OVER` of an accepted draw: who did it. */
+export interface DraughtsSeatEventData {
+  seat: number;
+}
+
 export interface DraughtsResponse {
   success: boolean;
   eventType: string;

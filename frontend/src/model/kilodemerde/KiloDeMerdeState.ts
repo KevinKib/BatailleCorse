@@ -128,11 +128,11 @@ export type KiloDeMerdeView = LobbyView | KiloDeMerdeState;
 
 export type KiloDeMerdeEventType =
   | 'START'
-  | 'ROUND_DEALT'
+  | 'ROUND_START'
   | 'PASS_CHOSEN'
   | 'STEP'
-  | 'RACE_OPENED'
-  | 'SLAPPED'
+  | 'RACE'
+  | 'SLAP'
   | 'FALSE_SLAP'
   | 'DRAW'
   | 'FLUSH'
@@ -149,10 +149,14 @@ export interface KiloDeMerdeEventData {
   /** The drawn card of a DRAW (null when the pile was empty). */
   card: Card | null;
   kilosAfter: number | null;
-  /** The place in the slap order of a SLAPPED. */
+  /** The place in the slap order of a SLAP. */
   rank: number | null;
   /** The number of cards returned to the pile by a FLUSH. */
   returnedCount: number | null;
+  /** How the round ended, every hand revealed: a ROUND_OVER only (the state carries it too). */
+  outcome: KiloDeMerdeRoundOutcome | null;
+  /** The end of the game: a GAME_OVER only (the state carries it too). */
+  result: KiloDeMerdeResult | null;
 }
 
 export interface KiloDeMerdeResponse {

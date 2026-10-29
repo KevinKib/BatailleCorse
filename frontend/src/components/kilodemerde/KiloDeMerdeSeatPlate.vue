@@ -3,7 +3,7 @@ import { computed } from 'vue';
 import SeatDisconnectBadge from '../SeatDisconnectBadge.vue';
 import { useI18n } from '../../composables/useI18n';
 import { format } from '../../locales/format';
-import { kiloLabel } from '../../model/kilodemerde/kilo';
+import { faceLetters, kiloLabel } from '../../model/kilodemerde/kilo';
 import type Card from '../../model/Card';
 import type { KiloDeMerdePlayer } from '../../model/kilodemerde/KiloDeMerdeState';
 
@@ -35,7 +35,7 @@ const levelText = computed(() => {
   return props.player.bot && level ? ui.levels[level] ?? level : '';
 });
 const kilosText = computed(() => format(ui.table.kilos, { kg: props.player.kilos }));
-const handText = computed(() => props.hand?.map(card => kiloLabel(card)).join(' ') ?? '');
+const handText = computed(() => props.hand?.map(card => kiloLabel(card, faceLetters(ui.ranks))).join(' ') ?? '');
 const accessibleName = computed(() => {
   const parts = [format(ui.table.kilosLabel, { player: props.label, kg: props.player.kilos })];
   if (levelText.value) parts.push(levelText.value);
@@ -44,7 +44,7 @@ const accessibleName = computed(() => {
   if (props.confirm === 'waiting') parts.push(props.mine ? ui.table.notConfirmedYou : format(ui.table.notConfirmed, { player: props.label }));
   if (props.player.slapRank !== null) parts.push(format(ui.race.rank, { n: props.player.slapRank }));
   if (props.last) parts.push(ui.outcome.lastTag);
-  if (props.hand) parts.push(`${props.mine ? ui.hand.revealedYou : format(ui.hand.revealed, { player: props.label })}: ${handText.value}`);
+  if (props.hand) parts.push(format(props.mine ? ui.hand.revealedYou : ui.hand.revealed, { player: props.label, cards: handText.value }));
   return parts.join(', ');
 });
 </script>

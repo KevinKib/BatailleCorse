@@ -7,6 +7,7 @@ import { format } from '../../locales/format';
 import type Card from '../../model/Card';
 import type { ClaimMode } from '../../model/bullshit/claimMode';
 import { sortHand } from '../../model/bullshit/sortHand';
+import { rankLabel } from '../../model/president/cardLabel';
 
 // The player's hand, sorted by rank (suits grouped), or by suit in suit claim mode, for display only. Cards overlap on one
 // row; when that would hide too much of each card they go on two overlapping rows instead,
@@ -32,8 +33,10 @@ const rows = computed(() => {
 });
 
 const isSelected = (card: Card) => props.selected.some(c => c.name === card.name);
-const cardLabel = (card: Card) =>
-  format(ui.table.cardLabel, { rank: card.rank.toLowerCase(), suit: card.suit.toLowerCase() });
+const cardLabel = (card: Card) => format(ui.table.cardLabel, {
+  rank: rankLabel(card.rank, ui.table),
+  suit: ui.table.suits[card.suit] ?? card.suit.toLowerCase(),
+});
 </script>
 
 <template>
