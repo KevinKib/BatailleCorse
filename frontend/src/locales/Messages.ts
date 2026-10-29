@@ -407,6 +407,7 @@ export interface KiloDeMerdeUiMessages {
     stalled: string;                   // nobody completed a set
     voided: string;                    // a player left: the round does not count
     noCard: string;                    // '{name}': the kilo pile was empty, nothing was drawn
+    noCardYou: string;                 // the same, when I was the one to draw
     lastTag: string;                   // the "last" tag on the plate that drew
   };
   kiloPopover: {

@@ -33,6 +33,16 @@ describe('roundLineText', () => {
       .toBe('Chasse d’eau ! Vous perdez tous vos kilos');
   });
 
+  it('givenAnEmptyPile_thenTheDrawerIsNamedAndConjugated', () => {
+    const fr = messagesFr.kiloDeMerdeUi.outcome;
+    const en = messagesEn.kiloDeMerdeUi.outcome;
+    const empty = (seat: number): RoundLine => ({ code: 'NO_CARD', seat, card: null, kg: 0 });
+    expect(roundLineText(empty(2), nameOf, en, ME)).toBe('Bob was last, but the kilo pile is empty');
+    expect(roundLineText(empty(ME), nameOf, en, ME)).toBe('You were last, but the kilo pile is empty');
+    expect(roundLineText(empty(2), nameOf, fr, ME)).toBe('Bob devait prendre une carte, mais le tas de kilos est vide');
+    expect(roundLineText(empty(ME), nameOf, fr, ME)).toBe('Vous deviez prendre une carte, mais le tas de kilos est vide');
+  });
+
   it('givenEnglishAndMySeat_thenTheLineSpeaksToMe', () => {
     const outcome = messagesEn.kiloDeMerdeUi.outcome;
     expect(roundLineText(line('LAST_DRAWS', ME), nameOf, outcome, ME)).toBe('You were last and take K♠: 13 kg');

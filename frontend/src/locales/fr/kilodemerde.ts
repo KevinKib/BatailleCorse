@@ -67,6 +67,7 @@ export const kiloDeMerdeUi: Messages['kiloDeMerdeUi'] = {
     stalled: 'Personne n’a réuni de carré : pas de kilos cette manche',
     voided: 'Un joueur est parti : cette manche ne compte pas',
     noCard: '{name} devait prendre une carte, mais le tas de kilos est vide',
+    noCardYou: 'Vous deviez prendre une carte, mais le tas de kilos est vide',
     lastTag: 'Dernier',
   },
   kiloPopover: {

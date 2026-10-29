@@ -18,6 +18,7 @@ export function roundLineText(
     case 'LAST_DRAWS': return format(mine ? outcome.lastYou : outcome.last, vars);
     case 'FALSE_SLAP': return format(mine ? outcome.falseSlapYou : outcome.falseSlap, vars);
     case 'FLUSH': return format(mine ? outcome.flushYou : outcome.flush, vars);
+    case 'NO_CARD': return format(mine ? outcome.noCardYou : outcome.noCard, vars);
     case 'VOIDED': return outcome.voided;
     default: return outcome.stalled;
   }

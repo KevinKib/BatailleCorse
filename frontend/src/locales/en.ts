@@ -772,6 +772,7 @@ export const messagesEn: Messages = {
       stalled: 'Nobody completed a set: no kilos this round',
       voided: 'A player left: this round does not count',
       noCard: '{name} was last, but the kilo pile is empty',
+      noCardYou: 'You were last, but the kilo pile is empty',
       lastTag: 'Last',
     },
     kiloPopover: {

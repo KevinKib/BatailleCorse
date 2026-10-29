@@ -3,7 +3,7 @@ import { kiloValue } from './kilo';
 import type { KiloDeMerdeRoundOutcome } from './KiloDeMerdeState';
 
 /** Which of the round lines of the table a draw is: the texts are chosen by this code. */
-export type RoundLineCode = 'LAST_DRAWS' | 'FALSE_SLAP' | 'FLUSH' | 'NOTHING' | 'VOIDED';
+export type RoundLineCode = 'LAST_DRAWS' | 'FALSE_SLAP' | 'FLUSH' | 'NO_CARD' | 'NOTHING' | 'VOIDED';
 
 /** One line of the round banner: the code and the parameters its text fills in (`{name}`, `{card}`, `{kg}`). */
 export interface RoundLine {
@@ -27,7 +27,8 @@ export function roundSummary(outcome: KiloDeMerdeRoundOutcome | null): RoundLine
   if (!outcome) return [];
   if (outcome.kind === 'VOIDED') return [{ ...NOTHING, code: 'VOIDED' }];
   const lines = outcome.draws.flatMap((draw): RoundLine[] => {
-    if (draw.card === null) return [];
+    // A drawer who found the kilo pile empty (A9) is still named: it was last, there was nothing to take.
+    if (draw.card === null) return [{ code: 'NO_CARD', seat: draw.seat, card: null, kg: 0 }];
     if (draw.flushed) return [{ code: 'FLUSH', seat: draw.seat, card: draw.card, kg: 0 }];
     return [{
       code: outcome.kind === 'FALSE_SLAP' ? 'FALSE_SLAP' : 'LAST_DRAWS',
