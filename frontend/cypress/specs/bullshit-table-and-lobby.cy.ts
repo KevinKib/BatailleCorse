@@ -314,8 +314,8 @@ describe('Bullshit claim badge shows the suit symbol', () => {
     cy.get('[data-test="start"]', { timeout: 10000 }).should('not.be.disabled').click();
     // The claimed suit is drawn at random each round: check the pairing, not the suit.
     const SUITS_BY_SYMBOL: Record<string, [string, string]> = {
-      '♥': ['HEART', 'claim-suit--red'], '♦': ['DIAMOND', 'claim-suit--red'],
-      '♣': ['CLUB', ''], '♠': ['SPADE', ''],
+      '♥': ['hearts', 'claim-suit--red'], '♦': ['diamonds', 'claim-suit--red'],
+      '♣': ['clubs', ''], '♠': ['spades', ''],
     };
     cy.get('[data-test="claim-badge"]', { timeout: 10000 }).should('be.visible');
     cy.get('[data-test="claim-suit"]').should('be.visible').then(($symbol) => {

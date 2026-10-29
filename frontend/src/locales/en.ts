@@ -1495,6 +1495,8 @@ export const messagesEn: Messages = {
       claim: 'Claim:',
       myCards: { one: '{n} card in your hand', other: '{n} cards in your hand' },
       cardLabel: '{rank} of {suit}',
+      ranks: { JACK: 'Jack', QUEEN: 'Queen', KING: 'King', ACE: 'Ace' },
+      suits: { HEART: 'hearts', DIAMOND: 'diamonds', CLUB: 'clubs', SPADE: 'spades' },
       discardAs: 'Discard as {target}',
       callBullshit: 'Call Bullshit',
       truthful: 'TRUTHFUL',

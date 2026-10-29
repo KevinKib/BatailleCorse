@@ -39,7 +39,7 @@ describe('BullshitHand', () => {
     const wrapper = mount(BullshitHand, { props: { cards, selected: [] } });
     await wrapper.setProps({ cards: [{ rank: '2', suit: 'HEART', name: 'HEART_2' }, ...cards] });
     expect(wrapper.findAll('button.hand-card').map(b => b.attributes('aria-label')))
-      .toEqual(['ace of heart', '2 of heart', '2 of club', 'king of spade']);
+      .toEqual(['Ace of hearts', '2 of hearts', '2 of clubs', 'King of spades']);
   });
 
   it('marks selected cards as raised and pressed', () => {
