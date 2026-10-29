@@ -68,6 +68,7 @@ describe('BullshitGameScreen', () => {
 
     const discardBtn = wrapper.get('[data-test="discard"]');
     expect((discardBtn.element as HTMLButtonElement).disabled).toBe(true);
+    expect(discardBtn.text()).toBe('Discard as Ace');
 
     await wrapper.get('[data-test="hand-card-0"]').trigger('click');
     expect((discardBtn.element as HTMLButtonElement).disabled).toBe(false);
@@ -120,7 +121,8 @@ describe('BullshitGameScreen', () => {
     }) });
     const wrapper = mount(BullshitGameScreen, { props: { gameId: 'g1' }, global: { plugins: [router, PrimeVue] } });
 
-    expect(wrapper.get('[data-test="claim-badge"]').text()).toContain('QUEEN');
+    expect(wrapper.get('[data-test="claim-badge"]').text()).toContain('Queen');
+    expect(wrapper.get('[data-test="claim-badge"]').text()).not.toContain('QUEEN');
     expect(wrapper.get('[data-test="last-play"]').text()).toContain('Player 2');  // claimantId 1 -> "Player 2"
     expect(wrapper.get('[data-test="last-play"]').text()).toContain('3');
   });
@@ -134,7 +136,7 @@ describe('BullshitGameScreen', () => {
     const suit = wrapper.get('[data-test="claim-suit"]');
     expect(suit.text()).toBe('♥');
     expect(suit.classes()).toContain('claim-suit--red');
-    expect(wrapper.get('[data-test="claim-badge"]').text()).toContain('HEART');
+    expect(wrapper.get('[data-test="claim-badge"]').text()).toContain('hearts');
   });
 
   it('shows a black suit symbol for spades and none for a rank claim', async () => {
