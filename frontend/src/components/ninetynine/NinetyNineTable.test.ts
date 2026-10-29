@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
 import NinetyNineTable from './NinetyNineTable.vue';
+import { centerRowSizes } from '../../model/table/ringLayout';
 import { buildNinetyNineFourSeatRound, buildNinetyNineTwelveSeatRound } from '../../model/fixtures/ninetynine';
 
 const nameOf = (seat: number) => `P${seat}`;
@@ -16,6 +17,16 @@ function mountTable(state = buildNinetyNineTwelveSeatRound(), extra: Record<stri
 }
 
 const labels = (wrapper: ReturnType<typeof mountTable>) => wrapper.findAll('[data-test="seat-name"]').map(n => n.text());
+
+describe('NinetyNineTable centre sizes', () => {
+  it.each([[344, 365], [1100, 420]])('givenAFeltOf%ix%i_thenThePileTotalAndStockAreSizedFromTheThreeDigitReserve', (width, height) => {
+    const style = mountTable(undefined, { frame: { width, height } }).get('[data-test="ninety-nine-table"]').attributes('style') ?? '';
+    const sizes = centerRowSizes(width < 600);
+    expect(style).toContain(`--nn-pile-w: ${sizes.pileW}px`);
+    expect(style).toContain(`--nn-total-w: ${sizes.totalW}px`);
+    expect(style).toContain(`--nn-total-size: ${sizes.totalSize}px`);
+  });
+});
 
 describe('NinetyNineTable', () => {
   it('givenTwelveSeats_thenEverySeatHasAPlateAndTheRingStartsWithMeThenSeatOrder', () => {

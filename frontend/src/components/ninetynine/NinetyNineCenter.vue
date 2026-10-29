@@ -5,6 +5,7 @@ import { useI18n } from '../../composables/useI18n';
 import { format, plural } from '../../locales/format';
 import { cardLabel } from '../../model/president/cardLabel';
 import { totalDanger } from '../../model/ninetynine/totalView';
+import { TOTAL_RESERVED_DIGITS } from '../../model/table/ringLayout';
 import type Card from '../../model/Card';
 import type { NinetyNineDirection } from '../../model/ninetynine/NinetyNineState';
 
@@ -39,7 +40,7 @@ const stockLabel = computed(() => plural(ui.table.stockCount, props.stockSize));
         <PlayingCard v-if="pileTop" :rank="pileTop.rank" :suit="pileTop.suit" />
         <span v-else class="empty-pile" aria-hidden="true"></span>
       </div>
-      <div class="total" :class="`total--${danger}`" data-test="total" role="status" :aria-label="format(ui.table.total, { total })">
+      <div class="total total--reserved" :class="`total--${danger}`" data-test="total" :style="{ '--total-digits': TOTAL_RESERVED_DIGITS }" role="status" :aria-label="format(ui.table.total, { total })">
         <strong class="total-value">{{ total }}</strong>
         <span class="total-limit">{{ ui.table.ofLimit }}</span>
       </div>
@@ -75,7 +76,7 @@ const stockLabel = computed(() => plural(ui.table.stockCount, props.stockSize));
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
-.row { display: flex; align-items: center; gap: var(--space-2); }
+.row { display: flex; align-items: center; gap: var(--nn-center-gap, 6px); }
 .pile, .stock { position: relative; flex: none; width: var(--pile-w); }
 .pile :deep(.playing_card), .stock :deep(.playing_card) {
   display: block;
@@ -109,9 +110,14 @@ const stockLabel = computed(() => plural(ui.table.stockCount, props.stockSize));
   text-align: center;
   font-variant-numeric: tabular-nums;
 }
-.total { display: flex; flex-direction: column; align-items: center; line-height: 1; min-width: 0; }
+/* The slot is as wide as three digits at all times (width from the table), so the cards beside it never move. */
+.total { flex: none; width: var(--nn-total-w, 66px); box-sizing: border-box; display: flex; flex-direction: column; align-items: center; line-height: 1; min-width: 0; }
 .total-value {
-  font-size: var(--nn-total-size, 44px);
+  display: block;
+  width: 100%;
+  text-align: center;
+  white-space: nowrap;
+  font-size: var(--nn-total-size, 36px);
   font-variant-numeric: tabular-nums;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
 }

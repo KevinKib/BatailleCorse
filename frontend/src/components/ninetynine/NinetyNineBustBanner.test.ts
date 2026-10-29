@@ -43,6 +43,11 @@ describe('NinetyNineBustBanner', () => {
     expect(mineOut.get('[data-test="bust-lives"]').text()).toBe('You are out');
   });
 
+  it('givenTheRoundEnd_thenTheProgressBarRunsForTheWholeTimeTheBannerIsShown', () => {
+    const wrapper = mount(NinetyNineBustBanner, { props: { bust, label: 'Gina', mine: false } });
+    expect(wrapper.get('[data-test="bust-bar-fill"]').attributes('style')).toContain('animation-duration: 7500ms');
+  });
+
   // The banner is only shown at a round end, so a next deal always follows.
   it('givenTheRoundEnd_thenTheBannerSaysTheNextDealComesInAMoment', () => {
     const wrapper = mount(NinetyNineBustBanner, { props: { bust, label: 'Gina', mine: false } });

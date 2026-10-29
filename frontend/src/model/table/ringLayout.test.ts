@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  boxGap, centerBox, chooseLayout, directionArrows, plateSizeFor, ringBoxes, ringCenters, ringMinGap, MIN_GAP,
+  boxGap, centerBox, centerRowSizes, centerRowWidth, chooseLayout, directionArrows, plateSizeFor, ringBoxes, ringCenters, ringMinGap, MIN_GAP,
 } from './ringLayout';
 
 const frame = (width: number, height: number) => ({ width, height });
@@ -71,6 +71,20 @@ describe('the middle block', () => {
     const f = frame(344, 365);
     const middle = centerBox(f);
     for (const box of ringBoxes(12, f, plateSizeFor(344))) expect(boxGap(box, middle)).toBeGreaterThanOrEqual(MIN_GAP);
+  });
+});
+
+describe('the centre row (pile, total, stock)', () => {
+  it.each([[344, 365], [1100, 420]])('givenAFeltOf%ix%i_thenTheRowWithAThreeDigitTotalFitsTheMiddleBlock', (w, h) => {
+    const f = frame(w, h);
+    const sizes = centerRowSizes(w < 600);
+    // the stock's count badge sticks out on the right
+    expect(centerRowWidth(sizes) + sizes.badgeOverhang).toBeLessThanOrEqual(centerBox(f).w);
+  });
+
+  it('givenTheTotal_thenItsSlotIsReservedForThreeDigits', () => {
+    const sizes = centerRowSizes(false);
+    expect(sizes.totalW).toBeGreaterThanOrEqual(Math.ceil(sizes.totalSize * 0.6 * 3));
   });
 });
 
