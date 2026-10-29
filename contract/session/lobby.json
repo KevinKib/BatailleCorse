@@ -1,0 +1,156 @@
+[ {
+  "kind" : "created",
+  "payload" : {
+    "gameId" : "00000000-0000-0000-0000-000000000000",
+    "token" : "00000000-0000-0000-0000-000000000000"
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "JOIN",
+    "eventData" : { },
+    "message" : "Bot joined.",
+    "state" : {
+      "started" : false,
+      "gameId" : "00000000-0000-0000-0000-000000000000",
+      "players" : [ {
+        "seat" : 0,
+        "name" : "Alice",
+        "joined" : true,
+        "bot" : false,
+        "seatOptions" : { },
+        "disconnected" : false
+      }, {
+        "seat" : 1,
+        "name" : "Bob",
+        "joined" : true,
+        "bot" : false,
+        "seatOptions" : { },
+        "disconnected" : false
+      }, {
+        "seat" : 2,
+        "name" : null,
+        "joined" : true,
+        "bot" : true,
+        "seatOptions" : { },
+        "disconnected" : false
+      }, {
+        "seat" : 3,
+        "name" : null,
+        "joined" : false,
+        "bot" : false,
+        "seatOptions" : { },
+        "disconnected" : false
+      }, {
+        "seat" : 4,
+        "name" : null,
+        "joined" : false,
+        "bot" : false,
+        "seatOptions" : { },
+        "disconnected" : false
+      }, {
+        "seat" : 5,
+        "name" : null,
+        "joined" : false,
+        "bot" : false,
+        "seatOptions" : { },
+        "disconnected" : false
+      } ],
+      "hostSeat" : 0,
+      "mySeat" : 0,
+      "minPlayers" : 2,
+      "maxPlayers" : 6,
+      "canStart" : true,
+      "options" : {
+        "claimMode" : "rank",
+        "deckSize" : "32"
+      },
+      "optionDescriptors" : [ {
+        "key" : "claimMode",
+        "type" : "CHOICE",
+        "values" : [ "rank", "suit" ],
+        "defaultValue" : "rank",
+        "labelKey" : "options.bullshit.claimMode"
+      }, {
+        "key" : "deckSize",
+        "type" : "CHOICE",
+        "values" : [ "52", "32" ],
+        "defaultValue" : "32",
+        "labelKey" : "options.bullshit.deckSize"
+      } ],
+      "seatOptionDescriptors" : [ ],
+      "canEditOptions" : true,
+      "removableBotSeats" : [ 2 ],
+      "lobbyVersion" : 2,
+      "privateGame" : false
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "REMOVED",
+    "eventData" : { },
+    "message" : "You were removed from the lobby by the host",
+    "state" : null,
+    "success" : true
+  }
+}, {
+  "kind" : "lobbies",
+  "payload" : {
+    "gameType" : "bullshit",
+    "lobbies" : [ {
+      "gameId" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "bullshit",
+      "hostName" : "Alice",
+      "joined" : 2,
+      "bots" : 1,
+      "maxPlayers" : 6,
+      "state" : "OPEN"
+    } ],
+    "total" : 1,
+    "truncated" : false,
+    "version" : 4
+  }
+}, {
+  "kind" : "session",
+  "payload" : {
+    "players" : [ {
+      "id" : 0,
+      "name" : "Alice",
+      "joined" : true,
+      "bot" : false,
+      "seatOptions" : { }
+    }, {
+      "id" : 1,
+      "name" : null,
+      "joined" : true,
+      "bot" : true,
+      "seatOptions" : { }
+    }, {
+      "id" : 2,
+      "name" : null,
+      "joined" : false,
+      "bot" : false,
+      "seatOptions" : { }
+    }, {
+      "id" : 3,
+      "name" : null,
+      "joined" : false,
+      "bot" : false,
+      "seatOptions" : { }
+    }, {
+      "id" : 4,
+      "name" : null,
+      "joined" : false,
+      "bot" : false,
+      "seatOptions" : { }
+    }, {
+      "id" : 5,
+      "name" : null,
+      "joined" : false,
+      "bot" : false,
+      "seatOptions" : { }
+    } ]
+  }
+} ]

@@ -1,0 +1,160 @@
+[ {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "OPPONENT_DISCONNECTED",
+    "eventData" : {
+      "disconnectedSeat" : 1,
+      "deadlineEpochMs" : 1700000000000
+    },
+    "message" : "Player 1 disconnected.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "bullshit",
+      "myHand" : [ {
+        "rank" : "ACE",
+        "suit" : "HEART",
+        "name" : "HEART_ACE"
+      }, {
+        "rank" : "KING",
+        "suit" : "HEART",
+        "name" : "HEART_KING"
+      } ],
+      "availableActions" : [ "DISCARD" ],
+      "players" : [ {
+        "id" : "0",
+        "handCount" : 2,
+        "isCurrentPlayer" : true,
+        "name" : null,
+        "bot" : false
+      }, {
+        "id" : "1",
+        "handCount" : 2,
+        "isCurrentPlayer" : false,
+        "name" : null,
+        "bot" : false
+      } ],
+      "currentTarget" : {
+        "label" : "ACE"
+      },
+      "discardPileSize" : 0,
+      "table" : {
+        "state" : "NO_CLAIM"
+      },
+      "pendingWinner" : {
+        "state" : "NONE"
+      },
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "deckSize" : 52,
+      "mySeat" : 0,
+      "version" : 0
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "OPPONENT_RECONNECTED",
+    "eventData" : {
+      "reconnectedSeat" : 1
+    },
+    "message" : "Player 1 reconnected.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "bullshit",
+      "myHand" : [ {
+        "rank" : "ACE",
+        "suit" : "HEART",
+        "name" : "HEART_ACE"
+      }, {
+        "rank" : "KING",
+        "suit" : "HEART",
+        "name" : "HEART_KING"
+      } ],
+      "availableActions" : [ "DISCARD" ],
+      "players" : [ {
+        "id" : "0",
+        "handCount" : 2,
+        "isCurrentPlayer" : true,
+        "name" : null,
+        "bot" : false
+      }, {
+        "id" : "1",
+        "handCount" : 2,
+        "isCurrentPlayer" : false,
+        "name" : null,
+        "bot" : false
+      } ],
+      "currentTarget" : {
+        "label" : "ACE"
+      },
+      "discardPileSize" : 0,
+      "table" : {
+        "state" : "NO_CLAIM"
+      },
+      "pendingWinner" : {
+        "state" : "NONE"
+      },
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "deckSize" : 52,
+      "mySeat" : 0,
+      "version" : 0
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "FORFEIT",
+    "eventData" : {
+      "loserSeat" : 1,
+      "reason" : "RESIGNED"
+    },
+    "message" : "Player 1 forfeited.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "bullshit",
+      "myHand" : [ {
+        "rank" : "ACE",
+        "suit" : "HEART",
+        "name" : "HEART_ACE"
+      }, {
+        "rank" : "KING",
+        "suit" : "HEART",
+        "name" : "HEART_KING"
+      } ],
+      "availableActions" : [ ],
+      "players" : [ {
+        "id" : "0",
+        "handCount" : 2,
+        "isCurrentPlayer" : true,
+        "name" : null,
+        "bot" : false
+      } ],
+      "currentTarget" : {
+        "label" : "ACE"
+      },
+      "discardPileSize" : 0,
+      "table" : {
+        "state" : "NO_CLAIM"
+      },
+      "pendingWinner" : {
+        "state" : "NONE"
+      },
+      "outcome" : {
+        "status" : "FINISHED",
+        "winnerId" : "0"
+      },
+      "deckSize" : 52,
+      "mySeat" : 0,
+      "version" : 1
+    },
+    "success" : true
+  }
+} ]

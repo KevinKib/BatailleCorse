@@ -1,0 +1,248 @@
+[ {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "OPPONENT_DISCONNECTED",
+    "eventData" : {
+      "disconnectedSeat" : 1,
+      "deadlineEpochMs" : 1700000000000
+    },
+    "message" : "Player 1 disconnected.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "draughts",
+      "version" : 0,
+      "phase" : "PLAY",
+      "currentSeat" : 0,
+      "whiteSeat" : 0,
+      "board" : [ "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", null, null, null, null, null, null, null, null, null, null, "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w" ],
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "colour" : "WHITE",
+        "current" : true,
+        "men" : 20,
+        "kings" : 0,
+        "captured" : 0
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "colour" : "BLACK",
+        "current" : false,
+        "men" : 20,
+        "kings" : 0,
+        "captured" : 0
+      } ],
+      "availableActions" : [ "MOVE", "OFFER_DRAW" ],
+      "legalMoves" : [ {
+        "from" : 31,
+        "to" : 26,
+        "path" : [ 26 ],
+        "captures" : [ ],
+        "promotes" : false
+      }, {
+        "from" : 31,
+        "to" : 27,
+        "path" : [ 27 ],
+        "captures" : [ ],
+        "promotes" : false
+      }, {
+        "from" : 32,
+        "to" : 27,
+        "path" : [ 27 ],
+        "captures" : [ ],
+        "promotes" : false
+      }, {
+        "from" : 32,
+        "to" : 28,
+        "path" : [ 28 ],
+        "captures" : [ ],
+        "promotes" : false
+      }, {
+        "from" : 33,
+        "to" : 28,
+        "path" : [ 28 ],
+        "captures" : [ ],
+        "promotes" : false
+      }, {
+        "from" : 33,
+        "to" : 29,
+        "path" : [ 29 ],
+        "captures" : [ ],
+        "promotes" : false
+      }, {
+        "from" : 34,
+        "to" : 29,
+        "path" : [ 29 ],
+        "captures" : [ ],
+        "promotes" : false
+      }, {
+        "from" : 34,
+        "to" : 30,
+        "path" : [ 30 ],
+        "captures" : [ ],
+        "promotes" : false
+      }, {
+        "from" : 35,
+        "to" : 30,
+        "path" : [ 30 ],
+        "captures" : [ ],
+        "promotes" : false
+      } ],
+      "captureRequired" : false,
+      "maxCaptures" : 0,
+      "history" : [ ],
+      "outcome" : {
+        "status" : "ONGOING"
+      }
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "OPPONENT_RECONNECTED",
+    "eventData" : {
+      "reconnectedSeat" : 1
+    },
+    "message" : "Player 1 reconnected.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "draughts",
+      "version" : 0,
+      "phase" : "PLAY",
+      "currentSeat" : 0,
+      "whiteSeat" : 0,
+      "board" : [ "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", null, null, null, null, null, null, null, null, null, null, "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w" ],
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "colour" : "WHITE",
+        "current" : true,
+        "men" : 20,
+        "kings" : 0,
+        "captured" : 0
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "colour" : "BLACK",
+        "current" : false,
+        "men" : 20,
+        "kings" : 0,
+        "captured" : 0
+      } ],
+      "availableActions" : [ "MOVE", "OFFER_DRAW" ],
+      "legalMoves" : [ {
+        "from" : 31,
+        "to" : 26,
+        "path" : [ 26 ],
+        "captures" : [ ],
+        "promotes" : false
+      }, {
+        "from" : 31,
+        "to" : 27,
+        "path" : [ 27 ],
+        "captures" : [ ],
+        "promotes" : false
+      }, {
+        "from" : 32,
+        "to" : 27,
+        "path" : [ 27 ],
+        "captures" : [ ],
+        "promotes" : false
+      }, {
+        "from" : 32,
+        "to" : 28,
+        "path" : [ 28 ],
+        "captures" : [ ],
+        "promotes" : false
+      }, {
+        "from" : 33,
+        "to" : 28,
+        "path" : [ 28 ],
+        "captures" : [ ],
+        "promotes" : false
+      }, {
+        "from" : 33,
+        "to" : 29,
+        "path" : [ 29 ],
+        "captures" : [ ],
+        "promotes" : false
+      }, {
+        "from" : 34,
+        "to" : 29,
+        "path" : [ 29 ],
+        "captures" : [ ],
+        "promotes" : false
+      }, {
+        "from" : 34,
+        "to" : 30,
+        "path" : [ 30 ],
+        "captures" : [ ],
+        "promotes" : false
+      }, {
+        "from" : 35,
+        "to" : 30,
+        "path" : [ 30 ],
+        "captures" : [ ],
+        "promotes" : false
+      } ],
+      "captureRequired" : false,
+      "maxCaptures" : 0,
+      "history" : [ ],
+      "outcome" : {
+        "status" : "ONGOING"
+      }
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "FORFEIT",
+    "eventData" : {
+      "loserSeat" : 1,
+      "reason" : "RESIGNED"
+    },
+    "message" : "Player 1 forfeited.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "draughts",
+      "version" : 1,
+      "phase" : "FINISHED",
+      "currentSeat" : 0,
+      "whiteSeat" : 0,
+      "board" : [ "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", null, null, null, null, null, null, null, null, null, null, "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w" ],
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "colour" : "WHITE",
+        "current" : false,
+        "men" : 20,
+        "kings" : 0,
+        "captured" : 0
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "colour" : "BLACK",
+        "current" : false,
+        "men" : 20,
+        "kings" : 0,
+        "captured" : 0
+      } ],
+      "availableActions" : [ ],
+      "legalMoves" : [ ],
+      "captureRequired" : false,
+      "maxCaptures" : 0,
+      "history" : [ ],
+      "outcome" : {
+        "status" : "FINISHED",
+        "winner" : 0,
+        "reason" : "FORFEIT"
+      }
+    },
+    "success" : true
+  }
+} ]

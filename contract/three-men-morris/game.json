@@ -1,0 +1,725 @@
+[ {
+  "kind" : "join",
+  "payload" : {
+    "playerId" : 1,
+    "token" : "00000000-0000-0000-0000-000000000000"
+  }
+}, {
+  "kind" : "state",
+  "payload" : {
+    "started" : false,
+    "gameId" : "00000000-0000-0000-0000-000000000000",
+    "players" : [ {
+      "seat" : 0,
+      "name" : "Alice",
+      "joined" : true,
+      "bot" : false,
+      "seatOptions" : { },
+      "disconnected" : false
+    }, {
+      "seat" : 1,
+      "name" : "Bob",
+      "joined" : true,
+      "bot" : false,
+      "seatOptions" : { },
+      "disconnected" : false
+    } ],
+    "hostSeat" : 0,
+    "mySeat" : 0,
+    "minPlayers" : 2,
+    "maxPlayers" : 2,
+    "canStart" : true,
+    "options" : {
+      "hostColour" : "random",
+      "variant" : "tapatan"
+    },
+    "optionDescriptors" : [ {
+      "key" : "variant",
+      "type" : "CHOICE",
+      "values" : [ "tapatan", "achi", "six" ],
+      "defaultValue" : "tapatan",
+      "labelKey" : "options.threeMenMorris.variant"
+    }, {
+      "key" : "hostColour",
+      "type" : "CHOICE",
+      "values" : [ "white", "black", "random" ],
+      "defaultValue" : "random",
+      "labelKey" : "options.threeMenMorris.hostColour"
+    } ],
+    "seatOptionDescriptors" : [ {
+      "key" : "level",
+      "type" : "CHOICE",
+      "values" : [ "random", "greedy", "perfect" ],
+      "defaultValue" : "greedy",
+      "labelKey" : "options.threeMenMorris.level"
+    } ],
+    "canEditOptions" : true,
+    "removableBotSeats" : [ ],
+    "lobbyVersion" : 1,
+    "privateGame" : false
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "JOIN",
+    "eventData" : { },
+    "message" : "Player 2 joined.",
+    "state" : {
+      "started" : false,
+      "gameId" : "00000000-0000-0000-0000-000000000000",
+      "players" : [ {
+        "seat" : 0,
+        "name" : "Alice",
+        "joined" : true,
+        "bot" : false,
+        "seatOptions" : { },
+        "disconnected" : false
+      }, {
+        "seat" : 1,
+        "name" : "Bob",
+        "joined" : true,
+        "bot" : false,
+        "seatOptions" : { },
+        "disconnected" : false
+      } ],
+      "hostSeat" : 0,
+      "mySeat" : 0,
+      "minPlayers" : 2,
+      "maxPlayers" : 2,
+      "canStart" : true,
+      "options" : {
+        "hostColour" : "random",
+        "variant" : "tapatan"
+      },
+      "optionDescriptors" : [ {
+        "key" : "variant",
+        "type" : "CHOICE",
+        "values" : [ "tapatan", "achi", "six" ],
+        "defaultValue" : "tapatan",
+        "labelKey" : "options.threeMenMorris.variant"
+      }, {
+        "key" : "hostColour",
+        "type" : "CHOICE",
+        "values" : [ "white", "black", "random" ],
+        "defaultValue" : "random",
+        "labelKey" : "options.threeMenMorris.hostColour"
+      } ],
+      "seatOptionDescriptors" : [ {
+        "key" : "level",
+        "type" : "CHOICE",
+        "values" : [ "random", "greedy", "perfect" ],
+        "defaultValue" : "greedy",
+        "labelKey" : "options.threeMenMorris.level"
+      } ],
+      "canEditOptions" : true,
+      "removableBotSeats" : [ ],
+      "lobbyVersion" : 1,
+      "privateGame" : false
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "PLACE",
+    "eventData" : {
+      "seat" : 0,
+      "action" : "PLACE",
+      "point" : 0,
+      "from" : null,
+      "to" : null
+    },
+    "message" : "Player 0 placed a piece.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "three-men-morris",
+      "version" : 1,
+      "phase" : "PLACEMENT",
+      "currentSeat" : 1,
+      "board" : [ 0, null, null, null, null, null, null, null, null ],
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "current" : false,
+        "piecesToPlace" : 2
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "current" : true,
+        "piecesToPlace" : 3
+      } ],
+      "legalMoves" : [ ],
+      "availableActions" : [ ],
+      "winningLine" : [ ],
+      "outcome" : {
+        "status" : "ONGOING"
+      }
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "PLACE",
+    "eventData" : {
+      "seat" : 1,
+      "action" : "PLACE",
+      "point" : 1,
+      "from" : null,
+      "to" : null
+    },
+    "message" : "Player 1 placed a piece.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "three-men-morris",
+      "version" : 2,
+      "phase" : "PLACEMENT",
+      "currentSeat" : 0,
+      "board" : [ 0, 1, null, null, null, null, null, null, null ],
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "current" : true,
+        "piecesToPlace" : 2
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "current" : false,
+        "piecesToPlace" : 2
+      } ],
+      "legalMoves" : [ ],
+      "availableActions" : [ "PLACE" ],
+      "winningLine" : [ ],
+      "outcome" : {
+        "status" : "ONGOING"
+      }
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "PLACE",
+    "eventData" : {
+      "seat" : 1,
+      "action" : "PLACE",
+      "point" : 8,
+      "from" : null,
+      "to" : null
+    },
+    "message" : "Player 1 placed a piece.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "three-men-morris",
+      "version" : 6,
+      "phase" : "MOVEMENT",
+      "currentSeat" : 0,
+      "board" : [ 0, 1, 0, null, null, 1, null, 0, 1 ],
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "current" : true,
+        "piecesToPlace" : 0
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "current" : false,
+        "piecesToPlace" : 0
+      } ],
+      "legalMoves" : [ {
+        "from" : 0,
+        "to" : 3
+      }, {
+        "from" : 0,
+        "to" : 4
+      }, {
+        "from" : 2,
+        "to" : 4
+      }, {
+        "from" : 7,
+        "to" : 4
+      }, {
+        "from" : 7,
+        "to" : 6
+      } ],
+      "availableActions" : [ "MOVE" ],
+      "winningLine" : [ ],
+      "outcome" : {
+        "status" : "ONGOING"
+      }
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "MOVE",
+    "eventData" : {
+      "seat" : 0,
+      "action" : "MOVE",
+      "point" : null,
+      "from" : 7,
+      "to" : 6
+    },
+    "message" : "Player 0 moved a piece.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "three-men-morris",
+      "version" : 7,
+      "phase" : "MOVEMENT",
+      "currentSeat" : 1,
+      "board" : [ 0, 1, 0, null, null, 1, 0, null, 1 ],
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "current" : false,
+        "piecesToPlace" : 0
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "current" : true,
+        "piecesToPlace" : 0
+      } ],
+      "legalMoves" : [ ],
+      "availableActions" : [ ],
+      "winningLine" : [ ],
+      "outcome" : {
+        "status" : "ONGOING"
+      }
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "DRAW_OFFERED",
+    "eventData" : {
+      "seat" : 0,
+      "action" : "OFFER_DRAW",
+      "point" : null,
+      "from" : null,
+      "to" : null
+    },
+    "message" : "Player 0 offered a draw.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "three-men-morris",
+      "version" : 8,
+      "phase" : "MOVEMENT",
+      "currentSeat" : 1,
+      "board" : [ 0, 1, 0, null, null, 1, 0, null, 1 ],
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "current" : false,
+        "piecesToPlace" : 0
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "current" : true,
+        "piecesToPlace" : 0
+      } ],
+      "legalMoves" : [ ],
+      "availableActions" : [ ],
+      "winningLine" : [ ],
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "drawOffer" : {
+        "seat" : 0
+      },
+      "drawActions" : [ ]
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "DRAW_DECLINED",
+    "eventData" : {
+      "seat" : 1,
+      "action" : "DECLINE_DRAW",
+      "point" : null,
+      "from" : null,
+      "to" : null
+    },
+    "message" : "Player 1 declined the draw.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "three-men-morris",
+      "version" : 9,
+      "phase" : "MOVEMENT",
+      "currentSeat" : 1,
+      "board" : [ 0, 1, 0, null, null, 1, 0, null, 1 ],
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "current" : false,
+        "piecesToPlace" : 0
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "current" : true,
+        "piecesToPlace" : 0
+      } ],
+      "legalMoves" : [ ],
+      "availableActions" : [ ],
+      "winningLine" : [ ],
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "drawActions" : [ ]
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "DRAW_OFFERED",
+    "eventData" : {
+      "seat" : 1,
+      "action" : "OFFER_DRAW",
+      "point" : null,
+      "from" : null,
+      "to" : null
+    },
+    "message" : "Player 1 offered a draw.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "three-men-morris",
+      "version" : 10,
+      "phase" : "MOVEMENT",
+      "currentSeat" : 1,
+      "board" : [ 0, 1, 0, null, null, 1, 0, null, 1 ],
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "current" : false,
+        "piecesToPlace" : 0
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "current" : true,
+        "piecesToPlace" : 0
+      } ],
+      "legalMoves" : [ ],
+      "availableActions" : [ ],
+      "winningLine" : [ ],
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "drawOffer" : {
+        "seat" : 1
+      },
+      "drawActions" : [ "ACCEPT_DRAW", "DECLINE_DRAW" ]
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "GAME_OVER",
+    "eventData" : {
+      "seat" : 0,
+      "action" : "ACCEPT_DRAW",
+      "point" : null,
+      "from" : null,
+      "to" : null
+    },
+    "message" : "Player 0 accepted the draw.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "three-men-morris",
+      "version" : 11,
+      "phase" : "FINISHED",
+      "currentSeat" : 1,
+      "board" : [ 0, 1, 0, null, null, 1, 0, null, 1 ],
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "current" : false,
+        "piecesToPlace" : 0
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "current" : true,
+        "piecesToPlace" : 0
+      } ],
+      "legalMoves" : [ ],
+      "availableActions" : [ ],
+      "winningLine" : [ ],
+      "outcome" : {
+        "status" : "FINISHED",
+        "winner" : null,
+        "reason" : "DRAW_AGREED"
+      }
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "PLACE",
+    "eventData" : {
+      "seat" : 0,
+      "action" : "PLACE",
+      "point" : 0,
+      "from" : null,
+      "to" : null
+    },
+    "message" : "Player 0 placed a piece.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "three-men-morris",
+      "version" : 1,
+      "phase" : "PLACEMENT",
+      "currentSeat" : 1,
+      "board" : [ 0, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null ],
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "current" : false,
+        "piecesToPlace" : 5,
+        "lost" : 0
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "current" : true,
+        "piecesToPlace" : 6,
+        "lost" : 0
+      } ],
+      "legalMoves" : [ ],
+      "availableActions" : [ ],
+      "winningLine" : [ ],
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "variant" : "six",
+      "legalPlacements" : [ ],
+      "quietPlyLimit" : 50
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "PLACE",
+    "eventData" : {
+      "seat" : 1,
+      "action" : "PLACE",
+      "point" : 8,
+      "from" : null,
+      "to" : null
+    },
+    "message" : "Player 1 placed a piece.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "three-men-morris",
+      "version" : 2,
+      "phase" : "PLACEMENT",
+      "currentSeat" : 0,
+      "board" : [ 0, null, null, null, null, null, null, null, 1, null, null, null, null, null, null, null ],
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "current" : true,
+        "piecesToPlace" : 5,
+        "lost" : 0
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "current" : false,
+        "piecesToPlace" : 5,
+        "lost" : 0
+      } ],
+      "legalMoves" : [ ],
+      "availableActions" : [ "PLACE" ],
+      "winningLine" : [ ],
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "variant" : "six",
+      "legalPlacements" : [ 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15 ],
+      "quietPlyLimit" : 50
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "PLACE",
+    "eventData" : {
+      "seat" : 0,
+      "action" : "PLACE",
+      "point" : 2,
+      "from" : null,
+      "to" : null,
+      "mill" : [ 0, 1, 2 ]
+    },
+    "message" : "Player 0 placed a piece.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "three-men-morris",
+      "version" : 5,
+      "phase" : "PLACEMENT",
+      "currentSeat" : 0,
+      "board" : [ 0, 0, 0, null, null, null, null, null, 1, null, 1, null, null, null, null, null ],
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "current" : true,
+        "piecesToPlace" : 3,
+        "lost" : 0
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "current" : false,
+        "piecesToPlace" : 4,
+        "lost" : 0
+      } ],
+      "legalMoves" : [ ],
+      "availableActions" : [ "REMOVE" ],
+      "winningLine" : [ ],
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "variant" : "six",
+      "legalPlacements" : [ ],
+      "removal" : {
+        "seat" : 0,
+        "mill" : [ 0, 1, 2 ]
+      },
+      "legalRemovals" : [ 8, 10 ],
+      "quietPlyLimit" : 50
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "REMOVE",
+    "eventData" : {
+      "seat" : 0,
+      "action" : "REMOVE",
+      "point" : 8,
+      "from" : null,
+      "to" : null
+    },
+    "message" : "Player 0 removed a piece.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "three-men-morris",
+      "version" : 6,
+      "phase" : "PLACEMENT",
+      "currentSeat" : 1,
+      "board" : [ 0, 0, 0, null, null, null, null, null, null, null, 1, null, null, null, null, null ],
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "current" : false,
+        "piecesToPlace" : 3,
+        "lost" : 0
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "current" : true,
+        "piecesToPlace" : 4,
+        "lost" : 1
+      } ],
+      "legalMoves" : [ ],
+      "availableActions" : [ ],
+      "winningLine" : [ ],
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "variant" : "six",
+      "legalPlacements" : [ ],
+      "quietPlyLimit" : 50
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "GAME_OVER",
+    "eventData" : {
+      "seat" : 0,
+      "action" : "PLACE",
+      "point" : 8,
+      "from" : null,
+      "to" : null
+    },
+    "message" : "Player 0 placed a piece.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "three-men-morris",
+      "version" : 5,
+      "phase" : "FINISHED",
+      "currentSeat" : 0,
+      "board" : [ 0, 1, null, 1, 0, null, null, null, 0 ],
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "current" : true,
+        "piecesToPlace" : 0
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "current" : false,
+        "piecesToPlace" : 1
+      } ],
+      "legalMoves" : [ ],
+      "availableActions" : [ ],
+      "winningLine" : [ 0, 4, 8 ],
+      "outcome" : {
+        "status" : "FINISHED",
+        "winner" : 0,
+        "reason" : "LINE"
+      }
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "state",
+  "payload" : {
+    "started" : true,
+    "id" : "00000000-0000-0000-0000-000000000000",
+    "gameType" : "three-men-morris",
+    "version" : 5,
+    "phase" : "FINISHED",
+    "currentSeat" : 0,
+    "board" : [ 0, 1, null, 1, 0, null, null, null, 0 ],
+    "players" : [ {
+      "seat" : 0,
+      "name" : null,
+      "current" : true,
+      "piecesToPlace" : 0
+    }, {
+      "seat" : 1,
+      "name" : null,
+      "current" : false,
+      "piecesToPlace" : 1
+    } ],
+    "legalMoves" : [ ],
+    "availableActions" : [ ],
+    "winningLine" : [ 0, 4, 8 ],
+    "outcome" : {
+      "status" : "FINISHED",
+      "winner" : 0,
+      "reason" : "LINE"
+    }
+  }
+} ]

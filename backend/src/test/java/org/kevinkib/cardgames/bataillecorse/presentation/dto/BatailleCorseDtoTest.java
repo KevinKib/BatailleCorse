@@ -35,6 +35,13 @@ class BatailleCorseDtoTest {
     }
 
     @Test
+    void theIdIsTheBareUuidLikeEveryOtherGame() {
+        GameId id = new GameId("00000000-0000-0000-0000-000000000001");
+
+        assertThat(BatailleCorseDto.from(new BatailleCorse(id, 2)).getId(), is("00000000-0000-0000-0000-000000000001"));
+    }
+
+    @Test
     void givenFreshGame_thenVersionIsZero() {
         assertThat(BatailleCorseDto.from(twoPlayerGame()).getVersion(), is(0));
     }

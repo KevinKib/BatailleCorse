@@ -55,12 +55,17 @@ export default class BatailleCorse {
   }
 
   static fromJSON(data: {
-    currentPlayer: { id: string; nbCards: number; availableActions: string[] };
+    /** The game id (a bare UUID), as every game's state carries it. */
+    id: string;
+    /** Increases with every change of the game. */
+    version: number;
+    currentPlayer: { id: string; nbCards: number; availableActions: string[]; forfeitReason?: string | null };
     pile: {
       cards: { rank: string; suit: string; name: string }[];
       grabbable: boolean;
       nbCardsSinceLastHonourCard: number;
-      playerThatAddedLastHonourCard: { id: string };
+      /** Null until an honour card is on the pile. */
+      playerThatAddedLastHonourCard: { id: string } | null;
     };
     players: { id: string; nbCards: number; availableActions: string[]; forfeitReason?: string | null }[];
     winner: { id: string } | null;

@@ -101,6 +101,8 @@ export interface BullshitUiMessages {
     claim: string;
     myCards: PluralForms;               // '{n}' = cards in my hand (accessible name of my counter)
     cardLabel: string;                 // '{rank}', '{suit}': accessible name of a hand card
+    ranks: Record<string, string>;     // by backend rank label (`JACK`...); a number is its own name
+    suits: Record<string, string>;     // by backend suit (`HEART`...): a card's suit and a suit claim
     discardAs: string;                 // '{target}'
     callBullshit: string;
     truthful: string;

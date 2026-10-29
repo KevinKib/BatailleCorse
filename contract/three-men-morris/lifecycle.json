@@ -1,0 +1,113 @@
+[ {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "OPPONENT_DISCONNECTED",
+    "eventData" : {
+      "disconnectedSeat" : 1,
+      "deadlineEpochMs" : 1700000000000
+    },
+    "message" : "Player 1 disconnected.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "three-men-morris",
+      "version" : 0,
+      "phase" : "PLACEMENT",
+      "currentSeat" : 0,
+      "board" : [ null, null, null, null, null, null, null, null, null ],
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "current" : true,
+        "piecesToPlace" : 3
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "current" : false,
+        "piecesToPlace" : 3
+      } ],
+      "legalMoves" : [ ],
+      "availableActions" : [ "PLACE" ],
+      "winningLine" : [ ],
+      "outcome" : {
+        "status" : "ONGOING"
+      }
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "OPPONENT_RECONNECTED",
+    "eventData" : {
+      "reconnectedSeat" : 1
+    },
+    "message" : "Player 1 reconnected.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "three-men-morris",
+      "version" : 0,
+      "phase" : "PLACEMENT",
+      "currentSeat" : 0,
+      "board" : [ null, null, null, null, null, null, null, null, null ],
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "current" : true,
+        "piecesToPlace" : 3
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "current" : false,
+        "piecesToPlace" : 3
+      } ],
+      "legalMoves" : [ ],
+      "availableActions" : [ "PLACE" ],
+      "winningLine" : [ ],
+      "outcome" : {
+        "status" : "ONGOING"
+      }
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "FORFEIT",
+    "eventData" : {
+      "loserSeat" : 1,
+      "reason" : "RESIGNED"
+    },
+    "message" : "Player 1 forfeited.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "three-men-morris",
+      "version" : 1,
+      "phase" : "FINISHED",
+      "currentSeat" : 0,
+      "board" : [ null, null, null, null, null, null, null, null, null ],
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "current" : true,
+        "piecesToPlace" : 3
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "current" : false,
+        "piecesToPlace" : 3
+      } ],
+      "legalMoves" : [ ],
+      "availableActions" : [ ],
+      "winningLine" : [ ],
+      "outcome" : {
+        "status" : "FINISHED",
+        "winner" : 0,
+        "reason" : "FORFEIT"
+      }
+    },
+    "success" : true
+  }
+} ]
