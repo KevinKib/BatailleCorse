@@ -4,7 +4,7 @@ import NinetyNineCenter from './NinetyNineCenter.vue';
 import NinetyNineSeatPlate from './NinetyNineSeatPlate.vue';
 import { useI18n } from '../../composables/useI18n';
 import {
-  centerBox, chooseLayout, directionArrows, plateSizeFor, radiiFor, ringCenters, trackRadii, type Frame,
+  centerBox, centerRowSizes, chooseLayout, directionArrows, plateSizeFor, radiiFor, ringCenters, trackRadii, type Frame,
 } from '../../model/table/ringLayout';
 import { seatsAtTable, seatsInTurnOrder } from '../../model/ninetynine/seatOrder';
 import type Card from '../../model/Card';
@@ -92,9 +92,20 @@ const rail = computed(() => {
     order: player.eliminated ? undefined : ++n,
   }));
 });
-const sizes = computed(() => (compact.value
-  ? { '--nn-pile-w': '38px', '--nn-total-size': '44px', '--nn-card-w': '70px', '--nn-bust-w': '11rem' }
-  : { '--nn-pile-w': '64px', '--nn-total-size': '76px', '--nn-card-w': '90px', '--nn-bust-w': '17rem' }));
+// The pile, total and stock are sized from the reserve of a three-digit total (`centerRowSizes`), so that the total
+// changing width never moves them and the row always fits the middle block.
+const sizes = computed(() => {
+  const row = centerRowSizes(compact.value);
+  return {
+    '--nn-pile-w': `${row.pileW}px`,
+    '--nn-total-size': `${row.totalSize}px`,
+    '--nn-total-w': `${row.totalW}px`,
+    '--nn-center-gap': `${row.gap}px`,
+    ...(compact.value
+      ? { '--nn-card-w': '70px', '--nn-bust-w': '11rem' }
+      : { '--nn-card-w': '90px', '--nn-bust-w': '17rem' }),
+  };
+});
 </script>
 
 <template>

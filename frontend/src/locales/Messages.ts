@@ -599,6 +599,9 @@ export interface BlackjackUiMessages {
     place: string;                     // '{n}': "Bet 10"
     waitingOthers: string;             // my bet is in, the others are still betting
     yourBet: string;                   // '{n}'
+    amount: string;                    // accessible name of the numeric bet field
+    left: string;                      // '{n}': chips left once the bet is placed
+    leftDouble: string;                // '{n}': chips left once a double or split costs the same again
   };
   actions: {
     label: string;                     // region name of the action bar

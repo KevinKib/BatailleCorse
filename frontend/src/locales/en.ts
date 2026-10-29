@@ -508,6 +508,9 @@ export const messagesEn: Messages = {
       place: 'Bet {n}',
       waitingOthers: 'Waiting for the other bets…',
       yourBet: 'Your bet: {n}',
+      amount: 'Bet amount',
+      left: 'You will have {n} pts left',
+      leftDouble: 'After a double or split: {n} pts',
     },
     actions: {
       label: 'Your actions',

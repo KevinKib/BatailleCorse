@@ -146,6 +146,14 @@ describe('KiloDeMerde store', () => {
       expect(store.lastEvent?.eventType).toBe('DRAW');
     });
 
+    it('records the hand slot of the card received, the slot the passed card left', () => {
+      const store = boot();
+      store.applyEvent({ type: 'state-update', state: { ...kiloDeMerdeStepState, version: 15, step: 4 } });
+      store.applyEvent({ type: 'event', eventType: 'STEP', eventData: eventData({ round: 2, step: 4 }) });
+      // HEART_JACK is the second card of the fixture hand.
+      expect(store.events[0].receivedSlot).toBe(1);
+    });
+
     it('lists the active seats only', () => {
       const store = boot();
       store.applyEvent({

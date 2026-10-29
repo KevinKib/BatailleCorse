@@ -45,4 +45,12 @@ describe('NinetyNineCenter', () => {
     expect(wrapper.get('[data-test="stock"]').attributes('aria-label')).toBe('8 cards in the stock');
     expect(wrapper.get('[data-test="stock-count"]').text()).toBe('8');
   });
+
+  it.each([0, 7, 42, 94, 99, 100])('givenATotalOf%i_thenItsSlotKeepsTheSameReservedWidth', (total) => {
+    const reference = mount(NinetyNineCenter, { props: { ...base, total: 100 } }).get('[data-test="total"]').attributes('style');
+    const wrapper = mount(NinetyNineCenter, { props: { ...base, total } });
+    expect(wrapper.get('[data-test="total"]').attributes('style')).toBe(reference);
+    expect(reference).toContain('--total-digits: 3');
+    expect(wrapper.get('[data-test="total"]').classes()).toContain('total--reserved');
+  });
 });
