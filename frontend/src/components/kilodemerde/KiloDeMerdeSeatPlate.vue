@@ -46,8 +46,9 @@ const accessibleName = computed(() => {
 </script>
 
 <template>
+  <div class="plate-box">
   <div class="plate"
-       :class="{ 'plate--mine': mine, 'plate--compact': compact, 'plate--disconnected': disconnected, 'plate--ready': ready }"
+       :class="{ 'plate--mine': mine, 'plate--compact': compact, 'plate--expanded': hand, 'plate--disconnected': disconnected, 'plate--ready': ready }"
        role="group"
        :aria-label="accessibleName"
        data-test="seat-plate"
@@ -66,14 +67,21 @@ const accessibleName = computed(() => {
     <span v-if="last" class="plate-last" data-test="seat-last" aria-hidden="true">{{ ui.outcome.lastTag }}</span>
     <span v-if="disconnected" class="plate-badge"><SeatDisconnectBadge :seconds-remaining="secondsRemaining ?? null" /></span>
   </div>
+  </div>
 </template>
 
 <style scoped>
+/* The box keeps the size of the seat on the ring; the plate fills it and, when it carries more (the revealed hand at the
+   end of a round), grows around its centre, wraps its hand (which scrolls past a ceiling), above the plates beside it. */
+.plate-box { position: relative; width: 100%; height: 100%; }
 .plate {
-  position: relative;
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
   box-sizing: border-box;
   width: 100%;
-  height: 100%;
+  min-height: 100%;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -115,7 +123,12 @@ const accessibleName = computed(() => {
 .plate--compact .plate-kilos { align-self: center; font-size: 0.6875rem; }
 .plate-kilos--covered { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 .plate-kilos:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
-.plate-hand { font-size: 0.6875rem; font-weight: 700; color: var(--gold); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.plate--expanded { z-index: 2; padding-top: 2px; padding-bottom: 2px; background: rgba(0, 0, 0, 0.88); }
+.plate-hand {
+  font-size: 0.6875rem; font-weight: 700; color: var(--gold); font-variant-numeric: tabular-nums;
+  white-space: normal; overflow-wrap: anywhere; word-spacing: 0.15em; line-height: 1.2;
+  max-height: 4.5rem; overflow-y: auto; /* the badges stay outside this box, so they are never clipped */
+}
 .plate--compact .plate-hand { font-size: 0.5625rem; }
 .plate-ready {
   position: absolute; top: -8px; right: -6px; z-index: 1;

@@ -12,13 +12,34 @@ const hand: KiloDeMerdeAnchor = { kind: 'hand' };
 const seat = (n: number): KiloDeMerdeAnchor => ({ kind: 'seat', seat: n });
 
 function event(
-  eventType: string, data: Partial<KiloDeMerdeEventData>, activeSeats: number[], received = kiloDeMerdeStepState.lastReceived,
+  eventType: string, data: Partial<KiloDeMerdeEventData>, activeSeats: number[], received = kiloDeMerdeStepState.lastReceived, receivedSlot: number | null = null,
 ): KiloDeMerdeTableEvent {
-  return { id: 1, eventType, data: { ...empty, ...data }, activeSeats, received };
+  return { id: 1, eventType, data: { ...empty, ...data }, activeSeats, received, receivedSlot };
 }
 const range = (n: number) => Array.from({ length: n }, (_, i) => i);
 
 describe('planMovements', () => {
+  describe('the slot of the swapped card', () => {
+    it('leaves from and lands in the slot of the card I changed, not in the first one', () => {
+      const moves = planMovements(event('STEP', {}, [0, 1, 2], kiloDeMerdeStepState.lastReceived, 2), 0);
+      const slot2: KiloDeMerdeAnchor = { kind: 'hand', slot: 2 };
+      expect(moves.map(m => [m.from, m.to])).toEqual([[slot2, seat(1)], [seat(1), seat(2)], [seat(2), slot2]]);
+      expect(moves[2]).toMatchObject({ card: kiloDeMerdeStepState.lastReceived!.card, flip: true, marks: [slot2] });
+    });
+
+    it('keeps the whole hand zone when the slot is unknown', () => {
+      const moves = planMovements(event('STEP', {}, [0, 1, 2]), 0);
+      expect(moves[0].from).toEqual(hand);
+      expect(moves[2].to).toEqual(hand);
+    });
+
+    it('shows the face of the card of the state the event came with', () => {
+      const card = kiloCard('QUEEN', 'HEART');
+      const moves = planMovements(event('STEP', {}, [0, 1], { card, from: 1 }, 1), 0);
+      expect(moves[1].card).toEqual(card);
+    });
+  });
+
   describe('STEP', () => {
     it('flies one card per seat to its left neighbour: mine from my hand, the one I receive into it face up', () => {
       const moves = planMovements(event('STEP', { round: 2, step: 3 }, [0, 1, 2]), 0);
