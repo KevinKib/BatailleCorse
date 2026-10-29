@@ -1,0 +1,622 @@
+[ {
+  "kind" : "join",
+  "payload" : {
+    "playerId" : 1,
+    "token" : "00000000-0000-0000-0000-000000000000"
+  }
+}, {
+  "kind" : "state",
+  "payload" : {
+    "started" : false,
+    "gameId" : "00000000-0000-0000-0000-000000000000",
+    "players" : [ {
+      "seat" : 0,
+      "name" : "Alice",
+      "joined" : true,
+      "bot" : false,
+      "seatOptions" : { },
+      "disconnected" : false
+    }, {
+      "seat" : 1,
+      "name" : "Bob",
+      "joined" : true,
+      "bot" : false,
+      "seatOptions" : { },
+      "disconnected" : false
+    } ],
+    "hostSeat" : 0,
+    "mySeat" : 0,
+    "minPlayers" : 2,
+    "maxPlayers" : 2,
+    "canStart" : true,
+    "options" : {
+      "direction" : "anticlockwise",
+      "firstPlayer" : "random"
+    },
+    "optionDescriptors" : [ {
+      "key" : "firstPlayer",
+      "type" : "CHOICE",
+      "values" : [ "host", "guest", "random" ],
+      "defaultValue" : "random",
+      "labelKey" : "options.mangola.firstPlayer"
+    }, {
+      "key" : "direction",
+      "type" : "CHOICE",
+      "values" : [ "anticlockwise", "clockwise" ],
+      "defaultValue" : "anticlockwise",
+      "labelKey" : "options.mangola.direction"
+    } ],
+    "seatOptionDescriptors" : [ {
+      "key" : "level",
+      "type" : "CHOICE",
+      "values" : [ "random", "greedy", "expert" ],
+      "defaultValue" : "greedy",
+      "labelKey" : "options.mangola.level"
+    } ],
+    "canEditOptions" : true,
+    "removableBotSeats" : [ ],
+    "lobbyVersion" : 1,
+    "privateGame" : false
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "JOIN",
+    "eventData" : { },
+    "message" : "Player 2 joined.",
+    "state" : {
+      "started" : false,
+      "gameId" : "00000000-0000-0000-0000-000000000000",
+      "players" : [ {
+        "seat" : 0,
+        "name" : "Alice",
+        "joined" : true,
+        "bot" : false,
+        "seatOptions" : { },
+        "disconnected" : false
+      }, {
+        "seat" : 1,
+        "name" : "Bob",
+        "joined" : true,
+        "bot" : false,
+        "seatOptions" : { },
+        "disconnected" : false
+      } ],
+      "hostSeat" : 0,
+      "mySeat" : 0,
+      "minPlayers" : 2,
+      "maxPlayers" : 2,
+      "canStart" : true,
+      "options" : {
+        "direction" : "anticlockwise",
+        "firstPlayer" : "random"
+      },
+      "optionDescriptors" : [ {
+        "key" : "firstPlayer",
+        "type" : "CHOICE",
+        "values" : [ "host", "guest", "random" ],
+        "defaultValue" : "random",
+        "labelKey" : "options.mangola.firstPlayer"
+      }, {
+        "key" : "direction",
+        "type" : "CHOICE",
+        "values" : [ "anticlockwise", "clockwise" ],
+        "defaultValue" : "anticlockwise",
+        "labelKey" : "options.mangola.direction"
+      } ],
+      "seatOptionDescriptors" : [ {
+        "key" : "level",
+        "type" : "CHOICE",
+        "values" : [ "random", "greedy", "expert" ],
+        "defaultValue" : "greedy",
+        "labelKey" : "options.mangola.level"
+      } ],
+      "canEditOptions" : true,
+      "removableBotSeats" : [ ],
+      "lobbyVersion" : 1,
+      "privateGame" : false
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "LAYOUT_CHANGED",
+    "eventData" : {
+      "seat" : 0,
+      "action" : "ARRANGE"
+    },
+    "message" : "Player 0 changed their layout.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "mangola",
+      "version" : 1,
+      "phase" : "PLACEMENT",
+      "currentSeat" : 0,
+      "seatA" : 0,
+      "direction" : "anticlockwise",
+      "board" : [ 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null ],
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "current" : false,
+        "side" : "A",
+        "seeds" : 32,
+        "ready" : false
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "current" : false,
+        "side" : "B",
+        "seeds" : null,
+        "ready" : false
+      } ],
+      "legalPits" : [ ],
+      "availableActions" : [ "ARRANGE", "CONFIRM_LAYOUT" ],
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "draftOnlyEndless" : false
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "LAYOUT_CONFIRMED",
+    "eventData" : {
+      "seat" : 0,
+      "action" : "CONFIRM_LAYOUT"
+    },
+    "message" : "Player 0 confirmed their layout.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "mangola",
+      "version" : 2,
+      "phase" : "PLACEMENT",
+      "currentSeat" : 0,
+      "seatA" : 0,
+      "direction" : "anticlockwise",
+      "board" : [ 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null ],
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "current" : false,
+        "side" : "A",
+        "seeds" : 32,
+        "ready" : true
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "current" : false,
+        "side" : "B",
+        "seeds" : null,
+        "ready" : false
+      } ],
+      "legalPits" : [ ],
+      "availableActions" : [ "EDIT_LAYOUT" ],
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "draftOnlyEndless" : false
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "LAYOUT_WITHDRAWN",
+    "eventData" : {
+      "seat" : 0,
+      "action" : "EDIT_LAYOUT"
+    },
+    "message" : "Player 0 is arranging again.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "mangola",
+      "version" : 3,
+      "phase" : "PLACEMENT",
+      "currentSeat" : 0,
+      "seatA" : 0,
+      "direction" : "anticlockwise",
+      "board" : [ 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null ],
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "current" : false,
+        "side" : "A",
+        "seeds" : 32,
+        "ready" : false
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "current" : false,
+        "side" : "B",
+        "seeds" : null,
+        "ready" : false
+      } ],
+      "legalPits" : [ ],
+      "availableActions" : [ "ARRANGE", "CONFIRM_LAYOUT" ],
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "draftOnlyEndless" : false
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "LAYOUTS_REVEALED",
+    "eventData" : {
+      "action" : "CONFIRM_LAYOUT"
+    },
+    "message" : "Player 1 confirmed their layout.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "mangola",
+      "version" : 6,
+      "phase" : "PLAY",
+      "currentSeat" : 0,
+      "seatA" : 0,
+      "direction" : "anticlockwise",
+      "board" : [ 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 0, 0, 0, 0, 0 ],
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "current" : true,
+        "side" : "A",
+        "seeds" : 32,
+        "ready" : true
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "current" : false,
+        "side" : "B",
+        "seeds" : 32,
+        "ready" : true
+      } ],
+      "legalPits" : [ 8, 9, 10, 11, 12, 13, 14, 15, 7, 6, 5, 4, 3, 2, 1, 0 ],
+      "availableActions" : [ "SOW" ],
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "draftOnlyEndless" : false
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "SOWN",
+    "eventData" : {
+      "seat" : 0,
+      "action" : "SOW",
+      "pit" : 8,
+      "trace" : [ {
+        "type" : "PICK",
+        "pit" : 8,
+        "count" : 2
+      }, {
+        "type" : "DROP",
+        "pit" : 9
+      }, {
+        "type" : "DROP",
+        "pit" : 10
+      }, {
+        "type" : "CAPTURE",
+        "pit" : 10,
+        "count" : 5,
+        "facing" : 18,
+        "behind" : 26
+      }, {
+        "type" : "RESUME_AFTER",
+        "pit" : 8
+      }, {
+        "type" : "DROP",
+        "pit" : 9
+      }, {
+        "type" : "DROP",
+        "pit" : 10
+      }, {
+        "type" : "DROP",
+        "pit" : 11
+      }, {
+        "type" : "DROP",
+        "pit" : 12
+      }, {
+        "type" : "SKIP_EMPTY",
+        "pit" : 13
+      }, {
+        "type" : "DROP",
+        "pit" : 14
+      } ],
+      "captured" : 5
+    },
+    "message" : "Player 0 sowed.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "mangola",
+      "version" : 1,
+      "phase" : "PLAY",
+      "currentSeat" : 1,
+      "seatA" : 0,
+      "direction" : "anticlockwise",
+      "board" : [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5 ],
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "current" : false,
+        "side" : "A",
+        "seeds" : 8,
+        "ready" : true
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "current" : true,
+        "side" : "B",
+        "seeds" : 5,
+        "ready" : true
+      } ],
+      "legalPits" : [ ],
+      "availableActions" : [ ],
+      "lastMove" : {
+        "seat" : 0,
+        "pit" : 8,
+        "trace" : [ {
+          "type" : "PICK",
+          "pit" : 8,
+          "count" : 2
+        }, {
+          "type" : "DROP",
+          "pit" : 9
+        }, {
+          "type" : "DROP",
+          "pit" : 10
+        }, {
+          "type" : "CAPTURE",
+          "pit" : 10,
+          "count" : 5,
+          "facing" : 18,
+          "behind" : 26
+        }, {
+          "type" : "RESUME_AFTER",
+          "pit" : 8
+        }, {
+          "type" : "DROP",
+          "pit" : 9
+        }, {
+          "type" : "DROP",
+          "pit" : 10
+        }, {
+          "type" : "DROP",
+          "pit" : 11
+        }, {
+          "type" : "DROP",
+          "pit" : 12
+        }, {
+          "type" : "SKIP_EMPTY",
+          "pit" : 13
+        }, {
+          "type" : "DROP",
+          "pit" : 14
+        } ]
+      },
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "draftOnlyEndless" : false
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "GAME_OVER",
+    "eventData" : {
+      "seat" : 0,
+      "action" : "SOW",
+      "pit" : 8,
+      "trace" : [ {
+        "type" : "PICK",
+        "pit" : 8,
+        "count" : 2
+      }, {
+        "type" : "DROP",
+        "pit" : 9
+      }, {
+        "type" : "DROP",
+        "pit" : 10
+      }, {
+        "type" : "CAPTURE",
+        "pit" : 10,
+        "count" : 5,
+        "facing" : 18,
+        "behind" : 26
+      }, {
+        "type" : "RESUME_AFTER",
+        "pit" : 8
+      }, {
+        "type" : "DROP",
+        "pit" : 9
+      }, {
+        "type" : "DROP",
+        "pit" : 10
+      }, {
+        "type" : "DROP",
+        "pit" : 11
+      }, {
+        "type" : "DROP",
+        "pit" : 12
+      }, {
+        "type" : "SKIP_EMPTY",
+        "pit" : 13
+      }, {
+        "type" : "DROP",
+        "pit" : 14
+      } ],
+      "captured" : 5
+    },
+    "message" : "Player 0 sowed.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "mangola",
+      "version" : 1,
+      "phase" : "FINISHED",
+      "currentSeat" : 1,
+      "seatA" : 0,
+      "direction" : "anticlockwise",
+      "board" : [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "current" : false,
+        "side" : "A",
+        "seeds" : 8,
+        "ready" : true
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "current" : false,
+        "side" : "B",
+        "seeds" : 0,
+        "ready" : true
+      } ],
+      "legalPits" : [ ],
+      "availableActions" : [ ],
+      "lastMove" : {
+        "seat" : 0,
+        "pit" : 8,
+        "trace" : [ {
+          "type" : "PICK",
+          "pit" : 8,
+          "count" : 2
+        }, {
+          "type" : "DROP",
+          "pit" : 9
+        }, {
+          "type" : "DROP",
+          "pit" : 10
+        }, {
+          "type" : "CAPTURE",
+          "pit" : 10,
+          "count" : 5,
+          "facing" : 18,
+          "behind" : 26
+        }, {
+          "type" : "RESUME_AFTER",
+          "pit" : 8
+        }, {
+          "type" : "DROP",
+          "pit" : 9
+        }, {
+          "type" : "DROP",
+          "pit" : 10
+        }, {
+          "type" : "DROP",
+          "pit" : 11
+        }, {
+          "type" : "DROP",
+          "pit" : 12
+        }, {
+          "type" : "SKIP_EMPTY",
+          "pit" : 13
+        }, {
+          "type" : "DROP",
+          "pit" : 14
+        } ]
+      },
+      "outcome" : {
+        "status" : "FINISHED",
+        "winner" : 0,
+        "reason" : "NO_MOVE"
+      },
+      "draftOnlyEndless" : false
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "state",
+  "payload" : {
+    "started" : true,
+    "id" : "00000000-0000-0000-0000-000000000000",
+    "gameType" : "mangola",
+    "version" : 1,
+    "phase" : "FINISHED",
+    "currentSeat" : 1,
+    "seatA" : 0,
+    "direction" : "anticlockwise",
+    "board" : [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
+    "players" : [ {
+      "seat" : 0,
+      "name" : null,
+      "current" : false,
+      "side" : "A",
+      "seeds" : 8,
+      "ready" : true
+    }, {
+      "seat" : 1,
+      "name" : null,
+      "current" : false,
+      "side" : "B",
+      "seeds" : 0,
+      "ready" : true
+    } ],
+    "legalPits" : [ ],
+    "availableActions" : [ ],
+    "lastMove" : {
+      "seat" : 0,
+      "pit" : 8,
+      "trace" : [ {
+        "type" : "PICK",
+        "pit" : 8,
+        "count" : 2
+      }, {
+        "type" : "DROP",
+        "pit" : 9
+      }, {
+        "type" : "DROP",
+        "pit" : 10
+      }, {
+        "type" : "CAPTURE",
+        "pit" : 10,
+        "count" : 5,
+        "facing" : 18,
+        "behind" : 26
+      }, {
+        "type" : "RESUME_AFTER",
+        "pit" : 8
+      }, {
+        "type" : "DROP",
+        "pit" : 9
+      }, {
+        "type" : "DROP",
+        "pit" : 10
+      }, {
+        "type" : "DROP",
+        "pit" : 11
+      }, {
+        "type" : "DROP",
+        "pit" : 12
+      }, {
+        "type" : "SKIP_EMPTY",
+        "pit" : 13
+      }, {
+        "type" : "DROP",
+        "pit" : 14
+      } ]
+    },
+    "outcome" : {
+      "status" : "FINISHED",
+      "winner" : 0,
+      "reason" : "NO_MOVE"
+    },
+    "draftOnlyEndless" : false
+  }
+} ]

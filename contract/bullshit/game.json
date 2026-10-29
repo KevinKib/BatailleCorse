@@ -1,0 +1,438 @@
+[ {
+  "kind" : "join",
+  "payload" : {
+    "playerId" : 1,
+    "token" : "00000000-0000-0000-0000-000000000000"
+  }
+}, {
+  "kind" : "state",
+  "payload" : {
+    "started" : false,
+    "gameId" : "00000000-0000-0000-0000-000000000000",
+    "players" : [ {
+      "seat" : 0,
+      "name" : "Alice",
+      "joined" : true,
+      "bot" : false,
+      "seatOptions" : { },
+      "disconnected" : false
+    }, {
+      "seat" : 1,
+      "name" : "Bob",
+      "joined" : true,
+      "bot" : false,
+      "seatOptions" : { },
+      "disconnected" : false
+    }, {
+      "seat" : 2,
+      "name" : "Cleo",
+      "joined" : true,
+      "bot" : false,
+      "seatOptions" : { },
+      "disconnected" : false
+    }, {
+      "seat" : 3,
+      "name" : null,
+      "joined" : false,
+      "bot" : false,
+      "seatOptions" : { },
+      "disconnected" : false
+    }, {
+      "seat" : 4,
+      "name" : null,
+      "joined" : false,
+      "bot" : false,
+      "seatOptions" : { },
+      "disconnected" : false
+    }, {
+      "seat" : 5,
+      "name" : null,
+      "joined" : false,
+      "bot" : false,
+      "seatOptions" : { },
+      "disconnected" : false
+    } ],
+    "hostSeat" : 0,
+    "mySeat" : 0,
+    "minPlayers" : 2,
+    "maxPlayers" : 6,
+    "canStart" : true,
+    "options" : {
+      "claimMode" : "rank",
+      "deckSize" : "32"
+    },
+    "optionDescriptors" : [ {
+      "key" : "claimMode",
+      "type" : "CHOICE",
+      "values" : [ "rank", "suit" ],
+      "defaultValue" : "rank",
+      "labelKey" : "options.bullshit.claimMode"
+    }, {
+      "key" : "deckSize",
+      "type" : "CHOICE",
+      "values" : [ "52", "32" ],
+      "defaultValue" : "32",
+      "labelKey" : "options.bullshit.deckSize"
+    } ],
+    "seatOptionDescriptors" : [ ],
+    "canEditOptions" : true,
+    "removableBotSeats" : [ ],
+    "lobbyVersion" : 2,
+    "privateGame" : false
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "JOIN",
+    "eventData" : { },
+    "message" : "Player 2 joined.",
+    "state" : {
+      "started" : false,
+      "gameId" : "00000000-0000-0000-0000-000000000000",
+      "players" : [ {
+        "seat" : 0,
+        "name" : "Alice",
+        "joined" : true,
+        "bot" : false,
+        "seatOptions" : { },
+        "disconnected" : false
+      }, {
+        "seat" : 1,
+        "name" : "Bob",
+        "joined" : true,
+        "bot" : false,
+        "seatOptions" : { },
+        "disconnected" : false
+      }, {
+        "seat" : 2,
+        "name" : null,
+        "joined" : false,
+        "bot" : false,
+        "seatOptions" : { },
+        "disconnected" : false
+      }, {
+        "seat" : 3,
+        "name" : null,
+        "joined" : false,
+        "bot" : false,
+        "seatOptions" : { },
+        "disconnected" : false
+      }, {
+        "seat" : 4,
+        "name" : null,
+        "joined" : false,
+        "bot" : false,
+        "seatOptions" : { },
+        "disconnected" : false
+      }, {
+        "seat" : 5,
+        "name" : null,
+        "joined" : false,
+        "bot" : false,
+        "seatOptions" : { },
+        "disconnected" : false
+      } ],
+      "hostSeat" : 0,
+      "mySeat" : 0,
+      "minPlayers" : 2,
+      "maxPlayers" : 6,
+      "canStart" : true,
+      "options" : {
+        "claimMode" : "rank",
+        "deckSize" : "32"
+      },
+      "optionDescriptors" : [ {
+        "key" : "claimMode",
+        "type" : "CHOICE",
+        "values" : [ "rank", "suit" ],
+        "defaultValue" : "rank",
+        "labelKey" : "options.bullshit.claimMode"
+      }, {
+        "key" : "deckSize",
+        "type" : "CHOICE",
+        "values" : [ "52", "32" ],
+        "defaultValue" : "32",
+        "labelKey" : "options.bullshit.deckSize"
+      } ],
+      "seatOptionDescriptors" : [ ],
+      "canEditOptions" : true,
+      "removableBotSeats" : [ ],
+      "lobbyVersion" : 1,
+      "privateGame" : false
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "DISCARD",
+    "eventData" : {
+      "claimantSeat" : 0,
+      "claimedTargetLabel" : "ACE",
+      "count" : 1
+    },
+    "message" : "Player 0 played 1 card(s) as ACE.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "bullshit",
+      "myHand" : [ {
+        "rank" : "KING",
+        "suit" : "HEART",
+        "name" : "HEART_KING"
+      } ],
+      "availableActions" : [ ],
+      "players" : [ {
+        "id" : "0",
+        "handCount" : 1,
+        "isCurrentPlayer" : false,
+        "name" : null,
+        "bot" : false
+      }, {
+        "id" : "1",
+        "handCount" : 3,
+        "isCurrentPlayer" : true,
+        "name" : null,
+        "bot" : false
+      }, {
+        "id" : "2",
+        "handCount" : 1,
+        "isCurrentPlayer" : false,
+        "name" : null,
+        "bot" : false
+      } ],
+      "currentTarget" : {
+        "label" : "2"
+      },
+      "discardPileSize" : 1,
+      "table" : {
+        "state" : "CLAIM",
+        "claimantId" : "0",
+        "claimedTargetLabel" : "ACE",
+        "count" : 1
+      },
+      "pendingWinner" : {
+        "state" : "NONE"
+      },
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "deckSize" : 52,
+      "mySeat" : 0,
+      "version" : 1
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "CALL_BULLSHIT",
+    "eventData" : {
+      "callerSeat" : 1,
+      "claimantSeat" : 0,
+      "truthful" : true,
+      "pickerSeat" : 1,
+      "revealedCards" : [ {
+        "rank" : "ACE",
+        "suit" : "HEART",
+        "name" : "HEART_ACE"
+      } ]
+    },
+    "message" : "Player 1 called bullshit on player 0.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "bullshit",
+      "myHand" : [ {
+        "rank" : "KING",
+        "suit" : "HEART",
+        "name" : "HEART_KING"
+      } ],
+      "availableActions" : [ ],
+      "players" : [ {
+        "id" : "0",
+        "handCount" : 1,
+        "isCurrentPlayer" : false,
+        "name" : null,
+        "bot" : false
+      }, {
+        "id" : "1",
+        "handCount" : 4,
+        "isCurrentPlayer" : true,
+        "name" : null,
+        "bot" : false
+      }, {
+        "id" : "2",
+        "handCount" : 1,
+        "isCurrentPlayer" : false,
+        "name" : null,
+        "bot" : false
+      } ],
+      "currentTarget" : {
+        "label" : "2"
+      },
+      "discardPileSize" : 0,
+      "table" : {
+        "state" : "NO_CLAIM"
+      },
+      "pendingWinner" : {
+        "state" : "NONE"
+      },
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "deckSize" : 52,
+      "mySeat" : 0,
+      "version" : 2
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "DISCARD",
+    "eventData" : {
+      "claimantSeat" : 0,
+      "claimedTargetLabel" : "ACE",
+      "count" : 1
+    },
+    "message" : "Player 0 played 1 card(s) as ACE.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "bullshit",
+      "myHand" : [ ],
+      "availableActions" : [ ],
+      "players" : [ {
+        "id" : "0",
+        "handCount" : 0,
+        "isCurrentPlayer" : false,
+        "name" : null,
+        "bot" : false
+      }, {
+        "id" : "1",
+        "handCount" : 2,
+        "isCurrentPlayer" : true,
+        "name" : null,
+        "bot" : false
+      } ],
+      "currentTarget" : {
+        "label" : "2"
+      },
+      "discardPileSize" : 1,
+      "table" : {
+        "state" : "CLAIM",
+        "claimantId" : "0",
+        "claimedTargetLabel" : "ACE",
+        "count" : 1
+      },
+      "pendingWinner" : {
+        "state" : "PENDING",
+        "playerId" : "0"
+      },
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "deckSize" : 52,
+      "mySeat" : 0,
+      "version" : 1
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "CALL_BULLSHIT",
+    "eventData" : {
+      "callerSeat" : 1,
+      "claimantSeat" : 0,
+      "truthful" : true,
+      "pickerSeat" : 1,
+      "revealedCards" : [ {
+        "rank" : "ACE",
+        "suit" : "HEART",
+        "name" : "HEART_ACE"
+      } ]
+    },
+    "message" : "Player 1 called bullshit on player 0.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "bullshit",
+      "myHand" : [ ],
+      "availableActions" : [ ],
+      "players" : [ {
+        "id" : "0",
+        "handCount" : 0,
+        "isCurrentPlayer" : false,
+        "name" : null,
+        "bot" : false
+      }, {
+        "id" : "1",
+        "handCount" : 3,
+        "isCurrentPlayer" : true,
+        "name" : null,
+        "bot" : false
+      } ],
+      "currentTarget" : {
+        "label" : "2"
+      },
+      "discardPileSize" : 0,
+      "table" : {
+        "state" : "NO_CLAIM"
+      },
+      "pendingWinner" : {
+        "state" : "PENDING",
+        "playerId" : "0"
+      },
+      "outcome" : {
+        "status" : "FINISHED",
+        "winnerId" : "0"
+      },
+      "deckSize" : 52,
+      "mySeat" : 0,
+      "version" : 2
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "state",
+  "payload" : {
+    "started" : true,
+    "id" : "00000000-0000-0000-0000-000000000000",
+    "gameType" : "bullshit",
+    "myHand" : [ ],
+    "availableActions" : [ ],
+    "players" : [ {
+      "id" : "0",
+      "handCount" : 0,
+      "isCurrentPlayer" : false,
+      "name" : null,
+      "bot" : false
+    }, {
+      "id" : "1",
+      "handCount" : 3,
+      "isCurrentPlayer" : true,
+      "name" : null,
+      "bot" : false
+    } ],
+    "currentTarget" : {
+      "label" : "2"
+    },
+    "discardPileSize" : 0,
+    "table" : {
+      "state" : "NO_CLAIM"
+    },
+    "pendingWinner" : {
+      "state" : "PENDING",
+      "playerId" : "0"
+    },
+    "outcome" : {
+      "status" : "FINISHED",
+      "winnerId" : "0"
+    },
+    "deckSize" : 52,
+    "mySeat" : 0,
+    "version" : 2
+  }
+} ]

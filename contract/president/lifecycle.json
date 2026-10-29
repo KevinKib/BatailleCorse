@@ -1,0 +1,333 @@
+[ {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "OPPONENT_DISCONNECTED",
+    "eventData" : {
+      "disconnectedSeat" : 1,
+      "deadlineEpochMs" : 1700000000000
+    },
+    "message" : "Player 1 disconnected.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "president",
+      "version" : 0,
+      "round" : 1,
+      "rounds" : 5,
+      "phase" : "PLAYING",
+      "currentSeat" : 0,
+      "options" : {
+        "afterPass" : "reenter",
+        "exchange" : "two",
+        "giveBack" : "free",
+        "length" : "rounds-5",
+        "mustPlay" : "off",
+        "nextLead" : "scum",
+        "reducedCut" : "off",
+        "scoring" : "rank"
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "handSize" : 2,
+        "title" : null,
+        "place" : null,
+        "out" : false,
+        "passed" : false,
+        "points" : 0,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "handSize" : 2,
+        "title" : null,
+        "place" : null,
+        "out" : false,
+        "passed" : false,
+        "points" : 0,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      }, {
+        "seat" : 2,
+        "name" : null,
+        "handSize" : 2,
+        "title" : null,
+        "place" : null,
+        "out" : false,
+        "passed" : false,
+        "points" : 0,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      } ],
+      "trick" : {
+        "leader" : 0,
+        "plays" : [ ],
+        "top" : null,
+        "lastPlayer" : null,
+        "passed" : [ ],
+        "constraint" : "FREE",
+        "requiredRank" : null,
+        "requiredCount" : null,
+        "chain" : null
+      },
+      "exchange" : [ ],
+      "lastRound" : null,
+      "standings" : [ {
+        "seat" : 0,
+        "points" : 0
+      }, {
+        "seat" : 1,
+        "points" : 0
+      }, {
+        "seat" : 2,
+        "points" : 0
+      } ],
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "hand" : [ {
+        "rank" : "4",
+        "suit" : "CLUB",
+        "name" : "CLUB_4"
+      }, {
+        "rank" : "9",
+        "suit" : "CLUB",
+        "name" : "CLUB_9"
+      } ],
+      "received" : [ ],
+      "given" : [ ],
+      "toGiveBack" : 0,
+      "legalPlays" : [ {
+        "kind" : "SET",
+        "rank" : "FOUR",
+        "count" : 1
+      }, {
+        "kind" : "SET",
+        "rank" : "NINE",
+        "count" : 1
+      } ],
+      "availableActions" : [ "PLAY" ]
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "OPPONENT_RECONNECTED",
+    "eventData" : {
+      "reconnectedSeat" : 1
+    },
+    "message" : "Player 1 reconnected.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "president",
+      "version" : 0,
+      "round" : 1,
+      "rounds" : 5,
+      "phase" : "PLAYING",
+      "currentSeat" : 0,
+      "options" : {
+        "afterPass" : "reenter",
+        "exchange" : "two",
+        "giveBack" : "free",
+        "length" : "rounds-5",
+        "mustPlay" : "off",
+        "nextLead" : "scum",
+        "reducedCut" : "off",
+        "scoring" : "rank"
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "handSize" : 2,
+        "title" : null,
+        "place" : null,
+        "out" : false,
+        "passed" : false,
+        "points" : 0,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "handSize" : 2,
+        "title" : null,
+        "place" : null,
+        "out" : false,
+        "passed" : false,
+        "points" : 0,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      }, {
+        "seat" : 2,
+        "name" : null,
+        "handSize" : 2,
+        "title" : null,
+        "place" : null,
+        "out" : false,
+        "passed" : false,
+        "points" : 0,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      } ],
+      "trick" : {
+        "leader" : 0,
+        "plays" : [ ],
+        "top" : null,
+        "lastPlayer" : null,
+        "passed" : [ ],
+        "constraint" : "FREE",
+        "requiredRank" : null,
+        "requiredCount" : null,
+        "chain" : null
+      },
+      "exchange" : [ ],
+      "lastRound" : null,
+      "standings" : [ {
+        "seat" : 0,
+        "points" : 0
+      }, {
+        "seat" : 1,
+        "points" : 0
+      }, {
+        "seat" : 2,
+        "points" : 0
+      } ],
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "hand" : [ {
+        "rank" : "4",
+        "suit" : "CLUB",
+        "name" : "CLUB_4"
+      }, {
+        "rank" : "9",
+        "suit" : "CLUB",
+        "name" : "CLUB_9"
+      } ],
+      "received" : [ ],
+      "given" : [ ],
+      "toGiveBack" : 0,
+      "legalPlays" : [ {
+        "kind" : "SET",
+        "rank" : "FOUR",
+        "count" : 1
+      }, {
+        "kind" : "SET",
+        "rank" : "NINE",
+        "count" : 1
+      } ],
+      "availableActions" : [ "PLAY" ]
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "FORFEIT",
+    "eventData" : {
+      "loserSeat" : 1,
+      "reason" : "RESIGNED"
+    },
+    "message" : "Player 1 forfeited.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "president",
+      "version" : 1,
+      "round" : 1,
+      "rounds" : 5,
+      "phase" : "PLAYING",
+      "currentSeat" : 0,
+      "options" : {
+        "afterPass" : "reenter",
+        "exchange" : "two",
+        "giveBack" : "free",
+        "length" : "rounds-5",
+        "mustPlay" : "off",
+        "nextLead" : "scum",
+        "reducedCut" : "off",
+        "scoring" : "rank"
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "handSize" : 2,
+        "title" : null,
+        "place" : null,
+        "out" : false,
+        "passed" : false,
+        "points" : 0,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      }, {
+        "seat" : 2,
+        "name" : null,
+        "handSize" : 2,
+        "title" : null,
+        "place" : null,
+        "out" : false,
+        "passed" : false,
+        "points" : 0,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      } ],
+      "trick" : {
+        "leader" : 0,
+        "plays" : [ ],
+        "top" : null,
+        "lastPlayer" : null,
+        "passed" : [ ],
+        "constraint" : "FREE",
+        "requiredRank" : null,
+        "requiredCount" : null,
+        "chain" : null
+      },
+      "exchange" : [ ],
+      "lastRound" : null,
+      "standings" : [ {
+        "seat" : 0,
+        "points" : 0
+      }, {
+        "seat" : 2,
+        "points" : 0
+      } ],
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "hand" : [ {
+        "rank" : "4",
+        "suit" : "CLUB",
+        "name" : "CLUB_4"
+      }, {
+        "rank" : "9",
+        "suit" : "CLUB",
+        "name" : "CLUB_9"
+      } ],
+      "received" : [ ],
+      "given" : [ ],
+      "toGiveBack" : 0,
+      "legalPlays" : [ {
+        "kind" : "SET",
+        "rank" : "FOUR",
+        "count" : 1
+      }, {
+        "kind" : "SET",
+        "rank" : "NINE",
+        "count" : 1
+      } ],
+      "availableActions" : [ "PLAY" ]
+    },
+    "success" : true
+  }
+} ]

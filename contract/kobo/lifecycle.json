@@ -1,0 +1,251 @@
+[ {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "OPPONENT_DISCONNECTED",
+    "eventData" : {
+      "disconnectedSeat" : 1,
+      "deadlineEpochMs" : 1700000000000
+    },
+    "message" : "Player 1 disconnected.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "kobo",
+      "version" : 0,
+      "round" : 1,
+      "phase" : "DRAW",
+      "currentSeat" : 0,
+      "readySeats" : [ ],
+      "announcer" : null,
+      "finalTurnsRemaining" : [ ],
+      "pendingPower" : "NONE",
+      "drawPileSize" : 2,
+      "discardSize" : 0,
+      "discardTop" : null,
+      "revealed" : false,
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "current" : true,
+        "total" : 0,
+        "handSize" : 4,
+        "slots" : [ {
+          "slot" : 0,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 1,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 2,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 3,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        } ]
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "current" : false,
+        "total" : 0,
+        "handSize" : 4,
+        "slots" : [ {
+          "slot" : 0,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 1,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 2,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 3,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        } ]
+      } ],
+      "hasDrawn" : false,
+      "drawnCard" : null,
+      "startingCards" : [ ],
+      "reveal" : null,
+      "availableActions" : [ "DRAW" ],
+      "lastRound" : null,
+      "outcome" : {
+        "status" : "ONGOING"
+      }
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "OPPONENT_RECONNECTED",
+    "eventData" : {
+      "reconnectedSeat" : 1
+    },
+    "message" : "Player 1 reconnected.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "kobo",
+      "version" : 0,
+      "round" : 1,
+      "phase" : "DRAW",
+      "currentSeat" : 0,
+      "readySeats" : [ ],
+      "announcer" : null,
+      "finalTurnsRemaining" : [ ],
+      "pendingPower" : "NONE",
+      "drawPileSize" : 2,
+      "discardSize" : 0,
+      "discardTop" : null,
+      "revealed" : false,
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "current" : true,
+        "total" : 0,
+        "handSize" : 4,
+        "slots" : [ {
+          "slot" : 0,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 1,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 2,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 3,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        } ]
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "current" : false,
+        "total" : 0,
+        "handSize" : 4,
+        "slots" : [ {
+          "slot" : 0,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 1,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 2,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 3,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        } ]
+      } ],
+      "hasDrawn" : false,
+      "drawnCard" : null,
+      "startingCards" : [ ],
+      "reveal" : null,
+      "availableActions" : [ "DRAW" ],
+      "lastRound" : null,
+      "outcome" : {
+        "status" : "ONGOING"
+      }
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "FORFEIT",
+    "eventData" : {
+      "loserSeat" : 1,
+      "reason" : "RESIGNED"
+    },
+    "message" : "Player 1 forfeited.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "kobo",
+      "version" : 1,
+      "round" : 1,
+      "phase" : "FINISHED",
+      "currentSeat" : 0,
+      "readySeats" : [ ],
+      "announcer" : null,
+      "finalTurnsRemaining" : [ ],
+      "pendingPower" : "NONE",
+      "drawPileSize" : 6,
+      "discardSize" : 0,
+      "discardTop" : null,
+      "revealed" : false,
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "current" : true,
+        "total" : 0,
+        "handSize" : 4,
+        "slots" : [ {
+          "slot" : 0,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 1,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 2,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        }, {
+          "slot" : 3,
+          "occupied" : true,
+          "revision" : 0,
+          "card" : null
+        } ]
+      } ],
+      "hasDrawn" : false,
+      "drawnCard" : null,
+      "startingCards" : [ ],
+      "reveal" : null,
+      "availableActions" : [ ],
+      "lastRound" : null,
+      "outcome" : {
+        "status" : "FINISHED",
+        "winners" : [ 0 ],
+        "reason" : "FORFEIT"
+      }
+    },
+    "success" : true
+  }
+} ]

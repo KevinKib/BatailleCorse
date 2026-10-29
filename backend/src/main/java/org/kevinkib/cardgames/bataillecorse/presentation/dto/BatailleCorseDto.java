@@ -54,7 +54,7 @@ public class BatailleCorseDto {
         PlayerDto currentPlayer = PlayerDto.from(current, batailleCorse.getAvailableActions(current));
 
         return new BatailleCorseDto(
-                batailleCorse.getId().toString(),
+                batailleCorse.getId().uuid().toString(),
                 players,
                 winner,
                 PileDto.from(batailleCorse.getPile()),

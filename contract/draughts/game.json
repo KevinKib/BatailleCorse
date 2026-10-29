@@ -1,0 +1,494 @@
+[ {
+  "kind" : "join",
+  "payload" : {
+    "playerId" : 1,
+    "token" : "00000000-0000-0000-0000-000000000000"
+  }
+}, {
+  "kind" : "state",
+  "payload" : {
+    "started" : false,
+    "gameId" : "00000000-0000-0000-0000-000000000000",
+    "players" : [ {
+      "seat" : 0,
+      "name" : "Alice",
+      "joined" : true,
+      "bot" : false,
+      "seatOptions" : { },
+      "disconnected" : false
+    }, {
+      "seat" : 1,
+      "name" : "Bob",
+      "joined" : true,
+      "bot" : false,
+      "seatOptions" : { },
+      "disconnected" : false
+    } ],
+    "hostSeat" : 0,
+    "mySeat" : 0,
+    "minPlayers" : 2,
+    "maxPlayers" : 2,
+    "canStart" : true,
+    "options" : {
+      "hostColour" : "random"
+    },
+    "optionDescriptors" : [ {
+      "key" : "hostColour",
+      "type" : "CHOICE",
+      "values" : [ "white", "black", "random" ],
+      "defaultValue" : "random",
+      "labelKey" : "options.draughts.hostColour"
+    } ],
+    "seatOptionDescriptors" : [ {
+      "key" : "level",
+      "type" : "CHOICE",
+      "values" : [ "random", "greedy", "expert" ],
+      "defaultValue" : "greedy",
+      "labelKey" : "options.draughts.level"
+    } ],
+    "canEditOptions" : true,
+    "removableBotSeats" : [ ],
+    "lobbyVersion" : 1,
+    "privateGame" : false
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "JOIN",
+    "eventData" : { },
+    "message" : "Player 2 joined.",
+    "state" : {
+      "started" : false,
+      "gameId" : "00000000-0000-0000-0000-000000000000",
+      "players" : [ {
+        "seat" : 0,
+        "name" : "Alice",
+        "joined" : true,
+        "bot" : false,
+        "seatOptions" : { },
+        "disconnected" : false
+      }, {
+        "seat" : 1,
+        "name" : "Bob",
+        "joined" : true,
+        "bot" : false,
+        "seatOptions" : { },
+        "disconnected" : false
+      } ],
+      "hostSeat" : 0,
+      "mySeat" : 0,
+      "minPlayers" : 2,
+      "maxPlayers" : 2,
+      "canStart" : true,
+      "options" : {
+        "hostColour" : "random"
+      },
+      "optionDescriptors" : [ {
+        "key" : "hostColour",
+        "type" : "CHOICE",
+        "values" : [ "white", "black", "random" ],
+        "defaultValue" : "random",
+        "labelKey" : "options.draughts.hostColour"
+      } ],
+      "seatOptionDescriptors" : [ {
+        "key" : "level",
+        "type" : "CHOICE",
+        "values" : [ "random", "greedy", "expert" ],
+        "defaultValue" : "greedy",
+        "labelKey" : "options.draughts.level"
+      } ],
+      "canEditOptions" : true,
+      "removableBotSeats" : [ ],
+      "lobbyVersion" : 1,
+      "privateGame" : false
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "MOVE",
+    "eventData" : {
+      "seat" : 0,
+      "from" : 32,
+      "to" : 28,
+      "path" : [ 28 ],
+      "captures" : [ ],
+      "promotes" : false
+    },
+    "message" : "Player 0 moved a piece.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "draughts",
+      "version" : 1,
+      "phase" : "PLAY",
+      "currentSeat" : 1,
+      "whiteSeat" : 0,
+      "board" : [ "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", null, null, null, null, null, null, null, "w", null, null, "w", null, "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w" ],
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "colour" : "WHITE",
+        "current" : false,
+        "men" : 20,
+        "kings" : 0,
+        "captured" : 0
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "colour" : "BLACK",
+        "current" : true,
+        "men" : 20,
+        "kings" : 0,
+        "captured" : 0
+      } ],
+      "availableActions" : [ "OFFER_DRAW" ],
+      "legalMoves" : [ ],
+      "captureRequired" : false,
+      "maxCaptures" : 0,
+      "lastMove" : {
+        "seat" : 0,
+        "from" : 32,
+        "to" : 28,
+        "path" : [ 28 ],
+        "captures" : [ ],
+        "promotes" : false
+      },
+      "history" : [ "32-28" ],
+      "outcome" : {
+        "status" : "ONGOING"
+      }
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "DRAW_OFFERED",
+    "eventData" : {
+      "seat" : 1
+    },
+    "message" : "Player 1 offered a draw.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "draughts",
+      "version" : 2,
+      "phase" : "PLAY",
+      "currentSeat" : 1,
+      "whiteSeat" : 0,
+      "board" : [ "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", null, null, null, null, null, null, null, "w", null, null, "w", null, "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w" ],
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "colour" : "WHITE",
+        "current" : false,
+        "men" : 20,
+        "kings" : 0,
+        "captured" : 0
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "colour" : "BLACK",
+        "current" : true,
+        "men" : 20,
+        "kings" : 0,
+        "captured" : 0
+      } ],
+      "availableActions" : [ "ACCEPT_DRAW", "DECLINE_DRAW" ],
+      "legalMoves" : [ ],
+      "captureRequired" : false,
+      "maxCaptures" : 0,
+      "lastMove" : {
+        "seat" : 0,
+        "from" : 32,
+        "to" : 28,
+        "path" : [ 28 ],
+        "captures" : [ ],
+        "promotes" : false
+      },
+      "drawOffer" : {
+        "by" : 1
+      },
+      "history" : [ "32-28" ],
+      "outcome" : {
+        "status" : "ONGOING"
+      }
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "DRAW_DECLINED",
+    "eventData" : {
+      "seat" : 0
+    },
+    "message" : "Player 0 declined the draw.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "draughts",
+      "version" : 3,
+      "phase" : "PLAY",
+      "currentSeat" : 1,
+      "whiteSeat" : 0,
+      "board" : [ "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", null, null, null, null, null, null, null, "w", null, null, "w", null, "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w" ],
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "colour" : "WHITE",
+        "current" : false,
+        "men" : 20,
+        "kings" : 0,
+        "captured" : 0
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "colour" : "BLACK",
+        "current" : true,
+        "men" : 20,
+        "kings" : 0,
+        "captured" : 0
+      } ],
+      "availableActions" : [ "OFFER_DRAW" ],
+      "legalMoves" : [ ],
+      "captureRequired" : false,
+      "maxCaptures" : 0,
+      "lastMove" : {
+        "seat" : 0,
+        "from" : 32,
+        "to" : 28,
+        "path" : [ 28 ],
+        "captures" : [ ],
+        "promotes" : false
+      },
+      "history" : [ "32-28" ],
+      "outcome" : {
+        "status" : "ONGOING"
+      }
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "GAME_OVER",
+    "eventData" : {
+      "seat" : 1
+    },
+    "message" : "Player 1 accepted the draw.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "draughts",
+      "version" : 5,
+      "phase" : "FINISHED",
+      "currentSeat" : 1,
+      "whiteSeat" : 0,
+      "board" : [ "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", null, null, null, null, null, null, null, "w", null, null, "w", null, "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w" ],
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "colour" : "WHITE",
+        "current" : false,
+        "men" : 20,
+        "kings" : 0,
+        "captured" : 0
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "colour" : "BLACK",
+        "current" : false,
+        "men" : 20,
+        "kings" : 0,
+        "captured" : 0
+      } ],
+      "availableActions" : [ ],
+      "legalMoves" : [ ],
+      "captureRequired" : false,
+      "maxCaptures" : 0,
+      "lastMove" : {
+        "seat" : 0,
+        "from" : 32,
+        "to" : 28,
+        "path" : [ 28 ],
+        "captures" : [ ],
+        "promotes" : false
+      },
+      "history" : [ "32-28" ],
+      "outcome" : {
+        "status" : "FINISHED",
+        "winner" : null,
+        "reason" : "DRAW_AGREED"
+      }
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "MOVE",
+    "eventData" : {
+      "seat" : 0,
+      "from" : 32,
+      "to" : 14,
+      "path" : [ 23, 14 ],
+      "captures" : [ 28, 19 ],
+      "promotes" : false
+    },
+    "message" : "Player 0 moved a piece.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "draughts",
+      "version" : 1,
+      "phase" : "PLAY",
+      "currentSeat" : 1,
+      "whiteSeat" : 0,
+      "board" : [ "b", null, null, null, null, null, null, null, null, null, null, null, null, "w", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null ],
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "colour" : "WHITE",
+        "current" : false,
+        "men" : 1,
+        "kings" : 0,
+        "captured" : 19
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "colour" : "BLACK",
+        "current" : true,
+        "men" : 1,
+        "kings" : 0,
+        "captured" : 19
+      } ],
+      "availableActions" : [ "OFFER_DRAW" ],
+      "legalMoves" : [ ],
+      "captureRequired" : false,
+      "maxCaptures" : 0,
+      "lastMove" : {
+        "seat" : 0,
+        "from" : 32,
+        "to" : 14,
+        "path" : [ 23, 14 ],
+        "captures" : [ 28, 19 ],
+        "promotes" : false
+      },
+      "history" : [ "32x14" ],
+      "outcome" : {
+        "status" : "ONGOING"
+      }
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "GAME_OVER",
+    "eventData" : {
+      "seat" : 0,
+      "from" : 27,
+      "to" : 16,
+      "path" : [ 16 ],
+      "captures" : [ 21 ],
+      "promotes" : false
+    },
+    "message" : "Player 0 moved a piece.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "draughts",
+      "version" : 1,
+      "phase" : "FINISHED",
+      "currentSeat" : 1,
+      "whiteSeat" : 0,
+      "board" : [ null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, "w", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null ],
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "colour" : "WHITE",
+        "current" : false,
+        "men" : 1,
+        "kings" : 0,
+        "captured" : 20
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "colour" : "BLACK",
+        "current" : false,
+        "men" : 0,
+        "kings" : 0,
+        "captured" : 19
+      } ],
+      "availableActions" : [ ],
+      "legalMoves" : [ ],
+      "captureRequired" : false,
+      "maxCaptures" : 0,
+      "lastMove" : {
+        "seat" : 0,
+        "from" : 27,
+        "to" : 16,
+        "path" : [ 16 ],
+        "captures" : [ 21 ],
+        "promotes" : false
+      },
+      "history" : [ "27x16" ],
+      "outcome" : {
+        "status" : "FINISHED",
+        "winner" : 0,
+        "reason" : "NO_PIECES"
+      }
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "state",
+  "payload" : {
+    "started" : true,
+    "id" : "00000000-0000-0000-0000-000000000000",
+    "gameType" : "draughts",
+    "version" : 1,
+    "phase" : "FINISHED",
+    "currentSeat" : 1,
+    "whiteSeat" : 0,
+    "board" : [ null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, "w", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null ],
+    "players" : [ {
+      "seat" : 0,
+      "name" : null,
+      "colour" : "WHITE",
+      "current" : false,
+      "men" : 1,
+      "kings" : 0,
+      "captured" : 20
+    }, {
+      "seat" : 1,
+      "name" : null,
+      "colour" : "BLACK",
+      "current" : false,
+      "men" : 0,
+      "kings" : 0,
+      "captured" : 19
+    } ],
+    "availableActions" : [ ],
+    "legalMoves" : [ ],
+    "captureRequired" : false,
+    "maxCaptures" : 0,
+    "lastMove" : {
+      "seat" : 0,
+      "from" : 27,
+      "to" : 16,
+      "path" : [ 16 ],
+      "captures" : [ 21 ],
+      "promotes" : false
+    },
+    "history" : [ "27x16" ],
+    "outcome" : {
+      "status" : "FINISHED",
+      "winner" : 0,
+      "reason" : "NO_PIECES"
+    }
+  }
+} ]

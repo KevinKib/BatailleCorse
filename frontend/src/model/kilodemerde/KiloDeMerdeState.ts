@@ -153,6 +153,10 @@ export interface KiloDeMerdeEventData {
   rank: number | null;
   /** The number of cards returned to the pile by a FLUSH. */
   returnedCount: number | null;
+  /** How the round ended, every hand revealed: a ROUND_OVER only (the state carries it too). */
+  outcome: KiloDeMerdeRoundOutcome | null;
+  /** The end of the game: a GAME_OVER only (the state carries it too). */
+  result: KiloDeMerdeResult | null;
 }
 
 export interface KiloDeMerdeResponse {
