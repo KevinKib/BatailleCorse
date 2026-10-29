@@ -27,7 +27,7 @@ const SAME_AS_ENGLISH_ALLOWED: readonly string[] = [
   // Blackjack: the name and the Blackjack tags are the same word, the bot label and the stack unit are shared, "Max"
   'gamePicker.games.blackjack.name', 'gamePicker.games.kilo-de-merde.name','blackjack.panelTitle', 'blackjackUi.botLabel', 'blackjackUi.dealer.blackjack',
   'blackjackUi.status.blackjack', 'blackjackUi.table.stack', 'blackjackUi.bet.max',
-  'blackjackUi.end.stackOf',
+  'blackjackUi.end.stackOf', 'blackjackUi.tags.double', 'blackjackUi.tagsYou.double',
   // Kilo de merde: the game's name, the bot name, the "kg" unit and a word that is the same in French
   'kiloDeMerde.panelTitle', 'kiloDeMerde.sections[4].title', 'kiloDeMerdeUi.botLabel', 'kiloDeMerdeUi.table.kilos',
   'kiloDeMerdeUi.standings.kilos', 'kiloDeMerdeUi.table.opponents',

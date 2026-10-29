@@ -49,7 +49,7 @@ describe('scriptFor', () => {
     it('tells the bets together first, then clears the old cards of every bettor and the dealer', () => {
       const { steps } = deal();
       expect(steps[0].atMs).toBe(0);
-      expect(steps[0].effect).toEqual({ type: 'unseal' });
+      expect(steps[0].effect).toEqual({ type: 'unseal', bets });
       const clear = effects(steps, 'clear')[0];
       expect(clear.atMs).toBe(TEMPO.bets.revealMs);
       expect(clear.effect).toMatchObject({ type: 'clear', handNumber: 3 });

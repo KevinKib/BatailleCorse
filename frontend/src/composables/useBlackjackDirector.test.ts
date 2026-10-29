@@ -177,6 +177,7 @@ describe('useBlackjackDirector', () => {
       expect(first.dealer.holeHidden).toBe(true);
       expect(first.players[0].hands[0].net).toBeUndefined();
       expect(t.director.banner.value?.kind).toBe('dealer');
+      expect(t.director.stage.value).toBe('dealer');
 
       await vi.advanceTimersByTimeAsync(TEMPO.dealer.bannerMs + TEMPO.dealer.revealMs);
       expect(t.director.shown.value!.dealer.holeHidden).toBe(false);
@@ -199,6 +200,7 @@ describe('useBlackjackDirector', () => {
       expect(t.director.holding.value).toBe(true);
       await vi.advanceTimersByTimeAsync(1500);
       expect(t.director.holding.value).toBe(false);
+      expect(t.director.stage.value).toBeNull();
       expect(t.director.shown.value).toBe(settled);
     });
 

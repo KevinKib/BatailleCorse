@@ -4,6 +4,7 @@ import { Button } from 'primevue';
 import { useRouter } from 'vue-router';
 import { useBlackjackStore } from '../../state/Blackjack.store';
 import { useBlackjackBootstrap } from '../../composables/useBlackjackBootstrap';
+import { useBlackjackDirector } from '../../composables/useBlackjackDirector';
 import { useLeaveGuard } from '../../composables/useLeaveGuard';
 import { useRemovedRedirect } from '../../composables/useRemovedRedirect';
 import { useSeatDisconnectCountdown } from '../../composables/useSeatDisconnectCountdown';
@@ -25,15 +26,16 @@ import { seatDisplayName } from '../../model/table/displayName';
 import { rematchButtonFor } from '../../model/RematchButton';
 import { format, formatList } from '../../locales/format';
 import {
-  AnimationSpeedButton, CardMotionLayer, cardIn, scaleMovements, useAnimationSpeed, useTableMotion,
+  AnimationSpeedButton, CardMotionLayer, cardIn, useAnimationSpeed, visibleRect,
   type CardMotionLayerPlay, type MotionTarget,
 } from '../../animation';
-import { planMovements, type BlackjackAnchor, type BlackjackTableEvent } from '../../model/blackjack/motion';
+import type { BlackjackAnchor, BlackjackTableEvent } from '../../model/blackjack/motion';
 import { eventLine } from '../../model/blackjack/eventLog';
-import { BLACKJACK_TEMPO } from '../../model/blackjack/tempo';
+import { opponentsOf } from '../../model/blackjack/seatOrder';
+import { slotRect } from '../../model/blackjack/slots';
 
-// The Blackjack table: the dealer strip, the opponents, my seat and a bar at the bottom (bets, actions or a status
-// line). Every rule is the server's (`availableActions`, `betLimits`): the screen only shows and sends.
+// The Blackjack table: the dealer strip and the shoe, the opponents, my seat and a bar at the bottom (bets, actions or a
+// status line). Every rule is the server's (`availableActions`, `betLimits`): the screen only shows and sends.
 const props = defineProps<{ gameId: string }>();
 const messages = useI18n();
 const ui = messages.blackjackUi;
@@ -74,20 +76,48 @@ watch(online, (isOnline, wasOnline) => {
 });
 
 // --- What the table shows ---------------------------------------------------------------------------------------
-const handText = computed(() => store.game
-  ? format(ui.header.hand, { n: store.game.handNumber, total: store.game.handsTotal }) : '');
+// The server answers a whole turn at once; the director tells it in order (the deal card by card, the dealer's draws,
+// the results for a few seconds). `shown` is the table as told so far, `store.game` the latest state: the buttons and
+// the rules read the latter, but they are only offered once the table is calm, so nothing changes under the player.
+const { speed, cycle: cycleSpeed } = useAnimationSpeed();
+const screenEl = ref<HTMLElement | null>(null);
+const motionLayer = ref<{ play: CardMotionLayerPlay<BlackjackAnchor> } | null>(null);
+const director = useBlackjackDirector({
+  game: () => store.game, events: () => store.events, mySeat: () => store.mySeat, speed, layer: motionLayer,
+});
+onBeforeUnmount(() => director.cancel());
+const shown = director.shown;
+const holding = director.holding;
+const shownMe = computed(() => shown.value?.players.find(p => p.seat === store.mySeat) ?? null);
+const shownOpponents = computed(() => opponentsOf(shown.value?.players ?? [], store.mySeat));
+
+const handText = computed(() => shown.value
+  ? format(ui.header.hand, { n: shown.value.handNumber, total: shown.value.handsTotal }) : '');
 const lobbySolo = computed(() => (store.lobby?.players.filter(p => p.joined).length ?? 0) === 1);
-const myTurn = computed(() => store.game?.phase === 'PLAYING' && store.game.currentSeat === store.mySeat);
-const betting = computed(() => store.game?.phase === 'BETTING' && !!store.me && !store.me.eliminated && !store.me.forfeited);
+const myTurn = computed(() => !holding.value && store.game?.phase === 'PLAYING' && store.game.currentSeat === store.mySeat);
+const betting = computed(() => !holding.value && store.game?.phase === 'BETTING' && !!store.me && !store.me.eliminated && !store.me.forfeited);
+// The bar of actions stays on screen all through the play (dimmed when it is not my turn), so it never jumps.
+const idleBar = computed(() => !myTurn.value && !betting.value && !!shownMe.value && !shownMe.value.eliminated
+  && !shownMe.value.forfeited && shown.value?.phase === 'PLAYING');
 const statusText = computed(() => {
-  const g = store.game;
+  const g = shown.value;
   if (!g || !store.me) return '';
+  if (holding.value) {
+    const stage = director.stage.value;
+    if (stage === 'bets' || stage === 'deal') return ui.wait.dealing;
+    if (stage === 'dealer') return ui.wait.dealer;
+    if (stage === 'results') return ui.wait.results;
+  }
   if (g.phase === 'BETTING') return ui.wait.betting;
   if (myTurn.value) return ui.wait.yourTurn;
   if (g.currentSeat < 0 || g.players.every(p => p.hands.every(h => h.status !== 'ACTIVE' && h.status !== 'WAITING'))) {
     return ui.wait.dealer;
   }
   return format(ui.wait.for, { player: displayName(g.currentSeat) });
+});
+const bannerView = computed(() => {
+  const b = director.banner.value;
+  return b ? { key: b.key, text: ui.phase[b.kind] } : null;
 });
 const noticeText = computed(() => store.notice ? ui.notice[store.notice] : '');
 const hasActions = computed(() => myTurn.value && (store.game?.availableActions.length ?? 0) > 0);
@@ -111,32 +141,33 @@ watch(() => store.lastEvent, (event) => {
 });
 
 // --- The pictures of the table ----------------------------------------------------------------------------------
-// Purely visual: cards fly from the shoe to a hand, the hole card turns over. The state and the buttons never wait
-// for it, and a place that cannot be found just skips the picture.
-const { speed, cycle: cycleSpeed } = useAnimationSpeed();
-const screenEl = ref<HTMLElement | null>(null);
-const motionLayer = ref<{ play: CardMotionLayerPlay<BlackjackAnchor> } | null>(null);
-
+// Purely visual: cards fly from the shoe to the next place of a hand, the hole card turns over. A place that cannot be
+// found just skips the picture. The places are the card slots of the rows on screen (`slotRect`).
 function resolveAnchor(anchor: BlackjackAnchor): MotionTarget | null {
   const root = screenEl.value;
   if (!root) return null;
-  const host = Array.from(root.querySelectorAll<HTMLElement>('[data-anchor]')).find(e => e.dataset.anchor === anchor) ?? null;
-  return cardIn(host, 40);
+  const find = (key: string) => root.querySelector<HTMLElement>(`[data-anchor="${key}"]`);
+  if (anchor === 'shoe') {
+    const host = find('shoe');
+    const front = host?.querySelector<HTMLElement>('.bj-shoe-card--front') ?? null;
+    const rect = visibleRect(front);
+    return rect ? { rect, cards: [] } : cardIn(host, 56);
+  }
+  const cut = anchor.lastIndexOf(':');
+  const index = Number(anchor.slice(cut + 1));
+  const row = find(anchor.slice(0, cut))?.querySelector<HTMLElement>('[data-card-size]') ?? null;
+  const box = visibleRect(row);
+  if (!row || !box) return null;
+  // A card already there is the place (a card turning over, a card leaving); an empty place is where the next one lands.
+  const there = row.querySelectorAll<HTMLElement>('.playing_card')[index] ?? null;
+  const thereRect = visibleRect(there);
+  if (there && thereRect) return { rect: thereRect, cards: [there] };
+  return { rect: slotRect(box, Number(row.dataset.cardSize) || 56, index), cards: [] };
 }
 
-const motion = useTableMotion<BlackjackTableEvent, BlackjackAnchor>({
-  layer: motionLayer,
-  speed,
-  bounds: BLACKJACK_TEMPO.queue,
-  log: () => store.events,
-  plan: (entry, { factor }) => {
-    const movements = planMovements(entry, store.mySeat);
-    return movements.length > 0 ? { movements: scaleMovements(movements, factor) } : null;
-  },
-});
-void motion;
-
 // --- The end -----------------------------------------------------------------------------------------------------
+// The end screen waits for the table to finish telling the last hand.
+const showEnd = computed(() => store.screen === 'finished' && !holding.value);
 const outcome = computed(() => {
   const o = store.game?.outcome;
   return o?.status === 'FINISHED' ? o : null;
@@ -188,7 +219,7 @@ const rematchButton = computed(() =>
     </GameLobby>
 
     <EndGameOverlay
-      v-else-if="store.screen === 'finished'"
+      v-else-if="showEnd"
       data-test="end"
       :did-i-win="iWon"
       :winner-line="winnerLine"
@@ -205,7 +236,7 @@ const rematchButton = computed(() =>
       <span>{{ ui.connecting }}</span>
     </div>
 
-    <template v-else-if="store.game">
+    <template v-else-if="store.game && shown">
       <RulesPanel :rules="messages.blackjack" />
 
       <div class="top-bar" data-test="top-bar">
@@ -229,34 +260,42 @@ const rematchButton = computed(() =>
       </div>
 
       <BlackjackTable
-        :game="store.game"
-        :opponents="store.opponents"
-        :me="store.me"
+        :game="shown"
+        :opponents="shownOpponents"
+        :me="shownMe"
         :my-seat="store.mySeat"
         :name-of="displayName"
         :disconnected="seatDisconnected"
-        :seconds-remaining="seatSecondsRemaining" />
+        :seconds-remaining="seatSecondsRemaining"
+        :tags="director.tags.value"
+        :last-action="director.lastAction.value"
+        :dealer-line="director.dealerLine.value"
+        :banner="bannerView" />
 
       <div class="bottom-bar" data-test="bottom-bar">
         <span v-if="noticeText" class="status-notice" data-test="notice" role="alert">{{ noticeText }}</span>
-        <BlackjackBetPanel
-          v-if="betting && store.game.betLimits"
-          :limits="store.game.betLimits"
-          :last-bet="store.game.lastBet"
-          :placed="store.me?.betPlaced"
-          :placed-amount="store.me?.bet"
-          :stack="store.me?.stack"
-          :busy="store.busy"
-          :reset-key="store.game.handNumber"
-          @bet="amount => store.bet(amount)" />
-        <BlackjackBetPanel v-else-if="betting && store.me?.betPlaced" :limits="null" :last-bet="null" placed
-                           :placed-amount="store.me?.bet" />
-        <BlackjackActionBar
-          v-else-if="hasActions"
-          :actions="store.game.availableActions"
-          :busy="store.busy"
-          @hit="store.hit()" @stand="store.stand()" @double="store.doubleDown()" @split="store.split()" />
-        <span v-else class="status-turn" data-test="status">{{ statusText }}</span>
+        <div class="controls" data-test="controls">
+          <BlackjackBetPanel
+            v-if="betting && store.game.betLimits"
+            :limits="store.game.betLimits"
+            :last-bet="store.game.lastBet"
+            :placed="store.me?.betPlaced"
+            :placed-amount="store.me?.bet"
+            :stack="store.me?.stack"
+            :busy="store.busy"
+            :reset-key="store.game.handNumber"
+            @bet="amount => store.bet(amount)" />
+          <BlackjackBetPanel v-else-if="betting && store.me?.betPlaced" :limits="null" :last-bet="null" placed
+                             :placed-amount="store.me?.bet" />
+          <BlackjackActionBar
+            v-else-if="hasActions"
+            class="turn-bar"
+            :actions="store.game.availableActions"
+            :busy="store.busy"
+            @hit="store.hit()" @stand="store.stand()" @double="store.doubleDown()" @split="store.split()" />
+          <BlackjackActionBar v-else-if="idleBar" :actions="[]" idle />
+        </div>
+        <span class="status-turn" :class="{ 'status-turn--mine': myTurn }" data-test="status">{{ statusText }}</span>
         <div class="table-footer" data-test="table-footer">
           <Button data-test="back" class="back-button" :label="ui.back" icon="pi pi-undo"
                   severity="secondary" variant="text" rounded @click="router.push({ name: 'games' })" />
@@ -292,9 +331,12 @@ const rematchButton = computed(() =>
 .hand-chip { display: inline-flex; align-items: center; height: var(--hud-chip-h); box-sizing: border-box; padding: 0 12px; font-size: 0.8rem;
   font-weight: 700; font-family: var(--font-title); letter-spacing: 0.06em; text-transform: uppercase; color: rgba(255, 255, 255, 0.8);
   background: rgba(0, 0, 0, 0.45); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 999px; }
-/* The thumb zone: sticky at the bottom, the table scrolls above it. */
+/* The thumb zone: sticky at the bottom, the table scrolls above it. The controls keep their room whatever the turn. */
 .bottom-bar { flex: none; display: flex; flex-direction: column; align-items: center; gap: var(--space-2); width: 100%; max-width: 1000px; margin: 0 auto; }
-.status-turn { font-size: 0.875rem; font-weight: 700; color: var(--gold); text-align: center; min-height: 1.25rem; }
+.controls { width: 100%; min-height: 56px; display: flex; align-items: center; justify-content: center; }
+.turn-bar { filter: drop-shadow(0 0 10px rgba(245, 200, 66, 0.55)); }
+.status-turn { font-size: 0.875rem; font-weight: 700; color: var(--gold); text-align: center; min-height: 1.25rem; transition: color 0.2s ease; }
+.status-turn--mine { font-size: 1rem; text-shadow: 0 0 12px rgba(245, 200, 66, 0.6); }
 .status-notice { font-size: 0.8125rem; color: rgb(var(--accent-negative-rgb)); font-weight: 700; }
 .table-footer { width: 100%; display: flex; align-items: center; gap: var(--space-2); }
 .table-footer .speed { margin-left: auto; }
@@ -307,5 +349,5 @@ const rematchButton = computed(() =>
   max-width: calc(100% - 24px); overflow-wrap: anywhere; text-align: center; }
 .forfeit-fade-enter-active, .forfeit-fade-leave-active { transition: opacity 0.25s ease, transform 0.25s ease; }
 .forfeit-fade-enter-from, .forfeit-fade-leave-to { opacity: 0; transform: translate(-50%, -8px); }
-@media (prefers-reduced-motion: reduce) { .forfeit-fade-enter-active, .forfeit-fade-leave-active { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .forfeit-fade-enter-active, .forfeit-fade-leave-active, .status-turn { transition: none; } }
 </style>

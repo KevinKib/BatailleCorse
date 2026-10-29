@@ -37,7 +37,7 @@ export const tagKindOf = (eventType: string): TagKind | null => TAGS[eventType] 
 /** One beat of a script: what the table does at `atMs` after the script starts. */
 export type Effect =
   /** The bets of the table are told together. */
-  | { type: 'unseal' }
+  | { type: 'unseal'; bets: Record<number, number> }
   /** The table is cleared for a new deal: these places are empty again, the others are gone. */
   | { type: 'clear'; keys: string[]; handNumber: number }
   /** A place with no card yet appears (the second hand of a split). */
@@ -124,7 +124,7 @@ function dealOf(data: BlackjackEventData, ctx: ScriptContext): Script {
   const keys = [...order.map(s => handKey(s, 0)), DEALER_KEY];
   const start = TEMPO.bets.revealMs + TEMPO.bets.clearMs;
   const steps: ScriptStep[] = [
-    { atMs: 0, effect: { type: 'unseal' } },
+    { atMs: 0, effect: { type: 'unseal', bets: data.bets ?? {} } },
     { atMs: 0, effect: { type: 'banner', kind: 'bets' } },
     { atMs: TEMPO.bets.revealMs, effect: { type: 'clear', keys, handNumber: data.handNumber ?? 0 } },
     { atMs: TEMPO.bets.revealMs, effect: { type: 'banner', kind: 'deal' } },

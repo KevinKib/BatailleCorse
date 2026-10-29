@@ -597,6 +597,9 @@ export interface BlackjackUiMessages {
     forfeited: string;                 // '{player}'
     disconnected: string;              // the badge of a seat that dropped
     offline: string;
+    shoe: string;                      // the shoe the cards come from
+    chips: string;                     // '{n}': accessible name of a pile of chips (a bet of n points)
+    chipsSealed: string;               // a sealed bet: the chips are face down
   };
   status: {
     blackjack: string;
@@ -634,6 +637,8 @@ export interface BlackjackUiMessages {
     for: string;                       // '{player}'
     dealer: string;                    // the dealer plays
     yourTurn: string;
+    dealing: string;                   // the cards are being dealt
+    results: string;                   // the results are on the table
   };
   summary: {
     title: string;
@@ -696,6 +701,13 @@ export interface BlackjackUiMessages {
   /** The codes the server sends on a refused command, by wire code. */
   errors: Record<string, string>;
   notice: { connection: string; moveImpossible: string };
+  /** The short tag over a seat for what it just did (another seat); `tagsYou` is the same for my own seat. */
+  tags: Record<'hit' | 'stand' | 'double' | 'split' | 'bust', string>;
+  tagsYou: Record<'hit' | 'stand' | 'double' | 'split' | 'bust', string>;
+  /** The banner that announces each beat of a hand. */
+  phase: { bets: string; deal: string; dealer: string; results: string };
+  /** The dealer's status line while he plays. */
+  dealerLine: { reveals: string; draws: string; stands: string; busts: string; blackjack: string };
   motion: {
     speed: string;                     // '{speed}': name of the speed button
     speeds: { normal: string; fast: string; instant: string };

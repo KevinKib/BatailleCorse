@@ -97,6 +97,28 @@ describe('BlackjackGameScreen', () => {
     const { wrapper } = await mountRoom(waiting);
     expect(wrapper.find('[data-test="action-bar"]').exists()).toBe(false);
     expect(wrapper.get('[data-test="status"]').text()).toBe('Waiting for Bob…');
+    // The bar keeps its place, dimmed, so nothing jumps when my turn comes; Bob's plate shows the turn.
+    expect(wrapper.findAll('[data-test="action-bar-idle"] button')).toHaveLength(4);
+    expect(wrapper.get('[data-test="seat-plate"][data-seat="1"]').attributes('data-current')).toBe('true');
+  });
+
+  it('shows the shoe, the hole card face down and the felt from the deal', async () => {
+    const { wrapper } = await mountRoom(blackjackPlayingState);
+    expect(wrapper.get('[data-anchor="shoe"]').exists()).toBe(true);
+    expect(wrapper.get('[data-test="hole-card"]').exists()).toBe(true);
+    expect(wrapper.find('.bj-felt').exists()).toBe(true);
+  });
+
+  it('shows a bot action as a tag over its plate, from the event', async () => {
+    const { wrapper, store } = await mountRoom(blackjackPlayingState);
+    expect(wrapper.find('[data-test="seat-tag"]').exists()).toBe(false);
+    store.applyEvent({ type: 'event', eventType: 'STAND', eventData: {
+      seat: 2, handIndex: 0, card: null, value: null, cards: null, holeCard: null, handNumber: null,
+      button: null, bets: null, nets: null, stacks: null, bestSeats: null,
+    } });
+    await flushPromises();
+    // No pictures in this environment: the last action of the seat is still told, on its plate.
+    expect(wrapper.get('[data-test="seat-plate"][data-seat="2"] [data-test="seat-last"]').text()).toBe('Stands');
   });
 
   it('live region: my own bust is said with "You bust", and with its total', async () => {

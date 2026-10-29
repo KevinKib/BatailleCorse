@@ -487,6 +487,9 @@ export const messagesEn: Messages = {
       forfeited: '{player} left the game',
       disconnected: 'Offline',
       offline: 'You are offline. Reconnecting…',
+      shoe: 'Shoe',
+      chips: 'Bet of {n} points',
+      chipsSealed: 'Bet placed, amount hidden',
     },
     status: {
       blackjack: 'Blackjack',
@@ -519,11 +522,23 @@ export const messagesEn: Messages = {
       double: 'Double',
       split: 'Split',
     },
+    tags: { hit: 'Hit', stand: 'Stands', double: 'Double', split: 'Splits', bust: 'Bust' },
+    tagsYou: { hit: 'Hit', stand: 'You stand', double: 'Double', split: 'You split', bust: 'You bust' },
+    phase: { bets: 'Bets are in', deal: 'Dealing', dealer: 'Dealer’s turn', results: 'Results' },
+    dealerLine: {
+      reveals: 'The dealer turns the hole card',
+      draws: 'The dealer draws a card',
+      stands: 'The dealer stands on {total}',
+      busts: 'The dealer busts with {total}',
+      blackjack: 'The dealer has Blackjack',
+    },
     wait: {
       betting: 'Betting is open',
       for: 'Waiting for {player}…',
       dealer: 'Dealer plays…',
       yourTurn: 'Your turn',
+      dealing: 'Dealing…',
+      results: 'Results',
     },
     summary: {
       title: 'Last hand',

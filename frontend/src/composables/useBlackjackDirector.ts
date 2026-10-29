@@ -38,6 +38,8 @@ export interface BlackjackDirector {
   lastAction: Ref<Record<number, TagKind>>;
   dealerLine: Ref<DirectorDealerLine | null>;
   banner: Ref<DirectorBanner | null>;
+  /** The beat the table is in while it is held (stays after its banner has gone); null when nothing is held. */
+  stage: Ref<BannerKind | null>;
   /** Shows the live state now and drops what was waiting. */
   flush: () => void;
   cancel: () => void;
@@ -56,6 +58,7 @@ export function useBlackjackDirector(options: BlackjackDirectorOptions): Blackja
   const lastAction = ref<Record<number, TagKind>>({});
   const dealerLine = ref<DirectorDealerLine | null>(null);
   const banner = ref<DirectorBanner | null>(null);
+  const stage = ref<BannerKind | null>(null);
 
   const stillNow = () => options.still
     ? options.still()
@@ -104,7 +107,7 @@ export function useBlackjackDirector(options: BlackjackDirectorOptions): Blackja
   function applyEffect(effect: Effect) {
     const current = hold.value;
     switch (effect.type) {
-      case 'unseal': patch({ betsSealed: false }); break;
+      case 'unseal': patch({ betsSealed: false, bets: effect.bets }); break;
       case 'clear': {
         const counts: Record<string, number> = {};
         for (const key of effect.keys) counts[key] = 0;
@@ -134,6 +137,7 @@ export function useBlackjackDirector(options: BlackjackDirectorOptions): Blackja
       case 'banner': {
         const key = ++counter;
         banner.value = { kind: effect.kind, key };
+        stage.value = effect.kind;
         later(TEMPO.bannerLifeMs * factor(), () => { if (banner.value?.key === key) banner.value = null; });
         break;
       }
@@ -162,6 +166,7 @@ export function useBlackjackDirector(options: BlackjackDirectorOptions): Blackja
     hold.value = null;
     dealerLine.value = null;
     banner.value = null;
+    stage.value = null;
     planned = {};
     baseStacks = null;
     busyUntil = 0;
@@ -245,7 +250,7 @@ export function useBlackjackDirector(options: BlackjackDirectorOptions): Blackja
     hold,
     holding: computed(() => hold.value !== null),
     shown,
-    tags, lastAction, dealerLine, banner,
+    tags, lastAction, dealerLine, banner, stage,
     flush,
     cancel: () => { flush(); },
   };

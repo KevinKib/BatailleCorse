@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { DEALER_KEY, handKey, holdFromState, shownState, type Hold } from './shown';
+import { DEALER_KEY, handKey, holdFromState, roundNetOf, shownState, type Hold } from './shown';
+import { blackjackBettingState } from './fixtures';
 import { blackjackPlayingState, blackjackSettledState, card } from './fixtures';
 import type { BlackjackState } from './BlackjackState';
 
@@ -136,6 +137,13 @@ describe('shownState: what the table has not told yet', () => {
     expect(open[1].bet).toBe(10);
   });
 
+  it('remembers the bets of the hand while the state has moved on to the next betting', () => {
+    const hold = { ...holdFromState(playing), betsSealed: false };
+    const players = shownState(blackjackBettingState, hold).players;
+    expect(players[1].bet).toBe(10);
+    expect(players[1].betPlaced).toBe(true);
+  });
+
   it('hides the nets of the hands until the results are shown', () => {
     const settled: BlackjackState = {
       ...playing,
@@ -151,9 +159,24 @@ describe('shownState: what the table has not told yet', () => {
     expect(frozen[2].stack).toBe(playing.players[2].stack);
   });
 
+  it('hides the summary of the previous hand while the table is being told', () => {
+    expect(shownState(blackjackBettingState, withHold()).lastHand).toBeNull();
+    expect(shownState(blackjackBettingState, null).lastHand).not.toBeNull();
+  });
+
   it('does not mutate the live state', () => {
     const before = JSON.stringify(playing);
     shownState(playing, withHold({ betsSealed: true, resultsHidden: true, counts: { [DEALER_KEY]: 0 } }));
     expect(JSON.stringify(playing)).toBe(before);
+  });
+});
+
+describe('roundNetOf', () => {
+  it('adds the nets of the hands once all are settled, null before', () => {
+    const [alice] = playing.players;
+    expect(roundNetOf(alice)).toBeNull();
+    const settled = { ...alice, hands: alice.hands.map((h, i) => ({ ...h, net: i === 0 ? 20 : -10 })) };
+    expect(roundNetOf(settled)).toBe(10);
+    expect(roundNetOf({ ...settled, hands: [{ ...settled.hands[0], pending: true }] })).toBeNull();
   });
 });

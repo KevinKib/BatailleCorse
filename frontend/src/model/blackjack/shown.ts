@@ -21,6 +21,8 @@ export interface Hold {
   holeFaceDown: boolean;
   /** The other seats' bets are still hidden (they are told together, at the deal). */
   betsSealed: boolean;
+  /** The bets of the hand by seat, kept while the results are told (the state has already moved on to the next betting). */
+  bets: Record<number, number>;
   /** The nets of the hands are not told yet. */
   resultsHidden: boolean;
   /** Stacks as the table told them (by seat); the live stack for a seat without an entry. */
@@ -51,6 +53,7 @@ export function holdFromState(state: BlackjackState, mySeat = 0): Hold {
     counts,
     holeFaceDown: state.dealer.holeHidden,
     betsSealed: false,
+    bets: Object.fromEntries(state.players.filter(p => p.bet !== null).map(p => [p.seat, p.bet as number])),
     resultsHidden: false,
     stacks: null,
   };
@@ -75,6 +78,10 @@ function shownSeat(player: BlackjackSeat, hold: Hold): BlackjackSeat {
   });
   const seat: BlackjackSeat = { ...player, hands };
   if (hold.betsSealed && player.seat !== hold.mySeat) seat.bet = null;
+  else if (seat.bet === null && hold.bets[player.seat] !== undefined) {
+    seat.bet = hold.bets[player.seat];
+    seat.betPlaced = true;
+  }
   const stack = hold.stacks?.[player.seat];
   if (stack !== undefined) seat.stack = stack;
   return seat;
@@ -116,5 +123,13 @@ export function shownState(live: BlackjackState, hold: Hold | null): BlackjackSt
     players: live.players.map(p => shownSeat(p, hold)),
     availableActions: [],
     betLimits: null,
+    // The summary of the previous hand is for the quiet betting that follows a settled hand, not for a table being told.
+    lastHand: null,
   };
+}
+
+/** The total net of a seat's hands once every one of them is settled, else null. */
+export function roundNetOf(player: BlackjackSeat): number | null {
+  if (player.hands.length === 0 || player.hands.some(h => h.net === undefined || h.pending)) return null;
+  return player.hands.reduce((sum, h) => sum + (h.net ?? 0), 0);
 }
