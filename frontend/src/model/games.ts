@@ -17,6 +17,18 @@ export interface GamePickerStyle {
   severity: 'success' | 'warn' | 'info' | 'secondary' | 'danger' | 'help' | 'contrast';
 }
 
+/** The sections of the Game selection: a game belongs to exactly one. */
+export type GameCategoryId = 'cards' | 'board';
+
+/**
+ * The Game selection's sections, in the order they are shown. `anchor` is the stable id of the section in the
+ * page (`#cartes`, `#plateau`), which the chips at the top scroll to.
+ */
+export const GAME_CATEGORIES: readonly { id: GameCategoryId; anchor: string }[] = [
+  { id: 'cards', anchor: 'cartes' },
+  { id: 'board', anchor: 'plateau' },
+];
+
 /**
  * The local preferences (per device) a game declares: the remappable keyboard actions and the
  * localStorage entries they live in (one set per game). Action ids are the keys of `hotkeys.actions`
@@ -43,11 +55,13 @@ export interface GameDefinition {
   /** Whether the lobby offers "Add bot" (the server refuses bots for the games that have none). */
   supportsBots: boolean;
   picker: GamePickerStyle;
+  /** The section of the Game selection the game is listed in. */
+  category: GameCategoryId;
   /** Absent for a game without remappable shortcuts: it then has no gear on its home and lobby. */
   hotkeys?: GameHotkeys;
 }
 
-type GameTraits = Pick<GameDefinition, 'supportsBots' | 'picker' | 'hotkeys'>;
+type GameTraits = Pick<GameDefinition, 'supportsBots' | 'picker' | 'category' | 'hotkeys'>;
 
 function define(key: GameKey, traits: GameTraits): GameDefinition {
   const base = `/${key}`;
@@ -65,11 +79,13 @@ export const GAMES: readonly GameDefinition[] = [
   // Bataille Corse keeps the keys it has always stored, one entry per action.
   define('bataillecorse', {
     supportsBots: true,
+    category: 'cards',
     picker: { icon: 'pi pi-play', severity: 'success' },
     hotkeys: { actions: ['send', 'slap'], storageKeys: ['bc_sendKey', 'bc_slapKey'] },
   }),
   define('bullshit', {
     supportsBots: true,
+    category: 'cards',
     picker: { icon: 'pi pi-bolt', severity: 'warn' },
     hotkeys: { actions: ['discard', 'call'], storageKeys: ['bullshit.hotkeys'] },
   }),
@@ -77,46 +93,54 @@ export const GAMES: readonly GameDefinition[] = [
   // no gear on its home and lobby.
   define('kobo', {
     supportsBots: true,
+    category: 'cards',
     picker: { icon: 'pi pi-star', severity: 'info' },
   }),
   // The board is operated with Tab, arrows, Enter and Escape: no remappable shortcut, so no gear.
   // Bots play at three levels (a seat option).
   define('three-men-morris', {
     supportsBots: true,
+    category: 'board',
     picker: { icon: 'pi pi-th-large', severity: 'info' },
   }),
   // Cards are tapped and then confirmed with buttons: no remappable shortcut, so no gear.
   // Bots play at three levels (a seat option).
   define('president', {
     supportsBots: true,
+    category: 'cards',
     picker: { icon: 'pi pi-crown', severity: 'contrast' },
   }),
   // The board is operated with Tab, arrows, Enter and Space: no remappable shortcut, so no gear.
   // Bots play at three levels (a seat option).
   define('mangola', {
     supportsBots: true,
+    category: 'board',
     picker: { icon: 'pi pi-circle', severity: 'help' },
   }),
   // Cards are tapped (an Ace asks for its value): no remappable shortcut, so no gear.
   // Bots play at three levels (a seat option).
   define('ninety-nine', {
     supportsBots: true,
+    category: 'cards',
     picker: { icon: 'pi pi-hashtag', severity: 'danger' },
   }),
   // Pieces are tapped on the board: no remappable shortcut, so no gear. Bots play at three levels (a seat option).
   define('draughts', {
     supportsBots: true,
+    category: 'board',
     picker: { icon: CheckerboardIcon, severity: 'secondary' },
   }),
   // Bets are chips and play is four buttons: no remappable shortcut, so no gear. Bots play at three levels (a seat option).
   define('blackjack', {
     supportsBots: true,
+    category: 'cards',
     picker: { icon: 'pi pi-wallet', severity: 'success' },
   }),
   // Cards are tapped and the pile is slapped, and every key is remappable (Space slaps, 1 to 4 pass, R is ready).
   // Bots play at three levels (a seat option).
   define('kilo-de-merde', {
     supportsBots: true,
+    category: 'cards',
     picker: { icon: 'pi pi-stopwatch', severity: 'warn' },
     hotkeys: { actions: ['slap', 'pass1', 'pass2', 'pass3', 'pass4', 'ready'], storageKeys: ['kilo-de-merde.hotkeys'] },
   }),
