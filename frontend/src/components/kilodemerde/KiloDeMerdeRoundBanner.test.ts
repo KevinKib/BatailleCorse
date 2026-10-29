@@ -54,9 +54,9 @@ describe('KiloDeMerdeRoundBanner', () => {
     it('givenIDrew_thenTheLineIsConjugatedForMe', () => {
       inFrench();
       expect(mountBanner({ lines: [line('LAST_DRAWS', 0)], mySeat: 0 }).get('[data-test="round-line"]').text())
-        .toBe('Trop tard ! Vous prenez K♠ (13 kg)');
+        .toBe('Trop tard ! Vous prenez R♠ (13 kg)');
       expect(mountBanner({ lines: [line('LAST_DRAWS', 2)], mySeat: 0 }).get('[data-test="round-line"]').text())
-        .toBe('Trop tard ! P2 prend K♠ (13 kg)');
+        .toBe('Trop tard ! P2 prend R♠ (13 kg)');
     });
   });
 

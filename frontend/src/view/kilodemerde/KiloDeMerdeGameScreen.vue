@@ -30,7 +30,7 @@ import {
   type CardMotionLayerPlay,
 } from '../../animation';
 import { countdown as countdownOf } from '../../model/kilodemerde/countdown';
-import { kiloLabel } from '../../model/kilodemerde/kilo';
+import { faceLetters, kiloLabel } from '../../model/kilodemerde/kilo';
 import { planMovements, type KiloDeMerdeAnchor, type KiloDeMerdeTableEvent } from '../../model/kilodemerde/motion';
 import { roundLineText } from '../../model/kilodemerde/roundLineText';
 import { roundSummary } from '../../model/kilodemerde/roundSummary';
@@ -42,6 +42,7 @@ import { KILO_DE_MERDE_TEMPO } from '../../model/kilodemerde/tempo';
 const props = defineProps<{ gameId: string; game?: GameDefinition }>();
 const messages = useI18n();
 const ui = messages.kiloDeMerdeUi;
+const letters = faceLetters(ui.ranks);
 const store = useKiloDeMerdeStore();
 const router = useRouter();
 const definition = props.game ?? findGame('kilo-de-merde');
@@ -165,7 +166,7 @@ watch(() => store.lastEvent?.id, () => {
       receivedGlow.value = true;
       glowTimer = setTimeout(() => { receivedGlow.value = false; glowTimer = null; }, KILO_DE_MERDE_TEMPO.receivedGlowMs);
       if (g.lastReceived) {
-        speak(politeText, format(ui.live.received, { card: kiloLabel(g.lastReceived.card), name: nameOrYou(g.lastReceived.from) }));
+        speak(politeText, format(ui.live.received, { card: kiloLabel(g.lastReceived.card, letters), name: nameOrYou(g.lastReceived.from) }));
       }
       break;
     case 'SLAP':
@@ -180,7 +181,7 @@ watch(() => store.lastEvent?.id, () => {
       }
       break;
     case 'ROUND_OVER':
-      speak(assertiveText, roundSummary(g.lastOutcome).map(l => roundLineText(l, nameOrYou, ui.outcome, store.mySeat)).join('. '));
+      speak(assertiveText, roundSummary(g.lastOutcome).map(l => roundLineText(l, nameOrYou, ui.outcome, store.mySeat, letters)).join('. '));
       break;
   }
 });
@@ -345,7 +346,7 @@ const rematchButton = computed(() =>
         :racing="racing"
         :ready="store.game.phase === 'PASSING'"
         :confirming="confirming"
-        :countdown-kind="confirming ? 'ready' : 'pass'"
+        :countdown-kind="confirming ? 'ready' : store.game.phase === 'RACE' ? 'race' : 'pass'"
         :hands="hands"
         :last-seats="lastSeats"
         :disconnected="seatDisconnected"

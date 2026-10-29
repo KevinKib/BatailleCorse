@@ -48,9 +48,16 @@ describe('roundSummary', () => {
       .toEqual([{ code: 'NOTHING', seat: null, card: null, kg: 0 }]);
   });
 
-  it('says nobody took kilos when the pile was empty (skipped draws)', () => {
+  it('names a drawer who found the kilo pile empty (a skipped draw), rather than saying nobody completed a set', () => {
     const lines = roundSummary(outcome({ draws: [{ seat: 2, card: null, flushed: false, kilosAfter: 4 }] }));
-    expect(lines.map(l => l.code)).toEqual(['NOTHING']);
+    expect(lines).toEqual([{ code: 'NO_CARD', seat: 2, card: null, kg: 0 }]);
+    const timeout = roundSummary(outcome({
+      draws: [
+        { seat: 2, card: kiloCard('5', 'CLUB'), flushed: false, kilosAfter: 5 },
+        { seat: 3, card: null, flushed: false, kilosAfter: 0 },
+      ],
+    }));
+    expect(timeout.map(l => [l.code, l.seat])).toEqual([['LAST_DRAWS', 2], ['NO_CARD', 3]]);
   });
 
   it('says the round is void after a forfeit', () => {
