@@ -11,6 +11,7 @@ import org.kevinkib.cardgames.sessionmanagement.core.application.RoomCreated;
 
 import static org.kevinkib.cardgames.kilodemerde.domain.KiloDeMerdeFactory.GAME_TYPE;
 import static org.kevinkib.cardgames.kilodemerde.presentation.KiloDeMerdeTable.ALL_SETS;
+import static org.kevinkib.cardgames.kilodemerde.presentation.KiloDeMerdeTable.NO_SET;
 import static org.kevinkib.cardgames.kilodemerde.presentation.KiloDeMerdeTable.PILE;
 import static org.kevinkib.cardgames.kilodemerde.presentation.KiloDeMerdeTable.card;
 import static org.kevinkib.cardgames.kilodemerde.presentation.KiloDeMerdeTable.cards;
@@ -24,6 +25,21 @@ class KiloDeMerdeWireContractTest {
     @Test
     void theEventTypesArePinned() {
         WireContract.verifyEventTypes(GAME_TYPE, KiloDeMerdeEventType.values());
+    }
+
+    /** A resolved pass step, then a false slap that draws a seven and flushes. */
+    @Test
+    void aStepAFalseSlapAndAFlush() throws Exception {
+        WireContract contract = WireContract.of(GAME_TYPE);
+        KiloDeMerde step = table.start(NO_SET);
+        table.actions.choosePass(step.getId(), new PlayerId(0), card("QC"));
+        table.actions.choosePass(step.getId(), new PlayerId(1), card("QD"));
+        table.actions.choosePass(step.getId(), new PlayerId(2), card("JC"));
+
+        KiloDeMerde flush = table.start(3, NO_SET, "7D AS 9C");
+        table.actions.slap(flush.getId(), new PlayerId(0));
+
+        contract.messagesTo(table.messaging, 0).verify("moves");
     }
 
     @Test
