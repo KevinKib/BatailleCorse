@@ -15,7 +15,8 @@ import java.util.Optional;
  * Mangola for two players, played by the rules it is given ({@link MangolaRules}). The seat that owns
  * rows 1 and 2 (side A) is the one that starts. A move picks one of the mover's own pits holding enough
  * seeds and runs the whole sowing at once ({@link Sowing}); a pit whose sowing never ends is either not a
- * legal move or ends the game in a draw, depending on the rules. A player with no legal move loses; the
+ * legal move or ends the game in a draw, depending on the rules. A player with no legal move loses, and so
+ * does a player who has just moved and can never move again (no pit with two seeds or more); the
  * third occurrence of a position is a draw. Every mutating method is synchronized, validates, mutates,
  * bumps the version and returns what happened; a rejected command changes nothing.
  *
@@ -215,6 +216,8 @@ public class Mangola implements Game {
         current = other(seat);
         if (legalPitsOf(current).isEmpty()) {
             finish(seat, MangolaResult.Reason.NO_MOVE);
+        } else if (cannotMoveAgain(seat)) {
+            finish(current, MangolaResult.Reason.CANNOT_MOVE_AGAIN);
         } else if (countPosition() >= REPETITIONS_TO_DRAW) {
             finish(null, MangolaResult.Reason.REPETITION);
         }
@@ -412,6 +415,32 @@ public class Mangola implements Game {
             pits.add(pit);
         }
         return pits;
+    }
+
+    /**
+     * Whether the seat, which has just moved, can be proven never to have a legal move again: no pit of its own
+     * holds enough seeds to be sown. Seeds only reach a side by its owner's sowing (a sowing stays on its own
+     * loop) and a capture only takes seeds away, so the opponent cannot refill it. The opponent is to move and
+     * has a legal move (checked before), and whatever it plays the seat is stuck on its next turn. With the
+     * rules where an endless sowing is played and draws, the opponent could still choose one, so nothing is
+     * proven while it has such a pit.
+     */
+    private boolean cannotMoveAgain(PlayerId seat) {
+        Side side = sideOf(seat);
+        for (int pit : MangolaGeometry.loop(side)) {
+            if (board.seeds(pit) >= rules.minSeedsToMove()) {
+                return false;
+            }
+        }
+        if (rules.endless() == MangolaRules.Endless.DRAW) {
+            Side opponent = side.other();
+            for (int pit : MangolaGeometry.loop(opponent)) {
+                if (board.seeds(pit) >= rules.minSeedsToMove() && Sowing.sow(board, opponent, pit, rules).endless()) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     private int countPosition() {

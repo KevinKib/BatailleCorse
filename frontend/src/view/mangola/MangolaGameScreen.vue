@@ -130,6 +130,9 @@ const endSubtitle = computed(() => {
   if (outcome.reason === 'NO_MOVE') {
     return store.iWon ? format(ui.end.noMoveWon, { player: displayName(loserSeat) }) : ui.end.noMoveLost;
   }
+  if (outcome.reason === 'CANNOT_MOVE_AGAIN') {
+    return store.iWon ? format(ui.end.blockedWon, { player: displayName(loserSeat) }) : ui.end.blockedLost;
+  }
   if (!store.iWon) return ui.end.youLostForfeit;
   const left = store.lastForfeit;
   if (left?.reason === 'RESIGNED') return format(ui.end.youWonResigned, { player: displayName(left.seat) });

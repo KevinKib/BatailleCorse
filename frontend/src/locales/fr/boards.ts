@@ -387,6 +387,8 @@ export const mangolaUi: Messages['mangolaUi'] = {
     winner: 'Gagnant\u00A0: {player}',
     noMoveWon: '{player} n’a plus de coup.',
     noMoveLost: 'Vous n’avez plus de coup.',
+    blockedWon: '{player} ne pourra plus jamais jouer : aucune case n’a deux graines.',
+    blockedLost: 'Vous ne pourrez plus jamais jouer : aucune de vos cases n’a deux graines.',
     drawRepetition: 'Nulle par répétition\u00A0: la même position est apparue trois fois.',
     drawEndless: 'Nulle\u00A0: un semis qui ne finit jamais.',
     youWonResigned: '{player} a abandonné.',

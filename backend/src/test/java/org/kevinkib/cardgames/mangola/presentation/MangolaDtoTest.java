@@ -283,7 +283,7 @@ class MangolaDtoTest {
     @Test
     void lastMoveCarriesTheSeatThePitAndTheTrace() throws Exception {
         Mangola game = Mangola.fromLayout(GameId.generate(), MangolaRules.OWNER, SEAT_0,
-                MangolaTable.board("a2:3 h4:5"));
+                MangolaTable.board("a2:3 h1:2 h4:5"));
         game.sow(SEAT_0, MangolaGeometry.pit("a2"));
 
         MangolaDto dto = view(game, SEAT_1);

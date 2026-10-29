@@ -62,6 +62,10 @@ class MangolaJsCharacterisationTest {
         }
     }
 
+    private static boolean moverCannotMoveAgain(Mangola game, PlayerId mover) {
+        return MangolaGeometry.loop(game.sideOf(mover)).stream().allMatch(pit -> game.board().seeds(pit) < 2);
+    }
+
     private record Counts(int finite, int endless, int finished) {
     }
 
@@ -93,7 +97,10 @@ class MangolaJsCharacterisationTest {
             }
             assertEquals(Boards.of(parts[2]), game.board(), context);
             String winner = parts[3].trim();
-            if (winner.equals("-")) {
+            if (winner.equals("-") && moverCannotMoveAgain(game, mover)) {
+                // The JS plays on; the Java game ends as soon as the mover is provably stuck for good.
+                assertEquals(new MangolaResult(other, MangolaResult.Reason.CANNOT_MOVE_AGAIN), game.result(), context);
+            } else if (winner.equals("-")) {
                 assertEquals(MangolaResult.ONGOING, game.result(), context);
                 assertEquals(other, game.currentSeat(), context);
             } else {
