@@ -68,6 +68,21 @@ describe('NinetyNineBustBanner', () => {
     expect(mineOut.get('[data-test="bust-lives"]').text()).toBe('You are out');
   });
 
+  it('givenAnElimination_thenASpecificUnmissableMessageNamesThePlayer', () => {
+    const out = { ...bust, livesLeft: 0, eliminated: true };
+    const wrapper = mount(NinetyNineBustBanner, { props: { bust: out, label: 'Gina', mine: false } });
+    expect(wrapper.get('[data-test="bust-eliminated"]').text()).toBe('Gina is eliminated!');
+    expect(wrapper.get('[data-test="bust"]').classes()).toContain('bust--eliminated');
+    const mineOut = mount(NinetyNineBustBanner, { props: { bust: out, label: 'You', mine: true } });
+    expect(mineOut.get('[data-test="bust-eliminated"]').text()).toBe('You are eliminated!');
+  });
+
+  it('givenALifeLeft_thenNoEliminationMessageIsShown', () => {
+    const wrapper = mount(NinetyNineBustBanner, { props: { bust, label: 'Gina', mine: false } });
+    expect(wrapper.find('[data-test="bust-eliminated"]').exists()).toBe(false);
+    expect(wrapper.get('[data-test="bust"]').classes()).not.toContain('bust--eliminated');
+  });
+
   it('givenTheRoundEnd_thenTheProgressBarRunsForTheWholeTimeTheBannerIsShown', () => {
     const wrapper = mount(NinetyNineBustBanner, { props: { bust, label: 'Gina', mine: false } });
     expect(wrapper.get('[data-test="bust-bar-fill"]').attributes('style')).toContain('animation-duration: 7500ms');
