@@ -8,6 +8,13 @@ const mountHand = (extra: Record<string, unknown> = {}) =>
   mount(KiloDeMerdeHand, { props: { cards, myChoice: null, canPass: true, received: null, ...extra } });
 
 describe('KiloDeMerdeHand', () => {
+  it('numbers the slots in hand order, so a flight can find the slot of a card', () => {
+    const wrapper = mountHand();
+    cards.forEach((card, slot) => {
+      expect(wrapper.get(`[data-slot="${slot}"]`).find(`[data-card="${card.name}"]`).exists()).toBe(true);
+    });
+  });
+
   it('givenFourCards_thenEachIsAButtonNamedByItsPass', () => {
     const wrapper = mountHand();
     const buttons = wrapper.findAll('[data-test="hand"] button');

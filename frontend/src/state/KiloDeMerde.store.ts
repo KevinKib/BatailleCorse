@@ -24,6 +24,14 @@ export const MAX_EVENTS = 20;
 /** Events that are not about the table: they have their own state (presence, forfeit). */
 const NOT_TABLE_EVENTS = new Set(['OPPONENT_DISCONNECTED', 'OPPONENT_RECONNECTED', 'FORFEIT']);
 
+/** The slot of my hand holding the card received at the last step (the passed card left that very slot), else null. */
+function slotOfReceived(g: KiloDeMerdeState | null): number | null {
+  const r = g?.lastReceived;
+  if (!g || !r) return null;
+  const slot = g.hand.findIndex(c => c.name === r.card.name);
+  return slot >= 0 ? slot : null;
+}
+
 export const useKiloDeMerdeStore = defineStore('kilo-de-merde-store', () => {
   const state = ref<KiloDeMerdeView | null>(null);
   const gameId = ref<string | null>(null);
@@ -110,6 +118,7 @@ export const useKiloDeMerdeStore = defineStore('kilo-de-merde-store', () => {
             // The state of the event already arrived (it comes first): the table around the event is that state.
             activeSeats: (game.value?.players ?? []).filter(p => p.active).map(p => p.seat),
             received: game.value?.lastReceived ?? null,
+            receivedSlot: slotOfReceived(game.value),
           };
           notice.value = null;
           lastEvent.value = entry;
