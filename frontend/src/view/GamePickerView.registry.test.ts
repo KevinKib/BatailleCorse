@@ -22,4 +22,14 @@ describe('GamePickerView and the registry', () => {
     expect(wrapper.find('[data-test="choice-bullshit"]').exists()).toBe(true);
     expect(wrapper.find('[data-test="choice-bataillecorse"]').exists()).toBe(false);
   });
+
+  it('givenARegistryWithOnlyCardGames_thenTheBoardSectionAndItsChipAreHidden', async () => {
+    const router = createAppRouter(createMemoryHistory());
+    await router.push('/');
+    await router.isReady();
+    const wrapper = mount(GamePickerView, { global: { plugins: [router, PrimeVue] } });
+    expect(wrapper.find('#cartes').exists()).toBe(true);
+    expect(wrapper.find('#plateau').exists()).toBe(false);
+    expect(wrapper.findAll('nav a').map(a => a.attributes('href'))).toEqual(['#cartes']);
+  });
 });

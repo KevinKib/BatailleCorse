@@ -1777,8 +1777,10 @@ export const messagesEn: Messages = {
     names: { en: 'English', fr: 'Français' },
   },
   gamePicker: {
-    title: 'Card Games',
+    title: 'CardGamesZone',
     choose: 'Choose a game',
+    navLabel: 'Go to a category',
+    categories: { cards: 'Card games', board: 'Board games' },
     back: 'Back',
     playAria: '{play} {name}',
     privacy: 'Privacy',
