@@ -55,16 +55,11 @@ describe('GamePickerView', () => {
     const { wrapper } = await mountPicker();
     const buttons = wrapper.findAll('button');
     expect(buttons).toHaveLength(10);
-    expect(buttons[0].attributes('aria-label')).toBe('Play Bataille Corse');
-    expect(buttons[1].attributes('aria-label')).toBe('Play Bullshit');
-    expect(buttons[2].attributes('aria-label')).toBe('Play Kobo');
-    expect(buttons[3].attributes('aria-label')).toBe('Play Morris');
-    expect(buttons[4].attributes('aria-label')).toBe('Play President');
-    expect(buttons[5].attributes('aria-label')).toBe('Play Mangola');
-    expect(buttons[6].attributes('aria-label')).toBe('Play 99');
-    expect(buttons[7].attributes('aria-label')).toBe('Play Draughts');
-    expect(buttons[8].attributes('aria-label')).toBe('Play Blackjack');
-    expect(buttons[9].attributes('aria-label')).toBe('Play Kilo de merde');
+    // Card games first, then board games; the registry order inside each section.
+    expect(buttons.map(b => b.attributes('aria-label'))).toEqual([
+      'Play Bataille Corse', 'Play Bullshit', 'Play Kobo', 'Play President', 'Play 99', 'Play Blackjack', 'Play Kilo de merde',
+      'Play Morris', 'Play Mangola', 'Play Draughts',
+    ]);
   });
 
   it('givenPlayOnDraughts_thenGoesToItsGameHome', async () => {
@@ -163,5 +158,64 @@ describe('GamePickerView', () => {
       expect(button.find('span.pi').exists()).toBe(true);
       expect(button.find('svg').exists()).toBe(false);
     }
+  });
+
+  describe('categories', () => {
+    const p = messagesEn.gamePicker;
+
+    it('givenPicker_thenTheH1IsTheSiteNameAndTheGamesAreInTwoSectionsInOrder', async () => {
+      const { wrapper } = await mountPicker();
+      expect(wrapper.get('h1').text()).toBe('CardGamesZone');
+      const sections = wrapper.findAll('section[data-test^="section-"]');
+      expect(sections.map(s => s.attributes('id'))).toEqual(['cartes', 'plateau']);
+      expect(sections.map(s => s.get('h2').text())).toEqual([`${p.categories.cards}7`, `${p.categories.board}3`]);
+      expect(sections.map(s => s.attributes('aria-label'))).toEqual([p.categories.cards, p.categories.board]);
+    });
+
+    it('givenPicker_thenEachSectionListsItsGamesInRegistryOrder', async () => {
+      const { wrapper } = await mountPicker();
+      const keys = (id: string) => wrapper.findAll(`#${id} article`).map(a => a.attributes('data-test'));
+      expect(keys('cartes')).toEqual(['bataillecorse', 'bullshit', 'kobo', 'president', 'ninety-nine', 'blackjack', 'kilo-de-merde'].map(k => `choice-${k}`));
+      expect(keys('plateau')).toEqual(['three-men-morris', 'mangola', 'draughts'].map(k => `choice-${k}`));
+    });
+
+    it('givenGameCards_thenTheirNamesAreH3UnderTheSectionH2', async () => {
+      const { wrapper } = await mountPicker();
+      expect(wrapper.findAll('article h2')).toHaveLength(0);
+      expect(wrapper.findAll('article h3')).toHaveLength(10);
+    });
+
+    it('givenPicker_thenAnAccessibleNavOffersOneChipPerSectionWithItsCount', async () => {
+      const { wrapper } = await mountPicker();
+      const nav = wrapper.get('nav');
+      expect(nav.attributes('aria-label')).toBe(p.navLabel);
+      const chips = nav.findAll('a');
+      expect(chips.map(c => c.attributes('href'))).toEqual(['#cartes', '#plateau']);
+      expect(chips.map(c => c.text())).toEqual([`${p.categories.cards}7`, `${p.categories.board}3`]);
+    });
+
+    it('givenAChip_thenItScrollsSmoothlyToItsSection', async () => {
+      const { wrapper } = await mountPicker();
+      const target = wrapper.get('#plateau').element as HTMLElement;
+      const scrollIntoView = vi.fn();
+      target.scrollIntoView = scrollIntoView;
+      await wrapper.findAll('nav a')[1].trigger('click');
+      expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
+    });
+
+    it('givenReducedMotion_thenTheChipJumpsWithoutSmoothScrolling', async () => {
+      const original = window.matchMedia;
+      window.matchMedia = ((q: string) => ({ matches: q.includes('reduce'), media: q })) as unknown as typeof window.matchMedia;
+      try {
+        const { wrapper } = await mountPicker();
+        const target = wrapper.get('#cartes').element as HTMLElement;
+        const scrollIntoView = vi.fn();
+        target.scrollIntoView = scrollIntoView;
+        await wrapper.findAll('nav a')[0].trigger('click');
+        expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'auto', block: 'start' });
+      } finally {
+        window.matchMedia = original;
+      }
+    });
   });
 });

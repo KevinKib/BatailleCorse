@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { GAMES, findGame, type GameDefinition, type GameKey } from './games';
+import { GAMES, GAME_CATEGORIES, findGame, type GameDefinition, type GameKey } from './games';
 
 describe('game registry', () => {
   it('givenEveryGame_thenEachDeclaresItsRoutesUnderTheirKey', () => {
@@ -116,7 +116,7 @@ describe('game registry', () => {
   it('givenAGameWithoutShortcuts_thenItsDefinitionNeedsNoHotkeys', () => {
     const quiet: GameDefinition = {
       key: 'kobo', serverType: 'kobo', gameHomeRoute: '/kobo', joinRoute: () => '/', roomRoute: () => '/',
-      supportsBots: false, picker: { icon: 'pi pi-star', severity: 'info' },
+      supportsBots: false, picker: { icon: 'pi pi-star', severity: 'info' }, category: 'cards',
     };
     expect(quiet.hotkeys).toBeUndefined();
   });
@@ -131,5 +131,21 @@ describe('game registry', () => {
     for (const g of GAMES.filter(g => g.key !== 'bataillecorse')) {
       expect(g.serverType, g.key).toBe(g.key);
     }
+  });
+
+  it('givenTheCategories_thenCardsComeBeforeBoardAndEachHasAStableAnchor', () => {
+    expect(GAME_CATEGORIES.map(c => c.id)).toEqual(['cards', 'board']);
+    expect(GAME_CATEGORIES.map(c => c.anchor)).toEqual(['cartes', 'plateau']);
+  });
+
+  it('givenEveryGame_thenItHasAKnownCategory', () => {
+    const known = GAME_CATEGORIES.map(c => c.id);
+    for (const g of GAMES) expect(known, g.key).toContain(g.category);
+  });
+
+  it('givenTheRegistry_thenSevenGamesAreCardGamesAndThreeAreBoardGames', () => {
+    const inCategory = (id: string) => GAMES.filter(g => g.category === id).map(g => g.key);
+    expect(inCategory('cards')).toEqual(['bataillecorse', 'bullshit', 'kobo', 'president', 'ninety-nine', 'blackjack', 'kilo-de-merde']);
+    expect(inCategory('board')).toEqual(['three-men-morris', 'mangola', 'draughts']);
   });
 });

@@ -64,8 +64,10 @@ export const batailleCorseUi: Messages['batailleCorseUi'] = {
 };
 
 export const gamePicker: Messages['gamePicker'] = {
-  title: 'Jeux de cartes',
+  title: 'CardGamesZone',
   choose: 'Choisissez un jeu',
+  navLabel: 'Aller à une catégorie',
+  categories: { cards: 'Jeux de cartes', board: 'Jeux de plateau' },
   back: 'Retour',
   playAria: '{play} {name}',
   privacy: 'Confidentialité',
