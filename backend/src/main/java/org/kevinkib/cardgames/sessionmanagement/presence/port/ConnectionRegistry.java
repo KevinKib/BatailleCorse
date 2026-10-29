@@ -10,6 +10,8 @@ public interface ConnectionRegistry {
     void bind(String connectionId, SeatClaim claim);
     Optional<SeatClaim> claimOf(String connectionId);
     Optional<SeatClaim> unbind(String connectionId);
+    /** Whether some connection still holds this claim (a second tab, or a new socket up before the old one dropped). */
+    boolean isHeld(SeatClaim claim);
     void removeGame(GameId gameId);
     /** How many connections currently hold a seat. */
     int size();
