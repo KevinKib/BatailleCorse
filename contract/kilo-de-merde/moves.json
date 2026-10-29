@@ -1,0 +1,874 @@
+[ {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "PASS_CHOSEN",
+    "eventData" : {
+      "seat" : 0,
+      "round" : null,
+      "step" : null,
+      "rank" : null,
+      "card" : null,
+      "kilosAfter" : null,
+      "returnedCount" : null,
+      "outcome" : null,
+      "result" : null
+    },
+    "message" : "Player 0 chose a card to pass.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "kilo-de-merde",
+      "version" : 4,
+      "round" : 1,
+      "roundsTotal" : 10,
+      "step" : 1,
+      "phase" : "PASSING",
+      "pileSize" : 5,
+      "options" : {
+        "rounds" : "10"
+      },
+      "passTimerEndsAt" : null,
+      "raceEndsAt" : null,
+      "readyEndsAt" : null,
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "kilos" : 0,
+        "kiloCards" : [ ],
+        "chosen" : true,
+        "ready" : false,
+        "slapRank" : null,
+        "active" : true,
+        "place" : null
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "kilos" : 0,
+        "kiloCards" : [ ],
+        "chosen" : false,
+        "ready" : false,
+        "slapRank" : null,
+        "active" : true,
+        "place" : null
+      }, {
+        "seat" : 2,
+        "name" : null,
+        "kilos" : 0,
+        "kiloCards" : [ ],
+        "chosen" : false,
+        "ready" : false,
+        "slapRank" : null,
+        "active" : true,
+        "place" : null
+      } ],
+      "race" : null,
+      "lastOutcome" : null,
+      "result" : null,
+      "hand" : [ {
+        "rank" : "KING",
+        "suit" : "SPADE",
+        "name" : "SPADE_KING"
+      }, {
+        "rank" : "KING",
+        "suit" : "HEART",
+        "name" : "HEART_KING"
+      }, {
+        "rank" : "KING",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_KING"
+      }, {
+        "rank" : "QUEEN",
+        "suit" : "CLUB",
+        "name" : "CLUB_QUEEN"
+      } ],
+      "myChoice" : {
+        "rank" : "QUEEN",
+        "suit" : "CLUB",
+        "name" : "CLUB_QUEEN"
+      },
+      "lastReceived" : null,
+      "lastGiven" : null,
+      "availableActions" : [ "SLAP" ]
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "PASS_CHOSEN",
+    "eventData" : {
+      "seat" : 2,
+      "round" : null,
+      "step" : null,
+      "rank" : null,
+      "card" : null,
+      "kilosAfter" : null,
+      "returnedCount" : null,
+      "outcome" : null,
+      "result" : null
+    },
+    "message" : "Player 2 chose a card to pass.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "kilo-de-merde",
+      "version" : 6,
+      "round" : 1,
+      "roundsTotal" : 10,
+      "step" : 2,
+      "phase" : "PASSING",
+      "pileSize" : 5,
+      "options" : {
+        "rounds" : "10"
+      },
+      "passTimerEndsAt" : null,
+      "raceEndsAt" : null,
+      "readyEndsAt" : null,
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "kilos" : 0,
+        "kiloCards" : [ ],
+        "chosen" : false,
+        "ready" : false,
+        "slapRank" : null,
+        "active" : true,
+        "place" : null
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "kilos" : 0,
+        "kiloCards" : [ ],
+        "chosen" : false,
+        "ready" : false,
+        "slapRank" : null,
+        "active" : true,
+        "place" : null
+      }, {
+        "seat" : 2,
+        "name" : null,
+        "kilos" : 0,
+        "kiloCards" : [ ],
+        "chosen" : false,
+        "ready" : false,
+        "slapRank" : null,
+        "active" : true,
+        "place" : null
+      } ],
+      "race" : null,
+      "lastOutcome" : null,
+      "result" : null,
+      "hand" : [ {
+        "rank" : "KING",
+        "suit" : "SPADE",
+        "name" : "SPADE_KING"
+      }, {
+        "rank" : "KING",
+        "suit" : "HEART",
+        "name" : "HEART_KING"
+      }, {
+        "rank" : "KING",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_KING"
+      }, {
+        "rank" : "JACK",
+        "suit" : "CLUB",
+        "name" : "CLUB_JACK"
+      } ],
+      "myChoice" : null,
+      "lastReceived" : {
+        "card" : {
+          "rank" : "JACK",
+          "suit" : "CLUB",
+          "name" : "CLUB_JACK"
+        },
+        "from" : 2
+      },
+      "lastGiven" : {
+        "card" : {
+          "rank" : "QUEEN",
+          "suit" : "CLUB",
+          "name" : "CLUB_QUEEN"
+        },
+        "to" : 1
+      },
+      "availableActions" : [ "PASS", "SLAP" ]
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "STEP",
+    "eventData" : {
+      "seat" : null,
+      "round" : 1,
+      "step" : 2,
+      "rank" : null,
+      "card" : null,
+      "kilosAfter" : null,
+      "returnedCount" : null,
+      "outcome" : null,
+      "result" : null
+    },
+    "message" : "Player 2 chose a card to pass.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "kilo-de-merde",
+      "version" : 6,
+      "round" : 1,
+      "roundsTotal" : 10,
+      "step" : 2,
+      "phase" : "PASSING",
+      "pileSize" : 5,
+      "options" : {
+        "rounds" : "10"
+      },
+      "passTimerEndsAt" : null,
+      "raceEndsAt" : null,
+      "readyEndsAt" : null,
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "kilos" : 0,
+        "kiloCards" : [ ],
+        "chosen" : false,
+        "ready" : false,
+        "slapRank" : null,
+        "active" : true,
+        "place" : null
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "kilos" : 0,
+        "kiloCards" : [ ],
+        "chosen" : false,
+        "ready" : false,
+        "slapRank" : null,
+        "active" : true,
+        "place" : null
+      }, {
+        "seat" : 2,
+        "name" : null,
+        "kilos" : 0,
+        "kiloCards" : [ ],
+        "chosen" : false,
+        "ready" : false,
+        "slapRank" : null,
+        "active" : true,
+        "place" : null
+      } ],
+      "race" : null,
+      "lastOutcome" : null,
+      "result" : null,
+      "hand" : [ {
+        "rank" : "KING",
+        "suit" : "SPADE",
+        "name" : "SPADE_KING"
+      }, {
+        "rank" : "KING",
+        "suit" : "HEART",
+        "name" : "HEART_KING"
+      }, {
+        "rank" : "KING",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_KING"
+      }, {
+        "rank" : "JACK",
+        "suit" : "CLUB",
+        "name" : "CLUB_JACK"
+      } ],
+      "myChoice" : null,
+      "lastReceived" : {
+        "card" : {
+          "rank" : "JACK",
+          "suit" : "CLUB",
+          "name" : "CLUB_JACK"
+        },
+        "from" : 2
+      },
+      "lastGiven" : {
+        "card" : {
+          "rank" : "QUEEN",
+          "suit" : "CLUB",
+          "name" : "CLUB_QUEEN"
+        },
+        "to" : 1
+      },
+      "availableActions" : [ "PASS", "SLAP" ]
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "FALSE_SLAP",
+    "eventData" : {
+      "seat" : 0,
+      "round" : null,
+      "step" : null,
+      "rank" : null,
+      "card" : null,
+      "kilosAfter" : null,
+      "returnedCount" : null,
+      "outcome" : null,
+      "result" : null
+    },
+    "message" : "Player 0 slapped.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "kilo-de-merde",
+      "version" : 4,
+      "round" : 1,
+      "roundsTotal" : 10,
+      "step" : 1,
+      "phase" : "ROUND_OVER",
+      "pileSize" : 3,
+      "options" : {
+        "rounds" : "10"
+      },
+      "passTimerEndsAt" : null,
+      "raceEndsAt" : null,
+      "readyEndsAt" : null,
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "kilos" : 0,
+        "kiloCards" : [ ],
+        "chosen" : false,
+        "ready" : false,
+        "slapRank" : 1,
+        "active" : true,
+        "place" : null
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "kilos" : 0,
+        "kiloCards" : [ ],
+        "chosen" : false,
+        "ready" : false,
+        "slapRank" : null,
+        "active" : true,
+        "place" : null
+      }, {
+        "seat" : 2,
+        "name" : null,
+        "kilos" : 0,
+        "kiloCards" : [ ],
+        "chosen" : false,
+        "ready" : false,
+        "slapRank" : null,
+        "active" : true,
+        "place" : null
+      } ],
+      "race" : {
+        "firstSlapper" : 0,
+        "order" : [ 0 ]
+      },
+      "lastOutcome" : {
+        "kind" : "FALSE_SLAP",
+        "firstSlapper" : 0,
+        "slapOrder" : [ 0 ],
+        "holders" : [ ],
+        "draws" : [ {
+          "seat" : 0,
+          "card" : {
+            "rank" : "7",
+            "suit" : "DIAMOND",
+            "name" : "DIAMOND_7"
+          },
+          "flushed" : true,
+          "kilosAfter" : 0
+        } ],
+        "hands" : [ {
+          "seat" : 0,
+          "cards" : [ {
+            "rank" : "KING",
+            "suit" : "SPADE",
+            "name" : "SPADE_KING"
+          }, {
+            "rank" : "KING",
+            "suit" : "HEART",
+            "name" : "HEART_KING"
+          }, {
+            "rank" : "KING",
+            "suit" : "DIAMOND",
+            "name" : "DIAMOND_KING"
+          }, {
+            "rank" : "QUEEN",
+            "suit" : "CLUB",
+            "name" : "CLUB_QUEEN"
+          } ]
+        }, {
+          "seat" : 1,
+          "cards" : [ {
+            "rank" : "JACK",
+            "suit" : "SPADE",
+            "name" : "SPADE_JACK"
+          }, {
+            "rank" : "JACK",
+            "suit" : "HEART",
+            "name" : "HEART_JACK"
+          }, {
+            "rank" : "QUEEN",
+            "suit" : "DIAMOND",
+            "name" : "DIAMOND_QUEEN"
+          }, {
+            "rank" : "QUEEN",
+            "suit" : "HEART",
+            "name" : "HEART_QUEEN"
+          } ]
+        }, {
+          "seat" : 2,
+          "cards" : [ {
+            "rank" : "KING",
+            "suit" : "CLUB",
+            "name" : "CLUB_KING"
+          }, {
+            "rank" : "JACK",
+            "suit" : "DIAMOND",
+            "name" : "DIAMOND_JACK"
+          }, {
+            "rank" : "JACK",
+            "suit" : "CLUB",
+            "name" : "CLUB_JACK"
+          }, {
+            "rank" : "QUEEN",
+            "suit" : "SPADE",
+            "name" : "SPADE_QUEEN"
+          } ]
+        } ]
+      },
+      "result" : null,
+      "hand" : [ {
+        "rank" : "KING",
+        "suit" : "SPADE",
+        "name" : "SPADE_KING"
+      }, {
+        "rank" : "KING",
+        "suit" : "HEART",
+        "name" : "HEART_KING"
+      }, {
+        "rank" : "KING",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_KING"
+      }, {
+        "rank" : "QUEEN",
+        "suit" : "CLUB",
+        "name" : "CLUB_QUEEN"
+      } ],
+      "myChoice" : null,
+      "lastReceived" : null,
+      "lastGiven" : null,
+      "availableActions" : [ "READY" ]
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "FLUSH",
+    "eventData" : {
+      "seat" : 0,
+      "round" : null,
+      "step" : null,
+      "rank" : null,
+      "card" : null,
+      "kilosAfter" : null,
+      "returnedCount" : 1,
+      "outcome" : null,
+      "result" : null
+    },
+    "message" : "Player 0 slapped.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "kilo-de-merde",
+      "version" : 4,
+      "round" : 1,
+      "roundsTotal" : 10,
+      "step" : 1,
+      "phase" : "ROUND_OVER",
+      "pileSize" : 3,
+      "options" : {
+        "rounds" : "10"
+      },
+      "passTimerEndsAt" : null,
+      "raceEndsAt" : null,
+      "readyEndsAt" : null,
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "kilos" : 0,
+        "kiloCards" : [ ],
+        "chosen" : false,
+        "ready" : false,
+        "slapRank" : 1,
+        "active" : true,
+        "place" : null
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "kilos" : 0,
+        "kiloCards" : [ ],
+        "chosen" : false,
+        "ready" : false,
+        "slapRank" : null,
+        "active" : true,
+        "place" : null
+      }, {
+        "seat" : 2,
+        "name" : null,
+        "kilos" : 0,
+        "kiloCards" : [ ],
+        "chosen" : false,
+        "ready" : false,
+        "slapRank" : null,
+        "active" : true,
+        "place" : null
+      } ],
+      "race" : {
+        "firstSlapper" : 0,
+        "order" : [ 0 ]
+      },
+      "lastOutcome" : {
+        "kind" : "FALSE_SLAP",
+        "firstSlapper" : 0,
+        "slapOrder" : [ 0 ],
+        "holders" : [ ],
+        "draws" : [ {
+          "seat" : 0,
+          "card" : {
+            "rank" : "7",
+            "suit" : "DIAMOND",
+            "name" : "DIAMOND_7"
+          },
+          "flushed" : true,
+          "kilosAfter" : 0
+        } ],
+        "hands" : [ {
+          "seat" : 0,
+          "cards" : [ {
+            "rank" : "KING",
+            "suit" : "SPADE",
+            "name" : "SPADE_KING"
+          }, {
+            "rank" : "KING",
+            "suit" : "HEART",
+            "name" : "HEART_KING"
+          }, {
+            "rank" : "KING",
+            "suit" : "DIAMOND",
+            "name" : "DIAMOND_KING"
+          }, {
+            "rank" : "QUEEN",
+            "suit" : "CLUB",
+            "name" : "CLUB_QUEEN"
+          } ]
+        }, {
+          "seat" : 1,
+          "cards" : [ {
+            "rank" : "JACK",
+            "suit" : "SPADE",
+            "name" : "SPADE_JACK"
+          }, {
+            "rank" : "JACK",
+            "suit" : "HEART",
+            "name" : "HEART_JACK"
+          }, {
+            "rank" : "QUEEN",
+            "suit" : "DIAMOND",
+            "name" : "DIAMOND_QUEEN"
+          }, {
+            "rank" : "QUEEN",
+            "suit" : "HEART",
+            "name" : "HEART_QUEEN"
+          } ]
+        }, {
+          "seat" : 2,
+          "cards" : [ {
+            "rank" : "KING",
+            "suit" : "CLUB",
+            "name" : "CLUB_KING"
+          }, {
+            "rank" : "JACK",
+            "suit" : "DIAMOND",
+            "name" : "DIAMOND_JACK"
+          }, {
+            "rank" : "JACK",
+            "suit" : "CLUB",
+            "name" : "CLUB_JACK"
+          }, {
+            "rank" : "QUEEN",
+            "suit" : "SPADE",
+            "name" : "SPADE_QUEEN"
+          } ]
+        } ]
+      },
+      "result" : null,
+      "hand" : [ {
+        "rank" : "KING",
+        "suit" : "SPADE",
+        "name" : "SPADE_KING"
+      }, {
+        "rank" : "KING",
+        "suit" : "HEART",
+        "name" : "HEART_KING"
+      }, {
+        "rank" : "KING",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_KING"
+      }, {
+        "rank" : "QUEEN",
+        "suit" : "CLUB",
+        "name" : "CLUB_QUEEN"
+      } ],
+      "myChoice" : null,
+      "lastReceived" : null,
+      "lastGiven" : null,
+      "availableActions" : [ "READY" ]
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "ROUND_OVER",
+    "eventData" : {
+      "seat" : null,
+      "round" : null,
+      "step" : null,
+      "rank" : null,
+      "card" : null,
+      "kilosAfter" : null,
+      "returnedCount" : null,
+      "outcome" : {
+        "kind" : "FALSE_SLAP",
+        "firstSlapper" : 0,
+        "slapOrder" : [ 0 ],
+        "holders" : [ ],
+        "draws" : [ {
+          "seat" : 0,
+          "card" : {
+            "rank" : "7",
+            "suit" : "DIAMOND",
+            "name" : "DIAMOND_7"
+          },
+          "flushed" : true,
+          "kilosAfter" : 0
+        } ],
+        "hands" : [ {
+          "seat" : 0,
+          "cards" : [ {
+            "rank" : "KING",
+            "suit" : "SPADE",
+            "name" : "SPADE_KING"
+          }, {
+            "rank" : "KING",
+            "suit" : "HEART",
+            "name" : "HEART_KING"
+          }, {
+            "rank" : "KING",
+            "suit" : "DIAMOND",
+            "name" : "DIAMOND_KING"
+          }, {
+            "rank" : "QUEEN",
+            "suit" : "CLUB",
+            "name" : "CLUB_QUEEN"
+          } ]
+        }, {
+          "seat" : 1,
+          "cards" : [ {
+            "rank" : "JACK",
+            "suit" : "SPADE",
+            "name" : "SPADE_JACK"
+          }, {
+            "rank" : "JACK",
+            "suit" : "HEART",
+            "name" : "HEART_JACK"
+          }, {
+            "rank" : "QUEEN",
+            "suit" : "DIAMOND",
+            "name" : "DIAMOND_QUEEN"
+          }, {
+            "rank" : "QUEEN",
+            "suit" : "HEART",
+            "name" : "HEART_QUEEN"
+          } ]
+        }, {
+          "seat" : 2,
+          "cards" : [ {
+            "rank" : "KING",
+            "suit" : "CLUB",
+            "name" : "CLUB_KING"
+          }, {
+            "rank" : "JACK",
+            "suit" : "DIAMOND",
+            "name" : "DIAMOND_JACK"
+          }, {
+            "rank" : "JACK",
+            "suit" : "CLUB",
+            "name" : "CLUB_JACK"
+          }, {
+            "rank" : "QUEEN",
+            "suit" : "SPADE",
+            "name" : "SPADE_QUEEN"
+          } ]
+        } ]
+      },
+      "result" : null
+    },
+    "message" : "Player 0 slapped.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "kilo-de-merde",
+      "version" : 4,
+      "round" : 1,
+      "roundsTotal" : 10,
+      "step" : 1,
+      "phase" : "ROUND_OVER",
+      "pileSize" : 3,
+      "options" : {
+        "rounds" : "10"
+      },
+      "passTimerEndsAt" : null,
+      "raceEndsAt" : null,
+      "readyEndsAt" : null,
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "kilos" : 0,
+        "kiloCards" : [ ],
+        "chosen" : false,
+        "ready" : false,
+        "slapRank" : 1,
+        "active" : true,
+        "place" : null
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "kilos" : 0,
+        "kiloCards" : [ ],
+        "chosen" : false,
+        "ready" : false,
+        "slapRank" : null,
+        "active" : true,
+        "place" : null
+      }, {
+        "seat" : 2,
+        "name" : null,
+        "kilos" : 0,
+        "kiloCards" : [ ],
+        "chosen" : false,
+        "ready" : false,
+        "slapRank" : null,
+        "active" : true,
+        "place" : null
+      } ],
+      "race" : {
+        "firstSlapper" : 0,
+        "order" : [ 0 ]
+      },
+      "lastOutcome" : {
+        "kind" : "FALSE_SLAP",
+        "firstSlapper" : 0,
+        "slapOrder" : [ 0 ],
+        "holders" : [ ],
+        "draws" : [ {
+          "seat" : 0,
+          "card" : {
+            "rank" : "7",
+            "suit" : "DIAMOND",
+            "name" : "DIAMOND_7"
+          },
+          "flushed" : true,
+          "kilosAfter" : 0
+        } ],
+        "hands" : [ {
+          "seat" : 0,
+          "cards" : [ {
+            "rank" : "KING",
+            "suit" : "SPADE",
+            "name" : "SPADE_KING"
+          }, {
+            "rank" : "KING",
+            "suit" : "HEART",
+            "name" : "HEART_KING"
+          }, {
+            "rank" : "KING",
+            "suit" : "DIAMOND",
+            "name" : "DIAMOND_KING"
+          }, {
+            "rank" : "QUEEN",
+            "suit" : "CLUB",
+            "name" : "CLUB_QUEEN"
+          } ]
+        }, {
+          "seat" : 1,
+          "cards" : [ {
+            "rank" : "JACK",
+            "suit" : "SPADE",
+            "name" : "SPADE_JACK"
+          }, {
+            "rank" : "JACK",
+            "suit" : "HEART",
+            "name" : "HEART_JACK"
+          }, {
+            "rank" : "QUEEN",
+            "suit" : "DIAMOND",
+            "name" : "DIAMOND_QUEEN"
+          }, {
+            "rank" : "QUEEN",
+            "suit" : "HEART",
+            "name" : "HEART_QUEEN"
+          } ]
+        }, {
+          "seat" : 2,
+          "cards" : [ {
+            "rank" : "KING",
+            "suit" : "CLUB",
+            "name" : "CLUB_KING"
+          }, {
+            "rank" : "JACK",
+            "suit" : "DIAMOND",
+            "name" : "DIAMOND_JACK"
+          }, {
+            "rank" : "JACK",
+            "suit" : "CLUB",
+            "name" : "CLUB_JACK"
+          }, {
+            "rank" : "QUEEN",
+            "suit" : "SPADE",
+            "name" : "SPADE_QUEEN"
+          } ]
+        } ]
+      },
+      "result" : null,
+      "hand" : [ {
+        "rank" : "KING",
+        "suit" : "SPADE",
+        "name" : "SPADE_KING"
+      }, {
+        "rank" : "KING",
+        "suit" : "HEART",
+        "name" : "HEART_KING"
+      }, {
+        "rank" : "KING",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_KING"
+      }, {
+        "rank" : "QUEEN",
+        "suit" : "CLUB",
+        "name" : "CLUB_QUEEN"
+      } ],
+      "myChoice" : null,
+      "lastReceived" : null,
+      "lastGiven" : null,
+      "availableActions" : [ "READY" ]
+    },
+    "success" : true
+  }
+} ]

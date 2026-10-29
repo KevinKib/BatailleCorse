@@ -21,6 +21,18 @@ export interface SeatGameView {
   mySeat?: number;
 }
 
+/** The body of `POST /api/lobby` (the backend `LobbyCreatedDto`): the room and the host's seat token. */
+export interface LobbyCreatedBody {
+  gameId: string;
+  token: string;
+}
+
+/** The body of a join or a Play again (the backend `JoinResponseDto`): the seat taken and its token. */
+export interface JoinBody {
+  playerId: number;
+  token: string;
+}
+
 export interface SeatGameResponse<View> {
   success?: boolean;
   eventType: string;
@@ -106,7 +118,7 @@ export default class SeatGameSession<
       body: JSON.stringify({ gameType: this.config.gameType, name: name ?? null, ...(privateGame ? { privateGame } : {}) }),
     });
     if (!res.ok) throw new HttpError(`Create failed: ${res.status}`, res.status);
-    const body = await res.json() as { gameId: string; token: string };
+    const body = await res.json() as LobbyCreatedBody;
     this.bind(body.gameId, 0, body.token);
     localStorage.setItem(this.tokenKey(body.gameId), JSON.stringify({ 0: body.token }));
     await this.hydrate();
@@ -121,7 +133,7 @@ export default class SeatGameSession<
       body: JSON.stringify({ name: name ?? null }),
     });
     if (!res.ok) throw HttpError.fromResponse(res, 'Join failed');
-    const body = await res.json() as { playerId: number; token: string };
+    const body = await res.json() as JoinBody;
     this.bind(gameId, body.playerId, body.token);
     localStorage.setItem(this.tokenKey(gameId), JSON.stringify({ [body.playerId]: body.token }));
     await this.hydrate();
@@ -340,7 +352,7 @@ export default class SeatGameSession<
       body: JSON.stringify({ name: this.myName }),
     });
     if (!res.ok) throw new HttpError(`Play again failed: ${res.status}`, res.status);
-    const body = await res.json() as { playerId: number; token: string };
+    const body = await res.json() as JoinBody;
     this.bind(this.gameId, body.playerId, body.token);
     localStorage.setItem(this.tokenKey(this.gameId), JSON.stringify({ [body.playerId]: body.token }));
     await this.hydrate();

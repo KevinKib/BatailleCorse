@@ -18,6 +18,7 @@ export const kiloDeMerdeUi: Messages['kiloDeMerdeUi'] = {
   table: {
     roundLine: 'Manche {round} sur {total} · passe {step}',
     countdown: 'Temps restant pour passer : {seconds} s',
+    raceCountdown: 'Temps restant pour taper : {seconds} s',
     kilos: '{kg} kg',
     kilosLabel: '{player} : {kg} kg',
     pile: 'Tas de kilos',
@@ -47,8 +48,8 @@ export const kiloDeMerdeUi: Messages['kiloDeMerdeUi'] = {
     passCard: 'Passer {card}',
     waiting: 'En attente des autres',
     received: 'de {name}',
-    revealed: 'Main de {player}',
-    revealedYou: 'Votre main',
+    revealed: 'Main de {player} : {cards}',
+    revealedYou: 'Votre main : {cards}',
   },
   race: {
     slapped: '{name} a tapé ! Tapez !',
@@ -66,12 +67,14 @@ export const kiloDeMerdeUi: Messages['kiloDeMerdeUi'] = {
     stalled: 'Personne n’a réuni de carré : pas de kilos cette manche',
     voided: 'Un joueur est parti : cette manche ne compte pas',
     noCard: '{name} devait prendre une carte, mais le tas de kilos est vide',
+    noCardYou: 'Vous deviez prendre une carte, mais le tas de kilos est vide',
     lastTag: 'Dernier',
   },
   kiloPopover: {
     title: 'Kilos de {player}',
     titleYou: 'Vos kilos',
     none: 'Aucun kilo pour l’instant',
+    close: 'Fermer',
     total: 'Total : {kg} kg',
   },
   standings: {

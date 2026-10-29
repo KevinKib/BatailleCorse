@@ -90,9 +90,11 @@ describe('KiloDeMerdeSeatPlate', () => {
       messages.fr = messagesFr;
       setCurrentLocaleForTest('fr');
       expect(label(mountPlate({ label: 'Vous', mine: true, ready: true, hand }))).toContain('Vous avez choisi une carte');
-      expect(label(mountPlate({ label: 'Vous', mine: true, ready: true, hand }))).toContain('Votre main: K♠');
+      // French face letters (V, D, R) and French typography (a no-break space before the colon).
+      expect(label(mountPlate({ label: 'Vous', mine: true, ready: true, hand }))).toContain('Votre main : R♠');
       expect(label(mountPlate({ ready: true, hand }))).toContain('Alice a choisi une carte');
-      expect(label(mountPlate({ ready: true, hand }))).toContain('Main d’Alice: K♠');
+      expect(label(mountPlate({ ready: true, hand }))).toContain('Main d’Alice : R♠');
+      expect(mountPlate({ hand }).get('[data-test="seat-hand"]').text()).toBe('R♠');
     });
   });
 

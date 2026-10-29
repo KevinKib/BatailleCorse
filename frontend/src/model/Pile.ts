@@ -6,7 +6,7 @@ export default class Pile {
     public readonly cards: Card[],
     public readonly grabbable: boolean,
     public readonly nbCardsSinceLastHonourCard: number,
-    public readonly playerThatAddedLastHonourCard: PlayerId,
+    public readonly playerThatAddedLastHonourCard: PlayerId | null,
   ) {}
 
   /**
@@ -24,7 +24,7 @@ export default class Pile {
     cards: Card[];
     grabbable: boolean;
     nbCardsSinceLastHonourCard: number;
-    playerThatAddedLastHonourCard: PlayerId;
+    playerThatAddedLastHonourCard: PlayerId | null;
   }): Pile {
     return new Pile(
       data.cards,

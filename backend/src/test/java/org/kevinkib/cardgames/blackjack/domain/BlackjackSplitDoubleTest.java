@@ -64,7 +64,7 @@ class BlackjackSplitDoubleTest {
 
         List<BlackjackEvent> events = game.doubleDown(B);
 
-        assertEquals(new Doubled(B, 0, c("KS")), event(events, Doubled.class));
+        assertEquals(new Doubled(B, 0, c("KS"), 21), event(events, Doubled.class));
         assertEquals(new CardDrawn(B, 1, c("5D"), 13), event(events, CardDrawn.class));
         PlayerHand first = game.seat(B).hands().get(0);
         assertEquals(cards("8C 3H KS"), first.cards());
@@ -140,7 +140,7 @@ class BlackjackSplitDoubleTest {
 
         List<BlackjackEvent> events = game.hit(A);
 
-        assertEquals(new Busted(A, 0), event(events, Busted.class));
+        assertEquals(new Busted(A, 0, 28), event(events, Busted.class));
         assertEquals(PlayerHand.Status.BUST, game.seat(A).hands().get(0).status());
         assertEquals(1, game.seat(A).activeHandIndex());
         assertEquals(cards("8D 2C"), game.seat(A).hands().get(1).cards());
@@ -203,7 +203,7 @@ class BlackjackSplitDoubleTest {
 
         List<BlackjackEvent> events = game.doubleDown(A);
 
-        assertEquals(new Doubled(A, 0, c("9H")), event(events, Doubled.class));
+        assertEquals(new Doubled(A, 0, c("9H"), 20), event(events, Doubled.class));
         assertEquals(20, event(events, HandSettled.class).nets().get(A));
         PlayerHand hand = game.lastHand().seats().get(A).get(0).hand();
         assertEquals(20, hand.bet());

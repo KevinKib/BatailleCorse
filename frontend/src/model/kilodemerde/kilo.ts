@@ -21,6 +21,13 @@ export function kiloTotal(cards: readonly Card[]): number {
 export type FaceLetters = Record<'ACE' | 'KING' | 'QUEEN' | 'JACK', string>;
 
 const ENGLISH_LETTERS: FaceLetters = { ACE: 'A', KING: 'K', QUEEN: 'Q', JACK: 'J' };
+
+/** The face letters of a language: the first letter of its rank names (`kiloDeMerdeUi.ranks`: Roi gives R, Valet V). */
+export function faceLetters(ranks: Record<string, string>): FaceLetters {
+  const first = (rank: keyof FaceLetters) => ranks[rank]?.charAt(0).toUpperCase() || ENGLISH_LETTERS[rank];
+  return { ACE: first('ACE'), KING: first('KING'), QUEEN: first('QUEEN'), JACK: first('JACK') };
+}
+
 const SUIT_SYMBOLS: Record<string, string> = { SPADE: '♠', HEART: '♥', DIAMOND: '♦', CLUB: '♣' };
 
 /** A card in the short form of a table: `K♠`, `9♣`, `10♥`. */

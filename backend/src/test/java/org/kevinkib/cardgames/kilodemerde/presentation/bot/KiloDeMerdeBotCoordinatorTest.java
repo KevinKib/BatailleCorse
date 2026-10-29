@@ -258,6 +258,19 @@ class KiloDeMerdeBotCoordinatorTest {
     }
 
     @Test
+    void aBotHoldingFourOfAKindDoesNotPassACardOfItButSlaps() throws Exception {
+        // Any pass from a four of a kind breaks it: if the other seats then chose, the step would resolve before the
+        // own-set slap and the bot would lose its set. It slaps instead; the pass timer still covers it.
+        KiloDeMerde game = threeSeats(ALL_SETS, 1);
+
+        start(game);
+
+        assertThat(pendingWithDelay(PASS_MS)).isEmpty();
+        assertThat(pendingWithDelay(OWN_MS)).hasSize(1);
+        assertThat(game.hasChosen(S1)).isFalse();
+    }
+
+    @Test
     void theOwnSetSlapIsDroppedWhenTheStepMovesOn() throws Exception {
         KiloDeMerde sets = threeSeats(ALL_SETS, 1);
         start(sets);

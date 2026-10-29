@@ -1,0 +1,3053 @@
+[ {
+  "kind" : "join",
+  "payload" : {
+    "playerId" : 1,
+    "token" : "00000000-0000-0000-0000-000000000000"
+  }
+}, {
+  "kind" : "state",
+  "payload" : {
+    "started" : false,
+    "gameId" : "00000000-0000-0000-0000-000000000000",
+    "players" : [ {
+      "seat" : 0,
+      "name" : "Alice",
+      "joined" : true,
+      "bot" : false,
+      "seatOptions" : { },
+      "disconnected" : false
+    }, {
+      "seat" : 1,
+      "name" : "Bob",
+      "joined" : true,
+      "bot" : false,
+      "seatOptions" : { },
+      "disconnected" : false
+    }, {
+      "seat" : 2,
+      "name" : null,
+      "joined" : false,
+      "bot" : false,
+      "seatOptions" : { },
+      "disconnected" : false
+    }, {
+      "seat" : 3,
+      "name" : null,
+      "joined" : false,
+      "bot" : false,
+      "seatOptions" : { },
+      "disconnected" : false
+    }, {
+      "seat" : 4,
+      "name" : null,
+      "joined" : false,
+      "bot" : false,
+      "seatOptions" : { },
+      "disconnected" : false
+    }, {
+      "seat" : 5,
+      "name" : null,
+      "joined" : false,
+      "bot" : false,
+      "seatOptions" : { },
+      "disconnected" : false
+    } ],
+    "hostSeat" : 0,
+    "mySeat" : 0,
+    "minPlayers" : 1,
+    "maxPlayers" : 6,
+    "canStart" : true,
+    "options" : {
+      "hands" : "10",
+      "maxBet" : "50"
+    },
+    "optionDescriptors" : [ {
+      "key" : "hands",
+      "type" : "CHOICE",
+      "values" : [ "5", "10", "15", "20" ],
+      "defaultValue" : "10",
+      "labelKey" : "options.blackjack.hands"
+    }, {
+      "key" : "maxBet",
+      "type" : "CHOICE",
+      "values" : [ "25", "50", "100" ],
+      "defaultValue" : "50",
+      "labelKey" : "options.blackjack.maxBet"
+    } ],
+    "seatOptionDescriptors" : [ {
+      "key" : "level",
+      "type" : "CHOICE",
+      "values" : [ "easy", "medium", "hard" ],
+      "defaultValue" : "medium",
+      "labelKey" : "options.blackjack.level"
+    } ],
+    "canEditOptions" : true,
+    "removableBotSeats" : [ ],
+    "lobbyVersion" : 1,
+    "privateGame" : false
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "JOIN",
+    "eventData" : { },
+    "message" : "Player 2 joined.",
+    "state" : {
+      "started" : false,
+      "gameId" : "00000000-0000-0000-0000-000000000000",
+      "players" : [ {
+        "seat" : 0,
+        "name" : "Alice",
+        "joined" : true,
+        "bot" : false,
+        "seatOptions" : { },
+        "disconnected" : false
+      }, {
+        "seat" : 1,
+        "name" : "Bob",
+        "joined" : true,
+        "bot" : false,
+        "seatOptions" : { },
+        "disconnected" : false
+      }, {
+        "seat" : 2,
+        "name" : null,
+        "joined" : false,
+        "bot" : false,
+        "seatOptions" : { },
+        "disconnected" : false
+      }, {
+        "seat" : 3,
+        "name" : null,
+        "joined" : false,
+        "bot" : false,
+        "seatOptions" : { },
+        "disconnected" : false
+      }, {
+        "seat" : 4,
+        "name" : null,
+        "joined" : false,
+        "bot" : false,
+        "seatOptions" : { },
+        "disconnected" : false
+      }, {
+        "seat" : 5,
+        "name" : null,
+        "joined" : false,
+        "bot" : false,
+        "seatOptions" : { },
+        "disconnected" : false
+      } ],
+      "hostSeat" : 0,
+      "mySeat" : 0,
+      "minPlayers" : 1,
+      "maxPlayers" : 6,
+      "canStart" : true,
+      "options" : {
+        "hands" : "10",
+        "maxBet" : "50"
+      },
+      "optionDescriptors" : [ {
+        "key" : "hands",
+        "type" : "CHOICE",
+        "values" : [ "5", "10", "15", "20" ],
+        "defaultValue" : "10",
+        "labelKey" : "options.blackjack.hands"
+      }, {
+        "key" : "maxBet",
+        "type" : "CHOICE",
+        "values" : [ "25", "50", "100" ],
+        "defaultValue" : "50",
+        "labelKey" : "options.blackjack.maxBet"
+      } ],
+      "seatOptionDescriptors" : [ {
+        "key" : "level",
+        "type" : "CHOICE",
+        "values" : [ "easy", "medium", "hard" ],
+        "defaultValue" : "medium",
+        "labelKey" : "options.blackjack.level"
+      } ],
+      "canEditOptions" : true,
+      "removableBotSeats" : [ ],
+      "lobbyVersion" : 1,
+      "privateGame" : false
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "BET",
+    "message" : "A bet of 0 is not allowed (from 1 to 50)",
+    "errorCode" : "INVALID_BET",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "blackjack",
+      "version" : 0,
+      "phase" : "BETTING",
+      "handNumber" : 1,
+      "handsTotal" : 10,
+      "solo" : false,
+      "button" : 0,
+      "currentSeat" : -1,
+      "activeHandIndex" : 0,
+      "options" : {
+        "hands" : "10",
+        "maxBet" : "50",
+        "startingStack" : 100,
+        "minBet" : 1
+      },
+      "dealer" : {
+        "upCard" : null,
+        "cards" : [ ],
+        "holeHidden" : false,
+        "total" : 0,
+        "soft" : false,
+        "blackjack" : false,
+        "bust" : false
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "stack" : 100,
+        "betPlaced" : false,
+        "bet" : null,
+        "hands" : [ ],
+        "eliminated" : false,
+        "forfeited" : false,
+        "place" : null,
+        "standing" : 1
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "stack" : 100,
+        "betPlaced" : false,
+        "bet" : null,
+        "hands" : [ ],
+        "eliminated" : false,
+        "forfeited" : false,
+        "place" : null,
+        "standing" : 1
+      } ],
+      "lastHand" : null,
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "availableActions" : [ "BET" ],
+      "betLimits" : {
+        "min" : 1,
+        "max" : 50
+      },
+      "lastBet" : null
+    },
+    "eventData" : { },
+    "success" : false
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "BET",
+    "eventData" : {
+      "seat" : 0,
+      "handIndex" : null,
+      "card" : null,
+      "value" : null,
+      "cards" : null,
+      "holeCard" : null,
+      "handNumber" : null,
+      "button" : null,
+      "bets" : null,
+      "nets" : null,
+      "stacks" : null,
+      "bestSeats" : null
+    },
+    "message" : "Player 0 bet.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "blackjack",
+      "version" : 1,
+      "phase" : "BETTING",
+      "handNumber" : 1,
+      "handsTotal" : 10,
+      "solo" : false,
+      "button" : 0,
+      "currentSeat" : -1,
+      "activeHandIndex" : 0,
+      "options" : {
+        "hands" : "10",
+        "maxBet" : "50",
+        "startingStack" : 100,
+        "minBet" : 1
+      },
+      "dealer" : {
+        "upCard" : null,
+        "cards" : [ ],
+        "holeHidden" : false,
+        "total" : 0,
+        "soft" : false,
+        "blackjack" : false,
+        "bust" : false
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "stack" : 90,
+        "betPlaced" : true,
+        "bet" : 10,
+        "hands" : [ ],
+        "eliminated" : false,
+        "forfeited" : false,
+        "place" : null,
+        "standing" : 1
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "stack" : 100,
+        "betPlaced" : false,
+        "bet" : null,
+        "hands" : [ ],
+        "eliminated" : false,
+        "forfeited" : false,
+        "place" : null,
+        "standing" : 1
+      } ],
+      "lastHand" : null,
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "availableActions" : [ ],
+      "betLimits" : null,
+      "lastBet" : 10
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "BET",
+    "eventData" : {
+      "seat" : 1,
+      "handIndex" : null,
+      "card" : null,
+      "value" : null,
+      "cards" : null,
+      "holeCard" : null,
+      "handNumber" : null,
+      "button" : null,
+      "bets" : null,
+      "nets" : null,
+      "stacks" : null,
+      "bestSeats" : null
+    },
+    "message" : "Player 1 bet.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "blackjack",
+      "version" : 2,
+      "phase" : "PLAYING",
+      "handNumber" : 1,
+      "handsTotal" : 10,
+      "solo" : false,
+      "button" : 0,
+      "currentSeat" : 0,
+      "activeHandIndex" : 0,
+      "options" : {
+        "hands" : "10",
+        "maxBet" : "50",
+        "startingStack" : 100,
+        "minBet" : 1
+      },
+      "dealer" : {
+        "upCard" : {
+          "rank" : "6",
+          "suit" : "DIAMOND",
+          "name" : "DIAMOND_6"
+        },
+        "cards" : [ {
+          "rank" : "6",
+          "suit" : "DIAMOND",
+          "name" : "DIAMOND_6"
+        } ],
+        "holeHidden" : true,
+        "total" : 6,
+        "soft" : false,
+        "blackjack" : false,
+        "bust" : false
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "stack" : 90,
+        "betPlaced" : true,
+        "bet" : 10,
+        "hands" : [ {
+          "cards" : [ {
+            "rank" : "10",
+            "suit" : "SPADE",
+            "name" : "SPADE_10"
+          }, {
+            "rank" : "7",
+            "suit" : "CLUB",
+            "name" : "CLUB_7"
+          } ],
+          "total" : 17,
+          "soft" : false,
+          "status" : "ACTIVE",
+          "doubled" : false,
+          "fromSplit" : false
+        } ],
+        "eliminated" : false,
+        "forfeited" : false,
+        "place" : null,
+        "standing" : 1
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "stack" : 80,
+        "betPlaced" : true,
+        "bet" : 20,
+        "hands" : [ {
+          "cards" : [ {
+            "rank" : "9",
+            "suit" : "HEART",
+            "name" : "HEART_9"
+          }, {
+            "rank" : "8",
+            "suit" : "CLUB",
+            "name" : "CLUB_8"
+          } ],
+          "total" : 17,
+          "soft" : false,
+          "status" : "ACTIVE",
+          "doubled" : false,
+          "fromSplit" : false
+        } ],
+        "eliminated" : false,
+        "forfeited" : false,
+        "place" : null,
+        "standing" : 2
+      } ],
+      "lastHand" : null,
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "availableActions" : [ "HIT", "STAND", "DOUBLE" ],
+      "betLimits" : null,
+      "lastBet" : 10
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "DEAL",
+    "eventData" : {
+      "seat" : null,
+      "handIndex" : null,
+      "card" : {
+        "rank" : "6",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_6"
+      },
+      "value" : null,
+      "cards" : null,
+      "holeCard" : null,
+      "handNumber" : 1,
+      "button" : 0,
+      "bets" : {
+        "0" : 10,
+        "1" : 20
+      },
+      "nets" : null,
+      "stacks" : null,
+      "bestSeats" : null
+    },
+    "message" : "Player 1 bet.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "blackjack",
+      "version" : 2,
+      "phase" : "PLAYING",
+      "handNumber" : 1,
+      "handsTotal" : 10,
+      "solo" : false,
+      "button" : 0,
+      "currentSeat" : 0,
+      "activeHandIndex" : 0,
+      "options" : {
+        "hands" : "10",
+        "maxBet" : "50",
+        "startingStack" : 100,
+        "minBet" : 1
+      },
+      "dealer" : {
+        "upCard" : {
+          "rank" : "6",
+          "suit" : "DIAMOND",
+          "name" : "DIAMOND_6"
+        },
+        "cards" : [ {
+          "rank" : "6",
+          "suit" : "DIAMOND",
+          "name" : "DIAMOND_6"
+        } ],
+        "holeHidden" : true,
+        "total" : 6,
+        "soft" : false,
+        "blackjack" : false,
+        "bust" : false
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "stack" : 90,
+        "betPlaced" : true,
+        "bet" : 10,
+        "hands" : [ {
+          "cards" : [ {
+            "rank" : "10",
+            "suit" : "SPADE",
+            "name" : "SPADE_10"
+          }, {
+            "rank" : "7",
+            "suit" : "CLUB",
+            "name" : "CLUB_7"
+          } ],
+          "total" : 17,
+          "soft" : false,
+          "status" : "ACTIVE",
+          "doubled" : false,
+          "fromSplit" : false
+        } ],
+        "eliminated" : false,
+        "forfeited" : false,
+        "place" : null,
+        "standing" : 1
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "stack" : 80,
+        "betPlaced" : true,
+        "bet" : 20,
+        "hands" : [ {
+          "cards" : [ {
+            "rank" : "9",
+            "suit" : "HEART",
+            "name" : "HEART_9"
+          }, {
+            "rank" : "8",
+            "suit" : "CLUB",
+            "name" : "CLUB_8"
+          } ],
+          "total" : 17,
+          "soft" : false,
+          "status" : "ACTIVE",
+          "doubled" : false,
+          "fromSplit" : false
+        } ],
+        "eliminated" : false,
+        "forfeited" : false,
+        "place" : null,
+        "standing" : 2
+      } ],
+      "lastHand" : null,
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "availableActions" : [ "HIT", "STAND", "DOUBLE" ],
+      "betLimits" : null,
+      "lastBet" : 10
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "HIT",
+    "eventData" : {
+      "seat" : 0,
+      "handIndex" : 0,
+      "card" : {
+        "rank" : "10",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_10"
+      },
+      "value" : 27,
+      "cards" : null,
+      "holeCard" : null,
+      "handNumber" : null,
+      "button" : null,
+      "bets" : null,
+      "nets" : null,
+      "stacks" : null,
+      "bestSeats" : null
+    },
+    "message" : "Player 0 hit.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "blackjack",
+      "version" : 3,
+      "phase" : "PLAYING",
+      "handNumber" : 1,
+      "handsTotal" : 10,
+      "solo" : false,
+      "button" : 0,
+      "currentSeat" : 1,
+      "activeHandIndex" : 0,
+      "options" : {
+        "hands" : "10",
+        "maxBet" : "50",
+        "startingStack" : 100,
+        "minBet" : 1
+      },
+      "dealer" : {
+        "upCard" : {
+          "rank" : "6",
+          "suit" : "DIAMOND",
+          "name" : "DIAMOND_6"
+        },
+        "cards" : [ {
+          "rank" : "6",
+          "suit" : "DIAMOND",
+          "name" : "DIAMOND_6"
+        } ],
+        "holeHidden" : true,
+        "total" : 6,
+        "soft" : false,
+        "blackjack" : false,
+        "bust" : false
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "stack" : 90,
+        "betPlaced" : true,
+        "bet" : 10,
+        "hands" : [ {
+          "cards" : [ {
+            "rank" : "10",
+            "suit" : "SPADE",
+            "name" : "SPADE_10"
+          }, {
+            "rank" : "7",
+            "suit" : "CLUB",
+            "name" : "CLUB_7"
+          }, {
+            "rank" : "10",
+            "suit" : "DIAMOND",
+            "name" : "DIAMOND_10"
+          } ],
+          "total" : 27,
+          "soft" : false,
+          "status" : "BUST",
+          "doubled" : false,
+          "fromSplit" : false
+        } ],
+        "eliminated" : false,
+        "forfeited" : false,
+        "place" : null,
+        "standing" : 1
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "stack" : 80,
+        "betPlaced" : true,
+        "bet" : 20,
+        "hands" : [ {
+          "cards" : [ {
+            "rank" : "9",
+            "suit" : "HEART",
+            "name" : "HEART_9"
+          }, {
+            "rank" : "8",
+            "suit" : "CLUB",
+            "name" : "CLUB_8"
+          } ],
+          "total" : 17,
+          "soft" : false,
+          "status" : "ACTIVE",
+          "doubled" : false,
+          "fromSplit" : false
+        } ],
+        "eliminated" : false,
+        "forfeited" : false,
+        "place" : null,
+        "standing" : 2
+      } ],
+      "lastHand" : null,
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "availableActions" : [ ],
+      "betLimits" : null,
+      "lastBet" : 10
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "BUST",
+    "eventData" : {
+      "seat" : 0,
+      "handIndex" : 0,
+      "card" : null,
+      "value" : 27,
+      "cards" : null,
+      "holeCard" : null,
+      "handNumber" : null,
+      "button" : null,
+      "bets" : null,
+      "nets" : null,
+      "stacks" : null,
+      "bestSeats" : null
+    },
+    "message" : "Player 0 hit.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "blackjack",
+      "version" : 3,
+      "phase" : "PLAYING",
+      "handNumber" : 1,
+      "handsTotal" : 10,
+      "solo" : false,
+      "button" : 0,
+      "currentSeat" : 1,
+      "activeHandIndex" : 0,
+      "options" : {
+        "hands" : "10",
+        "maxBet" : "50",
+        "startingStack" : 100,
+        "minBet" : 1
+      },
+      "dealer" : {
+        "upCard" : {
+          "rank" : "6",
+          "suit" : "DIAMOND",
+          "name" : "DIAMOND_6"
+        },
+        "cards" : [ {
+          "rank" : "6",
+          "suit" : "DIAMOND",
+          "name" : "DIAMOND_6"
+        } ],
+        "holeHidden" : true,
+        "total" : 6,
+        "soft" : false,
+        "blackjack" : false,
+        "bust" : false
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "stack" : 90,
+        "betPlaced" : true,
+        "bet" : 10,
+        "hands" : [ {
+          "cards" : [ {
+            "rank" : "10",
+            "suit" : "SPADE",
+            "name" : "SPADE_10"
+          }, {
+            "rank" : "7",
+            "suit" : "CLUB",
+            "name" : "CLUB_7"
+          }, {
+            "rank" : "10",
+            "suit" : "DIAMOND",
+            "name" : "DIAMOND_10"
+          } ],
+          "total" : 27,
+          "soft" : false,
+          "status" : "BUST",
+          "doubled" : false,
+          "fromSplit" : false
+        } ],
+        "eliminated" : false,
+        "forfeited" : false,
+        "place" : null,
+        "standing" : 1
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "stack" : 80,
+        "betPlaced" : true,
+        "bet" : 20,
+        "hands" : [ {
+          "cards" : [ {
+            "rank" : "9",
+            "suit" : "HEART",
+            "name" : "HEART_9"
+          }, {
+            "rank" : "8",
+            "suit" : "CLUB",
+            "name" : "CLUB_8"
+          } ],
+          "total" : 17,
+          "soft" : false,
+          "status" : "ACTIVE",
+          "doubled" : false,
+          "fromSplit" : false
+        } ],
+        "eliminated" : false,
+        "forfeited" : false,
+        "place" : null,
+        "standing" : 2
+      } ],
+      "lastHand" : null,
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "availableActions" : [ ],
+      "betLimits" : null,
+      "lastBet" : 10
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "STAND",
+    "eventData" : {
+      "seat" : 1,
+      "handIndex" : 0,
+      "card" : null,
+      "value" : null,
+      "cards" : null,
+      "holeCard" : null,
+      "handNumber" : null,
+      "button" : null,
+      "bets" : null,
+      "nets" : null,
+      "stacks" : null,
+      "bestSeats" : null
+    },
+    "message" : "Player 1 stood.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "blackjack",
+      "version" : 4,
+      "phase" : "BETTING",
+      "handNumber" : 2,
+      "handsTotal" : 10,
+      "solo" : false,
+      "button" : 1,
+      "currentSeat" : -1,
+      "activeHandIndex" : 0,
+      "options" : {
+        "hands" : "10",
+        "maxBet" : "50",
+        "startingStack" : 100,
+        "minBet" : 1
+      },
+      "dealer" : {
+        "upCard" : null,
+        "cards" : [ ],
+        "holeHidden" : false,
+        "total" : 0,
+        "soft" : false,
+        "blackjack" : false,
+        "bust" : false
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "stack" : 90,
+        "betPlaced" : false,
+        "bet" : null,
+        "hands" : [ ],
+        "eliminated" : false,
+        "forfeited" : false,
+        "place" : null,
+        "standing" : 1
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "stack" : 80,
+        "betPlaced" : false,
+        "bet" : null,
+        "hands" : [ ],
+        "eliminated" : false,
+        "forfeited" : false,
+        "place" : null,
+        "standing" : 2
+      } ],
+      "lastHand" : {
+        "handNumber" : 1,
+        "dealer" : {
+          "cards" : [ {
+            "rank" : "6",
+            "suit" : "DIAMOND",
+            "name" : "DIAMOND_6"
+          }, {
+            "rank" : "5",
+            "suit" : "HEART",
+            "name" : "HEART_5"
+          }, {
+            "rank" : "3",
+            "suit" : "HEART",
+            "name" : "HEART_3"
+          }, {
+            "rank" : "2",
+            "suit" : "CLUB",
+            "name" : "CLUB_2"
+          }, {
+            "rank" : "3",
+            "suit" : "CLUB",
+            "name" : "CLUB_3"
+          } ],
+          "total" : 19,
+          "bust" : false,
+          "blackjack" : false
+        },
+        "seats" : [ {
+          "seat" : 0,
+          "hands" : [ {
+            "cards" : [ {
+              "rank" : "10",
+              "suit" : "SPADE",
+              "name" : "SPADE_10"
+            }, {
+              "rank" : "7",
+              "suit" : "CLUB",
+              "name" : "CLUB_7"
+            }, {
+              "rank" : "10",
+              "suit" : "DIAMOND",
+              "name" : "DIAMOND_10"
+            } ],
+            "total" : 27,
+            "status" : "BUST",
+            "net" : -10
+          } ],
+          "net" : -10
+        }, {
+          "seat" : 1,
+          "hands" : [ {
+            "cards" : [ {
+              "rank" : "9",
+              "suit" : "HEART",
+              "name" : "HEART_9"
+            }, {
+              "rank" : "8",
+              "suit" : "CLUB",
+              "name" : "CLUB_8"
+            } ],
+            "total" : 17,
+            "status" : "STOOD",
+            "net" : -20
+          } ],
+          "net" : -20
+        } ],
+        "bestSeats" : [ ]
+      },
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "availableActions" : [ "BET" ],
+      "betLimits" : {
+        "min" : 1,
+        "max" : 50
+      },
+      "lastBet" : 10
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "DEALER_PLAY",
+    "eventData" : {
+      "seat" : null,
+      "handIndex" : null,
+      "card" : null,
+      "value" : 19,
+      "cards" : [ {
+        "rank" : "3",
+        "suit" : "HEART",
+        "name" : "HEART_3"
+      }, {
+        "rank" : "2",
+        "suit" : "CLUB",
+        "name" : "CLUB_2"
+      }, {
+        "rank" : "3",
+        "suit" : "CLUB",
+        "name" : "CLUB_3"
+      } ],
+      "holeCard" : {
+        "rank" : "5",
+        "suit" : "HEART",
+        "name" : "HEART_5"
+      },
+      "handNumber" : null,
+      "button" : null,
+      "bets" : null,
+      "nets" : null,
+      "stacks" : null,
+      "bestSeats" : null
+    },
+    "message" : "Player 1 stood.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "blackjack",
+      "version" : 4,
+      "phase" : "BETTING",
+      "handNumber" : 2,
+      "handsTotal" : 10,
+      "solo" : false,
+      "button" : 1,
+      "currentSeat" : -1,
+      "activeHandIndex" : 0,
+      "options" : {
+        "hands" : "10",
+        "maxBet" : "50",
+        "startingStack" : 100,
+        "minBet" : 1
+      },
+      "dealer" : {
+        "upCard" : null,
+        "cards" : [ ],
+        "holeHidden" : false,
+        "total" : 0,
+        "soft" : false,
+        "blackjack" : false,
+        "bust" : false
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "stack" : 90,
+        "betPlaced" : false,
+        "bet" : null,
+        "hands" : [ ],
+        "eliminated" : false,
+        "forfeited" : false,
+        "place" : null,
+        "standing" : 1
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "stack" : 80,
+        "betPlaced" : false,
+        "bet" : null,
+        "hands" : [ ],
+        "eliminated" : false,
+        "forfeited" : false,
+        "place" : null,
+        "standing" : 2
+      } ],
+      "lastHand" : {
+        "handNumber" : 1,
+        "dealer" : {
+          "cards" : [ {
+            "rank" : "6",
+            "suit" : "DIAMOND",
+            "name" : "DIAMOND_6"
+          }, {
+            "rank" : "5",
+            "suit" : "HEART",
+            "name" : "HEART_5"
+          }, {
+            "rank" : "3",
+            "suit" : "HEART",
+            "name" : "HEART_3"
+          }, {
+            "rank" : "2",
+            "suit" : "CLUB",
+            "name" : "CLUB_2"
+          }, {
+            "rank" : "3",
+            "suit" : "CLUB",
+            "name" : "CLUB_3"
+          } ],
+          "total" : 19,
+          "bust" : false,
+          "blackjack" : false
+        },
+        "seats" : [ {
+          "seat" : 0,
+          "hands" : [ {
+            "cards" : [ {
+              "rank" : "10",
+              "suit" : "SPADE",
+              "name" : "SPADE_10"
+            }, {
+              "rank" : "7",
+              "suit" : "CLUB",
+              "name" : "CLUB_7"
+            }, {
+              "rank" : "10",
+              "suit" : "DIAMOND",
+              "name" : "DIAMOND_10"
+            } ],
+            "total" : 27,
+            "status" : "BUST",
+            "net" : -10
+          } ],
+          "net" : -10
+        }, {
+          "seat" : 1,
+          "hands" : [ {
+            "cards" : [ {
+              "rank" : "9",
+              "suit" : "HEART",
+              "name" : "HEART_9"
+            }, {
+              "rank" : "8",
+              "suit" : "CLUB",
+              "name" : "CLUB_8"
+            } ],
+            "total" : 17,
+            "status" : "STOOD",
+            "net" : -20
+          } ],
+          "net" : -20
+        } ],
+        "bestSeats" : [ ]
+      },
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "availableActions" : [ "BET" ],
+      "betLimits" : {
+        "min" : 1,
+        "max" : 50
+      },
+      "lastBet" : 10
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "SETTLE",
+    "eventData" : {
+      "seat" : null,
+      "handIndex" : null,
+      "card" : null,
+      "value" : null,
+      "cards" : null,
+      "holeCard" : null,
+      "handNumber" : 1,
+      "button" : null,
+      "bets" : null,
+      "nets" : {
+        "0" : -10,
+        "1" : -20
+      },
+      "stacks" : {
+        "0" : 90,
+        "1" : 80
+      },
+      "bestSeats" : [ ]
+    },
+    "message" : "Player 1 stood.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "blackjack",
+      "version" : 4,
+      "phase" : "BETTING",
+      "handNumber" : 2,
+      "handsTotal" : 10,
+      "solo" : false,
+      "button" : 1,
+      "currentSeat" : -1,
+      "activeHandIndex" : 0,
+      "options" : {
+        "hands" : "10",
+        "maxBet" : "50",
+        "startingStack" : 100,
+        "minBet" : 1
+      },
+      "dealer" : {
+        "upCard" : null,
+        "cards" : [ ],
+        "holeHidden" : false,
+        "total" : 0,
+        "soft" : false,
+        "blackjack" : false,
+        "bust" : false
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "stack" : 90,
+        "betPlaced" : false,
+        "bet" : null,
+        "hands" : [ ],
+        "eliminated" : false,
+        "forfeited" : false,
+        "place" : null,
+        "standing" : 1
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "stack" : 80,
+        "betPlaced" : false,
+        "bet" : null,
+        "hands" : [ ],
+        "eliminated" : false,
+        "forfeited" : false,
+        "place" : null,
+        "standing" : 2
+      } ],
+      "lastHand" : {
+        "handNumber" : 1,
+        "dealer" : {
+          "cards" : [ {
+            "rank" : "6",
+            "suit" : "DIAMOND",
+            "name" : "DIAMOND_6"
+          }, {
+            "rank" : "5",
+            "suit" : "HEART",
+            "name" : "HEART_5"
+          }, {
+            "rank" : "3",
+            "suit" : "HEART",
+            "name" : "HEART_3"
+          }, {
+            "rank" : "2",
+            "suit" : "CLUB",
+            "name" : "CLUB_2"
+          }, {
+            "rank" : "3",
+            "suit" : "CLUB",
+            "name" : "CLUB_3"
+          } ],
+          "total" : 19,
+          "bust" : false,
+          "blackjack" : false
+        },
+        "seats" : [ {
+          "seat" : 0,
+          "hands" : [ {
+            "cards" : [ {
+              "rank" : "10",
+              "suit" : "SPADE",
+              "name" : "SPADE_10"
+            }, {
+              "rank" : "7",
+              "suit" : "CLUB",
+              "name" : "CLUB_7"
+            }, {
+              "rank" : "10",
+              "suit" : "DIAMOND",
+              "name" : "DIAMOND_10"
+            } ],
+            "total" : 27,
+            "status" : "BUST",
+            "net" : -10
+          } ],
+          "net" : -10
+        }, {
+          "seat" : 1,
+          "hands" : [ {
+            "cards" : [ {
+              "rank" : "9",
+              "suit" : "HEART",
+              "name" : "HEART_9"
+            }, {
+              "rank" : "8",
+              "suit" : "CLUB",
+              "name" : "CLUB_8"
+            } ],
+            "total" : 17,
+            "status" : "STOOD",
+            "net" : -20
+          } ],
+          "net" : -20
+        } ],
+        "bestSeats" : [ ]
+      },
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "availableActions" : [ "BET" ],
+      "betLimits" : {
+        "min" : 1,
+        "max" : 50
+      },
+      "lastBet" : 10
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "SPLIT",
+    "eventData" : {
+      "seat" : 0,
+      "handIndex" : null,
+      "card" : null,
+      "value" : null,
+      "cards" : [ {
+        "rank" : "8",
+        "suit" : "SPADE",
+        "name" : "SPADE_8"
+      }, {
+        "rank" : "3",
+        "suit" : "HEART",
+        "name" : "HEART_3"
+      }, {
+        "rank" : "8",
+        "suit" : "CLUB",
+        "name" : "CLUB_8"
+      } ],
+      "holeCard" : null,
+      "handNumber" : null,
+      "button" : null,
+      "bets" : null,
+      "nets" : null,
+      "stacks" : null,
+      "bestSeats" : null
+    },
+    "message" : "Player 0 split.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "blackjack",
+      "version" : 2,
+      "phase" : "PLAYING",
+      "handNumber" : 1,
+      "handsTotal" : 10,
+      "solo" : true,
+      "button" : 0,
+      "currentSeat" : 0,
+      "activeHandIndex" : 0,
+      "options" : {
+        "hands" : "10",
+        "maxBet" : "50",
+        "startingStack" : 100,
+        "minBet" : 1
+      },
+      "dealer" : {
+        "upCard" : {
+          "rank" : "6",
+          "suit" : "DIAMOND",
+          "name" : "DIAMOND_6"
+        },
+        "cards" : [ {
+          "rank" : "6",
+          "suit" : "DIAMOND",
+          "name" : "DIAMOND_6"
+        } ],
+        "holeHidden" : true,
+        "total" : 6,
+        "soft" : false,
+        "blackjack" : false,
+        "bust" : false
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "stack" : 80,
+        "betPlaced" : true,
+        "bet" : 10,
+        "hands" : [ {
+          "cards" : [ {
+            "rank" : "8",
+            "suit" : "SPADE",
+            "name" : "SPADE_8"
+          }, {
+            "rank" : "3",
+            "suit" : "HEART",
+            "name" : "HEART_3"
+          } ],
+          "total" : 11,
+          "soft" : false,
+          "status" : "ACTIVE",
+          "doubled" : false,
+          "fromSplit" : true
+        }, {
+          "cards" : [ {
+            "rank" : "8",
+            "suit" : "CLUB",
+            "name" : "CLUB_8"
+          } ],
+          "total" : 8,
+          "soft" : false,
+          "status" : "WAITING",
+          "doubled" : false,
+          "fromSplit" : true
+        } ],
+        "eliminated" : false,
+        "forfeited" : false,
+        "place" : null,
+        "standing" : 1
+      } ],
+      "lastHand" : null,
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "availableActions" : [ "HIT", "STAND", "DOUBLE" ],
+      "betLimits" : null,
+      "lastBet" : 10
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "DOUBLE",
+    "eventData" : {
+      "seat" : 0,
+      "handIndex" : 0,
+      "card" : {
+        "rank" : "10",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_10"
+      },
+      "value" : 21,
+      "cards" : null,
+      "holeCard" : null,
+      "handNumber" : null,
+      "button" : null,
+      "bets" : null,
+      "nets" : null,
+      "stacks" : null,
+      "bestSeats" : null
+    },
+    "message" : "Player 0 doubled.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "blackjack",
+      "version" : 2,
+      "phase" : "BETTING",
+      "handNumber" : 2,
+      "handsTotal" : 10,
+      "solo" : true,
+      "button" : 0,
+      "currentSeat" : -1,
+      "activeHandIndex" : 0,
+      "options" : {
+        "hands" : "10",
+        "maxBet" : "50",
+        "startingStack" : 100,
+        "minBet" : 1
+      },
+      "dealer" : {
+        "upCard" : null,
+        "cards" : [ ],
+        "holeHidden" : false,
+        "total" : 0,
+        "soft" : false,
+        "blackjack" : false,
+        "bust" : false
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "stack" : 120,
+        "betPlaced" : false,
+        "bet" : null,
+        "hands" : [ ],
+        "eliminated" : false,
+        "forfeited" : false,
+        "place" : null,
+        "standing" : 1
+      } ],
+      "lastHand" : {
+        "handNumber" : 1,
+        "dealer" : {
+          "cards" : [ {
+            "rank" : "6",
+            "suit" : "DIAMOND",
+            "name" : "DIAMOND_6"
+          }, {
+            "rank" : "5",
+            "suit" : "HEART",
+            "name" : "HEART_5"
+          }, {
+            "rank" : "2",
+            "suit" : "CLUB",
+            "name" : "CLUB_2"
+          }, {
+            "rank" : "3",
+            "suit" : "CLUB",
+            "name" : "CLUB_3"
+          }, {
+            "rank" : "4",
+            "suit" : "CLUB",
+            "name" : "CLUB_4"
+          } ],
+          "total" : 20,
+          "bust" : false,
+          "blackjack" : false
+        },
+        "seats" : [ {
+          "seat" : 0,
+          "hands" : [ {
+            "cards" : [ {
+              "rank" : "5",
+              "suit" : "SPADE",
+              "name" : "SPADE_5"
+            }, {
+              "rank" : "6",
+              "suit" : "CLUB",
+              "name" : "CLUB_6"
+            }, {
+              "rank" : "10",
+              "suit" : "DIAMOND",
+              "name" : "DIAMOND_10"
+            } ],
+            "total" : 21,
+            "status" : "STOOD",
+            "net" : 20
+          } ],
+          "net" : 20
+        } ],
+        "bestSeats" : [ 0 ]
+      },
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "availableActions" : [ "BET" ],
+      "betLimits" : {
+        "min" : 1,
+        "max" : 50
+      },
+      "lastBet" : 10
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "DEALER_PLAY",
+    "eventData" : {
+      "seat" : null,
+      "handIndex" : null,
+      "card" : null,
+      "value" : 20,
+      "cards" : [ {
+        "rank" : "2",
+        "suit" : "CLUB",
+        "name" : "CLUB_2"
+      }, {
+        "rank" : "3",
+        "suit" : "CLUB",
+        "name" : "CLUB_3"
+      }, {
+        "rank" : "4",
+        "suit" : "CLUB",
+        "name" : "CLUB_4"
+      } ],
+      "holeCard" : {
+        "rank" : "5",
+        "suit" : "HEART",
+        "name" : "HEART_5"
+      },
+      "handNumber" : null,
+      "button" : null,
+      "bets" : null,
+      "nets" : null,
+      "stacks" : null,
+      "bestSeats" : null
+    },
+    "message" : "Player 0 doubled.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "blackjack",
+      "version" : 2,
+      "phase" : "BETTING",
+      "handNumber" : 2,
+      "handsTotal" : 10,
+      "solo" : true,
+      "button" : 0,
+      "currentSeat" : -1,
+      "activeHandIndex" : 0,
+      "options" : {
+        "hands" : "10",
+        "maxBet" : "50",
+        "startingStack" : 100,
+        "minBet" : 1
+      },
+      "dealer" : {
+        "upCard" : null,
+        "cards" : [ ],
+        "holeHidden" : false,
+        "total" : 0,
+        "soft" : false,
+        "blackjack" : false,
+        "bust" : false
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "stack" : 120,
+        "betPlaced" : false,
+        "bet" : null,
+        "hands" : [ ],
+        "eliminated" : false,
+        "forfeited" : false,
+        "place" : null,
+        "standing" : 1
+      } ],
+      "lastHand" : {
+        "handNumber" : 1,
+        "dealer" : {
+          "cards" : [ {
+            "rank" : "6",
+            "suit" : "DIAMOND",
+            "name" : "DIAMOND_6"
+          }, {
+            "rank" : "5",
+            "suit" : "HEART",
+            "name" : "HEART_5"
+          }, {
+            "rank" : "2",
+            "suit" : "CLUB",
+            "name" : "CLUB_2"
+          }, {
+            "rank" : "3",
+            "suit" : "CLUB",
+            "name" : "CLUB_3"
+          }, {
+            "rank" : "4",
+            "suit" : "CLUB",
+            "name" : "CLUB_4"
+          } ],
+          "total" : 20,
+          "bust" : false,
+          "blackjack" : false
+        },
+        "seats" : [ {
+          "seat" : 0,
+          "hands" : [ {
+            "cards" : [ {
+              "rank" : "5",
+              "suit" : "SPADE",
+              "name" : "SPADE_5"
+            }, {
+              "rank" : "6",
+              "suit" : "CLUB",
+              "name" : "CLUB_6"
+            }, {
+              "rank" : "10",
+              "suit" : "DIAMOND",
+              "name" : "DIAMOND_10"
+            } ],
+            "total" : 21,
+            "status" : "STOOD",
+            "net" : 20
+          } ],
+          "net" : 20
+        } ],
+        "bestSeats" : [ 0 ]
+      },
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "availableActions" : [ "BET" ],
+      "betLimits" : {
+        "min" : 1,
+        "max" : 50
+      },
+      "lastBet" : 10
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "SETTLE",
+    "eventData" : {
+      "seat" : null,
+      "handIndex" : null,
+      "card" : null,
+      "value" : null,
+      "cards" : null,
+      "holeCard" : null,
+      "handNumber" : 1,
+      "button" : null,
+      "bets" : null,
+      "nets" : {
+        "0" : 20
+      },
+      "stacks" : {
+        "0" : 120
+      },
+      "bestSeats" : [ 0 ]
+    },
+    "message" : "Player 0 doubled.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "blackjack",
+      "version" : 2,
+      "phase" : "BETTING",
+      "handNumber" : 2,
+      "handsTotal" : 10,
+      "solo" : true,
+      "button" : 0,
+      "currentSeat" : -1,
+      "activeHandIndex" : 0,
+      "options" : {
+        "hands" : "10",
+        "maxBet" : "50",
+        "startingStack" : 100,
+        "minBet" : 1
+      },
+      "dealer" : {
+        "upCard" : null,
+        "cards" : [ ],
+        "holeHidden" : false,
+        "total" : 0,
+        "soft" : false,
+        "blackjack" : false,
+        "bust" : false
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "stack" : 120,
+        "betPlaced" : false,
+        "bet" : null,
+        "hands" : [ ],
+        "eliminated" : false,
+        "forfeited" : false,
+        "place" : null,
+        "standing" : 1
+      } ],
+      "lastHand" : {
+        "handNumber" : 1,
+        "dealer" : {
+          "cards" : [ {
+            "rank" : "6",
+            "suit" : "DIAMOND",
+            "name" : "DIAMOND_6"
+          }, {
+            "rank" : "5",
+            "suit" : "HEART",
+            "name" : "HEART_5"
+          }, {
+            "rank" : "2",
+            "suit" : "CLUB",
+            "name" : "CLUB_2"
+          }, {
+            "rank" : "3",
+            "suit" : "CLUB",
+            "name" : "CLUB_3"
+          }, {
+            "rank" : "4",
+            "suit" : "CLUB",
+            "name" : "CLUB_4"
+          } ],
+          "total" : 20,
+          "bust" : false,
+          "blackjack" : false
+        },
+        "seats" : [ {
+          "seat" : 0,
+          "hands" : [ {
+            "cards" : [ {
+              "rank" : "5",
+              "suit" : "SPADE",
+              "name" : "SPADE_5"
+            }, {
+              "rank" : "6",
+              "suit" : "CLUB",
+              "name" : "CLUB_6"
+            }, {
+              "rank" : "10",
+              "suit" : "DIAMOND",
+              "name" : "DIAMOND_10"
+            } ],
+            "total" : 21,
+            "status" : "STOOD",
+            "net" : 20
+          } ],
+          "net" : 20
+        } ],
+        "bestSeats" : [ 0 ]
+      },
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "availableActions" : [ "BET" ],
+      "betLimits" : {
+        "min" : 1,
+        "max" : 50
+      },
+      "lastBet" : 10
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "STAND",
+    "eventData" : {
+      "seat" : 0,
+      "handIndex" : 0,
+      "card" : null,
+      "value" : null,
+      "cards" : null,
+      "holeCard" : null,
+      "handNumber" : null,
+      "button" : null,
+      "bets" : null,
+      "nets" : null,
+      "stacks" : null,
+      "bestSeats" : null
+    },
+    "message" : "Player 0 stood.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "blackjack",
+      "version" : 3,
+      "phase" : "PLAYING",
+      "handNumber" : 1,
+      "handsTotal" : 10,
+      "solo" : false,
+      "button" : 0,
+      "currentSeat" : 1,
+      "activeHandIndex" : 0,
+      "options" : {
+        "hands" : "10",
+        "maxBet" : "100",
+        "startingStack" : 100,
+        "minBet" : 1
+      },
+      "dealer" : {
+        "upCard" : {
+          "rank" : "6",
+          "suit" : "DIAMOND",
+          "name" : "DIAMOND_6"
+        },
+        "cards" : [ {
+          "rank" : "6",
+          "suit" : "DIAMOND",
+          "name" : "DIAMOND_6"
+        } ],
+        "holeHidden" : true,
+        "total" : 6,
+        "soft" : false,
+        "blackjack" : false,
+        "bust" : false
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "stack" : 0,
+        "betPlaced" : true,
+        "bet" : 100,
+        "hands" : [ {
+          "cards" : [ {
+            "rank" : "10",
+            "suit" : "SPADE",
+            "name" : "SPADE_10"
+          }, {
+            "rank" : "7",
+            "suit" : "CLUB",
+            "name" : "CLUB_7"
+          } ],
+          "total" : 17,
+          "soft" : false,
+          "status" : "STOOD",
+          "doubled" : false,
+          "fromSplit" : false
+        } ],
+        "eliminated" : false,
+        "forfeited" : false,
+        "place" : null,
+        "standing" : 2
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "stack" : 90,
+        "betPlaced" : true,
+        "bet" : 10,
+        "hands" : [ {
+          "cards" : [ {
+            "rank" : "9",
+            "suit" : "HEART",
+            "name" : "HEART_9"
+          }, {
+            "rank" : "8",
+            "suit" : "CLUB",
+            "name" : "CLUB_8"
+          } ],
+          "total" : 17,
+          "soft" : false,
+          "status" : "ACTIVE",
+          "doubled" : false,
+          "fromSplit" : false
+        } ],
+        "eliminated" : false,
+        "forfeited" : false,
+        "place" : null,
+        "standing" : 1
+      } ],
+      "lastHand" : null,
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "availableActions" : [ ],
+      "betLimits" : null,
+      "lastBet" : 100
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "STAND",
+    "eventData" : {
+      "seat" : 1,
+      "handIndex" : 0,
+      "card" : null,
+      "value" : null,
+      "cards" : null,
+      "holeCard" : null,
+      "handNumber" : null,
+      "button" : null,
+      "bets" : null,
+      "nets" : null,
+      "stacks" : null,
+      "bestSeats" : null
+    },
+    "message" : "Player 1 stood.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "blackjack",
+      "version" : 4,
+      "phase" : "FINISHED",
+      "handNumber" : 1,
+      "handsTotal" : 10,
+      "solo" : false,
+      "button" : 0,
+      "currentSeat" : -1,
+      "activeHandIndex" : 0,
+      "options" : {
+        "hands" : "10",
+        "maxBet" : "100",
+        "startingStack" : 100,
+        "minBet" : 1
+      },
+      "dealer" : {
+        "upCard" : {
+          "rank" : "6",
+          "suit" : "DIAMOND",
+          "name" : "DIAMOND_6"
+        },
+        "cards" : [ {
+          "rank" : "6",
+          "suit" : "DIAMOND",
+          "name" : "DIAMOND_6"
+        }, {
+          "rank" : "5",
+          "suit" : "HEART",
+          "name" : "HEART_5"
+        }, {
+          "rank" : "10",
+          "suit" : "DIAMOND",
+          "name" : "DIAMOND_10"
+        } ],
+        "holeHidden" : false,
+        "total" : 21,
+        "soft" : false,
+        "blackjack" : false,
+        "bust" : false
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "stack" : 0,
+        "betPlaced" : true,
+        "bet" : 100,
+        "hands" : [ {
+          "cards" : [ {
+            "rank" : "10",
+            "suit" : "SPADE",
+            "name" : "SPADE_10"
+          }, {
+            "rank" : "7",
+            "suit" : "CLUB",
+            "name" : "CLUB_7"
+          } ],
+          "total" : 17,
+          "soft" : false,
+          "status" : "STOOD",
+          "doubled" : false,
+          "fromSplit" : false,
+          "net" : -100
+        } ],
+        "eliminated" : true,
+        "forfeited" : false,
+        "place" : 2,
+        "standing" : 0
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "stack" : 90,
+        "betPlaced" : true,
+        "bet" : 10,
+        "hands" : [ {
+          "cards" : [ {
+            "rank" : "9",
+            "suit" : "HEART",
+            "name" : "HEART_9"
+          }, {
+            "rank" : "8",
+            "suit" : "CLUB",
+            "name" : "CLUB_8"
+          } ],
+          "total" : 17,
+          "soft" : false,
+          "status" : "STOOD",
+          "doubled" : false,
+          "fromSplit" : false,
+          "net" : -10
+        } ],
+        "eliminated" : false,
+        "forfeited" : false,
+        "place" : 1,
+        "standing" : 1
+      } ],
+      "lastHand" : {
+        "handNumber" : 1,
+        "dealer" : {
+          "cards" : [ {
+            "rank" : "6",
+            "suit" : "DIAMOND",
+            "name" : "DIAMOND_6"
+          }, {
+            "rank" : "5",
+            "suit" : "HEART",
+            "name" : "HEART_5"
+          }, {
+            "rank" : "10",
+            "suit" : "DIAMOND",
+            "name" : "DIAMOND_10"
+          } ],
+          "total" : 21,
+          "bust" : false,
+          "blackjack" : false
+        },
+        "seats" : [ {
+          "seat" : 0,
+          "hands" : [ {
+            "cards" : [ {
+              "rank" : "10",
+              "suit" : "SPADE",
+              "name" : "SPADE_10"
+            }, {
+              "rank" : "7",
+              "suit" : "CLUB",
+              "name" : "CLUB_7"
+            } ],
+            "total" : 17,
+            "status" : "STOOD",
+            "net" : -100
+          } ],
+          "net" : -100
+        }, {
+          "seat" : 1,
+          "hands" : [ {
+            "cards" : [ {
+              "rank" : "9",
+              "suit" : "HEART",
+              "name" : "HEART_9"
+            }, {
+              "rank" : "8",
+              "suit" : "CLUB",
+              "name" : "CLUB_8"
+            } ],
+            "total" : 17,
+            "status" : "STOOD",
+            "net" : -10
+          } ],
+          "net" : -10
+        } ],
+        "bestSeats" : [ ]
+      },
+      "outcome" : {
+        "status" : "FINISHED",
+        "places" : {
+          "0" : 2,
+          "1" : 1
+        },
+        "stacks" : {
+          "0" : 0,
+          "1" : 90
+        },
+        "reason" : "LAST_STANDING"
+      },
+      "availableActions" : [ ],
+      "betLimits" : null,
+      "lastBet" : 100
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "DEALER_PLAY",
+    "eventData" : {
+      "seat" : null,
+      "handIndex" : null,
+      "card" : null,
+      "value" : 21,
+      "cards" : [ {
+        "rank" : "10",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_10"
+      } ],
+      "holeCard" : {
+        "rank" : "5",
+        "suit" : "HEART",
+        "name" : "HEART_5"
+      },
+      "handNumber" : null,
+      "button" : null,
+      "bets" : null,
+      "nets" : null,
+      "stacks" : null,
+      "bestSeats" : null
+    },
+    "message" : "Player 1 stood.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "blackjack",
+      "version" : 4,
+      "phase" : "FINISHED",
+      "handNumber" : 1,
+      "handsTotal" : 10,
+      "solo" : false,
+      "button" : 0,
+      "currentSeat" : -1,
+      "activeHandIndex" : 0,
+      "options" : {
+        "hands" : "10",
+        "maxBet" : "100",
+        "startingStack" : 100,
+        "minBet" : 1
+      },
+      "dealer" : {
+        "upCard" : {
+          "rank" : "6",
+          "suit" : "DIAMOND",
+          "name" : "DIAMOND_6"
+        },
+        "cards" : [ {
+          "rank" : "6",
+          "suit" : "DIAMOND",
+          "name" : "DIAMOND_6"
+        }, {
+          "rank" : "5",
+          "suit" : "HEART",
+          "name" : "HEART_5"
+        }, {
+          "rank" : "10",
+          "suit" : "DIAMOND",
+          "name" : "DIAMOND_10"
+        } ],
+        "holeHidden" : false,
+        "total" : 21,
+        "soft" : false,
+        "blackjack" : false,
+        "bust" : false
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "stack" : 0,
+        "betPlaced" : true,
+        "bet" : 100,
+        "hands" : [ {
+          "cards" : [ {
+            "rank" : "10",
+            "suit" : "SPADE",
+            "name" : "SPADE_10"
+          }, {
+            "rank" : "7",
+            "suit" : "CLUB",
+            "name" : "CLUB_7"
+          } ],
+          "total" : 17,
+          "soft" : false,
+          "status" : "STOOD",
+          "doubled" : false,
+          "fromSplit" : false,
+          "net" : -100
+        } ],
+        "eliminated" : true,
+        "forfeited" : false,
+        "place" : 2,
+        "standing" : 0
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "stack" : 90,
+        "betPlaced" : true,
+        "bet" : 10,
+        "hands" : [ {
+          "cards" : [ {
+            "rank" : "9",
+            "suit" : "HEART",
+            "name" : "HEART_9"
+          }, {
+            "rank" : "8",
+            "suit" : "CLUB",
+            "name" : "CLUB_8"
+          } ],
+          "total" : 17,
+          "soft" : false,
+          "status" : "STOOD",
+          "doubled" : false,
+          "fromSplit" : false,
+          "net" : -10
+        } ],
+        "eliminated" : false,
+        "forfeited" : false,
+        "place" : 1,
+        "standing" : 1
+      } ],
+      "lastHand" : {
+        "handNumber" : 1,
+        "dealer" : {
+          "cards" : [ {
+            "rank" : "6",
+            "suit" : "DIAMOND",
+            "name" : "DIAMOND_6"
+          }, {
+            "rank" : "5",
+            "suit" : "HEART",
+            "name" : "HEART_5"
+          }, {
+            "rank" : "10",
+            "suit" : "DIAMOND",
+            "name" : "DIAMOND_10"
+          } ],
+          "total" : 21,
+          "bust" : false,
+          "blackjack" : false
+        },
+        "seats" : [ {
+          "seat" : 0,
+          "hands" : [ {
+            "cards" : [ {
+              "rank" : "10",
+              "suit" : "SPADE",
+              "name" : "SPADE_10"
+            }, {
+              "rank" : "7",
+              "suit" : "CLUB",
+              "name" : "CLUB_7"
+            } ],
+            "total" : 17,
+            "status" : "STOOD",
+            "net" : -100
+          } ],
+          "net" : -100
+        }, {
+          "seat" : 1,
+          "hands" : [ {
+            "cards" : [ {
+              "rank" : "9",
+              "suit" : "HEART",
+              "name" : "HEART_9"
+            }, {
+              "rank" : "8",
+              "suit" : "CLUB",
+              "name" : "CLUB_8"
+            } ],
+            "total" : 17,
+            "status" : "STOOD",
+            "net" : -10
+          } ],
+          "net" : -10
+        } ],
+        "bestSeats" : [ ]
+      },
+      "outcome" : {
+        "status" : "FINISHED",
+        "places" : {
+          "0" : 2,
+          "1" : 1
+        },
+        "stacks" : {
+          "0" : 0,
+          "1" : 90
+        },
+        "reason" : "LAST_STANDING"
+      },
+      "availableActions" : [ ],
+      "betLimits" : null,
+      "lastBet" : 100
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "SETTLE",
+    "eventData" : {
+      "seat" : null,
+      "handIndex" : null,
+      "card" : null,
+      "value" : null,
+      "cards" : null,
+      "holeCard" : null,
+      "handNumber" : 1,
+      "button" : null,
+      "bets" : null,
+      "nets" : {
+        "0" : -100,
+        "1" : -10
+      },
+      "stacks" : {
+        "0" : 0,
+        "1" : 90
+      },
+      "bestSeats" : [ ]
+    },
+    "message" : "Player 1 stood.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "blackjack",
+      "version" : 4,
+      "phase" : "FINISHED",
+      "handNumber" : 1,
+      "handsTotal" : 10,
+      "solo" : false,
+      "button" : 0,
+      "currentSeat" : -1,
+      "activeHandIndex" : 0,
+      "options" : {
+        "hands" : "10",
+        "maxBet" : "100",
+        "startingStack" : 100,
+        "minBet" : 1
+      },
+      "dealer" : {
+        "upCard" : {
+          "rank" : "6",
+          "suit" : "DIAMOND",
+          "name" : "DIAMOND_6"
+        },
+        "cards" : [ {
+          "rank" : "6",
+          "suit" : "DIAMOND",
+          "name" : "DIAMOND_6"
+        }, {
+          "rank" : "5",
+          "suit" : "HEART",
+          "name" : "HEART_5"
+        }, {
+          "rank" : "10",
+          "suit" : "DIAMOND",
+          "name" : "DIAMOND_10"
+        } ],
+        "holeHidden" : false,
+        "total" : 21,
+        "soft" : false,
+        "blackjack" : false,
+        "bust" : false
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "stack" : 0,
+        "betPlaced" : true,
+        "bet" : 100,
+        "hands" : [ {
+          "cards" : [ {
+            "rank" : "10",
+            "suit" : "SPADE",
+            "name" : "SPADE_10"
+          }, {
+            "rank" : "7",
+            "suit" : "CLUB",
+            "name" : "CLUB_7"
+          } ],
+          "total" : 17,
+          "soft" : false,
+          "status" : "STOOD",
+          "doubled" : false,
+          "fromSplit" : false,
+          "net" : -100
+        } ],
+        "eliminated" : true,
+        "forfeited" : false,
+        "place" : 2,
+        "standing" : 0
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "stack" : 90,
+        "betPlaced" : true,
+        "bet" : 10,
+        "hands" : [ {
+          "cards" : [ {
+            "rank" : "9",
+            "suit" : "HEART",
+            "name" : "HEART_9"
+          }, {
+            "rank" : "8",
+            "suit" : "CLUB",
+            "name" : "CLUB_8"
+          } ],
+          "total" : 17,
+          "soft" : false,
+          "status" : "STOOD",
+          "doubled" : false,
+          "fromSplit" : false,
+          "net" : -10
+        } ],
+        "eliminated" : false,
+        "forfeited" : false,
+        "place" : 1,
+        "standing" : 1
+      } ],
+      "lastHand" : {
+        "handNumber" : 1,
+        "dealer" : {
+          "cards" : [ {
+            "rank" : "6",
+            "suit" : "DIAMOND",
+            "name" : "DIAMOND_6"
+          }, {
+            "rank" : "5",
+            "suit" : "HEART",
+            "name" : "HEART_5"
+          }, {
+            "rank" : "10",
+            "suit" : "DIAMOND",
+            "name" : "DIAMOND_10"
+          } ],
+          "total" : 21,
+          "bust" : false,
+          "blackjack" : false
+        },
+        "seats" : [ {
+          "seat" : 0,
+          "hands" : [ {
+            "cards" : [ {
+              "rank" : "10",
+              "suit" : "SPADE",
+              "name" : "SPADE_10"
+            }, {
+              "rank" : "7",
+              "suit" : "CLUB",
+              "name" : "CLUB_7"
+            } ],
+            "total" : 17,
+            "status" : "STOOD",
+            "net" : -100
+          } ],
+          "net" : -100
+        }, {
+          "seat" : 1,
+          "hands" : [ {
+            "cards" : [ {
+              "rank" : "9",
+              "suit" : "HEART",
+              "name" : "HEART_9"
+            }, {
+              "rank" : "8",
+              "suit" : "CLUB",
+              "name" : "CLUB_8"
+            } ],
+            "total" : 17,
+            "status" : "STOOD",
+            "net" : -10
+          } ],
+          "net" : -10
+        } ],
+        "bestSeats" : [ ]
+      },
+      "outcome" : {
+        "status" : "FINISHED",
+        "places" : {
+          "0" : 2,
+          "1" : 1
+        },
+        "stacks" : {
+          "0" : 0,
+          "1" : 90
+        },
+        "reason" : "LAST_STANDING"
+      },
+      "availableActions" : [ ],
+      "betLimits" : null,
+      "lastBet" : 100
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "ELIMINATED",
+    "eventData" : {
+      "seat" : 0,
+      "handIndex" : null,
+      "card" : null,
+      "value" : null,
+      "cards" : null,
+      "holeCard" : null,
+      "handNumber" : 1,
+      "button" : null,
+      "bets" : null,
+      "nets" : null,
+      "stacks" : null,
+      "bestSeats" : null
+    },
+    "message" : "Player 1 stood.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "blackjack",
+      "version" : 4,
+      "phase" : "FINISHED",
+      "handNumber" : 1,
+      "handsTotal" : 10,
+      "solo" : false,
+      "button" : 0,
+      "currentSeat" : -1,
+      "activeHandIndex" : 0,
+      "options" : {
+        "hands" : "10",
+        "maxBet" : "100",
+        "startingStack" : 100,
+        "minBet" : 1
+      },
+      "dealer" : {
+        "upCard" : {
+          "rank" : "6",
+          "suit" : "DIAMOND",
+          "name" : "DIAMOND_6"
+        },
+        "cards" : [ {
+          "rank" : "6",
+          "suit" : "DIAMOND",
+          "name" : "DIAMOND_6"
+        }, {
+          "rank" : "5",
+          "suit" : "HEART",
+          "name" : "HEART_5"
+        }, {
+          "rank" : "10",
+          "suit" : "DIAMOND",
+          "name" : "DIAMOND_10"
+        } ],
+        "holeHidden" : false,
+        "total" : 21,
+        "soft" : false,
+        "blackjack" : false,
+        "bust" : false
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "stack" : 0,
+        "betPlaced" : true,
+        "bet" : 100,
+        "hands" : [ {
+          "cards" : [ {
+            "rank" : "10",
+            "suit" : "SPADE",
+            "name" : "SPADE_10"
+          }, {
+            "rank" : "7",
+            "suit" : "CLUB",
+            "name" : "CLUB_7"
+          } ],
+          "total" : 17,
+          "soft" : false,
+          "status" : "STOOD",
+          "doubled" : false,
+          "fromSplit" : false,
+          "net" : -100
+        } ],
+        "eliminated" : true,
+        "forfeited" : false,
+        "place" : 2,
+        "standing" : 0
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "stack" : 90,
+        "betPlaced" : true,
+        "bet" : 10,
+        "hands" : [ {
+          "cards" : [ {
+            "rank" : "9",
+            "suit" : "HEART",
+            "name" : "HEART_9"
+          }, {
+            "rank" : "8",
+            "suit" : "CLUB",
+            "name" : "CLUB_8"
+          } ],
+          "total" : 17,
+          "soft" : false,
+          "status" : "STOOD",
+          "doubled" : false,
+          "fromSplit" : false,
+          "net" : -10
+        } ],
+        "eliminated" : false,
+        "forfeited" : false,
+        "place" : 1,
+        "standing" : 1
+      } ],
+      "lastHand" : {
+        "handNumber" : 1,
+        "dealer" : {
+          "cards" : [ {
+            "rank" : "6",
+            "suit" : "DIAMOND",
+            "name" : "DIAMOND_6"
+          }, {
+            "rank" : "5",
+            "suit" : "HEART",
+            "name" : "HEART_5"
+          }, {
+            "rank" : "10",
+            "suit" : "DIAMOND",
+            "name" : "DIAMOND_10"
+          } ],
+          "total" : 21,
+          "bust" : false,
+          "blackjack" : false
+        },
+        "seats" : [ {
+          "seat" : 0,
+          "hands" : [ {
+            "cards" : [ {
+              "rank" : "10",
+              "suit" : "SPADE",
+              "name" : "SPADE_10"
+            }, {
+              "rank" : "7",
+              "suit" : "CLUB",
+              "name" : "CLUB_7"
+            } ],
+            "total" : 17,
+            "status" : "STOOD",
+            "net" : -100
+          } ],
+          "net" : -100
+        }, {
+          "seat" : 1,
+          "hands" : [ {
+            "cards" : [ {
+              "rank" : "9",
+              "suit" : "HEART",
+              "name" : "HEART_9"
+            }, {
+              "rank" : "8",
+              "suit" : "CLUB",
+              "name" : "CLUB_8"
+            } ],
+            "total" : 17,
+            "status" : "STOOD",
+            "net" : -10
+          } ],
+          "net" : -10
+        } ],
+        "bestSeats" : [ ]
+      },
+      "outcome" : {
+        "status" : "FINISHED",
+        "places" : {
+          "0" : 2,
+          "1" : 1
+        },
+        "stacks" : {
+          "0" : 0,
+          "1" : 90
+        },
+        "reason" : "LAST_STANDING"
+      },
+      "availableActions" : [ ],
+      "betLimits" : null,
+      "lastBet" : 100
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "GAME_OVER",
+    "eventData" : {
+      "seat" : null,
+      "handIndex" : null,
+      "card" : null,
+      "value" : null,
+      "cards" : null,
+      "holeCard" : null,
+      "handNumber" : null,
+      "button" : null,
+      "bets" : null,
+      "nets" : null,
+      "stacks" : null,
+      "bestSeats" : null
+    },
+    "message" : "Player 1 stood.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "blackjack",
+      "version" : 4,
+      "phase" : "FINISHED",
+      "handNumber" : 1,
+      "handsTotal" : 10,
+      "solo" : false,
+      "button" : 0,
+      "currentSeat" : -1,
+      "activeHandIndex" : 0,
+      "options" : {
+        "hands" : "10",
+        "maxBet" : "100",
+        "startingStack" : 100,
+        "minBet" : 1
+      },
+      "dealer" : {
+        "upCard" : {
+          "rank" : "6",
+          "suit" : "DIAMOND",
+          "name" : "DIAMOND_6"
+        },
+        "cards" : [ {
+          "rank" : "6",
+          "suit" : "DIAMOND",
+          "name" : "DIAMOND_6"
+        }, {
+          "rank" : "5",
+          "suit" : "HEART",
+          "name" : "HEART_5"
+        }, {
+          "rank" : "10",
+          "suit" : "DIAMOND",
+          "name" : "DIAMOND_10"
+        } ],
+        "holeHidden" : false,
+        "total" : 21,
+        "soft" : false,
+        "blackjack" : false,
+        "bust" : false
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "stack" : 0,
+        "betPlaced" : true,
+        "bet" : 100,
+        "hands" : [ {
+          "cards" : [ {
+            "rank" : "10",
+            "suit" : "SPADE",
+            "name" : "SPADE_10"
+          }, {
+            "rank" : "7",
+            "suit" : "CLUB",
+            "name" : "CLUB_7"
+          } ],
+          "total" : 17,
+          "soft" : false,
+          "status" : "STOOD",
+          "doubled" : false,
+          "fromSplit" : false,
+          "net" : -100
+        } ],
+        "eliminated" : true,
+        "forfeited" : false,
+        "place" : 2,
+        "standing" : 0
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "stack" : 90,
+        "betPlaced" : true,
+        "bet" : 10,
+        "hands" : [ {
+          "cards" : [ {
+            "rank" : "9",
+            "suit" : "HEART",
+            "name" : "HEART_9"
+          }, {
+            "rank" : "8",
+            "suit" : "CLUB",
+            "name" : "CLUB_8"
+          } ],
+          "total" : 17,
+          "soft" : false,
+          "status" : "STOOD",
+          "doubled" : false,
+          "fromSplit" : false,
+          "net" : -10
+        } ],
+        "eliminated" : false,
+        "forfeited" : false,
+        "place" : 1,
+        "standing" : 1
+      } ],
+      "lastHand" : {
+        "handNumber" : 1,
+        "dealer" : {
+          "cards" : [ {
+            "rank" : "6",
+            "suit" : "DIAMOND",
+            "name" : "DIAMOND_6"
+          }, {
+            "rank" : "5",
+            "suit" : "HEART",
+            "name" : "HEART_5"
+          }, {
+            "rank" : "10",
+            "suit" : "DIAMOND",
+            "name" : "DIAMOND_10"
+          } ],
+          "total" : 21,
+          "bust" : false,
+          "blackjack" : false
+        },
+        "seats" : [ {
+          "seat" : 0,
+          "hands" : [ {
+            "cards" : [ {
+              "rank" : "10",
+              "suit" : "SPADE",
+              "name" : "SPADE_10"
+            }, {
+              "rank" : "7",
+              "suit" : "CLUB",
+              "name" : "CLUB_7"
+            } ],
+            "total" : 17,
+            "status" : "STOOD",
+            "net" : -100
+          } ],
+          "net" : -100
+        }, {
+          "seat" : 1,
+          "hands" : [ {
+            "cards" : [ {
+              "rank" : "9",
+              "suit" : "HEART",
+              "name" : "HEART_9"
+            }, {
+              "rank" : "8",
+              "suit" : "CLUB",
+              "name" : "CLUB_8"
+            } ],
+            "total" : 17,
+            "status" : "STOOD",
+            "net" : -10
+          } ],
+          "net" : -10
+        } ],
+        "bestSeats" : [ ]
+      },
+      "outcome" : {
+        "status" : "FINISHED",
+        "places" : {
+          "0" : 2,
+          "1" : 1
+        },
+        "stacks" : {
+          "0" : 0,
+          "1" : 90
+        },
+        "reason" : "LAST_STANDING"
+      },
+      "availableActions" : [ ],
+      "betLimits" : null,
+      "lastBet" : 100
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "state",
+  "payload" : {
+    "started" : true,
+    "id" : "00000000-0000-0000-0000-000000000000",
+    "gameType" : "blackjack",
+    "version" : 4,
+    "phase" : "FINISHED",
+    "handNumber" : 1,
+    "handsTotal" : 10,
+    "solo" : false,
+    "button" : 0,
+    "currentSeat" : -1,
+    "activeHandIndex" : 0,
+    "options" : {
+      "hands" : "10",
+      "maxBet" : "100",
+      "startingStack" : 100,
+      "minBet" : 1
+    },
+    "dealer" : {
+      "upCard" : {
+        "rank" : "6",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_6"
+      },
+      "cards" : [ {
+        "rank" : "6",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_6"
+      }, {
+        "rank" : "5",
+        "suit" : "HEART",
+        "name" : "HEART_5"
+      }, {
+        "rank" : "10",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_10"
+      } ],
+      "holeHidden" : false,
+      "total" : 21,
+      "soft" : false,
+      "blackjack" : false,
+      "bust" : false
+    },
+    "players" : [ {
+      "seat" : 0,
+      "name" : null,
+      "stack" : 0,
+      "betPlaced" : true,
+      "bet" : 100,
+      "hands" : [ {
+        "cards" : [ {
+          "rank" : "10",
+          "suit" : "SPADE",
+          "name" : "SPADE_10"
+        }, {
+          "rank" : "7",
+          "suit" : "CLUB",
+          "name" : "CLUB_7"
+        } ],
+        "total" : 17,
+        "soft" : false,
+        "status" : "STOOD",
+        "doubled" : false,
+        "fromSplit" : false,
+        "net" : -100
+      } ],
+      "eliminated" : true,
+      "forfeited" : false,
+      "place" : 2,
+      "standing" : 0
+    }, {
+      "seat" : 1,
+      "name" : null,
+      "stack" : 90,
+      "betPlaced" : true,
+      "bet" : 10,
+      "hands" : [ {
+        "cards" : [ {
+          "rank" : "9",
+          "suit" : "HEART",
+          "name" : "HEART_9"
+        }, {
+          "rank" : "8",
+          "suit" : "CLUB",
+          "name" : "CLUB_8"
+        } ],
+        "total" : 17,
+        "soft" : false,
+        "status" : "STOOD",
+        "doubled" : false,
+        "fromSplit" : false,
+        "net" : -10
+      } ],
+      "eliminated" : false,
+      "forfeited" : false,
+      "place" : 1,
+      "standing" : 1
+    } ],
+    "lastHand" : {
+      "handNumber" : 1,
+      "dealer" : {
+        "cards" : [ {
+          "rank" : "6",
+          "suit" : "DIAMOND",
+          "name" : "DIAMOND_6"
+        }, {
+          "rank" : "5",
+          "suit" : "HEART",
+          "name" : "HEART_5"
+        }, {
+          "rank" : "10",
+          "suit" : "DIAMOND",
+          "name" : "DIAMOND_10"
+        } ],
+        "total" : 21,
+        "bust" : false,
+        "blackjack" : false
+      },
+      "seats" : [ {
+        "seat" : 0,
+        "hands" : [ {
+          "cards" : [ {
+            "rank" : "10",
+            "suit" : "SPADE",
+            "name" : "SPADE_10"
+          }, {
+            "rank" : "7",
+            "suit" : "CLUB",
+            "name" : "CLUB_7"
+          } ],
+          "total" : 17,
+          "status" : "STOOD",
+          "net" : -100
+        } ],
+        "net" : -100
+      }, {
+        "seat" : 1,
+        "hands" : [ {
+          "cards" : [ {
+            "rank" : "9",
+            "suit" : "HEART",
+            "name" : "HEART_9"
+          }, {
+            "rank" : "8",
+            "suit" : "CLUB",
+            "name" : "CLUB_8"
+          } ],
+          "total" : 17,
+          "status" : "STOOD",
+          "net" : -10
+        } ],
+        "net" : -10
+      } ],
+      "bestSeats" : [ ]
+    },
+    "outcome" : {
+      "status" : "FINISHED",
+      "places" : {
+        "0" : 2,
+        "1" : 1
+      },
+      "stacks" : {
+        "0" : 0,
+        "1" : 90
+      },
+      "reason" : "LAST_STANDING"
+    },
+    "availableActions" : [ ],
+    "betLimits" : null,
+    "lastBet" : 100
+  }
+} ]

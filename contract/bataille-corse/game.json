@@ -1,0 +1,412 @@
+[ {
+  "kind" : "join",
+  "payload" : {
+    "playerId" : 1,
+    "token" : "00000000-0000-0000-0000-000000000000"
+  }
+}, {
+  "kind" : "state",
+  "payload" : {
+    "started" : false,
+    "gameId" : "00000000-0000-0000-0000-000000000000",
+    "players" : [ {
+      "seat" : 0,
+      "name" : "Alice",
+      "joined" : true,
+      "bot" : false,
+      "seatOptions" : { },
+      "disconnected" : false
+    }, {
+      "seat" : 1,
+      "name" : "Bob",
+      "joined" : true,
+      "bot" : false,
+      "seatOptions" : { },
+      "disconnected" : false
+    } ],
+    "hostSeat" : 0,
+    "mySeat" : 0,
+    "minPlayers" : 2,
+    "maxPlayers" : 2,
+    "canStart" : true,
+    "options" : { },
+    "optionDescriptors" : [ ],
+    "seatOptionDescriptors" : [ {
+      "key" : "tier",
+      "type" : "CHOICE",
+      "values" : [ "0", "1", "2", "3", "4", "5", "6", "7", "8" ],
+      "defaultValue" : "1",
+      "labelKey" : "options.bataillecorse.tier"
+    } ],
+    "canEditOptions" : false,
+    "removableBotSeats" : [ ],
+    "lobbyVersion" : 1,
+    "privateGame" : false
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "JOIN",
+    "eventData" : { },
+    "message" : "Player 2 joined.",
+    "state" : {
+      "started" : false,
+      "gameId" : "00000000-0000-0000-0000-000000000000",
+      "players" : [ {
+        "seat" : 0,
+        "name" : "Alice",
+        "joined" : true,
+        "bot" : false,
+        "seatOptions" : { },
+        "disconnected" : false
+      }, {
+        "seat" : 1,
+        "name" : "Bob",
+        "joined" : true,
+        "bot" : false,
+        "seatOptions" : { },
+        "disconnected" : false
+      } ],
+      "hostSeat" : 0,
+      "mySeat" : 0,
+      "minPlayers" : 2,
+      "maxPlayers" : 2,
+      "canStart" : true,
+      "options" : { },
+      "optionDescriptors" : [ ],
+      "seatOptionDescriptors" : [ {
+        "key" : "tier",
+        "type" : "CHOICE",
+        "values" : [ "0", "1", "2", "3", "4", "5", "6", "7", "8" ],
+        "defaultValue" : "1",
+        "labelKey" : "options.bataillecorse.tier"
+      } ],
+      "canEditOptions" : false,
+      "removableBotSeats" : [ ],
+      "lobbyVersion" : 1,
+      "privateGame" : false
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "SEND",
+    "eventData" : {
+      "player" : {
+        "id" : "0"
+      }
+    },
+    "message" : "Player 0 sent SPADE_10.",
+    "state" : {
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "players" : [ {
+        "id" : "0",
+        "nbCards" : 1,
+        "availableActions" : [ "SLAP" ],
+        "forfeitReason" : null
+      }, {
+        "id" : "1",
+        "nbCards" : 2,
+        "availableActions" : [ "SEND", "SLAP" ],
+        "forfeitReason" : null
+      } ],
+      "winner" : null,
+      "pile" : {
+        "cards" : [ {
+          "rank" : "10",
+          "suit" : "SPADE",
+          "name" : "SPADE_10"
+        } ],
+        "grabbable" : false,
+        "nbCardsSinceLastHonourCard" : 1,
+        "playerThatAddedLastHonourCard" : null
+      },
+      "currentPlayer" : {
+        "id" : "1",
+        "nbCards" : 2,
+        "availableActions" : [ "SEND", "SLAP" ],
+        "forfeitReason" : null
+      },
+      "version" : 1
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "SLAP",
+    "eventData" : {
+      "isSuccessful" : true,
+      "player" : {
+        "id" : "1"
+      }
+    },
+    "message" : "Player 1 slapped and won.",
+    "state" : {
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "players" : [ {
+        "id" : "0",
+        "nbCards" : 1,
+        "availableActions" : [ ],
+        "forfeitReason" : null
+      }, {
+        "id" : "1",
+        "nbCards" : 3,
+        "availableActions" : [ "SEND" ],
+        "forfeitReason" : null
+      } ],
+      "winner" : null,
+      "pile" : {
+        "cards" : [ ],
+        "grabbable" : false,
+        "nbCardsSinceLastHonourCard" : 0,
+        "playerThatAddedLastHonourCard" : null
+      },
+      "currentPlayer" : {
+        "id" : "1",
+        "nbCards" : 3,
+        "availableActions" : [ "SEND" ],
+        "forfeitReason" : null
+      },
+      "version" : 2
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "SEND",
+    "eventData" : {
+      "player" : {
+        "id" : "0"
+      }
+    },
+    "message" : "Player 0 sent SPADE_JACK.",
+    "state" : {
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "players" : [ {
+        "id" : "0",
+        "nbCards" : 1,
+        "availableActions" : [ "SLAP" ],
+        "forfeitReason" : null
+      }, {
+        "id" : "1",
+        "nbCards" : 2,
+        "availableActions" : [ "SEND", "SLAP" ],
+        "forfeitReason" : null
+      } ],
+      "winner" : null,
+      "pile" : {
+        "cards" : [ {
+          "rank" : "JACK",
+          "suit" : "SPADE",
+          "name" : "SPADE_JACK"
+        } ],
+        "grabbable" : false,
+        "nbCardsSinceLastHonourCard" : 0,
+        "playerThatAddedLastHonourCard" : {
+          "id" : "0"
+        }
+      },
+      "currentPlayer" : {
+        "id" : "1",
+        "nbCards" : 2,
+        "availableActions" : [ "SEND", "SLAP" ],
+        "forfeitReason" : null
+      },
+      "version" : 1
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "GRAB",
+    "eventData" : {
+      "player" : {
+        "id" : "0"
+      }
+    },
+    "message" : "Player 0 grabbed the pile. ",
+    "state" : {
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "players" : [ {
+        "id" : "0",
+        "nbCards" : 3,
+        "availableActions" : [ "SEND" ],
+        "forfeitReason" : null
+      }, {
+        "id" : "1",
+        "nbCards" : 1,
+        "availableActions" : [ ],
+        "forfeitReason" : null
+      } ],
+      "winner" : null,
+      "pile" : {
+        "cards" : [ ],
+        "grabbable" : false,
+        "nbCardsSinceLastHonourCard" : 0,
+        "playerThatAddedLastHonourCard" : null
+      },
+      "currentPlayer" : {
+        "id" : "0",
+        "nbCards" : 3,
+        "availableActions" : [ "SEND" ],
+        "forfeitReason" : null
+      },
+      "version" : 3
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "OPPONENT_DISCONNECTED",
+    "eventData" : {
+      "disconnectedSeat" : 1,
+      "deadlineEpochMs" : 1700000000000
+    },
+    "message" : "Player 1 disconnected.",
+    "state" : {
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "players" : [ {
+        "id" : "0",
+        "nbCards" : 3,
+        "availableActions" : [ "SEND" ],
+        "forfeitReason" : null
+      }, {
+        "id" : "1",
+        "nbCards" : 1,
+        "availableActions" : [ ],
+        "forfeitReason" : null
+      } ],
+      "winner" : null,
+      "pile" : {
+        "cards" : [ ],
+        "grabbable" : false,
+        "nbCardsSinceLastHonourCard" : 0,
+        "playerThatAddedLastHonourCard" : null
+      },
+      "currentPlayer" : {
+        "id" : "0",
+        "nbCards" : 3,
+        "availableActions" : [ "SEND" ],
+        "forfeitReason" : null
+      },
+      "version" : 3
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "OPPONENT_RECONNECTED",
+    "eventData" : {
+      "reconnectedSeat" : 1
+    },
+    "message" : "Player 1 reconnected.",
+    "state" : {
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "players" : [ {
+        "id" : "0",
+        "nbCards" : 3,
+        "availableActions" : [ "SEND" ],
+        "forfeitReason" : null
+      }, {
+        "id" : "1",
+        "nbCards" : 1,
+        "availableActions" : [ ],
+        "forfeitReason" : null
+      } ],
+      "winner" : null,
+      "pile" : {
+        "cards" : [ ],
+        "grabbable" : false,
+        "nbCardsSinceLastHonourCard" : 0,
+        "playerThatAddedLastHonourCard" : null
+      },
+      "currentPlayer" : {
+        "id" : "0",
+        "nbCards" : 3,
+        "availableActions" : [ "SEND" ],
+        "forfeitReason" : null
+      },
+      "version" : 3
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "FORFEIT",
+    "eventData" : {
+      "loserSeat" : 1,
+      "reason" : "RESIGNED"
+    },
+    "message" : "Player 1 forfeited.",
+    "state" : {
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "players" : [ {
+        "id" : "0",
+        "nbCards" : 3,
+        "availableActions" : [ ],
+        "forfeitReason" : null
+      }, {
+        "id" : "1",
+        "nbCards" : 1,
+        "availableActions" : [ ],
+        "forfeitReason" : "RESIGNED"
+      } ],
+      "winner" : {
+        "id" : "0"
+      },
+      "pile" : {
+        "cards" : [ ],
+        "grabbable" : false,
+        "nbCardsSinceLastHonourCard" : 0,
+        "playerThatAddedLastHonourCard" : null
+      },
+      "currentPlayer" : {
+        "id" : "0",
+        "nbCards" : 3,
+        "availableActions" : [ ],
+        "forfeitReason" : null
+      },
+      "version" : 4
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "state",
+  "payload" : {
+    "id" : "00000000-0000-0000-0000-000000000000",
+    "players" : [ {
+      "id" : "0",
+      "nbCards" : 3,
+      "availableActions" : [ ],
+      "forfeitReason" : null
+    }, {
+      "id" : "1",
+      "nbCards" : 1,
+      "availableActions" : [ ],
+      "forfeitReason" : "RESIGNED"
+    } ],
+    "winner" : {
+      "id" : "0"
+    },
+    "pile" : {
+      "cards" : [ ],
+      "grabbable" : false,
+      "nbCardsSinceLastHonourCard" : 0,
+      "playerThatAddedLastHonourCard" : null
+    },
+    "currentPlayer" : {
+      "id" : "0",
+      "nbCards" : 3,
+      "availableActions" : [ ],
+      "forfeitReason" : null
+    },
+    "version" : 4
+  }
+} ]

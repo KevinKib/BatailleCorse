@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
  * Four kinds of task, each keyed on a domain counter and never on {@code version()}:
  * <ul>
  *   <li>PASS: while passing, a bot that has not chosen passes a card after the pass delay, keyed on the {@link
- *       KiloDeMerdeStepKey};</li>
+ *       KiloDeMerdeStepKey}; not when its own hand is four of a kind, since any pass would break the set;</li>
  *   <li>OWN SET: while passing, a bot whose own hand is four of a kind slaps after its own-set delay, keyed the same;</li>
  *   <li>FOLLOW: while a race is open, a bot that has not slapped slaps after its follow delay, keyed on the race;</li>
  *   <li>READY: while the table waits for confirmations (before the first round, between two rounds), a bot that is
@@ -174,11 +174,11 @@ public class KiloDeMerdeBotCoordinator implements GameStateListener<KiloDeMerde>
                 if (!bots.contains(seat)) {
                     continue;
                 }
-                if (!game.hasChosen(seat)) {
-                    wanted.add(new TaskKey(Kind.PASS, seat, step));
-                }
                 if (KiloDeMerdeRules.isFourOfAKind(game.hand(seat))) {
+                    // Any pass would break the set (the step could resolve before the slap): slap, never pass.
                     wanted.add(new TaskKey(Kind.OWN_SET, seat, step));
+                } else if (!game.hasChosen(seat)) {
+                    wanted.add(new TaskKey(Kind.PASS, seat, step));
                 }
             }
         } else if (KiloDeMerdeReadyKey.of(game) != null) {

@@ -96,6 +96,11 @@ The request is architectural: write the spec (`docs/specs/YYYY-MM-DD-<id>-*-desi
 - [ ] `<Pascal>WebSocketControllerIT`: a real STOMP game with `StompTestClient` (create, join, start, a few
       commands, a refused command answered to the sender alone, the end). The name must end in `IT` or `Test`.
 - [ ] If random: the seam tests of §5.
+- [ ] `<Pascal>WireContractTest`: the wire contract. With `presentation/support/WireContract`, record a lobby
+      (`contract.lobby(...)`), a scripted game on fixed cards that reaches every phase and the end, and the
+      lifecycle (`WireContract.playLifecycle`), plus `verifyEventTypes(GAME_TYPE, <Pascal>EventType.values())`. The
+      golden files land in the repository-level `contract/<id>/` (written on the first run, rewritten with
+      `-Dcontract.update=true`); commit them. Everything recorded must be deterministic (fix every deal and draw).
 
 ## 3. Frontend checklist
 
@@ -137,6 +142,10 @@ The request is architectural: write the spec (`docs/specs/YYYY-MM-DD-<id>-*-desi
 
 TypeScript types are not checked by any suite (`npm test` is Vitest, `npx vite build` does not type-check, no
 `vue-tsc` in `package.json`): a missing key in `en.ts` or `ScriptedGameType` only shows in the editor.
+The one exception is the wire: `src/contract/wireContract.test.ts` type-checks every golden file of `contract/`
+against the frontend types with the TypeScript compiler (field names, nullability, enum values, extra fields, event
+type strings both ways, and the typed fixtures listed). Add the game to `src/contract/games.ts` (its view, event
+type union, `eventData` type per event type, fixtures): **FAILS** while a `contract/` folder has no entry.
 
 ## 4. E2E (entry PR)
 

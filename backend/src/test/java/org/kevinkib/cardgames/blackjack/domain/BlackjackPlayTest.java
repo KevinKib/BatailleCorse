@@ -55,7 +55,7 @@ class BlackjackPlayTest {
         List<BlackjackEvent> events = game.hit(B);
 
         assertEquals(new CardDrawn(B, 0, c("10D"), 26), event(events, CardDrawn.class));
-        assertEquals(new Busted(B, 0), event(events, Busted.class));
+        assertEquals(new Busted(B, 0, 26), event(events, Busted.class));
         assertEquals(PlayerHand.Status.BUST, game.seat(B).hands().get(0).status());
         assertEquals(C, game.currentSeat());
     }

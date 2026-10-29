@@ -46,7 +46,7 @@ const betText = computed(() => {
     </div>
     <div class="bj-stats">
       <span data-test="seat-stack">{{ format(ui.table.stack, { n: player.stack }) }}</span>
-      <span data-test="seat-standing">{{ format(ui.table.standing, { place: player.standing }) }}</span>
+      <span v-if="player.standing > 0" data-test="seat-standing">{{ format(ui.table.standing, { place: player.standing }) }}</span>
     </div>
     <span v-if="player.eliminated || player.forfeited" class="bj-out" data-test="seat-out">{{ player.forfeited ? ui.end.forfeited : outText }}</span>
     <template v-else>

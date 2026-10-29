@@ -1,0 +1,4013 @@
+[ {
+  "kind" : "join",
+  "payload" : {
+    "playerId" : 1,
+    "token" : "00000000-0000-0000-0000-000000000000"
+  }
+}, {
+  "kind" : "state",
+  "payload" : {
+    "started" : false,
+    "gameId" : "00000000-0000-0000-0000-000000000000",
+    "players" : [ {
+      "seat" : 0,
+      "name" : "Alice",
+      "joined" : true,
+      "bot" : false,
+      "seatOptions" : { },
+      "disconnected" : false
+    }, {
+      "seat" : 1,
+      "name" : "Bob",
+      "joined" : true,
+      "bot" : false,
+      "seatOptions" : { },
+      "disconnected" : false
+    }, {
+      "seat" : 2,
+      "name" : "Cleo",
+      "joined" : true,
+      "bot" : false,
+      "seatOptions" : { },
+      "disconnected" : false
+    }, {
+      "seat" : 3,
+      "name" : null,
+      "joined" : false,
+      "bot" : false,
+      "seatOptions" : { },
+      "disconnected" : false
+    }, {
+      "seat" : 4,
+      "name" : null,
+      "joined" : false,
+      "bot" : false,
+      "seatOptions" : { },
+      "disconnected" : false
+    }, {
+      "seat" : 5,
+      "name" : null,
+      "joined" : false,
+      "bot" : false,
+      "seatOptions" : { },
+      "disconnected" : false
+    }, {
+      "seat" : 6,
+      "name" : null,
+      "joined" : false,
+      "bot" : false,
+      "seatOptions" : { },
+      "disconnected" : false
+    }, {
+      "seat" : 7,
+      "name" : null,
+      "joined" : false,
+      "bot" : false,
+      "seatOptions" : { },
+      "disconnected" : false
+    } ],
+    "hostSeat" : 0,
+    "mySeat" : 0,
+    "minPlayers" : 3,
+    "maxPlayers" : 8,
+    "canStart" : true,
+    "options" : {
+      "afterPass" : "reenter",
+      "exchange" : "two",
+      "giveBack" : "free",
+      "length" : "rounds-5",
+      "mustPlay" : "off",
+      "nextLead" : "scum",
+      "reducedCut" : "off",
+      "scoring" : "rank"
+    },
+    "optionDescriptors" : [ {
+      "key" : "afterPass",
+      "type" : "CHOICE",
+      "values" : [ "reenter", "out" ],
+      "defaultValue" : "reenter",
+      "labelKey" : "options.president.afterPass"
+    }, {
+      "key" : "exchange",
+      "type" : "CHOICE",
+      "values" : [ "two", "one", "scaled", "none" ],
+      "defaultValue" : "two",
+      "labelKey" : "options.president.exchange"
+    }, {
+      "key" : "giveBack",
+      "type" : "CHOICE",
+      "values" : [ "free", "lowest" ],
+      "defaultValue" : "free",
+      "labelKey" : "options.president.giveBack"
+    }, {
+      "key" : "nextLead",
+      "type" : "CHOICE",
+      "values" : [ "scum", "president" ],
+      "defaultValue" : "scum",
+      "labelKey" : "options.president.nextLead"
+    }, {
+      "key" : "scoring",
+      "type" : "CHOICE",
+      "values" : [ "rank", "titles", "zeroSum" ],
+      "defaultValue" : "rank",
+      "labelKey" : "options.president.scoring"
+    }, {
+      "key" : "length",
+      "type" : "CHOICE",
+      "values" : [ "rounds-5", "rounds-3", "rounds-10", "points-11", "points-21", "endless" ],
+      "defaultValue" : "rounds-5",
+      "labelKey" : "options.president.length"
+    }, {
+      "key" : "mustPlay",
+      "type" : "CHOICE",
+      "values" : [ "off", "on" ],
+      "defaultValue" : "off",
+      "labelKey" : "options.president.mustPlay"
+    }, {
+      "key" : "reducedCut",
+      "type" : "CHOICE",
+      "values" : [ "off", "on" ],
+      "defaultValue" : "off",
+      "labelKey" : "options.president.reducedCut"
+    } ],
+    "seatOptionDescriptors" : [ {
+      "key" : "level",
+      "type" : "CHOICE",
+      "values" : [ "easy", "medium", "hard" ],
+      "defaultValue" : "medium",
+      "labelKey" : "options.president.level"
+    } ],
+    "canEditOptions" : true,
+    "removableBotSeats" : [ ],
+    "lobbyVersion" : 2,
+    "privateGame" : false
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "JOIN",
+    "eventData" : { },
+    "message" : "Player 2 joined.",
+    "state" : {
+      "started" : false,
+      "gameId" : "00000000-0000-0000-0000-000000000000",
+      "players" : [ {
+        "seat" : 0,
+        "name" : "Alice",
+        "joined" : true,
+        "bot" : false,
+        "seatOptions" : { },
+        "disconnected" : false
+      }, {
+        "seat" : 1,
+        "name" : "Bob",
+        "joined" : true,
+        "bot" : false,
+        "seatOptions" : { },
+        "disconnected" : false
+      }, {
+        "seat" : 2,
+        "name" : null,
+        "joined" : false,
+        "bot" : false,
+        "seatOptions" : { },
+        "disconnected" : false
+      }, {
+        "seat" : 3,
+        "name" : null,
+        "joined" : false,
+        "bot" : false,
+        "seatOptions" : { },
+        "disconnected" : false
+      }, {
+        "seat" : 4,
+        "name" : null,
+        "joined" : false,
+        "bot" : false,
+        "seatOptions" : { },
+        "disconnected" : false
+      }, {
+        "seat" : 5,
+        "name" : null,
+        "joined" : false,
+        "bot" : false,
+        "seatOptions" : { },
+        "disconnected" : false
+      }, {
+        "seat" : 6,
+        "name" : null,
+        "joined" : false,
+        "bot" : false,
+        "seatOptions" : { },
+        "disconnected" : false
+      }, {
+        "seat" : 7,
+        "name" : null,
+        "joined" : false,
+        "bot" : false,
+        "seatOptions" : { },
+        "disconnected" : false
+      } ],
+      "hostSeat" : 0,
+      "mySeat" : 0,
+      "minPlayers" : 3,
+      "maxPlayers" : 8,
+      "canStart" : false,
+      "options" : {
+        "afterPass" : "reenter",
+        "exchange" : "two",
+        "giveBack" : "free",
+        "length" : "rounds-5",
+        "mustPlay" : "off",
+        "nextLead" : "scum",
+        "reducedCut" : "off",
+        "scoring" : "rank"
+      },
+      "optionDescriptors" : [ {
+        "key" : "afterPass",
+        "type" : "CHOICE",
+        "values" : [ "reenter", "out" ],
+        "defaultValue" : "reenter",
+        "labelKey" : "options.president.afterPass"
+      }, {
+        "key" : "exchange",
+        "type" : "CHOICE",
+        "values" : [ "two", "one", "scaled", "none" ],
+        "defaultValue" : "two",
+        "labelKey" : "options.president.exchange"
+      }, {
+        "key" : "giveBack",
+        "type" : "CHOICE",
+        "values" : [ "free", "lowest" ],
+        "defaultValue" : "free",
+        "labelKey" : "options.president.giveBack"
+      }, {
+        "key" : "nextLead",
+        "type" : "CHOICE",
+        "values" : [ "scum", "president" ],
+        "defaultValue" : "scum",
+        "labelKey" : "options.president.nextLead"
+      }, {
+        "key" : "scoring",
+        "type" : "CHOICE",
+        "values" : [ "rank", "titles", "zeroSum" ],
+        "defaultValue" : "rank",
+        "labelKey" : "options.president.scoring"
+      }, {
+        "key" : "length",
+        "type" : "CHOICE",
+        "values" : [ "rounds-5", "rounds-3", "rounds-10", "points-11", "points-21", "endless" ],
+        "defaultValue" : "rounds-5",
+        "labelKey" : "options.president.length"
+      }, {
+        "key" : "mustPlay",
+        "type" : "CHOICE",
+        "values" : [ "off", "on" ],
+        "defaultValue" : "off",
+        "labelKey" : "options.president.mustPlay"
+      }, {
+        "key" : "reducedCut",
+        "type" : "CHOICE",
+        "values" : [ "off", "on" ],
+        "defaultValue" : "off",
+        "labelKey" : "options.president.reducedCut"
+      } ],
+      "seatOptionDescriptors" : [ {
+        "key" : "level",
+        "type" : "CHOICE",
+        "values" : [ "easy", "medium", "hard" ],
+        "defaultValue" : "medium",
+        "labelKey" : "options.president.level"
+      } ],
+      "canEditOptions" : true,
+      "removableBotSeats" : [ ],
+      "lobbyVersion" : 1,
+      "privateGame" : false
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "PLAY",
+    "eventData" : {
+      "seat" : 2,
+      "action" : "PLAY",
+      "cards" : [ {
+        "rank" : "3",
+        "suit" : "CLUB",
+        "name" : "CLUB_3"
+      } ],
+      "count" : null,
+      "outPlace" : null,
+      "outForbidden" : null,
+      "trickWinner" : null,
+      "trickEndReason" : null,
+      "barrierOpened" : null
+    },
+    "message" : "Player 2 played.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "president",
+      "version" : 1,
+      "round" : 1,
+      "rounds" : 3,
+      "phase" : "PLAYING",
+      "currentSeat" : 0,
+      "options" : {
+        "afterPass" : "reenter",
+        "exchange" : "two",
+        "giveBack" : "free",
+        "length" : "rounds-3",
+        "mustPlay" : "off",
+        "nextLead" : "scum",
+        "reducedCut" : "off",
+        "scoring" : "rank"
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "handSize" : 18,
+        "title" : null,
+        "place" : null,
+        "out" : false,
+        "passed" : false,
+        "points" : 0,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "handSize" : 17,
+        "title" : null,
+        "place" : null,
+        "out" : false,
+        "passed" : false,
+        "points" : 0,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      }, {
+        "seat" : 2,
+        "name" : null,
+        "handSize" : 16,
+        "title" : null,
+        "place" : null,
+        "out" : false,
+        "passed" : false,
+        "points" : 0,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      } ],
+      "trick" : {
+        "leader" : 2,
+        "plays" : [ {
+          "seat" : 2,
+          "cards" : [ {
+            "rank" : "3",
+            "suit" : "CLUB",
+            "name" : "CLUB_3"
+          } ]
+        } ],
+        "top" : {
+          "kind" : "SET",
+          "rank" : "THREE",
+          "count" : 1
+        },
+        "lastPlayer" : 2,
+        "passed" : [ ],
+        "constraint" : "BEAT",
+        "requiredRank" : null,
+        "requiredCount" : null,
+        "chain" : {
+          "rank" : "THREE",
+          "cards" : [ {
+            "rank" : "3",
+            "suit" : "CLUB",
+            "name" : "CLUB_3"
+          } ],
+          "plays" : 1
+        }
+      },
+      "exchange" : [ ],
+      "lastRound" : null,
+      "standings" : [ {
+        "seat" : 0,
+        "points" : 0
+      }, {
+        "seat" : 1,
+        "points" : 0
+      }, {
+        "seat" : 2,
+        "points" : 0
+      } ],
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "hand" : [ {
+        "rank" : "3",
+        "suit" : "SPADE",
+        "name" : "SPADE_3"
+      }, {
+        "rank" : "5",
+        "suit" : "CLUB",
+        "name" : "CLUB_5"
+      }, {
+        "rank" : "5",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_5"
+      }, {
+        "rank" : "5",
+        "suit" : "HEART",
+        "name" : "HEART_5"
+      }, {
+        "rank" : "6",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_6"
+      }, {
+        "rank" : "6",
+        "suit" : "SPADE",
+        "name" : "SPADE_6"
+      }, {
+        "rank" : "7",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_7"
+      }, {
+        "rank" : "8",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_8"
+      }, {
+        "rank" : "10",
+        "suit" : "CLUB",
+        "name" : "CLUB_10"
+      }, {
+        "rank" : "10",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_10"
+      }, {
+        "rank" : "JACK",
+        "suit" : "CLUB",
+        "name" : "CLUB_JACK"
+      }, {
+        "rank" : "JACK",
+        "suit" : "HEART",
+        "name" : "HEART_JACK"
+      }, {
+        "rank" : "QUEEN",
+        "suit" : "CLUB",
+        "name" : "CLUB_QUEEN"
+      }, {
+        "rank" : "QUEEN",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_QUEEN"
+      }, {
+        "rank" : "KING",
+        "suit" : "CLUB",
+        "name" : "CLUB_KING"
+      }, {
+        "rank" : "2",
+        "suit" : "CLUB",
+        "name" : "CLUB_2"
+      }, {
+        "rank" : "2",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_2"
+      }, {
+        "rank" : "2",
+        "suit" : "SPADE",
+        "name" : "SPADE_2"
+      } ],
+      "received" : [ ],
+      "given" : [ ],
+      "toGiveBack" : 0,
+      "legalPlays" : [ {
+        "kind" : "SET",
+        "rank" : "THREE",
+        "count" : 1
+      }, {
+        "kind" : "SET",
+        "rank" : "FIVE",
+        "count" : 1
+      }, {
+        "kind" : "SET",
+        "rank" : "SIX",
+        "count" : 1
+      }, {
+        "kind" : "SET",
+        "rank" : "SEVEN",
+        "count" : 1
+      }, {
+        "kind" : "SET",
+        "rank" : "EIGHT",
+        "count" : 1
+      }, {
+        "kind" : "SET",
+        "rank" : "TEN",
+        "count" : 1
+      }, {
+        "kind" : "SET",
+        "rank" : "JACK",
+        "count" : 1
+      }, {
+        "kind" : "SET",
+        "rank" : "QUEEN",
+        "count" : 1
+      }, {
+        "kind" : "SET",
+        "rank" : "KING",
+        "count" : 1
+      }, {
+        "kind" : "SET",
+        "rank" : "TWO",
+        "count" : 1
+      } ],
+      "availableActions" : [ "PLAY", "PASS" ]
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "PLAY",
+    "eventData" : {
+      "seat" : 0,
+      "action" : "PLAY",
+      "cards" : [ {
+        "rank" : "3",
+        "suit" : "SPADE",
+        "name" : "SPADE_3"
+      } ],
+      "count" : null,
+      "outPlace" : null,
+      "outForbidden" : null,
+      "trickWinner" : null,
+      "trickEndReason" : null,
+      "barrierOpened" : null
+    },
+    "message" : "Player 0 played.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "president",
+      "version" : 2,
+      "round" : 1,
+      "rounds" : 3,
+      "phase" : "PLAYING",
+      "currentSeat" : 1,
+      "options" : {
+        "afterPass" : "reenter",
+        "exchange" : "two",
+        "giveBack" : "free",
+        "length" : "rounds-3",
+        "mustPlay" : "off",
+        "nextLead" : "scum",
+        "reducedCut" : "off",
+        "scoring" : "rank"
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "handSize" : 17,
+        "title" : null,
+        "place" : null,
+        "out" : false,
+        "passed" : false,
+        "points" : 0,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "handSize" : 17,
+        "title" : null,
+        "place" : null,
+        "out" : false,
+        "passed" : false,
+        "points" : 0,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      }, {
+        "seat" : 2,
+        "name" : null,
+        "handSize" : 16,
+        "title" : null,
+        "place" : null,
+        "out" : false,
+        "passed" : false,
+        "points" : 0,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      } ],
+      "trick" : {
+        "leader" : 2,
+        "plays" : [ {
+          "seat" : 2,
+          "cards" : [ {
+            "rank" : "3",
+            "suit" : "CLUB",
+            "name" : "CLUB_3"
+          } ]
+        }, {
+          "seat" : 0,
+          "cards" : [ {
+            "rank" : "3",
+            "suit" : "SPADE",
+            "name" : "SPADE_3"
+          } ]
+        } ],
+        "top" : {
+          "kind" : "SET",
+          "rank" : "THREE",
+          "count" : 1
+        },
+        "lastPlayer" : 0,
+        "passed" : [ ],
+        "constraint" : "MATCH_OR_PASS",
+        "requiredRank" : "THREE",
+        "requiredCount" : 1,
+        "chain" : {
+          "rank" : "THREE",
+          "cards" : [ {
+            "rank" : "3",
+            "suit" : "CLUB",
+            "name" : "CLUB_3"
+          }, {
+            "rank" : "3",
+            "suit" : "SPADE",
+            "name" : "SPADE_3"
+          } ],
+          "plays" : 2
+        }
+      },
+      "exchange" : [ ],
+      "lastRound" : null,
+      "standings" : [ {
+        "seat" : 0,
+        "points" : 0
+      }, {
+        "seat" : 1,
+        "points" : 0
+      }, {
+        "seat" : 2,
+        "points" : 0
+      } ],
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "hand" : [ {
+        "rank" : "5",
+        "suit" : "CLUB",
+        "name" : "CLUB_5"
+      }, {
+        "rank" : "5",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_5"
+      }, {
+        "rank" : "5",
+        "suit" : "HEART",
+        "name" : "HEART_5"
+      }, {
+        "rank" : "6",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_6"
+      }, {
+        "rank" : "6",
+        "suit" : "SPADE",
+        "name" : "SPADE_6"
+      }, {
+        "rank" : "7",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_7"
+      }, {
+        "rank" : "8",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_8"
+      }, {
+        "rank" : "10",
+        "suit" : "CLUB",
+        "name" : "CLUB_10"
+      }, {
+        "rank" : "10",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_10"
+      }, {
+        "rank" : "JACK",
+        "suit" : "CLUB",
+        "name" : "CLUB_JACK"
+      }, {
+        "rank" : "JACK",
+        "suit" : "HEART",
+        "name" : "HEART_JACK"
+      }, {
+        "rank" : "QUEEN",
+        "suit" : "CLUB",
+        "name" : "CLUB_QUEEN"
+      }, {
+        "rank" : "QUEEN",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_QUEEN"
+      }, {
+        "rank" : "KING",
+        "suit" : "CLUB",
+        "name" : "CLUB_KING"
+      }, {
+        "rank" : "2",
+        "suit" : "CLUB",
+        "name" : "CLUB_2"
+      }, {
+        "rank" : "2",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_2"
+      }, {
+        "rank" : "2",
+        "suit" : "SPADE",
+        "name" : "SPADE_2"
+      } ],
+      "received" : [ ],
+      "given" : [ ],
+      "toGiveBack" : 0,
+      "legalPlays" : [ ],
+      "availableActions" : [ ]
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "PLAY",
+    "eventData" : {
+      "seat" : 2,
+      "action" : "PLAY",
+      "cards" : [ {
+        "rank" : "3",
+        "suit" : "HEART",
+        "name" : "HEART_3"
+      } ],
+      "count" : null,
+      "outPlace" : null,
+      "outForbidden" : null,
+      "trickWinner" : 2,
+      "trickEndReason" : "QUAD",
+      "barrierOpened" : null
+    },
+    "message" : "Player 2 played.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "president",
+      "version" : 4,
+      "round" : 1,
+      "rounds" : 3,
+      "phase" : "PLAYING",
+      "currentSeat" : 2,
+      "options" : {
+        "afterPass" : "reenter",
+        "exchange" : "two",
+        "giveBack" : "free",
+        "length" : "rounds-3",
+        "mustPlay" : "off",
+        "nextLead" : "scum",
+        "reducedCut" : "off",
+        "scoring" : "rank"
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "handSize" : 17,
+        "title" : null,
+        "place" : null,
+        "out" : false,
+        "passed" : false,
+        "points" : 0,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "handSize" : 16,
+        "title" : null,
+        "place" : null,
+        "out" : false,
+        "passed" : false,
+        "points" : 0,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      }, {
+        "seat" : 2,
+        "name" : null,
+        "handSize" : 15,
+        "title" : null,
+        "place" : null,
+        "out" : false,
+        "passed" : false,
+        "points" : 0,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      } ],
+      "trick" : {
+        "leader" : 2,
+        "plays" : [ ],
+        "top" : null,
+        "lastPlayer" : null,
+        "passed" : [ ],
+        "constraint" : "FREE",
+        "requiredRank" : null,
+        "requiredCount" : null,
+        "chain" : null
+      },
+      "exchange" : [ ],
+      "lastRound" : null,
+      "standings" : [ {
+        "seat" : 0,
+        "points" : 0
+      }, {
+        "seat" : 1,
+        "points" : 0
+      }, {
+        "seat" : 2,
+        "points" : 0
+      } ],
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "hand" : [ {
+        "rank" : "5",
+        "suit" : "CLUB",
+        "name" : "CLUB_5"
+      }, {
+        "rank" : "5",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_5"
+      }, {
+        "rank" : "5",
+        "suit" : "HEART",
+        "name" : "HEART_5"
+      }, {
+        "rank" : "6",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_6"
+      }, {
+        "rank" : "6",
+        "suit" : "SPADE",
+        "name" : "SPADE_6"
+      }, {
+        "rank" : "7",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_7"
+      }, {
+        "rank" : "8",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_8"
+      }, {
+        "rank" : "10",
+        "suit" : "CLUB",
+        "name" : "CLUB_10"
+      }, {
+        "rank" : "10",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_10"
+      }, {
+        "rank" : "JACK",
+        "suit" : "CLUB",
+        "name" : "CLUB_JACK"
+      }, {
+        "rank" : "JACK",
+        "suit" : "HEART",
+        "name" : "HEART_JACK"
+      }, {
+        "rank" : "QUEEN",
+        "suit" : "CLUB",
+        "name" : "CLUB_QUEEN"
+      }, {
+        "rank" : "QUEEN",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_QUEEN"
+      }, {
+        "rank" : "KING",
+        "suit" : "CLUB",
+        "name" : "CLUB_KING"
+      }, {
+        "rank" : "2",
+        "suit" : "CLUB",
+        "name" : "CLUB_2"
+      }, {
+        "rank" : "2",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_2"
+      }, {
+        "rank" : "2",
+        "suit" : "SPADE",
+        "name" : "SPADE_2"
+      } ],
+      "received" : [ ],
+      "given" : [ ],
+      "toGiveBack" : 0,
+      "legalPlays" : [ ],
+      "availableActions" : [ ]
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "PLAY",
+    "eventData" : {
+      "seat" : 1,
+      "action" : "PLAY",
+      "cards" : [ {
+        "rank" : "5",
+        "suit" : "SPADE",
+        "name" : "SPADE_5"
+      } ],
+      "count" : null,
+      "outPlace" : null,
+      "outForbidden" : null,
+      "trickWinner" : null,
+      "trickEndReason" : null,
+      "barrierOpened" : null
+    },
+    "message" : "Player 1 played.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "president",
+      "version" : 7,
+      "round" : 1,
+      "rounds" : 3,
+      "phase" : "PLAYING",
+      "currentSeat" : 2,
+      "options" : {
+        "afterPass" : "reenter",
+        "exchange" : "two",
+        "giveBack" : "free",
+        "length" : "rounds-3",
+        "mustPlay" : "off",
+        "nextLead" : "scum",
+        "reducedCut" : "off",
+        "scoring" : "rank"
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "handSize" : 16,
+        "title" : null,
+        "place" : null,
+        "out" : false,
+        "passed" : false,
+        "points" : 0,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "handSize" : 15,
+        "title" : null,
+        "place" : null,
+        "out" : false,
+        "passed" : false,
+        "points" : 0,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      }, {
+        "seat" : 2,
+        "name" : null,
+        "handSize" : 14,
+        "title" : null,
+        "place" : null,
+        "out" : false,
+        "passed" : false,
+        "points" : 0,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      } ],
+      "trick" : {
+        "leader" : 2,
+        "plays" : [ {
+          "seat" : 2,
+          "cards" : [ {
+            "rank" : "4",
+            "suit" : "DIAMOND",
+            "name" : "DIAMOND_4"
+          } ]
+        }, {
+          "seat" : 0,
+          "cards" : [ {
+            "rank" : "5",
+            "suit" : "CLUB",
+            "name" : "CLUB_5"
+          } ]
+        }, {
+          "seat" : 1,
+          "cards" : [ {
+            "rank" : "5",
+            "suit" : "SPADE",
+            "name" : "SPADE_5"
+          } ]
+        } ],
+        "top" : {
+          "kind" : "SET",
+          "rank" : "FIVE",
+          "count" : 1
+        },
+        "lastPlayer" : 1,
+        "passed" : [ ],
+        "constraint" : "MATCH_OR_PASS",
+        "requiredRank" : "FIVE",
+        "requiredCount" : 1,
+        "chain" : {
+          "rank" : "FIVE",
+          "cards" : [ {
+            "rank" : "5",
+            "suit" : "CLUB",
+            "name" : "CLUB_5"
+          }, {
+            "rank" : "5",
+            "suit" : "SPADE",
+            "name" : "SPADE_5"
+          } ],
+          "plays" : 2
+        }
+      },
+      "exchange" : [ ],
+      "lastRound" : null,
+      "standings" : [ {
+        "seat" : 0,
+        "points" : 0
+      }, {
+        "seat" : 1,
+        "points" : 0
+      }, {
+        "seat" : 2,
+        "points" : 0
+      } ],
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "hand" : [ {
+        "rank" : "5",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_5"
+      }, {
+        "rank" : "5",
+        "suit" : "HEART",
+        "name" : "HEART_5"
+      }, {
+        "rank" : "6",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_6"
+      }, {
+        "rank" : "6",
+        "suit" : "SPADE",
+        "name" : "SPADE_6"
+      }, {
+        "rank" : "7",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_7"
+      }, {
+        "rank" : "8",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_8"
+      }, {
+        "rank" : "10",
+        "suit" : "CLUB",
+        "name" : "CLUB_10"
+      }, {
+        "rank" : "10",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_10"
+      }, {
+        "rank" : "JACK",
+        "suit" : "CLUB",
+        "name" : "CLUB_JACK"
+      }, {
+        "rank" : "JACK",
+        "suit" : "HEART",
+        "name" : "HEART_JACK"
+      }, {
+        "rank" : "QUEEN",
+        "suit" : "CLUB",
+        "name" : "CLUB_QUEEN"
+      }, {
+        "rank" : "QUEEN",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_QUEEN"
+      }, {
+        "rank" : "KING",
+        "suit" : "CLUB",
+        "name" : "CLUB_KING"
+      }, {
+        "rank" : "2",
+        "suit" : "CLUB",
+        "name" : "CLUB_2"
+      }, {
+        "rank" : "2",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_2"
+      }, {
+        "rank" : "2",
+        "suit" : "SPADE",
+        "name" : "SPADE_2"
+      } ],
+      "received" : [ ],
+      "given" : [ ],
+      "toGiveBack" : 0,
+      "legalPlays" : [ ],
+      "completion" : [ {
+        "rank" : "5",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_5"
+      }, {
+        "rank" : "5",
+        "suit" : "HEART",
+        "name" : "HEART_5"
+      } ],
+      "availableActions" : [ "COMPLETE" ]
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "PASS",
+    "eventData" : {
+      "seat" : 2,
+      "action" : "PASS",
+      "cards" : null,
+      "count" : null,
+      "outPlace" : null,
+      "outForbidden" : null,
+      "trickWinner" : null,
+      "trickEndReason" : null,
+      "barrierOpened" : null
+    },
+    "message" : "Player 2 passed.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "president",
+      "version" : 8,
+      "round" : 1,
+      "rounds" : 3,
+      "phase" : "PLAYING",
+      "currentSeat" : 0,
+      "options" : {
+        "afterPass" : "reenter",
+        "exchange" : "two",
+        "giveBack" : "free",
+        "length" : "rounds-3",
+        "mustPlay" : "off",
+        "nextLead" : "scum",
+        "reducedCut" : "off",
+        "scoring" : "rank"
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "handSize" : 16,
+        "title" : null,
+        "place" : null,
+        "out" : false,
+        "passed" : false,
+        "points" : 0,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "handSize" : 15,
+        "title" : null,
+        "place" : null,
+        "out" : false,
+        "passed" : false,
+        "points" : 0,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      }, {
+        "seat" : 2,
+        "name" : null,
+        "handSize" : 14,
+        "title" : null,
+        "place" : null,
+        "out" : false,
+        "passed" : true,
+        "points" : 0,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      } ],
+      "trick" : {
+        "leader" : 2,
+        "plays" : [ {
+          "seat" : 2,
+          "cards" : [ {
+            "rank" : "4",
+            "suit" : "DIAMOND",
+            "name" : "DIAMOND_4"
+          } ]
+        }, {
+          "seat" : 0,
+          "cards" : [ {
+            "rank" : "5",
+            "suit" : "CLUB",
+            "name" : "CLUB_5"
+          } ]
+        }, {
+          "seat" : 1,
+          "cards" : [ {
+            "rank" : "5",
+            "suit" : "SPADE",
+            "name" : "SPADE_5"
+          } ]
+        } ],
+        "top" : {
+          "kind" : "SET",
+          "rank" : "FIVE",
+          "count" : 1
+        },
+        "lastPlayer" : 1,
+        "passed" : [ 2 ],
+        "constraint" : "BEAT",
+        "requiredRank" : null,
+        "requiredCount" : null,
+        "chain" : {
+          "rank" : "FIVE",
+          "cards" : [ {
+            "rank" : "5",
+            "suit" : "CLUB",
+            "name" : "CLUB_5"
+          }, {
+            "rank" : "5",
+            "suit" : "SPADE",
+            "name" : "SPADE_5"
+          } ],
+          "plays" : 2
+        }
+      },
+      "exchange" : [ ],
+      "lastRound" : null,
+      "standings" : [ {
+        "seat" : 0,
+        "points" : 0
+      }, {
+        "seat" : 1,
+        "points" : 0
+      }, {
+        "seat" : 2,
+        "points" : 0
+      } ],
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "hand" : [ {
+        "rank" : "5",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_5"
+      }, {
+        "rank" : "5",
+        "suit" : "HEART",
+        "name" : "HEART_5"
+      }, {
+        "rank" : "6",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_6"
+      }, {
+        "rank" : "6",
+        "suit" : "SPADE",
+        "name" : "SPADE_6"
+      }, {
+        "rank" : "7",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_7"
+      }, {
+        "rank" : "8",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_8"
+      }, {
+        "rank" : "10",
+        "suit" : "CLUB",
+        "name" : "CLUB_10"
+      }, {
+        "rank" : "10",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_10"
+      }, {
+        "rank" : "JACK",
+        "suit" : "CLUB",
+        "name" : "CLUB_JACK"
+      }, {
+        "rank" : "JACK",
+        "suit" : "HEART",
+        "name" : "HEART_JACK"
+      }, {
+        "rank" : "QUEEN",
+        "suit" : "CLUB",
+        "name" : "CLUB_QUEEN"
+      }, {
+        "rank" : "QUEEN",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_QUEEN"
+      }, {
+        "rank" : "KING",
+        "suit" : "CLUB",
+        "name" : "CLUB_KING"
+      }, {
+        "rank" : "2",
+        "suit" : "CLUB",
+        "name" : "CLUB_2"
+      }, {
+        "rank" : "2",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_2"
+      }, {
+        "rank" : "2",
+        "suit" : "SPADE",
+        "name" : "SPADE_2"
+      } ],
+      "received" : [ ],
+      "given" : [ ],
+      "toGiveBack" : 0,
+      "legalPlays" : [ {
+        "kind" : "SET",
+        "rank" : "FIVE",
+        "count" : 1
+      }, {
+        "kind" : "SET",
+        "rank" : "SIX",
+        "count" : 1
+      }, {
+        "kind" : "SET",
+        "rank" : "SEVEN",
+        "count" : 1
+      }, {
+        "kind" : "SET",
+        "rank" : "EIGHT",
+        "count" : 1
+      }, {
+        "kind" : "SET",
+        "rank" : "TEN",
+        "count" : 1
+      }, {
+        "kind" : "SET",
+        "rank" : "JACK",
+        "count" : 1
+      }, {
+        "kind" : "SET",
+        "rank" : "QUEEN",
+        "count" : 1
+      }, {
+        "kind" : "SET",
+        "rank" : "KING",
+        "count" : 1
+      }, {
+        "kind" : "SET",
+        "rank" : "TWO",
+        "count" : 1
+      } ],
+      "completion" : [ {
+        "rank" : "5",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_5"
+      }, {
+        "rank" : "5",
+        "suit" : "HEART",
+        "name" : "HEART_5"
+      } ],
+      "availableActions" : [ "PLAY", "PASS", "COMPLETE" ]
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "PLAY",
+    "eventData" : {
+      "seat" : 0,
+      "action" : "PLAY",
+      "cards" : [ {
+        "rank" : "2",
+        "suit" : "SPADE",
+        "name" : "SPADE_2"
+      } ],
+      "count" : null,
+      "outPlace" : null,
+      "outForbidden" : true,
+      "trickWinner" : 1,
+      "trickEndReason" : "CUT",
+      "barrierOpened" : null
+    },
+    "message" : "Player 0 played.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "president",
+      "version" : 57,
+      "round" : 1,
+      "rounds" : 3,
+      "phase" : "PLAYING",
+      "currentSeat" : 1,
+      "options" : {
+        "afterPass" : "reenter",
+        "exchange" : "two",
+        "giveBack" : "free",
+        "length" : "rounds-3",
+        "mustPlay" : "off",
+        "nextLead" : "scum",
+        "reducedCut" : "off",
+        "scoring" : "rank"
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "handSize" : 0,
+        "title" : null,
+        "place" : null,
+        "out" : true,
+        "passed" : false,
+        "points" : 0,
+        "ready" : false,
+        "forbiddenFinish" : true,
+        "sawExchange" : false
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "handSize" : 3,
+        "title" : null,
+        "place" : null,
+        "out" : false,
+        "passed" : false,
+        "points" : 0,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      }, {
+        "seat" : 2,
+        "name" : null,
+        "handSize" : 1,
+        "title" : null,
+        "place" : null,
+        "out" : false,
+        "passed" : false,
+        "points" : 0,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      } ],
+      "trick" : {
+        "leader" : 1,
+        "plays" : [ ],
+        "top" : null,
+        "lastPlayer" : null,
+        "passed" : [ ],
+        "constraint" : "FREE",
+        "requiredRank" : null,
+        "requiredCount" : null,
+        "chain" : null
+      },
+      "exchange" : [ ],
+      "lastRound" : null,
+      "standings" : [ {
+        "seat" : 0,
+        "points" : 0
+      }, {
+        "seat" : 1,
+        "points" : 0
+      }, {
+        "seat" : 2,
+        "points" : 0
+      } ],
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "hand" : [ ],
+      "received" : [ ],
+      "given" : [ ],
+      "toGiveBack" : 0,
+      "legalPlays" : [ ],
+      "availableActions" : [ ]
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "ROUND_END",
+    "eventData" : {
+      "seat" : 2,
+      "action" : "PLAY",
+      "cards" : [ {
+        "rank" : "2",
+        "suit" : "HEART",
+        "name" : "HEART_2"
+      } ],
+      "count" : null,
+      "outPlace" : null,
+      "outForbidden" : true,
+      "trickWinner" : null,
+      "trickEndReason" : null,
+      "barrierOpened" : null
+    },
+    "message" : "Player 2 played.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "president",
+      "version" : 59,
+      "round" : 1,
+      "rounds" : 3,
+      "phase" : "ROUND_OVER",
+      "currentSeat" : 2,
+      "options" : {
+        "afterPass" : "reenter",
+        "exchange" : "two",
+        "giveBack" : "free",
+        "length" : "rounds-3",
+        "mustPlay" : "off",
+        "nextLead" : "scum",
+        "reducedCut" : "off",
+        "scoring" : "rank"
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "handSize" : 0,
+        "title" : null,
+        "place" : 2,
+        "out" : true,
+        "passed" : false,
+        "points" : 1,
+        "ready" : false,
+        "forbiddenFinish" : true,
+        "sawExchange" : false
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "handSize" : 2,
+        "title" : null,
+        "place" : 1,
+        "out" : true,
+        "passed" : false,
+        "points" : 2,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      }, {
+        "seat" : 2,
+        "name" : null,
+        "handSize" : 0,
+        "title" : null,
+        "place" : 3,
+        "out" : true,
+        "passed" : false,
+        "points" : 0,
+        "ready" : false,
+        "forbiddenFinish" : true,
+        "sawExchange" : false
+      } ],
+      "trick" : {
+        "leader" : 1,
+        "plays" : [ {
+          "seat" : 1,
+          "cards" : [ {
+            "rank" : "ACE",
+            "suit" : "CLUB",
+            "name" : "CLUB_ACE"
+          } ]
+        }, {
+          "seat" : 2,
+          "cards" : [ {
+            "rank" : "2",
+            "suit" : "HEART",
+            "name" : "HEART_2"
+          } ]
+        } ],
+        "top" : {
+          "kind" : "SET",
+          "rank" : "TWO",
+          "count" : 1
+        },
+        "lastPlayer" : 2,
+        "passed" : [ ],
+        "constraint" : "BEAT",
+        "requiredRank" : null,
+        "requiredCount" : null,
+        "chain" : {
+          "rank" : "TWO",
+          "cards" : [ {
+            "rank" : "2",
+            "suit" : "HEART",
+            "name" : "HEART_2"
+          } ],
+          "plays" : 1
+        }
+      },
+      "exchange" : [ ],
+      "lastRound" : {
+        "round" : 1,
+        "finishingOrder" : [ 1, 0, 2 ],
+        "players" : [ {
+          "seat" : 1,
+          "place" : 1,
+          "title" : "PRESIDENT",
+          "points" : 2,
+          "total" : 2,
+          "forbiddenFinish" : false
+        }, {
+          "seat" : 0,
+          "place" : 2,
+          "title" : "NEUTRAL",
+          "points" : 1,
+          "total" : 1,
+          "forbiddenFinish" : true
+        }, {
+          "seat" : 2,
+          "place" : 3,
+          "title" : "SCUM",
+          "points" : 0,
+          "total" : 0,
+          "forbiddenFinish" : true
+        } ]
+      },
+      "standings" : [ {
+        "seat" : 1,
+        "points" : 2
+      }, {
+        "seat" : 0,
+        "points" : 1
+      }, {
+        "seat" : 2,
+        "points" : 0
+      } ],
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "hand" : [ ],
+      "received" : [ ],
+      "given" : [ ],
+      "toGiveBack" : 0,
+      "legalPlays" : [ ],
+      "availableActions" : [ "READY" ]
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "READY",
+    "eventData" : {
+      "seat" : 0,
+      "action" : "READY",
+      "cards" : null,
+      "count" : null,
+      "outPlace" : null,
+      "outForbidden" : null,
+      "trickWinner" : null,
+      "trickEndReason" : null,
+      "barrierOpened" : false
+    },
+    "message" : "Player 0 is ready.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "president",
+      "version" : 60,
+      "round" : 1,
+      "rounds" : 3,
+      "phase" : "ROUND_OVER",
+      "currentSeat" : 2,
+      "options" : {
+        "afterPass" : "reenter",
+        "exchange" : "two",
+        "giveBack" : "free",
+        "length" : "rounds-3",
+        "mustPlay" : "off",
+        "nextLead" : "scum",
+        "reducedCut" : "off",
+        "scoring" : "rank"
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "handSize" : 0,
+        "title" : null,
+        "place" : 2,
+        "out" : true,
+        "passed" : false,
+        "points" : 1,
+        "ready" : true,
+        "forbiddenFinish" : true,
+        "sawExchange" : false
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "handSize" : 2,
+        "title" : null,
+        "place" : 1,
+        "out" : true,
+        "passed" : false,
+        "points" : 2,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      }, {
+        "seat" : 2,
+        "name" : null,
+        "handSize" : 0,
+        "title" : null,
+        "place" : 3,
+        "out" : true,
+        "passed" : false,
+        "points" : 0,
+        "ready" : false,
+        "forbiddenFinish" : true,
+        "sawExchange" : false
+      } ],
+      "trick" : {
+        "leader" : 1,
+        "plays" : [ {
+          "seat" : 1,
+          "cards" : [ {
+            "rank" : "ACE",
+            "suit" : "CLUB",
+            "name" : "CLUB_ACE"
+          } ]
+        }, {
+          "seat" : 2,
+          "cards" : [ {
+            "rank" : "2",
+            "suit" : "HEART",
+            "name" : "HEART_2"
+          } ]
+        } ],
+        "top" : {
+          "kind" : "SET",
+          "rank" : "TWO",
+          "count" : 1
+        },
+        "lastPlayer" : 2,
+        "passed" : [ ],
+        "constraint" : "BEAT",
+        "requiredRank" : null,
+        "requiredCount" : null,
+        "chain" : {
+          "rank" : "TWO",
+          "cards" : [ {
+            "rank" : "2",
+            "suit" : "HEART",
+            "name" : "HEART_2"
+          } ],
+          "plays" : 1
+        }
+      },
+      "exchange" : [ ],
+      "lastRound" : {
+        "round" : 1,
+        "finishingOrder" : [ 1, 0, 2 ],
+        "players" : [ {
+          "seat" : 1,
+          "place" : 1,
+          "title" : "PRESIDENT",
+          "points" : 2,
+          "total" : 2,
+          "forbiddenFinish" : false
+        }, {
+          "seat" : 0,
+          "place" : 2,
+          "title" : "NEUTRAL",
+          "points" : 1,
+          "total" : 1,
+          "forbiddenFinish" : true
+        }, {
+          "seat" : 2,
+          "place" : 3,
+          "title" : "SCUM",
+          "points" : 0,
+          "total" : 0,
+          "forbiddenFinish" : true
+        } ]
+      },
+      "standings" : [ {
+        "seat" : 1,
+        "points" : 2
+      }, {
+        "seat" : 0,
+        "points" : 1
+      }, {
+        "seat" : 2,
+        "points" : 0
+      } ],
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "hand" : [ ],
+      "received" : [ ],
+      "given" : [ ],
+      "toGiveBack" : 0,
+      "legalPlays" : [ ],
+      "availableActions" : [ ]
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "ROUND_START",
+    "eventData" : {
+      "seat" : 2,
+      "action" : "READY",
+      "cards" : null,
+      "count" : null,
+      "outPlace" : null,
+      "outForbidden" : null,
+      "trickWinner" : null,
+      "trickEndReason" : null,
+      "barrierOpened" : true
+    },
+    "message" : "Player 2 is ready.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "president",
+      "version" : 62,
+      "round" : 2,
+      "rounds" : 3,
+      "phase" : "EXCHANGE",
+      "currentSeat" : 2,
+      "options" : {
+        "afterPass" : "reenter",
+        "exchange" : "two",
+        "giveBack" : "free",
+        "length" : "rounds-3",
+        "mustPlay" : "off",
+        "nextLead" : "scum",
+        "reducedCut" : "off",
+        "scoring" : "rank"
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "handSize" : 18,
+        "title" : "NEUTRAL",
+        "place" : null,
+        "out" : false,
+        "passed" : false,
+        "points" : 1,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "handSize" : 19,
+        "title" : "PRESIDENT",
+        "place" : null,
+        "out" : false,
+        "passed" : false,
+        "points" : 2,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      }, {
+        "seat" : 2,
+        "name" : null,
+        "handSize" : 15,
+        "title" : "SCUM",
+        "place" : null,
+        "out" : false,
+        "passed" : false,
+        "points" : 0,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      } ],
+      "trick" : {
+        "leader" : 2,
+        "plays" : [ ],
+        "top" : null,
+        "lastPlayer" : null,
+        "passed" : [ ],
+        "constraint" : "FREE",
+        "requiredRank" : null,
+        "requiredCount" : null,
+        "chain" : null
+      },
+      "exchange" : [ {
+        "high" : 1,
+        "low" : 2,
+        "count" : 2,
+        "done" : false
+      } ],
+      "lastRound" : {
+        "round" : 1,
+        "finishingOrder" : [ 1, 0, 2 ],
+        "players" : [ {
+          "seat" : 1,
+          "place" : 1,
+          "title" : "PRESIDENT",
+          "points" : 2,
+          "total" : 2,
+          "forbiddenFinish" : false
+        }, {
+          "seat" : 0,
+          "place" : 2,
+          "title" : "NEUTRAL",
+          "points" : 1,
+          "total" : 1,
+          "forbiddenFinish" : true
+        }, {
+          "seat" : 2,
+          "place" : 3,
+          "title" : "SCUM",
+          "points" : 0,
+          "total" : 0,
+          "forbiddenFinish" : true
+        } ]
+      },
+      "standings" : [ {
+        "seat" : 1,
+        "points" : 2
+      }, {
+        "seat" : 0,
+        "points" : 1
+      }, {
+        "seat" : 2,
+        "points" : 0
+      } ],
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "hand" : [ {
+        "rank" : "3",
+        "suit" : "CLUB",
+        "name" : "CLUB_3"
+      }, {
+        "rank" : "3",
+        "suit" : "HEART",
+        "name" : "HEART_3"
+      }, {
+        "rank" : "4",
+        "suit" : "HEART",
+        "name" : "HEART_4"
+      }, {
+        "rank" : "4",
+        "suit" : "SPADE",
+        "name" : "SPADE_4"
+      }, {
+        "rank" : "5",
+        "suit" : "CLUB",
+        "name" : "CLUB_5"
+      }, {
+        "rank" : "6",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_6"
+      }, {
+        "rank" : "8",
+        "suit" : "CLUB",
+        "name" : "CLUB_8"
+      }, {
+        "rank" : "9",
+        "suit" : "CLUB",
+        "name" : "CLUB_9"
+      }, {
+        "rank" : "9",
+        "suit" : "SPADE",
+        "name" : "SPADE_9"
+      }, {
+        "rank" : "10",
+        "suit" : "CLUB",
+        "name" : "CLUB_10"
+      }, {
+        "rank" : "10",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_10"
+      }, {
+        "rank" : "10",
+        "suit" : "SPADE",
+        "name" : "SPADE_10"
+      }, {
+        "rank" : "JACK",
+        "suit" : "CLUB",
+        "name" : "CLUB_JACK"
+      }, {
+        "rank" : "JACK",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_JACK"
+      }, {
+        "rank" : "JACK",
+        "suit" : "SPADE",
+        "name" : "SPADE_JACK"
+      }, {
+        "rank" : "QUEEN",
+        "suit" : "CLUB",
+        "name" : "CLUB_QUEEN"
+      }, {
+        "rank" : "QUEEN",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_QUEEN"
+      }, {
+        "rank" : "2",
+        "suit" : "CLUB",
+        "name" : "CLUB_2"
+      } ],
+      "received" : [ ],
+      "given" : [ ],
+      "toGiveBack" : 0,
+      "legalPlays" : [ ],
+      "availableActions" : [ ]
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "EXCHANGE",
+    "eventData" : {
+      "seat" : 1,
+      "action" : "EXCHANGE",
+      "cards" : null,
+      "count" : 2,
+      "outPlace" : null,
+      "outForbidden" : null,
+      "trickWinner" : null,
+      "trickEndReason" : null,
+      "barrierOpened" : null
+    },
+    "message" : "Player 1 gave cards back.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "president",
+      "version" : 63,
+      "round" : 2,
+      "rounds" : 3,
+      "phase" : "EXCHANGE_VIEW",
+      "currentSeat" : 2,
+      "options" : {
+        "afterPass" : "reenter",
+        "exchange" : "two",
+        "giveBack" : "free",
+        "length" : "rounds-3",
+        "mustPlay" : "off",
+        "nextLead" : "scum",
+        "reducedCut" : "off",
+        "scoring" : "rank"
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "handSize" : 18,
+        "title" : "NEUTRAL",
+        "place" : null,
+        "out" : false,
+        "passed" : false,
+        "points" : 1,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "handSize" : 17,
+        "title" : "PRESIDENT",
+        "place" : null,
+        "out" : false,
+        "passed" : false,
+        "points" : 2,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      }, {
+        "seat" : 2,
+        "name" : null,
+        "handSize" : 17,
+        "title" : "SCUM",
+        "place" : null,
+        "out" : false,
+        "passed" : false,
+        "points" : 0,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      } ],
+      "trick" : {
+        "leader" : 2,
+        "plays" : [ ],
+        "top" : null,
+        "lastPlayer" : null,
+        "passed" : [ ],
+        "constraint" : "FREE",
+        "requiredRank" : null,
+        "requiredCount" : null,
+        "chain" : null
+      },
+      "exchange" : [ {
+        "high" : 1,
+        "low" : 2,
+        "count" : 2,
+        "done" : true
+      } ],
+      "lastRound" : {
+        "round" : 1,
+        "finishingOrder" : [ 1, 0, 2 ],
+        "players" : [ {
+          "seat" : 1,
+          "place" : 1,
+          "title" : "PRESIDENT",
+          "points" : 2,
+          "total" : 2,
+          "forbiddenFinish" : false
+        }, {
+          "seat" : 0,
+          "place" : 2,
+          "title" : "NEUTRAL",
+          "points" : 1,
+          "total" : 1,
+          "forbiddenFinish" : true
+        }, {
+          "seat" : 2,
+          "place" : 3,
+          "title" : "SCUM",
+          "points" : 0,
+          "total" : 0,
+          "forbiddenFinish" : true
+        } ]
+      },
+      "standings" : [ {
+        "seat" : 1,
+        "points" : 2
+      }, {
+        "seat" : 0,
+        "points" : 1
+      }, {
+        "seat" : 2,
+        "points" : 0
+      } ],
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "hand" : [ {
+        "rank" : "3",
+        "suit" : "CLUB",
+        "name" : "CLUB_3"
+      }, {
+        "rank" : "3",
+        "suit" : "HEART",
+        "name" : "HEART_3"
+      }, {
+        "rank" : "4",
+        "suit" : "HEART",
+        "name" : "HEART_4"
+      }, {
+        "rank" : "4",
+        "suit" : "SPADE",
+        "name" : "SPADE_4"
+      }, {
+        "rank" : "5",
+        "suit" : "CLUB",
+        "name" : "CLUB_5"
+      }, {
+        "rank" : "6",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_6"
+      }, {
+        "rank" : "8",
+        "suit" : "CLUB",
+        "name" : "CLUB_8"
+      }, {
+        "rank" : "9",
+        "suit" : "CLUB",
+        "name" : "CLUB_9"
+      }, {
+        "rank" : "9",
+        "suit" : "SPADE",
+        "name" : "SPADE_9"
+      }, {
+        "rank" : "10",
+        "suit" : "CLUB",
+        "name" : "CLUB_10"
+      }, {
+        "rank" : "10",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_10"
+      }, {
+        "rank" : "10",
+        "suit" : "SPADE",
+        "name" : "SPADE_10"
+      }, {
+        "rank" : "JACK",
+        "suit" : "CLUB",
+        "name" : "CLUB_JACK"
+      }, {
+        "rank" : "JACK",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_JACK"
+      }, {
+        "rank" : "JACK",
+        "suit" : "SPADE",
+        "name" : "SPADE_JACK"
+      }, {
+        "rank" : "QUEEN",
+        "suit" : "CLUB",
+        "name" : "CLUB_QUEEN"
+      }, {
+        "rank" : "QUEEN",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_QUEEN"
+      }, {
+        "rank" : "2",
+        "suit" : "CLUB",
+        "name" : "CLUB_2"
+      } ],
+      "received" : [ ],
+      "given" : [ ],
+      "toGiveBack" : 0,
+      "legalPlays" : [ ],
+      "availableActions" : [ "SEE_EXCHANGE" ]
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "EXCHANGE_SEEN",
+    "eventData" : {
+      "seat" : 0,
+      "action" : "EXCHANGE_SEEN",
+      "cards" : null,
+      "count" : null,
+      "outPlace" : null,
+      "outForbidden" : null,
+      "trickWinner" : null,
+      "trickEndReason" : null,
+      "barrierOpened" : false
+    },
+    "message" : "Player 0 saw the exchange.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "president",
+      "version" : 64,
+      "round" : 2,
+      "rounds" : 3,
+      "phase" : "EXCHANGE_VIEW",
+      "currentSeat" : 2,
+      "options" : {
+        "afterPass" : "reenter",
+        "exchange" : "two",
+        "giveBack" : "free",
+        "length" : "rounds-3",
+        "mustPlay" : "off",
+        "nextLead" : "scum",
+        "reducedCut" : "off",
+        "scoring" : "rank"
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "handSize" : 18,
+        "title" : "NEUTRAL",
+        "place" : null,
+        "out" : false,
+        "passed" : false,
+        "points" : 1,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : true
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "handSize" : 17,
+        "title" : "PRESIDENT",
+        "place" : null,
+        "out" : false,
+        "passed" : false,
+        "points" : 2,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      }, {
+        "seat" : 2,
+        "name" : null,
+        "handSize" : 17,
+        "title" : "SCUM",
+        "place" : null,
+        "out" : false,
+        "passed" : false,
+        "points" : 0,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      } ],
+      "trick" : {
+        "leader" : 2,
+        "plays" : [ ],
+        "top" : null,
+        "lastPlayer" : null,
+        "passed" : [ ],
+        "constraint" : "FREE",
+        "requiredRank" : null,
+        "requiredCount" : null,
+        "chain" : null
+      },
+      "exchange" : [ {
+        "high" : 1,
+        "low" : 2,
+        "count" : 2,
+        "done" : true
+      } ],
+      "lastRound" : {
+        "round" : 1,
+        "finishingOrder" : [ 1, 0, 2 ],
+        "players" : [ {
+          "seat" : 1,
+          "place" : 1,
+          "title" : "PRESIDENT",
+          "points" : 2,
+          "total" : 2,
+          "forbiddenFinish" : false
+        }, {
+          "seat" : 0,
+          "place" : 2,
+          "title" : "NEUTRAL",
+          "points" : 1,
+          "total" : 1,
+          "forbiddenFinish" : true
+        }, {
+          "seat" : 2,
+          "place" : 3,
+          "title" : "SCUM",
+          "points" : 0,
+          "total" : 0,
+          "forbiddenFinish" : true
+        } ]
+      },
+      "standings" : [ {
+        "seat" : 1,
+        "points" : 2
+      }, {
+        "seat" : 0,
+        "points" : 1
+      }, {
+        "seat" : 2,
+        "points" : 0
+      } ],
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "hand" : [ {
+        "rank" : "3",
+        "suit" : "CLUB",
+        "name" : "CLUB_3"
+      }, {
+        "rank" : "3",
+        "suit" : "HEART",
+        "name" : "HEART_3"
+      }, {
+        "rank" : "4",
+        "suit" : "HEART",
+        "name" : "HEART_4"
+      }, {
+        "rank" : "4",
+        "suit" : "SPADE",
+        "name" : "SPADE_4"
+      }, {
+        "rank" : "5",
+        "suit" : "CLUB",
+        "name" : "CLUB_5"
+      }, {
+        "rank" : "6",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_6"
+      }, {
+        "rank" : "8",
+        "suit" : "CLUB",
+        "name" : "CLUB_8"
+      }, {
+        "rank" : "9",
+        "suit" : "CLUB",
+        "name" : "CLUB_9"
+      }, {
+        "rank" : "9",
+        "suit" : "SPADE",
+        "name" : "SPADE_9"
+      }, {
+        "rank" : "10",
+        "suit" : "CLUB",
+        "name" : "CLUB_10"
+      }, {
+        "rank" : "10",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_10"
+      }, {
+        "rank" : "10",
+        "suit" : "SPADE",
+        "name" : "SPADE_10"
+      }, {
+        "rank" : "JACK",
+        "suit" : "CLUB",
+        "name" : "CLUB_JACK"
+      }, {
+        "rank" : "JACK",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_JACK"
+      }, {
+        "rank" : "JACK",
+        "suit" : "SPADE",
+        "name" : "SPADE_JACK"
+      }, {
+        "rank" : "QUEEN",
+        "suit" : "CLUB",
+        "name" : "CLUB_QUEEN"
+      }, {
+        "rank" : "QUEEN",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_QUEEN"
+      }, {
+        "rank" : "2",
+        "suit" : "CLUB",
+        "name" : "CLUB_2"
+      } ],
+      "received" : [ ],
+      "given" : [ ],
+      "toGiveBack" : 0,
+      "legalPlays" : [ ],
+      "availableActions" : [ ]
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "EXCHANGE_CLOSED",
+    "eventData" : {
+      "round" : 2,
+      "late" : [ 1, 2 ]
+    },
+    "message" : "The exchange view was closed.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "president",
+      "version" : 65,
+      "round" : 2,
+      "rounds" : 3,
+      "phase" : "PLAYING",
+      "currentSeat" : 2,
+      "options" : {
+        "afterPass" : "reenter",
+        "exchange" : "two",
+        "giveBack" : "free",
+        "length" : "rounds-3",
+        "mustPlay" : "off",
+        "nextLead" : "scum",
+        "reducedCut" : "off",
+        "scoring" : "rank"
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "handSize" : 18,
+        "title" : "NEUTRAL",
+        "place" : null,
+        "out" : false,
+        "passed" : false,
+        "points" : 1,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "handSize" : 17,
+        "title" : "PRESIDENT",
+        "place" : null,
+        "out" : false,
+        "passed" : false,
+        "points" : 2,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      }, {
+        "seat" : 2,
+        "name" : null,
+        "handSize" : 17,
+        "title" : "SCUM",
+        "place" : null,
+        "out" : false,
+        "passed" : false,
+        "points" : 0,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      } ],
+      "trick" : {
+        "leader" : 2,
+        "plays" : [ ],
+        "top" : null,
+        "lastPlayer" : null,
+        "passed" : [ ],
+        "constraint" : "FREE",
+        "requiredRank" : null,
+        "requiredCount" : null,
+        "chain" : null
+      },
+      "exchange" : [ {
+        "high" : 1,
+        "low" : 2,
+        "count" : 2,
+        "done" : true
+      } ],
+      "lastRound" : {
+        "round" : 1,
+        "finishingOrder" : [ 1, 0, 2 ],
+        "players" : [ {
+          "seat" : 1,
+          "place" : 1,
+          "title" : "PRESIDENT",
+          "points" : 2,
+          "total" : 2,
+          "forbiddenFinish" : false
+        }, {
+          "seat" : 0,
+          "place" : 2,
+          "title" : "NEUTRAL",
+          "points" : 1,
+          "total" : 1,
+          "forbiddenFinish" : true
+        }, {
+          "seat" : 2,
+          "place" : 3,
+          "title" : "SCUM",
+          "points" : 0,
+          "total" : 0,
+          "forbiddenFinish" : true
+        } ]
+      },
+      "standings" : [ {
+        "seat" : 1,
+        "points" : 2
+      }, {
+        "seat" : 0,
+        "points" : 1
+      }, {
+        "seat" : 2,
+        "points" : 0
+      } ],
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "hand" : [ {
+        "rank" : "3",
+        "suit" : "CLUB",
+        "name" : "CLUB_3"
+      }, {
+        "rank" : "3",
+        "suit" : "HEART",
+        "name" : "HEART_3"
+      }, {
+        "rank" : "4",
+        "suit" : "HEART",
+        "name" : "HEART_4"
+      }, {
+        "rank" : "4",
+        "suit" : "SPADE",
+        "name" : "SPADE_4"
+      }, {
+        "rank" : "5",
+        "suit" : "CLUB",
+        "name" : "CLUB_5"
+      }, {
+        "rank" : "6",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_6"
+      }, {
+        "rank" : "8",
+        "suit" : "CLUB",
+        "name" : "CLUB_8"
+      }, {
+        "rank" : "9",
+        "suit" : "CLUB",
+        "name" : "CLUB_9"
+      }, {
+        "rank" : "9",
+        "suit" : "SPADE",
+        "name" : "SPADE_9"
+      }, {
+        "rank" : "10",
+        "suit" : "CLUB",
+        "name" : "CLUB_10"
+      }, {
+        "rank" : "10",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_10"
+      }, {
+        "rank" : "10",
+        "suit" : "SPADE",
+        "name" : "SPADE_10"
+      }, {
+        "rank" : "JACK",
+        "suit" : "CLUB",
+        "name" : "CLUB_JACK"
+      }, {
+        "rank" : "JACK",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_JACK"
+      }, {
+        "rank" : "JACK",
+        "suit" : "SPADE",
+        "name" : "SPADE_JACK"
+      }, {
+        "rank" : "QUEEN",
+        "suit" : "CLUB",
+        "name" : "CLUB_QUEEN"
+      }, {
+        "rank" : "QUEEN",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_QUEEN"
+      }, {
+        "rank" : "2",
+        "suit" : "CLUB",
+        "name" : "CLUB_2"
+      } ],
+      "received" : [ ],
+      "given" : [ ],
+      "toGiveBack" : 0,
+      "legalPlays" : [ ],
+      "availableActions" : [ ]
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "PLAY",
+    "eventData" : {
+      "seat" : 2,
+      "action" : "PLAY",
+      "cards" : [ {
+        "rank" : "3",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_3"
+      } ],
+      "count" : null,
+      "outPlace" : null,
+      "outForbidden" : null,
+      "trickWinner" : null,
+      "trickEndReason" : null,
+      "barrierOpened" : null
+    },
+    "message" : "Player 2 played.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "president",
+      "version" : 66,
+      "round" : 2,
+      "rounds" : 3,
+      "phase" : "PLAYING",
+      "currentSeat" : 0,
+      "options" : {
+        "afterPass" : "reenter",
+        "exchange" : "two",
+        "giveBack" : "free",
+        "length" : "rounds-3",
+        "mustPlay" : "off",
+        "nextLead" : "scum",
+        "reducedCut" : "off",
+        "scoring" : "rank"
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "handSize" : 18,
+        "title" : "NEUTRAL",
+        "place" : null,
+        "out" : false,
+        "passed" : false,
+        "points" : 1,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "handSize" : 17,
+        "title" : "PRESIDENT",
+        "place" : null,
+        "out" : false,
+        "passed" : false,
+        "points" : 2,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      }, {
+        "seat" : 2,
+        "name" : null,
+        "handSize" : 16,
+        "title" : "SCUM",
+        "place" : null,
+        "out" : false,
+        "passed" : false,
+        "points" : 0,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      } ],
+      "trick" : {
+        "leader" : 2,
+        "plays" : [ {
+          "seat" : 2,
+          "cards" : [ {
+            "rank" : "3",
+            "suit" : "DIAMOND",
+            "name" : "DIAMOND_3"
+          } ]
+        } ],
+        "top" : {
+          "kind" : "SET",
+          "rank" : "THREE",
+          "count" : 1
+        },
+        "lastPlayer" : 2,
+        "passed" : [ ],
+        "constraint" : "BEAT",
+        "requiredRank" : null,
+        "requiredCount" : null,
+        "chain" : {
+          "rank" : "THREE",
+          "cards" : [ {
+            "rank" : "3",
+            "suit" : "DIAMOND",
+            "name" : "DIAMOND_3"
+          } ],
+          "plays" : 1
+        }
+      },
+      "exchange" : [ {
+        "high" : 1,
+        "low" : 2,
+        "count" : 2,
+        "done" : true
+      } ],
+      "lastRound" : {
+        "round" : 1,
+        "finishingOrder" : [ 1, 0, 2 ],
+        "players" : [ {
+          "seat" : 1,
+          "place" : 1,
+          "title" : "PRESIDENT",
+          "points" : 2,
+          "total" : 2,
+          "forbiddenFinish" : false
+        }, {
+          "seat" : 0,
+          "place" : 2,
+          "title" : "NEUTRAL",
+          "points" : 1,
+          "total" : 1,
+          "forbiddenFinish" : true
+        }, {
+          "seat" : 2,
+          "place" : 3,
+          "title" : "SCUM",
+          "points" : 0,
+          "total" : 0,
+          "forbiddenFinish" : true
+        } ]
+      },
+      "standings" : [ {
+        "seat" : 1,
+        "points" : 2
+      }, {
+        "seat" : 0,
+        "points" : 1
+      }, {
+        "seat" : 2,
+        "points" : 0
+      } ],
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "hand" : [ {
+        "rank" : "3",
+        "suit" : "CLUB",
+        "name" : "CLUB_3"
+      }, {
+        "rank" : "3",
+        "suit" : "HEART",
+        "name" : "HEART_3"
+      }, {
+        "rank" : "4",
+        "suit" : "HEART",
+        "name" : "HEART_4"
+      }, {
+        "rank" : "4",
+        "suit" : "SPADE",
+        "name" : "SPADE_4"
+      }, {
+        "rank" : "5",
+        "suit" : "CLUB",
+        "name" : "CLUB_5"
+      }, {
+        "rank" : "6",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_6"
+      }, {
+        "rank" : "8",
+        "suit" : "CLUB",
+        "name" : "CLUB_8"
+      }, {
+        "rank" : "9",
+        "suit" : "CLUB",
+        "name" : "CLUB_9"
+      }, {
+        "rank" : "9",
+        "suit" : "SPADE",
+        "name" : "SPADE_9"
+      }, {
+        "rank" : "10",
+        "suit" : "CLUB",
+        "name" : "CLUB_10"
+      }, {
+        "rank" : "10",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_10"
+      }, {
+        "rank" : "10",
+        "suit" : "SPADE",
+        "name" : "SPADE_10"
+      }, {
+        "rank" : "JACK",
+        "suit" : "CLUB",
+        "name" : "CLUB_JACK"
+      }, {
+        "rank" : "JACK",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_JACK"
+      }, {
+        "rank" : "JACK",
+        "suit" : "SPADE",
+        "name" : "SPADE_JACK"
+      }, {
+        "rank" : "QUEEN",
+        "suit" : "CLUB",
+        "name" : "CLUB_QUEEN"
+      }, {
+        "rank" : "QUEEN",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_QUEEN"
+      }, {
+        "rank" : "2",
+        "suit" : "CLUB",
+        "name" : "CLUB_2"
+      } ],
+      "received" : [ ],
+      "given" : [ ],
+      "toGiveBack" : 0,
+      "legalPlays" : [ {
+        "kind" : "SET",
+        "rank" : "THREE",
+        "count" : 1
+      }, {
+        "kind" : "SET",
+        "rank" : "FOUR",
+        "count" : 1
+      }, {
+        "kind" : "SET",
+        "rank" : "FIVE",
+        "count" : 1
+      }, {
+        "kind" : "SET",
+        "rank" : "SIX",
+        "count" : 1
+      }, {
+        "kind" : "SET",
+        "rank" : "EIGHT",
+        "count" : 1
+      }, {
+        "kind" : "SET",
+        "rank" : "NINE",
+        "count" : 1
+      }, {
+        "kind" : "SET",
+        "rank" : "TEN",
+        "count" : 1
+      }, {
+        "kind" : "SET",
+        "rank" : "JACK",
+        "count" : 1
+      }, {
+        "kind" : "SET",
+        "rank" : "QUEEN",
+        "count" : 1
+      }, {
+        "kind" : "SET",
+        "rank" : "TWO",
+        "count" : 1
+      } ],
+      "availableActions" : [ "PLAY", "PASS" ]
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "PASS",
+    "eventData" : {
+      "seat" : 1,
+      "action" : "PASS",
+      "cards" : null,
+      "count" : null,
+      "outPlace" : null,
+      "outForbidden" : null,
+      "trickWinner" : null,
+      "trickEndReason" : null,
+      "barrierOpened" : null
+    },
+    "message" : "Player 1 passed.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "president",
+      "version" : 68,
+      "round" : 2,
+      "rounds" : 3,
+      "phase" : "PLAYING",
+      "currentSeat" : 2,
+      "options" : {
+        "afterPass" : "reenter",
+        "exchange" : "two",
+        "giveBack" : "free",
+        "length" : "rounds-3",
+        "mustPlay" : "off",
+        "nextLead" : "scum",
+        "reducedCut" : "off",
+        "scoring" : "rank"
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "handSize" : 17,
+        "title" : "NEUTRAL",
+        "place" : null,
+        "out" : false,
+        "passed" : false,
+        "points" : 1,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "handSize" : 17,
+        "title" : "PRESIDENT",
+        "place" : null,
+        "out" : false,
+        "passed" : true,
+        "points" : 2,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      }, {
+        "seat" : 2,
+        "name" : null,
+        "handSize" : 16,
+        "title" : "SCUM",
+        "place" : null,
+        "out" : false,
+        "passed" : false,
+        "points" : 0,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      } ],
+      "trick" : {
+        "leader" : 2,
+        "plays" : [ {
+          "seat" : 2,
+          "cards" : [ {
+            "rank" : "3",
+            "suit" : "DIAMOND",
+            "name" : "DIAMOND_3"
+          } ]
+        }, {
+          "seat" : 0,
+          "cards" : [ {
+            "rank" : "3",
+            "suit" : "CLUB",
+            "name" : "CLUB_3"
+          } ]
+        } ],
+        "top" : {
+          "kind" : "SET",
+          "rank" : "THREE",
+          "count" : 1
+        },
+        "lastPlayer" : 0,
+        "passed" : [ 1 ],
+        "constraint" : "BEAT",
+        "requiredRank" : null,
+        "requiredCount" : null,
+        "chain" : {
+          "rank" : "THREE",
+          "cards" : [ {
+            "rank" : "3",
+            "suit" : "DIAMOND",
+            "name" : "DIAMOND_3"
+          }, {
+            "rank" : "3",
+            "suit" : "CLUB",
+            "name" : "CLUB_3"
+          } ],
+          "plays" : 2
+        }
+      },
+      "exchange" : [ {
+        "high" : 1,
+        "low" : 2,
+        "count" : 2,
+        "done" : true
+      } ],
+      "lastRound" : {
+        "round" : 1,
+        "finishingOrder" : [ 1, 0, 2 ],
+        "players" : [ {
+          "seat" : 1,
+          "place" : 1,
+          "title" : "PRESIDENT",
+          "points" : 2,
+          "total" : 2,
+          "forbiddenFinish" : false
+        }, {
+          "seat" : 0,
+          "place" : 2,
+          "title" : "NEUTRAL",
+          "points" : 1,
+          "total" : 1,
+          "forbiddenFinish" : true
+        }, {
+          "seat" : 2,
+          "place" : 3,
+          "title" : "SCUM",
+          "points" : 0,
+          "total" : 0,
+          "forbiddenFinish" : true
+        } ]
+      },
+      "standings" : [ {
+        "seat" : 1,
+        "points" : 2
+      }, {
+        "seat" : 0,
+        "points" : 1
+      }, {
+        "seat" : 2,
+        "points" : 0
+      } ],
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "hand" : [ {
+        "rank" : "3",
+        "suit" : "HEART",
+        "name" : "HEART_3"
+      }, {
+        "rank" : "4",
+        "suit" : "HEART",
+        "name" : "HEART_4"
+      }, {
+        "rank" : "4",
+        "suit" : "SPADE",
+        "name" : "SPADE_4"
+      }, {
+        "rank" : "5",
+        "suit" : "CLUB",
+        "name" : "CLUB_5"
+      }, {
+        "rank" : "6",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_6"
+      }, {
+        "rank" : "8",
+        "suit" : "CLUB",
+        "name" : "CLUB_8"
+      }, {
+        "rank" : "9",
+        "suit" : "CLUB",
+        "name" : "CLUB_9"
+      }, {
+        "rank" : "9",
+        "suit" : "SPADE",
+        "name" : "SPADE_9"
+      }, {
+        "rank" : "10",
+        "suit" : "CLUB",
+        "name" : "CLUB_10"
+      }, {
+        "rank" : "10",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_10"
+      }, {
+        "rank" : "10",
+        "suit" : "SPADE",
+        "name" : "SPADE_10"
+      }, {
+        "rank" : "JACK",
+        "suit" : "CLUB",
+        "name" : "CLUB_JACK"
+      }, {
+        "rank" : "JACK",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_JACK"
+      }, {
+        "rank" : "JACK",
+        "suit" : "SPADE",
+        "name" : "SPADE_JACK"
+      }, {
+        "rank" : "QUEEN",
+        "suit" : "CLUB",
+        "name" : "CLUB_QUEEN"
+      }, {
+        "rank" : "QUEEN",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_QUEEN"
+      }, {
+        "rank" : "2",
+        "suit" : "CLUB",
+        "name" : "CLUB_2"
+      } ],
+      "received" : [ ],
+      "given" : [ ],
+      "toGiveBack" : 0,
+      "legalPlays" : [ ],
+      "availableActions" : [ ]
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "PLAY",
+    "eventData" : {
+      "seat" : 2,
+      "action" : "PLAY",
+      "cards" : [ {
+        "rank" : "ACE",
+        "suit" : "HEART",
+        "name" : "HEART_ACE"
+      } ],
+      "count" : null,
+      "outPlace" : 1,
+      "outForbidden" : false,
+      "trickWinner" : 0,
+      "trickEndReason" : "FIRST_OUT",
+      "barrierOpened" : null
+    },
+    "message" : "Player 2 played.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "president",
+      "version" : 114,
+      "round" : 2,
+      "rounds" : 3,
+      "phase" : "PLAYING",
+      "currentSeat" : 0,
+      "options" : {
+        "afterPass" : "reenter",
+        "exchange" : "two",
+        "giveBack" : "free",
+        "length" : "rounds-3",
+        "mustPlay" : "off",
+        "nextLead" : "scum",
+        "reducedCut" : "off",
+        "scoring" : "rank"
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "handSize" : 6,
+        "title" : "NEUTRAL",
+        "place" : null,
+        "out" : false,
+        "passed" : false,
+        "points" : 1,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "handSize" : 8,
+        "title" : "PRESIDENT",
+        "place" : null,
+        "out" : false,
+        "passed" : false,
+        "points" : 2,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      }, {
+        "seat" : 2,
+        "name" : null,
+        "handSize" : 0,
+        "title" : "SCUM",
+        "place" : 1,
+        "out" : true,
+        "passed" : false,
+        "points" : 0,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      } ],
+      "trick" : {
+        "leader" : 0,
+        "plays" : [ ],
+        "top" : null,
+        "lastPlayer" : null,
+        "passed" : [ ],
+        "constraint" : "FREE",
+        "requiredRank" : null,
+        "requiredCount" : null,
+        "chain" : null
+      },
+      "exchange" : [ {
+        "high" : 1,
+        "low" : 2,
+        "count" : 2,
+        "done" : true
+      } ],
+      "lastRound" : {
+        "round" : 1,
+        "finishingOrder" : [ 1, 0, 2 ],
+        "players" : [ {
+          "seat" : 1,
+          "place" : 1,
+          "title" : "PRESIDENT",
+          "points" : 2,
+          "total" : 2,
+          "forbiddenFinish" : false
+        }, {
+          "seat" : 0,
+          "place" : 2,
+          "title" : "NEUTRAL",
+          "points" : 1,
+          "total" : 1,
+          "forbiddenFinish" : true
+        }, {
+          "seat" : 2,
+          "place" : 3,
+          "title" : "SCUM",
+          "points" : 0,
+          "total" : 0,
+          "forbiddenFinish" : true
+        } ]
+      },
+      "standings" : [ {
+        "seat" : 1,
+        "points" : 2
+      }, {
+        "seat" : 0,
+        "points" : 1
+      }, {
+        "seat" : 2,
+        "points" : 0
+      } ],
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "hand" : [ {
+        "rank" : "10",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_10"
+      }, {
+        "rank" : "10",
+        "suit" : "SPADE",
+        "name" : "SPADE_10"
+      }, {
+        "rank" : "JACK",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_JACK"
+      }, {
+        "rank" : "JACK",
+        "suit" : "SPADE",
+        "name" : "SPADE_JACK"
+      }, {
+        "rank" : "QUEEN",
+        "suit" : "CLUB",
+        "name" : "CLUB_QUEEN"
+      }, {
+        "rank" : "QUEEN",
+        "suit" : "DIAMOND",
+        "name" : "DIAMOND_QUEEN"
+      } ],
+      "received" : [ ],
+      "given" : [ ],
+      "toGiveBack" : 0,
+      "legalPlays" : [ {
+        "kind" : "SET",
+        "rank" : "TEN",
+        "count" : 1
+      }, {
+        "kind" : "SET",
+        "rank" : "TEN",
+        "count" : 2
+      }, {
+        "kind" : "SET",
+        "rank" : "JACK",
+        "count" : 1
+      }, {
+        "kind" : "SET",
+        "rank" : "JACK",
+        "count" : 2
+      }, {
+        "kind" : "SET",
+        "rank" : "QUEEN",
+        "count" : 1
+      }, {
+        "kind" : "SET",
+        "rank" : "QUEEN",
+        "count" : 2
+      } ],
+      "availableActions" : [ "PLAY" ]
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "ROUND_END",
+    "eventData" : {
+      "seat" : 0,
+      "action" : "PLAY",
+      "cards" : [ {
+        "rank" : "JACK",
+        "suit" : "SPADE",
+        "name" : "SPADE_JACK"
+      } ],
+      "count" : null,
+      "outPlace" : 2,
+      "outForbidden" : false,
+      "trickWinner" : null,
+      "trickEndReason" : null,
+      "barrierOpened" : null
+    },
+    "message" : "Player 0 played.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "president",
+      "version" : 126,
+      "round" : 2,
+      "rounds" : 3,
+      "phase" : "ROUND_OVER",
+      "currentSeat" : 0,
+      "options" : {
+        "afterPass" : "reenter",
+        "exchange" : "two",
+        "giveBack" : "free",
+        "length" : "rounds-3",
+        "mustPlay" : "off",
+        "nextLead" : "scum",
+        "reducedCut" : "off",
+        "scoring" : "rank"
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "handSize" : 0,
+        "title" : "NEUTRAL",
+        "place" : 2,
+        "out" : true,
+        "passed" : false,
+        "points" : 2,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "handSize" : 2,
+        "title" : "PRESIDENT",
+        "place" : 3,
+        "out" : true,
+        "passed" : false,
+        "points" : 2,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      }, {
+        "seat" : 2,
+        "name" : null,
+        "handSize" : 0,
+        "title" : "SCUM",
+        "place" : 1,
+        "out" : true,
+        "passed" : false,
+        "points" : 2,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      } ],
+      "trick" : {
+        "leader" : 1,
+        "plays" : [ {
+          "seat" : 1,
+          "cards" : [ {
+            "rank" : "7",
+            "suit" : "HEART",
+            "name" : "HEART_7"
+          } ]
+        }, {
+          "seat" : 0,
+          "cards" : [ {
+            "rank" : "JACK",
+            "suit" : "SPADE",
+            "name" : "SPADE_JACK"
+          } ]
+        } ],
+        "top" : {
+          "kind" : "SET",
+          "rank" : "JACK",
+          "count" : 1
+        },
+        "lastPlayer" : 0,
+        "passed" : [ ],
+        "constraint" : "BEAT",
+        "requiredRank" : null,
+        "requiredCount" : null,
+        "chain" : {
+          "rank" : "JACK",
+          "cards" : [ {
+            "rank" : "JACK",
+            "suit" : "SPADE",
+            "name" : "SPADE_JACK"
+          } ],
+          "plays" : 1
+        }
+      },
+      "exchange" : [ {
+        "high" : 1,
+        "low" : 2,
+        "count" : 2,
+        "done" : true
+      } ],
+      "lastRound" : {
+        "round" : 2,
+        "finishingOrder" : [ 2, 0, 1 ],
+        "players" : [ {
+          "seat" : 2,
+          "place" : 1,
+          "title" : "PRESIDENT",
+          "points" : 2,
+          "total" : 2,
+          "forbiddenFinish" : false
+        }, {
+          "seat" : 0,
+          "place" : 2,
+          "title" : "NEUTRAL",
+          "points" : 1,
+          "total" : 2,
+          "forbiddenFinish" : false
+        }, {
+          "seat" : 1,
+          "place" : 3,
+          "title" : "SCUM",
+          "points" : 0,
+          "total" : 2,
+          "forbiddenFinish" : false
+        } ]
+      },
+      "standings" : [ {
+        "seat" : 0,
+        "points" : 2
+      }, {
+        "seat" : 1,
+        "points" : 2
+      }, {
+        "seat" : 2,
+        "points" : 2
+      } ],
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "hand" : [ ],
+      "received" : [ ],
+      "given" : [ ],
+      "toGiveBack" : 0,
+      "legalPlays" : [ ],
+      "availableActions" : [ "READY" ]
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "READY",
+    "eventData" : {
+      "seat" : 0,
+      "action" : "READY",
+      "cards" : null,
+      "count" : null,
+      "outPlace" : null,
+      "outForbidden" : null,
+      "trickWinner" : null,
+      "trickEndReason" : null,
+      "barrierOpened" : false
+    },
+    "message" : "Player 0 is ready.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "president",
+      "version" : 127,
+      "round" : 2,
+      "rounds" : 3,
+      "phase" : "ROUND_OVER",
+      "currentSeat" : 0,
+      "options" : {
+        "afterPass" : "reenter",
+        "exchange" : "two",
+        "giveBack" : "free",
+        "length" : "rounds-3",
+        "mustPlay" : "off",
+        "nextLead" : "scum",
+        "reducedCut" : "off",
+        "scoring" : "rank"
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "handSize" : 0,
+        "title" : "NEUTRAL",
+        "place" : 2,
+        "out" : true,
+        "passed" : false,
+        "points" : 2,
+        "ready" : true,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "handSize" : 2,
+        "title" : "PRESIDENT",
+        "place" : 3,
+        "out" : true,
+        "passed" : false,
+        "points" : 2,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      }, {
+        "seat" : 2,
+        "name" : null,
+        "handSize" : 0,
+        "title" : "SCUM",
+        "place" : 1,
+        "out" : true,
+        "passed" : false,
+        "points" : 2,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      } ],
+      "trick" : {
+        "leader" : 1,
+        "plays" : [ {
+          "seat" : 1,
+          "cards" : [ {
+            "rank" : "7",
+            "suit" : "HEART",
+            "name" : "HEART_7"
+          } ]
+        }, {
+          "seat" : 0,
+          "cards" : [ {
+            "rank" : "JACK",
+            "suit" : "SPADE",
+            "name" : "SPADE_JACK"
+          } ]
+        } ],
+        "top" : {
+          "kind" : "SET",
+          "rank" : "JACK",
+          "count" : 1
+        },
+        "lastPlayer" : 0,
+        "passed" : [ ],
+        "constraint" : "BEAT",
+        "requiredRank" : null,
+        "requiredCount" : null,
+        "chain" : {
+          "rank" : "JACK",
+          "cards" : [ {
+            "rank" : "JACK",
+            "suit" : "SPADE",
+            "name" : "SPADE_JACK"
+          } ],
+          "plays" : 1
+        }
+      },
+      "exchange" : [ {
+        "high" : 1,
+        "low" : 2,
+        "count" : 2,
+        "done" : true
+      } ],
+      "lastRound" : {
+        "round" : 2,
+        "finishingOrder" : [ 2, 0, 1 ],
+        "players" : [ {
+          "seat" : 2,
+          "place" : 1,
+          "title" : "PRESIDENT",
+          "points" : 2,
+          "total" : 2,
+          "forbiddenFinish" : false
+        }, {
+          "seat" : 0,
+          "place" : 2,
+          "title" : "NEUTRAL",
+          "points" : 1,
+          "total" : 2,
+          "forbiddenFinish" : false
+        }, {
+          "seat" : 1,
+          "place" : 3,
+          "title" : "SCUM",
+          "points" : 0,
+          "total" : 2,
+          "forbiddenFinish" : false
+        } ]
+      },
+      "standings" : [ {
+        "seat" : 0,
+        "points" : 2
+      }, {
+        "seat" : 1,
+        "points" : 2
+      }, {
+        "seat" : 2,
+        "points" : 2
+      } ],
+      "outcome" : {
+        "status" : "ONGOING"
+      },
+      "hand" : [ ],
+      "received" : [ ],
+      "given" : [ ],
+      "toGiveBack" : 0,
+      "legalPlays" : [ ],
+      "availableActions" : [ ]
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "message",
+  "payload" : {
+    "eventType" : "GAME_OVER",
+    "eventData" : {
+      "seat" : 1,
+      "action" : "PLAY",
+      "cards" : [ {
+        "rank" : "JACK",
+        "suit" : "SPADE",
+        "name" : "SPADE_JACK"
+      } ],
+      "count" : null,
+      "outPlace" : 2,
+      "outForbidden" : false,
+      "trickWinner" : null,
+      "trickEndReason" : null,
+      "barrierOpened" : null
+    },
+    "message" : "Player 1 played.",
+    "state" : {
+      "started" : true,
+      "id" : "00000000-0000-0000-0000-000000000000",
+      "gameType" : "president",
+      "version" : 190,
+      "round" : 3,
+      "rounds" : 3,
+      "phase" : "FINISHED",
+      "currentSeat" : 1,
+      "options" : {
+        "afterPass" : "reenter",
+        "exchange" : "two",
+        "giveBack" : "free",
+        "length" : "rounds-3",
+        "mustPlay" : "off",
+        "nextLead" : "scum",
+        "reducedCut" : "off",
+        "scoring" : "rank"
+      },
+      "players" : [ {
+        "seat" : 0,
+        "name" : null,
+        "handSize" : 2,
+        "title" : "NEUTRAL",
+        "place" : 3,
+        "out" : true,
+        "passed" : false,
+        "points" : 2,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      }, {
+        "seat" : 1,
+        "name" : null,
+        "handSize" : 0,
+        "title" : "SCUM",
+        "place" : 2,
+        "out" : true,
+        "passed" : false,
+        "points" : 3,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      }, {
+        "seat" : 2,
+        "name" : null,
+        "handSize" : 0,
+        "title" : "PRESIDENT",
+        "place" : 1,
+        "out" : true,
+        "passed" : false,
+        "points" : 4,
+        "ready" : false,
+        "forbiddenFinish" : false,
+        "sawExchange" : false
+      } ],
+      "trick" : {
+        "leader" : 0,
+        "plays" : [ {
+          "seat" : 0,
+          "cards" : [ {
+            "rank" : "3",
+            "suit" : "SPADE",
+            "name" : "SPADE_3"
+          } ]
+        }, {
+          "seat" : 1,
+          "cards" : [ {
+            "rank" : "JACK",
+            "suit" : "SPADE",
+            "name" : "SPADE_JACK"
+          } ]
+        } ],
+        "top" : {
+          "kind" : "SET",
+          "rank" : "JACK",
+          "count" : 1
+        },
+        "lastPlayer" : 1,
+        "passed" : [ ],
+        "constraint" : "BEAT",
+        "requiredRank" : null,
+        "requiredCount" : null,
+        "chain" : {
+          "rank" : "JACK",
+          "cards" : [ {
+            "rank" : "JACK",
+            "suit" : "SPADE",
+            "name" : "SPADE_JACK"
+          } ],
+          "plays" : 1
+        }
+      },
+      "exchange" : [ {
+        "high" : 2,
+        "low" : 1,
+        "count" : 2,
+        "done" : true
+      } ],
+      "lastRound" : {
+        "round" : 3,
+        "finishingOrder" : [ 2, 1, 0 ],
+        "players" : [ {
+          "seat" : 2,
+          "place" : 1,
+          "title" : "PRESIDENT",
+          "points" : 2,
+          "total" : 4,
+          "forbiddenFinish" : false
+        }, {
+          "seat" : 1,
+          "place" : 2,
+          "title" : "NEUTRAL",
+          "points" : 1,
+          "total" : 3,
+          "forbiddenFinish" : false
+        }, {
+          "seat" : 0,
+          "place" : 3,
+          "title" : "SCUM",
+          "points" : 0,
+          "total" : 2,
+          "forbiddenFinish" : false
+        } ]
+      },
+      "standings" : [ {
+        "seat" : 2,
+        "points" : 4
+      }, {
+        "seat" : 1,
+        "points" : 3
+      }, {
+        "seat" : 0,
+        "points" : 2
+      } ],
+      "outcome" : {
+        "status" : "FINISHED",
+        "winners" : [ 2 ],
+        "reason" : "POINTS"
+      },
+      "hand" : [ {
+        "rank" : "7",
+        "suit" : "HEART",
+        "name" : "HEART_7"
+      }, {
+        "rank" : "2",
+        "suit" : "HEART",
+        "name" : "HEART_2"
+      } ],
+      "received" : [ ],
+      "given" : [ ],
+      "toGiveBack" : 0,
+      "legalPlays" : [ ],
+      "availableActions" : [ ]
+    },
+    "success" : true
+  }
+}, {
+  "kind" : "state",
+  "payload" : {
+    "started" : true,
+    "id" : "00000000-0000-0000-0000-000000000000",
+    "gameType" : "president",
+    "version" : 190,
+    "round" : 3,
+    "rounds" : 3,
+    "phase" : "FINISHED",
+    "currentSeat" : 1,
+    "options" : {
+      "afterPass" : "reenter",
+      "exchange" : "two",
+      "giveBack" : "free",
+      "length" : "rounds-3",
+      "mustPlay" : "off",
+      "nextLead" : "scum",
+      "reducedCut" : "off",
+      "scoring" : "rank"
+    },
+    "players" : [ {
+      "seat" : 0,
+      "name" : null,
+      "handSize" : 2,
+      "title" : "NEUTRAL",
+      "place" : 3,
+      "out" : true,
+      "passed" : false,
+      "points" : 2,
+      "ready" : false,
+      "forbiddenFinish" : false,
+      "sawExchange" : false
+    }, {
+      "seat" : 1,
+      "name" : null,
+      "handSize" : 0,
+      "title" : "SCUM",
+      "place" : 2,
+      "out" : true,
+      "passed" : false,
+      "points" : 3,
+      "ready" : false,
+      "forbiddenFinish" : false,
+      "sawExchange" : false
+    }, {
+      "seat" : 2,
+      "name" : null,
+      "handSize" : 0,
+      "title" : "PRESIDENT",
+      "place" : 1,
+      "out" : true,
+      "passed" : false,
+      "points" : 4,
+      "ready" : false,
+      "forbiddenFinish" : false,
+      "sawExchange" : false
+    } ],
+    "trick" : {
+      "leader" : 0,
+      "plays" : [ {
+        "seat" : 0,
+        "cards" : [ {
+          "rank" : "3",
+          "suit" : "SPADE",
+          "name" : "SPADE_3"
+        } ]
+      }, {
+        "seat" : 1,
+        "cards" : [ {
+          "rank" : "JACK",
+          "suit" : "SPADE",
+          "name" : "SPADE_JACK"
+        } ]
+      } ],
+      "top" : {
+        "kind" : "SET",
+        "rank" : "JACK",
+        "count" : 1
+      },
+      "lastPlayer" : 1,
+      "passed" : [ ],
+      "constraint" : "BEAT",
+      "requiredRank" : null,
+      "requiredCount" : null,
+      "chain" : {
+        "rank" : "JACK",
+        "cards" : [ {
+          "rank" : "JACK",
+          "suit" : "SPADE",
+          "name" : "SPADE_JACK"
+        } ],
+        "plays" : 1
+      }
+    },
+    "exchange" : [ {
+      "high" : 2,
+      "low" : 1,
+      "count" : 2,
+      "done" : true
+    } ],
+    "lastRound" : {
+      "round" : 3,
+      "finishingOrder" : [ 2, 1, 0 ],
+      "players" : [ {
+        "seat" : 2,
+        "place" : 1,
+        "title" : "PRESIDENT",
+        "points" : 2,
+        "total" : 4,
+        "forbiddenFinish" : false
+      }, {
+        "seat" : 1,
+        "place" : 2,
+        "title" : "NEUTRAL",
+        "points" : 1,
+        "total" : 3,
+        "forbiddenFinish" : false
+      }, {
+        "seat" : 0,
+        "place" : 3,
+        "title" : "SCUM",
+        "points" : 0,
+        "total" : 2,
+        "forbiddenFinish" : false
+      } ]
+    },
+    "standings" : [ {
+      "seat" : 2,
+      "points" : 4
+    }, {
+      "seat" : 1,
+      "points" : 3
+    }, {
+      "seat" : 0,
+      "points" : 2
+    } ],
+    "outcome" : {
+      "status" : "FINISHED",
+      "winners" : [ 2 ],
+      "reason" : "POINTS"
+    },
+    "hand" : [ {
+      "rank" : "7",
+      "suit" : "HEART",
+      "name" : "HEART_7"
+    }, {
+      "rank" : "2",
+      "suit" : "HEART",
+      "name" : "HEART_2"
+    } ],
+    "received" : [ ],
+    "given" : [ ],
+    "toGiveBack" : 0,
+    "legalPlays" : [ ],
+    "availableActions" : [ ]
+  }
+} ]

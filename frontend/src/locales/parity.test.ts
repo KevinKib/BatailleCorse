@@ -131,6 +131,8 @@ describe('translated areas', () => {
     expect(messagesFr.kiloDeMerdeUi.live.kilosChangeYou).toBe('Vous avez maintenant {kg} kg');
     expect(messagesFr.ninetyNineUi.end.quickYou).toBe('Mode rapide : vous avez perdu votre dernière vie. Classement selon les vies restantes.');
     expect(messagesFr.kiloDeMerdeUi.table.readyYou).toBe('Vous avez choisi une carte');
+    expect(messagesFr.blackjackUi.events.bustYou).toBe('Vous brûlez avec {total}');
+    expect(messagesFr.blackjackUi.events.standYou).toBe('Vous restez');
     expect(messagesFr.kiloDeMerdeUi.outcome.lastYou).toBe('Trop tard ! Vous prenez {card} ({kg} kg)');
   });
 
