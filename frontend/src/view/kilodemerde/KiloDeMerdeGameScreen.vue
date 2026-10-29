@@ -157,7 +157,7 @@ watch(() => store.lastEvent?.id, () => {
   if (!event || !g) return;
   const seat = event.data?.seat ?? null;
   switch (event.eventType) {
-    case 'ROUND_DEALT':
+    case 'ROUND_START':
       speak(politeText, format(ui.live.round, { n: event.data?.round ?? g.round }));
       break;
     case 'STEP':
@@ -168,7 +168,7 @@ watch(() => store.lastEvent?.id, () => {
         speak(politeText, format(ui.live.received, { card: kiloLabel(g.lastReceived.card), name: nameOrYou(g.lastReceived.from) }));
       }
       break;
-    case 'SLAPPED':
+    case 'SLAP':
       if (seat !== null) {
         speak(assertiveText, seat === store.mySeat ? ui.race.slappedYou : format(ui.live.slapped, { name: displayName(seat) }));
       }

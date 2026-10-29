@@ -267,7 +267,7 @@ describe('KiloDeMerdeGameScreen', () => {
   describe('live regions', () => {
     it('givenASlapEvent_thenTheAssertiveRegionSaysWhoSlapped', async () => {
       const { wrapper, store } = await mountRoom(room(kiloDeMerdeRaceState));
-      store.applyEvent({ type: 'event', eventType: 'SLAPPED', eventData: { seat: 3, round: null, step: null, card: null, kilosAfter: null, rank: 1, returnedCount: null } });
+      store.applyEvent({ type: 'event', eventType: 'SLAP', eventData: { seat: 3, round: null, step: null, card: null, kilosAfter: null, rank: 1, returnedCount: null } });
       await flushPromises();
       expect(wrapper.get('[data-test="kilo-live-assertive"]').text()).toBe('Player 3 slapped! Slap!');
       expect(wrapper.get('[data-test="kilo-live-assertive"]').attributes('aria-live')).toBe('assertive');
