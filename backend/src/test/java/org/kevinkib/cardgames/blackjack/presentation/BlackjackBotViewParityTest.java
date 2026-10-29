@@ -89,6 +89,7 @@ class BlackjackBotViewParityTest {
         Blackjack game = table.start(2, "10S 9H 6D 7C 8C 5H 10D 3H");
         game.bet(S1, 25);
         assertSameAsTheHumanView(game);
+        assertThat(BlackjackBotView.forSeat(game, S0).stacks()).containsEntry(S1, 100); // the bet is sealed
         game.bet(S0, 10);
         assertSameAsTheHumanView(game);
     }
