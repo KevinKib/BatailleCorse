@@ -69,9 +69,12 @@ export function useSeatGameBootstrap(
       // The game is gone (404) or the stored token no longer resolves (403, the seat was lost): forget the
       // token and offer a new game, saying which of the two happened.
       localStorage.removeItem(`${tokenKeyPrefix}${gameId}`);
+      // The player already left the room page: the answer must not pull them back to the game home.
+      if (unmounted) return;
       router.replace({ path: game.gameHomeRoute, query: result === 'lost' ? { lost: '1' } : { gone: '1' } });
       return;
     }
+    if (unmounted) return;
     options.onHydrated?.();
   });
 }

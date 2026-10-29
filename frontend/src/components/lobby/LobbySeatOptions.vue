@@ -20,8 +20,13 @@ const valueOf = (d: OptionDescriptor) => props.values[d.key] ?? d.defaultValue;
 const accessibleName = (d: OptionDescriptor) =>
   format(ui.seatOptionLabel, { option: optionGroupLabel(messages, d), name: props.seatName });
 
+// The lobby is the only source of truth (as for the game options): ask for the value, then put the selector back on
+// the value the lobby holds. An accepted change comes back as the next lobby view and moves it; a refused or unsent
+// one leaves it where it was, instead of showing a choice the server did not take (Vue would not repaint).
 function onChange(d: OptionDescriptor, event: Event) {
-  emit('change', props.seat, d.key, (event.target as HTMLSelectElement).value);
+  const select = event.target as HTMLSelectElement;
+  emit('change', props.seat, d.key, select.value);
+  select.value = valueOf(d);
 }
 </script>
 

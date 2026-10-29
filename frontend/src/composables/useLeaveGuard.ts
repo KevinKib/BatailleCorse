@@ -20,7 +20,12 @@ export function useLeaveGuard(options: UseLeaveGuardOptions) {
     if (!isInProgress()) return true;
     const confirmed = window.confirm(ui.confirm);
     if (!confirmed) return false;
-    forfeit();
+    try {
+      forfeit();
+    } catch {
+      // The socket is down: the forfeit cannot be sent, but the player chose to go. The server's disconnect
+      // timer concedes the seat instead.
+    }
     return true;
   });
 
