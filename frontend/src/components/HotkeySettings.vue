@@ -52,7 +52,10 @@ onBeforeUnmount(() => {
   window.removeEventListener('keyup', swallowKeyUp, true);
 });
 
-const keyOf = (id: string) => (props.settings.actions.find((a) => a.id === id)?.key.value ?? '').toUpperCase();
+const keyOf = (id: string) => {
+  const key = props.settings.actions.find((a) => a.id === id)?.key.value ?? '';
+  return key === ' ' ? ui.space : key.toUpperCase();
+};
 </script>
 
 <template>

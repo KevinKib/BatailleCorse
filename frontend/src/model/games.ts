@@ -113,11 +113,12 @@ export const GAMES: readonly GameDefinition[] = [
     supportsBots: true,
     picker: { icon: 'pi pi-wallet', severity: 'success' },
   }),
-  // Cards are tapped and the pile is slapped; the keys (1 to 4 pass, Space slaps) are fixed, so no gear.
+  // Cards are tapped and the pile is slapped, and every key is remappable (Space slaps, 1 to 4 pass, R is ready).
   // Bots play at three levels (a seat option).
   define('kilo-de-merde', {
     supportsBots: true,
     picker: { icon: 'pi pi-stopwatch', severity: 'warn' },
+    hotkeys: { actions: ['slap', 'pass1', 'pass2', 'pass3', 'pass4', 'ready'], storageKeys: ['kilo-de-merde.hotkeys'] },
   }),
 ];
 

@@ -26,7 +26,7 @@ export const privacy: Messages['privacy'] = {
       paragraphs: [
         'Le site utilise le stockage local de votre navigateur, et non des cookies. Seul le site lui-même le lit, pour reprendre une partie et pour mémoriser vos choix. Vous pouvez l’effacer dans les paramètres de votre navigateur.',
         'Jeton de place, qui vous permet de revenir à la partie que vous étiez en train de jouer : tokens:<identifiant de la partie> (bataille corse), bullshit:tokens:<identifiant de la partie>, kobo:tokens:<identifiant de la partie>, three-men-morris:tokens:<identifiant de la partie>, president:tokens:<identifiant de la partie>, mangola:tokens:<identifiant de la partie>, ninety-nine:tokens:<identifiant de la partie>, draughts:tokens:<identifiant de la partie> et kilo-de-merde:tokens:<identifiant de la partie>. Il est supprimé lorsque vous quittez la partie.',
-        'Nom d’affichage : bc_playerName. Raccourcis clavier : bc_sendKey, bc_slapKey et bullshit.hotkeys. Son : bullshit.sound et kobo.sound. Vitesse d’animation : animationSpeed. Astuce de Kobo déjà vue : kobo.matchCoach. Langue : bc_locale.',
+        'Nom d’affichage : bc_playerName. Raccourcis clavier : bc_sendKey, bc_slapKey, bullshit.hotkeys et kilo-de-merde.hotkeys. Son : bullshit.sound et kobo.sound. Vitesse d’animation : animationSpeed. Astuce de Kobo déjà vue : kobo.matchCoach. Langue : bc_locale.',
         'La police du site est servie par le site lui-même, de sorte que votre navigateur ne contacte aucun autre serveur pour l’afficher, et que rien n’est envoyé à un tiers.',
       ],
     },

@@ -1315,15 +1315,16 @@ export const messagesEn: Messages = {
     enabled: 'Shortcuts enabled',
     actions: {
       discard: 'Discard', call: 'Call Bullshit', send: 'Send card', slap: 'Slap pile',
-      pass1: 'Pass card 1', pass2: 'Pass card 2', pass3: 'Pass card 3', pass4: 'Pass card 4',
+      pass1: 'Pass card 1', pass2: 'Pass card 2', pass3: 'Pass card 3', pass4: 'Pass card 4', ready: 'Ready',
     },
     change: 'Change',
     changeAria: 'Change the key for {action}',
     listening: 'Press a key…',
     reset: 'Reset to defaults',
+    space: 'Space',
     errors: {
       reserved: 'Use a single letter or symbol key (not Tab, Enter, Space, Esc, arrows or modifiers).',
-      duplicate: 'That key is already used by the other action.',
+      duplicate: 'That key is already used by another action.',
     },
   },
   turn: {
@@ -1739,7 +1740,7 @@ export const messagesEn: Messages = {
         paragraphs: [
           'The site uses the local storage of your browser, not cookies. Only the site itself reads it, to resume a game and to remember your choices. You can erase it in your browser settings.',
           'Seat token, which lets you come back to the game you were playing: tokens:<game id> (Bataille Corse), bullshit:tokens:<game id>, kobo:tokens:<game id>, three-men-morris:tokens:<game id>, president:tokens:<game id>, mangola:tokens:<game id>, ninety-nine:tokens:<game id>, draughts:tokens:<game id> and kilo-de-merde:tokens:<game id>. It is removed when you leave the game.',
-          'Display name: bc_playerName. Keyboard shortcuts: bc_sendKey, bc_slapKey and bullshit.hotkeys. Sound: bullshit.sound and kobo.sound. Animation speed: animationSpeed. Kobo hint already seen: kobo.matchCoach. Language: bc_locale.',
+          'Display name: bc_playerName. Keyboard shortcuts: bc_sendKey, bc_slapKey, bullshit.hotkeys and kilo-de-merde.hotkeys. Sound: bullshit.sound and kobo.sound. Animation speed: animationSpeed. Kobo hint already seen: kobo.matchCoach. Language: bc_locale.',
           'The font of the site is served by the site itself, so your browser contacts no other server to display it, and nothing is sent to a third party.',
         ],
       },

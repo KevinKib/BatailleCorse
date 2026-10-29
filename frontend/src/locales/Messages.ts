@@ -80,11 +80,12 @@ export interface HotkeyMessages {
   title: string;
   enabled: string;                     // label of the master switch (pressed = shortcuts on)
   // names of the remappable actions (`pass1`..`pass4`: Kilo de merde passes the card in that slot of the hand)
-  actions: { discard: string; call: string; send: string; slap: string; pass1: string; pass2: string; pass3: string; pass4: string };
+  actions: { discard: string; call: string; send: string; slap: string; pass1: string; pass2: string; pass3: string; pass4: string; ready: string };
   change: string;                      // button that starts listening for a new key
   changeAria: string;                  // '{action}': accessible name of that button
   listening: string;                   // shown on the button while it waits for a key
   reset: string;
+  space: string;                       // name of the Space key, shown in place of an invisible character
   errors: { reserved: string; duplicate: string };
 }
 
