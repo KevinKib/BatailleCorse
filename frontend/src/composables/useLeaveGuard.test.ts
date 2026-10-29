@@ -39,6 +39,14 @@ describe('useLeaveGuard', () => {
     expect(forfeit).not.toHaveBeenCalled();
   });
 
+  it('givenTheSocketIsDown_whenTheLeaveIsConfirmed_thenThePlayerStillLeaves', () => {
+    stubConfirm(true);
+    // Publishing throws while the socket reconnects: the server timer will concede the seat instead.
+    const forfeit = mountGuard(true, vi.fn(() => { throw new TypeError('There is no underlying STOMP connection'); }));
+    expect(leaveHook!()).toBe(true);
+    expect(forfeit).toHaveBeenCalledOnce();
+  });
+
   it('givenNoGameInProgress_thenLeavingIsFree', () => {
     const confirm = stubConfirm(true);
     mountGuard(false);
