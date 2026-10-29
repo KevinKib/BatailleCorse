@@ -22,6 +22,9 @@ describe('game registry', () => {
     // Bataille Corse keeps the keys it has always stored; Bullshit has one entry of its own.
     expect(findGame('bataillecorse')?.hotkeys?.storageKeys).toEqual(['bc_sendKey', 'bc_slapKey']);
     expect(findGame('bullshit')?.hotkeys?.storageKeys).toEqual(['bullshit.hotkeys']);
+    expect(findGame('kilo-de-merde')?.hotkeys).toEqual({
+      actions: ['slap', 'pass1', 'pass2', 'pass3', 'pass4', 'ready'], storageKeys: ['kilo-de-merde.hotkeys'],
+    });
     const all = GAMES.flatMap(g => g.hotkeys?.storageKeys ?? []);
     expect(new Set(all).size).toBe(all.length);
   });
@@ -69,11 +72,11 @@ describe('game registry', () => {
     expect(ninetyNine?.roomRoute('abc')).toBe('/ninety-nine/room/abc');
   });
 
-  it('givenKiloDeMerde_thenItIsRegisteredWithBotsButNoRemappableShortcutsAndItsOwnPickerStyle', () => {
+  it('givenKiloDeMerde_thenItIsRegisteredWithBotsRemappableShortcutsAndItsOwnPickerStyle', () => {
     const kilo = findGame('kilo-de-merde');
     expect(kilo?.serverType).toBe('kilo-de-merde');
     expect(kilo?.supportsBots).toBe(true);
-    expect(kilo?.hotkeys).toBeUndefined();
+    expect(kilo?.hotkeys?.actions).toContain('slap');
     expect(kilo?.picker).toEqual({ icon: 'pi pi-stopwatch', severity: 'warn' });
     expect(kilo?.roomRoute('abc')).toBe('/kilo-de-merde/room/abc');
   });

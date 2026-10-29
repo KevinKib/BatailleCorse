@@ -214,6 +214,56 @@ describe('KiloDeMerdeGameScreen', () => {
       expect(slap).not.toHaveBeenCalled();
     });
 
+    it('givenRemappedKeys_thenTheNewKeysActAndTheOldOnesDoNothing', async () => {
+      localStorage.setItem('kilo-de-merde.hotkeys', JSON.stringify({
+        enabled: true, keys: { slap: 'x', pass1: 'a', pass2: '2', pass3: '3', pass4: '4', ready: 'g' },
+      }));
+      const { store } = await mountRoom(room(kiloDeMerdeStepState));
+      const slap = vi.spyOn(store, 'slap').mockReturnValue(true);
+      const pass = vi.spyOn(store, 'pass').mockReturnValue(true);
+      press(' ');
+      press('1');
+      expect(slap).not.toHaveBeenCalled();
+      expect(pass).not.toHaveBeenCalled();
+      press('x');
+      press('a');
+      expect(slap).toHaveBeenCalledTimes(1);
+      expect(pass).toHaveBeenCalledWith(kiloDeMerdeStepState.hand[0]);
+    });
+
+    it('givenTheRemappedReadyKey_thenItConfirmsAndRIsFree', async () => {
+      localStorage.setItem('kilo-de-merde.hotkeys', JSON.stringify({
+        enabled: true, keys: { slap: ' ', pass1: '1', pass2: '2', pass3: '3', pass4: '4', ready: 'g' },
+      }));
+      const { store } = await mountRoom(room(kiloDeMerdeAwaitingStartState));
+      const ready = vi.spyOn(store, 'ready').mockImplementation(() => true);
+      press('r');
+      expect(ready).not.toHaveBeenCalled();
+      press('g');
+      expect(ready).toHaveBeenCalledTimes(1);
+    });
+
+    it('givenTheShortcutsSwitchedOff_thenNoKeyDoesAnything', async () => {
+      localStorage.setItem('kilo-de-merde.hotkeys', JSON.stringify({
+        enabled: false, keys: { slap: ' ', pass1: '1', pass2: '2', pass3: '3', pass4: '4', ready: 'r' },
+      }));
+      const { store } = await mountRoom(room(kiloDeMerdeStepState));
+      const slap = vi.spyOn(store, 'slap').mockReturnValue(true);
+      const pass = vi.spyOn(store, 'pass').mockReturnValue(true);
+      press(' ');
+      press('1');
+      expect(slap).not.toHaveBeenCalled();
+      expect(pass).not.toHaveBeenCalled();
+    });
+
+    it('givenTheTable_thenAGearInTheFooterOpensTheShortcutsWithSpaceNamed', async () => {
+      const { wrapper } = await mountRoom(room(kiloDeMerdeStepState));
+      await wrapper.get('[data-test="table-footer"] [data-test="hotkeys-button"]').trigger('click');
+      expect(wrapper.get('[data-test="hotkey-slap-key"]').text()).toBe(messagesEn.hotkeys.space);
+      expect(wrapper.get('[data-test="hotkey-pass1-key"]').text()).toBe('1');
+      expect(wrapper.get('[data-test="hotkey-ready-key"]').text()).toBe('R');
+    });
+
     it('givenTheLobby_thenTheKeysDoNothing', async () => {
       const { store } = await mountRoom(room(lobby(4)));
       const slap = vi.spyOn(store, 'slap').mockReturnValue(true);
@@ -252,7 +302,9 @@ describe('KiloDeMerdeGameScreen', () => {
       const { wrapper } = await mountRoom(room(kiloDeMerdeRoundOverState));
       expect(wrapper.get('[data-test="round-line"]').text()).toContain('Flush! Player 2 drops all their kilos');
       expect(wrapper.findAll('[data-test="seat-hand"]')).toHaveLength(4);
-      expect(wrapper.get('[data-test="seat-plate"][data-seat="2"] [data-test="seat-last"]').exists()).toBe(true);
+      // The tag leaves the revealed composition; the plate's name still says who was last.
+      expect(wrapper.find('[data-test="seat-last"]').exists()).toBe(false);
+      expect(wrapper.get('[data-test="seat-plate"][data-seat="2"]').attributes('aria-label')).toContain('Last');
     });
 
     it('givenAStepOrARace_thenNoHandIsRevealed', async () => {

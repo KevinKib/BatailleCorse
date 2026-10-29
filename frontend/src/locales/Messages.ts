@@ -80,11 +80,12 @@ export interface HotkeyMessages {
   title: string;
   enabled: string;                     // label of the master switch (pressed = shortcuts on)
   // names of the remappable actions (`pass1`..`pass4`: Kilo de merde passes the card in that slot of the hand)
-  actions: { discard: string; call: string; send: string; slap: string; pass1: string; pass2: string; pass3: string; pass4: string };
+  actions: { discard: string; call: string; send: string; slap: string; pass1: string; pass2: string; pass3: string; pass4: string; ready: string };
   change: string;                      // button that starts listening for a new key
   changeAria: string;                  // '{action}': accessible name of that button
   listening: string;                   // shown on the button while it waits for a key
   reset: string;
+  space: string;                       // name of the Space key, shown in place of an invisible character
   errors: { reserved: string; duplicate: string };
 }
 
@@ -507,6 +508,8 @@ export interface NinetyNineUiMessages {
     overLimit: string;                 // under a card that would go over 99
     cardOver: string;                  // '{card}': accessible name of a card that cannot be played
     cardEffect: string;                // '{card}', '{effect}'
+    /** The short reminder under a card of the hand ('{n}' = the face value). */
+    tag: { face: string; ace: string; reverse: string; pass: string; minusTen: string; plusTen: string; ninetyNine: string };
     waiting: string;                   // the hand while it is not my turn
     stuckHint: string;                 // my turn, no safe card: play any card, lose a life
   };
@@ -528,6 +531,8 @@ export interface NinetyNineUiMessages {
     livesLeft: PluralForms;            // '{n}': "Life lost · {n} left" (no subject: it is under my title or another's)
     eliminated: string;                // '{player}'
     eliminatedYou: string;
+    eliminatedBanner: string;          // '{player}': the unmissable line of an elimination
+    eliminatedBannerYou: string;
     next: string;                      // the pause before the next deal
     hit: string;                       // the badge on the seat that lost a life
     handLabel: string;                 // '{player}': the stuck hand, as a region name

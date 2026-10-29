@@ -37,7 +37,7 @@ describe('LocalPreferences with two languages', () => {
 
   it('givenEveryGameWithoutShortcuts_thenAGlobeMenuStandsInPlaceOfTheGear', () => {
     const quiet = GAMES.filter(g => !g.hotkeys);
-    expect(quiet.map(g => g.key).sort()).toEqual(['blackjack', 'draughts', 'kilo-de-merde', 'kobo', 'mangola', 'ninety-nine', 'president', 'three-men-morris']);
+    expect(quiet.map(g => g.key).sort()).toEqual(['blackjack', 'draughts', 'kobo', 'mangola', 'ninety-nine', 'president', 'three-men-morris']);
     for (const game of quiet) {
       const wrapper = mountFor(game.key);
       expect(wrapper.find('[data-test="hotkeys-button"]').exists()).toBe(false);
