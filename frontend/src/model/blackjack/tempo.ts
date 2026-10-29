@@ -15,9 +15,9 @@ export const BLACKJACK_TEMPO = {
   /** A stand or a bust: the tag is read before the next player plays. */
   say: { spanMs: 1000 },
   /** The dealer: the banner, the hole card turning over, then each draw one after the other. */
-  dealer: { bannerMs: 1000, revealMs: 560, afterRevealMs: 650, drawGapMs: 950, flightMs: 480, endMs: 1100 },
+  dealer: { bannerMs: 1000, revealMs: 560, afterRevealMs: 650, drawGapMs: 950, flightMs: 480, endMs: 800 },
   /** The results stay on the table this long before the next betting opens. */
-  results: { holdMs: 4300 },
+  results: { holdMs: 3600 },
   /** How long a tag over a seat, the phase banner and a dealer line stay. */
   tagLifeMs: 1800,
   bannerLifeMs: 1500,

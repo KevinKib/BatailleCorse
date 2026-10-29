@@ -14,10 +14,10 @@ const off = () => props.busy || props.idle;
 
 <template>
   <div class="bj-actions" :class="{ 'bj-actions--idle': idle }" :data-test="idle ? 'action-bar-idle' : 'action-bar'" role="group" :aria-label="ui.actions.label" :aria-hidden="idle ? 'true' : undefined">
-    <Button v-if="has('HIT')" data-test="action-hit" class="bj-action" :label="ui.actions.hit" :disabled="off()" rounded @click="emit('hit')" />
-    <Button v-if="has('STAND')" data-test="action-stand" class="bj-action" :label="ui.actions.stand" :disabled="off()" severity="secondary" rounded @click="emit('stand')" />
-    <Button v-if="has('DOUBLE')" data-test="action-double" class="bj-action" :label="ui.actions.double" :disabled="off()" severity="warn" rounded @click="emit('double')" />
-    <Button v-if="has('SPLIT')" data-test="action-split" class="bj-action" :label="ui.actions.split" :disabled="off()" severity="info" rounded @click="emit('split')" />
+    <Button v-if="has('HIT')" :data-test="idle ? undefined : 'action-hit'" class="bj-action" :label="ui.actions.hit" :disabled="off()" rounded @click="emit('hit')" />
+    <Button v-if="has('STAND')" :data-test="idle ? undefined : 'action-stand'" class="bj-action" :label="ui.actions.stand" :disabled="off()" severity="secondary" rounded @click="emit('stand')" />
+    <Button v-if="has('DOUBLE')" :data-test="idle ? undefined : 'action-double'" class="bj-action" :label="ui.actions.double" :disabled="off()" severity="warn" rounded @click="emit('double')" />
+    <Button v-if="has('SPLIT')" :data-test="idle ? undefined : 'action-split'" class="bj-action" :label="ui.actions.split" :disabled="off()" severity="info" rounded @click="emit('split')" />
   </div>
 </template>
 
