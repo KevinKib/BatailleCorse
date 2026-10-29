@@ -417,6 +417,18 @@ describe('MangolaGameScreen', () => {
       expect(subtitle(wrapper)).toBe('Bob has no move left.');
     });
 
+    it('a win because the opponent can never move again says why', async () => {
+      const { wrapper } = await mountScreen(finishedState({ outcome: { status: 'FINISHED', winner: 0, reason: 'CANNOT_MOVE_AGAIN' } }));
+      expect(wrapper.get('.end-title').text()).toBe('VICTORY');
+      expect(subtitle(wrapper)).toBe(ui.end.blockedWon.replace('{player}', 'Bob'));
+    });
+
+    it('a loss because I can never move again says why', async () => {
+      const { wrapper } = await mountScreen(finishedState({ outcome: { status: 'FINISHED', winner: 1, reason: 'CANNOT_MOVE_AGAIN' } }));
+      expect(wrapper.get('.end-title').text()).toBe('DEFEAT');
+      expect(subtitle(wrapper)).toBe(ui.end.blockedLost);
+    });
+
     it('a draw by repetition: a DRAW title without trophy or winner', async () => {
       const { wrapper } = await mountScreen(finishedState({ outcome: { status: 'FINISHED', winner: null, reason: 'REPETITION' } }));
       expect(wrapper.get('.end-title').text()).toBe('DRAW');

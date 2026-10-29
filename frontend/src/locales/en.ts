@@ -1460,6 +1460,8 @@ export const messagesEn: Messages = {
       winner: 'Winner: {player}',
       noMoveWon: '{player} has no move left.',
       noMoveLost: 'You have no move left.',
+      blockedWon: '{player} can never move again: no pit holds two seeds.',
+      blockedLost: 'You can never move again: no pit of yours holds two seeds.',
       drawRepetition: 'Draw by repetition: the same position occurred three times.',
       drawEndless: 'Draw: a sowing that never ends.',
       youWonResigned: '{player} resigned.',

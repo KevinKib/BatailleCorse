@@ -565,6 +565,8 @@ describe('Mangola messages', () => {
     expect(ui.end.winner).toBe('Winner: {player}');
     expect(ui.end.noMoveWon).toContain('{player}');
     expect(ui.end.noMoveLost).toBeTruthy();
+    expect(ui.end.blockedWon).toContain('{player}');
+    expect(ui.end.blockedLost).toBeTruthy();
     expect(ui.end.drawRepetition).toContain('three times');
     expect(ui.end.drawEndless).toBeTruthy();
     expect(ui.end.youWonResigned).toContain('{player}');

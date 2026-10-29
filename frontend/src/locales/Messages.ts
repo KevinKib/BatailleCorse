@@ -1140,6 +1140,8 @@ export interface MangolaUiMessages {
     winner: string;                    // '{player}': names the winner on the end screen
     noMoveWon: string;                 // '{player}' (the loser) has no move left
     noMoveLost: string;                // I have no move left
+    blockedWon: string;                // '{player}' (the loser) can never move again: no pit with two seeds
+    blockedLost: string;               // I can never move again
     drawRepetition: string;
     drawEndless: string;
     youWonResigned: string;            // '{player}'

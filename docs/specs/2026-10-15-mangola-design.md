@@ -237,6 +237,24 @@ reproduces each one [C]):
 
 ### End of the game
 
+- **`CANNOT_MOVE_AGAIN` (earliest provable end, owner feedback 2026-10-29):** right after a move, if the
+  player who just moved has **no pit with two seeds or more** (none can be sown), the game ends at once and
+  the **opponent wins**, instead of one move later. It is a proof, not a heuristic: seeds reach a side only
+  by its owner's sowing (a sowing never leaves its own loop) and a capture only takes seeds away, so the
+  opponent can never refill the stuck side; on its next turn that player would have no legal move and lose
+  by `NO_MOVE` whatever the opponent plays. Order of the checks after a move: (1) the opponent has no legal
+  move: the mover wins (`NO_MOVE`, unchanged, so a position where both sides are dead is still won by the
+  mover); (2) the mover has no pit with two seeds or more: the opponent wins (`CANNOT_MOVE_AGAIN`);
+  (3) third repetition: draw. With the `DRAW` endless variant, nothing is proven while the opponent owns a
+  pit whose sowing is endless (it could play it and draw), so the game goes on. A mover whose pits with two
+  seeds or more are all endless is **not** ended early: a capture can break the cycle.
+  **Scoring:** the game has no score. The remaining seeds do not count, exactly as in the existing
+  `NO_MOVE` end: the winner is the player who can still move. Worked example: side A `a2:3 c1:1`, side B
+  `c3:2 d4:3`, A to move, A sows `a2` (`b2`+1, `c2`+1, `d2` is empty so the last seed goes to `e2`). A now
+  holds `c1 b2 c2 e2` at one seed each, so it can never play again; B still has `c3` and `d4`. Before:
+  B plays any move, then A has no legal move and B wins. Now: the game ends on A's move, B wins
+  (`CANNOT_MOVE_AGAIN`). If A had kept `h1:2`, A could still move and the game would go on.
+
 - **`NO_MOVE`:** the player to move has no legal move; the other player wins. At the start no player can be
   without a pit to sow: 32 seeds on 16 pits always leave a pit with two or more (pigeonhole). With the
   recommended endless rule, a revealed layout whose every candidate pit is endless would lose at once; it

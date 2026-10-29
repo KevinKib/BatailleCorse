@@ -3,7 +3,7 @@
 // or waited for through the pits becoming playable again. Pits are numbered row * 8 + column (a1 = 0 ... h4 = 31).
 //
 // Both players lay out two seeds per pit. From there (hand-checked against the rules, with a simulator) the host
-// wins in five plies: a2 (three captures), a4, f1, a3, b2; and loses in six when it plays a2, h2, c1 against the
+// wins in four plies: a2 (three captures), a4, f1, a3 (the guest is then left with single seeds only and can never move again); and loses in six when it plays a2, h2, c1 against the
 // guest's a4, d4 (six pits captured), h3.
 import {
   arrange, asHostInPlacement, canSow, confirmLayout, pitEl, playFromTwoPerPit, sow, startWithAnimationSpeed, TWO_PER_PIT,
@@ -57,7 +57,7 @@ describe('Mangola game', () => {
   // default Normal speed and its pause before the seeds leave are covered by mangola-animation-speed.cy.ts.
   beforeEach(() => startWithAnimationSpeed('fast'));
 
-  it('wins in five plies: a capture on the board, the move read out, the end screen, then Play again', () => {
+  it('wins in four plies: a capture on the board, the move read out, the end screen, then Play again', () => {
     playFromTwoPerPit().then(({ bob }) => {
       cy.get('[data-test="turn-hint"]').should('contain.text', 'Your turn');
       pitEl(A2).click();
@@ -75,11 +75,13 @@ describe('Mangola game', () => {
       pitEl(A4).should('have.attr', 'data-last-start', 'true');
       pitEl(F1).click();
       sow(bob, A3);
-      canSow(B2);
-      pitEl(B2).click();
+      // Bob's move leaves him no pit of two seeds: he can never move again, so the game ends here.
+      // The end screen waits for his long sowing to be shown: skip it.
+      cy.get('[data-test="skip-sowing"]', { timeout: 10000 }).click();
       cy.get('[data-test="end"]', { timeout: 20000 }).should('be.visible');
       cy.get('.end-title').should('have.text', 'VICTORY');
       cy.get('[data-test="end-winner"]').should('have.text', 'Winner: Alice');
+      cy.get('.end-sub').should('contain.text', 'Bob can never move again');
       cy.get('[data-cy="play-again"]').click();
       cy.get('[data-test="lobby"]', { timeout: 10000 }).should('be.visible');
     });
