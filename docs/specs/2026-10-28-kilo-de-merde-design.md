@@ -209,7 +209,7 @@ Each row can be overturned by the owner; the "Where" column says what changes.
 | A18 | Three bot levels, reaction times as the main lever (section 11) | slapping speed is the core skill; passing choices add a second lever | two levels | `KiloDeMerdeBotTuning` |
 | A19 | Picker icon `pi pi-stopwatch`, severity `warn` | a reflex game; no other game uses the icon (every severity is already taken by some game) | `pi pi-bolt` (Bullshit's) | `games.ts` |
 | A20 | Table layout of section 12.2: the ellipse ring of plates (99's geometry, promoted to `model/table`), the kilo pile as the single slap target in the middle, my four cards at the bottom, a tap on a card passes it (no confirm) | reuses the tested 12-seat ring; one big target is easiest under time pressure; a pass costs little so a confirm only slows the game | a separate "Slap" button; tap-to-select then confirm | F2 |
-| A21 | Remappable shortcuts through the shared hotkey settings: `slap` (Space), `pass1`..`pass4` (1-4) | single-key shortcuts must be remappable or off (WCAG 2.1.4, existing gear) | fixed keys | `games.ts` `hotkeys` |
+| A21 | Remappable shortcuts through the shared hotkey settings: `slap` (Space), `pass1`..`pass4` (1-4), `ready` (R), with a master switch (storage `kilo-de-merde.hotkeys`) | single-key shortcuts must be remappable or off (WCAG 2.1.4, existing gear) | fixed keys | `games.ts` `hotkeys` |
 | A22 | The display name is "Kilo de merde" in both languages; texts call the cards "kilos" and the pile "the kilo pile"; no other crude word | owner's brief | translated name | locales |
 
 ## 6. Options
@@ -448,9 +448,9 @@ Three levels: the choice is real twice (what to pass, how fast to slap), so thre
 (`KILO_DE_MERDE_SESSION_CONFIG`, `pass(card)`, `slap()`), `state/KiloDeMerde.store.ts` (`kilo-de-merde-store`),
 `composables/useKiloDeMerdeBootstrap.ts`, `components/kilodemerde/`, `view/kilodemerde/KiloDeMerdeGameScreen.vue`.
 Texts: rules at `kiloDeMerde`, screen at `kiloDeMerdeUi`, options at `options.kiloDeMerde`, hotkey action labels in
-the shared `hotkeys.actions` (`slap` exists; `pass1`..`pass4` added). Registry:
+the shared `hotkeys.actions` (`slap` exists; `pass1`..`pass4` and `ready` added, plus `hotkeys.space`). Registry:
 `define('kilo-de-merde', { supportsBots: true, picker: { icon: 'pi pi-stopwatch', severity: 'warn' }, hotkeys:
-{ actions: ['slap', 'pass1', 'pass2', 'pass3', 'pass4'], storageKeys: ['kilo-de-merde.hotkeys'] } })`.
+{ actions: ['slap', 'pass1', 'pass2', 'pass3', 'pass4', 'ready'], storageKeys: ['kilo-de-merde.hotkeys'] } })`.
 
 The client has no rule: what may be done comes from `availableActions`; the four-of-a-kind is never highlighted
 (spotting it is the game).
@@ -469,7 +469,8 @@ The client has no rule: what may be done comes from `availableActions`; the four
   pass countdown ring (15 s).
 - **My hand**: my 4 cards at the bottom, large; a tap on a card passes it (A20): the card lifts and greys with
   "Passing…", the others are disabled until the step resolves; then the received card glows for a moment with
-  "from <name>". Keys `1`-`4` pass, Space slaps (remappable, A21).
+  "from <name>". Keys `1`-`4` pass, Space slaps, R confirms ready (all remappable or off, A21; implemented by `useKiloHotkeySettings`, which stores
+  `{ enabled, keys }` under `kilo-de-merde.hotkeys`; Space is a default but, like Tab and Enter, cannot be captured again, so Reset restores it).
 - **Race banner**: "<name> slapped! Slap!" at the top of the felt, with the live order; after the race, the round
   banner: "<name> was last and takes K♠: 13 kg", "False slap: <name> takes 9♣: 9 kg", "Flush! <name> drops all
   their kilos", "Nobody completed a set: no kilos this round". During the round pause every plate shows its hand
