@@ -8,7 +8,6 @@ import org.kevinkib.cardgames.game.GameOptions;
 import org.kevinkib.cardgames.game.OptionDescriptor;
 import org.kevinkib.cardgames.game.OptionType;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
@@ -85,10 +84,9 @@ public class BlackjackFactory implements GameFactory {
         return BlackjackOptions.parseStrict(requested).toGameOptions();
     }
 
-    /** The default value first, then the others in declaration order. */
+    /** The values in ascending (declaration) order; the default is carried separately, not by position. */
     private static <T> OptionDescriptor descriptor(String key, T[] values, T defaultValue, Function<T, String> label) {
-        List<String> keys = new ArrayList<>(List.of(label.apply(defaultValue)));
-        Arrays.stream(values).filter(value -> !value.equals(defaultValue)).map(label).forEach(keys::add);
+        List<String> keys = Arrays.stream(values).map(label).toList();
         return new OptionDescriptor(key, OptionType.CHOICE, keys, label.apply(defaultValue),
                 "options.blackjack." + key);
     }

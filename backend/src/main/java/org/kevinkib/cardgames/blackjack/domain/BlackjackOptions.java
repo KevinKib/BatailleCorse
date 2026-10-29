@@ -26,9 +26,9 @@ public record BlackjackOptions(Hands hands, MaxBet maxBet) {
     /** The keys the lobby may set, in display order. */
     public static final List<String> KEYS = List.of(HANDS_KEY, MAX_BET_KEY);
 
-    /** Number of hands in a game; the first constant is the default. */
+    /** Number of hands in a game, in ascending order (the default is {@link #defaults()}, not the first). */
     public enum Hands {
-        TEN(10), FIVE(5), FIFTEEN(15), TWENTY(20);
+        FIVE(5), TEN(10), FIFTEEN(15), TWENTY(20);
 
         private final int count;
 
@@ -54,9 +54,9 @@ public record BlackjackOptions(Hands hands, MaxBet maxBet) {
         }
     }
 
-    /** The largest bet of a hand (also capped by the stack); the first constant is the default. */
+    /** The largest bet of a hand (also capped by the stack), in ascending order (the default is {@link #defaults()}). */
     public enum MaxBet {
-        FIFTY(50), TWENTY_FIVE(25), HUNDRED(100);
+        TWENTY_FIVE(25), FIFTY(50), HUNDRED(100);
 
         private final int amount;
 
