@@ -74,13 +74,29 @@ class BlackjackDtoTest {
         BlackjackDto.PlayerDto bob = mine.players().get(1);
         assertThat(bob.betPlaced()).isTrue();
         assertThat(bob.bet()).isNull();
-        assertThat(bob.stack()).isEqualTo(80);
         assertThat(mine.players().get(0).betPlaced()).isFalse();
         assertThat(theirs.players().get(1).bet()).isEqualTo(20);
         assertThat(theirs.lastBet()).isEqualTo(20);
         assertThat(theirs.betLimits()).isNull();
         assertThat(theirs.availableActions()).isEmpty();
         assertThat(mine.lastBet()).isNull();
+    }
+
+    @Test
+    void aSealedBetDoesNotShowThroughTheStackOrTheStanding() throws Exception {
+        Blackjack game = table.start(2, HAND_1);
+        game.bet(S1, 20);
+
+        BlackjackDto mine = view(game, S0);
+        BlackjackDto theirs = view(game, S1);
+
+        // The stack before the deal was public (100): showing 80 would give the sealed amount away.
+        assertThat(mine.players().get(1).stack()).isEqualTo(100);
+        assertThat(mine.players().get(0).standing()).isEqualTo(1);
+        assertThat(mine.players().get(1).standing()).isEqualTo(1);
+        // The bettor still sees its own stack and bet apart.
+        assertThat(theirs.players().get(1).stack()).isEqualTo(80);
+        assertThat(theirs.players().get(1).standing()).isEqualTo(1);
     }
 
     @Test

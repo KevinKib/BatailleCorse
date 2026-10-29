@@ -24,7 +24,7 @@ import java.util.Map;
  * Public description of one thing that happened at the table; only the fields of the event type are set, the others
  * are null. {@code card} is the card of a HIT or DOUBLE, or the up card of a DEAL; {@code cards} the flat cards the
  * hands of a SPLIT hold right after it (hand 0 then hand 1) or the dealer's drawn cards of a DEALER_PLAY;
- * {@code holeCard} the card a DEALER_BLACKJACK or DEALER_PLAY shows; {@code value} the hand total after a HIT or the
+ * {@code holeCard} the card a DEALER_BLACKJACK or DEALER_PLAY shows; {@code value} the hand total after a HIT, a DOUBLE or a BUST, or the
  * dealer's final total; {@code bets}, {@code nets} and {@code stacks} are by seat.
  */
 public record BlackjackEventData(
@@ -57,13 +57,13 @@ public record BlackjackEventData(
             return new BlackjackEventData(e.seat().id(), e.handIndex(), null, null, null, null, null, null, null,
                     null, null, null);
         } else if (event instanceof Doubled e) {
-            return new BlackjackEventData(e.seat().id(), e.handIndex(), CardDto.from(e.card()), null, null, null,
+            return new BlackjackEventData(e.seat().id(), e.handIndex(), CardDto.from(e.card()), e.value(), null, null,
                     null, null, null, null, null, null);
         } else if (event instanceof SplitHand e) {
             return new BlackjackEventData(e.seat().id(), null, null, null,
                     e.cards().stream().map(CardDto::from).toList(), null, null, null, null, null, null, null);
         } else if (event instanceof Busted e) {
-            return new BlackjackEventData(e.seat().id(), e.handIndex(), null, null, null, null, null, null, null,
+            return new BlackjackEventData(e.seat().id(), e.handIndex(), null, e.value(), null, null, null, null, null,
                     null, null, null);
         } else if (event instanceof DealerPlayed e) {
             return new BlackjackEventData(null, null, null, e.value(),

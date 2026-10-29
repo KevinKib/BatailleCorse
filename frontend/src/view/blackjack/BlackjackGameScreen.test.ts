@@ -99,6 +99,16 @@ describe('BlackjackGameScreen', () => {
     expect(wrapper.get('[data-test="status"]').text()).toBe('Waiting for Bob…');
   });
 
+  it('live region: my own bust is said with "You bust", and with its total', async () => {
+    const { wrapper, store } = await mountRoom(blackjackPlayingState);
+    store.applyEvent({ type: 'event', eventType: 'BUST', eventData: {
+      seat: 0, handIndex: 0, card: null, value: 24, cards: null, holeCard: null, handNumber: null,
+      button: null, bets: null, nets: null, stacks: null, bestSeats: null,
+    } });
+    await flushPromises();
+    expect(wrapper.get('[data-test="blackjack-live"]').text()).toBe('You bust with 24');
+  });
+
   it('tournament end: shared places', async () => {
     const { wrapper } = await mountRoom(blackjackTournamentEndState);
     expect(wrapper.get('[data-test="end"]').exists()).toBe(true);

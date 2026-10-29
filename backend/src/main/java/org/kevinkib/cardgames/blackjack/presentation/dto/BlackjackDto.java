@@ -28,7 +28,7 @@ import java.util.Set;
  * One player's view of a Blackjack game, the only projection of the aggregate. Public information is the same for
  * every viewer; {@code availableActions}, {@code betLimits} and {@code lastBet} are the viewer's own. Never in it: the
  * dealer's hole card before it is shown, another seat's bet during {@code BETTING} (the amount is null, only the fact
- * that it was placed is public) and the order of the shoe. Totals, soft flags and statuses come from the domain: the
+ * that it was placed is public, and its stack and standing still count the bet) and the order of the shoe. Totals, soft flags and statuses come from the domain: the
  * client counts nothing.
  */
 public record BlackjackDto(
@@ -175,7 +175,8 @@ public record BlackjackDto(
             hands.add(new HandDto(hand.cards().stream().map(CardDto::from).toList(), value.total(), value.soft(),
                     hand.status().name(), hand.doubled(), hand.fromSplit(), net));
         }
-        return new PlayerDto(seat.id(), name, bot, level, state.stack(), state.betPlaced(), bet, hands,
+        int stack = sealed ? game.publicStack(seat) : state.stack();
+        return new PlayerDto(seat.id(), name, bot, level, stack, state.betPlaced(), bet, hands,
                 state.eliminated(), state.forfeited(), state.place(), game.standing(seat));
     }
 
