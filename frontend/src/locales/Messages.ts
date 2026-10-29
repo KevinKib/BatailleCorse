@@ -353,6 +353,7 @@ export interface KiloDeMerdeUiMessages {
   table: {
     roundLine: string;                 // '{round}', '{total}', '{step}': "Round 3 of 10 · pass 7"
     countdown: string;                 // '{seconds}': accessible name of the pass countdown ring
+    raceCountdown: string;             // '{seconds}': accessible name of the ring while a race is open
     kilos: string;                     // '{kg}': the kilos of a plate ("113 kg")
     kilosLabel: string;                // '{player}', '{kg}': accessible name of a plate's kilos
     pile: string;                      // region name and label of the kilo pile

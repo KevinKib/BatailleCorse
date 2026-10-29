@@ -723,6 +723,7 @@ export const messagesEn: Messages = {
     table: {
       roundLine: 'Round {round} of {total} · pass {step}',
       countdown: '{seconds} seconds left to pass',
+      raceCountdown: '{seconds} seconds left to slap',
       kilos: '{kg} kg',
       kilosLabel: '{player}: {kg} kg',
       pile: 'Kilo pile',

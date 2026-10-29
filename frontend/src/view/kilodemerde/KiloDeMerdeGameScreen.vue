@@ -346,7 +346,7 @@ const rematchButton = computed(() =>
         :racing="racing"
         :ready="store.game.phase === 'PASSING'"
         :confirming="confirming"
-        :countdown-kind="confirming ? 'ready' : 'pass'"
+        :countdown-kind="confirming ? 'ready' : store.game.phase === 'RACE' ? 'race' : 'pass'"
         :hands="hands"
         :last-seats="lastSeats"
         :disconnected="seatDisconnected"

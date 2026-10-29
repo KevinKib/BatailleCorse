@@ -18,6 +18,7 @@ export const kiloDeMerdeUi: Messages['kiloDeMerdeUi'] = {
   table: {
     roundLine: 'Manche {round} sur {total} · passe {step}',
     countdown: 'Temps restant pour passer : {seconds} s',
+    raceCountdown: 'Temps restant pour taper : {seconds} s',
     kilos: '{kg} kg',
     kilosLabel: '{player} : {kg} kg',
     pile: 'Tas de kilos',

@@ -231,6 +231,13 @@ describe('KiloDeMerdeGameScreen', () => {
       expect(wrapper.get('[data-test="pile"]').attributes('disabled')).toBeUndefined();
     });
 
+    it('givenARace_thenTheCountdownIsNamedAfterTheRaceNotThePass', async () => {
+      const { wrapper } = await mountRoom(room(kiloDeMerdeRaceState));
+      const label = wrapper.get('[data-test="countdown"]').attributes('aria-label');
+      expect(label).toContain(messagesEn.kiloDeMerdeUi.table.raceCountdown.replace(/\{seconds\}.*/, ''));
+      expect(label).not.toContain('to pass');
+    });
+
     it('givenIAlreadySlapped_thenThePileNoLongerPulses', async () => {
       const players = kiloDeMerdeRaceState.players.map(p => p.seat === 0 ? { ...p, slapRank: 4 } : p);
       const state: KiloDeMerdeState = { ...kiloDeMerdeRaceState, players, availableActions: [] };
