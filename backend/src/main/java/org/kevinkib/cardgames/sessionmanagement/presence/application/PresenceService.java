@@ -41,7 +41,10 @@ public class PresenceService {
     private final ForfeitLog forfeitLog;
     private final GameLifecycleBroadcasters broadcasters;
 
-    private final Map<Seat, ScheduledForfeit> pendingForfeits = new ConcurrentHashMap<>();
+    /** A grace timer and the game it was armed in: a rematch on the same id is another game, not its business. */
+    private record PendingForfeit(Game game, ScheduledForfeit task) { }
+
+    private final Map<Seat, PendingForfeit> pendingForfeits = new ConcurrentHashMap<>();
     private final Map<GameId, Duration> graceOverrides = new ConcurrentHashMap<>();
     private volatile BiConsumer<GameId, List<AddressedLobbyView>> lobbyPresenceListener = (id, views) -> { };
 
@@ -106,12 +109,13 @@ public class PresenceService {
         publishLobbyConnection(gameId, token, true);
 
         Seat seat = new Seat(gameId, playerId.get());
-        ScheduledForfeit pending = pendingForfeits.remove(seat);
+        PendingForfeit pending = pendingForfeits.remove(seat);
         if (pending != null) {
-            pending.cancel();
+            pending.task().cancel();
             Game game = findGame(seat.gameId());
-            // On a finished game the pending task was a rematch departure: nothing to announce.
-            if (game != null && !game.isFinished()) {
+            // On a finished game the pending task was a rematch departure, and a timer armed in the previous game
+            // concerned another player of that seat number: nothing to announce.
+            if (game != null && game == pending.game() && !game.isFinished()) {
                 broadcasters.broadcasterFor(game).reconnected(game, seat.playerId());
             }
         }
@@ -125,6 +129,11 @@ public class PresenceService {
     public void onDisconnect(String connectionId) {
         Optional<SeatClaim> claim = registry.unbind(connectionId);
         if (claim.isEmpty()) {
+            return;
+        }
+        // Another connection still holds the seat (a second tab, or the new socket was up before the old one
+        // timed out): the player is still here.
+        if (registry.isHeld(claim.get())) {
             return;
         }
         // The seat is resolved now, not at bind time: a token that no longer resolves holds nothing.
@@ -141,9 +150,11 @@ public class PresenceService {
         }
 
         Instant deadline = clock.instant().plus(forfeitGraceFor(seat.gameId()));
-        ScheduledForfeit task = scheduler.schedule(deadline,
-                () -> forfeit(seat.gameId(), seat.playerId(), ForfeitReason.DISCONNECTED));
-        pendingForfeits.put(seat, task);
+        ScheduledForfeit task = scheduler.schedule(deadline, () -> expire(game, seat));
+        PendingForfeit replaced = pendingForfeits.put(seat, new PendingForfeit(game, task));
+        if (replaced != null) {
+            replaced.task().cancel();
+        }
         if (!game.isFinished()) {
             broadcasters.broadcasterFor(game).disconnected(game, seat.playerId(), deadline.toEpochMilli());
         }
@@ -168,6 +179,15 @@ public class PresenceService {
         forfeitLog.record(seat, reason);
         games.touch(gameId); // start the finished-grace clock
         broadcasters.broadcasterFor(game).forfeited(game, playerId, reason);
+    }
+
+    /** The grace is over: the seat forfeits, unless the game it was armed in has since been replaced by a rematch. */
+    private void expire(Game armedIn, Seat seat) {
+        if (findGame(seat.gameId()) != armedIn) {
+            pendingForfeits.computeIfPresent(seat, (s, pending) -> pending.game() == armedIn ? null : pending);
+            return;
+        }
+        forfeit(seat.gameId(), seat.playerId(), ForfeitReason.DISCONNECTED);
     }
 
     private void publishLobbyConnection(GameId gameId, String token, boolean connected) {

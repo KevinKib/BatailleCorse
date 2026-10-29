@@ -28,6 +28,11 @@ public class InMemoryConnectionRegistry implements ConnectionRegistry {
     }
 
     @Override
+    public boolean isHeld(SeatClaim claim) {
+        return claimByConnection.containsValue(claim);
+    }
+
+    @Override
     public int size() {
         return claimByConnection.size();
     }
