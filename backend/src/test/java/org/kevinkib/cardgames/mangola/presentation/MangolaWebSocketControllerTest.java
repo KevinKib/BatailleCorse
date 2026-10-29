@@ -181,7 +181,7 @@ class MangolaWebSocketControllerTest {
 
     @Test
     void sow_isAuthenticatedByTheSeatToken() {
-        Mangola game = table.playGame(MangolaTable.board("a2:3 h4:5"));
+        Mangola game = table.playGame(MangolaTable.board("a2:3 h1:2 h4:5"));
         String gameId = game.getId().uuid().toString();
 
         table.ws.sow(new MangolaSowPayload(gameId, table.token(game, 0), MangolaGeometry.pit("a2")));

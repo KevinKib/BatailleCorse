@@ -108,6 +108,19 @@ class MangolaGameActionsTest {
     }
 
     @Test
+    void theSowThatLeavesTheMoverStuckForGoodIsAnnouncedAsGameOverWithItsReason() throws Exception {
+        // a2:3 leaves side A with single seeds only, side B still has a move: B wins at once
+        Mangola game = table.playGame(MangolaTable.board("a2:3 c1:1 c3:2 d4:3"));
+        table.messaging.clear();
+
+        table.actions.sow(game.getId(), SEAT_0, MangolaGeometry.pit("a2"));
+
+        Response over = table.messaging.payloads.get(0);
+        assertThat(over.getEventType(), is("GAME_OVER"));
+        assertThat(((MangolaDto) over.getState()).outcome(), is(new MangolaDto.Finished(1, "CANNOT_MOVE_AGAIN")));
+    }
+
+    @Test
     void theSowThatLeavesTheOpponentWithoutAMoveIsAnnouncedAsGameOver() throws Exception {
         // E3: the capture empties side B, so A wins at once
         Mangola game = table.playGame(MangolaTable.board("a2:2 c2:1 c3:2 c4:3"));

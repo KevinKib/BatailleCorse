@@ -9,7 +9,7 @@ export type MangolaSide = 'A' | 'B';
 /** What the server lets the viewer do now (placement: `ARRANGE`, `CONFIRM_LAYOUT`, `EDIT_LAYOUT`; play: `SOW`). */
 export type MangolaAction = 'ARRANGE' | 'CONFIRM_LAYOUT' | 'EDIT_LAYOUT' | 'SOW';
 
-export type MangolaReason = 'NO_MOVE' | 'FORFEIT' | 'REPETITION' | 'ENDLESS_SOWING';
+export type MangolaReason = 'NO_MOVE' | 'CANNOT_MOVE_AGAIN' | 'FORFEIT' | 'REPETITION' | 'ENDLESS_SOWING';
 
 export interface MangolaPlayer {
   seat: number;
