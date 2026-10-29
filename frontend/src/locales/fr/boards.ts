@@ -129,7 +129,7 @@ export const morrisLobby: Messages['morrisLobby'] = {
     six: {
       name: 'Moulin à six',
       summary: '6 pions chacun, moulins',
-      rule: 'Moulin à six\u00A0: 6 pions chacun sur deux carrés. Un moulin prend un pion\u00A0; il faut garder au moins trois pions.',
+      rule: 'Moulin à six\u00A0: 6 pions chacun sur deux carrés. Un moulin prend un pion\u202F; il faut garder au moins trois pions.',
     },
   },
   colours: { white: 'Blancs', black: 'Noirs', random: 'Au hasard' },
@@ -345,7 +345,7 @@ export const mangolaUi: Messages['mangolaUi'] = {
   placement: {
     title: 'Placez vos graines',
     boardLabel: 'Votre disposition',
-    intro: 'Mettez vos 32 graines sur vos deux rangées. Votre adversaire place les siennes en même temps\u00A0; les deux dispositions sont révélées ensemble.',
+    intro: 'Mettez vos 32 graines sur vos deux rangées. Votre adversaire place les siennes en même temps\u202F; les deux dispositions sont révélées ensemble.',
     seedsLeft: { one: '{n} graine restante', other: '{n} graines restantes' },
     allPlaced: 'Toutes les graines sont placées',
     add: 'Ajouter',
@@ -358,7 +358,7 @@ export const mangolaUi: Messages['mangolaUi'] = {
       clear: 'Vider',
     },
     confirm: 'Confirmer la disposition',
-    confirmDisabledHint: 'Placez toutes vos graines pour confirmer ({n} restantes).',
+    confirmDisabledHint: 'Placez toutes vos graines pour confirmer (encore {n}).',
     editLayout: 'Modifier la disposition',
     confirmedWaiting: 'Disposition confirmée. Vous pouvez encore la modifier tant que votre adversaire n’est pas prêt.',
     opponent: '{player}\u00A0: {status}',

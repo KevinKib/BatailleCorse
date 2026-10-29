@@ -246,7 +246,7 @@ describe('NinetyNineGameScreen', () => {
       const { wrapper } = await mountRoom(room(buildNinetyNineBust()));
       expect(wrapper.get('[data-test="bust-title"]').text()).toBe('Player 2 goes over 99 (103)');
       expect(wrapper.findAll('[data-test="bust-card"]')).toHaveLength(2);
-      expect(wrapper.get('[data-test="bust-lives"]').text()).toBe('Loses a life · 2 left');
+      expect(wrapper.get('[data-test="bust-lives"]').text()).toBe('Life lost · 2 left');
       expect(wrapper.get('[data-test="bust-next"]').exists()).toBe(true);
       expect(wrapper.get('[data-test="seat-hit"]').text()).toBe('−1');
       expect(wrapper.get('[data-test="round"]').text()).toBe('End of round 1');
@@ -275,6 +275,12 @@ describe('NinetyNineGameScreen', () => {
       expect(wrapper.get('[data-test="end-winner"]').text()).toBe('Winners: You and Player 1');
       expect(wrapper.get('[data-test="end-sub"]').text()).toBe('Quick mode: Player 2 lost the last life. Places by lives left.');
       expect(wrapper.findAll('[data-test="place"]').map(p => p.text())).toEqual(['1st', '1st', '3rd']);
+    });
+
+    it('givenAQuickModeEndOnMyLastLife_thenTheQuickLineSpeaksToMe', async () => {
+      const end = buildNinetyNineQuickEnd();
+      const { wrapper } = await mountRoom(room({ ...end, lastBust: { ...end.lastBust!, seat: 0 } }));
+      expect(wrapper.get('[data-test="end-sub"]').text()).toBe('Quick mode: you lost your last life. Places by lives left.');
     });
 
     it('givenAnEndedGame_thenPlayAgainGoesThroughTheStore', async () => {

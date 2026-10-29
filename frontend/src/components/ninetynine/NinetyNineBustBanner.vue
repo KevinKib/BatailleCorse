@@ -28,7 +28,7 @@ const outcome = computed(() => props.bust.eliminated
 <template>
   <div class="bust" role="alert" data-test="bust">
     <strong class="bust-title" data-test="bust-title">{{ title }}</strong>
-    <div class="bust-hand" data-test="bust-hand" role="group" :aria-label="format(ui.bust.handLabel, { player: label })">
+    <div class="bust-hand" data-test="bust-hand" role="group" :aria-label="mine ? ui.bust.handLabelYou : format(ui.bust.handLabel, { player: label })">
       <span v-for="card in bust.hand" :key="card.name" class="bust-card" data-test="bust-card" role="img"
             :aria-label="cardLabel(card, ui, false)">
         <PlayingCard :rank="card.rank" :suit="card.suit" />

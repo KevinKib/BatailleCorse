@@ -1,6 +1,9 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import { mount } from '@vue/test-utils';
 import KiloDeMerdeRoundBanner from './KiloDeMerdeRoundBanner.vue';
+import { messages } from '../../locales';
+import { messagesFr } from '../../locales/fr';
+import { setCurrentLocaleForTest } from '../../locales/locale';
 import { kiloCard } from '../../model/kilodemerde/fixtures';
 import type { RoundLine } from '../../model/kilodemerde/roundSummary';
 
@@ -32,6 +35,29 @@ describe('KiloDeMerdeRoundBanner', () => {
     for (const [l, text] of cases) {
       expect(mountBanner({ lines: [l] }).get('[data-test="round-line"]').text()).toBe(text);
     }
+  });
+
+  describe('my own seat', () => {
+    afterEach(() => { setCurrentLocaleForTest('en'); delete messages.fr; });
+    const inFrench = () => { messages.fr = messagesFr; setCurrentLocaleForTest('fr'); };
+
+    it('givenIFirstSlapped_thenTheRaceTitleSpeaksToMe', () => {
+      expect(mountBanner({ race: { firstSlapper: 0, order: [0] }, mySeat: 0 }).get('.race-title').text())
+        .toBe('You slapped! Waiting for the others');
+      inFrench();
+      expect(mountBanner({ race: { firstSlapper: 0, order: [0] }, mySeat: 0 }).get('.race-title').text())
+        .toBe('Vous avez tapé ! En attente des autres');
+      expect(mountBanner({ race: { firstSlapper: 3, order: [3] }, mySeat: 0 }).get('.race-title').text())
+        .toBe('P3 a tapé ! Tapez !');
+    });
+
+    it('givenIDrew_thenTheLineIsConjugatedForMe', () => {
+      inFrench();
+      expect(mountBanner({ lines: [line('LAST_DRAWS', 0)], mySeat: 0 }).get('[data-test="round-line"]').text())
+        .toBe('Trop tard ! Vous prenez K♠ (13 kg)');
+      expect(mountBanner({ lines: [line('LAST_DRAWS', 2)], mySeat: 0 }).get('[data-test="round-line"]').text())
+        .toBe('Trop tard ! P2 prend K♠ (13 kg)');
+    });
   });
 
   it('givenSeveralDrawers_thenEveryLineIsShown', () => {

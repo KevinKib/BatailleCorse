@@ -13,6 +13,9 @@ import type { LobbyView } from '../../model/lobby/LobbyView';
 import webSocketService from '../../service/WebSocketService';
 import { setConnectionOnline } from '../../composables/useConnectionStatus';
 import { messagesEn } from '../../locales/en';
+import { messages } from '../../locales';
+import { messagesFr } from '../../locales/fr';
+import { setCurrentLocaleForTest } from '../../locales/locale';
 
 const ui = messagesEn.draughtsUi;
 
@@ -378,6 +381,42 @@ describe('DraughtsGameScreen', () => {
       store.applyEvent({ type: 'event', eventType: 'DRAW_DECLINED', message: '', eventData: { seat: 1 } });
       await flushPromises();
       expect(wrapper.get('[data-test="board-live"]').text()).toBe('Bob declined the draw.');
+    });
+
+    describe('in French', () => {
+      beforeEach(() => { messages.fr = messagesFr; setCurrentLocaleForTest('fr'); });
+      afterEach(() => { setCurrentLocaleForTest('en'); delete messages.fr; });
+      const move = (seat: number, captures: number[]) => ({
+        type: 'event' as const, eventType: 'MOVE', message: '',
+        eventData: { seat, from: 33, to: 22, path: [22], captures, promotes: false },
+      });
+
+      it('conjugates my own move for "vous" and the opponent\'s in the third person', async () => {
+        const { wrapper, store } = await mountScreen(draughtsOpeningState);
+        store.applyEvent({ type: 'state-update', state: draughtsState({ version: 1, history: ['33x22'] }) });
+        store.applyEvent(move(0, [28]));
+        await flushPromises();
+        expect(wrapper.get('[data-test="board-live"]').text()).toBe('Vous avez joué 33x22 et pris 1 pièce.');
+        store.applyEvent(move(0, []));
+        await flushPromises();
+        expect(wrapper.get('[data-test="board-live"]').text()).toBe('Vous avez joué 33x22.');
+        store.applyEvent(move(1, [28, 27]));
+        await flushPromises();
+        expect(wrapper.get('[data-test="board-live"]').text()).toBe('Bob a joué 33x22 et pris 2 pièces.');
+      });
+
+      it('conjugates my own draw offer and refusal for "vous"', async () => {
+        const { wrapper, store } = await mountScreen(draughtsOpeningState);
+        store.applyEvent({ type: 'event', eventType: 'DRAW_OFFERED', message: '', eventData: { seat: 0 } });
+        await flushPromises();
+        expect(wrapper.get('[data-test="board-live"]').text()).toBe('Vous proposez la nulle.');
+        store.applyEvent({ type: 'event', eventType: 'DRAW_DECLINED', message: '', eventData: { seat: 0 } });
+        await flushPromises();
+        expect(wrapper.get('[data-test="board-live"]').text()).toBe('Vous avez refusé la nulle.');
+        store.applyEvent({ type: 'event', eventType: 'DRAW_OFFERED', message: '', eventData: { seat: 1 } });
+        await flushPromises();
+        expect(wrapper.get('[data-test="board-live"]').text()).toBe('Bob propose la nulle.');
+      });
     });
   });
 

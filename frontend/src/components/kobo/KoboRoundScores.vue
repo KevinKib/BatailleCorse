@@ -42,7 +42,7 @@ const lines = computed(() => props.rows.map(r => ({
           <span v-if="line.announcer || line.gift || line.ready" class="pills">
             <span v-if="line.announcer" class="pill pill--kobo" data-test="pill-kobo">{{ sheet.pills.kobo }}</span>
             <span v-if="line.gift" class="pill pill--gift" data-test="pill-gift"
-                  :aria-label="format(sheet.pills.giftLabel, { player: line.name })">{{ sheet.pills.gift }}</span>
+                  :aria-label="line.seat === mySeat ? sheet.pills.giftLabelYou : format(sheet.pills.giftLabel, { player: line.name })">{{ sheet.pills.gift }}</span>
             <span v-if="line.ready" class="pill pill--ready" :data-test="`ready-${line.seat}`">
               <i class="pi pi-check" aria-hidden="true"></i>{{ sheet.ready }}
             </span>

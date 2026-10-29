@@ -103,13 +103,18 @@ export const draughtsUi: Messages['draughtsUi'] = {
     black: 'Noirs',
     number: 'N°',
     empty: 'Aucun coup joué.',
-    label: 'Coups, {n} joués',
+    label: 'Coups joués : {n}',
   },
   announce: {
     moved: '{player} a joué {move}.',
     movedTaking: {
       one: '{player} a joué {move} et pris {n} pièce.',
       other: '{player} a joué {move} et pris {n} pièces.',
+    },
+    movedYou: 'Vous avez joué {move}.',
+    movedTakingYou: {
+      one: 'Vous avez joué {move} et pris {n} pièce.',
+      other: 'Vous avez joué {move} et pris {n} pièces.',
     },
   },
   draw: {
@@ -121,6 +126,8 @@ export const draughtsUi: Messages['draughtsUi'] = {
     decline: 'Refuser',
     offeredBy: '{player} propose la nulle.',
     declinedBy: '{player} a refusé la nulle.',
+    offeredByYou: 'Vous proposez la nulle.',
+    declinedByYou: 'Vous avez refusé la nulle.',
     agreed: 'Nulle d’un commun accord.',
     byRepetition: 'Nulle par répétition : la même position est apparue trois fois.',
     byKingsOnly: 'Nulle : 25 coups chacun où seules des dames ont joué, sans prise.',

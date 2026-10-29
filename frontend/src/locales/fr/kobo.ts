@@ -25,7 +25,7 @@ export const kobo: Messages['kobo'] = {
       title: 'Votre tour',
       body: [
         'Piochez une carte, puis échangez-la avec l’une de vos cartes (l’ancienne carte va face visible sur la défausse) ou défaussez-la.',
-        'Un 7 à un roi défaussé peut donner un pouvoir, que vous pouvez toujours ignorer. Ensuite, terminez votre tour.',
+        'Une carte défaussée, du 7 au roi, peut donner un pouvoir, que vous pouvez toujours ignorer. Ensuite, terminez votre tour.',
       ],
     },
     {
@@ -205,6 +205,7 @@ export const koboUi: Messages['koboUi'] = {
       kobo: 'Kobo !',
       gift: '+10',
       giftLabel: '{player} a reçu 10 points',
+      giftLabelYou: 'Vous avez reçu 10 points',
     },
     ready: 'Prêt',
     giveTen: 'Donner 10 à {player}',

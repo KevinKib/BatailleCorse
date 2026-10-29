@@ -204,7 +204,8 @@ const endSubtitle = computed(() => {
   }
   if (outcome.reason === 'QUICK') {
     const out = store.game?.lastBust;
-    return out ? format(ui.end.quick, { player: nameOrYou(out.seat) }) : ui.end.lastStanding;
+    if (!out) return ui.end.lastStanding;
+    return out.seat === store.mySeat ? ui.end.quickYou : format(ui.end.quick, { player: displayName(out.seat) });
   }
   return ui.end.lastStanding;
 });
