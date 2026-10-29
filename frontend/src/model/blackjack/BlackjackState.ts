@@ -32,6 +32,8 @@ export interface BlackjackHand {
   fromSplit: boolean;
   /** The net gain of the hand once settled, else absent. */
   net?: number;
+  /** Client only (`shownState`): some cards of the hand have not landed yet, so its total is not told. */
+  pending?: boolean;
 }
 
 export interface BlackjackDealer {
@@ -44,6 +46,8 @@ export interface BlackjackDealer {
   soft: boolean;
   blackjack: boolean;
   bust: boolean;
+  /** Client only (`shownState`): the dealer's cards are still being dealt or turned, so the total is not told. */
+  pending?: boolean;
 }
 
 export interface BlackjackSeat {

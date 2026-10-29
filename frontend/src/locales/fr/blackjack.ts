@@ -41,6 +41,9 @@ export const blackjackUi: Messages['blackjackUi'] = {
     forfeited: '{player} a quitté la partie',
     disconnected: 'Hors ligne',
     offline: 'Vous êtes hors ligne. Reconnexion…',
+    shoe: 'Sabot',
+    chips: 'Mise de {n} points',
+    chipsSealed: 'Mise placée, montant caché',
   },
   status: {
     blackjack: 'Blackjack',
@@ -73,11 +76,23 @@ export const blackjackUi: Messages['blackjackUi'] = {
     double: 'Doubler',
     split: 'Séparer',
   },
+  tags: { hit: 'Carte', stand: 'Reste', double: 'Double', split: 'Sépare', bust: 'Brûle' },
+  tagsYou: { hit: 'Carte', stand: 'Vous restez', double: 'Double', split: 'Vous séparez', bust: 'Vous brûlez' },
+  phase: { bets: 'Mises faites', deal: 'Distribution', dealer: 'Tour du croupier', results: 'Résultats' },
+  dealerLine: {
+    reveals: 'Le croupier retourne sa carte',
+    draws: 'Le croupier tire une carte',
+    stands: 'Le croupier reste à {total}',
+    busts: 'Le croupier dépasse avec {total}',
+    blackjack: 'Le croupier a un Blackjack',
+  },
   wait: {
     betting: 'Les mises sont ouvertes',
     for: 'En attente de {player}…',
     dealer: 'Le croupier joue…',
     yourTurn: 'À vous de jouer',
+    dealing: 'Distribution…',
+    results: 'Résultats',
   },
   summary: {
     title: 'Dernière main',

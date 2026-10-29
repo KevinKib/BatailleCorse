@@ -67,14 +67,15 @@ describe('Blackjack, nominal games on a scripted shoe', () => {
         scriptedBet(bob, 1, 40);
 
         // Alice acts first (the button is seat 0): 9 and 6 make 15, a 5 makes 20, she stands.
-        cy.get('[data-test="my-seat"] [data-test="hand-total"]', { timeout: 10000 }).should('contain.text', '15');
+        cy.get('[data-test="my-seat"] [data-test="hand-total"]', { timeout: 20000 }).should('contain.text', '15');
         cy.get('[data-test="action-hit"]').should('be.visible').click();
         cy.get('[data-test="my-seat"] [data-test="hand-total"]').should('contain.text', '20');
         cy.get('[data-test="action-stand"]').should('be.visible').click();
         scriptedAct(bob, 1, 'stand');
 
         // The dealer stands on 17: Alice wins 10, Bob loses 40. The summary of hand 1 is shown while hand 2 opens.
-        cy.get('[data-test="hand-number"]', { timeout: 10000 }).should('contain.text', 'Hand 2 / 10');
+        // The table tells the dealer's turn and the results (a few seconds) before the next betting opens.
+        cy.get('[data-test="hand-number"]', { timeout: 30000 }).should('contain.text', 'Hand 2 / 10');
         cy.get('[data-test="hand-summary"]').should('be.visible');
         cy.get('[data-test="summary-dealer"]').should('contain.text', '17');
         cy.get('[data-test="summary-you"]').should('contain.text', '+10');
@@ -86,11 +87,11 @@ describe('Blackjack, nominal games on a scripted shoe', () => {
 
         // Bob plays first, draws a King on 16 and busts; then it is Alice's turn: 19 against the dealer's 17.
         scriptedAct(bob, 2, 'hit');
-        cy.get('[data-test="my-seat"] [data-test="hand-total"]', { timeout: 10000 }).should('contain.text', '19');
-        cy.get('[data-test="action-stand"]', { timeout: 10000 }).should('be.visible').click();
+        cy.get('[data-test="my-seat"] [data-test="hand-total"]', { timeout: 20000 }).should('contain.text', '19');
+        cy.get('[data-test="action-stand"]', { timeout: 20000 }).should('be.visible').click();
 
         // Bob has no points left: only Alice is standing, the game ends and she is first.
-        cy.get('[data-test="end"]', { timeout: 10000 }).should('be.visible');
+        cy.get('[data-test="end"]', { timeout: 30000 }).should('be.visible');
         cy.get('[data-test="place-row"]').should('have.length', 2);
         cy.get('[data-test="place-name"]').then(($names) => {
           expect($names.eq(0).text(), '1st').to.eq('You');
@@ -123,7 +124,7 @@ describe('Blackjack, nominal games on a scripted shoe', () => {
       cy.get('[data-test="chip-max"]').click();
       cy.get('[data-test="bet-place"]').should('contain.text', 'Bet 100').click();
 
-      cy.get('[data-test="end"]', { timeout: 10000 }).should('be.visible');
+      cy.get('[data-test="end"]', { timeout: 30000 }).should('be.visible');
       cy.get('[data-test="solo-final"]').should('contain.text', '0 points').and('contain.text', '-100');
     });
   });
