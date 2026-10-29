@@ -415,6 +415,7 @@ export interface KiloDeMerdeUiMessages {
     titleYou: string;                  // my own kilos
     none: string;
     total: string;                     // '{kg}'
+    close: string;                     // accessible name of the cross that closes the popover
   };
   standings: {
     player: string;

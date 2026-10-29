@@ -23,7 +23,7 @@ onMounted(() => root.value?.focus());
        :aria-label="title" @keydown.esc="emit('close')">
     <div class="popover-head">
       <strong class="popover-title">{{ title }}</strong>
-      <button type="button" class="popover-close" data-test="kilo-close" :aria-label="ui.back" @click="emit('close')">
+      <button type="button" class="popover-close" data-test="kilo-close" :aria-label="ui.kiloPopover.close" @click="emit('close')">
         <i class="pi pi-times" aria-hidden="true"></i>
       </button>
     </div>

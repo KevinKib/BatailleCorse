@@ -45,5 +45,7 @@ describe('KiloDeMerdeKiloPopover', () => {
     await wrapper.get('[data-test="kilo-popover"]').trigger('keydown', { key: 'Escape' });
     await wrapper.get('[data-test="kilo-close"]').trigger('click');
     expect(wrapper.emitted('close')).toHaveLength(2);
+    // The cross closes the dialog: it is not a "Back" to the game list.
+    expect(wrapper.get('[data-test="kilo-close"]').attributes('aria-label')).toBe('Close');
   });
 });

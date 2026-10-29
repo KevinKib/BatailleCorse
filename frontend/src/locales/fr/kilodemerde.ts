@@ -74,6 +74,7 @@ export const kiloDeMerdeUi: Messages['kiloDeMerdeUi'] = {
     title: 'Kilos de {player}',
     titleYou: 'Vos kilos',
     none: 'Aucun kilo pour l’instant',
+    close: 'Fermer',
     total: 'Total : {kg} kg',
   },
   standings: {

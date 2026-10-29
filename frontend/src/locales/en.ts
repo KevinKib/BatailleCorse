@@ -780,6 +780,7 @@ export const messagesEn: Messages = {
       titleYou: 'Your kilos',
       none: 'No kilo cards yet',
       total: 'Total: {kg} kg',
+      close: 'Close',
     },
     standings: {
       player: 'Player',
