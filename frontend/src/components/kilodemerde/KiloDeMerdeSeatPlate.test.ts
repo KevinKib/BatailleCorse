@@ -1,6 +1,9 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import { mount } from '@vue/test-utils';
 import KiloDeMerdeSeatPlate from './KiloDeMerdeSeatPlate.vue';
+import { messages } from '../../locales';
+import { messagesFr } from '../../locales/fr';
+import { setCurrentLocaleForTest } from '../../locales/locale';
 import { kiloCard, kiloDeMerdeStepState } from '../../model/kilodemerde/fixtures';
 import type { KiloDeMerdePlayer } from '../../model/kilodemerde/KiloDeMerdeState';
 
@@ -51,6 +54,23 @@ describe('KiloDeMerdeSeatPlate', () => {
     const wrapper = mountPlate();
     await wrapper.get('[data-test="seat-kilos"]').trigger('click');
     expect(wrapper.emitted('show-kilos')).toHaveLength(1);
+  });
+
+  describe('my own plate', () => {
+    afterEach(() => { setCurrentLocaleForTest('en'); delete messages.fr; });
+    const hand = [kiloCard('KING', 'SPADE')];
+    const label = (wrapper: ReturnType<typeof mountPlate>) => wrapper.get('[data-test="seat-plate"]').attributes('aria-label');
+
+    it('givenMyPlate_thenItsReadyCheckAndHandSpeakToMe', () => {
+      expect(label(mountPlate({ label: 'You', mine: true, ready: true, hand }))).toContain('You have chosen a card');
+      expect(label(mountPlate({ label: 'You', mine: true, ready: true, hand }))).toContain('Your hand: K♠');
+      messages.fr = messagesFr;
+      setCurrentLocaleForTest('fr');
+      expect(label(mountPlate({ label: 'Vous', mine: true, ready: true, hand }))).toContain('Vous avez choisi une carte');
+      expect(label(mountPlate({ label: 'Vous', mine: true, ready: true, hand }))).toContain('Votre main: K♠');
+      expect(label(mountPlate({ ready: true, hand }))).toContain('Alice a choisi une carte');
+      expect(label(mountPlate({ ready: true, hand }))).toContain('Main d’Alice: K♠');
+    });
   });
 
   it('givenADisconnectedSeat_thenTheBadgeIsShown', () => {

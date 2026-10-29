@@ -1,6 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
 import KiloDeMerdeKiloPopover from './KiloDeMerdeKiloPopover.vue';
+import { messages } from '../../locales';
+import { messagesFr } from '../../locales/fr';
+import { setCurrentLocaleForTest } from '../../locales/locale';
 import { kiloCard } from '../../model/kilodemerde/fixtures';
 
 describe('KiloDeMerdeKiloPopover', () => {
@@ -11,6 +14,22 @@ describe('KiloDeMerdeKiloPopover', () => {
     expect(wrapper.get('[data-test="kilo-popover"]').attributes('aria-label')).toBe('Kilos of Alice');
     expect(wrapper.findAll('[data-test="kilo-card"]').map(c => c.text())).toEqual(['K♠', '9♣']);
     expect(wrapper.get('[data-test="kilo-total"]').text()).toBe('Total: 22 kg');
+  });
+
+  it('givenMyOwnKilos_thenTheTitleSpeaksToMe', () => {
+    const title = (props: Record<string, unknown>) =>
+      mount(KiloDeMerdeKiloPopover, { props: { name: 'Alice', cards: [], ...props } }).get('.popover-title').text();
+    expect(title({ name: 'You', mine: true })).toBe('Your kilos');
+    messages.fr = messagesFr;
+    setCurrentLocaleForTest('fr');
+    try {
+      expect(title({ name: 'Vous', mine: true })).toBe('Vos kilos');
+      expect(title({ name: 'Bob' })).toBe('Kilos de Bob');
+      expect(title({ name: 'Alice' })).toBe('Kilos d’Alice');
+    } finally {
+      setCurrentLocaleForTest('en');
+      delete messages.fr;
+    }
   });
 
   it('givenNoKiloCards_thenItSaysSo', () => {

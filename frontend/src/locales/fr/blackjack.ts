@@ -86,7 +86,7 @@ export const blackjackUi: Messages['blackjackUi'] = {
     nobodyGained: 'Aucun gain sur cette main',
   },
   lobby: {
-    fixed: 'Chaque joueur commence avec 100 points ; mises de 1 jusqu’au maximum.',
+    fixed: 'Chaque joueur commence avec 100 points ; mises de 1 jusqu’au maximum.',
     soloHint: 'Lancez la partie seul pour jouer en solo contre le croupier',
   },
   end: {
@@ -124,8 +124,8 @@ export const blackjackUi: Messages['blackjackUi'] = {
     dealerDraws: 'Le croupier tire {card}, total {total}',
     dealerBusts: 'Le croupier brûle avec {total}',
     dealerStands: 'Le croupier reste sur {total}',
-    win: '{n} gagnés',
-    lose: '{n} perdus',
+    win: 'Gain : {n}',
+    lose: 'Perte : {n}',
     push: 'Égalité',
     eliminated: '{player} : éliminé',
   },
@@ -187,7 +187,7 @@ export const blackjack: Messages['blackjack'] = {
       kind: 'text',
       title: 'Valeur des cartes',
       body: [
-        'Du 2 au 10, les cartes valent leur chiffre, le valet, la dame et le roi valent 10, l’as vaut 11 ou 1. Une main où l’as compte pour 11 est dite « souple ».',
+        'Du 2 au 10, les cartes valent leur chiffre ; le valet, la dame et le roi valent 10 ; l’as vaut 11 ou 1. Une main où l’as compte pour 11 est dite « souple ».',
         'Un as et une carte de valeur 10 en deux premières cartes forment un Blackjack.',
       ],
     },
@@ -195,7 +195,7 @@ export const blackjack: Messages['blackjack'] = {
       kind: 'text',
       title: 'Votre tour',
       body: [
-        'Carte (tirer une carte), Rester, Doubler (avec vos deux premières cartes : la mise double et vous tirez exactement une carte), Séparer (deux cartes de même valeur : elles forment deux mains, chacune avec sa mise ; les as séparés reçoivent une seule carte chacun).',
+        'Carte (tirer une carte), Rester, Doubler (avec vos deux premières cartes : la mise double et vous tirez exactement une carte), Séparer (deux cartes de même valeur : elles forment deux mains, chacune avec sa mise ; les as séparés reçoivent une seule carte chacun).',
         'Au-delà de 21, vous brûlez et perdez votre mise. À 21, vous restez automatiquement.',
       ],
     },
@@ -212,7 +212,7 @@ export const blackjack: Messages['blackjack'] = {
     {
       kind: 'text',
       title: 'Fin de partie',
-      body: ['La partie se termine après la dernière main, ou quand vous n’avez plus de points. En tournoi, un joueur à 0 point est éliminé, et la partie s’arrête plus tôt s’il ne reste qu’un joueur. Les tapis égaux se partagent la place.'],
+      body: ['La partie se termine après la dernière main, ou quand vous n’avez plus de points. En tournoi, un joueur à 0 point est éliminé, et la partie s’arrête plus tôt s’il ne reste qu’un joueur. Les joueurs à égalité partagent la place.'],
     },
   ],
 };

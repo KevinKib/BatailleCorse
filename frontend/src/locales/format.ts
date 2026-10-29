@@ -3,10 +3,20 @@ import { currentLocale } from './locale';
 
 // Fills `{name}` placeholders. An unknown placeholder stays visible in the output
 // so a missing variable shows up in the UI instead of silently vanishing.
+// In French, "de" before a value that starts with a vowel is elided ("En attente d’Alice"), since a template cannot
+// know the name it will hold. A leading "h" is left alone: it may be aspirated ("de Hugo").
 export function format(template: string, vars: Record<string, string | number>): string {
-  return template.replace(/\{(\w+)\}/g, (placeholder, key: string) =>
-    key in vars ? String(vars[key]) : placeholder);
+  const filled = template.replace(/\{(\w+)\}/g, (placeholder, key: string) =>
+    key in vars ? `${PLACEHOLDER_START}${String(vars[key])}` : placeholder);
+  const elided = currentLocale() === 'fr'
+    ? filled.replace(FRENCH_DE_BEFORE_VOWEL, (_match, before: string, d: string) => `${before}${d}’`)
+    : filled;
+  return elided.split(PLACEHOLDER_START).join('');
 }
+
+// Marks where a filled value starts, so only "de" right before a value is elided, never "de" before the template's own words.
+const PLACEHOLDER_START = '\u0000';
+const FRENCH_DE_BEFORE_VOWEL = /(^|[^\p{L}])([dD])e \u0000(?=[aeiouyàâäéèêëîïôöùûüAEIOUYÀÂÄÉÈÊËÎÏÔÖÙÛÜ])/gu;
 
 // Picks the singular form where the running locale's rules say "one" (English: exactly 1; French: 0 and 1),
 // the other form otherwise, and fills `{n}` with the count plus any extra variables.

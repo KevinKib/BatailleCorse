@@ -362,6 +362,7 @@ export interface KiloDeMerdeUiMessages {
     opponents: string;
     standings: string;
     ready: string;                     // '{player}': the check on a seat that chose its card this step
+    readyYou: string;                  // the same check on my own plate
     forfeited: string;                 // '{player}'
     offline: string;
   };
@@ -371,6 +372,7 @@ export interface KiloDeMerdeUiMessages {
     waiting: string;                   // the hand while the step resolves
     received: string;                  // '{name}': "from {name}", under the card I received
     revealed: string;                  // '{player}': a hand shown at the end of a round, as a region name
+    revealedYou: string;               // my own hand shown at the end of a round
   };
   race: {
     slapped: string;                   // '{name}': "{name} slapped! Slap!"
@@ -378,11 +380,17 @@ export interface KiloDeMerdeUiMessages {
     rank: string;                      // '{n}': a plate's slap rank ("1")
     order: string;                     // the live order of the slaps, as a region name
   };
-  /** The result of a round, said by the banner and the live region ('{name}', '{card}' and '{kg}' as noted). */
+  /**
+   * The result of a round, said by the banner and the live region ('{name}', '{card}' and '{kg}' as noted). A line
+   * about my own seat uses its `…You` variant: "you" takes its own verb form ("Vous prenez", never "Vous prend").
+   */
   outcome: {
     last: string;                      // '{name}', '{card}', '{kg}': the last to slap draws
+    lastYou: string;                   // '{card}', '{kg}'
     falseSlap: string;                 // '{name}', '{card}', '{kg}': a slap with no set
+    falseSlapYou: string;              // '{card}', '{kg}'
     flush: string;                     // '{name}': a 7 was drawn
+    flushYou: string;
     stalled: string;                   // nobody completed a set
     voided: string;                    // a player left: the round does not count
     noCard: string;                    // '{name}': the kilo pile was empty, nothing was drawn
@@ -390,6 +398,7 @@ export interface KiloDeMerdeUiMessages {
   };
   kiloPopover: {
     title: string;                     // '{player}'
+    titleYou: string;                  // my own kilos
     none: string;
     total: string;                     // '{kg}'
   };
@@ -415,6 +424,7 @@ export interface KiloDeMerdeUiMessages {
     received: string;                  // '{card}', '{name}'
     slapped: string;                   // '{name}'
     kilosChange: string;               // '{name}', '{kg}'
+    kilosChangeYou: string;            // '{kg}'
   };
   /** The codes the server sends on a refused command (`kiloDeMerdeUi.errors.<code>`). */
   errors: {
@@ -498,18 +508,20 @@ export interface NinetyNineUiMessages {
     stuck: string;                     // '{player}', '{total}'
     stuckYou: string;                  // '{total}'
     reason: string;                    // every card goes over 99
-    livesLeft: PluralForms;            // '{n}': "Loses a life · {n} left"
+    livesLeft: PluralForms;            // '{n}': "Life lost · {n} left" (no subject: it is under my title or another's)
     eliminated: string;                // '{player}'
     eliminatedYou: string;
     next: string;                      // the pause before the next deal
     hit: string;                       // the badge on the seat that lost a life
     handLabel: string;                 // '{player}': the stuck hand, as a region name
+    handLabelYou: string;              // my own stuck hand
   };
   lobby: { quickHint: string; };
   end: {
     winner: string;                    // '{players}'
     winners: string;
     quick: string;                     // '{player}': the quick-mode finish
+    quickYou: string;                  // the same when I lost the last life
     lastStanding: string;
     youWonResigned: string;            // '{player}'
     youWonDisconnected: string;        // '{player}'
@@ -922,6 +934,7 @@ export interface KoboSheetMessages {
     kobo: string;
     gift: string;                      // "+10"
     giftLabel: string;                 // '{player}': accessible text of the gift pill
+    giftLabelYou: string;              // the same on my own row
   };
   ready: string;                       // the tick of a player who is ready for the next round
   giveTen: string;                     // '{player}'
@@ -1244,6 +1257,8 @@ export interface DraughtsUiMessages {
   announce: {
     moved: string;                     // '{player}', '{move}'
     movedTaking: PluralForms;          // '{player}', '{move}', '{n}' = pieces taken
+    movedYou: string;                  // '{move}': my own move ("vous" takes its own verb form)
+    movedTakingYou: PluralForms;       // '{move}', '{n}'
   };
   draw: {
     offer: string;
@@ -1254,6 +1269,8 @@ export interface DraughtsUiMessages {
     decline: string;
     offeredBy: string;                 // '{player}'
     declinedBy: string;                // '{player}'
+    offeredByYou: string;              // my own offer
+    declinedByYou: string;             // my own refusal
     agreed: string;
     byRepetition: string;
     byKingsOnly: string;

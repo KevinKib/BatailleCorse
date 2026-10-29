@@ -1,6 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
 import KoboRoundScores from './KoboRoundScores.vue';
+import { messages } from '../../locales';
+import { messagesFr } from '../../locales/fr';
+import { setCurrentLocaleForTest } from '../../locales/locale';
 import type { RoundRow } from '../../model/kobo/roundScores';
 
 const row = (seat: number, overrides: Partial<RoundRow> = {}): RoundRow => ({
@@ -43,6 +46,21 @@ describe('KoboRoundScores', () => {
     const pill = wrapper.get('[data-test="score-row-1"] [data-test="pill-gift"]');
     expect(pill.text()).toBe('+10');
     expect(pill.attributes('aria-label')).toBe('Bob received 10 points');
+  });
+
+  it('givenIReceivedTheGift_thenThePillSpeaksToMeInBothLanguages', () => {
+    const pill = () => mountScores([row(0, { gift: true }), row(1)]).get('[data-test="score-row-0"] [data-test="pill-gift"]');
+    expect(pill().attributes('aria-label')).toBe('You received 10 points');
+    messages.fr = messagesFr;
+    setCurrentLocaleForTest('fr');
+    try {
+      expect(pill().attributes('aria-label')).toBe('Vous avez reçu 10 points');
+      expect(mountScores([row(0), row(1, { gift: true })]).get('[data-test="score-row-1"] [data-test="pill-gift"]')
+        .attributes('aria-label')).toBe('Bob a reçu 10 points');
+    } finally {
+      setCurrentLocaleForTest('en');
+      delete messages.fr;
+    }
   });
 
   it('givenATotalOfExactly75_thenItIsShownAsIsWithoutAnyResetMarker', () => {

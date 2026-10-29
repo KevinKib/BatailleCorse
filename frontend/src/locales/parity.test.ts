@@ -118,6 +118,22 @@ describe('translated areas', () => {
     }
   });
 
+  // "Vous" takes its own verb form: a line about my seat has a `…You` variant instead of filling "{player}" with "Vous".
+  it('givenFrench_thenNoLeafConjugatesVousInTheThirdPerson', () => {
+    for (const [path, text] of fr) {
+      if (typeof text !== 'string') continue;
+      // "Vous" as the subject: at the start of a sentence or after a colon ("L’hôte vous a retiré" is an object, fine).
+      expect(text, path).not.toMatch(/(^|[.!?:]\s)[Vv]ous (a|est|était|avait|prend|perd|dépasse|propose|ramasse|termine|choisit)\b/);
+    }
+  });
+
+  it('givenTheYouVariants_thenTheyAreConjugatedForVous', () => {
+    expect(messagesFr.kiloDeMerdeUi.live.kilosChangeYou).toBe('Vous avez maintenant {kg} kg');
+    expect(messagesFr.ninetyNineUi.end.quickYou).toBe('Mode rapide : vous avez perdu votre dernière vie. Classement selon les vies restantes.');
+    expect(messagesFr.kiloDeMerdeUi.table.readyYou).toBe('Vous avez choisi une carte');
+    expect(messagesFr.kiloDeMerdeUi.outcome.lastYou).toBe('Trop tard ! Vous prenez {card} ({kg} kg)');
+  });
+
   it('givenEitherLocale_thenNoLeafHoldsAReplacementCharacter', () => {
     for (const [path, text] of [...en, ...fr]) {
       if (typeof text === 'string') expect(text, path).not.toContain('�');

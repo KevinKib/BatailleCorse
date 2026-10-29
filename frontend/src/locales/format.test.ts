@@ -86,6 +86,26 @@ describe('locale-aware formatting in French', () => {
     expect(formatList(['1', '2', '3'], 'disjunction')).toBe('1, 2 ou 3');
   });
 
+  it('givenDeBeforeANameStartingWithAVowel_thenItIsElided', () => {
+    expect(format('En attente de {player}…', { player: 'Alice' })).toBe('En attente d’Alice…');
+    expect(format('Main de {player}', { player: 'Émile' })).toBe('Main d’Émile');
+    expect(format('Main de {player}', { player: 'yann' })).toBe('Main d’yann');
+    expect(format('En attente de {a} et de {b}', { a: 'Ugo', b: 'Ines' })).toBe('En attente d’Ugo et d’Ines');
+  });
+
+  it('givenDeBeforeAConsonantAHOrANumber_thenItStays', () => {
+    expect(format('En attente de {player}…', { player: 'Bob' })).toBe('En attente de Bob…');
+    expect(format('Main de {player}', { player: 'Hugo' })).toBe('Main de Hugo');
+    expect(format('{rank} de {suit}', { rank: 'As', suit: 'cœur' })).toBe('As de cœur');
+    expect(format('De {min} à {max}', { min: 1, max: 8 })).toBe('De 1 à 8');
+    expect(format('Mode {player}', { player: 'Alice' })).toBe('Mode Alice');
+  });
+
+  it('givenEnglish_thenNothingIsElided', () => {
+    setCurrentLocaleForTest('en');
+    expect(format('Hand de {player}', { player: 'Alice' })).toBe('Hand de Alice');
+  });
+
   it('givenEnglishAgain_thenEnglishRulesApply', () => {
     setCurrentLocaleForTest('en');
     expect(plural({ one: '{n} card', other: '{n} cards' }, 0)).toBe('0 cards');
