@@ -169,7 +169,8 @@ const dash = computed(() => `${(props.countdown?.fraction ?? 1) * CIRCUMFERENCE}
 
       <div class="overlay"><slot name="overlay" /></div>
       <div v-if="kiloPlayer" class="popover-slot">
-        <KiloDeMerdeKiloPopover :name="nameOfSeat(kiloPlayer.seat)" :cards="kiloPlayer.kiloCards" @close="kiloSeat = null" />
+        <KiloDeMerdeKiloPopover :name="nameOfSeat(kiloPlayer.seat)" :mine="kiloPlayer.seat === mySeat" :cards="kiloPlayer.kiloCards"
+                                @close="kiloSeat = null" />
       </div>
     </div>
   </div>

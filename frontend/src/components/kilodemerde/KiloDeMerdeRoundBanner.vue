@@ -13,17 +13,22 @@ const props = defineProps<{
   race: KiloDeMerdeRace | null;
   lines: RoundLine[];
   nameOf: (seat: number) => string;
+  /** My seat: a race or a line about it speaks to me ("You slapped!"). */
+  mySeat?: number | null;
 }>();
 const ui = useI18n().kiloDeMerdeUi;
 
-const texts = computed(() => props.lines.map(line => roundLineText(line, props.nameOf, ui.outcome)));
+const texts = computed(() => props.lines.map(line => roundLineText(line, props.nameOf, ui.outcome, props.mySeat ?? null)));
+const raceTitle = computed(() => !props.race ? ''
+  : props.race.firstSlapper === props.mySeat ? ui.race.slappedYou
+    : format(ui.race.slapped, { name: props.nameOf(props.race.firstSlapper) }));
 const visible = computed(() => props.race !== null || props.lines.length > 0);
 </script>
 
 <template>
   <div v-if="visible" class="banner" data-test="round-banner">
     <div v-if="race" class="race" data-test="race-banner">
-      <strong class="race-title">{{ format(ui.race.slapped, { name: nameOf(race.firstSlapper) }) }}</strong>
+      <strong class="race-title">{{ raceTitle }}</strong>
       <ol class="race-order" data-test="race-order" :aria-label="ui.race.order">
         <li v-for="(seat, i) in race.order" :key="seat" class="race-item">
           <span class="race-rank">{{ i + 1 }}</span><span class="race-name">{{ nameOf(seat) }}</span>

@@ -1,7 +1,8 @@
 import type { Messages } from '../Messages';
 
 // French typography: U+00A0 before ":" and U+202F before "!", "?", ";" and "»" (written as escapes so they stay visible).
-// Lines about a player use "{player} : …" or a verb in the third person; the player can be "Vous".
+// Lines about a player use "{player} : …" or a verb in the third person; a line about my own seat has
+// its own `…You` key conjugated for "vous" ("Vous prenez", never "Vous prend").
 export const kiloDeMerdeUi: Messages['kiloDeMerdeUi'] = {
   connecting: 'Connexion…',
   back: 'Retour',
@@ -16,7 +17,7 @@ export const kiloDeMerdeUi: Messages['kiloDeMerdeUi'] = {
   levels: { easy: 'Facile', medium: 'Moyen', hard: 'Difficile' },
   table: {
     roundLine: 'Manche {round} sur {total} · passe {step}',
-    countdown: 'Il reste {seconds} secondes pour passer',
+    countdown: 'Temps restant pour passer : {seconds} s',
     kilos: '{kg} kg',
     kilosLabel: '{player} : {kg} kg',
     pile: 'Tas de kilos',
@@ -29,6 +30,9 @@ export const kiloDeMerdeUi: Messages['kiloDeMerdeUi'] = {
     readyCountdown: 'Les joueurs absents seront comptés comme prêts dans {seconds} s',
     confirmed: '{player}\u00A0: prêt',
     notConfirmed: '{player}\u00A0: en attente',
+    readyYou: 'Vous avez choisi une carte',
+    confirmedYou: 'Vous êtes prêt',
+    notConfirmedYou: 'Vous êtes en attente',
     forfeited: '{player} a quitté la partie',
     offline: 'Vous êtes hors ligne. Reconnexion…',
   },
@@ -44,6 +48,7 @@ export const kiloDeMerdeUi: Messages['kiloDeMerdeUi'] = {
     waiting: 'En attente des autres',
     received: 'de {name}',
     revealed: 'Main de {player}',
+    revealedYou: 'Votre main',
   },
   race: {
     slapped: '{name} a tapé ! Tapez !',
@@ -52,16 +57,20 @@ export const kiloDeMerdeUi: Messages['kiloDeMerdeUi'] = {
     order: 'Ordre des claques',
   },
   outcome: {
-    last: '{name} était dernier et prend {card} : {kg} kg',
-    falseSlap: 'Fausse claque : {name} prend {card} : {kg} kg',
+    last: 'Trop tard ! {name} prend {card} ({kg} kg)',
+    lastYou: 'Trop tard ! Vous prenez {card} ({kg} kg)',
+    falseSlap: 'Fausse claque : {name} prend {card} ({kg} kg)',
+    falseSlapYou: 'Fausse claque : vous prenez {card} ({kg} kg)',
     flush: 'Chasse d’eau ! {name} perd tous ses kilos',
+    flushYou: 'Chasse d’eau ! Vous perdez tous vos kilos',
     stalled: 'Personne n’a réuni de carré : pas de kilos cette manche',
     voided: 'Un joueur est parti : cette manche ne compte pas',
-    noCard: '{name} était dernier, mais le tas de kilos est vide',
+    noCard: '{name} devait prendre une carte, mais le tas de kilos est vide',
     lastTag: 'Dernier',
   },
   kiloPopover: {
     title: 'Kilos de {player}',
+    titleYou: 'Vos kilos',
     none: 'Aucun kilo pour l’instant',
     total: 'Total : {kg} kg',
   },
@@ -75,8 +84,8 @@ export const kiloDeMerdeUi: Messages['kiloDeMerdeUi'] = {
     winner: 'Gagnant : {players}',
     winners: 'Gagnants : {players}',
     reasons: {
-      roundsPlayed: 'Les {n} manches ont été jouées. Le moins de kilos gagne.',
-      pileEmpty: 'Le tas de kilos est vide. Le moins de kilos gagne.',
+      roundsPlayed: 'Les {n} manches ont été jouées. Le joueur qui a le moins de kilos gagne.',
+      pileEmpty: 'Le tas de kilos est vide. Le joueur qui a le moins de kilos gagne.',
       forfeit: 'Trop de joueurs ont quitté la table. Les autres sont classés selon leurs kilos.',
     },
     youWonForfeit: 'Les autres joueurs ont quitté la partie. Vous gagnez par forfait.',
@@ -90,6 +99,7 @@ export const kiloDeMerdeUi: Messages['kiloDeMerdeUi'] = {
     received: 'Vous avez reçu {card} de {name}',
     slapped: '{name} a tapé ! Tapez !',
     kilosChange: '{name} a maintenant {kg} kg',
+    kilosChangeYou: 'Vous avez maintenant {kg} kg',
   },
   errors: {
     finishedGame: 'La partie est terminée.',
@@ -125,7 +135,7 @@ export const kiloDeMerde: Messages['kiloDeMerde'] = {
     {
       kind: 'text',
       title: 'Mise en place',
-      body: ['Chacun reçoit 4 cartes. Seules certaines valeurs sont distribuées : les Valets, Dames et Rois à 3 joueurs, puis les 2 à 4, les 3 à 5, les 4 à 6, les 5 à 7, les 6 à 8, les 8 à 9 et les 9 à 10. Les 7 ne sont jamais distribués. Toutes les autres cartes forment le tas de kilos, face cachée.'],
+      body: ['Chacun reçoit 4 cartes. Seules certaines valeurs sont distribuées : les valets, les dames et les rois avec 3 joueurs, puis on ajoute les 2 avec 4 joueurs, les 3 avec 5, les 4 avec 6, les 5 avec 7, les 6 avec 8, les 8 avec 9 et les 9 avec 10. Les 7 ne sont jamais distribués. Toutes les autres cartes forment le tas de kilos, face cachée.'],
     },
     {
       kind: 'text',
@@ -145,7 +155,7 @@ export const kiloDeMerde: Messages['kiloDeMerde'] = {
     {
       kind: 'text',
       title: 'Fin de la partie',
-      body: ['La partie dure le nombre de manches choisi dans le salon, ou jusqu’à ce que le tas de kilos soit vide. Le moins de kilos gagne ; les égalités partagent la place.'],
+      body: ['La partie dure le nombre de manches choisi dans le salon, ou jusqu’à ce que le tas de kilos soit vide. Le joueur qui a le moins de kilos gagne ; les ex æquo partagent la place.'],
     },
   ],
 };

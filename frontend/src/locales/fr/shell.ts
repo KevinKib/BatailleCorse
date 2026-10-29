@@ -96,7 +96,7 @@ export const gamePicker: Messages['gamePicker'] = {
     },
     president: {
       name: 'Président',
-      description: 'Posez vos cartes les premiers et décrochez le titre de président.',
+      description: 'Videz votre main avant les autres et décrochez le titre de président.',
       players: '3 à 8 joueurs',
       play: 'Jouer',
     },
@@ -114,13 +114,13 @@ export const gamePicker: Messages['gamePicker'] = {
     },
     draughts: {
       name: 'Dames',
-      description: 'Dames internationales sur un plateau de 10 sur 10. Prenez tous les pions, ou laissez l’adversaire sans coup possible.',
+      description: 'Dames internationales sur un plateau de 10 sur 10. Prenez toutes les pièces adverses, ou laissez l’adversaire sans coup possible.',
       players: '2 joueurs',
       play: 'Jouer',
     },
     blackjack: {
       name: 'Blackjack',
-      description: 'Battez le croupier, seul ou dans un tournoi à 100 points',
+      description: 'Battez le croupier, seul ou dans un tournoi à 100 points.',
       players: '1 à 6 joueurs',
       play: 'Jouer',
     },
@@ -193,7 +193,7 @@ export const join: Messages['join'] = {
     totalCount: 'Ouvertes : {open} · {total} au total',
     openOnly: 'Parties ouvertes uniquement',
     join: 'Rejoindre',
-    joinAria: 'Rejoindre la partie de {host}, {joined} joueurs sur {max}',
+    joinAria: 'Rejoindre la partie de {host}, places prises : {joined} sur {max}',
     open: 'Ouverte',
     full: 'Complète',
     inPlay: 'En cours',
@@ -207,7 +207,7 @@ export const join: Messages['join'] = {
     truncated: '{shown} parties affichées sur {total}.',
     announce: {
       newGames: { one: '{n} nouvelle partie.', other: '{n} nouvelles parties.' },
-      openNow: '{open} ouvertes.',
+      openNow: 'Parties ouvertes : {open}.',
       noneOpen: 'Aucune partie ouverte.',
     },
   },

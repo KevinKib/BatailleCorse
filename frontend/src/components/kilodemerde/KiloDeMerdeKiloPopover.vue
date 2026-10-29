@@ -6,9 +6,11 @@ import { kiloLabel, kiloTotal } from '../../model/kilodemerde/kilo';
 import type Card from '../../model/Card';
 
 // The kilo cards a seat holds and their weight, opened from a plate. Escape or the close button closes it.
-const props = defineProps<{ name: string; cards: Card[] }>();
+const props = defineProps<{ name: string; cards: Card[]; mine?: boolean }>();
 const emit = defineEmits<{ close: [] }>();
 const ui = useI18n().kiloDeMerdeUi;
+
+const title = computed(() => props.mine ? ui.kiloPopover.titleYou : format(ui.kiloPopover.title, { player: props.name }));
 
 const total = computed(() => kiloTotal(props.cards));
 const root = ref<HTMLElement | null>(null);
@@ -17,9 +19,9 @@ onMounted(() => root.value?.focus());
 
 <template>
   <div ref="root" class="popover" data-test="kilo-popover" role="dialog" tabindex="-1"
-       :aria-label="format(ui.kiloPopover.title, { player: name })" @keydown.esc="emit('close')">
+       :aria-label="title" @keydown.esc="emit('close')">
     <div class="popover-head">
-      <strong class="popover-title">{{ format(ui.kiloPopover.title, { player: name }) }}</strong>
+      <strong class="popover-title">{{ title }}</strong>
       <button type="button" class="popover-close" data-test="kilo-close" :aria-label="ui.back" @click="emit('close')">
         <i class="pi pi-times" aria-hidden="true"></i>
       </button>

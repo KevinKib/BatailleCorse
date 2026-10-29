@@ -76,15 +76,22 @@ const lastMoveMarks = computed(() => {
 // What the opponent (or I) just did, for the live region. A reload has no last move: nothing to say.
 const announcement = computed(() => {
   const notice = store.drawNotice;
+  // My own lines take their "you" variant: "you" has its own verb form ("Vous avez joué", not "Vous a joué").
   if (notice) {
-    return format(notice.kind === 'offered' ? ui.draw.offeredBy : ui.draw.declinedBy, { player: nameOrYou(notice.seat ?? -1) });
+    const mine = notice.seat === store.mySeat;
+    if (notice.kind === 'offered') return mine ? ui.draw.offeredByYou : format(ui.draw.offeredBy, { player: displayName(notice.seat ?? -1) });
+    return mine ? ui.draw.declinedByYou : format(ui.draw.declinedBy, { player: displayName(notice.seat ?? -1) });
   }
   const move = store.lastMove;
   if (!move) return '';
   const history = store.game?.history ?? [];
   const notation = history[history.length - 1] ?? `${move.from}${move.captures.length > 0 ? 'x' : '-'}${move.to}`;
-  const vars = { player: nameOrYou(move.seat), move: notation };
-  return move.captures.length > 0 ? plural(ui.announce.movedTaking, move.captures.length, vars) : format(ui.announce.moved, vars);
+  const mine = move.seat === store.mySeat;
+  const vars = { player: displayName(move.seat), move: notation };
+  if (move.captures.length > 0) {
+    return plural(mine ? ui.announce.movedTakingYou : ui.announce.movedTaking, move.captures.length, vars);
+  }
+  return format(mine ? ui.announce.movedYou : ui.announce.moved, vars);
 });
 
 const waitingFor = computed(() => {

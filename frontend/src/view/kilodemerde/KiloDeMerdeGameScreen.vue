@@ -175,11 +175,12 @@ watch(() => store.lastEvent?.id, () => {
       break;
     case 'DRAW':
       if (seat !== null && event.data?.kilosAfter != null) {
-        speak(politeText, format(ui.live.kilosChange, { name: nameOrYou(seat), kg: event.data.kilosAfter }));
+        speak(politeText, format(seat === store.mySeat ? ui.live.kilosChangeYou : ui.live.kilosChange,
+          { name: displayName(seat), kg: event.data.kilosAfter }));
       }
       break;
     case 'ROUND_OVER':
-      speak(assertiveText, roundSummary(g.lastOutcome).map(l => roundLineText(l, nameOrYou, ui.outcome)).join('. '));
+      speak(assertiveText, roundSummary(g.lastOutcome).map(l => roundLineText(l, nameOrYou, ui.outcome, store.mySeat)).join('. '));
       break;
   }
 });
@@ -351,7 +352,7 @@ const rematchButton = computed(() =>
         :seconds-remaining="seatSecondsRemaining"
         @slap="slap">
         <template #overlay>
-          <KiloDeMerdeRoundBanner :race="raceOpen" :lines="lines" :name-of="nameOrYou" />
+          <KiloDeMerdeRoundBanner :race="raceOpen" :lines="lines" :name-of="nameOrYou" :my-seat="store.mySeat" />
         </template>
       </KiloDeMerdeTable>
 

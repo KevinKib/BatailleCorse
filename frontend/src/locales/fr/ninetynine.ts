@@ -22,7 +22,7 @@ export const ninetyNineUi: Messages['ninetyNineUi'] = {
     lives: { one: '{n} vie restante', other: '{n} vies restantes' },
     out: 'ÉLIMINÉ',
     outPlace: 'ÉLIMINÉ · {place}',
-    current: 'À qui de jouer',
+    current: 'À jouer',
     reversed: 'Sens inversé',
     directionClockwise: 'Le jeu tourne dans le sens horaire',
     directionReversed: 'Le sens du jeu est inversé',
@@ -79,18 +79,20 @@ export const ninetyNineUi: Messages['ninetyNineUi'] = {
     stuck: '{player} dépasse 99 ({total})',
     stuckYou: 'Vous dépassez 99 ({total})',
     reason: 'Aucune carte ne pouvait rester à 99 ou moins.',
-    livesLeft: { one: 'Perd une vie · {n} restante', other: 'Perd une vie · {n} restantes' },
+    livesLeft: { one: 'Une vie perdue · {n} restante', other: 'Une vie perdue · {n} restantes' },
     eliminated: '{player} est éliminé',
     eliminatedYou: 'Vous êtes éliminé',
     next: 'La prochaine donne arrive dans un instant',
     hit: '−1',
     handLabel: 'Main de {player}',
+    handLabelYou: 'Votre main',
   },
   lobby: { quickHint: 'Activé : la partie s’arrête à la première élimination, les autres sont classés selon leurs vies restantes.' },
   end: {
     winner: 'Gagnant : {players}',
     winners: 'Gagnants : {players}',
     quick: 'Mode rapide : {player} a perdu sa dernière vie. Classement selon les vies restantes.',
+    quickYou: 'Mode rapide : vous avez perdu votre dernière vie. Classement selon les vies restantes.',
     lastStanding: 'Dernier joueur en lice.',
     youWonResigned: '{player} a abandonné. Vous gagnez par forfait.',
     youWonDisconnected: 'La connexion de {player} est perdue. Vous gagnez par forfait.',
@@ -124,7 +126,7 @@ export const ninetyNine: Messages['ninetyNine'] = {
     {
       kind: 'text',
       title: 'But du jeu',
-      body: ['Gardez le total à 99 ou moins. Un joueur qui ne peut pas jouer sans dépasser 99 perd une vie ; le dernier joueur à avoir encore des vies gagne.'],
+      body: ['Gardez le total à 99 ou moins. Un joueur qui ne peut pas jouer sans dépasser 99 perd une vie ; le dernier joueur à avoir encore des vies gagne.'],
     },
     {
       kind: 'text',
@@ -168,7 +170,7 @@ export const ninetyNine: Messages['ninetyNine'] = {
     {
       kind: 'text',
       title: 'Quitter la partie',
-      body: ['Quitter la partie, ou rester déconnecté trop longtemps, vous élimine aussitôt, sous les joueurs encore en jeu.'],
+      body: ['Quitter la partie, ou rester déconnecté trop longtemps, vous élimine aussitôt et vous place derrière les joueurs encore en jeu.'],
     },
     {
       kind: 'text',

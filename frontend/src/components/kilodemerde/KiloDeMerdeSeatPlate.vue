@@ -39,12 +39,12 @@ const handText = computed(() => props.hand?.map(card => kiloLabel(card)).join(' 
 const accessibleName = computed(() => {
   const parts = [format(ui.table.kilosLabel, { player: props.label, kg: props.player.kilos })];
   if (levelText.value) parts.push(levelText.value);
-  if (props.ready) parts.push(format(ui.table.ready, { player: props.label }));
-  if (props.confirm === 'ready') parts.push(format(ui.table.confirmed, { player: props.label }));
-  if (props.confirm === 'waiting') parts.push(format(ui.table.notConfirmed, { player: props.label }));
+  if (props.ready) parts.push(props.mine ? ui.table.readyYou : format(ui.table.ready, { player: props.label }));
+  if (props.confirm === 'ready') parts.push(props.mine ? ui.table.confirmedYou : format(ui.table.confirmed, { player: props.label }));
+  if (props.confirm === 'waiting') parts.push(props.mine ? ui.table.notConfirmedYou : format(ui.table.notConfirmed, { player: props.label }));
   if (props.player.slapRank !== null) parts.push(format(ui.race.rank, { n: props.player.slapRank }));
   if (props.last) parts.push(ui.outcome.lastTag);
-  if (props.hand) parts.push(`${format(ui.hand.revealed, { player: props.label })}: ${handText.value}`);
+  if (props.hand) parts.push(`${props.mine ? ui.hand.revealedYou : format(ui.hand.revealed, { player: props.label })}: ${handText.value}`);
   return parts.join(', ');
 });
 </script>

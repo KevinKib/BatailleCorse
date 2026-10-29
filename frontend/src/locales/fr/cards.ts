@@ -149,7 +149,7 @@ export const president: Messages['president'] = {
     {
       kind: 'text',
       title: 'Partie',
-      body: ['Chaque manche rapporte des points selon la place d’arrivée. La partie s’arrête après le nombre de manches choisi, ou dès que quelqu’un atteint le score cible ; l’hôte les règle dans le salon.'],
+      body: ['Chaque manche rapporte des points selon la place d’arrivée. La partie s’arrête après le nombre de manches choisi, ou dès que quelqu’un atteint le score cible ; l’hôte les règle dans le salon.'],
     },
   ],
 };
@@ -331,7 +331,7 @@ export const presidentUi: Messages['presidentUi'] = {
     closed: {
       CUT: 'Fermé par un 2',
       QUAD: 'Carré',
-      FIRST_OUT: 'Sortie du premier',
+      FIRST_OUT: 'Premier sorti',
       ALL_PASSED: 'Tous ont passé',
     },
     closedOther: 'Pli fermé',

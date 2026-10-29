@@ -1,6 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
 import NinetyNineBustBanner from './NinetyNineBustBanner.vue';
+import { messages } from '../../locales';
+import { messagesFr } from '../../locales/fr';
+import { setCurrentLocaleForTest } from '../../locales/locale';
 import { buildNinetyNineBust } from '../../model/fixtures/ninetynine';
 
 const bust = buildNinetyNineBust().lastBust!;
@@ -25,6 +28,28 @@ describe('NinetyNineBustBanner', () => {
     expect(wrapper.get('[data-test="bust-hand"]').attributes('aria-label')).toBe('Hand of Gina');
   });
 
+  it('givenMyOwnBust_thenTheHandIsMine', () => {
+    const wrapper = mount(NinetyNineBustBanner, { props: { bust, label: 'You', mine: true } });
+    expect(wrapper.get('[data-test="bust-hand"]').attributes('aria-label')).toBe('Your hand');
+  });
+
+  it('givenFrench_thenTheBannerIsConjugatedForMeOrTheNamedSeat', () => {
+    messages.fr = messagesFr;
+    setCurrentLocaleForTest('fr');
+    try {
+      const mine = mount(NinetyNineBustBanner, { props: { bust, label: 'Vous', mine: true } });
+      expect(mine.get('[data-test="bust-title"]').text()).toBe('Vous dépassez 99 (103)');
+      expect(mine.get('[data-test="bust-hand"]').attributes('aria-label')).toBe('Votre main');
+      expect(mine.get('[data-test="bust-lives"]').text()).toBe('Une vie perdue · 2 restantes');
+      const theirs = mount(NinetyNineBustBanner, { props: { bust, label: 'Gina', mine: false } });
+      expect(theirs.get('[data-test="bust-title"]').text()).toBe('Gina dépasse 99 (103)');
+      expect(theirs.get('[data-test="bust-hand"]').attributes('aria-label')).toBe('Main de Gina');
+    } finally {
+      setCurrentLocaleForTest('en');
+      delete messages.fr;
+    }
+  });
+
   it('givenTheReason_thenItSaysEveryCardGoesOver', () => {
     const wrapper = mount(NinetyNineBustBanner, { props: { bust, label: 'Gina', mine: false } });
     expect(wrapper.get('[data-test="bust-reason"]').text()).toBe('No card could stay at 99 or below.');
@@ -32,7 +57,7 @@ describe('NinetyNineBustBanner', () => {
 
   it('givenALifeLeft_thenTheBannerSaysTheLifeLostAndHowManyRemain', () => {
     const wrapper = mount(NinetyNineBustBanner, { props: { bust, label: 'Gina', mine: false } });
-    expect(wrapper.get('[data-test="bust-lives"]').text()).toBe('Loses a life · 2 left');
+    expect(wrapper.get('[data-test="bust-lives"]').text()).toBe('Life lost · 2 left');
   });
 
   it('givenTheLastLifeLost_thenTheBannerSaysTheSeatIsOut', () => {

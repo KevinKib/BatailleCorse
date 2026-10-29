@@ -280,5 +280,16 @@ describe('KiloDeMerdeGameScreen', () => {
       await flushPromises();
       expect(wrapper.get('[data-test="kilo-live-polite"]').text()).toBe('You received J♥ from Player 2');
     });
+
+    it('givenADrawEvent_thenThePoliteRegionConjugatesForMeOrNamesTheSeat', async () => {
+      const draw = (seat: number) => ({ type: 'event' as const, eventType: 'DRAW', eventData: { seat, round: null, step: null, card: null, kilosAfter: 24, rank: null, returnedCount: null } });
+      const { wrapper, store } = await mountRoom(room(kiloDeMerdeRoundOverState));
+      store.applyEvent(draw(0));
+      await flushPromises();
+      expect(wrapper.get('[data-test="kilo-live-polite"]').text()).toBe('You now hold 24 kg');
+      store.applyEvent(draw(2));
+      await flushPromises();
+      expect(wrapper.get('[data-test="kilo-live-polite"]').text()).toBe('Player 2 now holds 24 kg');
+    });
   });
 });
