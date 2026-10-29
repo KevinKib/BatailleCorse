@@ -1,4 +1,5 @@
 import type { GameDefinition, GameKey } from '../model/games';
+import { useKiloHotkeySettings } from './useKiloHotkeySettings';
 import { useHotkeySettings, type HotkeyPanelApi } from './useHotkeySettings';
 
 // Each game keeps its own storage (see `GameDefinition.hotkeys`); only the game asked for is read, so a
@@ -6,6 +7,7 @@ import { useHotkeySettings, type HotkeyPanelApi } from './useHotkeySettings';
 const SETTINGS: { [K in GameKey]?: () => HotkeyPanelApi } = {
   bataillecorse: () => useHotkeySettings('bataillecorse'),
   bullshit: () => useHotkeySettings('bullshit'),
+  'kilo-de-merde': () => useKiloHotkeySettings(),
 };
 
 /**
