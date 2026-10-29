@@ -76,6 +76,8 @@ describe('Mangola game', () => {
       pitEl(F1).click();
       sow(bob, A3);
       // Bob's move leaves him no pit of two seeds: he can never move again, so the game ends here.
+      // The end screen waits for his long sowing to be shown: skip it.
+      cy.get('[data-test="skip-sowing"]', { timeout: 10000 }).click();
       cy.get('[data-test="end"]', { timeout: 20000 }).should('be.visible');
       cy.get('.end-title').should('have.text', 'VICTORY');
       cy.get('[data-test="end-winner"]').should('have.text', 'Winner: Alice');
