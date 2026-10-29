@@ -245,6 +245,7 @@ const rematchButton = computed(() =>
           :last-bet="store.game.lastBet"
           :placed="store.me?.betPlaced"
           :placed-amount="store.me?.bet"
+          :stack="store.me?.stack"
           :busy="store.busy"
           :reset-key="store.game.handNumber"
           @bet="amount => store.bet(amount)" />

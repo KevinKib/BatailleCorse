@@ -1,7 +1,22 @@
 import { describe, it, expect } from 'vitest';
 import {
-  BET_CHIPS, DEFAULT_BET, addChip, clampBet, defaultBet, isBetAllowed, maxOf,
+  BET_CHIPS, DEFAULT_BET, addChip, chipsLeft, clampBet, defaultBet, isBetAllowed, maxOf, parseBetInput,
 } from './betting';
+
+describe('parseBetInput and chipsLeft', () => {
+  it('keeps only the digits of what was typed', () => {
+    expect(parseBetInput('12')).toBe(12);
+    expect(parseBetInput(' 1a2 ')).toBe(12);
+    expect(parseBetInput('abc')).toBe(0);
+    expect(parseBetInput('')).toBe(0);
+  });
+
+  it('counts the chips left after the bet, and after a double or split', () => {
+    expect(chipsLeft(100, 30)).toEqual({ after: 70, afterDouble: 40 });
+    expect(chipsLeft(100, 60)).toEqual({ after: 40, afterDouble: null });
+    expect(chipsLeft(100, 0)).toEqual({ after: 100, afterDouble: 100 });
+  });
+});
 
 const limits37 = { min: 1, max: 37 };
 const limits50 = { min: 1, max: 50 };

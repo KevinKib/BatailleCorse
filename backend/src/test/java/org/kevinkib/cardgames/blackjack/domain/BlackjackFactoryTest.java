@@ -54,16 +54,16 @@ class BlackjackFactoryTest {
     }
 
     @Test
-    void itDescribesTheHostOptionsDefaultFirst() {
+    void itDescribesTheHostOptionsInAscendingOrder() {
         List<OptionDescriptor> descriptors = factory.optionDescriptors();
         assertEquals(List.of("hands", "maxBet"), descriptors.stream().map(OptionDescriptor::key).toList());
         OptionDescriptor hands = descriptors.get(0);
         assertEquals(OptionType.CHOICE, hands.type());
-        assertEquals(List.of("10", "5", "15", "20"), hands.values());
+        assertEquals(List.of("5", "10", "15", "20"), hands.values());
         assertEquals("10", hands.defaultValue());
         assertEquals("options.blackjack.hands", hands.labelKey());
         OptionDescriptor maxBet = descriptors.get(1);
-        assertEquals(List.of("50", "25", "100"), maxBet.values());
+        assertEquals(List.of("25", "50", "100"), maxBet.values());
         assertEquals("50", maxBet.defaultValue());
         assertEquals("options.blackjack.maxBet", maxBet.labelKey());
     }
