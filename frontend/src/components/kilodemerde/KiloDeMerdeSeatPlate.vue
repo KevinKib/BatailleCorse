@@ -18,6 +18,8 @@ const props = defineProps<{
   compact?: boolean;
   /** The seat has chosen its card for this step. */
   ready?: boolean;
+  /** While the table waits for confirmations: this seat is ready, or still to be waited for; null outside the waits. */
+  confirm?: 'ready' | 'waiting' | null;
   /** The seat drew the kilo card of the round. */
   last?: boolean;
   /** The hand to show (round over), else nothing. */
@@ -38,6 +40,8 @@ const accessibleName = computed(() => {
   const parts = [format(ui.table.kilosLabel, { player: props.label, kg: props.player.kilos })];
   if (levelText.value) parts.push(levelText.value);
   if (props.ready) parts.push(format(ui.table.ready, { player: props.label }));
+  if (props.confirm === 'ready') parts.push(format(ui.table.confirmed, { player: props.label }));
+  if (props.confirm === 'waiting') parts.push(format(ui.table.notConfirmed, { player: props.label }));
   if (props.player.slapRank !== null) parts.push(format(ui.race.rank, { n: props.player.slapRank }));
   if (props.last) parts.push(ui.outcome.lastTag);
   if (props.hand) parts.push(`${format(ui.hand.revealed, { player: props.label })}: ${handText.value}`);
@@ -47,7 +51,7 @@ const accessibleName = computed(() => {
 
 <template>
   <div class="plate"
-       :class="{ 'plate--mine': mine, 'plate--compact': compact, 'plate--disconnected': disconnected, 'plate--ready': ready }"
+       :class="{ 'plate--mine': mine, 'plate--compact': compact, 'plate--disconnected': disconnected, 'plate--ready': ready || confirm === 'ready' }"
        role="group"
        :aria-label="accessibleName"
        data-test="seat-plate"
@@ -62,6 +66,8 @@ const accessibleName = computed(() => {
             @click="$emit('show-kilos')">{{ kilosText }}</button>
     <span v-if="hand" class="plate-hand" data-test="seat-hand">{{ handText }}</span>
     <span v-if="ready" class="plate-ready" data-test="seat-ready" aria-hidden="true"><i class="pi pi-check"></i></span>
+    <span v-if="confirm === 'ready'" class="plate-ready" data-test="seat-confirmed" aria-hidden="true"><i class="pi pi-check"></i></span>
+    <span v-else-if="confirm === 'waiting'" class="plate-ready plate-ready--waiting" data-test="seat-waiting" aria-hidden="true"><i class="pi pi-hourglass"></i></span>
     <span v-if="player.slapRank !== null" class="plate-rank" data-test="seat-rank" aria-hidden="true">{{ player.slapRank }}</span>
     <span v-if="last" class="plate-last" data-test="seat-last" aria-hidden="true">{{ ui.outcome.lastTag }}</span>
     <span v-if="disconnected" class="plate-badge"><SeatDisconnectBadge :seconds-remaining="secondsRemaining ?? null" /></span>
@@ -123,6 +129,7 @@ const accessibleName = computed(() => {
   width: 18px; height: 18px; border-radius: 50%;
   background: rgb(var(--accent-active-rgb)); color: #141413; font-size: 0.625rem;
 }
+.plate-ready--waiting { background: rgba(255, 255, 255, 0.85); }
 .plate-rank {
   position: absolute; top: -10px; left: -6px; z-index: 1;
   min-width: 20px; height: 20px; padding: 0 4px; box-sizing: border-box;

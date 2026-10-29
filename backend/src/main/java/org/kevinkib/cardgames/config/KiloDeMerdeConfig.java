@@ -15,7 +15,7 @@ import org.kevinkib.cardgames.kilodemerde.presentation.KiloDeMerdeGameActions;
 import org.kevinkib.cardgames.kilodemerde.presentation.KiloDeMerdeLifecycleBroadcaster;
 import org.kevinkib.cardgames.kilodemerde.presentation.KiloDeMerdePassTimer;
 import org.kevinkib.cardgames.kilodemerde.presentation.KiloDeMerdeRaceTimeout;
-import org.kevinkib.cardgames.kilodemerde.presentation.KiloDeMerdeRoundPause;
+import org.kevinkib.cardgames.kilodemerde.presentation.KiloDeMerdeReadyTimeout;
 import org.kevinkib.cardgames.kilodemerde.presentation.bot.KiloDeMerdeBotCoordinator;
 import org.kevinkib.cardgames.kilodemerde.presentation.dto.KiloDeMerdeDto;
 import org.kevinkib.cardgames.presentation.GameMessagingService;
@@ -31,12 +31,11 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
 
 import java.time.Clock;
-import java.time.Duration;
 import java.util.Random;
 
 /**
  * The beans of the Kilo de merde context: factory, deck source, broadcasters, actions, the three timers (pass step,
- * race, pause between rounds) and the bot coordinator. Nothing is registered in {@code AppConfig}.
+ * race, ready barrier) and the bot coordinator. Nothing is registered in {@code AppConfig}.
  */
 @Configuration
 public class KiloDeMerdeConfig {
@@ -47,8 +46,11 @@ public class KiloDeMerdeConfig {
     /** A race stays open 5 s before the seats that did not slap draw (property {@code kilodemerde.race-timeout-ms}). */
     public static final String DEFAULT_RACE_TIMEOUT_MS = "5000";
 
-    /** The table shows the revealed hands for 3 s before the next deal (property {@code kilodemerde.round-pause-ms}). */
-    public static final String DEFAULT_ROUND_PAUSE_MS = "3000";
+    /**
+     * The table waits 60 s for every seat to confirm it is ready (before the first round and after each round) before
+     * it counts the missing ones ready (property {@code kilodemerde.ready-timeout-ms}; 0 waits for every confirmation).
+     */
+    public static final String DEFAULT_READY_TIMEOUT_MS = "60000";
 
     /** Production: a random deal. */
     @Bean
@@ -74,8 +76,9 @@ public class KiloDeMerdeConfig {
     public KiloDeMerdeDeadlines kiloDeMerdeDeadlines(
             Clock clock,
             @Value("${kilodemerde.pass-timer-ms:" + DEFAULT_PASS_TIMER_MS + "}") long passTimerMs,
-            @Value("${kilodemerde.race-timeout-ms:" + DEFAULT_RACE_TIMEOUT_MS + "}") long raceTimeoutMs) {
-        return new KiloDeMerdeDeadlines(clock, passTimerMs, raceTimeoutMs);
+            @Value("${kilodemerde.race-timeout-ms:" + DEFAULT_RACE_TIMEOUT_MS + "}") long raceTimeoutMs,
+            @Value("${kilodemerde.ready-timeout-ms:" + DEFAULT_READY_TIMEOUT_MS + "}") long readyTimeoutMs) {
+        return new KiloDeMerdeDeadlines(clock, passTimerMs, raceTimeoutMs, readyTimeoutMs);
     }
 
     @Bean
@@ -122,16 +125,15 @@ public class KiloDeMerdeConfig {
         return timeout;
     }
 
-    /** Deals the next round {@code kilodemerde.round-pause-ms} after a round end (0 under the {@code test} profile). */
+    /** Counts the missing seats ready when the wait is up ({@code kilodemerde.ready-timeout-ms}, off under the {@code test} profile). */
     @Bean
-    public KiloDeMerdeRoundPause kiloDeMerdeRoundPause(
+    public KiloDeMerdeReadyTimeout kiloDeMerdeReadyTimeout(
             KiloDeMerdeGameActions actions,
             SeatStateBroadcaster<KiloDeMerde, KiloDeMerdeDto> kiloDeMerdeStateBroadcaster,
-            BotScheduler botScheduler,
-            @Value("${kilodemerde.round-pause-ms:" + DEFAULT_ROUND_PAUSE_MS + "}") long pauseMillis) {
-        KiloDeMerdeRoundPause pause = new KiloDeMerdeRoundPause(actions, botScheduler, Duration.ofMillis(pauseMillis));
-        kiloDeMerdeStateBroadcaster.addListener(pause);
-        return pause;
+            BotScheduler botScheduler, KiloDeMerdeDeadlines kiloDeMerdeDeadlines) {
+        KiloDeMerdeReadyTimeout timeout = new KiloDeMerdeReadyTimeout(actions, botScheduler, kiloDeMerdeDeadlines);
+        kiloDeMerdeStateBroadcaster.addListener(timeout);
+        return timeout;
     }
 
     /**

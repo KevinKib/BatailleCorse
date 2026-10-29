@@ -3,6 +3,7 @@ import { setActivePinia, createPinia } from 'pinia';
 import { useKiloDeMerdeStore } from './KiloDeMerde.store';
 import webSocketService from '../service/WebSocketService';
 import {
+  kiloDeMerdeAwaitingStartState, kiloDeMerdeRoundOverWaitingState,
   kiloDeMerdeFinishedState, kiloDeMerdeRaceState, kiloDeMerdeRoundOverState, kiloDeMerdeStepState,
 } from '../model/kilodemerde/fixtures';
 import type { KiloDeMerdeEventData, KiloDeMerdeState } from '../model/kilodemerde/KiloDeMerdeState';
@@ -46,6 +47,53 @@ describe('KiloDeMerde store', () => {
     vi.spyOn(webSocketService, 'setPresence').mockImplementation(() => {});
   });
   afterEach(() => { vi.restoreAllMocks(); });
+
+  describe('the ready confirmation', () => {
+    it('sends ready before the first round and stays busy until my mark shows', () => {
+      const store = boot(kiloDeMerdeAwaitingStartState);
+      expect(store.can('READY')).toBe(true);
+
+      expect(store.ready()).toBe(true);
+
+      expect(sent()).toEqual([{ dest: '/app/kilo-de-merde/ready', body: expect.objectContaining({ gameId: 'g1' }) }]);
+      expect(store.busy).toBe(true);
+      // someone else's confirmation is not the answer to mine
+      store.applyEvent({
+        type: 'state-update',
+        state: { ...kiloDeMerdeAwaitingStartState, version: 3, players: kiloDeMerdeAwaitingStartState.players.map(p => (p.seat === 1 ? { ...p, ready: true } : p)) },
+      });
+      expect(store.busy).toBe(true);
+      store.applyEvent({
+        type: 'state-update',
+        state: { ...kiloDeMerdeAwaitingStartState, version: 4, availableActions: [], players: kiloDeMerdeAwaitingStartState.players.map(p => ({ ...p, ready: true })) },
+      });
+      expect(store.busy).toBe(false);
+    });
+
+    it('is answered by the next round when I was the last one', () => {
+      const store = boot(kiloDeMerdeRoundOverWaitingState);
+      expect(store.ready()).toBe(true);
+      store.applyEvent({ type: 'state-update', state: { ...kiloDeMerdeStepState, round: 6, version: 90 } });
+      expect(store.busy).toBe(false);
+    });
+
+    it('refuses to send when the server did not offer READY, or while another command is on its way', () => {
+      const store = boot(kiloDeMerdeStepState);
+      expect(store.ready()).toBe(false);
+      expect(sent()).toEqual([]);
+      const waiting = boot(kiloDeMerdeAwaitingStartState);
+      expect(waiting.ready()).toBe(true);
+      expect(waiting.ready()).toBe(false);
+      expect(sent()).toHaveLength(1);
+    });
+
+    it('does not turn a READY event into a table event', () => {
+      const store = boot(kiloDeMerdeAwaitingStartState);
+      store.applyEvent({ type: 'event', eventType: 'READY', eventData: eventData({ seat: 1 }) });
+      expect(store.events).toEqual([]);
+      expect(store.lastEvent).toBeNull();
+    });
+  });
 
   describe('views and screen', () => {
     it('is connecting without a view, then lobby, playing and finished', () => {

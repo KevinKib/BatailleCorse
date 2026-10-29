@@ -33,7 +33,7 @@ class KiloDeMerdeEndTest {
             KiloDeMerde game = new KiloDeMerde(GameId.generate(), players, new RandomDeckSource(),
                     KiloDeMerdeOptions.defaults());
 
-            assertEquals(Phase.PASSING, game.phase());
+            assertEquals(Phase.AWAITING_START, game.phase());
             assertEquals(1, game.round());
             assertEquals(1, game.step());
             assertEquals(10, game.roundsTotal());

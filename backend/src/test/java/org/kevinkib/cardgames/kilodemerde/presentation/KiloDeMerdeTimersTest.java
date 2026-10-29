@@ -25,22 +25,22 @@ class KiloDeMerdeTimersTest {
     private static final PlayerId S0 = new PlayerId(0);
     private static final PlayerId S1 = new PlayerId(1);
     private static final PlayerId S2 = new PlayerId(2);
-    private static final Duration PAUSE = Duration.ofMillis(3000);
+    private static final Duration PAUSE = Duration.ofMillis(60_000);
 
     private KiloDeMerdeTable table;
     private ManualBotScheduler scheduler;
     private KiloDeMerdePassTimer passTimer;
     private KiloDeMerdeRaceTimeout raceTimeout;
-    private KiloDeMerdeRoundPause roundPause;
+    private KiloDeMerdeReadyTimeout roundPause;
 
     @BeforeEach
     void setUp() {
-        KiloDeMerdeDeadlines deadlines = new KiloDeMerdeDeadlines(KiloDeMerdeTable.fixedClock(1_000_000), 15_000, 5_000);
+        KiloDeMerdeDeadlines deadlines = new KiloDeMerdeDeadlines(KiloDeMerdeTable.fixedClock(1_000_000), 15_000, 5_000, 60_000);
         table = new KiloDeMerdeTable(deadlines);
         scheduler = new ManualBotScheduler();
         passTimer = new KiloDeMerdePassTimer(table.actions, scheduler, deadlines);
         raceTimeout = new KiloDeMerdeRaceTimeout(table.actions, scheduler, deadlines);
-        roundPause = new KiloDeMerdeRoundPause(table.actions, scheduler, PAUSE);
+        roundPause = new KiloDeMerdeReadyTimeout(table.actions, scheduler, deadlines);
         table.broadcaster.addListener(passTimer);
         table.broadcaster.addListener(raceTimeout);
         table.broadcaster.addListener(roundPause);
@@ -200,7 +200,7 @@ class KiloDeMerdeTimersTest {
         assertThat(race.isCancelled()).isTrue();
     }
 
-    // ---- round pause ----
+    // ---- ready timeout ----
 
     @Test
     void aRoundEndSchedulesOneTaskAfterThePauseAndItDealsTheNextRound() throws Exception {
@@ -219,7 +219,8 @@ class KiloDeMerdeTimersTest {
 
         assertThat(game.round()).isEqualTo(2);
         assertThat(game.phase()).isEqualTo(Phase.PASSING);
-        assertThat(table.messaging.payloads.get(0).getEventType()).isEqualTo("ROUND_START");
+        assertThat(table.messaging.payloads.stream().map(r -> r.getEventType()).distinct())
+                .containsExactly("READY", "ROUND_START");
     }
 
     @Test
@@ -248,11 +249,11 @@ class KiloDeMerdeTimersTest {
         table.actions.slap(game.getId(), S0);
         ManualBotScheduler.Entry pause = scheduler.pending().stream().filter(e -> e.delay().equals(PAUSE)).findFirst()
                 .orElseThrow();
-        table.actions.nextRound(game.getId(), game, 1);
+        table.nextRound(game, 1);
         assertThat(game.round()).isEqualTo(2);
 
         pause.cancel();
-        table.actions.nextRound(game.getId(), game, 1);
+        table.nextRound(game, 1);
 
         assertThat(game.round()).isEqualTo(2);
         assertThat(game.step()).isEqualTo(1);

@@ -16,7 +16,7 @@ import org.kevinkib.cards.domain.Card;
 import java.util.List;
 
 /**
- * The Kilo de merde use cases, shared by humans, the bots and the three timers: domain call, session touch, then one
+ * The Kilo de merde use cases, shared by humans, the bots and the timers: domain call, session touch, then one
  * broadcast per domain event of the command (a last choice announces PASS_CHOSEN then STEP; the last slap of a race
  * announces SLAP, DRAW, ROUND_OVER), each with the state after the whole command. Authentication stays with the
  * caller; domain exceptions propagate to it. The call and the broadcasts run under the monitor of the game, so two
@@ -75,14 +75,40 @@ public class KiloDeMerdeGameActions {
         }
     }
 
-    /** Deals the next round (or ends the game) when the game is still at the end of round {@code round}. */
-    public void nextRound(GameId id, KiloDeMerde expected, int round) throws KiloDeMerdeException {
+    /**
+     * The seat confirms it is ready (before the first round or at the end of a round); the last confirmation starts
+     * the round, deals the next one or ends the game.
+     */
+    public void ready(GameId id, PlayerId seat) throws KiloDeMerdeException {
         KiloDeMerde game = sessionService.getGame(id, KiloDeMerde.class);
         synchronized (game) {
-            if (game != expected || game.phase() != Phase.ROUND_OVER || game.round() != round) {
+            announce(id, game, game.ready(seat), "Player " + seat + " is ready.");
+        }
+    }
+
+    /**
+     * Counts a seat ready when it is still waited for (it disconnected while the table waits). Does nothing when the
+     * game is not waiting, the seat is not playing or is already ready.
+     */
+    public void readyIfWaiting(KiloDeMerde expected, PlayerId seat) throws KiloDeMerdeException {
+        KiloDeMerde game = sessionService.getGame(expected.getId(), KiloDeMerde.class);
+        synchronized (game) {
+            if (game != expected || KiloDeMerdeReadyKey.of(game) == null || game.isReady(seat)
+                    || !game.activeSeats().contains(seat)) {
                 return;
             }
-            announce(id, game, game.nextRound(), "A new round was dealt.");
+            announce(game.getId(), game, game.ready(seat), "Player " + seat + " is away and counted ready.");
+        }
+    }
+
+    /** The ready timeout of {@code key} expired: the seats still missing are counted ready and the game moves on. */
+    public void expireReady(GameId id, KiloDeMerde expected, KiloDeMerdeReadyKey key) throws KiloDeMerdeException {
+        KiloDeMerde game = sessionService.getGame(id, KiloDeMerde.class);
+        synchronized (game) {
+            if (game != expected || !key.equals(KiloDeMerdeReadyKey.of(game))) {
+                return;
+            }
+            announce(id, game, game.expireReady(), "The ready timeout expired.");
         }
     }
 

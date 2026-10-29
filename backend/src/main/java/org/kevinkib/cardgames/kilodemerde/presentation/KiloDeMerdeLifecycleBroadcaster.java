@@ -8,12 +8,16 @@ import org.kevinkib.cardgames.presentation.state.SeatLifecycleBroadcaster;
 import org.kevinkib.cardgames.presentation.state.SeatStateBroadcaster;
 import org.kevinkib.cardgames.sessionmanagement.presence.port.ForfeitReason;
 import org.kevinkib.cardgames.sessionmanagement.presence.port.GameLifecycleBroadcaster;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The Kilo de merde lifecycle broadcaster: the generic seat one, plus the announcement of what a forfeit caused (the
  * new deal of the re-formed table, or the end of the game), which the domain recorded.
  */
 public class KiloDeMerdeLifecycleBroadcaster implements GameLifecycleBroadcaster {
+
+    private static final Logger log = LoggerFactory.getLogger(KiloDeMerdeLifecycleBroadcaster.class);
 
     private final SeatLifecycleBroadcaster<KiloDeMerde> seats;
     private final KiloDeMerdeGameActions actions;
@@ -32,6 +36,12 @@ public class KiloDeMerdeLifecycleBroadcaster implements GameLifecycleBroadcaster
     @Override
     public void disconnected(Game game, PlayerId player, long deadlineEpochMs) {
         seats.disconnected(game, player, deadlineEpochMs);
+        // A seat that drops while the table waits for confirmations must not hold the others up.
+        try {
+            actions.readyIfWaiting((KiloDeMerde) game, player);
+        } catch (Exception e) {
+            log.warn("Seat {} could not be counted ready after its disconnection", player, e);
+        }
     }
 
     @Override

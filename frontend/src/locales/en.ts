@@ -729,8 +729,17 @@ export const messagesEn: Messages = {
       opponents: 'Table',
       standings: 'Standings',
       ready: '{player} has chosen a card',
+      readyCountdown: 'Players who are away count as ready in {seconds} s',
+      confirmed: '{player}: ready',
+      notConfirmed: '{player}: waiting',
       forfeited: '{player} left the game',
       offline: 'You are offline. Reconnecting…',
+    },
+    readyGate: {
+      button: 'Ready',
+      startPrompt: 'Confirm that you are ready: the first round starts when everyone is.',
+      roundPrompt: 'When you have seen the result, confirm that you are ready for the next round.',
+      waitingFor: { one: 'Waiting for {n} player', other: 'Waiting for {n} players' },
     },
     hand: {
       passing: 'Passing…',

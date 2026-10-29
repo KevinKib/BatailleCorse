@@ -66,6 +66,12 @@ public class KiloDeMerdeWebSocketController {
                 (id, seat) -> actions.slap(id, seat));
     }
 
+    @MessageMapping("/kilo-de-merde/ready")
+    public void ready(@Payload GameActionPayload payload) {
+        handle(payload.gameId(), payload.token(), KiloDeMerdeEventType.READY,
+                (id, seat) -> actions.ready(id, seat));
+    }
+
     private void handle(String rawGameId, String token, KiloDeMerdeEventType type, SeatCommands.SeatAction action) {
         seatCommands.handle(rawGameId, token, type.toString(), action,
                 (gameId, seat) -> broadcaster.stateFor(sessionService.getGame(gameId, KiloDeMerde.class), seat));

@@ -21,6 +21,7 @@ function player(seat: number, overrides: Partial<KiloDeMerdePlayer> = {}): KiloD
     kilos: 0,
     kiloCards: [],
     chosen: false,
+    ready: false,
     slapRank: null,
     active: true,
     place: null,
@@ -46,6 +47,7 @@ function base(overrides: Partial<KiloDeMerdeState>): KiloDeMerdeState {
     options: { ...DEFAULT_KILO_DE_MERDE_OPTIONS },
     passTimerEndsAt: null,
     raceEndsAt: null,
+    readyEndsAt: null,
     players: [],
     race: null,
     lastOutcome: null,
@@ -126,6 +128,29 @@ export const kiloDeMerdeRoundOverState: KiloDeMerdeState = base({
   players: seats(4, (seat) => ({ slapRank: seat === 1 ? 1 : seat === 3 ? 2 : seat === 0 ? 3 : null })),
   lastOutcome: roundOverOutcome,
   availableActions: [],
+});
+
+/** Four seats, round 5 over, seats 1 and 3 already confirmed they are ready; I (seat 0) have not. */
+export const kiloDeMerdeRoundOverWaitingState: KiloDeMerdeState = base({
+  ...kiloDeMerdeRoundOverState,
+  version: 81,
+  readyEndsAt: 1_900_000_060_000,
+  players: seats(4, (seat) => ({
+    slapRank: seat === 1 ? 1 : seat === 3 ? 2 : seat === 0 ? 3 : null,
+    ready: seat === 1 || seat === 3,
+  })),
+  availableActions: ['READY'],
+});
+
+/** Three seats, nothing dealt to the eye yet: the first round starts once every seat is ready (seat 2 is). */
+export const kiloDeMerdeAwaitingStartState: KiloDeMerdeState = base({
+  version: 2,
+  phase: 'AWAITING_START',
+  pileSize: 40,
+  readyEndsAt: 1_900_000_060_000,
+  players: seats(3, (seat) => ({ ready: seat === 2 })),
+  hand: [],
+  availableActions: ['READY'],
 });
 
 /** Four seats, game over after 5 rounds: seats 0 and 2 share 1st place (0 kg), seat 1 is 3rd, seat 3 is 4th. */

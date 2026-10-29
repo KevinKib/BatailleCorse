@@ -121,7 +121,7 @@ class KiloDeMerdeGameActionsTest {
         for (int round = 1; round <= 5; round++) {
             table.actions.slap(game.getId(), S0);
             table.decks.fixDeal(game.getId(), KiloDeMerdeTable.hands(NO_SET), List.of());
-            table.actions.nextRound(game.getId(), game, game.round());
+            table.nextRound(game, game.round());
         }
 
         assertThat(game.phase()).isEqualTo(Phase.FINISHED);
@@ -244,12 +244,12 @@ class KiloDeMerdeGameActionsTest {
         table.actions.slap(game.getId(), S0);
         table.messaging.clear();
 
-        table.actions.nextRound(game.getId(), game, 1);
+        table.nextRound(game, 1);
 
         assertThat(game.round()).isEqualTo(2);
-        assertThat(eventTypes()).containsExactly("ROUND_START");
+        assertThat(eventTypes()).containsExactly("READY", "READY", "READY", "ROUND_START");
         table.messaging.clear();
-        table.actions.nextRound(game.getId(), game, 1); // stale: round 2 is being played
+        table.nextRound(game, 1); // stale: round 2 is being played
         assertThat(table.messaging.payloads).isEmpty();
         assertThat(game.round()).isEqualTo(2);
     }

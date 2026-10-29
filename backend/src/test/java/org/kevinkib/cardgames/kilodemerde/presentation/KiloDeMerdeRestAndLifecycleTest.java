@@ -133,6 +133,26 @@ class KiloDeMerdeRestAndLifecycleTest {
     }
 
     @Test
+    void aSeatThatDisconnectsWhileTheTableWaitsIsCountedReady() throws Exception {
+        KiloDeMerdeLifecycleBroadcaster lifecycle = new KiloDeMerdeLifecycleBroadcaster(table.broadcaster, table.actions);
+        KiloDeMerde game = table.startAwaitingReady(3, NO_SET, KiloDeMerdeTable.PILE);
+
+        lifecycle.disconnected(game, S1, 123L);
+
+        assertThat(game.isReady(S1)).isTrue();
+        assertThat(game.phase().name()).isEqualTo("AWAITING_START");
+        assertThat(table.messaging.payloads.stream().map(Response::getEventType).distinct().toList())
+                .containsExactly("OPPONENT_DISCONNECTED", "READY");
+
+        // while passing, a disconnection changes nothing in the game
+        table.messaging.clear();
+        KiloDeMerde playing = table.start(NO_SET);
+        int version = playing.version();
+        lifecycle.disconnected(playing, S1, 123L);
+        assertThat(playing.version()).isEqualTo(version);
+    }
+
+    @Test
     void aForfeitAnnouncesTheNewDealOrTheEndOfTheGameAfterTheForfeitItself() {
         KiloDeMerdeLifecycleBroadcaster lifecycle = new KiloDeMerdeLifecycleBroadcaster(table.broadcaster, table.actions);
         KiloDeMerde four = table.start(4, NO_SET_4, KiloDeMerdeTable.PILE);

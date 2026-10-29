@@ -112,8 +112,34 @@ public final class KiloDeMerdeTable {
     KiloDeMerde start(int seats, GameOptions options, String hands, String pile) {
         GameId id = GameId.generate();
         decks.fixDeal(id, hands(hands), cards(pile));
-        return base.install(new KiloDeMerde(id, seats, decks, KiloDeMerdeOptions.from(options)),
+        KiloDeMerde game = base.install(new KiloDeMerde(id, seats, decks, KiloDeMerdeOptions.from(options)),
                 KiloDeMerdeFactory.GAME_TYPE);
+        readyEveryone(game);
+        return game;
+    }
+
+    /** Same as {@link #start(int, GameOptions, String, String)}, but every seat is still to confirm it is ready. */
+    KiloDeMerde startAwaitingReady(int seats, String hands, String pile) {
+        GameId id = GameId.generate();
+        decks.fixDeal(id, hands(hands), cards(pile));
+        return base.install(new KiloDeMerde(id, seats, decks, KiloDeMerdeOptions.defaults()),
+                KiloDeMerdeFactory.GAME_TYPE);
+    }
+
+    /** Every seat confirms it is ready, straight on the aggregate (no broadcast): the first round starts. */
+    public static void readyEveryone(KiloDeMerde game) {
+        try {
+            for (var seat : game.activeSeats()) {
+                game.ready(seat);
+            }
+        } catch (org.kevinkib.cardgames.kilodemerde.domain.KiloDeMerdeException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    /** The ready timeout of the end of round {@code round} expires. */
+    void nextRound(KiloDeMerde game, int round) throws Exception {
+        actions.expireReady(game.getId(), game, new KiloDeMerdeReadyKey(org.kevinkib.cardgames.kilodemerde.domain.Phase.ROUND_OVER, round));
     }
 
     KiloDeMerde start(int seats, String hands, String pile) {

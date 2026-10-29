@@ -74,6 +74,11 @@ describe('KiloDeMerdeSession', () => {
       expect(c.published).toEqual([{ dest: '/app/kilo-de-merde/pass', body: { ...base, card } }]);
     });
 
+    it('ready sends the bare action to /app/kilo-de-merde/ready', () => {
+      const c = bound(); c.session.ready();
+      expect(c.published).toEqual([{ dest: '/app/kilo-de-merde/ready', body: base }]);
+    });
+
     it('slap sends the bare action to /app/kilo-de-merde/slap', () => {
       const c = bound(); c.session.slap();
       expect(c.published).toEqual([{ dest: '/app/kilo-de-merde/slap', body: base }]);

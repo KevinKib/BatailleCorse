@@ -102,7 +102,7 @@ export const useKiloDeMerdeStore = defineStore('kilo-de-merde-store', () => {
         if (event.eventType === 'FORFEIT') room.onForfeit(event.eventData as ForfeitEventData);
         if (NOT_TABLE_EVENTS.has(event.eventType)) {
           presence.applyPresenceEvent(event.eventType, event.eventData);
-        } else if (event.eventType !== 'START') {
+        } else if (event.eventType !== 'START' && event.eventType !== 'READY') {
           const entry: KiloDeMerdeTableEvent = {
             id: ++entryId,
             eventType: event.eventType,
@@ -189,6 +189,20 @@ export const useKiloDeMerdeStore = defineStore('kilo-de-merde-store', () => {
         || (next.players.find(p => p.seat === seat)?.slapRank ?? null) !== null);
   }
 
+  /**
+   * Confirms I am ready (before the first round, at the end of a round). Answered by a state that shows my mark, or
+   * where the phase or the round moved on (I was the last one).
+   */
+  function ready(): boolean {
+    const current = game.value;
+    if (!current || busy.value || !can('READY')) return false;
+    const { round, phase } = current;
+    const seat = mySeat.value;
+    return send(() => session.ready(), next =>
+      !next || next.phase !== phase || next.round !== round
+        || (next.players.find(p => p.seat === seat)?.ready ?? false));
+  }
+
   // Leaves the lobby and forgets everything about it, so the next room starts from a clean store.
   const leave = () => room.leave(clear);
 
@@ -201,7 +215,7 @@ export const useKiloDeMerdeStore = defineStore('kilo-de-merde-store', () => {
     forfeitNotice: presence.forfeitNotice,
     busy, notice, lastEvent, events,
     me, can, options, hand, screen,
-    applyEvent, pass, slap,
+    applyEvent, pass, slap, ready,
     create: (name?: string, privateGame = false) => session.create(name, privateGame),
     join: (id: string, name?: string) => session.join(id, name),
     restore: (id: string, seat: number, token: string) => session.restore(id, seat, token),

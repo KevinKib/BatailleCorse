@@ -58,7 +58,16 @@ class KiloDeMerdeInvariantsTest {
                     game.slap(seat);
                 }
             }
-            case ROUND_OVER -> game.nextRound();
+            case AWAITING_START, ROUND_OVER -> {
+                int roll = random.nextInt(10);
+                if (roll == 0) {
+                    game.expireReady();
+                } else if (roll == 1 && game.phase() == Phase.ROUND_OVER) {
+                    game.nextRound();
+                } else {
+                    game.ready(seat);
+                }
+            }
             default -> throw new IllegalStateException();
         }
     }

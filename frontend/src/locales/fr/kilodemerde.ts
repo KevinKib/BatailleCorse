@@ -26,8 +26,17 @@ export const kiloDeMerdeUi: Messages['kiloDeMerdeUi'] = {
     opponents: 'Table',
     standings: 'Classement',
     ready: '{player} a choisi une carte',
+    readyCountdown: 'Les joueurs absents seront comptés comme prêts dans {seconds} s',
+    confirmed: '{player}\u00A0: prêt',
+    notConfirmed: '{player}\u00A0: en attente',
     forfeited: '{player} a quitté la partie',
     offline: 'Vous êtes hors ligne. Reconnexion…',
+  },
+  readyGate: {
+    button: 'Prêt',
+    startPrompt: 'Confirmez que vous êtes prêt\u00A0: la première manche commence quand tout le monde l’est.',
+    roundPrompt: 'Quand vous avez vu le résultat, confirmez que vous êtes prêt pour la manche suivante.',
+    waitingFor: { one: 'En attente de {n} joueur', other: 'En attente de {n} joueurs' },
   },
   hand: {
     passing: 'Passage…',
