@@ -32,6 +32,9 @@ const pressed = (card: Card) => (hasAceChoice(card) ? props.aceName === card.nam
 // no effect label, so the rank-to-sentence table stays on the client, in model/ninetynine/effect.ts.
 const effectText =(card: Card) => format(ui.effect[effectCode(card.rank)], { n: card.rank });
 
+// The short reminder under the card (+4, +1 / +11, =99...): the same display-only table as the sentence above.
+const tagText = (card: Card) => format(ui.hand.tag[effectCode(card.rank)], { n: card.rank });
+
 function labelOf(card: Card): string {
   const name = cardLabel(card, ui, props.aceName === card.name);
   if (overLimit(card)) return format(ui.hand.cardOver, { card: name });
@@ -53,7 +56,11 @@ function labelOf(card: Card): string {
         @click="emit('play', card)">
         <PlayingCard :rank="card.rank" :suit="card.suit" />
       </button>
-      <span v-if="overLimit(card)" class="over-limit" :data-test="`over-limit-${card.name}`">{{ ui.hand.overLimit }}</span>
+      <!-- One slot of fixed height under every card (the reminder, then the reason when over 99): it never changes size. -->
+      <span class="card-notes" data-test="card-notes">
+        <span class="effect-tag" :data-test="`effect-tag-${card.name}`" aria-hidden="true">{{ tagText(card) }}</span>
+        <span v-if="overLimit(card)" class="over-limit" :data-test="`over-limit-${card.name}`">{{ ui.hand.overLimit }}</span>
+      </span>
     </div>
   </div>
 </template>
@@ -67,7 +74,7 @@ function labelOf(card: Card): string {
   gap: var(--space-3);
   padding-top: var(--space-3);
   box-sizing: border-box;
-  min-height: calc(var(--card-w) * 1.45 + var(--space-3));
+  min-height: calc(var(--card-w) * 1.45 + var(--space-3) + 2.75rem + var(--space-1));
 }
 .hand-slot { display: flex; flex-direction: column; align-items: center; gap: var(--space-1); }
 .hand-card {
@@ -91,8 +98,19 @@ function labelOf(card: Card): string {
   box-shadow: 0 0 0 3px var(--gold), 0 0 16px rgba(245, 200, 66, 0.6);
 }
 .hand-card :deep(.playing_card) { display: block; width: 100%; height: auto; aspect-ratio: 167.575 / 243.1375; }
+/* Fixed height: a two-line reminder ("Sens inversé") plus the over-99 line, always reserved, whatever the text. */
+.card-notes {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: var(--card-w);
+  height: 2.75rem;
+  overflow: hidden;
+  text-align: center;
+}
+.effect-tag { font-size: 0.75rem; font-weight: 700; line-height: 1.1; color: var(--gold); font-variant-numeric: tabular-nums; max-width: 100%; overflow-wrap: anywhere; }
 .over-limit { font-size: 0.6875rem; line-height: 1; color: rgba(255, 255, 255, 0.75); white-space: nowrap; }
-
 @media (prefers-reduced-motion: reduce) {
   .hand-card { transition: none; }
 }

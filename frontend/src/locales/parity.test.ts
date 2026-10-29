@@ -24,7 +24,9 @@ const SAME_AS_ENGLISH_ALLOWED: readonly string[] = [
   'koboUi.botLabel', 'koboUi.table.total', 'koboUi.regions.table', 'koboUi.sheet.totalChange', 'koboUi.sheet.pills.gift',
   'koboUi.sheet.columns.total', 'koboUi.end.totals.total',
   // 99: bot name, same word in French, and the lives options are digits
-  'ninetyNine.panelTitle', 'ninetyNineUi.botLabel', 'ninetyNineUi.table.opponents', 'options.ninetyNine.lives',
+  'ninetyNineUi.hand.tag.face', 'ninetyNineUi.hand.tag.ace', 'ninetyNineUi.hand.tag.pass', 'ninetyNineUi.hand.tag.minusTen',
+  'ninetyNineUi.hand.tag.plusTen', 'ninetyNineUi.hand.tag.ninetyNine',
+  'ninetyNine.panelTitle','ninetyNineUi.botLabel', 'ninetyNineUi.table.opponents', 'options.ninetyNine.lives',
   // Blackjack: the name and the Blackjack tags are the same word, the bot label and the stack unit are shared, "Max"
   'gamePicker.games.blackjack.name', 'gamePicker.games.kilo-de-merde.name','blackjack.panelTitle', 'blackjackUi.botLabel', 'blackjackUi.dealer.blackjack',
   'blackjackUi.status.blackjack', 'blackjackUi.table.stack', 'blackjackUi.bet.max',

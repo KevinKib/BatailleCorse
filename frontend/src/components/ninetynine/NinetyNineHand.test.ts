@@ -38,6 +38,22 @@ describe('NinetyNineHand', () => {
     expect(wrapper.emitted('play')).toBeUndefined();
   });
 
+  it('givenAnyCard_thenItsEffectIsRemindedUnderItInAFixedSlot', () => {
+    const wrapper = mountHand();
+    expect(wrapper.get('[data-test="effect-tag-SPADE_KING"]').text()).toBe('=99');
+    expect(wrapper.get('[data-test="effect-tag-DIAMOND_7"]').text()).toBe('+7');
+    expect(wrapper.get('[data-test="effect-tag-CLUB_ACE"]').text()).toBe('+1 / +11');
+    // The reminder and the over-99 reason live in one slot that exists for every card, so nothing moves when one shows.
+    expect(wrapper.findAll('[data-test="card-notes"]')).toHaveLength(3);
+  });
+
+  it.each([['4', 'Reverses'], ['9', '+0'], ['10', '−10'], ['JACK', '+10'], ['QUEEN', '+10']])(
+    'givenTheRank%s_thenTheReminderIs%s', (rank, text) => {
+      const card = buildNinetyNineCard(rank, 'HEART');
+      const wrapper = mountHand({ cards: [card], playable: [{ card, safe: true, aceValues: [] }] });
+      expect(wrapper.get(`[data-test="effect-tag-HEART_${rank}"]`).text()).toBe(text);
+    });
+
   it('givenASafeCard_thenNoReasonIsShownUnderIt', () => {
     expect(mountHand().find('[data-test="over-limit-SPADE_KING"]').exists()).toBe(false);
   });

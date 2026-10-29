@@ -26,10 +26,11 @@ import { seatDisplayName } from '../../model/table/displayName';
 import { rematchButtonFor } from '../../model/RematchButton';
 import { format, formatList } from '../../locales/format';
 import {
-  AnimationSpeedButton, CardMotionLayer, defineAnchors, scaleMovements, useAnimationSpeed, useTableMotion,
+  AnimationSpeedButton, CardMotionLayer, defineAnchors, scaleMovements, speedFactor, useAnimationSpeed, useTableMotion,
   type CardMotionLayerPlay,
 } from '../../animation';
-import { planMovements, type NinetyNineAnchor } from '../../model/ninetynine/motion';
+import { landingMs, planMovements, type NinetyNineAnchor } from '../../model/ninetynine/motion';
+import { useLandedTotal } from '../../composables/useLandedTotal';
 import { NINETY_NINE_TEMPO } from '../../model/ninetynine/tempo';
 import { needsAceChoice, aceValuesFor } from '../../model/ninetynine/playable';
 import { lastPlayLine } from '../../model/ninetynine/totalView';
@@ -163,7 +164,9 @@ const screenEl = ref<HTMLElement | null>(null);
 const motionLayer = ref<{ play: CardMotionLayerPlay<NinetyNineAnchor> } | null>(null);
 
 const resolveAnchor = defineAnchors<NinetyNineAnchor>(() => screenEl.value, {
-  seat: (anchor, q) => q.cardIn(q.find(`[data-test="seat-plate"][data-seat="${anchor.seat}"]`), 24),
+  // A card leaving an opponent's plate starts at the size of the pile's card, so that it never grows on the way.
+  seat: (anchor, q) => q.cardIn(q.find(`[data-test="seat-plate"][data-seat="${anchor.seat}"]`),
+    q.rect(q.find('[data-test="pile"]'))?.width ?? 38),
   hand: (_, q) => q.cardIn(q.find('[data-test="hand"]')),
   pile: (_, q) => q.cardIn(q.find('[data-test="pile"]')),
   stock: (_, q) => q.cardIn(q.find('[data-test="stock"]')),
@@ -181,6 +184,13 @@ const motion = useTableMotion<NinetyNineLogEntry, NinetyNineAnchor>({
   },
 });
 void motion;
+
+// The total changes when the played card lands on the pile, not before (instant speed: at once).
+const shownTotal = useLandedTotal(
+  () => store.game?.total ?? 0,
+  () => store.events,
+  entry => Math.round(landingMs(entry, store.mySeat) * speedFactor(speed.value)),
+);
 
 // --- The end -------------------------------------------------------------------------------------------------------
 const winners = computed(() => {
@@ -289,7 +299,7 @@ const rematchButton = computed(() =>
         :my-seat="store.mySeat"
         :current-seat="store.game.phase === 'PLAYING' ? store.game.currentSeat : -1"
         :direction="store.game.direction"
-        :total="store.game.total"
+        :total="shownTotal"
         :pile-top="store.game.pileTop"
         :stock-size="store.game.stockSize"
         :max-lives="maxLives"
@@ -391,7 +401,9 @@ const rematchButton = computed(() =>
   justify-content: center;
   align-items: baseline;
   gap: var(--space-1) var(--space-3);
-  min-height: 1.25rem;
+  /* Reserved for the longest case (turn, last move, a refusal and the stuck hint), so the hand below never moves. */
+  min-height: 4.5rem;
+  align-content: flex-start;
   font-size: 0.8125rem;
   color: rgba(255, 255, 255, 0.8);
   text-align: center;
