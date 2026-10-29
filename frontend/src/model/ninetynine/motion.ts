@@ -78,3 +78,10 @@ function playOf(entry: NinetyNineLogEntry, mySeat: number): NinetyNineMovement[]
   };
   return [play, draw];
 }
+
+/** How long after a play appears its card lands on the pile (hold + flight, at Normal speed); 0 for any other event. */
+export function landingMs(entry: NinetyNineLogEntry, mySeat: number): number {
+  if (entry.eventType !== 'PLAY' || entry.seat === null || entry.card === null) return 0;
+  const leg = entry.seat === mySeat ? TEMPO.own : TEMPO.opponent;
+  return leg.holdBeforeMs + leg.flightMs;
+}

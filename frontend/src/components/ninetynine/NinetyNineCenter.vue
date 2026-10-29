@@ -83,6 +83,8 @@ const stockLabel = computed(() => plural(ui.table.stockCount, props.stockSize));
   width: 100%;
   height: auto;
   aspect-ratio: 167.575 / 243.1375;
+  /* The border sits inside the width: the card on the pile measures what the flying copy lands at. */
+  box-sizing: border-box;
   border: 1px solid #000;
   border-radius: 6%;
   box-shadow: 0 2px 3px rgba(0, 0, 0, 0.55), 0 8px 22px rgba(0, 0, 0, 0.5);

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  boxGap, centerBox, centerRowSizes, centerRowWidth, chooseLayout, directionArrows, plateSizeFor, ringBoxes, ringCenters, ringMinGap, MIN_GAP,
+  bannerBox, boxGap, centerBox, centerRowSizes, centerRowWidth, chooseLayout, directionArrows, plateSizeFor, ringBoxes, ringCenters, ringMinGap, MIN_GAP,
 } from './ringLayout';
 
 const frame = (width: number, height: number) => ({ width, height });
@@ -135,5 +135,21 @@ describe('chooseLayout', () => {
 
   it('givenNoMeasureYet_thenTheRingIsUsed', () => {
     expect(chooseLayout(12, null)).toBe('ring');
+  });
+});
+
+describe('bannerBox', () => {
+  const felts = [{ width: 344, height: 365 }, { width: 1100, height: 520 }, { width: 1280, height: 600 }];
+  it.each(felts)('givenAFeltOf%o_thenTheBannerNeverTouchesAPlateOrTheMiddleBlock', (f) => {
+    for (let count = 2; count <= 12; count++) {
+      if (chooseLayout(count, f) !== 'ring') continue;
+      const box = bannerBox(count, f);
+      expect(box.h).toBeGreaterThan(0);
+      ringBoxes(count, f).forEach(p => expect(boxGap(box, p)).toBeGreaterThanOrEqual(MIN_GAP));
+      expect(boxGap(box, centerBox(f))).toBeGreaterThanOrEqual(MIN_GAP - 0.001);
+    }
+  });
+  it('givenAPhoneFeltAndSixSeats_thenTheBandIsTallEnoughForTwoLines', () => {
+    expect(bannerBox(6, { width: 344, height: 365 }).h).toBeGreaterThanOrEqual(32);
   });
 });

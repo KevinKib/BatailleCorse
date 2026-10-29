@@ -252,7 +252,9 @@ describe('KiloDeMerdeGameScreen', () => {
       const { wrapper } = await mountRoom(room(kiloDeMerdeRoundOverState));
       expect(wrapper.get('[data-test="round-line"]').text()).toContain('Flush! Player 2 drops all their kilos');
       expect(wrapper.findAll('[data-test="seat-hand"]')).toHaveLength(4);
-      expect(wrapper.get('[data-test="seat-plate"][data-seat="2"] [data-test="seat-last"]').exists()).toBe(true);
+      // The tag leaves the revealed composition; the plate's name still says who was last.
+      expect(wrapper.find('[data-test="seat-last"]').exists()).toBe(false);
+      expect(wrapper.get('[data-test="seat-plate"][data-seat="2"]').attributes('aria-label')).toContain('Last');
     });
 
     it('givenAStepOrARace_thenNoHandIsRevealed', async () => {

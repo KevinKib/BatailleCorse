@@ -175,3 +175,25 @@ export function chooseLayout(count: number, frame: Frame | null): TableLayout {
   if (!frame || frame.width <= 0 || frame.height <= 0) return 'ring';
   return ringMinGap(count, frame) >= MIN_GAP ? 'ring' : 'rail';
 }
+
+/**
+ * Where a message of the table (a banner) can sit without touching a plate: in the free band, above or below the
+ * middle block (the larger one), as wide as the middle block, 8 px clear of every plate and of the block. The band
+ * can be thin on a crowded phone felt: the banner clamps its text to the height it is given.
+ */
+export function bannerBox(count: number, frame: Frame): Box {
+  const middle = centerBox(frame);
+  const plates = ringBoxes(count, frame);
+  const inColumn = plates.filter(p => p.x < middle.x + middle.w + MIN_GAP && p.x + p.w + MIN_GAP > middle.x);
+  const above = inColumn.filter(p => p.y + p.h <= middle.y + middle.h / 2);
+  const below = inColumn.filter(p => p.y >= middle.y + middle.h / 2);
+  const aboveTop = Math.max(0, ...above.map(p => p.y + p.h + MIN_GAP));
+  const aboveBottom = middle.y - MIN_GAP;
+  const belowTop = middle.y + middle.h + MIN_GAP;
+  const belowBottom = Math.min(frame.height, ...below.map(p => p.y - MIN_GAP));
+  const roomAbove = aboveBottom - aboveTop;
+  const roomBelow = belowBottom - belowTop;
+  return roomAbove >= roomBelow
+    ? { x: middle.x, y: aboveTop, w: middle.w, h: Math.max(0, roomAbove) }
+    : { x: middle.x, y: belowTop, w: middle.w, h: Math.max(0, roomBelow) };
+}

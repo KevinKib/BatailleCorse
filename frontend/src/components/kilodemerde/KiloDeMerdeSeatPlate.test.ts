@@ -16,7 +16,7 @@ describe('KiloDeMerdeSeatPlate', () => {
     // jsdom has no layout: the class drives the CSS that lets the plate grow, wrap and scroll.
     const wrapper = mountPlate({ hand: [kiloCard('JACK', 'CLUB'), kiloCard('JACK', 'HEART')], mine: true, last: true, ready: true });
     expect(wrapper.get('[data-test="seat-plate"]').classes()).toContain('plate--expanded');
-    for (const hook of ['seat-name', 'seat-kilos', 'seat-hand', 'seat-last', 'seat-ready']) {
+    for (const hook of ['seat-name', 'seat-kilos', 'seat-hand', 'seat-ready']) {
       expect(wrapper.find(`[data-test="${hook}"]`).exists(), hook).toBe(true);
     }
     expect(mountPlate().get('[data-test="seat-plate"]').classes()).not.toContain('plate--expanded');
@@ -64,6 +64,12 @@ describe('KiloDeMerdeSeatPlate', () => {
   it('givenTheLastToSlap_thenTheLastTagIsShown', () => {
     expect(mountPlate({ last: true }).get('[data-test="seat-last"]').text()).toBe('Last');
     expect(mountPlate().find('[data-test="seat-last"]').exists()).toBe(false);
+  });
+
+  it('givenTheLastToSlapWithARevealedHand_thenTheTagIsNotDrawnOverTheCompositionButStaysInTheName', () => {
+    const wrapper = mountPlate({ last: true, hand: [kiloCard('KING', 'SPADE')] });
+    expect(wrapper.find('[data-test="seat-last"]').exists()).toBe(false);
+    expect(wrapper.get('[data-test="seat-plate"]').attributes('aria-label')).toContain('Last');
   });
 
   it('givenARevealedHand_thenItIsShownAsShortLabels', () => {

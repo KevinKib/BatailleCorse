@@ -6,7 +6,7 @@ import KiloDeMerdeSeatPlate from './KiloDeMerdeSeatPlate.vue';
 import { useI18n } from '../../composables/useI18n';
 import { format } from '../../locales/format';
 import {
-  centerBox, chooseLayout, directionArrows, plateSizeFor, radiiFor, ringCenters, trackRadii, type Frame,
+  bannerBox, centerBox, chooseLayout, directionArrows, plateSizeFor, radiiFor, ringCenters, trackRadii, type Frame,
 } from '../../model/table/ringLayout';
 import { seatsAtTable } from '../../model/kilodemerde/seatOrder';
 import type { Countdown } from '../../model/kilodemerde/countdown';
@@ -99,6 +99,18 @@ const middleStyle = computed(() => {
   return { left: '50%', top: `${(box.y + box.h / 2) / frame.value.height * 100}%` };
 });
 
+// On the ring, the banner (race, "too late, you take X") sits in the free band beside the middle block, clear of every
+// plate; on the rail there are no plates on the felt and it keeps the top of the felt.
+const overlayStyle = computed(() => {
+  if (layout.value !== 'ring') return undefined;
+  const box = bannerBox(ring.value.length, frame.value);
+  const f = frame.value;
+  return {
+    left: `${(box.x / f.width) * 100}%`, top: `${(box.y / f.height) * 100}%`,
+    width: `${(box.w / f.width) * 100}%`, height: `${(box.h / f.height) * 100}%`,
+  };
+});
+
 // The kilo cards of the plate that was tapped.
 const kiloSeat = ref<number | null>(null);
 const kiloPlayer = computed(() => props.players.find(p => p.seat === kiloSeat.value) ?? null);
@@ -168,7 +180,7 @@ const dash = computed(() => `${(props.countdown?.fraction ?? 1) * CIRCUMFERENCE}
         </div>
       </div>
 
-      <div class="overlay"><slot name="overlay" /></div>
+      <div class="overlay" :class="{ 'overlay--band': layout === 'ring' }" :style="overlayStyle" data-test="overlay"><slot name="overlay" /></div>
       <div v-if="kiloPlayer" class="popover-slot">
         <KiloDeMerdeKiloPopover :name="nameOfSeat(kiloPlayer.seat)" :mine="kiloPlayer.seat === mySeat" :cards="kiloPlayer.kiloCards"
                                 @close="kiloSeat = null" />
@@ -216,6 +228,9 @@ const dash = computed(() => `${(props.countdown?.fraction ?? 1) * CIRCUMFERENCE}
   padding-top: var(--space-2); pointer-events: none;
 }
 .overlay > :deep(*) { pointer-events: auto; }
+/* On the ring the overlay is the free band given by `bannerBox`: centred in it, never taller than it. */
+.overlay--band { inset: auto; padding-top: 0; align-items: center; overflow: hidden; }
+.overlay--band > :deep(*) { max-height: 100%; overflow: hidden; }
 .popover-slot { position: absolute; z-index: 4; top: 50%; left: 50%; transform: translate(-50%, -50%); }
 
 .rail { margin: 0; padding: 0; list-style: none; flex: none; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--space-2); }

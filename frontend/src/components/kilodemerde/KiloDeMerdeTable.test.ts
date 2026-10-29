@@ -33,6 +33,18 @@ describe('KiloDeMerdeTable', () => {
     expect(wrapper.findAll('.ring-slot')).toHaveLength(10);
   });
 
+  it.each([{ width: 1280, height: 520 }, { width: 1100, height: 600 }])('givenARingOf%o_thenTheBannerBandClearsEveryPlate', (frame) => {
+    const wrapper = mountTable(kiloDeMerdeRaceState, { frame });
+    const style = wrapper.get('[data-test="overlay"]').attributes('style') ?? '';
+    const pct = (name: string) => Number(new RegExp(`${name}: ([\\d.]+)%`).exec(style)?.[1]);
+    const band = {
+      x: pct('left') / 100 * frame.width, y: pct('top') / 100 * frame.height,
+      w: pct('width') / 100 * frame.width, h: pct('height') / 100 * frame.height,
+    };
+    expect(band.h).toBeGreaterThan(0);
+    ringBoxes(10, frame).forEach(p => expect(boxGap(band, p)).toBeGreaterThanOrEqual(MIN_GAP - 0.01));
+  });
+
   it('givenAFeltTooNarrowForTenPlates_thenTheRailOfSeatsIsUsedAndEverySeatStaysVisible', () => {
     const wrapper = mountTable(kiloDeMerdeRaceState, { frame: { width: 280, height: 300 } });
     expect(wrapper.get('[data-test="kilo-table"]').attributes('data-layout')).toBe('rail');
@@ -71,13 +83,13 @@ describe('KiloDeMerdeTable', () => {
     expect(mountTable(kiloDeMerdeRaceState, { players, ready: true }).findAll('[data-test="seat-ready"]')).toHaveLength(2);
   });
 
-  it('givenARoundOver_thenOnlyThenEveryPlateShowsItsHandAndTheLastDrawerIsTagged', () => {
+  it('givenARoundOver_thenOnlyThenEveryPlateShowsItsHandAndTheLastTagLeavesTheComposition', () => {
     const over = kiloDeMerdeRoundOverState;
     expect(mountTable(over, { hands: null }).findAll('[data-test="seat-hand"]')).toHaveLength(0);
     const wrapper = mountTable(over, { hands: over.lastOutcome!.hands, lastSeats: [2] });
     expect(wrapper.findAll('[data-test="seat-hand"]')).toHaveLength(4);
-    expect(wrapper.findAll('[data-test="seat-last"]')).toHaveLength(1);
-    expect(wrapper.get('[data-seat="2"] [data-test="seat-last"]').exists()).toBe(true);
+    expect(wrapper.findAll('[data-test="seat-last"]')).toHaveLength(0);
+    expect(mountTable(over, { hands: null, lastSeats: [2] }).get('[data-seat="2"] [data-test="seat-last"]').exists()).toBe(true);
   });
 
   it('givenTheOverlaySlot_thenItIsRendered', () => {

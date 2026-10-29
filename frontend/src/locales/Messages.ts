@@ -507,6 +507,8 @@ export interface NinetyNineUiMessages {
     overLimit: string;                 // under a card that would go over 99
     cardOver: string;                  // '{card}': accessible name of a card that cannot be played
     cardEffect: string;                // '{card}', '{effect}'
+    /** The short reminder under a card of the hand ('{n}' = the face value). */
+    tag: { face: string; ace: string; reverse: string; pass: string; minusTen: string; plusTen: string; ninetyNine: string };
     waiting: string;                   // the hand while it is not my turn
     stuckHint: string;                 // my turn, no safe card: play any card, lose a life
   };
@@ -528,6 +530,8 @@ export interface NinetyNineUiMessages {
     livesLeft: PluralForms;            // '{n}': "Life lost · {n} left" (no subject: it is under my title or another's)
     eliminated: string;                // '{player}'
     eliminatedYou: string;
+    eliminatedBanner: string;          // '{player}': the unmissable line of an elimination
+    eliminatedBannerYou: string;
     next: string;                      // the pause before the next deal
     hit: string;                       // the badge on the seat that lost a life
     handLabel: string;                 // '{player}': the stuck hand, as a region name
