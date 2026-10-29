@@ -79,6 +79,7 @@ describe('Mangola game', () => {
       cy.get('[data-test="end"]', { timeout: 20000 }).should('be.visible');
       cy.get('.end-title').should('have.text', 'VICTORY');
       cy.get('[data-test="end-winner"]').should('have.text', 'Winner: Alice');
+      cy.get('.end-sub').should('contain.text', 'Bob can never move again');
       cy.get('[data-cy="play-again"]').click();
       cy.get('[data-test="lobby"]', { timeout: 10000 }).should('be.visible');
     });
