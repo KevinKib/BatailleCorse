@@ -129,6 +129,29 @@ describe('useSeatGameBootstrap', () => {
     });
   });
 
+  it('when the player left before the answer came, a gone game does not pull them back to the game home', async () => {
+    localStorage.setItem('fake:tokens:g1', JSON.stringify({ 0: 'tok' }));
+    let answer!: (result: HydrateResult) => void;
+    const store = fakeStore(() => new Promise<HydrateResult>((resolve) => { answer = resolve; }));
+    const onHydrated = vi.fn();
+    const router = createAppRouter(createMemoryHistory());
+    await router.push('/bullshit/room/g1');
+    await router.isReady();
+    const Probe = defineComponent({
+      setup() { useSeatGameBootstrap(game, 'g1', PREFIX, store, { onHydrated }); return () => h('div'); },
+    });
+    const wrapper = mount(Probe, { global: { plugins: [router] } });
+    await flushPromises();
+
+    await router.push('/');
+    wrapper.unmount();
+    answer('gone');
+    await flushPromises();
+
+    expect(router.currentRoute.value.path).toBe('/');
+    expect(onHydrated).not.toHaveBeenCalled();
+  });
+
   describe('on unavailable', () => {
     beforeEach(() => { vi.useFakeTimers(); });
     afterEach(() => { vi.useRealTimers(); });

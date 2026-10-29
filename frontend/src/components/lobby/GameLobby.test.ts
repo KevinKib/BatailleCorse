@@ -385,6 +385,19 @@ describe('GameLobby', () => {
       expect(wrapper.emitted('set-seat-option')).toEqual([[1, 'tier', '0']]);
     });
 
+    it('keeps showing the value the lobby holds until the server takes the change', async () => {
+      const wrapper = mountLobby({ lobby: withTiers });
+      const select = wrapper.get('select[data-test="seat-option-1-tier"]');
+      await select.setValue('0');
+      // Refused, or never sent (socket down): the lobby still says 2, and so must the selector.
+      expect((select.element as HTMLSelectElement).value).toBe('2');
+      await wrapper.setProps({ lobby: lobby({
+        ...withTiers,
+        players: [withTiers.players[0], { ...withTiers.players[1], seatOptions: { tier: '0' } }],
+      }) });
+      expect((select.element as HTMLSelectElement).value).toBe('0');
+    });
+
     it('renders nothing for a game whose bots declare no option, and nothing for a guest', () => {
       expect(mountLobby().find('select').exists()).toBe(false);
       const guest = mountLobby({ lobby: { ...withTiers, mySeat: 1, canEditOptions: false } });
