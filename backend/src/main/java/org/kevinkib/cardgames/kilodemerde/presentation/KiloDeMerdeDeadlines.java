@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * When the pass timer and the race timeout of a game end, as server epoch milliseconds. The state sent to the
+ * When the pass timer, the race timeout and the ready timeout of a game end, as server epoch milliseconds. The state sent to the
  * seats (for the countdown) and the timers that fire read the same instant, so the picture and the rule agree.
  *
  * <p>The instant of a step or of a race is fixed the first time somebody asks for it (the state broadcast that
@@ -26,17 +26,28 @@ public class KiloDeMerdeDeadlines implements GameEvictionListener {
     private final Clock clock;
     private final long passTimerMs;
     private final long raceTimeoutMs;
+    private final long readyTimeoutMs;
     private final Map<GameId, Stamp<KiloDeMerdeStepKey>> passes = new ConcurrentHashMap<>();
     private final Map<GameId, Stamp<Integer>> races = new ConcurrentHashMap<>();
+    private final Map<GameId, Stamp<KiloDeMerdeReadyKey>> readies = new ConcurrentHashMap<>();
 
     /**
      * @param passTimerMs   how long a step lasts before the server passes for the slow seats; 0 turns the timer off
      * @param raceTimeoutMs how long a race stays open before the seats that did not slap draw; 0 turns it off
      */
     public KiloDeMerdeDeadlines(Clock clock, long passTimerMs, long raceTimeoutMs) {
+        this(clock, passTimerMs, raceTimeoutMs, 0);
+    }
+
+    /**
+     * @param readyTimeoutMs how long the table waits for the seats to confirm they are ready before it counts the
+     *                       missing ones ready; 0 turns it off (the table then waits for every confirmation)
+     */
+    public KiloDeMerdeDeadlines(Clock clock, long passTimerMs, long raceTimeoutMs, long readyTimeoutMs) {
         this.clock = clock;
         this.passTimerMs = passTimerMs;
         this.raceTimeoutMs = raceTimeoutMs;
+        this.readyTimeoutMs = readyTimeoutMs;
     }
 
     /** No timer at all: the states carry no deadline. */
@@ -46,6 +57,10 @@ public class KiloDeMerdeDeadlines implements GameEvictionListener {
 
     public boolean passTimerEnabled() {
         return passTimerMs > 0;
+    }
+
+    public boolean readyTimeoutEnabled() {
+        return readyTimeoutMs > 0;
     }
 
     public boolean raceTimeoutEnabled() {
@@ -93,8 +108,28 @@ public class KiloDeMerdeDeadlines implements GameEvictionListener {
         }
     }
 
+    /** When the wait for the seats to be ready ends; null when the timeout is off or the game is not waiting. */
+    public Long readyEndsAt(KiloDeMerde game) {
+        if (readyTimeoutMs <= 0) {
+            return null;
+        }
+        synchronized (game) {
+            KiloDeMerdeReadyKey key = KiloDeMerdeReadyKey.of(game);
+            if (key == null) {
+                return null;
+            }
+            Stamp<KiloDeMerdeReadyKey> current = readies.get(game.getId());
+            if (current == null || current.game() != game || !current.key().equals(key)) {
+                current = new Stamp<>(game, key, clock.millis() + readyTimeoutMs);
+                readies.put(game.getId(), current);
+            }
+            return current.endsAt();
+        }
+    }
+
     @Override
     public void onEvicted(GameId id) {
+        readies.remove(id);
         passes.remove(id);
         races.remove(id);
     }

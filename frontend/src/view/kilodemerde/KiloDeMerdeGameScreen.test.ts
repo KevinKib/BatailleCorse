@@ -7,6 +7,7 @@ import KiloDeMerdeGameScreen from './KiloDeMerdeGameScreen.vue';
 import { useKiloDeMerdeStore } from '../../state/KiloDeMerde.store';
 import { messagesEn } from '../../locales/en';
 import {
+  kiloDeMerdeAwaitingStartState, kiloDeMerdeRoundOverWaitingState,
   DEFAULT_KILO_DE_MERDE_OPTIONS, kiloDeMerdeFinishedState, kiloDeMerdeRaceState, kiloDeMerdeRoundOverState,
   kiloDeMerdeStepState,
 } from '../../model/kilodemerde/fixtures';
@@ -84,6 +85,61 @@ describe('KiloDeMerdeGameScreen', () => {
       const setOption = vi.spyOn(store, 'setOption').mockImplementation(() => {});
       await wrapper.get('[data-test="option-rounds-15"]').setValue(true);
       expect(setOption).toHaveBeenCalledWith('rounds', '15');
+    });
+  });
+
+  describe('the ready confirmation', () => {
+    it('givenTheTableWaitsBeforeTheFirstRound_thenIOnlySeeThePromptTheButtonAndWhoIsReady', async () => {
+      const { wrapper, store } = await mountRoom(room(kiloDeMerdeAwaitingStartState));
+      const ready = vi.spyOn(store, 'ready').mockImplementation(() => true);
+
+      expect(wrapper.get('[data-test="ready-prompt"]').text()).toBe(messagesEn.kiloDeMerdeUi.readyGate.startPrompt);
+      expect(wrapper.findAll('[data-card]')).toHaveLength(0);
+      expect(wrapper.findAll('[data-test="seat-confirmed"]')).toHaveLength(1); // seat 2
+      expect(wrapper.findAll('[data-test="seat-waiting"]')).toHaveLength(2);
+      expect(wrapper.get('[data-test="countdown"]').attributes('aria-label'))
+        .toContain(messagesEn.kiloDeMerdeUi.table.readyCountdown.replace(/\{seconds\}.*/, ''));
+      await wrapper.get('[data-test="ready"]').trigger('click');
+      expect(ready).toHaveBeenCalledTimes(1);
+    });
+
+    it('givenTheRoundIsOver_thenTheResultStaysAndTheReadyButtonAsksForTheNextRound', async () => {
+      const { wrapper } = await mountRoom(room(kiloDeMerdeRoundOverWaitingState));
+
+      expect(wrapper.find('[data-test="round-banner"]').exists()).toBe(true);
+      expect(wrapper.get('[data-test="ready-prompt"]').text()).toBe(messagesEn.kiloDeMerdeUi.readyGate.roundPrompt);
+      expect(wrapper.get('[data-test="ready"]').attributes('disabled')).toBeUndefined();
+      expect(wrapper.findAll('[data-test="seat-confirmed"]')).toHaveLength(2); // seats 1 and 3
+      expect(wrapper.findAll('[data-test="seat-waiting"]')).toHaveLength(2); // seats 0 and 2
+    });
+
+    it('givenIConfirmed_thenTheButtonGivesWayToTheCountOfSeatsStillWaitedFor', async () => {
+      const mine: KiloDeMerdeState = {
+        ...kiloDeMerdeRoundOverWaitingState, version: 82, availableActions: [],
+        players: kiloDeMerdeRoundOverWaitingState.players.map(p => (p.seat === 0 ? { ...p, ready: true } : p)),
+      };
+      const { wrapper } = await mountRoom(room(mine));
+
+      expect(wrapper.find('[data-test="ready"]').exists()).toBe(false);
+      expect(wrapper.get('[data-test="ready-waiting"]').text()).toBe('Waiting for 1 player');
+    });
+
+    it('givenThePassStep_thenThereIsNoReadyGate', async () => {
+      const { wrapper } = await mountRoom(room(kiloDeMerdeStepState));
+      expect(wrapper.find('[data-test="ready-gate"]').exists()).toBe(false);
+      expect(wrapper.find('[data-test="seat-waiting"]').exists()).toBe(false);
+    });
+
+    it('givenTheKeyR_thenIConfirmOnlyWhenTheServerOffersIt', async () => {
+      const { store } = await mountRoom(room(kiloDeMerdeAwaitingStartState));
+      const ready = vi.spyOn(store, 'ready').mockImplementation(() => true);
+      press('r');
+      expect(ready).toHaveBeenCalledTimes(1);
+
+      const passing = await mountRoom(room(kiloDeMerdeStepState));
+      const none = vi.spyOn(passing.store, 'ready').mockImplementation(() => true);
+      press('r');
+      expect(none).not.toHaveBeenCalled();
     });
   });
 

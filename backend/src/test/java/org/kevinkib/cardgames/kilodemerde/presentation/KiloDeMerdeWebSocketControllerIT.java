@@ -114,13 +114,27 @@ class KiloDeMerdeWebSocketControllerIT {
             client.sendApp(stomp[0], "/kilo-de-merde/start", StompTestClient.body(gameId, tokens[0]));
             for (int seat = 0; seat < 3; seat++) {
                 Map<String, Object> start = frames[seat].await(f -> "START".equals(f.get("eventType")));
-                assertThat(state(start).get("phase"), is("PASSING"));
+                assertThat(state(start).get("phase"), is("AWAITING_START"));
+            }
+            for (int seat = 0; seat < 3; seat++) {
+                client.sendApp(stomp[seat], "/kilo-de-merde/ready", StompTestClient.body(gameId, tokens[seat]));
+            }
+            for (int seat = 0; seat < 3; seat++) {
+                Map<String, Object> dealt = frames[seat].await(f -> "ROUND_START".equals(f.get("eventType")));
+                assertThat(state(dealt).get("phase"), is("PASSING"));
             }
         }
 
         void pass(int seat, String code) {
             client.sendApp(stomp[seat], "/kilo-de-merde/pass", StompTestClient.body(gameId, tokens[seat],
                     "card", cardBody(code)));
+        }
+
+        /** Every seat confirms it is ready (after the round ended: a confirmation outside the wait is refused). */
+        void readyAll() {
+            for (int seat = 0; seat < 3; seat++) {
+                client.sendApp(stomp[seat], "/kilo-de-merde/ready", StompTestClient.body(gameId, tokens[seat]));
+            }
         }
 
         void slap(int seat) {
@@ -154,10 +168,14 @@ class KiloDeMerdeWebSocketControllerIT {
     void theStartGivesEachSeatItsOwnHandOnly() throws Exception {
         Table table = new Table();
 
+        Map<String, Object> waiting = state(table.frames[0].all.stream()
+                .filter(f -> "START".equals(f.get("eventType"))).findFirst().orElseThrow());
+        assertThat(((List<Object>) waiting.get("hand")).size(), is(0)); // nothing is shown before everyone is ready
+        assertThat(waiting.get("availableActions"), is(List.of("READY")));
         Map<String, Object> mine = state(table.frames[0].all.stream()
-                .filter(f -> "START".equals(f.get("eventType"))).findFirst().orElseThrow());
+                .filter(f -> "ROUND_START".equals(f.get("eventType"))).findFirst().orElseThrow());
         Map<String, Object> theirs = state(table.frames[1].all.stream()
-                .filter(f -> "START".equals(f.get("eventType"))).findFirst().orElseThrow());
+                .filter(f -> "ROUND_START".equals(f.get("eventType"))).findFirst().orElseThrow());
         assertThat(((List<Object>) mine.get("hand")).size(), is(4));
         assertThat(mine.get("hand").equals(theirs.get("hand")), is(false));
         assertThat(mine.get("availableActions"), is(List.of("PASS", "SLAP")));
@@ -211,12 +229,15 @@ class KiloDeMerdeWebSocketControllerIT {
         table.slap(0);
         table.awaitAll("RACE");
         table.slap(1); // seat 2 never slaps: it is the last one
-
         for (int s = 0; s < 3; s++) {
             Map<String, Object> draw = table.frames[s].await(f -> "DRAW".equals(f.get("eventType")));
             Map<String, Object> data = (Map<String, Object>) draw.get("eventData");
             assertThat(data.get("seat"), is(2));
             assertThat(data.get("kilosAfter"), is(100));
+        }
+        table.awaitAll("ROUND_OVER");
+        table.readyAll(); // the pile is empty: the game ends once everybody has seen the round
+        for (int s = 0; s < 3; s++) {
             Map<String, Object> over = table.frames[s].await(f -> "GAME_OVER".equals(f.get("eventType")));
             Map<String, Object> result = (Map<String, Object>) state(over).get("result");
             assertThat(result.get("reason"), is("PILE_EMPTY"));
@@ -239,7 +260,7 @@ class KiloDeMerdeWebSocketControllerIT {
         table.pass(0, "QC");
         table.awaitAll("PASS_CHOSEN");
 
-        assertThat(table.rehydrate(0).get("version"), is(1));
+        assertThat(table.rehydrate(0).get("version"), is(4)); // three confirmations, then one choice
         assertThat(table.refusals(1), is(0L));
     }
 

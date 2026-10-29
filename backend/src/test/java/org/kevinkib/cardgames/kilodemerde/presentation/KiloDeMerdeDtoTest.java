@@ -40,6 +40,44 @@ class KiloDeMerdeDtoTest {
         return KiloDeMerdeDto.forViewer(game, viewer, names, Set.of());
     }
 
+    private static KiloDeMerdeDto timedView(KiloDeMerde game, KiloDeMerdeDeadlines deadlines) {
+        Map<PlayerId, String> names = new HashMap<>();
+        game.getPlayerIds().forEach(p -> names.put(p, "Seat " + p.id()));
+        return KiloDeMerdeDto.forViewer(game, S0, names, Set.of(),
+                (id, seat) -> Map.of(), deadlines);
+    }
+
+    @Test
+    void beforeTheFirstRoundNobodySeesAHandAndTheReadyMarksArePublic() throws Exception {
+        KiloDeMerde game = table.startAwaitingReady(3, NO_SET, KiloDeMerdeTable.PILE);
+        table.actions.ready(game.getId(), S1);
+
+        KiloDeMerdeDto mine = view(game, S0);
+        KiloDeMerdeDto theirs = view(game, S1);
+
+        assertThat(mine.phase()).isEqualTo("AWAITING_START");
+        assertThat(mine.hand()).isEmpty();
+        assertThat(mine.availableActions()).containsExactly("READY");
+        assertThat(theirs.availableActions()).isEmpty();
+        assertThat(mine.players().stream().map(KiloDeMerdeDto.PlayerDto::ready).toList())
+                .containsExactly(false, true, false);
+        assertThat(mine.readyEndsAt()).isNull();
+    }
+
+    @Test
+    void theReadyCountdownIsFixedForTheWholeWaitAndStartsAgainAtTheEndOfARound() throws Exception {
+        KiloDeMerdeDeadlines deadlines = new KiloDeMerdeDeadlines(KiloDeMerdeTable.fixedClock(1_000_000), 0, 0, 60_000);
+        KiloDeMerdeTable timed = new KiloDeMerdeTable(deadlines);
+        KiloDeMerde game = timed.startAwaitingReady(3, NO_SET, KiloDeMerdeTable.PILE);
+
+        assertThat(timedView(game, deadlines).readyEndsAt()).isEqualTo(1_060_000L);
+        KiloDeMerdeTable.readyEveryone(game);
+        assertThat(timedView(game, deadlines).readyEndsAt()).isNull(); // passing: no countdown
+        timed.actions.slap(game.getId(), S0);
+        assertThat(timedView(game, deadlines).phase()).isEqualTo("ROUND_OVER");
+        assertThat(timedView(game, deadlines).readyEndsAt()).isEqualTo(1_060_000L);
+    }
+
     @Test
     void theStartShowsTheTablePubliclyAndTheViewersHandOnly() throws Exception {
         KiloDeMerde game = table.start(NO_SET);
@@ -152,7 +190,7 @@ class KiloDeMerdeDtoTest {
         assertThat(dto.players().get(0).kilos()).isEqualTo(100);
         assertThat(dto.players().get(0).kiloCards()).isEqualTo(dtos("AS"));
         assertThat(dto.pileSize()).isEqualTo(4);
-        assertThat(dto.availableActions()).isEmpty();
+        assertThat(dto.availableActions()).containsExactly("READY");
         KiloDeMerdeDto.OutcomeDto outcome = dto.lastOutcome();
         assertThat(outcome.kind()).isEqualTo("RACE");
         assertThat(outcome.firstSlapper()).isEqualTo(1);
@@ -182,7 +220,7 @@ class KiloDeMerdeDtoTest {
     void theNextDealForgetsTheOutcomeAndTheReceivedCard() throws Exception {
         KiloDeMerde game = table.start(NO_SET);
         table.actions.slap(game.getId(), S0);
-        table.actions.nextRound(game.getId(), game, game.round());
+        table.nextRound(game, game.round());
 
         KiloDeMerdeDto dto = view(game, S0);
 

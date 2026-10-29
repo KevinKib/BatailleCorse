@@ -27,8 +27,10 @@ import java.util.Set;
  * {@code availableActions} are the viewer's own. The other hands during a round, their choices, the cards they
  * received and the order of the kilo pile are never in it.
  *
- * <p>{@code passTimerEndsAt} and {@code raceEndsAt} are server epoch milliseconds for the countdown, null when the
- * timer is off or not running.
+ * <p>{@code passTimerEndsAt}, {@code raceEndsAt} and {@code readyEndsAt} are server epoch milliseconds for the
+ * countdown, null when the timer is off or not running. {@code ready} on a player is public: before the first round
+ * and between two rounds the table shows who it still waits for. Before the first round ({@code AWAITING_START}) the
+ * dealt hand is withheld (empty {@code hand}).
  */
 public record KiloDeMerdeDto(
         boolean started,
@@ -43,6 +45,7 @@ public record KiloDeMerdeDto(
         Map<String, String> options,
         Long passTimerEndsAt,
         Long raceEndsAt,
+        Long readyEndsAt,
         List<PlayerDto> players,
         RaceDto race,
         OutcomeDto lastOutcome,
@@ -60,8 +63,8 @@ public record KiloDeMerdeDto(
      */
     public record PlayerDto(int seat, String name, @JsonInclude(JsonInclude.Include.NON_DEFAULT) boolean bot,
                             @JsonInclude(JsonInclude.Include.NON_NULL) String level, int kilos,
-                            List<CardDto> kiloCards, boolean chosen, Integer slapRank, boolean active,
-                            Integer place) {
+                            List<CardDto> kiloCards, boolean chosen, boolean ready, Integer slapRank,
+                            boolean active, Integer place) {
     }
 
     /** The race in progress, or the one that just ended: the first slapper and the slaps in order of arrival. */
@@ -112,7 +115,7 @@ public record KiloDeMerdeDto(
                 int rank = slapOrder.indexOf(seat);
                 return new PlayerDto(seat.id(), names.get(seat), bot, bot ? levelOf(game, seat, seatOptions) : null,
                         game.kilos(seat), game.kiloCards(seat).stream().map(CardDto::from).toList(),
-                        game.hasChosen(seat), rank < 0 ? null : rank + 1, game.activeSeats().contains(seat),
+                        game.hasChosen(seat), game.isReady(seat), rank < 0 ? null : rank + 1, game.activeSeats().contains(seat),
                         finalPlaces.get(seat));
             }).toList();
             boolean passingOrRace = game.phase() == Phase.PASSING || game.phase() == Phase.RACE;
@@ -130,12 +133,14 @@ public record KiloDeMerdeDto(
                     game.options().toGameOptions().values(),
                     deadlines.passEndsAt(game),
                     deadlines.raceEndsAt(game),
+                    deadlines.readyEndsAt(game),
                     players,
                     slapOrder.isEmpty() ? null
                             : new RaceDto(slapOrder.get(0).id(), slapOrder.stream().map(PlayerId::id).toList()),
                     game.lastOutcome().map(KiloDeMerdeDto::outcomeOf).orElse(null),
                     game.result().map(KiloDeMerdeDto::resultOf).orElse(null),
-                    game.hand(viewer).stream().map(CardDto::from).toList(),
+                    game.phase() == Phase.AWAITING_START ? List.<CardDto>of()
+                            : game.hand(viewer).stream().map(CardDto::from).toList(),
                     game.chosen(viewer).map(CardDto::from).orElse(null),
                     passingOrRace && viewerPlays
                             ? game.lastReceived(viewer).map(c -> new ReceivedDto(CardDto.from(c),

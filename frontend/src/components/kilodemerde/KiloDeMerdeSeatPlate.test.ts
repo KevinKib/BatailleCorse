@@ -42,6 +42,19 @@ describe('KiloDeMerdeSeatPlate', () => {
     expect(mountPlate().find('[data-test="seat-ready"]').exists()).toBe(false);
   });
 
+  it('givenTheTableWaitsForConfirmations_thenEachPlateSaysIfItsSeatIsReadyOrStillWaitedFor', () => {
+    const ready = mountPlate({ confirm: 'ready' });
+    expect(ready.find('[data-test="seat-confirmed"]').exists()).toBe(true);
+    expect(ready.find('[data-test="seat-waiting"]').exists()).toBe(false);
+    expect(ready.get('[data-test="seat-plate"]').attributes('aria-label')).toContain('Alice: ready');
+    const waiting = mountPlate({ confirm: 'waiting' });
+    expect(waiting.find('[data-test="seat-waiting"]').exists()).toBe(true);
+    expect(waiting.get('[data-test="seat-plate"]').attributes('aria-label')).toContain('Alice: waiting');
+    const none = mountPlate();
+    expect(none.find('[data-test="seat-confirmed"]').exists()).toBe(false);
+    expect(none.find('[data-test="seat-waiting"]').exists()).toBe(false);
+  });
+
   it('givenASlapRank_thenItIsShownOnTheHandMark', () => {
     const wrapper = mountPlate({}, { ...base, slapRank: 2 });
     expect(wrapper.get('[data-test="seat-rank"]').text()).toBe('2');

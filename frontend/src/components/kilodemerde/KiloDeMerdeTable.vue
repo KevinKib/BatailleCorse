@@ -30,6 +30,10 @@ const props = defineProps<{
   racing: boolean;
   /** The pass step is open: the seats that chose show a check. */
   ready: boolean;
+  /** The table waits for the ready confirmations (before the first round, between two rounds): each plate says who is ready. */
+  confirming?: boolean;
+  /** What the countdown ring counts down to: the end of the pass step or race (default), or of the wait for confirmations. */
+  countdownKind?: 'pass' | 'ready';
   /** Every hand, only once the round is over. */
   hands: KiloDeMerdeSeatHand[] | null;
   /** The seats that drew the kilo card of the round. */
@@ -69,6 +73,8 @@ const ring = computed(() => seatsAtTable(props.players, props.mySeat));
 const layout = computed(() => chooseLayout(ring.value.length, known.value));
 const plate = computed(() => plateSizeFor(frame.value.width));
 const compact = computed(() => plate.value.w < 100);
+const confirmOf = (p: KiloDeMerdePlayer) => props.confirming ? (p.ready ? 'ready' as const : 'waiting' as const) : null;
+const countdownLabel = computed(() => props.countdownKind === 'ready' ? ui.table.readyCountdown : ui.table.countdown);
 const nameOfSeat = (seat: number) => seat === props.mySeat ? ui.you : props.nameOf(seat);
 const handOf = (seat: number) => props.hands?.find(h => h.seat === seat)?.cards ?? null;
 
@@ -112,6 +118,7 @@ const dash = computed(() => `${(props.countdown?.fraction ?? 1) * CIRCUMFERENCE}
           :label="nameOfSeat(p.seat)"
           :mine="p.seat === mySeat"
           :ready="ready && p.chosen"
+          :confirm="confirmOf(p)"
           :last="lastSeats.includes(p.seat)"
           :hand="handOf(p.seat)"
           :disconnected="disconnected?.(p.seat)"
@@ -136,6 +143,7 @@ const dash = computed(() => `${(props.countdown?.fraction ?? 1) * CIRCUMFERENCE}
             :compact="compact"
             :mine="p.player.seat === mySeat"
             :ready="ready && p.player.chosen"
+            :confirm="confirmOf(p.player)"
             :last="lastSeats.includes(p.player.seat)"
             :hand="handOf(p.player.seat)"
             :disconnected="disconnected?.(p.player.seat)"
@@ -149,7 +157,7 @@ const dash = computed(() => `${(props.countdown?.fraction ?? 1) * CIRCUMFERENCE}
         <div class="pile-row">
           <KiloDeMerdePile :count="pileSize" :can-slap="canSlap" :racing="racing" @slap="$emit('slap')" />
           <div v-if="countdown" class="countdown" data-test="countdown" role="timer"
-               :aria-label="format(ui.table.countdown, { seconds: countdown.seconds })">
+               :aria-label="format(countdownLabel, { seconds: countdown.seconds })">
             <svg viewBox="0 0 36 36" aria-hidden="true" class="countdown-ring">
               <circle cx="18" cy="18" r="16" class="countdown-track" />
               <circle cx="18" cy="18" r="16" class="countdown-arc" :stroke-dasharray="dash" />

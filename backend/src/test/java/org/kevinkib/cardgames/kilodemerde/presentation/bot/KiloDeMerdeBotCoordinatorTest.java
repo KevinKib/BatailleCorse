@@ -108,10 +108,15 @@ class KiloDeMerdeBotCoordinatorTest {
         broadcaster.addListener(coordinator);
     }
 
+    private boolean readyOnRegister = true;
+
     private KiloDeMerde register(int seats, String dealt, String level, int... botSeats) {
         GameId id = GameId.generate();
         decks.fixDeal(id, hands(dealt), cards(PILE));
         KiloDeMerde game = new KiloDeMerde(id, seats, decks, KiloDeMerdeOptions.defaults());
+        if (readyOnRegister) {
+            org.kevinkib.cardgames.kilodemerde.presentation.KiloDeMerdeTable.readyEveryone(game);
+        }
         SessionGame session = SessionGame.create(game.getId(), game.getPlayerIds(), KiloDeMerdeFactory.GAME_TYPE);
         session.claimHost("Alice");
         Set<Integer> bots = new HashSet<>();
@@ -130,6 +135,16 @@ class KiloDeMerdeBotCoordinatorTest {
         }
         repository.save(game, session);
         return game;
+    }
+
+    /** A table of three that still waits for every seat to be ready before the first round. */
+    private KiloDeMerde awaitingStart(String dealt, int... botSeats) {
+        readyOnRegister = false;
+        try {
+            return register(3, dealt, null, botSeats);
+        } finally {
+            readyOnRegister = true;
+        }
     }
 
     private KiloDeMerde threeSeats(String dealt, int... botSeats) {
@@ -317,6 +332,36 @@ class KiloDeMerdeBotCoordinatorTest {
     }
 
     @Test
+    void botsConfirmTheyAreReadyAtTheEndOfARoundAndTheHumanIsWaitedFor() throws Exception {
+        KiloDeMerde game = threeSeats(NO_SET, 1, 2);
+        start(game);
+        actions.slap(game.getId(), S0); // false slap: round over
+
+        scheduler.pending().forEach(ManualBotScheduler.Entry::run);
+
+        assertThat(game.phase()).isEqualTo(Phase.ROUND_OVER);
+        assertThat(game.isReady(new PlayerId(1))).isTrue();
+        assertThat(game.isReady(new PlayerId(2))).isTrue();
+        assertThat(game.isReady(S0)).isFalse();
+        actions.ready(game.getId(), S0);
+        assertThat(game.round()).isEqualTo(2);
+    }
+
+    @Test
+    void botsConfirmTheyAreReadyBeforeTheFirstRound() throws Exception {
+        KiloDeMerde waiting = awaitingStart(NO_SET, 1, 2);
+        start(waiting);
+
+        scheduler.pending().forEach(ManualBotScheduler.Entry::run);
+
+        assertThat(waiting.phase()).isEqualTo(Phase.AWAITING_START);
+        assertThat(waiting.isReady(new PlayerId(1))).isTrue();
+        assertThat(waiting.isReady(new PlayerId(2))).isTrue();
+        actions.ready(waiting.getId(), S0);
+        assertThat(waiting.phase()).isEqualTo(Phase.PASSING);
+    }
+
+    @Test
     void aRoundEndCancelsTheOpenTasks() throws Exception {
         KiloDeMerde game = threeSeats(NO_SET, 1, 2);
         start(game);
@@ -325,7 +370,7 @@ class KiloDeMerdeBotCoordinatorTest {
         actions.slap(game.getId(), S0); // false slap: round over
 
         assertThat(passes).allMatch(ManualBotScheduler.Entry::isCancelled);
-        assertThat(scheduler.pending()).isEmpty();
+        assertThat(scheduler.pending()).hasSize(2); // the two bots now get ready for the next round
     }
 
     @Test
@@ -362,7 +407,8 @@ class KiloDeMerdeBotCoordinatorTest {
         ManualBotScheduler.Entry old = scheduler.pending().get(0);
         // The same fixed table again: a random deal could hold a four of a kind and schedule a second bot task.
         decks.fixDeal(game.getId(), hands(NO_SET), cards(PILE));
-        KiloDeMerde rematch =new KiloDeMerde(game.getId(), 3, decks, KiloDeMerdeOptions.defaults());
+        KiloDeMerde rematch = new KiloDeMerde(game.getId(), 3, decks, KiloDeMerdeOptions.defaults());
+        org.kevinkib.cardgames.kilodemerde.presentation.KiloDeMerdeTable.readyEveryone(rematch);
         SessionGame session = SessionGame.create(rematch.getId(), rematch.getPlayerIds(), KiloDeMerdeFactory.GAME_TYPE);
         session.claimHost("Alice");
         session.claimBot(null);

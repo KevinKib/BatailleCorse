@@ -76,6 +76,9 @@ class KiloDeMerdeBotsIT {
         Frames frames = client.subscribeSeat(stomp, room.gameId(), room.hostToken());
 
         client.sendApp(stomp, "/kilo-de-merde/start", StompTestClient.body(room.gameId(), room.hostToken()));
+        frames.await(f -> "START".equals(f.get("eventType")));
+        // the bots confirm on their own; the human is the last to say it is ready
+        client.sendApp(stomp, "/kilo-de-merde/ready", StompTestClient.body(room.gameId(), room.hostToken()));
 
         Map<String, Object> over = frames.await(f -> "ROUND_OVER".equals(f.get("eventType")));
         Map<String, Object> state = (Map<String, Object>) over.get("state");

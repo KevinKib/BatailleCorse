@@ -54,7 +54,7 @@ class KiloDeMerdeFactoryTest {
         assertEquals(15, game.roundsTotal());
         assertEquals(15, game.options().rounds().count());
         assertEquals(5, game.getPlayerIds().size());
-        assertEquals(Phase.PASSING, game.phase());
+        assertEquals(Phase.AWAITING_START, game.phase());
     }
 
     @Test

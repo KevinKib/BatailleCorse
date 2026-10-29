@@ -7,6 +7,7 @@ import org.kevinkib.cardgames.kilodemerde.domain.event.KiloDeMerdeEvent;
 import org.kevinkib.cardgames.kilodemerde.domain.event.KiloDrawn;
 import org.kevinkib.cardgames.kilodemerde.domain.event.PassChosen;
 import org.kevinkib.cardgames.kilodemerde.domain.event.RaceOpened;
+import org.kevinkib.cardgames.kilodemerde.domain.event.ReadyMarked;
 import org.kevinkib.cardgames.kilodemerde.domain.event.RoundDealt;
 import org.kevinkib.cardgames.kilodemerde.domain.event.RoundOver;
 import org.kevinkib.cardgames.kilodemerde.domain.event.Slapped;
@@ -14,7 +15,7 @@ import org.kevinkib.cardgames.kilodemerde.domain.event.StepResolved;
 
 /** What the table is told about, one broadcast per domain event of a command, in the order they happened. */
 public enum KiloDeMerdeEventType {
-    START, ROUND_START, PASS_CHOSEN, STEP, RACE, SLAP, FALSE_SLAP, DRAW, FLUSH, ROUND_OVER, GAME_OVER;
+    START, ROUND_START, PASS_CHOSEN, STEP, RACE, SLAP, FALSE_SLAP, DRAW, FLUSH, ROUND_OVER, GAME_OVER, READY;
 
     /** The type announcing a domain event; null for a forfeit, which the lifecycle broadcaster announces. */
     public static KiloDeMerdeEventType of(KiloDeMerdeEvent event) {
@@ -38,6 +39,8 @@ public enum KiloDeMerdeEventType {
             return ROUND_OVER;
         } else if (event instanceof GameFinished) {
             return GAME_OVER;
+        } else if (event instanceof ReadyMarked) {
+            return READY;
         }
         return null;
     }

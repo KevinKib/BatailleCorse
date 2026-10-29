@@ -7,6 +7,7 @@ import org.kevinkib.cardgames.kilodemerde.domain.event.KiloDeMerdeEvent;
 import org.kevinkib.cardgames.kilodemerde.domain.event.KiloDrawn;
 import org.kevinkib.cardgames.kilodemerde.domain.event.PassChosen;
 import org.kevinkib.cardgames.kilodemerde.domain.event.RaceOpened;
+import org.kevinkib.cardgames.kilodemerde.domain.event.ReadyMarked;
 import org.kevinkib.cardgames.kilodemerde.domain.event.RoundDealt;
 import org.kevinkib.cardgames.kilodemerde.domain.event.RoundOver;
 import org.kevinkib.cardgames.kilodemerde.domain.event.Slapped;
@@ -38,6 +39,8 @@ public record KiloDeMerdeEventData(
     public static KiloDeMerdeEventData from(KiloDeMerdeEvent event) {
         if (event instanceof RoundDealt e) {
             return new KiloDeMerdeEventData(null, e.round(), null, null, null, null, null, null, null);
+        } else if (event instanceof ReadyMarked e) {
+            return new KiloDeMerdeEventData(e.seat().id(), null, null, null, null, null, null, null, null);
         } else if (event instanceof PassChosen e) {
             return new KiloDeMerdeEventData(e.seat().id(), null, null, null, null, null, null, null, null);
         } else if (event instanceof StepResolved e) {

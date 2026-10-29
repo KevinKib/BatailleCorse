@@ -11,6 +11,7 @@ import org.kevinkib.cardgames.kilodemerde.domain.bot.KiloDeMerdeBotStrategy;
 import org.kevinkib.cardgames.kilodemerde.domain.bot.KiloDeMerdeBotView;
 import org.kevinkib.cardgames.kilodemerde.domain.bot.KiloDeMerdeReflex;
 import org.kevinkib.cardgames.kilodemerde.presentation.KiloDeMerdeGameActions;
+import org.kevinkib.cardgames.kilodemerde.presentation.KiloDeMerdeReadyKey;
 import org.kevinkib.cardgames.kilodemerde.presentation.KiloDeMerdeStepKey;
 import org.kevinkib.cardgames.presentation.bot.BotScheduler;
 import org.kevinkib.cardgames.presentation.bot.BotSeatOptions;
@@ -38,12 +39,14 @@ import java.util.stream.Collectors;
  * <p>Unlike the turn-based games, Kilo de merde is a race: several bots act at the same time and one bot's slap must
  * not cancel the others'. After every state broadcast the coordinator works out which tasks should exist, then
  * cancels the ones that no longer should and arms the missing ones, never touching the ones that are still right.
- * Three kinds of task, each keyed on a domain counter and never on {@code version()}:
+ * Four kinds of task, each keyed on a domain counter and never on {@code version()}:
  * <ul>
  *   <li>PASS: while passing, a bot that has not chosen passes a card after the pass delay, keyed on the {@link
  *       KiloDeMerdeStepKey};</li>
  *   <li>OWN SET: while passing, a bot whose own hand is four of a kind slaps after its own-set delay, keyed the same;</li>
- *   <li>FOLLOW: while a race is open, a bot that has not slapped slaps after its follow delay, keyed on the race.</li>
+ *   <li>FOLLOW: while a race is open, a bot that has not slapped slaps after its follow delay, keyed on the race;</li>
+ *   <li>READY: while the table waits for confirmations (before the first round, between two rounds), a bot that is
+ *       not ready confirms after a short reflex delay (the pass delay), keyed on the {@link KiloDeMerdeReadyKey}.</li>
  * </ul>
  * A bot never opens a race without a four of a kind in its own hand, so it never false-slaps. A task re-checks under
  * the monitor of the game that its key is still wanted and drops itself otherwise. A strategy that fails or proposes a
@@ -54,9 +57,9 @@ public class KiloDeMerdeBotCoordinator implements GameStateListener<KiloDeMerde>
 
     private static final Logger log = LoggerFactory.getLogger(KiloDeMerdeBotCoordinator.class);
 
-    private enum Kind { PASS, OWN_SET, FOLLOW }
+    private enum Kind { PASS, OWN_SET, FOLLOW, READY }
 
-    /** One task of one seat; {@code counter} is the step key (PASS, OWN_SET) or the race number (FOLLOW). */
+    /** One task of one seat; {@code counter} is the step key (PASS, OWN_SET), the race number (FOLLOW) or the ready key (READY). */
     private record TaskKey(Kind kind, PlayerId seat, Object counter) {
     }
 
@@ -178,6 +181,13 @@ public class KiloDeMerdeBotCoordinator implements GameStateListener<KiloDeMerde>
                     wanted.add(new TaskKey(Kind.OWN_SET, seat, step));
                 }
             }
+        } else if (KiloDeMerdeReadyKey.of(game) != null) {
+            KiloDeMerdeReadyKey ready = KiloDeMerdeReadyKey.of(game);
+            for (PlayerId seat : game.activeSeats()) {
+                if (bots.contains(seat) && !game.isReady(seat)) {
+                    wanted.add(new TaskKey(Kind.READY, seat, ready));
+                }
+            }
         } else if (game.phase() == Phase.RACE) {
             int race = game.raceId();
             for (PlayerId seat : game.activeSeats()) {
@@ -191,7 +201,7 @@ public class KiloDeMerdeBotCoordinator implements GameStateListener<KiloDeMerde>
 
     private Duration delayOf(KiloDeMerde game, TaskKey key) {
         long ms = switch (key.kind()) {
-            case PASS -> reflex.passDelayMs(random);
+            case PASS, READY -> reflex.passDelayMs(random);
             case OWN_SET -> reflex.ownSetDelayMs(levelOf(game, key.seat()), random);
             case FOLLOW -> reflex.followDelayMs(levelOf(game, key.seat()), random);
         };
@@ -222,6 +232,8 @@ public class KiloDeMerdeBotCoordinator implements GameStateListener<KiloDeMerde>
             try {
                 if (key.kind() == Kind.PASS) {
                     pass(game, key.seat());
+                } else if (key.kind() == Kind.READY) {
+                    actions.ready(game.getId(), key.seat());
                 } else {
                     actions.slap(game.getId(), key.seat());
                 }

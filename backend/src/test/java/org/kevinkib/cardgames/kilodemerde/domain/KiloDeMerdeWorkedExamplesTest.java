@@ -323,6 +323,8 @@ class KiloDeMerdeWorkedExamplesTest {
         assertTrue(game.availableActions(B).isEmpty());
         game.slap(C);
         game.slap(D);
+        assertEquals(List.of(Action.READY), game.availableActions(A));
+        game.ready(A);
         assertTrue(game.availableActions(A).isEmpty());
     }
 

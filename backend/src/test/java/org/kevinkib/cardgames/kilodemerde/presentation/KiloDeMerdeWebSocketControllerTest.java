@@ -27,6 +27,9 @@ import static org.kevinkib.cardgames.kilodemerde.presentation.KiloDeMerdeTable.c
 
 class KiloDeMerdeWebSocketControllerTest {
 
+    /** The version of a started table: the three seats confirmed they are ready. */
+    private static final int READIED = 3;
+
     private static final PlayerId S0 = new PlayerId(0);
     private static final PlayerId S1 = new PlayerId(1);
 
@@ -48,8 +51,9 @@ class KiloDeMerdeWebSocketControllerTest {
         Response first = table.messaging.payloads.get(0);
         assertThat(first.getEventType()).isEqualTo("START");
         KiloDeMerdeDto state = (KiloDeMerdeDto) first.getState();
-        assertThat(state.phase()).isEqualTo("PASSING");
-        assertThat(state.hand()).hasSize(4);
+        assertThat(state.phase()).isEqualTo("AWAITING_START");
+        assertThat(state.hand()).isEmpty();
+        assertThat(state.availableActions()).containsExactly("READY");
         assertThat(state.players()).hasSize(3);
     }
 
@@ -127,7 +131,7 @@ class KiloDeMerdeWebSocketControllerTest {
         assertThat(error.getEventType()).isEqualTo("PASS_CHOSEN");
         assertThat(((ErrorResponse) error).getMessage()).isNotBlank();
         assertThat(((KiloDeMerdeDto) error.getState()).hand()).contains(dto("JS"));
-        assertThat(game.version()).isZero();
+        assertThat(game.version()).isEqualTo(READIED);
     }
 
     @Test
@@ -156,6 +160,6 @@ class KiloDeMerdeWebSocketControllerTest {
 
         assertThat(table.messaging.payloads).hasSize(2);
         assertThat(table.messaging.payloads.stream().noneMatch(Response::isSuccess)).isTrue();
-        assertThat(game.version()).isZero();
+        assertThat(game.version()).isEqualTo(READIED);
     }
 }

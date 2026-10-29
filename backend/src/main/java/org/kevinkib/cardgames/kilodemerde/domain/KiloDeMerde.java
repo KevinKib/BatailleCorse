@@ -12,6 +12,7 @@ import org.kevinkib.cardgames.kilodemerde.domain.event.KiloDeMerdeEvent;
 import org.kevinkib.cardgames.kilodemerde.domain.event.KiloDrawn;
 import org.kevinkib.cardgames.kilodemerde.domain.event.PassChosen;
 import org.kevinkib.cardgames.kilodemerde.domain.event.RaceOpened;
+import org.kevinkib.cardgames.kilodemerde.domain.event.ReadyMarked;
 import org.kevinkib.cardgames.kilodemerde.domain.event.RoundDealt;
 import org.kevinkib.cardgames.kilodemerde.domain.event.RoundOver;
 import org.kevinkib.cardgames.kilodemerde.domain.event.Slapped;
@@ -20,9 +21,11 @@ import org.kevinkib.cards.domain.Card;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * A Kilo de merde game: rounds of simultaneous pass steps in which the seats collect four of a kind, a slap race
@@ -55,9 +58,11 @@ public class KiloDeMerde implements Game {
     /** The kilos a seat had when it left. */
     private final Map<PlayerId, Integer> leftKilos = new LinkedHashMap<>();
     private final List<PlayerId> slapOrder = new ArrayList<>();
+    /** The seats that confirmed they are ready, while the game is in {@link Phase#AWAITING_START} or {@link Phase#ROUND_OVER}. */
+    private final Set<PlayerId> ready = new LinkedHashSet<>();
     /** The kilo pile, the top card first. */
     private List<Card> pile = new ArrayList<>();
-    private Phase phase = Phase.PASSING;
+    private Phase phase = Phase.AWAITING_START;
     /** The number of the round being played (or just played): rounds played + 1 while passing. */
     private int round;
     private int roundsPlayed;
@@ -83,6 +88,8 @@ public class KiloDeMerde implements Game {
         seats.forEach(seat -> kiloCards.put(seat, new ArrayList<>()));
         this.pile = new ArrayList<>(deckSource.shufflePile(id, KiloDeck.kiloPile(nbPlayers)));
         deal();
+        // The hands are dealt through the seam now, but nobody sees them and nobody passes until every seat is ready.
+        phase = Phase.AWAITING_START;
     }
 
     /** Test constructor: an explicit state. Seats are the keys of {@code hands}. */
@@ -94,6 +101,7 @@ public class KiloDeMerde implements Game {
         this.roundsPlayed = roundsPlayed;
         this.round = roundsPlayed + 1;
         this.step = step;
+        this.phase = Phase.PASSING;
         this.seats.addAll(hands.keySet());
         this.active.addAll(hands.keySet());
         hands.forEach((seat, hand) -> this.hands.put(seat, new ArrayList<>(hand)));
@@ -219,8 +227,44 @@ public class KiloDeMerde implements Game {
     }
 
     /**
-     * Called after the round pause: ends the game (rounds played, or an empty kilo pile) or deals the next round.
-     * Refused outside {@link Phase#ROUND_OVER}.
+     * A seat confirms it has seen the table and is ready: before the first deal ({@link Phase#AWAITING_START}) or
+     * between two rounds ({@link Phase#ROUND_OVER}). When the last active seat is ready the game moves on: the first
+     * round starts, or the next round is dealt, or the game ends. Confirming twice changes nothing.
+     */
+    public synchronized List<KiloDeMerdeEvent> ready(PlayerId seat) throws KiloDeMerdeException {
+        requireNotFinished();
+        requireAwaitingReady();
+        requireActive(seat);
+        List<KiloDeMerdeEvent> events = new ArrayList<>();
+        if (ready.add(seat)) {
+            events.add(new ReadyMarked(seat));
+            advanceIfEveryoneReady(events);
+            version++;
+        }
+        return events;
+    }
+
+    /**
+     * The ready timeout expired: every active seat that is not ready is counted ready and the game moves on. Refused
+     * outside the two waiting phases.
+     */
+    public synchronized List<KiloDeMerdeEvent> expireReady() throws KiloDeMerdeException {
+        requireNotFinished();
+        requireAwaitingReady();
+        List<KiloDeMerdeEvent> events = new ArrayList<>();
+        for (PlayerId seat : active) {
+            if (ready.add(seat)) {
+                events.add(new ReadyMarked(seat));
+            }
+        }
+        advanceIfEveryoneReady(events);
+        version++;
+        return events;
+    }
+
+    /**
+     * Forces the move on from the end of a round, whoever is ready: ends the game (rounds played, or an empty kilo
+     * pile) or deals the next round. Refused outside {@link Phase#ROUND_OVER}.
      */
     public synchronized List<KiloDeMerdeEvent> nextRound() throws KiloDeMerdeException {
         requireNotFinished();
@@ -228,14 +272,7 @@ public class KiloDeMerde implements Game {
             throw new WrongPhaseException();
         }
         List<KiloDeMerdeEvent> events = new ArrayList<>();
-        if (roundsPlayed >= options.rounds().count()) {
-            finish(KiloDeMerdeResult.Reason.ROUNDS_PLAYED, events);
-        } else if (pile.isEmpty()) {
-            finish(KiloDeMerdeResult.Reason.PILE_EMPTY, events);
-        } else {
-            deal();
-            events.add(new RoundDealt(round));
-        }
+        advance(events);
         version++;
         return events;
     }
@@ -272,6 +309,7 @@ public class KiloDeMerde implements Game {
         active.remove(loser);
         hands.put(loser, new ArrayList<>());
         chosen.remove(loser);
+        ready.remove(loser);
         if (active.size() < MIN_PLAYERS) {
             finish(KiloDeMerdeResult.Reason.FORFEIT, events);
         } else {
@@ -280,7 +318,15 @@ public class KiloDeMerde implements Game {
             KiloDeck.handDeck(before).stream().filter(card -> !stillDealt.contains(card)).forEach(merged::add);
             merged.addAll(returned);
             pile = new ArrayList<>(deckSource.shufflePile(id, merged));
-            if (phase != Phase.ROUND_OVER) {
+            if (phase == Phase.AWAITING_START) {
+                Set<PlayerId> confirmed = new LinkedHashSet<>(ready);
+                deal();
+                phase = Phase.AWAITING_START;
+                ready.addAll(confirmed);
+                advanceIfEveryoneReady(events);
+            } else if (phase == Phase.ROUND_OVER) {
+                advanceIfEveryoneReady(events);
+            } else {
                 deal();
                 events.add(new RoundDealt(round));
             }
@@ -300,6 +346,35 @@ public class KiloDeMerde implements Game {
     private void requireActive(PlayerId seat) throws NotActiveSeatException {
         if (!active.contains(seat)) {
             throw new NotActiveSeatException();
+        }
+    }
+
+    private void requireAwaitingReady() throws WrongPhaseException {
+        if (phase != Phase.AWAITING_START && phase != Phase.ROUND_OVER) {
+            throw new WrongPhaseException();
+        }
+    }
+
+    /** Moves on once every active seat is ready (a seat that left no longer counts). */
+    private void advanceIfEveryoneReady(List<KiloDeMerdeEvent> events) {
+        if (ready.containsAll(active)) {
+            advance(events);
+        }
+    }
+
+    /** Leaves the waiting phase: starts the first round, ends the game, or deals the next round. */
+    private void advance(List<KiloDeMerdeEvent> events) {
+        if (phase == Phase.AWAITING_START) {
+            ready.clear();
+            phase = Phase.PASSING;
+            events.add(new RoundDealt(round));
+        } else if (roundsPlayed >= options.rounds().count()) {
+            finish(KiloDeMerdeResult.Reason.ROUNDS_PLAYED, events);
+        } else if (pile.isEmpty()) {
+            finish(KiloDeMerdeResult.Reason.PILE_EMPTY, events);
+        } else {
+            deal();
+            events.add(new RoundDealt(round));
         }
     }
 
@@ -324,6 +399,7 @@ public class KiloDeMerde implements Game {
         lastGiven.clear();
         lastReceived.clear();
         slapOrder.clear();
+        ready.clear();
         lastOutcome = null;
         passHistory.clear();
         active.forEach(seat -> passHistory.put(seat, new ArrayList<>()));
@@ -480,6 +556,11 @@ public class KiloDeMerde implements Game {
         return Optional.ofNullable(chosen.get(seat));
     }
 
+    /** Whether the seat confirmed it is ready (public: the table sees who it waits for). */
+    public synchronized boolean isReady(PlayerId seat) {
+        return ready.contains(seat);
+    }
+
     /** Whether the seat chose this step (public: the table sees who it waits for). */
     public synchronized boolean hasChosen(PlayerId seat) {
         return chosen.containsKey(seat);
@@ -548,6 +629,9 @@ public class KiloDeMerde implements Game {
         }
         if (phase == Phase.PASSING) {
             return chosen.containsKey(seat) ? List.of(Action.SLAP) : List.of(Action.PASS, Action.SLAP);
+        }
+        if ((phase == Phase.AWAITING_START || phase == Phase.ROUND_OVER) && !ready.contains(seat)) {
+            return List.of(Action.READY);
         }
         if (phase == Phase.RACE && !slapOrder.contains(seat)) {
             return List.of(Action.SLAP);

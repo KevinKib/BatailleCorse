@@ -362,9 +362,21 @@ export interface KiloDeMerdeUiMessages {
     opponents: string;
     standings: string;
     ready: string;                     // '{player}': the check on a seat that chose its card this step
+    readyCountdown: string;            // '{seconds}': accessible name of the ring of the wait for the ready confirmations
+    confirmed: string;                 // '{player}': a seat that confirmed it is ready (before a round)
+    notConfirmed: string;              // '{player}': a seat the table still waits for
+    confirmedYou: string;              // the same on my own plate
+    notConfirmedYou: string;
     readyYou: string;                  // the same check on my own plate
     forfeited: string;                 // '{player}'
     offline: string;
+  };
+  /** The confirmation before the first round and between two rounds: every seat says it is ready. */
+  readyGate: {
+    button: string;                    // "Ready"
+    startPrompt: string;               // before the first round
+    roundPrompt: string;               // once a round is over, under the results
+    waitingFor: PluralForms;           // '{n}': after I confirmed, how many seats the table still waits for
   };
   hand: {
     passing: string;                   // under the card I passed: "Passing…"

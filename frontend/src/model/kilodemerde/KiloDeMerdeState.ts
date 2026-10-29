@@ -3,9 +3,10 @@ import type { LobbyView } from '../lobby/LobbyView';
 
 /** Mirrors of the backend `KiloDeMerdeDto` (the viewer's projection of a started game); nothing here is derived. */
 
-export type KiloDeMerdePhase = 'PASSING' | 'RACE' | 'ROUND_OVER' | 'FINISHED';
+/** `AWAITING_START` (before the first round) and `ROUND_OVER` are the two waits where every seat confirms it is ready. */
+export type KiloDeMerdePhase = 'AWAITING_START' | 'PASSING' | 'RACE' | 'ROUND_OVER' | 'FINISHED';
 
-export type KiloDeMerdeAction = 'PASS' | 'SLAP';
+export type KiloDeMerdeAction = 'PASS' | 'SLAP' | 'READY';
 
 export type KiloDeMerdeEndReason = 'ROUNDS_PLAYED' | 'PILE_EMPTY' | 'FORFEIT';
 
@@ -25,6 +26,8 @@ export interface KiloDeMerdePlayer {
   kiloCards: Card[];
   /** Whether the seat has chosen its card for the current step (public); the card itself is private. */
   chosen: boolean;
+  /** Whether the seat confirmed it is ready (before the first round, between two rounds); public. Bots and absent seats count ready. */
+  ready: boolean;
   /** Position in the slap order of the open or last race (1 is the first slapper), else null. */
   slapRank: number | null;
   /** False once the seat has forfeited. */
@@ -104,6 +107,8 @@ export interface KiloDeMerdeState {
   passTimerEndsAt: number | null;
   /** Server epoch ms when the open race times out; null outside a race. */
   raceEndsAt: number | null;
+  /** Server epoch ms when the wait for the ready confirmations times out (the missing seats are counted ready); null when off or not waiting. */
+  readyEndsAt: number | null;
   players: KiloDeMerdePlayer[];
   race: KiloDeMerdeRace | null;
   /** Only once the round is over. */
@@ -132,6 +137,7 @@ export type KiloDeMerdeEventType =
   | 'DRAW'
   | 'FLUSH'
   | 'ROUND_OVER'
+  | 'READY'
   | 'GAME_OVER'
   | 'FORFEIT';
 

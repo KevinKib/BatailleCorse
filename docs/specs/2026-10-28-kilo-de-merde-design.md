@@ -116,7 +116,7 @@ after a valid one), **flush** (chasse d'eau, the 7), **kilos** (kilos, written `
 - A round ends after a false slap, after the race's draws, or when it **stalls**: after `stallLimit` pass steps
   with no slap, the round ends with no draw [A10]. Every ended round counts towards the round total.
 - **Between rounds**: all hands are revealed (proof of the four of a kind, or of the false slap), then after the
-  round pause the next round is dealt automatically (no ready barrier) [A11].
+  round pause the next round is dealt automatically (no ready barrier) [A11, superseded: see "Changes after first play-test"].
 - **End**: the game ends after the number of rounds chosen in the lobby (`rounds`, default 10) [Du: "les joueurs
   doivent décider en amont combien de tours"; A12], or earlier when the kilo pile is empty at the end of a round.
 - **Ranking**: fewest kilos first; equal totals **share** the place (1st, 1st, 3rd: standard competition
@@ -199,7 +199,7 @@ Each row can be overturned by the owner; the "Where" column says what changes.
 | A8 | On a flush the **7 goes back too**, with the drawer's cards, and the pile is shuffled | otherwise the 7s run out and the game loses its comeback | the 7 stays with the drawer at 0 kg | `drawFor` |
 | A9 | A draw from an empty pile draws nothing; the game ends at the end of that round (`PILE_EMPTY`) | 10 players have only 12 kilo cards; with 10 rounds the pile can run out | reshuffle all players' kilos (would erase the score) | `drawFor`, end check |
 | A10 | A round **stalls** after 40 pass steps without a slap: it ends with no draw and counts as played | humans could pass forever; 40 steps is about 4 times the usual length of a round with bots | no limit | `KiloDeMerdeRules.STALL_LIMIT` |
-| A11 | Between rounds: hands revealed, a 3 s pause, then the next deal (no ready barrier) | 10 players never wait for a click; the reveal shows why someone lost | Kobo/President ready barrier | `KiloDeMerdeRoundPause` |
+| A11 | **Superseded after the first play-test (section 16).** Between rounds: hands revealed, a 3 s pause, then the next deal (no ready barrier) | 10 players never wait for a click; the reveal shows why someone lost | Kobo/President ready barrier | `KiloDeMerdeRoundPause` |
 | A12 | Lobby option `rounds` = 10 (default), 5, 15, 20 | the rules leave it to the players; 10 rounds is about 10 minutes with bots | free number; a target score | `KiloDeMerdeOptions` |
 | A13 | Equal kilos share the place | fair and the same as 99's quick mode | tie-break by fewer cards or seat order | `KiloDeMerdeResult` |
 | A14 | **Forfeit**: the leaver is placed last; the current round is voided (not counted, no draw); the table re-forms for `n - 1` players: the hand-deck rank no longer dealt joins the kilo pile, the leaver's kilo cards go back into the pile, the pile is shuffled, a new round is dealt. Below 3 players the game ends (`FORFEIT`), the others ranked by kilos | the hand deck must hold exactly 4 cards per player, so the table cannot keep a hole | the server plays the leaver's seat (needs a bot takeover the session core does not have) | `KiloDeMerde.forfeit` |
@@ -243,7 +243,7 @@ can be changed later (one property or constant each).
 | Pass timer | none (live table) | 15,000 ms; off under `test` | **changed** (new value, A3) |
 | Race timeout | none | 5,000 ms; 3,000 ms under `test` | **changed** (new value, A5) |
 | Stall limit | none | 40 pass steps | **changed** (new value, A10) |
-| Round pause (hands revealed) | none | 3,000 ms; 0 under `test` | **changed** (new value, A11) |
+| Round pause (hands revealed) | none | ~~3,000 ms; 0 under `test`~~ replaced by the ready barrier: 60,000 ms fallback; off under `test` (section 16) | **changed** (new value, A11) |
 | Bot pass delay (all levels) | — | 500 to 1,000 ms; 0 under `test` | **changed** (new value) |
 | Bot `easy` own-set slap delay / follow delay | — | 1,500-2,500 ms / 1,200-2,000 ms | **changed** (new value) |
 | Bot `medium` own-set slap delay / follow delay | — | 700-1,100 ms / 700-1,100 ms | **changed** (new value) |
@@ -541,3 +541,25 @@ Difficile.
 | Jokers in the kilo pile (0 kg or "double") | box contents | no source rule |
 | A target score instead of a number of rounds | none | an option value of `rounds` |
 | Pass to the right | [Rj] | a direction option |
+
+## 16. Changes after first play-test
+
+The owner played the finished game and asked that **nobody is rushed**: the fixed 3 s pause between rounds (A11) did
+not leave time to read who lost and why, and a round started before everyone was looking at the table. The pause is
+replaced by a **ready barrier**. The decisions below were taken without the owner (he delegated them); each can be
+overturned by changing one row.
+
+| # | Decision | Reason |
+|---|----------|--------|
+| R1 | Two waits where every active seat confirms it is **ready**: before the first round (`Phase.AWAITING_START`, the hands are dealt through the seam but not shown: the DTO withholds `hand`) and at the end of every round (`Phase.ROUND_OVER`, the hands stay revealed). When the last active seat is ready, the first round starts, the next one is dealt, or the game ends (rounds played, empty pile). | what the owner asked; one mechanism for both waits |
+| R2 | The rule lives in the aggregate: `ready(seat)` (idempotent, refused outside the two waits and for a seat that left), `expireReady()` (counts every missing seat ready) and a ready set cleared at every deal. `nextRound()` stays as the forced move on from `ROUND_OVER`. Presentation and the bot coordinator only schedule. | domain rules stay in the domain |
+| R3 | A seat that **forfeits** while the table waits no longer counts: if every remaining seat is ready the table moves on; before the first round the table is re-dealt for `n - 1` seats and keeps the confirmations already given. | a leaver must never hold the others up |
+| R4 | **Bots are always ready**: each bot confirms after the pass reflex delay (500 to 1,000 ms, 0 under `test`), through the same `ready` use case. | no click for a computer, but not instantaneous either |
+| R5 | A human who **disconnects** while the table waits is counted ready at once (`KiloDeMerdeLifecycleBroadcaster.disconnected`); one already disconnected when a wait opens is covered by R6 and by the forfeit after the grace period. | a dropped connection should not freeze a table |
+| R6 | A **fallback timeout** of 60 s (`kilodemerde.ready-timeout-ms`, 0 = off, off under `test`) counts the seats still missing ready, so a table never hangs. It is keyed on the wait (phase and round), so confirmations do not restart it; the state carries `readyEndsAt` and the table shows the same countdown ring as the pass timer. | an away human must not block the table forever |
+| R7 | The state carries a public `ready` flag on every player and `readyEndsAt`; both come back with the state on reconnection (rehydration needs nothing else). New command `/app/kilo-de-merde/ready`, new event `READY` (not a table event: no animation, no entry in the event log), new action `READY` in `availableActions`. | the table shows who it waits for |
+| R8 | UI: a **Ready** button under the table with a short prompt, the key **R**, a check on the plates of the ready seats and an hourglass on the others; once I am ready, the button gives way to "Waiting for N players". | the owner asked for a button and a view of who is ready |
+| R9 | Tests and e2e: the test seam keeps the scripted deal; under the `test` profile the fallback is off, so the nominal Cypress spec confirms explicitly (Ready button for the host, `/app/kilo-de-merde/ready` for the scripted guests). The Cypress spec and the smoke list entry are otherwise unchanged. | the e2e still proves the nominal game |
+
+`KiloDeMerdeRoundPause` and the property `kilodemerde.round-pause-ms` are gone; `KiloDeMerdeReadyTimeout` and
+`kilodemerde.ready-timeout-ms` replace them.

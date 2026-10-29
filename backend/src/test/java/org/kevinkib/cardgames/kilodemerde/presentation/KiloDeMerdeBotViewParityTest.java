@@ -103,7 +103,7 @@ class KiloDeMerdeBotViewParityTest {
         table.actions.slap(game.getId(), S2);
         assertSameAsTheHumanView(game);
 
-        table.actions.nextRound(game.getId(), game, game.round());
+        table.nextRound(game, game.round());
         assertSameAsTheHumanView(game);
     }
 

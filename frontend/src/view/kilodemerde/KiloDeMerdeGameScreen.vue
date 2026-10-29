@@ -24,7 +24,7 @@ import KiloDeMerdeTable from '../../components/kilodemerde/KiloDeMerdeTable.vue'
 import { findGame, type GameDefinition } from '../../model/games';
 import { seatDisplayName } from '../../model/table/displayName';
 import { rematchButtonFor } from '../../model/RematchButton';
-import { format, formatList } from '../../locales/format';
+import { format, formatList, plural } from '../../locales/format';
 import {
   AnimationSpeedButton, CardMotionLayer, defineAnchors, scaleMovements, useAnimationSpeed, useTableMotion,
   type CardMotionLayerPlay,
@@ -91,6 +91,11 @@ const roundLine = computed(() => {
 const canPass = computed(() => store.can('PASS') && !store.busy);
 const canSlap = computed(() => store.can('SLAP') && !store.busy);
 const mePlayer = computed(() => store.game?.players.find(p => p.seat === store.mySeat) ?? null);
+// The two waits where every seat confirms it is ready (before the first round, between two rounds).
+const confirming = computed(() => store.game?.phase === 'AWAITING_START' || store.game?.phase === 'ROUND_OVER');
+const canReady = computed(() => store.can('READY') && !store.busy);
+const stillWaitedFor = computed(() => (store.game?.players ?? []).filter(p => p.active && !p.ready).length);
+const readyPrompt = computed(() => store.game?.phase === 'AWAITING_START' ? ui.readyGate.startPrompt : ui.readyGate.roundPrompt);
 const racing = computed(() => store.game?.phase === 'RACE' && mePlayer.value?.slapRank === null);
 const roundOver = computed(() => store.game?.phase === 'ROUND_OVER');
 const lines = computed(() => roundOver.value ? roundSummary(store.game?.lastOutcome ?? null) : []);
@@ -106,18 +111,20 @@ const noticeText = computed(() => {
 const now = ref(Date.now());
 let ticker: ReturnType<typeof setInterval> | null = null;
 function stopTicker() { if (ticker !== null) { clearInterval(ticker); ticker = null; } }
-watch(() => [store.game?.passTimerEndsAt ?? null, store.game?.raceEndsAt ?? null], ([pass, race]) => {
+watch(() => [store.game?.passTimerEndsAt ?? null, store.game?.raceEndsAt ?? null, store.game?.readyEndsAt ?? null], ([pass, race, ready]) => {
   stopTicker();
-  if (pass === null && race === null) return;
+  if (pass === null && race === null && ready === null) return;
   now.value = Date.now();
   ticker = setInterval(() => { now.value = Date.now(); }, 250);
 }, { immediate: true });
 onBeforeUnmount(stopTicker);
 const PASS_TIMER_MS = 15000;
 const RACE_TIMER_MS = 5000;
+const READY_TIMER_MS = 60000;
 const countdown = computed(() => {
   const g = store.game;
   if (!g) return null;
+  if (confirming.value) return countdownOf(g.readyEndsAt, now.value, READY_TIMER_MS);
   return g.phase === 'RACE' ? countdownOf(g.raceEndsAt, now.value, RACE_TIMER_MS) : countdownOf(g.passTimerEndsAt, now.value, PASS_TIMER_MS);
 });
 
@@ -179,9 +186,10 @@ watch(() => store.lastEvent?.id, () => {
 });
 
 // --- Keys ----------------------------------------------------------------------------------------------------------
-// Space slaps, 1 to 4 pass the card in that slot. Both only when the server allows the action. (Remapping lives with
+// Space slaps, 1 to 4 pass the card in that slot, R confirms I am ready. All only when the server allows the action. (Remapping lives with
 // the game's registration, which declares the shortcuts.)
 function slap() { if (canSlap.value) store.slap(); }
+function ready() { if (canReady.value) store.ready(); }
 function passSlot(slot: number) {
   const card = store.hand[slot];
   if (card && canPass.value && store.game?.myChoice === null) store.pass(card);
@@ -191,7 +199,10 @@ useHotkeys(
   slap,
   () => [],
   () => [' '],
-  (key) => { if (/^[1-4]$/.test(key)) passSlot(Number(key) - 1); },
+  (key) => {
+    if (/^[1-4]$/.test(key)) passSlot(Number(key) - 1);
+    else if (key === 'r') ready();
+  },
   () => store.screen === 'playing',
 );
 
@@ -333,6 +344,8 @@ const rematchButton = computed(() =>
         :can-slap="canSlap"
         :racing="racing"
         :ready="store.game.phase === 'PASSING'"
+        :confirming="confirming"
+        :countdown-kind="confirming ? 'ready' : 'pass'"
         :hands="hands"
         :last-seats="lastSeats"
         :disconnected="seatDisconnected"
@@ -342,6 +355,17 @@ const rematchButton = computed(() =>
           <KiloDeMerdeRoundBanner :race="raceOpen" :lines="lines" :name-of="nameOrYou" :my-seat="store.mySeat" />
         </template>
       </KiloDeMerdeTable>
+
+      <div v-if="confirming" class="ready-gate" data-test="ready-gate">
+        <template v-if="canReady || !store.me?.ready">
+          <p class="ready-prompt" data-test="ready-prompt">{{ readyPrompt }}</p>
+          <Button data-test="ready" class="ready-button" :label="ui.readyGate.button" icon="pi pi-check" aria-keyshortcuts="R"
+                  :disabled="!canReady" @click="ready()" />
+        </template>
+        <p v-else class="ready-prompt" data-test="ready-waiting">
+          {{ stillWaitedFor > 0 ? plural(ui.readyGate.waitingFor, stillWaitedFor) : ui.hand.waiting }}
+        </p>
+      </div>
 
       <div class="status" data-test="status">
         <span v-if="store.game.myChoice" class="status-wait">{{ ui.hand.waiting }}</span>
@@ -432,6 +456,18 @@ const rematchButton = computed(() =>
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
+.ready-gate {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2) var(--space-3);
+  text-align: center;
+}
+.ready-prompt { margin: 0; font-size: 0.8125rem; color: rgba(255, 255, 255, 0.9); max-width: 32rem; }
+/* 44 px touch target (frontend-spacing). */
+.ready-gate :deep(.ready-button.p-button) { min-height: 44px; min-width: 7rem; }
 .status {
   flex: none;
   display: flex;

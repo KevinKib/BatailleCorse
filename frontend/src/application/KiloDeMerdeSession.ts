@@ -18,7 +18,7 @@ export const KILO_DE_MERDE_SESSION_CONFIG: SeatGameSessionConfig = {
 };
 
 /**
- * The seat-game session plus the game's two commands. The state version guard and the reload after every
+ * The seat-game session plus the game's three commands. The state version guard and the reload after every
  * connection are the shared session's; the server judges every pass and every slap.
  */
 export default class KiloDeMerdeSession extends SeatGameSession<KiloDeMerdeView, KiloDeMerdeResponse> {
@@ -29,6 +29,11 @@ export default class KiloDeMerdeSession extends SeatGameSession<KiloDeMerdeView,
   /** Chooses the card to pass to the left neighbour at this step. */
   pass(card: Card): void {
     this.publishAction('/app/kilo-de-merde/pass', { card });
+  }
+
+  /** Confirms that I am ready for the first round or the next one. */
+  ready(): void {
+    this.publishAction('/app/kilo-de-merde/ready');
   }
 
   /** Slaps the kilo pile. */
