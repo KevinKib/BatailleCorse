@@ -662,43 +662,33 @@ export interface BlackjackUiMessages {
     rematchPending: string;
     rematchFailed: string;
   };
-  /** The live region: one line per event, read once ('{player}', '{card}', '{total}', '{n}'). */
-  live: {
-    betsOpen: string;
-    bet: string;                       // '{player}'
-    dealt: string;                     // '{n}'
-    dealerBlackjack: string;
-    yourTurn: string;
-    hit: string;                       // '{player}', '{card}', '{total}'
-    stand: string;                     // '{player}', '{total}'
-    double: string;                    // '{player}', '{card}', '{total}'
-    split: string;                     // '{player}'
-    bust: string;                      // '{player}', '{total}'
-    dealerReveals: string;             // '{card}', '{total}'
-    dealerDraws: string;               // '{card}', '{total}'
-    dealerBusts: string;               // '{total}'
-    dealerStands: string;              // '{total}'
-    win: string;                       // '{n}'
-    lose: string;                      // '{n}'
-    push: string;
-    eliminated: string;                // '{player}'
-  };
-  /** The live region lines of `model/blackjack/eventLog` (`blackjackUi.events.<name>`), seats already named ('{player}'). */
+  /**
+   * The live region lines of `model/blackjack/eventLog` (`blackjackUi.events.<name>`), seats already named
+   * ('{player}'). A line about my own seat uses its `…You` variant: "you" takes its own verb form ("Vous brûlez",
+   * never "Vous brûle").
+   */
   events: {
     bet: string;                       // '{player}'
+    betYou: string;
     deal: string;                      // '{hand}'
     dealerBlackjack: string;
     hit: string;                       // '{player}', '{total}'
+    hitYou: string;                    // '{total}'
     stand: string;                     // '{player}'
+    standYou: string;
     double: string;                    // '{player}', '{total}'
+    doubleYou: string;                 // '{total}'
     split: string;                     // '{player}'
+    splitYou: string;
     bust: string;                      // '{player}', '{total}'
+    bustYou: string;                   // '{total}'
     dealerBusts: string;               // '{total}'
     dealerStands: string;              // '{total}'
     settleWin: string;                 // '{amount}'
     settleLoss: string;                // '{amount}'
     settlePush: string;
     eliminated: string;                // '{player}'
+    eliminatedYou: string;
     gameOver: string;
   };
   /** The codes the server sends on a refused command, by wire code. */

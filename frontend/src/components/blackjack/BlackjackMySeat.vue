@@ -26,7 +26,8 @@ const roundNetText = computed(() => roundNet.value === null ? '' : roundNet.valu
       <strong data-test="my-stack" :aria-label="format(ui.table.stackLabel, { n: player.stack })">{{ format(ui.table.stack, { n: player.stack }) }}</strong>
       <span v-if="roundNet !== null" class="bj-round-net" :class="{ 'bj-round-net--win': roundNet > 0, 'bj-round-net--lose': roundNet < 0 }"
             data-test="my-net">{{ roundNetText }}</span>
-      <span data-test="my-standing">{{ format(ui.table.standing, { place: player.standing }) }}</span>
+      <span v-if="player.standing > 0" data-test="my-standing">{{ format(ui.table.standing, { place: player.standing }) }}</span>
+      <span v-else-if="player.eliminated || player.forfeited" data-test="my-out">{{ ui.table.out }}</span>
       <span v-if="player.bet !== null" data-test="my-bet">{{ format(ui.table.bet, { n: player.bet }) }}</span>
       <span v-else-if="player.betPlaced" data-test="my-bet">{{ ui.table.betPlaced }}</span>
     </div>

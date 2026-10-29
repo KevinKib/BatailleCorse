@@ -31,6 +31,7 @@ describe('BlackjackDealer', () => {
     expect(w.find('[data-test="dealer-name"]').exists()).toBe(false);
   });
 
+
   it('shows no hole card once it is shown, and the tags', () => {
     const dealer = { upCard: card('ACE'), cards: [card('ACE'), card('KING')], holeHidden: false, total: 21, soft: true, blackjack: true, bust: false };
     const w = mount(BlackjackDealer, { props: { dealer }, global });
@@ -45,6 +46,7 @@ describe('BlackjackHand', () => {
     const w = mount(BlackjackHand, { props: { hand }, global });
     expect(w.get('[data-test="hand-total"]').text()).toBe('7 / 17');
   });
+
 
   it('tags a split double hand and writes its net', () => {
     const hand = { cards: [card('FIVE'), card('SIX')], total: 11, soft: false, status: 'STOOD' as const, doubled: true, fromSplit: true, net: 20 };
@@ -74,6 +76,13 @@ describe('BlackjackSeatPlate', () => {
     const out = blackjackTournamentEndState.players[3];
     const w = mount(BlackjackSeatPlate, { props: { player: out, label: 'Bot' }, global });
     expect(w.get('[data-test="seat-out"]').text()).toContain('4th');
+  });
+
+  // The server ranks only live seats: a seat that is out has standing 0, which must not read "#0".
+  it('shows no standing for a seat that is out', () => {
+    const out = { ...blackjackPlayingState.players[1], stack: 0, eliminated: true, standing: 0, hands: [] };
+    const w = mount(BlackjackSeatPlate, { props: { player: out, label: 'Bob' }, global });
+    expect(w.find('[data-test="seat-standing"]').exists()).toBe(false);
   });
 });
 
@@ -111,6 +120,13 @@ describe('BlackjackBetPanel', () => {
 });
 
 describe('BlackjackMySeat', () => {
+  it('says I am out instead of a standing "#0" once eliminated', () => {
+    const me = { ...blackjackPlayingState.players[0], stack: 0, eliminated: true, standing: 0, hands: [], bet: null, betPlaced: false };
+    const w = mount(BlackjackMySeat, { props: { player: me }, global });
+    expect(w.find('[data-test="my-standing"]').exists()).toBe(false);
+    expect(w.get('[data-test="my-out"]').text()).toBe('OUT');
+  });
+
   it('writes the total net of a settled round next to the stack, and nothing before', () => {
     const base = blackjackPlayingState.players[0];
     const hand = (net: number) => ({ ...base.hands[0], net });

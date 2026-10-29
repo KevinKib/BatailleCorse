@@ -165,7 +165,7 @@ public class Blackjack implements Game {
         events.add(new CardDrawn(seat, index, card, value.total()));
         if (value.bust()) {
             hand = hand.withStatus(PlayerHand.Status.BUST);
-            events.add(new Busted(seat, index));
+            events.add(new Busted(seat, index, value.total()));
         } else if (value.total() == BLACKJACK) {
             hand = hand.withStatus(PlayerHand.Status.STOOD);
             events.add(new Stood(seat, index));
@@ -198,10 +198,11 @@ public class Blackjack implements Game {
         s.stack -= hand.bet();
         Card card = shoe.draw();
         hand = hand.doubledWith(card);
-        events.add(new Doubled(seat, index, card));
-        if (hand.value().bust()) {
+        HandValue value = hand.value();
+        events.add(new Doubled(seat, index, card, value.total()));
+        if (value.bust()) {
             hand = hand.withStatus(PlayerHand.Status.BUST);
-            events.add(new Busted(seat, index));
+            events.add(new Busted(seat, index, value.total()));
         } else {
             hand = hand.withStatus(PlayerHand.Status.STOOD);
         }
@@ -591,13 +592,28 @@ public class Blackjack implements Game {
         return s.lastBet == 0 ? OptionalInt.empty() : OptionalInt.of(s.lastBet);
     }
 
-    /** The current rank of a live seat by stack (equal stacks share it), 0 for a seat that is out. */
+    /**
+     * The current rank of a live seat by its public stack (equal stacks share it), 0 for a seat that is out. A
+     * sealed bet does not move it, or the ranks would give the bet away.
+     */
     public synchronized int standing(PlayerId seat) {
         Seat s = require(seat);
         if (s.out()) {
             return 0;
         }
-        return 1 + (int) seats.stream().filter(t -> !t.out() && t.stack > s.stack).count();
+        return 1 + (int) seats.stream().filter(t -> !t.out() && publicStackOf(t) > publicStackOf(s)).count();
+    }
+
+    /**
+     * The stack of a seat as the other seats may know it: while bets are sealed, a placed bet still counts in it
+     * (its stack before the bet was public, so the stack after it would tell the amount); otherwise the stack.
+     */
+    public synchronized int publicStack(PlayerId seat) {
+        return publicStackOf(require(seat));
+    }
+
+    private int publicStackOf(Seat s) {
+        return phase == Phase.BETTING && s.betPlaced ? s.stack + s.bet : s.stack;
     }
 
     /** What the seat may do now: the single source of the buttons a client shows. */
