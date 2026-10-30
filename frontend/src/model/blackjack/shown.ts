@@ -27,6 +27,11 @@ export interface Hold {
   resultsHidden: boolean;
   /** Stacks as the table told them (by seat); the live stack for a seat without an entry. */
   stacks: Record<number, number> | null;
+  /**
+   * The table of the hand before, kept on screen until the new deal clears it (the state has already moved on to an
+   * empty betting). Null once cleared, or when there was nothing to keep.
+   */
+  ghost: BlackjackState | null;
 }
 
 export const DEALER_KEY = 'dealer';
@@ -56,6 +61,7 @@ export function holdFromState(state: BlackjackState, mySeat = 0): Hold {
     bets: Object.fromEntries(state.players.filter(p => p.bet !== null).map(p => [p.seat, p.bet as number])),
     resultsHidden: false,
     stacks: null,
+    ghost: null,
   };
 }
 
@@ -110,17 +116,52 @@ function shownDealer(dealer: BlackjackDealer, hold: Hold): BlackjackDealer {
   return out;
 }
 
-/** The latest state as the table has told it so far. No hold: the state itself. */
+/**
+ * The betting that follows a settled hand has no cards in the state, but the cards of the hand stay on the table until
+ * the next deal: this is that state with the dealer and the hands read back from `lastHand` (totals and statuses are
+ * the server's; no net, which the summary tells). Null when there is nothing to keep (the state has cards, or no
+ * previous hand).
+ */
+export function lastTableOf(state: BlackjackState): BlackjackState | null {
+  const last = state.lastHand;
+  if (state.phase !== 'BETTING' || !last) return null;
+  if (state.dealer.cards.length > 0 || state.dealer.holeHidden || state.players.some(p => p.hands.length > 0)) return null;
+  const dealer: BlackjackDealer = {
+    upCard: last.dealer.cards[0] ?? null,
+    cards: last.dealer.cards,
+    holeHidden: false,
+    total: last.dealer.total,
+    soft: false,
+    blackjack: last.dealer.blackjack,
+    bust: last.dealer.bust,
+  };
+  const players = state.players.map((p) => {
+    const seat = last.seats.find(s => s.seat === p.seat);
+    if (!seat) return p;
+    const hands: BlackjackHand[] = seat.hands.map(h => ({
+      cards: h.cards, total: h.total, soft: false, status: h.status, doubled: false, fromSplit: seat.hands.length > 1,
+    }));
+    return { ...p, hands };
+  });
+  return { ...state, dealer, players };
+}
+
+/** The latest state as the table has told it so far. No hold: the state itself, with the last table kept. */
 export function shownState(live: BlackjackState, hold: Hold | null): BlackjackState {
-  if (!hold) return live;
+  if (!hold) return lastTableOf(live) ?? live;
+  const ghost = hold.ghost;
   return {
     ...live,
     phase: hold.phase,
     currentSeat: hold.currentSeat,
     activeHandIndex: hold.activeHandIndex,
     handNumber: hold.handNumber,
-    dealer: shownDealer(live.dealer, hold),
-    players: live.players.map(p => shownSeat(p, hold)),
+    dealer: ghost ? ghost.dealer : shownDealer(live.dealer, hold),
+    players: live.players.map((p) => {
+      const seat = shownSeat(p, hold);
+      const old = ghost?.players.find(o => o.seat === p.seat);
+      return old ? { ...seat, hands: old.hands } : seat;
+    }),
     availableActions: [],
     betLimits: null,
     // The summary of the previous hand is for the quiet betting that follows a settled hand, not for a table being told.

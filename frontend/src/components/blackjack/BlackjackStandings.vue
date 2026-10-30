@@ -47,9 +47,9 @@ const soloLine = computed(() => {
 
 <style scoped>
 .bj-solo { margin: 0; font-weight: 700; }
-.bj-places { width: 100%; margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--space-1); }
-.bj-row { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto auto; align-items: center; gap: var(--space-2); min-height: 34px;
-  padding: 0 var(--space-3); border-radius: 8px; background: rgba(255, 255, 255, 0.05); font-size: 0.875rem; }
+.bj-places { width: 100%; margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--bj-space-1); }
+.bj-row { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto auto; align-items: center; gap: var(--bj-space-2); min-height: 2.25rem;
+  padding: 0 var(--bj-space-3); border-radius: 8px; background: rgba(255, 255, 255, 0.05); font-size: 0.875rem; }
 .bj-row--first { color: var(--gold); }
 .bj-row--me { background: rgba(245, 200, 66, 0.18); }
 .bj-name { min-width: 0; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

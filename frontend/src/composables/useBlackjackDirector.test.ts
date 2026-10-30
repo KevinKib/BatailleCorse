@@ -43,9 +43,17 @@ describe('useBlackjackDirector', () => {
   afterEach(() => { vi.useRealTimers(); });
 
   it('shows the latest state as it is when nothing is playing', () => {
-    const { director } = setup(blackjackBettingState);
-    expect(director.shown.value).toBe(blackjackBettingState);
+    const { director } = setup(blackjackPlayingState);
+    expect(director.shown.value).toBe(blackjackPlayingState);
     expect(director.holding.value).toBe(false);
+  });
+
+  it('keeps the cards of the last hand on the table through the next betting', () => {
+    const { director } = setup(blackjackBettingState);
+    const shown = director.shown.value!;
+    expect(shown.dealer.cards).toHaveLength(2);
+    expect(shown.players[0].hands[0].cards).toHaveLength(2);
+    expect(shown.phase).toBe('BETTING');
   });
 
   describe('a deal', () => {
@@ -92,6 +100,19 @@ describe('useBlackjackDirector', () => {
       await vi.advanceTimersByTimeAsync(20000);
       expect(t.director.holding.value).toBe(false);
       expect(t.director.shown.value).toBe(blackjackPlayingState);
+    });
+
+    it('keeps the old cards on the table until the deal clears them, then deals the new ones', async () => {
+      const t = setup(blackjackBettingState);
+      t.receive(blackjackPlayingState, dealEvent());
+      // While the bets are told, the previous hand is still there, the dealer's included.
+      expect(t.director.shown.value!.dealer.cards).toEqual(blackjackBettingState.lastHand!.dealer.cards);
+      expect(t.director.shown.value!.players[0].hands[0].cards).toEqual(blackjackBettingState.lastHand!.seats[0].hands[0].cards);
+      await vi.advanceTimersByTimeAsync(TEMPO.bets.revealMs - 10);
+      expect(t.director.shown.value!.dealer.cards).toHaveLength(2);
+      await vi.advanceTimersByTimeAsync(10);
+      expect(t.director.shown.value!.dealer.cards).toEqual([]);
+      expect(t.director.shown.value!.players[0].hands[0].cards).toEqual([]);
     });
 
     it('slows down and speeds up with the animation speed', async () => {
@@ -202,6 +223,20 @@ describe('useBlackjackDirector', () => {
       expect(t.director.holding.value).toBe(false);
       expect(t.director.stage.value).toBeNull();
       expect(t.director.shown.value).toBe(settled);
+    });
+
+    it('keeps the dealer and my cards on the table when the table lets go on an empty betting', async () => {
+      const next: BlackjackState = {
+        ...blackjackBettingState, version: 41, handNumber: 5,
+        lastHand: { ...blackjackBettingState.lastHand!, handNumber: 4 },
+      };
+      const t = setup(base);
+      t.receive(next, ...batch());
+      await vi.advanceTimersByTimeAsync(20000);
+      expect(t.director.holding.value).toBe(false);
+      const shown = t.director.shown.value!;
+      expect(shown.dealer.cards.length).toBeGreaterThan(0);
+      expect(shown.players[0].hands[0].cards.length).toBeGreaterThan(0);
     });
 
     it('keeps the stacks as they were until the results are told', async () => {

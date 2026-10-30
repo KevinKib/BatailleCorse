@@ -70,6 +70,13 @@ const onLeave = fadeOut;
   --space-7: 48px;
   --space-8: 64px;
 
+  /* The Blackjack scale (rem, 4/8 grid): 4 / 8 / 16 / 24 / 32. The only values a Blackjack margin, padding or gap may use. */
+  --bj-space-1: 0.25rem;
+  --bj-space-2: 0.5rem;
+  --bj-space-3: 1rem;
+  --bj-space-4: 1.5rem;
+  --bj-space-5: 2rem;
+
   /* Typefaces (visual direction "C bis"), the single place they are named.
      Self-hosted: @font-face rules in fonts.css. Atkinson Hyperlegible ships only
      the 400 and 700 weights (plus italics): use those two everywhere. Title

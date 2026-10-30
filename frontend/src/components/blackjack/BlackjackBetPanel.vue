@@ -71,15 +71,15 @@ function place() { if (allowed.value) emit('bet', amount.value); }
 </template>
 
 <style scoped>
-.bj-bet { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); width: 100%; color: #fff; font-size: 0.875rem; }
+.bj-bet { display: flex; flex-direction: column; align-items: center; gap: var(--bj-space-2); width: 100%; color: #fff; font-size: 0.875rem; }
 .bj-limits { margin: 0; font-size: 0.75rem; opacity: 0.75; }
 .bj-field { box-sizing: border-box; width: 120px; min-height: 48px; text-align: center; font-size: 1.25rem; font-weight: 700;
   font-variant-numeric: tabular-nums; color: #fff; background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255, 255, 255, 0.4); border-radius: 999px; }
 .bj-field:focus-visible { outline: 2px solid rgba(232, 201, 109, 0.7); outline-offset: 1px; }
 .bj-left { margin: 0; display: flex; flex-direction: column; align-items: center; font-size: 0.75rem; }
 .bj-left-double { opacity: 0.7; }
-.bj-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
-.bj-chip { min-width: 44px; min-height: 44px; padding: 0 10px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.4);
+.bj-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--bj-space-2); }
+.bj-chip { min-width: 44px; min-height: 44px; padding: 0 var(--bj-space-3); border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.4);
   background: rgba(0, 0, 0, 0.5); color: #fff; font-weight: 700; cursor: pointer; }
 .bj-place { min-height: 48px; min-width: 160px; }
 </style>
