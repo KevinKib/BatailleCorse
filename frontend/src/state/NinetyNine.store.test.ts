@@ -107,6 +107,16 @@ describe('NinetyNine store', () => {
       expect(store.lastEvent?.eventType).toBe('RESHUFFLE');
     });
 
+    it('records the slot my played card held in the hand I saw, and none for another seat', () => {
+      const store = boot();
+      const state = buildNinetyNineFourSeatRound();
+      store.applyEvent({ type: 'state-update', state: { ...state, version: state.version + 1 } });
+      store.applyEvent({ type: 'event', eventType: 'PLAY', eventData: eventData({ seat: 0, card: state.hand[2] }) });
+      store.applyEvent({ type: 'event', eventType: 'PLAY', eventData: eventData({ seat: 3, card: state.hand[2] }) });
+      expect(store.events[1].handSlot).toBe(2);
+      expect(store.events[0].handSlot).toBeNull();
+    });
+
     it('gives every event of one command the state from before the command, not the one after it', () => {
       const store = boot();
       const state = buildNinetyNineFourSeatRound();

@@ -25,6 +25,8 @@ export interface NinetyNineLogEntry {
   round: number | null;
   /** The pile top the event covers (null when the pile was empty or the state before is unknown). */
   pileTopBefore: Card | null;
+  /** For my own play: the slot the card held in the hand I saw before it (null/absent when unknown or not mine). */
+  handSlot?: number | null;
 }
 
 /** How many entries the store keeps (newest first). */

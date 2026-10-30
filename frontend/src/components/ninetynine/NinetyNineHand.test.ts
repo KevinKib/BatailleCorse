@@ -19,6 +19,13 @@ function mountHand(props: Record<string, unknown> = {}) {
 }
 
 describe('NinetyNineHand', () => {
+  it('numbers the slots in hand order, so a flight can find the slot of a card', () => {
+    const wrapper = mountHand();
+    [king, seven, ace].forEach((card, slot) => {
+      expect(wrapper.get(`[data-slot="${slot}"]`).find(`[data-card="${card.name}"]`).exists()).toBe(true);
+    });
+  });
+
   it('givenMyTurn_thenASafeCardIsNamedAfterItsEffectAndCanBePlayed', async () => {
     const wrapper = mountHand();
     const card = wrapper.get('[data-card="SPADE_KING"]');

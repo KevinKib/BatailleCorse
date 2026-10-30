@@ -35,6 +35,20 @@ describe('planMovements', () => {
       expect(draw.delayMs).toBeGreaterThan(play.delayMs);
     });
 
+    it('carries the slot of my played card on the play and on the replacement', () => {
+      const entry = { ...entryOf('PLAY', { seat: 0, card: seven }), handSlot: 1 };
+      const [play, draw] = planMovements(entry, 0);
+      expect(play.from).toEqual({ kind: 'hand', slot: 1 });
+      expect(draw.to).toEqual({ kind: 'hand', slot: 1 });
+    });
+
+    it('keeps the whole hand when the slot is unknown, and never gives a slot to an opponent', () => {
+      const [play] = planMovements({ ...entryOf('PLAY', { seat: 0, card: seven }), handSlot: null }, 0);
+      expect(play.from).toEqual({ kind: 'hand' });
+      const [opp] = planMovements({ ...entryOf('PLAY', { seat: 2, card: seven }), handSlot: 1 }, 0);
+      expect(opp.from).toEqual({ kind: 'seat', seat: 2 });
+    });
+
     it('flies an opponent card from his seat, face down and turning up, at the slower tempo', () => {
       const [play, draw] = planMovements(entryOf('PLAY', { seat: 2, card: seven, totalAfter: 49 }), 0);
       expect(play).toMatchObject({
