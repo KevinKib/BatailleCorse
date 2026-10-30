@@ -160,13 +160,13 @@ export const ninetyNine: Messages['ninetyNine'] = {
     {
       kind: 'text',
       title: 'L’as',
-      body: ['L’as ajoute 1 ou 11, au choix. Vous ne pouvez choisir 11 que si le total reste à 99 ou moins.'],
+      body: ['L’as ajoute 1 ou 11, au choix.'],
     },
     {
       kind: 'text',
       title: 'Dépasser 99',
       body: [
-        'Si vous tenez une carte qui garde le total à 99 ou moins, vous devez en jouer une. Si aucune de vos trois cartes ne peut être jouée, vous êtes bloqué : vous dépassez 99 et perdez une vie. Vos cartes sont montrées à la table, et une nouvelle manche commence avec un jeu neuf et le total remis à 0.',
+        'Toutes les cartes de votre main peuvent être jouées, et rien ne vous prévient : surveillez le total. Le joueur dont la carte fait dépasser 99 perd une vie, même s’il avait une carte plus sûre en main. Un joueur dont toutes les cartes dépassent est bloqué et doit quand même en jouer une. Les cartes sont montrées à la table, et une nouvelle manche commence avec un jeu neuf et le total remis à 0.',
         'La manche suivante est ouverte par le joueur qui a perdu, ou par le joueur suivant s’il est éliminé.',
       ],
     },

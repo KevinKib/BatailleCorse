@@ -104,7 +104,9 @@ public class NinetyNine implements Game {
 
     /**
      * Plays a card of the seat on its turn. An Ace needs a value (1, or 11 when that stays at 99); the value is
-     * ignored for other cards. A seat that holds a safe card must play a safe card. A seat that holds none is
+     * ignored for other cards. With {@linkplain NinetyNineOptions.FreePlay free play} (the default) any card of the
+     * hand may be played, and an Ace as 11 even when that goes over 99: a play over 99 is paid with a life, as below.
+     * With free play off, a seat that holds a safe card must play a safe card. A seat that holds none is
      * <em>stuck</em>: it is still on turn and must play one of its cards (an Ace counts 1 or 11, both go over),
      * which takes the total over 99 and costs it a life: the {@link Played} event is followed by the
      * {@link Busted} one, and the seat draws no replacement since the round ends.
@@ -120,14 +122,16 @@ public class NinetyNine implements Game {
             throw new CardNotInHandException();
         }
         boolean stuck = CardEffect.safeCards(total, hand).isEmpty();
+        // the guard that keeps a seat holding a safe card at or under 99; free play (the default) drops it
+        boolean guarded = !stuck && options.freePlay() == NinetyNineOptions.FreePlay.OFF;
         boolean ace = card.getRank() == FrenchRank.ACE;
         if (ace && (aceValue == null || (aceValue != 1 && aceValue != 11)
-                || (!stuck && aceValue == 11 && total + 11 > CardEffect.LIMIT))) {
+                || (guarded && aceValue == 11 && total + 11 > CardEffect.LIMIT))) {
             throw new AceValueException();
         }
         Integer used = ace ? aceValue : null;
         int after = CardEffect.apply(total, card, used);
-        if (after > CardEffect.LIMIT && !stuck) {
+        if (after > CardEffect.LIMIT && guarded) {
             throw new UnsafeCardException();
         }
 
@@ -436,6 +440,19 @@ public class NinetyNine implements Game {
             return List.of();
         }
         return CardEffect.safeCards(total, hands.get(seat));
+    }
+
+    /**
+     * Whether a seat holding a safe card may play this card now: every card with free play, else a safe one. (A
+     * stuck seat may play any card; the presentation handles that case.)
+     */
+    public synchronized boolean isPlayable(Card card) {
+        return options.freePlay() == NinetyNineOptions.FreePlay.ON || CardEffect.isSafe(total, card);
+    }
+
+    /** The values a seat holding a safe card may give an Ace now: 1 and 11 with free play, else the safe ones. */
+    public synchronized List<Integer> aceValues() {
+        return options.freePlay() == NinetyNineOptions.FreePlay.ON ? List.of(1, 11) : CardEffect.aceValues(total);
     }
 
     /** Whether the seat on turn holds no safe card: it must play a card that goes over 99 and lose a life. */

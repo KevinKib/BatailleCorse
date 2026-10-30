@@ -119,8 +119,8 @@ class NinetyNineStuckTest {
     }
 
     @Test
-    void anUnsafeCardIsStillRefusedWhileASafeCardExists() {
-        NinetyNine game = game(3).total(95).current(A).hand(A, "9H 7H JH").build();
+    void anUnsafeCardIsRefusedWhileASafeCardExistsWhenFreePlayIsOff() {
+        NinetyNine game = game(3).total(95).current(A).hand(A, "9H 7H JH").guarded().build();
 
         assertThrows(UnsafeCardException.class, () -> game.play(A, c("7H"), null));
     }

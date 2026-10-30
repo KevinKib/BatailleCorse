@@ -45,8 +45,9 @@ class NinetyNineFactoryTest {
 
     @Test
     void validateIsStrictAndCompletesMissingKeys() {
-        assertEquals(GameOptions.of(Map.of("lives", "3", "quick", "off")), factory.validate(GameOptions.none()));
-        assertEquals(GameOptions.of(Map.of("lives", "2", "quick", "off")),
+        assertEquals(GameOptions.of(Map.of("lives", "3", "quick", "off", "freePlay", "on")),
+                factory.validate(GameOptions.none()));
+        assertEquals(GameOptions.of(Map.of("lives", "2", "quick", "off", "freePlay", "on")),
                 factory.validate(GameOptions.of(Map.of("lives", "2"))));
         assertThrows(InvalidOptionException.class, () -> factory.validate(GameOptions.of(Map.of("lives", "5"))));
         assertThrows(InvalidOptionException.class, () -> factory.validate(GameOptions.of(Map.of("speed", "fast"))));
@@ -60,6 +61,13 @@ class NinetyNineFactoryTest {
         assertEquals(2, game.options().lives().count());
         assertEquals(NinetyNineOptions.QuickMode.ON, game.options().quick());
         assertEquals(4, game.getPlayerIds().size());
+    }
+
+    @Test
+    void freePlayIsAHiddenOptionTheLobbyDoesNotList() {
+        assertEquals(List.of("lives", "quick"), factory.optionDescriptors().stream().map(OptionDescriptor::key).toList());
+        assertEquals(NinetyNineOptions.FreePlay.OFF, ((NinetyNine) factory.create(GameId.generate(), 2,
+                factory.validate(GameOptions.of(Map.of("freePlay", "off"))))).options().freePlay());
     }
 
     @Test

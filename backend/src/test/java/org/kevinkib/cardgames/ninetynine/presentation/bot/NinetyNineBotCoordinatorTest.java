@@ -261,6 +261,23 @@ class NinetyNineBotCoordinatorTest {
     }
 
     @Test
+    void underFreePlayAFailingStrategyStillFallsBackToASafeCardNotTheFirstOne() throws Exception {
+        // the bot (seat 1) holds 7H 9H 2H at 99: only the 9 is safe, and nothing but its choice keeps it from the 7
+        NinetyNine game = register("KS 7H JC 9S 9H QC 4S 2H 3C 5D", null, 1);
+        bot.answer = view -> {
+            throw new IllegalStateException("boom");
+        };
+        start(game);
+        actions.play(game.getId(), HUMAN, card("KS"), null);
+
+        scheduler.runNext();
+
+        assertThat(game.pileTop()).contains(card("9H"));
+        assertThat(game.total()).isEqualTo(99);
+        assertThat(game.lives().get(BOT)).isEqualTo(3);
+    }
+
+    @Test
     void anIllegalDecisionFallsBackToALegalPlay() throws Exception {
         NinetyNine game = register(1);
         bot.answer = view -> new NinetyNineDecision.Play(

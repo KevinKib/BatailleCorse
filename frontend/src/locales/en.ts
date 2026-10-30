@@ -643,13 +643,13 @@ export const messagesEn: Messages = {
       {
         kind: 'text',
         title: 'The Ace',
-        body: ['An Ace adds 1 or 11, as you choose. You can only choose 11 when the total stays at 99 or less.'],
+        body: ['An Ace adds 1 or 11, as you choose.'],
       },
       {
         kind: 'text',
         title: 'Going over 99',
         body: [
-          'If you hold a card that keeps the total at 99 or less, you must play one. If none of your cards can be played, you are stuck: you must still play one of them, which takes the total over 99, and you lose a life. The table sees the card and the total before the round ends, and a new round starts with a fresh deck and the total back at 0.',
+          'Any card of your hand can be played, and nothing warns you: pay attention to the total. The player whose card takes the total over 99 loses a life, even when a safer card was in their hand. A player whose cards all go over is stuck and must play one anyway. The table sees the card and the total before the round ends, and a new round starts with a fresh deck and the total back at 0.',
           'The next round is led by the player who lost, or by the next player if they were eliminated.',
         ],
       },

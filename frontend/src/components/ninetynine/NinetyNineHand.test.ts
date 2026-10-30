@@ -38,6 +38,27 @@ describe('NinetyNineHand', () => {
     expect(wrapper.emitted('play')).toBeUndefined();
   });
 
+  it('givenFreePlayWhereTheServerReportsEveryCardPlayable_thenNothingIsDisabledDimmedOrExplained', async () => {
+    // total 94: the 8 and the Ace as 11 go over 99, yet the server says every card is playable, so the hand says nothing
+    const eight = buildNinetyNineCard('8', 'SPADE');
+    const free: NinetyNinePlayable[] = [
+      { card: king, safe: true, aceValues: [] },
+      { card: eight, safe: true, aceValues: [] },
+      { card: ace, safe: true, aceValues: [1, 11] },
+    ];
+    const wrapper = mountHand({ cards: [king, eight, ace], playable: free });
+    for (const name of ['SPADE_KING', 'SPADE_8', 'CLUB_ACE']) {
+      const card = wrapper.get(`[data-card="${name}"]`);
+      expect(card.attributes('disabled'), name).toBeUndefined();
+      expect(card.classes(), name).not.toContain('hand-card--over');
+      expect(card.attributes('aria-label'), name).not.toContain('over 99');
+    }
+    expect(wrapper.find('[data-test^="over-limit-"]').exists()).toBe(false);
+    expect(wrapper.find('.over-limit').exists()).toBe(false);
+    await wrapper.get('[data-card="SPADE_8"]').trigger('click');
+    expect(wrapper.emitted('play')).toEqual([[eight]]);
+  });
+
   it('givenAnyCard_thenItsEffectIsRemindedUnderItInAFixedSlot', () => {
     const wrapper = mountHand();
     expect(wrapper.get('[data-test="effect-tag-SPADE_KING"]').text()).toBe('=99');
@@ -108,6 +129,16 @@ describe('NinetyNineAceChooser', () => {
     expect(wrapper.get('[role="group"]').attributes('aria-label')).toBe('Choose the value of the Ace');
     expect(wrapper.get('[data-test="ace-1"]').text()).toBe('+1');
     expect(wrapper.get('[data-test="ace-11"]').text()).toBe('+11');
+    await wrapper.get('[data-test="ace-11"]').trigger('click');
+    expect(wrapper.emitted('choose')).toEqual([[11]]);
+  });
+
+  it('givenFreePlayAtNinetyFour_thenBothValuesStayEnabledWithNoStrikeThrough', async () => {
+    const wrapper = mount(NinetyNineAceChooser, { props: { values: [1, 11] } });
+    for (const v of [1, 11]) {
+      expect(wrapper.get(`[data-test="ace-${v}"]`).attributes('disabled')).toBeUndefined();
+      expect(wrapper.get(`[data-test="ace-${v}"]`).classes()).not.toContain('ace-button--off');
+    }
     await wrapper.get('[data-test="ace-11"]').trigger('click');
     expect(wrapper.emitted('choose')).toEqual([[11]]);
   });

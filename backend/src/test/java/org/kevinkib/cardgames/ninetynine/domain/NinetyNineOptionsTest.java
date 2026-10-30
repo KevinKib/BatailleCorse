@@ -20,6 +20,17 @@ class NinetyNineOptionsTest {
     }
 
     @Test
+    void freePlayIsOnByDefaultAndSettableThroughTheStrictParse() {
+        assertEquals(NinetyNineOptions.FreePlay.ON, NinetyNineOptions.defaults().freePlay());
+        assertEquals(NinetyNineOptions.FreePlay.OFF,
+                NinetyNineOptions.parseStrict(GameOptions.of(Map.of("freePlay", "off"))).freePlay());
+        assertEquals(NinetyNineOptions.FreePlay.OFF,
+                NinetyNineOptions.from(GameOptions.of(Map.of("freePlay", "off"))).freePlay());
+        assertThrows(InvalidOptionException.class,
+                () -> NinetyNineOptions.parseStrict(GameOptions.of(Map.of("freePlay", "maybe"))));
+    }
+
+    @Test
     void strictParseReadsBothKeys() {
         NinetyNineOptions parsed = NinetyNineOptions.parseStrict(GameOptions.of(Map.of("lives", "2", "quick", "on")));
         assertEquals(NinetyNineOptions.Lives.TWO, parsed.lives());
@@ -58,8 +69,9 @@ class NinetyNineOptionsTest {
 
     @Test
     void toGameOptionsRoundTrips() {
-        NinetyNineOptions options = new NinetyNineOptions(NinetyNineOptions.Lives.FOUR, NinetyNineOptions.QuickMode.ON);
+        NinetyNineOptions options = new NinetyNineOptions(NinetyNineOptions.Lives.FOUR, NinetyNineOptions.QuickMode.ON,
+                NinetyNineOptions.FreePlay.OFF);
         assertEquals(options, NinetyNineOptions.parseStrict(options.toGameOptions()));
-        assertEquals(Map.of("lives", "4", "quick", "on"), options.toGameOptions().values());
+        assertEquals(Map.of("lives", "4", "quick", "on", "freePlay", "off"), options.toGameOptions().values());
     }
 }

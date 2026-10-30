@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.ninetynine.domain.Action;
-import org.kevinkib.cardgames.ninetynine.domain.CardEffect;
 import org.kevinkib.cardgames.ninetynine.domain.NinetyNine;
 import org.kevinkib.cardgames.ninetynine.domain.NinetyNineFactory;
 import org.kevinkib.cardgames.ninetynine.domain.Phase;
@@ -65,7 +64,9 @@ public record NinetyNineDto(
 
     /**
      * A card of the viewer's hand: whether it may be played now and the Ace values allowed (empty for other cards).
-     * A stuck seat on turn may play any card ({@code safe} true: the play costs a life, see {@code stuck}).
+     * {@code safe} means "playable", not "keeps the total at 99 or below": with free play (the default) every card
+     * is playable and an Ace allows 1 and 11, so the client shows nothing in advance; a stuck seat on turn may play
+     * any card too (the play costs a life, see {@code stuck}).
      */
     public record PlayableDto(CardDto card, boolean safe, List<Integer> aceValues) {
     }
@@ -142,8 +143,8 @@ public record NinetyNineDto(
             // stuck: every card may be played (each goes over 99 and costs a life); an Ace is sent as 1
             return new PlayableDto(CardDto.from(card), true, ace ? List.of(1) : List.of());
         }
-        return new PlayableDto(CardDto.from(card), CardEffect.isSafe(game.total(), card),
-                ace ? CardEffect.aceValues(game.total()) : List.of());
+        // `safe` is "playable now": the domain says so (every card under free play, the safe ones otherwise)
+        return new PlayableDto(CardDto.from(card), game.isPlayable(card), ace ? game.aceValues() : List.of());
     }
 
     private static LastBustDto bustOf(Busted bust) {

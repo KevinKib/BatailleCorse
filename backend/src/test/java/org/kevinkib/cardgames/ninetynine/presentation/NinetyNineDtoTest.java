@@ -1,6 +1,7 @@
 package org.kevinkib.cardgames.ninetynine.presentation;
 
 import org.junit.jupiter.api.Test;
+import org.kevinkib.cardgames.game.GameOptions;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.ninetynine.domain.NinetyNine;
 import org.kevinkib.cardgames.ninetynine.presentation.dto.NinetyNineDto;
@@ -47,7 +48,8 @@ class NinetyNineDtoTest {
         assertThat(dto.pileTop()).isNull();
         assertThat(dto.pileCount()).isZero();
         assertThat(dto.stockSize()).isEqualTo(52 - 9);
-        assertThat(dto.options()).containsEntry("lives", "3").containsEntry("quick", "off");
+        assertThat(dto.options()).containsEntry("lives", "3").containsEntry("quick", "off")
+                .containsEntry("freePlay", "on");
         assertThat(dto.lastPlay()).isNull();
         assertThat(dto.lastBust()).isNull();
         assertThat(dto.outcome()).isEqualTo(new NinetyNineDto.OutcomeDto.Ongoing());
@@ -98,11 +100,31 @@ class NinetyNineDtoTest {
     }
 
     @Test
-    void playableTellsTheViewerWhichCardsAreSafeAndTheAceValuesAllowed() throws Exception {
+    void freePlayReportsEveryCardPlayableAndBothAceValuesToEveryViewer() throws Exception {
         NinetyNine game = table.atNinetyFour();
 
         NinetyNineDto seat1 = view(game, S1);
         assertThat(seat1.total()).isEqualTo(94);
+        assertThat(seat1.stuck()).isFalse();
+        assertThat(seat1.options()).containsEntry("freePlay", "on");
+        assertThat(seat1.playable()).containsExactly(
+                new NinetyNineDto.PlayableDto(dto("9H"), true, java.util.List.of()),
+                new NinetyNineDto.PlayableDto(dto("7H"), true, java.util.List.of()),
+                new NinetyNineDto.PlayableDto(dto("6D"), true, java.util.List.of()));
+
+        NinetyNineDto seat0 = view(game, S0);
+        assertThat(seat0.playable()).containsExactly(
+                new NinetyNineDto.PlayableDto(dto("AS"), true, java.util.List.of(1, 11)),
+                new NinetyNineDto.PlayableDto(dto("3C"), true, java.util.List.of()),
+                new NinetyNineDto.PlayableDto(dto("2C"), true, java.util.List.of()));
+    }
+
+    @Test
+    void withFreePlayOffPlayableTellsTheViewerWhichCardsAreSafeAndTheAceValuesAllowed() throws Exception {
+        NinetyNine game = table.atNinetyFour(GameOptions.of(Map.of("freePlay", "off")));
+
+        NinetyNineDto seat1 = view(game, S1);
+        assertThat(seat1.options()).containsEntry("freePlay", "off");
         assertThat(seat1.playable()).containsExactly(
                 new NinetyNineDto.PlayableDto(dto("9H"), true, java.util.List.of()),
                 new NinetyNineDto.PlayableDto(dto("7H"), false, java.util.List.of()),

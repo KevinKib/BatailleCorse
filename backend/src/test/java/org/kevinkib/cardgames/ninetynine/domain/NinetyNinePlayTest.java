@@ -37,7 +37,7 @@ class NinetyNinePlayTest {
 
     @Test
     void example3_aceElevenIsRefusedWhenItGoesOver() throws NinetyNineException {
-        NinetyNine game = game(3).total(89).hand(A, "AH 2H 4H").build();
+        NinetyNine game = game(3).total(89).hand(A, "AH 2H 4H").guarded().build();
         int version = game.version();
 
         assertThrows(AceValueException.class, () -> game.play(A, c("AH"), 11));
@@ -73,7 +73,7 @@ class NinetyNinePlayTest {
 
     @Test
     void example4_anUnsafeCardIsRefusedWhileASafeOneExistsAndTheFourReverses() throws NinetyNineException {
-        NinetyNine game = game(3).total(95).hand(A, "8H 4H JH").build();
+        NinetyNine game = game(3).total(95).hand(A, "8H 4H JH").guarded().build();
         int version = game.version();
 
         assertThrows(UnsafeCardException.class, () -> game.play(A, c("8H"), null));
@@ -90,9 +90,51 @@ class NinetyNinePlayTest {
 
     @Test
     void anAceThatCanOnlyGoOverIsUnsafeWhileASafeCardExists() {
-        NinetyNine game = game(3).total(99).hand(A, "AH 9H 4H").build();
+        NinetyNine game = game(3).total(99).hand(A, "AH 9H 4H").guarded().build();
 
         assertThrows(UnsafeCardException.class, () -> game.play(A, c("AH"), 1));
+    }
+
+    @Test
+    void freePlayLetsASeatPlayACardThatGoesOverWhileASafeOneExists() throws NinetyNineException {
+        NinetyNine game = game(3).total(95).hand(A, "8H 4H JH").build();
+
+        List<NinetyNineEvent> events = game.play(A, c("8H"), null);
+
+        assertEquals(103, game.total());
+        assertEquals(new Played(A, c("8H"), null, 103, false), events.get(0));
+        assertTrue(events.get(1) instanceof Busted);
+        assertEquals(2, game.lives().get(A));
+        assertEquals(Phase.ROUND_OVER, game.phase());
+        assertEquals(cards("4H JH"), game.hand(A));
+    }
+
+    @Test
+    void freePlayAllowsAnAceElevenThatGoesOver() throws NinetyNineException {
+        NinetyNine game = game(3).total(89).hand(A, "AH 2H 4H").build();
+
+        List<NinetyNineEvent> events = game.play(A, c("AH"), 11);
+
+        assertEquals(100, game.total());
+        assertEquals(new Played(A, c("AH"), 11, 100, false), events.get(0));
+        assertTrue(events.get(1) instanceof Busted);
+        assertEquals(2, game.lives().get(A));
+    }
+
+    @Test
+    void freePlayStillNeedsAnAceValueOfOneOrEleven() {
+        NinetyNine game = game(3).total(89).hand(A, "AH 2H 4H").build();
+
+        assertThrows(AceValueException.class, () -> game.play(A, c("AH"), null));
+        assertThrows(AceValueException.class, () -> game.play(A, c("AH"), 5));
+    }
+
+    @Test
+    void freePlayDoesNotChangeWhatIsSafe() {
+        NinetyNine game = game(3).total(95).hand(A, "8H 4H JH").build();
+
+        assertEquals(cards("4H"), game.safeCards(A));
+        assertTrue(!game.isStuck());
     }
 
     @Test

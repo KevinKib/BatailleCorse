@@ -102,7 +102,12 @@ public final class NinetyNineTable {
      * AS 3C 2C. Messages sent so far are forgotten.
      */
     NinetyNine atNinetyFour() throws Exception {
-        NinetyNine game = start(2, "KS 10H 5C 9H AS 7H 3C 6D 2C");
+        return atNinetyFour(GameOptions.none());
+    }
+
+    /** Same table with the given options (free play off for the restrictive rule). */
+    NinetyNine atNinetyFour(GameOptions options) throws Exception {
+        NinetyNine game = start(2, options, "KS 10H 5C 9H AS 7H 3C 6D 2C");
         actions.play(game.getId(), new PlayerId(0), card("KS"), null);
         actions.play(game.getId(), new PlayerId(1), card("10H"), null);
         actions.play(game.getId(), new PlayerId(0), card("5C"), null);
