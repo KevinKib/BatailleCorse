@@ -44,7 +44,7 @@ function labelOf(card: Card): string {
 
 <template>
   <div class="hand" data-test="hand" role="group" :aria-label="ui.table.yourCards" :class="{ 'hand--waiting': !canPlay }">
-    <div v-for="card in cards" :key="card.name" class="hand-slot">
+    <div v-for="(card, slot) in cards" :key="card.name" class="hand-slot" :data-slot="slot">
       <button
         type="button"
         class="hand-card"

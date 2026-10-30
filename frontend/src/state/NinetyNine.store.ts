@@ -28,6 +28,13 @@ export interface NinetyNineTableEvent {
 /** Events that are not about the table: they have their own state (presence, forfeit). */
 const NOT_TABLE_EVENTS = new Set(['OPPONENT_DISCONNECTED', 'OPPONENT_RECONNECTED', 'FORFEIT']);
 
+/** The slot my played card held in the hand before the play, else null (another seat's play, or unknown). */
+function slotOfPlay(data: NinetyNineEventData | null, before: NinetyNineState | null, mySeat: number): number | null {
+  if (!data?.card || !before || data.seat !== mySeat) return null;
+  const slot = before.hand.findIndex(c => c.name === data.card!.name);
+  return slot >= 0 ? slot : null;
+}
+
 export const useNinetyNineStore = defineStore('ninety-nine-store', () => {
   const state = ref<NinetyNineView | null>(null);
   const gameId = ref<string | null>(null);
@@ -123,7 +130,9 @@ export const useNinetyNineStore = defineStore('ninety-nine-store', () => {
           notice.value = null;
           lastEvent.value = event.eventType === 'ROUND_START' ? null : { eventType: event.eventType, data };
           // The state of the event already arrived (it comes first): the one before it is what the entry needs.
-          events.value = appendEntry(events.value, toLogEntry(++entryId, event.eventType, data, previousGame));
+          const entry = toLogEntry(++entryId, event.eventType, data, previousGame);
+          if (entry && event.eventType === 'PLAY') entry.handSlot = slotOfPlay(data, previousGame, mySeat.value);
+          events.value = appendEntry(events.value, entry);
         }
         break;
     }

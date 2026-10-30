@@ -8,6 +8,11 @@ const base = {
 };
 
 describe('NinetyNineCenter', () => {
+  it('names the empty pile placeholder pile-empty, the outline the flights measure, so the first card lands at card size', () => {
+    const wrapper = mount(NinetyNineCenter, { props: { ...base, pileTop: null } });
+    expect(wrapper.get('[data-test="pile"] .pile-empty').exists()).toBe(true);
+  });
+
   it('givenARunningTotal_thenItIsShownWithItsLimitAndAnAccessibleName', () => {
     const wrapper = mount(NinetyNineCenter, { props: base });
     expect(wrapper.get('[data-test="total"]').text()).toContain('94');
