@@ -68,16 +68,16 @@ const netText = computed(() => {
 </template>
 
 <style scoped>
-.bj-hand { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 4px; border-radius: 8px; border: 2px solid transparent; transition: border-color 0.2s ease, box-shadow 0.2s ease; }
+.bj-hand { display: flex; flex-direction: column; align-items: center; gap: var(--bj-space-1); padding: var(--bj-space-1); border-radius: 8px; border: 2px solid transparent; transition: border-color 0.2s ease, box-shadow 0.2s ease; }
 .bj-hand--active { border-color: var(--gold); box-shadow: 0 0 14px rgba(245, 200, 66, 0.45); }
 .bj-cards { display: flex; justify-content: center; min-width: var(--bj-card-w); min-height: var(--bj-card-h); }
 .bj-cards :deep(.playing_card) { margin-left: calc(var(--bj-overlap) * -1); box-shadow: var(--card-shadow); border-radius: 4px; }
 .bj-cards :deep(.playing_card:first-child) { margin-left: 0; }
-.bj-meta { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 4px; min-height: 1.25rem; font-size: 0.75rem; color: #fff; }
-.bj-total { font-weight: 700; font-variant-numeric: tabular-nums; padding: 0 6px; border-radius: 999px; background: rgba(0, 0, 0, 0.45); }
+.bj-meta { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: var(--bj-space-1); min-height: 1.5rem; font-size: 0.75rem; color: #fff; }
+.bj-total { font-weight: 700; font-variant-numeric: tabular-nums; padding: 0 var(--bj-space-1); border-radius: 999px; background: rgba(0, 0, 0, 0.45); }
 .bj-total--wait { background: none; }
-.bj-tag { padding: 0 6px; border-radius: 999px; background: rgba(255, 255, 255, 0.18); font-size: 0.6875rem; font-weight: 700; }
-.bj-net { font-weight: 700; padding: 0 6px; border-radius: 999px; background: rgba(0, 0, 0, 0.5); animation: net-pop 380ms ease-out both; }
+.bj-tag { padding: 0 var(--bj-space-1); border-radius: 999px; background: rgba(255, 255, 255, 0.18); font-size: 0.6875rem; font-weight: 700; }
+.bj-net { font-weight: 700; padding: 0 var(--bj-space-1); border-radius: 999px; background: rgba(0, 0, 0, 0.5); animation: net-pop 380ms ease-out both; }
 .bj-net--win { color: #4ade80; }
 .bj-net--lose { color: #f87171; }
 @keyframes net-pop { from { transform: scale(0.6); opacity: 0; } to { transform: none; opacity: 1; } }

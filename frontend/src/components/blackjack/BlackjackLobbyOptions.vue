@@ -30,6 +30,6 @@ const ui = useI18n().blackjackUi;
 </template>
 
 <style scoped>
-.bj-options { width: 100%; display: flex; flex-direction: column; gap: var(--space-2); }
+.bj-options { width: 100%; display: flex; flex-direction: column; gap: var(--bj-space-2); }
 .bj-hint { margin: 0; font-size: 0.75rem; line-height: 1rem; color: rgba(255, 255, 255, 0.7); }
 </style>

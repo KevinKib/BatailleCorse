@@ -34,8 +34,8 @@ import { eventLine } from '../../model/blackjack/eventLog';
 import { opponentsOf } from '../../model/blackjack/seatOrder';
 import { slotRect } from '../../model/blackjack/slots';
 
-// The Blackjack table: the dealer strip and the shoe, the opponents, my seat and a bar at the bottom (bets, actions or a
-// status line). Every rule is the server's (`availableActions`, `betLimits`): the screen only shows and sends.
+// The Blackjack table: the dealer zone and the shoe, the status rail, the opponents and my seat with its permanent dock
+// (bets, or the actions: disabled, never hidden, when it is not my turn); under the felt a status line and the footer. Every rule is the server's (`availableActions`, `betLimits`): the screen only shows and sends.
 const props = defineProps<{ gameId: string }>();
 const messages = useI18n();
 const ui = messages.blackjackUi;
@@ -96,9 +96,11 @@ const handText = computed(() => shown.value
 const lobbySolo = computed(() => (store.lobby?.players.filter(p => p.joined).length ?? 0) === 1);
 const myTurn = computed(() => !holding.value && store.game?.phase === 'PLAYING' && store.game.currentSeat === store.mySeat);
 const betting = computed(() => !holding.value && store.game?.phase === 'BETTING' && !!store.me && !store.me.eliminated && !store.me.forfeited);
-// The bar of actions stays on screen all through the play (dimmed when it is not my turn), so it never jumps.
+// The dock of my seat is always there while I am in the game (disabled actions when it is not my turn, even through the
+// dealer's turn, the results and the end of a betting), so it never jumps and leaves no empty band. Out of the game: no dock.
 const idleBar = computed(() => !myTurn.value && !betting.value && !!shownMe.value && !shownMe.value.eliminated
-  && !shownMe.value.forfeited && shown.value?.phase === 'PLAYING');
+  && !shownMe.value.forfeited && store.game?.phase !== 'FINISHED');
+const dockVisible = computed(() => betting.value || hasActions.value || idleBar.value);
 const statusText = computed(() => {
   const g = shown.value;
   if (!g || !store.me) return '';
@@ -270,31 +272,33 @@ const rematchButton = computed(() =>
         :tags="director.tags.value"
         :last-action="director.lastAction.value"
         :dealer-line="director.dealerLine.value"
-        :banner="bannerView" />
+        :banner="bannerView">
+        <template v-if="dockVisible" #dock>
+          <div class="controls" data-test="controls">
+            <BlackjackBetPanel
+              v-if="betting && store.game.betLimits"
+              :limits="store.game.betLimits"
+              :last-bet="store.game.lastBet"
+              :placed="store.me?.betPlaced"
+              :placed-amount="store.me?.bet"
+              :stack="store.me?.stack"
+              :busy="store.busy"
+              :reset-key="store.game.handNumber"
+              @bet="amount => store.bet(amount)" />
+            <BlackjackBetPanel v-else-if="betting && store.me?.betPlaced" :limits="null" :last-bet="null" placed
+                               :placed-amount="store.me?.bet" />
+            <BlackjackActionBar
+              v-else-if="hasActions"
+              :actions="store.game.availableActions"
+              :busy="store.busy"
+              @hit="store.hit()" @stand="store.stand()" @double="store.doubleDown()" @split="store.split()" />
+            <BlackjackActionBar v-else :actions="[]" idle />
+          </div>
+        </template>
+      </BlackjackTable>
 
       <div class="bottom-bar" data-test="bottom-bar">
         <span v-if="noticeText" class="status-notice" data-test="notice" role="alert">{{ noticeText }}</span>
-        <div class="controls" data-test="controls">
-          <BlackjackBetPanel
-            v-if="betting && store.game.betLimits"
-            :limits="store.game.betLimits"
-            :last-bet="store.game.lastBet"
-            :placed="store.me?.betPlaced"
-            :placed-amount="store.me?.bet"
-            :stack="store.me?.stack"
-            :busy="store.busy"
-            :reset-key="store.game.handNumber"
-            @bet="amount => store.bet(amount)" />
-          <BlackjackBetPanel v-else-if="betting && store.me?.betPlaced" :limits="null" :last-bet="null" placed
-                             :placed-amount="store.me?.bet" />
-          <BlackjackActionBar
-            v-else-if="hasActions"
-            class="turn-bar"
-            :actions="store.game.availableActions"
-            :busy="store.busy"
-            @hit="store.hit()" @stand="store.stand()" @double="store.doubleDown()" @split="store.split()" />
-          <BlackjackActionBar v-else-if="idleBar" :actions="[]" idle />
-        </div>
         <span class="status-turn" :class="{ 'status-turn--mine': myTurn }" data-test="status">{{ statusText }}</span>
         <div class="table-footer" data-test="table-footer">
           <Button data-test="back" class="back-button" :label="ui.back" icon="pi pi-undo"
@@ -309,42 +313,42 @@ const rematchButton = computed(() =>
 
 <style scoped>
 .bj-screen {
+  --bj-hud-reserve: 7.5rem; /* room for the rules and settings buttons at the top right */
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--bj-space-2);
   box-sizing: border-box;
   height: 100vh;
   height: 100dvh;
   overflow: hidden;
-  padding: var(--space-2) var(--space-2) calc(var(--space-2) + env(safe-area-inset-bottom, 0px));
+  padding: var(--bj-space-2) var(--bj-space-3) calc(var(--bj-space-2) + env(safe-area-inset-bottom, 0px));
   background: var(--table-room-bg);
 }
 .bj-screen--lobby { display: block; padding: 0; background: none; }
-.connecting { flex: 1 1 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-3);
+.connecting { flex: 1 1 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--bj-space-3);
   color: rgba(255, 255, 255, 0.85); font-family: var(--font-title); letter-spacing: 0.04em; text-align: center; }
 .connecting-spinner { font-size: 1.5rem; color: var(--gold); }
-.top-bar { flex: none; display: flex; align-items: center; gap: var(--space-2); box-sizing: border-box;
+.top-bar { flex: none; display: flex; align-items: center; gap: var(--bj-space-2); box-sizing: border-box;
   height: calc(var(--hud-inset) * 2 + var(--hud-chip-h) + env(safe-area-inset-top, 0px));
-  padding: env(safe-area-inset-top, 0px) 120px 0 calc(var(--hud-inset) - var(--space-2) + env(safe-area-inset-left, 0px));
-  margin-top: calc(var(--space-2) * -1); }
-.hand-chip { display: inline-flex; align-items: center; height: var(--hud-chip-h); box-sizing: border-box; padding: 0 12px; font-size: 0.8rem;
+  padding: env(safe-area-inset-top, 0px) var(--bj-hud-reserve) 0 calc(var(--hud-inset) - var(--bj-space-3) + env(safe-area-inset-left, 0px));
+  margin-top: calc(var(--bj-space-2) * -1); }
+.hand-chip { display: inline-flex; align-items: center; height: var(--hud-chip-h); box-sizing: border-box; padding: 0 var(--bj-space-3); font-size: 0.8rem;
   font-weight: 700; font-family: var(--font-title); letter-spacing: 0.06em; text-transform: uppercase; color: rgba(255, 255, 255, 0.8);
   background: rgba(0, 0, 0, 0.45); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 999px; }
-/* The thumb zone: sticky at the bottom, the table scrolls above it. The controls keep their room whatever the turn. */
-.bottom-bar { flex: none; display: flex; flex-direction: column; align-items: center; gap: var(--space-2); width: 100%; max-width: 1000px; margin: 0 auto; }
-.controls { width: 100%; min-height: 56px; display: flex; align-items: center; justify-content: center; }
-.turn-bar { filter: drop-shadow(0 0 10px rgba(245, 200, 66, 0.55)); }
+/* Under the felt: the notice, the status line and the footer. The actions are in the dock of my seat, not here. */
+.bottom-bar { flex: none; display: flex; flex-direction: column; align-items: center; gap: var(--bj-space-2); width: 100%; max-width: 1000px; margin: 0 auto; }
+.controls { width: 100%; min-height: 3rem; display: flex; align-items: center; justify-content: center; }
 .status-turn { font-size: 0.875rem; font-weight: 700; color: var(--gold); text-align: center; min-height: 1.25rem; transition: color 0.2s ease; }
-.status-turn--mine { font-size: 1rem; text-shadow: 0 0 12px rgba(245, 200, 66, 0.6); }
+.status-turn--mine { font-size: 1rem; }
 .status-notice { font-size: 0.8125rem; color: rgb(var(--accent-negative-rgb)); font-weight: 700; }
-.table-footer { width: 100%; display: flex; align-items: center; gap: var(--space-2); }
+.table-footer { width: 100%; display: flex; align-items: center; gap: var(--bj-space-2); }
 .table-footer .speed { margin-left: auto; }
 .table-footer :deep(.back-button.p-button) { min-height: 44px; }
-.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.sr-only { position: absolute; width: 1px; height: 1px; margin: 0; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 .offline-notice { position: absolute; top: 56px; left: 50%; transform: translateX(-50%); z-index: 1800; width: max-content; max-width: calc(100% - 24px);
   box-sizing: border-box; font-size: 0.8rem; font-weight: 700; color: #fff; background: rgba(0, 0, 0, 0.82);
-  border: 1px solid rgba(var(--accent-negative-rgb), 0.7); border-radius: 999px; padding: 6px 18px; text-align: center; box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5); }
+  border: 1px solid rgba(var(--accent-negative-rgb), 0.7); border-radius: 999px; padding: var(--bj-space-1) var(--bj-space-3); text-align: center; box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5); }
 .forfeit-notice { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); z-index: 1800; width: max-content;
   max-width: calc(100% - 24px); overflow-wrap: anywhere; text-align: center; }
 .forfeit-fade-enter-active, .forfeit-fade-leave-active { transition: opacity 0.25s ease, transform 0.25s ease; }

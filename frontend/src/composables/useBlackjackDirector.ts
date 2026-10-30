@@ -8,7 +8,7 @@ import {
   scriptFor, tagKindOf, type BannerKind, type BlackjackAnchor, type BlackjackTableEvent, type DealerLineKind, type Effect,
   type ScriptContext, type ScriptStep, type TagKind,
 } from '../model/blackjack/motion';
-import { DEALER_KEY, DEALER_HOLE_INDEX, handKey, holdFromState, shownState, type Hold } from '../model/blackjack/shown';
+import { DEALER_KEY, DEALER_HOLE_INDEX, handKey, holdFromState, lastTableOf, shownState, type Hold } from '../model/blackjack/shown';
 import { BLACKJACK_TEMPO as TEMPO } from '../model/blackjack/tempo';
 
 export interface DirectorTag { kind: TagKind; key: number }
@@ -111,7 +111,7 @@ export function useBlackjackDirector(options: BlackjackDirectorOptions): Blackja
       case 'clear': {
         const counts: Record<string, number> = {};
         for (const key of effect.keys) counts[key] = 0;
-        patch({ counts, handNumber: effect.handNumber, holeFaceDown: true, resultsHidden: true, stacks: null });
+        patch({ counts, handNumber: effect.handNumber, holeFaceDown: true, resultsHidden: true, stacks: null, ghost: null });
         lastAction.value = {};
         dealerLine.value = null;
         break;
@@ -190,6 +190,8 @@ export function useBlackjackDirector(options: BlackjackDirectorOptions): Blackja
     const h = holdFromState(base, options.mySeat());
     h.betsSealed = base.phase === 'BETTING';
     h.resultsHidden = base.phase === 'PLAYING';
+    // The cards of the hand before stay on the table until the deal clears it.
+    h.ghost = lastTableOf(base);
     hold.value = h;
     planned = { ...h.counts };
     baseStacks = Object.fromEntries(base.players.map(p => [p.seat, p.stack]));

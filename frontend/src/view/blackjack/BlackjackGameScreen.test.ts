@@ -102,6 +102,35 @@ describe('BlackjackGameScreen', () => {
     expect(wrapper.get('[data-test="seat-plate"][data-seat="1"]').attributes('data-current')).toBe('true');
   });
 
+  it('puts the permanent dock inside my seat, with the actions, and no glow class on the bar', async () => {
+    const { wrapper } = await mountRoom(blackjackPlayingState);
+    expect(wrapper.find('[data-test="my-seat"] [data-test="dock"] [data-test="action-bar"]').exists()).toBe(true);
+    expect(wrapper.get('[data-test="action-bar"]').classes()).not.toContain('turn-bar');
+    expect(wrapper.find('[data-test="bottom-bar"] [data-test="controls"]').exists()).toBe(false);
+  });
+
+  it('keeps the dock in the same place, disabled, when it is not my turn', async () => {
+    const { wrapper } = await mountRoom({ ...blackjackPlayingState, currentSeat: 1, availableActions: [] });
+    const idle = wrapper.findAll('[data-test="my-seat"] [data-test="dock"] [data-test="action-bar-idle"] button');
+    expect(idle).toHaveLength(4);
+    expect(idle.every(b => b.attributes('disabled') !== undefined)).toBe(true);
+  });
+
+  it('leaves no empty band for a player who is out: no dock', async () => {
+    const out = { ...blackjackPlayingState, currentSeat: 1, availableActions: [],
+      players: blackjackPlayingState.players.map(p => p.seat === 0 ? { ...p, eliminated: true } : p) };
+    const { wrapper } = await mountRoom(out);
+    expect(wrapper.find('[data-test="controls"]').exists()).toBe(false);
+    expect(wrapper.find('[data-test="dock"]').exists()).toBe(false);
+    expect(wrapper.find('[data-test="status"]').exists()).toBe(true);
+  });
+
+  it('keeps the cards of the last hand (dealer and mine) on the table through the next betting', async () => {
+    const { wrapper } = await mountRoom(blackjackBettingState);
+    expect(wrapper.findAll('[data-test="dealer-cards"] .playing_card')).toHaveLength(2);
+    expect(wrapper.findAll('[data-test="my-seat"] [data-test="hand-cards"] .playing_card')).toHaveLength(2);
+  });
+
   it('shows the shoe, the hole card face down and the felt from the deal', async () => {
     const { wrapper } = await mountRoom(blackjackPlayingState);
     expect(wrapper.get('[data-anchor="shoe"]').exists()).toBe(true);

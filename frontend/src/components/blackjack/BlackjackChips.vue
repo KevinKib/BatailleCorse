@@ -49,8 +49,8 @@ const label = computed(() => props.sealed || props.amount === null
 </template>
 
 <style scoped>
-.bj-chips { --disc: 20px; --disc-face: #b91c1c; --disc-edge: #fecaca; display: inline-flex; align-items: flex-end; gap: 6px; animation: chips-drop 360ms cubic-bezier(.2, .8, .2, 1) both; }
-.bj-chips--compact { --disc: 15px; gap: 4px; }
+.bj-chips { --disc: 20px; --disc-face: #b91c1c; --disc-edge: #fecaca; display: inline-flex; align-items: flex-end; gap: var(--bj-space-2); animation: chips-drop 360ms cubic-bezier(.2, .8, .2, 1) both; }
+.bj-chips--compact { --disc: 15px; gap: var(--bj-space-1); }
 .bj-chips--low { --disc-face: #e5e7eb; --disc-edge: #6b7280; }
 .bj-chips--mid { --disc-face: #dc2626; --disc-edge: #fecaca; }
 .bj-chips--high { --disc-face: #2563eb; --disc-edge: #bfdbfe; }

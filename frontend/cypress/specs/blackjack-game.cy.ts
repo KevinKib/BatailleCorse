@@ -9,6 +9,7 @@
 // each seat, the dealer's hole card), then the cards drawn in the order they are drawn. Everything is waited on
 // through DOM states and frames, never a fixed delay.
 import { joinAsScriptedPlayer, type ScriptedPlayer } from '../support/stompPlayer';
+import { atSpacingViewports, expectNoOverlap } from '../support/spacing';
 
 type Guest = ScriptedPlayer & { token: string; seat: number };
 
@@ -68,6 +69,12 @@ describe('Blackjack, nominal games on a scripted shoe', () => {
 
         // Alice acts first (the button is seat 0): 9 and 6 make 15, a 5 makes 20, she stands.
         cy.get('[data-test="my-seat"] [data-test="hand-total"]', { timeout: 20000 }).should('contain.text', '15');
+        // The status rail never shares a box with a card, and the dock sits under my cards, at both reference sizes.
+        atSpacingViewports(() => {
+          expectNoOverlap('[data-test="status-rail"]', '[data-test="dealer-cards"]');
+          expectNoOverlap('[data-test="status-rail"]', '[data-test="my-seat"] [data-test="hand-cards"]');
+          expectNoOverlap('[data-test="dock"]', '[data-test="my-seat"] [data-test="hand-cards"]');
+        });
         cy.get('[data-test="action-hit"]').should('be.visible').click();
         cy.get('[data-test="my-seat"] [data-test="hand-total"]').should('contain.text', '20');
         cy.get('[data-test="action-stand"]').should('be.visible').click();

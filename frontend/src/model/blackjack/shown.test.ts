@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { DEALER_KEY, handKey, holdFromState, roundNetOf, shownState, type Hold } from './shown';
+import { DEALER_KEY, handKey, holdFromState, lastTableOf, roundNetOf, shownState, type Hold } from './shown';
 import { blackjackBettingState } from './fixtures';
 import { blackjackPlayingState, blackjackSettledState, card } from './fixtures';
 import type { BlackjackState } from './BlackjackState';
@@ -168,6 +168,69 @@ describe('shownState: what the table has not told yet', () => {
     const before = JSON.stringify(playing);
     shownState(playing, withHold({ betsSealed: true, resultsHidden: true, counts: { [DEALER_KEY]: 0 } }));
     expect(JSON.stringify(playing)).toBe(before);
+  });
+});
+
+describe('the last table stays until the next deal', () => {
+  const betting = blackjackBettingState; // the next betting: no cards in the state, the previous hand in `lastHand`
+
+  it('keeps my cards and the dealer\'s on the table through the next betting, from the last hand', () => {
+    const shown = shownState(betting, null);
+    expect(shown.dealer.cards).toEqual([card('KING'), card('QUEEN', 'HEART')]);
+    expect(shown.dealer.holeHidden).toBe(false);
+    expect(shown.dealer.total).toBe(20);
+    expect(shown.players[0].hands).toHaveLength(1);
+    expect(shown.players[0].hands[0].cards).toEqual([card('TEN', 'CLUB'), card('SEVEN', 'CLUB')]);
+    expect(shown.players[0].hands[0].total).toBe(17);
+    expect(shown.players[3].hands[0].status).toBe('BUST');
+    expect(shown.players[3].hands[0].cards).toHaveLength(3);
+  });
+
+  it('tells no net on the old cards (the summary tells them, the new chips are not a payout)', () => {
+    const shown = shownState(betting, null);
+    expect(shown.players.every(p => p.hands.every(h => h.net === undefined))).toBe(true);
+  });
+
+  it('keeps everything else live: bets, stacks, phase, the previous hand summary', () => {
+    const shown = shownState(betting, null);
+    expect(shown.phase).toBe('BETTING');
+    expect(shown.players[1].betPlaced).toBe(true);
+    expect(shown.players[0].stack).toBe(betting.players[0].stack);
+    expect(shown.lastHand).toBe(betting.lastHand);
+    expect(shown.betLimits).toBe(betting.betLimits);
+  });
+
+  it('shows a split pair as two hands', () => {
+    const lastHand = {
+      ...betting.lastHand!,
+      seats: [{ seat: 0, net: 0, hands: [
+        { cards: [card('EIGHT'), card('TEN')], total: 18, status: 'STOOD' as const, net: 0 },
+        { cards: [card('EIGHT', 'HEART'), card('NINE')], total: 17, status: 'STOOD' as const, net: 0 },
+      ] }],
+    };
+    const shown = shownState({ ...betting, lastHand }, null);
+    expect(shown.players[0].hands).toHaveLength(2);
+    expect(shown.players[0].hands.every(h => h.fromSplit)).toBe(true);
+  });
+
+  it('leaves a first betting (no previous hand) and a table with cards alone', () => {
+    const first = { ...betting, lastHand: null };
+    expect(shownState(first, null)).toBe(first);
+    expect(shownState(playing, null)).toBe(playing);
+  });
+
+  it('keeps the old cards through a hold that has not cleared the table yet, whatever the new state says', () => {
+    const hold = { ...holdFromState(betting), ghost: lastTableOf(betting) };
+    const shown = shownState(playing, hold);
+    expect(shown.dealer.cards).toEqual([card('KING'), card('QUEEN', 'HEART')]);
+    expect(shown.players[0].hands[0].cards).toEqual([card('TEN', 'CLUB'), card('SEVEN', 'CLUB')]);
+  });
+
+  it('lets go of the old cards once the hold has cleared the table', () => {
+    const hold = { ...holdFromState(betting), ghost: null, counts: { [DEALER_KEY]: 0, [handKey(0, 0)]: 0 } };
+    const shown = shownState(playing, hold);
+    expect(shown.dealer.cards).toEqual([]);
+    expect(shown.players[0].hands[0].cards).toEqual([]);
   });
 });
 

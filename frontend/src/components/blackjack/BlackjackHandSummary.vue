@@ -36,7 +36,7 @@ const best = computed(() => {
 </template>
 
 <style scoped>
-.bj-summary { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 12px; font-size: 0.8125rem; color: rgba(255, 255, 255, 0.9); text-align: center; }
+.bj-summary { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--bj-space-1) var(--bj-space-3); font-size: 0.8125rem; color: rgba(255, 255, 255, 0.9); text-align: center; }
 .bj-best { color: var(--gold); font-weight: 700; }
 .bj-none { opacity: 0.7; }
 </style>
