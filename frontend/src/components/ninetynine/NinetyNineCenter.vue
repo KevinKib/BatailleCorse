@@ -38,7 +38,7 @@ const stockLabel = computed(() => plural(ui.table.stockCount, props.stockSize));
     <div class="row">
       <div class="pile" data-test="pile" role="img" :aria-label="pileLabel">
         <PlayingCard v-if="pileTop" :rank="pileTop.rank" :suit="pileTop.suit" />
-        <span v-else class="empty-pile" aria-hidden="true"></span>
+        <span v-else class="pile-empty" aria-hidden="true"></span>
       </div>
       <div class="total total--reserved" :class="`total--${danger}`" data-test="total" :style="{ '--total-digits': TOTAL_RESERVED_DIGITS }" role="status" :aria-label="format(ui.table.total, { total })">
         <strong class="total-value">{{ total }}</strong>
@@ -89,7 +89,7 @@ const stockLabel = computed(() => plural(ui.table.stockCount, props.stockSize));
   border-radius: 6%;
   box-shadow: 0 2px 3px rgba(0, 0, 0, 0.55), 0 8px 22px rgba(0, 0, 0, 0.5);
 }
-.empty-pile {
+.pile-empty {
   display: block;
   width: 100%;
   aspect-ratio: 167.575 / 243.1375;

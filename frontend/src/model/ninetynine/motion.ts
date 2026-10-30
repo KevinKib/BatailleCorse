@@ -6,8 +6,8 @@ import { NINETY_NINE_TEMPO as TEMPO } from './tempo';
 export type NinetyNineAnchor =
   /** An opponent's plate. */
   | { kind: 'seat'; seat: number }
-  /** My own hand zone. */
-  | { kind: 'hand' }
+  /** My own hand: the card in that slot (0-based, left to right), else the whole zone. */
+  | { kind: 'hand'; slot?: number }
   | { kind: 'pile' }
   | { kind: 'stock' };
 
@@ -20,8 +20,8 @@ export interface MotionContext {
 }
 
 /** My seat is my hand zone, any other seat is its plate. */
-const placeOf = (seat: number, mySeat: number): NinetyNineAnchor =>
-  seat === mySeat ? { kind: 'hand' } : { kind: 'seat', seat };
+const placeOf = (seat: number, mySeat: number, slot: number | null = null): NinetyNineAnchor =>
+  seat === mySeat ? (slot === null ? { kind: 'hand' } : { kind: 'hand', slot }) : { kind: 'seat', seat };
 
 const STOCK: NinetyNineAnchor = { kind: 'stock' };
 const PILE: NinetyNineAnchor = { kind: 'pile' };
@@ -63,7 +63,8 @@ function playOf(entry: NinetyNineLogEntry, mySeat: number): NinetyNineMovement[]
   if (entry.seat === null || entry.card === null) return [];
   const byOpponent = entry.seat !== mySeat;
   const leg = byOpponent ? TEMPO.opponent : TEMPO.own;
-  const source = placeOf(entry.seat, mySeat);
+  // The replacement takes the slot of the card played, so both legs use it.
+  const source = placeOf(entry.seat, mySeat, entry.handSlot ?? null);
   const play: NinetyNineMovement = {
     kind: 'travel', from: source, to: PILE, card: entry.card, flip: byOpponent, turnDown: false,
     actor: entry.seat, byOpponent, delayMs: leg.holdBeforeMs, durationMs: leg.flightMs, holdAfterMs: leg.holdAfterMs,

@@ -167,10 +167,17 @@ const resolveAnchor = defineAnchors<NinetyNineAnchor>(() => screenEl.value, {
   // A card leaving an opponent's plate starts at the size of the pile's card, so that it never grows on the way.
   seat: (anchor, q) => q.cardIn(q.find(`[data-test="seat-plate"][data-seat="${anchor.seat}"]`),
     q.rect(q.find('[data-test="pile"]'))?.width ?? 38),
-  hand: (_, q) => q.cardIn(q.find('[data-test="hand"]')),
+  // The card of the slot that played (or received the replacement); the first card would be another one.
+  hand: (anchor, q) => q.cardIn(q.find(
+    anchor.slot === undefined ? '[data-test="hand"]' : `[data-test="hand"] [data-slot="${anchor.slot}"]`)),
   pile: (_, q) => q.cardIn(q.find('[data-test="pile"]')),
   stock: (_, q) => q.cardIn(q.find('[data-test="stock"]')),
 });
+
+// The total shows a play's number when its card lands, counted from the real start of that play in the animation queue
+// (so a burst of plays never runs the number ahead of the pictures), and in order.
+const landedTotal = useLandedTotal(() => store.game?.total ?? 0, () => store.events);
+const shownTotal = landedTotal.shown;
 
 const motion = useTableMotion<NinetyNineLogEntry, NinetyNineAnchor>({
   layer: motionLayer,
@@ -182,15 +189,16 @@ const motion = useTableMotion<NinetyNineLogEntry, NinetyNineAnchor>({
     const movements = planMovements(entry, store.mySeat, { liveSeats });
     return movements.length > 0 ? { movements: scaleMovements(movements, factor) } : null;
   },
+  onPlayed: (played, entry) => {
+    if (!entry || entry.eventType !== 'PLAY') return;
+    // Instant, reduced motion or a full backlog (rings only): at once. Otherwise: its start plus its own landing.
+    const ms = played.still || !played.motion
+      ? 0
+      : played.startInMs + Math.round(landingMs(entry, store.mySeat) * speedFactor(speed.value));
+    landedTotal.landsIn(entry, ms);
+  },
 });
 void motion;
-
-// The total changes when the played card lands on the pile, not before (instant speed: at once).
-const shownTotal = useLandedTotal(
-  () => store.game?.total ?? 0,
-  () => store.events,
-  entry => Math.round(landingMs(entry, store.mySeat) * speedFactor(speed.value)),
-);
 
 // --- The end -------------------------------------------------------------------------------------------------------
 const winners = computed(() => {
