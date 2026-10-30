@@ -36,6 +36,7 @@
       "pileCount" : 1,
       "stockSize" : 42,
       "options" : {
+        "freePlay" : "on",
         "lives" : "3",
         "quick" : "off"
       },
@@ -158,6 +159,7 @@
       "pileCount" : 2,
       "stockSize" : 41,
       "options" : {
+        "freePlay" : "on",
         "lives" : "3",
         "quick" : "off"
       },
@@ -280,6 +282,7 @@
       "pileCount" : 3,
       "stockSize" : 40,
       "options" : {
+        "freePlay" : "on",
         "lives" : "3",
         "quick" : "off"
       },
@@ -391,6 +394,7 @@
       "pileCount" : 4,
       "stockSize" : 39,
       "options" : {
+        "freePlay" : "on",
         "lives" : "3",
         "quick" : "off"
       },
@@ -501,6 +505,7 @@
       "pileCount" : 4,
       "stockSize" : 39,
       "options" : {
+        "freePlay" : "on",
         "lives" : "3",
         "quick" : "off"
       },
@@ -612,6 +617,7 @@
       "pileCount" : 4,
       "stockSize" : 39,
       "options" : {
+        "freePlay" : "on",
         "lives" : "3",
         "quick" : "off"
       },
@@ -730,6 +736,7 @@
       "pileCount" : 4,
       "stockSize" : 39,
       "options" : {
+        "freePlay" : "on",
         "lives" : "3",
         "quick" : "off"
       },

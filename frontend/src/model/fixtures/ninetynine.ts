@@ -1,8 +1,11 @@
 import type Card from '../Card';
 import type { NinetyNinePlayable, NinetyNinePlayer, NinetyNineState } from '../ninetynine/NinetyNineState';
 
-/** The options of a fresh room as the server fills them in (`NinetyNineOptions.defaults()`). */
-export const DEFAULT_NINETY_NINE_OPTIONS: Record<string, string> = { lives: '3', quick: 'off' };
+/**
+ * The options of a fresh room as the server fills them in (`NinetyNineOptions.defaults()`). `freePlay` is a hidden
+ * option (no lobby group): on, the server reports every card as playable and both Ace values as allowed.
+ */
+export const DEFAULT_NINETY_NINE_OPTIONS: Record<string, string> = { lives: '3', quick: 'off', freePlay: 'on' };
 
 /** A card shaped like the backend `CardDto`: upper-case labels (`2`..`10`, `JACK`, `ACE`...) and a `SUIT_RANK` name. */
 export function buildNinetyNineCard(rank: string, suit = 'CLUB'): Card {
@@ -65,7 +68,10 @@ export function buildNinetyNineFourSeatRound(): NinetyNineState {
   });
 }
 
-/** Twelve seats at total 94, direction reversed; the viewer (seat 0) holds a 9 and two cards that go over. */
+/**
+ * Twelve seats at total 94, direction reversed; the viewer (seat 0) holds a 9 and two cards that go over. The server
+ * has free play off here (a guarded game): it reports the two cards that go over as not playable.
+ */
 export function buildNinetyNineTwelveSeatRound(): NinetyNineState {
   const nine = buildNinetyNineCard('9', 'HEART');
   const eight = buildNinetyNineCard('8', 'SPADE');
@@ -83,8 +89,32 @@ export function buildNinetyNineTwelveSeatRound(): NinetyNineState {
     players: Array.from({ length: 12 }, (_, seat) =>
       player(seat, seat === 5 ? { lives: 1 } : seat === 9 ? { lives: 0, handSize: 0, eliminated: true, place: 12 } : {})),
     lastPlay: { seat: 1, card: four, aceValue: null, totalBefore: 94, totalAfter: 94, reversed: true },
+    options: { ...DEFAULT_NINETY_NINE_OPTIONS, freePlay: 'off' },
     hand: [nine, eight, queen],
     playable: [safe(nine), { card: eight, safe: false, aceValues: [] }, { card: queen, safe: false, aceValues: [] }],
+    availableActions: ['PLAY'],
+  });
+}
+
+/**
+ * The same position with free play on (the default): total 94, the viewer (seat 0) holds a 9, an 8 and an Ace. The server
+ * reports every card as playable and the Ace as 1 or 11, though the 8 and the Ace as 11 go over 99.
+ */
+export function buildNinetyNineFreePlayRound(): NinetyNineState {
+  const nine = buildNinetyNineCard('9', 'HEART');
+  const eight = buildNinetyNineCard('8', 'SPADE');
+  const ace = buildNinetyNineCard('ACE', 'CLUB');
+  return base({
+    version: 31,
+    round: 2,
+    total: 94,
+    currentSeat: 0,
+    pileTop: buildNinetyNineCard('4', 'DIAMOND'),
+    pileCount: 11,
+    stockSize: 52 - 36 - 11,
+    players: [0, 1, 2, 3].map((seat) => player(seat)),
+    hand: [nine, eight, ace],
+    playable: [safe(nine), safe(eight), safe(ace, [1, 11])],
     availableActions: ['PLAY'],
   });
 }

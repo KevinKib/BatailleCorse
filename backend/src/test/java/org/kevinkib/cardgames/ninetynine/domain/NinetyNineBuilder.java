@@ -131,7 +131,13 @@ final class NinetyNineBuilder {
     }
 
     NinetyNineBuilder quick() {
-        options = new NinetyNineOptions(options.lives(), NinetyNineOptions.QuickMode.ON);
+        options = new NinetyNineOptions(options.lives(), NinetyNineOptions.QuickMode.ON, options.freePlay());
+        return this;
+    }
+
+    /** The restrictive rule: a seat holding a safe card may not play a card that goes over 99 (free play off). */
+    NinetyNineBuilder guarded() {
+        options = new NinetyNineOptions(options.lives(), options.quick(), NinetyNineOptions.FreePlay.OFF);
         return this;
     }
 

@@ -57,7 +57,7 @@ The game is strictly turn-based: no out-of-turn play, no race between players.
 
 | Rank | Effect on the total | Note |
 |------|---------------------|------|
-| A | +1 or +11, the player chooses | +11 is offered only if it keeps the total ≤ 99 |
+| A | +1 or +11, the player chooses | +11 is offered only if it keeps the total ≤ 99 (with `freePlay = off`; by default both values are always offered, 3.3) |
 | 2, 3, 5, 6, 7, 8 | + face value | **5 is missing from the main source**: the secondary source counts 2 to 8 at face value; proposed +5 [S2, Q1] |
 | 4 | +0, **reverses the direction** | with 2 players a reversal changes nothing (the other player is next either way) [U, Q8] |
 | 9 | +0 | "pass" card |
@@ -72,9 +72,15 @@ Q counts +10 and the Ace only +1. The main source wins everywhere it speaks.
 
 - A card is **safe** when one of its values keeps the total ≤ 99. A total of exactly 99 is safe [O: "dépasse 99"].
   4, 9, 10 and K are always safe; a hand can only be stuck at a total of 92 or more without any of them.
-- **A player who holds a safe card must play a safe card** [U, Q4]: the domain refuses an unsafe card when a safe
-  one is in hand, and an Ace at +11 when +11 goes over. Going over on purpose never helps (it only costs a life),
-  so the rule only removes misclicks.
+- **Free play** [owner change, 30 Oct 2026, supersedes Q4's "a player who holds a safe card must play a safe card"]:
+  by default (`freePlay = on`, section 4.1) the player is **allowed to make the mistake**, to force attention. The
+  domain accepts any card of the hand, and an Ace at +11 even when +11 goes over; a play over 99 is paid exactly as
+  a stuck seat pays it (the `Played` event, then `Busted`, no replacement draw, the round ends, a life is lost).
+  The server reports every card as playable and both Ace values as allowed, so the client neither dims a card nor
+  says "over 99" beforehand; the stuck seat sees what it saw before (`stuck: true`, the hint, an Ace sent as 1).
+  With `freePlay = off` the old guard applies [U, Q4]: the domain refuses an unsafe card (`UnsafeCardException`)
+  when a safe one is in hand, and an Ace at +11 when +11 goes over (`AceValueException`); `playable` then marks the
+  unsafe cards `safe: false`. Bots are unaffected: they still pick a safe card whenever they hold one.
 - **Stuck** [owner change, 28 Oct 2026, after playing; supersedes the automatic bust of the first version]: when
   the turn reaches a seat whose cards are all unsafe, the seat is **not** busted: it stays on turn (`stuck: true` in
   the view, public) and **must play one of its cards**, which takes the total over 99. That play is a normal
@@ -115,13 +121,14 @@ Q counts +10 and the Ace only +1. The main source wins everywhere it speaks.
 
 ### 4.1 Host options (game level)
 
-Both are `OptionType.CHOICE` through the existing lobby mechanism (`optionDescriptors()`, `validate` parsing a
+`lives` and `quick` are `OptionType.CHOICE` through the existing lobby mechanism (`optionDescriptors()`, `validate` parsing a
 `NinetyNineOptions` record strictly, Bullshit/President pattern). Label keys `options.ninetyNine.<key>`.
 
 | Key | Values (first = default) | Meaning |
 |-----|--------------------------|---------|
 | `lives` | `3`, `2`, `4` | lives per player [O] |
 | `quick` | `off`, `on` | quick mode (3.4) [O] |
+| `freePlay` | `on`, `off` | **hidden**: not in `optionDescriptors()`, so the lobby shows no group for it; accepted by the strict parse, hence settable by the host through the options API (`PUT` options / `SessionService.updateOptions`), so a later tutorial can switch the guard back on. Default `on` (3.3). Always present in the full option map (`options` of the view and the lobby) |
 
 ### 4.2 Seat options (bots)
 
@@ -161,7 +168,7 @@ Package-private constructor with explicit hands, stock and total for tests (`Nin
 | `Phase` | `PLAYING`, `ROUND_OVER`, `FINISHED` |
 | `DeckSource` (port) | `shuffledDeck()` for a deal and `reshuffle(List<Card>)` for the stock; `RandomDeckSource` default, `ScriptedDeckSource` under `test`; the first seat of round 1 also comes from it (`firstSeat(n)`) |
 | `NinetyNineEvent` (sealed) | `RoundDealt(round, starter)`, `Played(seat, card, aceValue, totalAfter, reversed)`, `Busted(seat, totalBefore, hand, livesLeft)`, `Eliminated(seat, place)`, `StockReshuffled(size)`, `GameFinished(result)`, `Forfeited(seat)` |
-| Exceptions (checked `NinetyNineException`) | `FinishedGameException`, `WrongPhaseException`, `NotPlayersTurnException`, `CardNotInHandException`, `UnsafeCardException` (a safe card exists), `AceValueException` (missing, not 1/11, or 11 over 99), `NotEliminatedException` |
+| Exceptions (checked `NinetyNineException`) | `FinishedGameException`, `WrongPhaseException`, `NotPlayersTurnException`, `CardNotInHandException`, `UnsafeCardException` (a safe card exists, `freePlay` off only), `AceValueException` (missing, not 1/11, or with `freePlay` off 11 over 99), `NotEliminatedException` |
 
 ### 6.1 Commands and queries
 
@@ -185,7 +192,7 @@ Three players A, B, C in seat order, 3 lives, one parameterised test row each.
 1. Total 90, A plays K: total 99. B holds 9: plays it, total 99, C next.
 2. Total 95, A holds 7, 8, J: stuck. When C's play passes the turn to A, A stays on turn, plays the 7 (total 102) and busts with the hand 8, J shown:
    A has 2 lives, `ROUND_OVER`, A starts the next round.
-3. Total 89, A holds A, 2, 4: plays A; `aceValue = 11` is refused (100), `aceValue = 1` gives 90. A missing ace value
+3. Total 89, A holds A, 2, 4: plays A; with `freePlay` off `aceValue = 11` is refused (100) (accepted by default, and the seat loses a life), `aceValue = 1` gives 90. A missing ace value
    is refused for an Ace, ignored for other cards [D].
 4. Total 95, A holds 8, 4: playing 8 is refused (`UnsafeCardException`, the 4 is safe); A plays 4: total 95, the
    direction reverses, C is next.

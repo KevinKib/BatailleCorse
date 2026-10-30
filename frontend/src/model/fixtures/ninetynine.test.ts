@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildNinetyNineBust,
   buildNinetyNineFourSeatRound,
+  buildNinetyNineFreePlayRound,
   buildNinetyNineQuickEnd,
   buildNinetyNineTwelveSeatRound,
 } from './ninetynine';
@@ -22,6 +23,13 @@ describe('99 fixtures', () => {
     expect(state.players).toHaveLength(12);
     expect(state.total).toBe(94);
     expect(state.direction).toBe('COUNTER_CLOCKWISE');
+  });
+
+  it('builds a free-play round where every card is playable and the Ace allows both values', () => {
+    const state = buildNinetyNineFreePlayRound();
+    expect(state.options.freePlay).toBe('on');
+    expect(state.playable.every((p) => p.safe)).toBe(true);
+    expect(state.playable[2].aceValues).toEqual([1, 11]);
   });
 
   it('builds a bust that reveals what the busted seat still holds', () => {

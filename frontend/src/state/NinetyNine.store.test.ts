@@ -3,7 +3,7 @@ import { setActivePinia, createPinia } from 'pinia';
 import { useNinetyNineStore } from './NinetyNine.store';
 import webSocketService from '../service/WebSocketService';
 import {
-  buildNinetyNineBust, buildNinetyNineFourSeatRound, buildNinetyNineQuickEnd,
+  buildNinetyNineBust, buildNinetyNineFourSeatRound, buildNinetyNineFreePlayRound, buildNinetyNineQuickEnd,
 } from '../model/fixtures/ninetynine';
 import type { NinetyNineEventData, NinetyNineState } from '../model/ninetynine/NinetyNineState';
 import type { LobbyView } from '../model/lobby/LobbyView';
@@ -70,7 +70,7 @@ describe('NinetyNine store', () => {
       expect(store.me?.seat).toBe(0);
       expect(store.isMyTurn).toBe(true);
       expect(store.hand).toHaveLength(3);
-      expect(store.options).toEqual({ lives: '3', quick: 'off' });
+      expect(store.options).toEqual({ lives: '3', quick: 'off', freePlay: 'on' });
       expect(store.can('PLAY')).toBe(true);
     });
 
@@ -228,6 +228,17 @@ describe('NinetyNine store', () => {
       expect(store.play(round.hand[0])).toBe(false);
       expect(store.play({ rank: '3', suit: 'CLUB', name: 'CLUB_3' })).toBe(false);
       expect(sent()).toEqual([]);
+    });
+
+    it('sends a card that goes over 99 and an Ace as 11 when the server lists them playable (free play)', () => {
+      const round = buildNinetyNineFreePlayRound();
+      const store = boot(round);
+      const [, eight, ace] = round.hand;
+      expect(store.play(eight)).toBe(true);
+      expect(sent()[0].body).toMatchObject({ card: eight });
+      store.applyEvent({ type: 'error', message: 'refused' });
+      expect(store.play(ace, 11)).toBe(true);
+      expect(sent()[1].body).toMatchObject({ card: ace, aceValue: 11 });
     });
 
     it('reports a socket that is down, and stays free to retry', () => {

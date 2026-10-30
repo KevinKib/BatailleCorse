@@ -296,6 +296,7 @@
       "pileCount" : 1,
       "stockSize" : 45,
       "options" : {
+        "freePlay" : "on",
         "lives" : "2",
         "quick" : "off"
       },
@@ -366,7 +367,7 @@
           "suit" : "DIAMOND",
           "name" : "DIAMOND_5"
         },
-        "safe" : false,
+        "safe" : true,
         "aceValues" : [ ]
       } ],
       "availableActions" : [ ]
@@ -411,6 +412,7 @@
       "pileCount" : 2,
       "stockSize" : 45,
       "options" : {
+        "freePlay" : "on",
         "lives" : "2",
         "quick" : "off"
       },
@@ -520,6 +522,7 @@
       "pileCount" : 2,
       "stockSize" : 45,
       "options" : {
+        "freePlay" : "on",
         "lives" : "2",
         "quick" : "off"
       },
@@ -617,6 +620,7 @@
       "pileCount" : 0,
       "stockSize" : 46,
       "options" : {
+        "freePlay" : "on",
         "lives" : "2",
         "quick" : "off"
       },
@@ -721,6 +725,7 @@
       "pileCount" : 1,
       "stockSize" : 45,
       "options" : {
+        "freePlay" : "on",
         "lives" : "2",
         "quick" : "off"
       },
@@ -836,6 +841,7 @@
       "pileCount" : 3,
       "stockSize" : 44,
       "options" : {
+        "freePlay" : "on",
         "lives" : "2",
         "quick" : "off"
       },
@@ -947,6 +953,7 @@
       "pileCount" : 3,
       "stockSize" : 44,
       "options" : {
+        "freePlay" : "on",
         "lives" : "2",
         "quick" : "off"
       },
@@ -1050,6 +1057,7 @@
       "pileCount" : 3,
       "stockSize" : 44,
       "options" : {
+        "freePlay" : "on",
         "lives" : "2",
         "quick" : "off"
       },
@@ -1153,6 +1161,7 @@
       "pileCount" : 3,
       "stockSize" : 44,
       "options" : {
+        "freePlay" : "on",
         "lives" : "2",
         "quick" : "off"
       },
@@ -1242,6 +1251,7 @@
     "pileCount" : 3,
     "stockSize" : 44,
     "options" : {
+      "freePlay" : "on",
       "lives" : "2",
       "quick" : "off"
     },

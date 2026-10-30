@@ -3,6 +3,7 @@ package org.kevinkib.cardgames.ninetynine.presentation;
 import org.junit.jupiter.api.Test;
 import org.kevinkib.cardgames.bullshit.domain.BullshitFactory;
 import org.kevinkib.cardgames.game.GameId;
+import org.kevinkib.cardgames.game.GameOptions;
 import org.kevinkib.cardgames.game.PlayerId;
 import org.kevinkib.cardgames.ninetynine.domain.NinetyNine;
 import org.kevinkib.cardgames.ninetynine.domain.NinetyNineFactory;
@@ -18,6 +19,7 @@ import org.kevinkib.cardgames.sessionmanagement.core.application.RoomCreated;
 import org.kevinkib.cardgames.sessionmanagement.core.application.SessionService;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.kevinkib.cardgames.ninetynine.presentation.NinetyNineTable.card;
@@ -108,7 +110,7 @@ class NinetyNineWebSocketControllerTest {
 
     @Test
     void aRefusedPlayRepliesToTheSenderOnlyWithItsCurrentState() throws Exception {
-        NinetyNine game = table.atNinetyFour();
+        NinetyNine game = table.atNinetyFour(GameOptions.of(Map.of("freePlay", "off")));
         String id = game.getId().uuid().toString();
 
         table.ws.play(new NinetyNinePlayPayload(id, table.token(game, 1), dto("7H"), null));

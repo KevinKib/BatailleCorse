@@ -59,7 +59,8 @@ class NinetyNineRoundTest {
     void everySeatStartsWithTheConfiguredLives() {
         ScriptedDeckSource source = new ScriptedDeckSource(new RandomDeckSource());
         NinetyNine game = new NinetyNine(GameId.generate(), 4, source,
-                new NinetyNineOptions(NinetyNineOptions.Lives.FOUR, NinetyNineOptions.QuickMode.OFF));
+                new NinetyNineOptions(NinetyNineOptions.Lives.FOUR, NinetyNineOptions.QuickMode.OFF,
+                        NinetyNineOptions.FreePlay.ON));
 
         assertEquals(4, game.lives().size());
         game.lives().values().forEach(lives -> assertEquals(4, lives));

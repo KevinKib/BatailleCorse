@@ -22,6 +22,7 @@ import static org.kevinkib.cardgames.ninetynine.presentation.NinetyNineTable.car
 
 class NinetyNineGameActionsTest {
 
+    private static final GameOptions GAME_GUARDED = GameOptions.of(Map.of("freePlay", "off"));
     private static final PlayerId S0 = new PlayerId(0);
     private static final PlayerId S1 = new PlayerId(1);
     private static final PlayerId S2 = new PlayerId(2);
@@ -165,7 +166,7 @@ class NinetyNineGameActionsTest {
 
     @Test
     void aRejectedCommandBroadcastsNothingAndPropagates() throws Exception {
-        NinetyNine game = table.atNinetyFour();
+        NinetyNine game = table.atNinetyFour(GAME_GUARDED);
         int version = game.version();
 
         assertThatThrownBy(() -> table.actions.play(game.getId(), S0, card("AS"), 1))
@@ -177,6 +178,19 @@ class NinetyNineGameActionsTest {
 
         assertThat(table.messaging.payloads).isEmpty();
         assertThat(game.version()).isEqualTo(version);
+    }
+
+    @Test
+    void freePlayBroadcastsAnOverNinetyNineCardThenTheBustWhileASafeCardExists() throws Exception {
+        NinetyNine game = table.atNinetyFour();
+
+        table.actions.play(game.getId(), S1, card("7H"), null);
+
+        assertThat(game.total()).isEqualTo(101);
+        assertThat(game.lives().get(S1)).isEqualTo(2);
+        assertThat(game.lastBust()).isPresent();
+        assertThat(game.phase().name()).isEqualTo("ROUND_OVER");
+        assertThat(table.messaging.payloads).isNotEmpty();
     }
 
     @Test

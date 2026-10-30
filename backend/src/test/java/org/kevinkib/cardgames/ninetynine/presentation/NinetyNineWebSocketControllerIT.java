@@ -92,12 +92,17 @@ class NinetyNineWebSocketControllerIT {
 
         @SuppressWarnings("unchecked")
         Table() throws Exception {
+            this(Map.of("lives", "2"));
+        }
+
+        /** The lobby options are set by the host through the options API, free play included (hidden in the UI). */
+        Table(Map<String, String> options) throws Exception {
             HttpResponse<String> created = post("/api/lobby", "{\"gameType\":\"ninety-nine\",\"name\":\"Alice\"}");
             assertThat(created.statusCode(), is(200));
             Map<String, Object> room = objectMapper.readValue(created.body(), Map.class);
             gameId = (String) room.get("gameId");
             tokens[0] = (String) room.get("token");
-            sessionService.updateOptions(new GameId(gameId), tokens[0], Map.of("lives", "2"));
+            sessionService.updateOptions(new GameId(gameId), tokens[0], options);
             HttpResponse<String> joined = post("/api/ninety-nine/game/" + gameId + "/join", "{\"name\":\"Bob\"}");
             assertThat(joined.statusCode(), is(200));
             tokens[1] = (String) objectMapper.readValue(joined.body(), Map.class).get("token");
@@ -163,7 +168,7 @@ class NinetyNineWebSocketControllerIT {
     @Test
     @SuppressWarnings("unchecked")
     void aWholeGameRunsFromTheFirstPlayToTheEliminationAndTheEnd() throws Exception {
-        Table table = new Table();
+        Table table = new Table(Map.of("lives", "2", "freePlay", "off"));
 
         table.play(0, "KS", null);
         table.awaitBoth("PLAY");
@@ -207,6 +212,25 @@ class NinetyNineWebSocketControllerIT {
             assertThat(outcome.get("reason"), is("LAST_STANDING"));
         }
         assertThat(table.rehydrate(1).get("phase"), is("FINISHED"));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void underFreePlayACardOverNinetyNineIsAcceptedWhileASafeOneIsInHandAndCostsALife() throws Exception {
+        Table table = new Table();
+
+        table.play(0, "KS", null);
+        table.awaitBoth("PLAY");
+        table.play(1, "7H", null); // goes over 99 while the 9H is safe: no refusal, the seat pays a life
+        for (int s = 0; s < 2; s++) {
+            Map<String, Object> bust = table.frames[s].await(f -> "BUST".equals(f.get("eventType")));
+            Map<String, Object> data = (Map<String, Object>) bust.get("eventData");
+            assertThat(data.get("seat"), is(1));
+            assertThat(data.get("livesLeft"), is(1));
+            assertThat(((Map<String, Object>) state(bust).get("lastBust")).get("totalBefore"), is(106));
+        }
+        assertThat(table.refusals(0), is(0L));
+        assertThat(table.refusals(1), is(0L));
     }
 
     @Test

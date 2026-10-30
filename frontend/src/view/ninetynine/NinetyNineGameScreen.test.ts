@@ -7,7 +7,7 @@ import NinetyNineGameScreen from './NinetyNineGameScreen.vue';
 import { useNinetyNineStore } from '../../state/NinetyNine.store';
 import { messagesEn } from '../../locales/en';
 import {
-  buildNinetyNineBust, buildNinetyNineCard, buildNinetyNineFourSeatRound, buildNinetyNineQuickEnd, buildNinetyNineStuck,
+  buildNinetyNineBust, buildNinetyNineCard, buildNinetyNineFourSeatRound, buildNinetyNineFreePlayRound, buildNinetyNineQuickEnd, buildNinetyNineStuck,
   buildNinetyNineTwelveSeatRound, DEFAULT_NINETY_NINE_OPTIONS,
 } from '../../model/fixtures/ninetynine';
 import type { LobbyView } from '../../model/lobby/LobbyView';
@@ -165,6 +165,24 @@ describe('NinetyNineGameScreen', () => {
       expect(wrapper.get('[data-card="HEART_9"]').attributes('disabled')).toBeUndefined();
       expect(wrapper.findAll('[data-test^="over-limit-"]')).toHaveLength(2);
       expect(wrapper.get('[data-test="seat-out"]').text()).toBe('OUT · 12th');
+    });
+
+    it('givenFreePlayAtNinetyFour_thenNoCardIsDisabledOrExplainedAndTheAceOffersBothValues', async () => {
+      const { wrapper, store } = await mountRoom(room(buildNinetyNineFreePlayRound()));
+      const play = vi.spyOn(store, 'play').mockReturnValue(true);
+      const buttons = wrapper.findAll('[data-test="hand"] button');
+      expect(buttons).toHaveLength(3);
+      for (const b of buttons) expect(b.attributes('disabled')).toBeUndefined();
+      expect(wrapper.findAll('[data-test^="over-limit-"]')).toHaveLength(0);
+      expect(wrapper.findAll('.hand-card--over')).toHaveLength(0);
+      expect(wrapper.find('[data-test="stuck-hint"]').exists()).toBe(false);
+      await wrapper.get('[data-card="SPADE_8"]').trigger('click');
+      expect(play).toHaveBeenCalledWith(buildNinetyNineCard('8', 'SPADE'));
+      await wrapper.get('[data-card="CLUB_ACE"]').trigger('click');
+      expect(wrapper.get('[data-test="ace-1"]').attributes('disabled')).toBeUndefined();
+      expect(wrapper.get('[data-test="ace-11"]').attributes('disabled')).toBeUndefined();
+      await wrapper.get('[data-test="ace-11"]').trigger('click');
+      expect(play).toHaveBeenLastCalledWith(buildNinetyNineCard('ACE', 'CLUB'), 11);
     });
 
     it('givenAnotherSeatsTurn_thenTheStatusNamesItAndTheHandWaits', async () => {

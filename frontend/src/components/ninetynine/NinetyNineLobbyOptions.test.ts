@@ -22,6 +22,13 @@ describe('NinetyNineLobbyOptions', () => {
     expect(wrapper.get('[data-test="option-quick"]').text()).toContain('On');
   });
 
+  it('givenTheHiddenFreePlayOption_thenTheLobbyShowsNoGroupForIt', () => {
+    const wrapper = mountOptions({ ...DEFAULT_NINETY_NINE_OPTIONS, freePlay: 'off' });
+    expect(wrapper.find('[data-test="option-freePlay"]').exists()).toBe(false);
+    expect(wrapper.find('[data-test="option-lives"]').exists()).toBe(true);
+    expect(wrapper.text()).not.toMatch(/free play/i);
+  });
+
   it('givenTheLivesChoices_thenTheyAreListedInAscendingOrder', () => {
     const labels = mountOptions().findAll('[data-test="option-lives"] label').map(l => l.text());
     expect(labels).toEqual(['2', '3', '4']);
